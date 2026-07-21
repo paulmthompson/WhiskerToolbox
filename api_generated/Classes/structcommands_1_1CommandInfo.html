@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -401,27 +401,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>std::string</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandInfo.html#variable-name">name</a></strong></td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandInfo.html#variable-name">name</a></strong> <br>Command display and registry name (must match <a href="">ICommand::commandName()</a>).</td>
 </tr>
 <tr class="even">
 <td>std::string</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandInfo.html#variable-description">description</a></strong></td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandInfo.html#variable-description">description</a></strong> <br>Human-readable description shown in command pickers and editors.</td>
 </tr>
 <tr class="odd">
 <td>std::string</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandInfo.html#variable-category">category</a></strong> <br>“data_mutation”, “meta”, “persistence”, etc.</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandInfo.html#variable-category">category</a></strong> <br>Logical grouping for UI organization.</td>
 </tr>
 <tr class="even">
 <td>bool</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandInfo.html#variable-supports-undo">supports_undo</a></strong></td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandInfo.html#variable-supports-undo">supports_undo</a></strong> <br>True if the command implements undo via <a href="">ICommand::undo()</a>.</td>
 </tr>
 <tr class="odd">
 <td>std::vector&lt; std::string &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandInfo.html#variable-supported-data-types">supported_data_types</a></strong></td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandInfo.html#variable-supported-data-types">supported_data_types</a></strong> <br>Data types this command can operate on.</td>
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Classes/structParameterSchema.html">ParameterSchema</a></td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandInfo.html#variable-parameter-schema">parameter_schema</a></strong></td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandInfo.html#variable-parameter-schema">parameter_schema</a></strong> <br>Schema describing the command’s JSON parameters.</td>
 </tr>
 </tbody>
 </table>
@@ -437,29 +437,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="variable-name" class="level3">
 <h3 class="anchored" data-anchor-id="variable-name">variable name</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string name<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Command display and registry name (must match <a href="">ICommand::commandName()</a>).</p>
 </section>
 <section id="variable-description" class="level3">
 <h3 class="anchored" data-anchor-id="variable-description">variable description</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string description<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Human-readable description shown in command pickers and editors.</p>
 </section>
 <section id="variable-category" class="level3">
 <h3 class="anchored" data-anchor-id="variable-category">variable category</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string category<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>“data_mutation”, “meta”, “persistence”, etc.</p>
+<p>Logical grouping for UI organization.</p>
+<p>Examples: “data_mutation”, “meta”, “persistence”, “navigation”.</p>
 </section>
 <section id="variable-supports_undo" class="level3">
 <h3 class="anchored" data-anchor-id="variable-supports_undo">variable supports_undo</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> supports_undo <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>True if the command implements undo via <a href="">ICommand::undo()</a>.</p>
 </section>
 <section id="variable-supported_data_types" class="level3">
 <h3 class="anchored" data-anchor-id="variable-supported_data_types">variable supported_data_types</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> supported_data_types<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Data types this command can operate on.</p>
+<p>Empty when the command is not tied to a specific data object type.</p>
 </section>
 <section id="variable-parameter_schema" class="level3">
 <h3 class="anchored" data-anchor-id="variable-parameter_schema">variable parameter_schema</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>ParameterSchema parameter_schema<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Schema describing the command’s JSON parameters.</p>
+<p>Populated automatically by <a href="../../api_generated/Namespaces/namespacecommands.html#function-registertypedcommand">registerTypedCommand()</a> or set manually when registering via <a href="../../api_generated/Classes/classcommands_1_1CommandRegistry.html#function-registercommand">CommandRegistry::registerCommand()</a>.</p>
 <hr>
-<p>Updated on 2026-07-09 at 17:06:34 +0000</p>
+<p>Updated on 2026-07-21 at 20:17:06 +0000</p>
 
 
 </section>

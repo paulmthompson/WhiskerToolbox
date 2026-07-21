@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -407,7 +407,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/classcommands_1_1CommandRegistry.html">CommandRegistry</a> &amp;</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1CommandRegistry.html#function-instance">instance</a></strong>()<br>Access the singleton instance.</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1CommandRegistry.html#function-instance">instance</a></strong>()<br>Access the singleton <a href="../../api_generated/Classes/classcommands_1_1CommandRegistry.html">CommandRegistry</a> instance.</td>
 </tr>
 <tr class="even">
 <td>void</td>
@@ -468,7 +468,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-instance" class="level3">
 <h3 class="anchored" data-anchor-id="function-instance">function instance</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> CommandRegistry <span class="op">&amp;</span> instance<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Access the singleton instance.</p>
+<p>Access the singleton <a href="../../api_generated/Classes/classcommands_1_1CommandRegistry.html">CommandRegistry</a> instance.</p>
+<p><strong>Return</strong>: Reference to the process-wide <a href="../../api_generated/Classes/classcommands_1_1CommandRegistry.html">CommandRegistry</a> singleton.</p>
 </section>
 <section id="function-registercommand" class="level3">
 <h3 class="anchored" data-anchor-id="function-registercommand">function registerCommand</h3>
@@ -478,6 +479,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    CommandInfo info</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Register a command with its creator function and metadata.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> Unique command name string (must not be empty).</li>
+<li><strong>creator</strong> Callable that deserializes JSON and constructs the command.</li>
+<li><strong>info</strong> Static metadata for the command.</li>
+</ul>
 <p><strong>Precondition</strong>:</p>
 <ul>
 <li>name must not already be registered (asserts in debug builds).</li>
@@ -490,6 +497,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Check if a command name has been registered.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> Command name to query.</li>
+</ul>
+<p><strong>Return</strong>: True if <code>name</code> is registered, false otherwise.</p>
 </section>
 <section id="function-create" class="level3">
 <h3 class="anchored" data-anchor-id="function-create">function create</h3>
@@ -498,12 +510,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> params_json</span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create a command instance from its name and a normalized JSON parameter string.</p>
-<p><strong>Return</strong>: The constructed command, or nullptr if the name is unknown or params fail to parse.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> Registered command name.</li>
+<li><strong>params_json</strong> Normalized JSON parameter string for the command.</li>
+</ul>
+<p><strong>Return</strong>: The constructed command, or nullptr if <code>name</code> is unknown or <code>params_json</code> fails to parse.</p>
 </section>
 <section id="function-availablecommands" class="level3">
 <h3 class="anchored" data-anchor-id="function-availablecommands">function availableCommands</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> CommandInfo <span class="op">&gt;</span> availableCommands<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Return metadata for all registered commands.</p>
+<p><strong>Return</strong>: Vector of <a href="../../api_generated/Classes/structcommands_1_1CommandInfo.html">CommandInfo</a> for every registered command.</p>
 </section>
 <section id="function-commandinfo" class="level3">
 <h3 class="anchored" data-anchor-id="function-commandinfo">function commandInfo</h3>
@@ -511,12 +529,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Return metadata for a single command by name.</p>
-<p><strong>Return</strong>: The <a href="../../api_generated/Classes/structcommands_1_1CommandInfo.html">CommandInfo</a>, or std::nullopt if the name is not registered.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> Registered command name to look up.</li>
+</ul>
+<p><strong>Return</strong>: The <a href="../../api_generated/Classes/structcommands_1_1CommandInfo.html">CommandInfo</a> for <code>name</code>, or std::nullopt if the name is not registered.</p>
 </section>
 <section id="function-size" class="level3">
 <h3 class="anchored" data-anchor-id="function-size">function size</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t size<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Return the number of registered commands.</p>
+<p><strong>Return</strong>: Count of registered command entries.</p>
 </section>
 <section id="function-clear" class="level3">
 <h3 class="anchored" data-anchor-id="function-clear">function clear</h3>
@@ -548,7 +571,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    CommandRegistry <span class="op">&amp;&amp;</span> </span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="op">=</span><span class="kw">delete</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-09 at 17:06:34 +0000</p>
+<p>Updated on 2026-07-21 at 20:17:06 +0000</p>
 
 
 </section>

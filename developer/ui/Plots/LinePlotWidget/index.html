@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -2032,8 +2032,9 @@ PlottingOpenGL::BatchLineRenderer::render()</code></pre>
 <h2 class="anchored" data-anchor-id="time-axis-x">Time Axis (X)</h2>
 <p>Uses the shared <code>RelativeTimeAxisWidget</code> with <code>RelativeTimeAxisState</code>. The axis is synchronized bidirectionally with the view state:</p>
 <ul>
-<li><strong>User changes axis range</strong> → view state updates → scene rebuilds (via <code>rangeChanged</code>)</li>
+<li><strong>User changes axis range</strong> (spinboxes or wheel) → <code>rangeChanged</code> updates <code>x_zoom</code>/<code>x_pan</code> via <code>LinePlotWidget::wireTimeAxis()</code> (visible-span editing, not <code>window_size</code>)</li>
 <li><strong>User zooms/pans</strong> → axis range updates silently via <code>setRangeSilent()</code> (no feedback loop)</li>
+<li><strong><code>rangeUpdated</code></strong> in <code>LinePlotState</code> only syncs <code>_data.time_axis</code> for serialization; it does not emit <code>stateChanged()</code> or mutate <code>alignment.window_size</code></li>
 </ul>
 <p>See <a href="../../../../developer/ui/Plots/plot_widget_guide.html">Plot Widget Guide</a> for full axis integration details including the “Silent Update” pattern.</p>
 </section>

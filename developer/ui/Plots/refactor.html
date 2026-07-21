@@ -43,9 +43,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -335,15 +335,15 @@ ul.task-list li input[type="checkbox"] {
 <h3 class="anchored" data-anchor-id="markdirty-in-view-only-setters-causes-scene-rebuilds-on-zoompan">1. markDirty() in view-only setters causes scene rebuilds on zoom/pan</h3>
 <p><code>EditorState::markDirty()</code> always emits <code>stateChanged()</code>. If view-only setters (<code>setXZoom</code>, <code>setYZoom</code>, <code>setPan</code>) call <code>markDirty()</code>, the connected <code>onStateChanged()</code> slot sets <code>_scene_dirty = true</code>, causing a full scene rebuild on every zoom/pan frame. The comments in these setters often say “No stateChanged() here” but <code>markDirty()</code> emits it anyway.</p>
 <p><strong>Fix:</strong> Remove <code>markDirty()</code> from view-only setters. The view state is still written to <code>_data.view_state</code> for serialization; it will be saved when the next real state change calls <code>markDirty()</code>.</p>
-<p><strong>Fixed in:</strong> EventPlotState (<code>setXZoom</code>, <code>setYZoom</code>, <code>setPan</code>)<br>
-<strong>Check:</strong> LinePlotState and any other plot state classes with the same pattern.</p>
+<p><strong>Fixed in:</strong> EventPlotState (<code>setXZoom</code>, <code>setYZoom</code>, <code>setPan</code>), LinePlotState<br>
+<strong>Check:</strong> Any other plot state classes with the same pattern.</p>
 </section>
 <section id="rangeupdated-handler-emits-statechanged-causing-rebuild-on-resizepan" class="level3">
 <h3 class="anchored" data-anchor-id="rangeupdated-handler-emits-statechanged-causing-rebuild-on-resizepan">2. rangeUpdated handler emits stateChanged() causing rebuild on resize/pan</h3>
 <p><code>RelativeTimeAxisState::setRangeSilent()</code> emits <code>rangeUpdated</code>. If the state class’s <code>rangeUpdated</code> handler calls <code>markDirty()</code> → <code>stateChanged()</code>, this creates a cascade: resize → <code>paintGL</code> → <code>viewBoundsChanged</code> → <code>syncTimeAxisRange()</code> → <code>setRangeSilent()</code> → <code>rangeUpdated</code> → <code>markDirty()</code> → <code>stateChanged()</code> → <code>_scene_dirty = true</code> → full scene rebuild.</p>
 <p><strong>Fix:</strong> The <code>rangeUpdated</code> handler should only sync serialization data (<code>_data.time_axis = ...</code>) without calling <code>markDirty()</code> or emitting <code>stateChanged()</code>.</p>
-<p><strong>Fixed in:</strong> EventPlotState<br>
-<strong>Check:</strong> LinePlotState and any other state class connecting to <code>rangeUpdated</code>.</p>
+<p><strong>Fixed in:</strong> EventPlotState, LinePlotState<br>
+<strong>Check:</strong> Any other state class connecting to <code>rangeUpdated</code> (e.g.&nbsp;HeatmapState).</p>
 
 
 </section>

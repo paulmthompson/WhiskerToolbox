@@ -43,9 +43,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -379,7 +379,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/CommandContext_8hpp.html#file-commandcontext.hpp">hpp</a></strong> <br>Runtime context provided to commands during execution.</li>
 <li><strong>file <a href="../api_generated/Files/CommandDescriptor_8hpp.html#file-commanddescriptor.hpp">hpp</a></strong> <br>JSON-serializable descriptors for command invocations and sequences.</li>
 <li><strong>file <a href="../api_generated/Files/CommandFactory_8cpp.html#file-commandfactory.cpp">cpp</a></strong> <br>Thin wrappers delegating to CommandRegistry for backward compatibility.</li>
-<li><strong>file <a href="../api_generated/Files/CommandFactory_8hpp.html#file-commandfactory.hpp">hpp</a></strong> <br>Factory function mapping command name strings to concrete ICommand instances, plus introspection query functions for command metadata.</li>
+<li><strong>file <a href="../api_generated/Files/CommandFactory_8hpp.html#file-commandfactory.hpp">hpp</a></strong> <br>Factory functions mapping command name strings to concrete ICommand instances, plus introspection query functions for command metadata.</li>
 <li><strong>file <a href="../api_generated/Files/CommandFactory_8test_8cpp.html#file-commandfactory.test.cpp">cpp</a></strong> <br>Unit tests for the command factory and core types.</li>
 <li><strong>file <a href="../api_generated/Files/CommandInfo_8hpp.html#file-commandinfo.hpp">hpp</a></strong> <br>Static metadata for a registered command, including its <a href="../api_generated/Classes/structParameterSchema.html">ParameterSchema</a>.</li>
 <li><strong>file <a href="../api_generated/Files/CommandInfo_8test_8cpp.html#file-commandinfo.test.cpp">cpp</a></strong> <br>Unit tests for CommandInfo and factory query functions.</li>
@@ -397,7 +397,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/Validation_8hpp.html#file-validation.hpp">hpp</a></strong> <br>Pre-execution validation of command sequences.</li>
 <li><strong>file <a href="../api_generated/Files/Validation_8test_8cpp.html#file-validation.test.cpp">cpp</a></strong> <br>Unit tests for command sequence validation.</li>
 <li><strong>file <a href="../api_generated/Files/VariableSubstitution_8cpp.html#file-variablesubstitution.cpp">cpp</a></strong> <br>Implementation of ${variable} substitution for command sequences.</li>
-<li><strong>file <a href="../api_generated/Files/VariableSubstitution_8hpp.html#file-variablesubstitution.hpp">hpp</a></strong> <br>Two-pass ${variable} substitution for command sequences.</li>
+<li><strong>file <a href="../api_generated/Files/VariableSubstitution_8hpp.html#file-variablesubstitution.hpp">hpp</a></strong> <br>Two-pass ${variable} substitution and JSON number normalization for command sequences.</li>
 <li><strong>file <a href="../api_generated/Files/VariableSubstitution_8test_8cpp.html#file-variablesubstitution.test.cpp">cpp</a></strong> <br>Unit tests for variable substitution and sequence execution.</li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_002292825818dae91dcfea6282a51590.html#dir-src/commands/dataobjects">src/Commands/DataObjects</a></strong>
@@ -492,6 +492,8 @@ ul.task-list li input[type="checkbox"] {
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_d8766d1a23286c38393970b3d0d81fd0.html#dir-src/coremath">src/CoreMath</a></strong>
 <ul>
+<li><strong>file <a href="../api_generated/Files/non__finite__rows_8cpp.html#file-non-finite-rows.cpp">cpp</a></strong> <br>Implementation of NaN/Inf row detection and filtering.</li>
+<li><strong>file <a href="../api_generated/Files/non__finite__rows_8hpp.html#file-non-finite-rows.hpp">hpp</a></strong> <br>NaN/Inf row detection and filtering for Armadillo observation matrices.</li>
 <li><strong>file <a href="../api_generated/Files/parametric__polynomial__utils_8cpp.html#file-parametric-polynomial-utils.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/parametric__polynomial__utils_8hpp.html#file-parametric-polynomial-utils.hpp">hpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/polynomial__fit_8cpp.html#file-polynomial-fit.cpp">cpp</a></strong> <br>Implementation of polynomial fitting utilities for line parameterization.</li>
@@ -2283,8 +2285,7 @@ ul.task-list li input[type="checkbox"] {
 <ul>
 <li><strong>file <a href="../api_generated/Files/DimReductionOutputBuilder_8cpp.html#file-dimreductionoutputbuilder.cpp">cpp</a></strong> <br>Implementation of shared output tensor construction for dim reduction.</li>
 <li><strong>file <a href="../api_generated/Files/DimReductionOutputBuilder_8hpp.html#file-dimreductionoutputbuilder.hpp">hpp</a></strong> <br>Shared output tensor construction for dimensionality reduction transforms.</li>
-<li><strong>file <a href="../api_generated/Files/NaNFilter_8cpp.html#file-nanfilter.cpp">cpp</a></strong> <br>Implementation of NaN/Inf row detection and filtering.</li>
-<li><strong>file <a href="../api_generated/Files/NaNFilter_8hpp.html#file-nanfilter.hpp">hpp</a></strong> <br>NaN/Inf row detection and filtering for <a href="../api_generated/Classes/classTensorData.html">TensorData</a> transforms.</li>
+<li><strong>file <a href="../api_generated/Files/NaNPolicy_8hpp.html#file-nanpolicy.hpp">hpp</a></strong> <br>Policy for handling NaN/Inf rows in dimensionality reduction transforms.</li>
 </ul></li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_0839db92b9b4fec1046c9e32005af256.html#dir-src/triagesession">src/TriageSession</a></strong>
@@ -3989,7 +3990,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/tableview__design__doc_8md.html#file-tableview-design-doc.md">tableview_design_doc.md</a></strong></li>
 </ul>
 <hr>
-<p>Updated on 2026-07-09 at 17:06:38 +0000</p>
+<p>Updated on 2026-07-21 at 20:17:11 +0000</p>
 
 
 </section>

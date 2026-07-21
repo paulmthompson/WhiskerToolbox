@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -444,7 +444,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandContext.html">commands::CommandContext</a></strong> <br>Runtime context provided to every command at execution time. This is not serialized — it is the environment that commands run in.</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandContext.html">commands::CommandContext</a></strong> <br>Runtime context provided to every command at execution time.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
@@ -593,7 +593,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>using std::function&lt; std::unique_ptr&lt; <a href="../../api_generated/Classes/classcommands_1_1ICommand.html">ICommand</a> &gt;(std::string const &amp;)&gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespacecommands.html#using-commandcreator">CommandCreator</a></strong> <br>Type-erased command creator: takes normalized JSON, returns <a href="">ICommand</a>.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacecommands.html#using-commandcreator">CommandCreator</a></strong> <br>Type-erased command creator.</td>
 </tr>
 </tbody>
 </table>
@@ -650,7 +650,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>std::string</td>
-<td><strong><a href="../../api_generated/Namespaces/namespacecommands.html#function-substitutevariables">substituteVariables</a></strong>(std::string const &amp; input, std::map&lt; std::string, std::string &gt; const &amp; variables)<br>Replace all ${variable_name} patterns in a string with values from the variables map.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacecommands.html#function-substitutevariables">substituteVariables</a></strong>(std::string const &amp; input, std::map&lt; std::string, std::string &gt; const &amp; variables)<br>Replace all ${variable_name} patterns in a string with values from <code>variables</code>.</td>
 </tr>
 <tr class="even">
 <td>std::string</td>
@@ -704,7 +704,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="using-commandcreator" class="level3">
 <h3 class="anchored" data-anchor-id="using-commandcreator">using CommandCreator</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> commands<span class="op">::</span>CommandCreator <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>ICommand<span class="op">&gt;(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Type-erased command creator: takes normalized JSON, returns <a href="">ICommand</a>.</p>
+<p>Type-erased command creator.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>params_json</strong> Normalized JSON parameter string for the command.</li>
+</ul>
+<p><strong>Return</strong>: A new command instance, or nullptr if deserialization fails.</p>
+<p>Takes a normalized JSON parameter string and returns an owned command instance.</p>
 </section>
 </section>
 <section id="functions-documentation" class="level2">
@@ -715,6 +721,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Check if a command name is recognized by the factory.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> Command name to query.</li>
+</ul>
+<p><strong>Return</strong>: True if <code>name</code> is registered in <a href="../../api_generated/Classes/classcommands_1_1CommandRegistry.html">CommandRegistry</a>.</p>
 <p>Returns true for all command names that <a href="../../api_generated/Namespaces/namespacecommands.html#function-createcommand">createCommand()</a> can instantiate.</p>
 </section>
 <section id="function-createcommand" class="level3">
@@ -724,7 +735,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    rfl<span class="op">::</span>Generic <span class="at">const</span> <span class="op">&amp;</span> params</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create a command from a descriptor’s name and rfl::Generic parameters.</p>
-<p>Returns nullptr if the command name is unknown or parameters fail to parse. Delegates to <a href="../../api_generated/Namespaces/namespacecommands.html#function-createcommandfromjson">createCommandFromJson()</a> after serializing and normalizing the JSON.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> Registered command name.</li>
+<li><strong>params</strong> Command parameters as a generic JSON value.</li>
+</ul>
+<p><strong>Return</strong>: The constructed command, or nullptr if <code>name</code> is unknown or <code>params</code> fail to parse.</p>
+<p>Delegates to <a href="../../api_generated/Namespaces/namespacecommands.html#function-createcommandfromjson">createCommandFromJson()</a> after serializing and normalizing the JSON.</p>
 </section>
 <section id="function-createcommandfromjson" class="level3">
 <h3 class="anchored" data-anchor-id="function-createcommandfromjson">function createCommandFromJson</h3>
@@ -733,13 +750,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> params_json</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create a command from a name and a pre-built JSON parameter string.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> Registered command name.</li>
+<li><strong>params_json</strong> JSON parameter string for the command.</li>
+</ul>
+<p><strong>Return</strong>: The constructed command, or nullptr if <code>name</code> is unknown or <code>params_json</code> fails to parse.</p>
 <p>Applies integer normalization to handle the rfl::Generic round-trip issue (whole-number doubles like 10.0 are converted to 10 before deserialization). Prefer this overload when a JSON string is already available to avoid an unnecessary rfl::Generic round-trip.</p>
-<p>Returns nullptr if the command name is unknown or parameters fail to parse.</p>
 </section>
 <section id="function-getavailablecommands" class="level3">
 <h3 class="anchored" data-anchor-id="function-getavailablecommands">function getAvailableCommands</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> CommandInfo <span class="op">&gt;</span> getAvailableCommands<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Return metadata for all registered commands.</p>
+<p><strong>Return</strong>: Vector of <a href="../../api_generated/Classes/structcommands_1_1CommandInfo.html">CommandInfo</a> for every registered command.</p>
 <p>Each entry includes the command’s name, description, category, undo support flag, supported data types, and a <a href="../../api_generated/Classes/structParameterSchema.html">ParameterSchema</a> generated via <a href="../../api_generated/Files/ParameterSchema_8hpp.html#function-extractparameterschema">extractParameterSchema<t>()</t></a>.</p>
 </section>
 <section id="function-getcommandinfo" class="level3">
@@ -748,7 +771,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Return metadata for a single command by name.</p>
-<p>Returns std::nullopt if the command name is not recognized.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>name</strong> Registered command name to look up.</li>
+</ul>
+<p><strong>Return</strong>: The <a href="../../api_generated/Classes/structcommands_1_1CommandInfo.html">CommandInfo</a> for <code>name</code>, or std::nullopt if the name is not recognized.</p>
 </section>
 <section id="function-registertypedcommand" class="level3">
 <h3 class="anchored" data-anchor-id="function-registertypedcommand">function registerTypedCommand</h3>
@@ -762,14 +789,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Convenience helper to register a command with automatic JSON deserialization and <a href="../../api_generated/Classes/structParameterSchema.html">ParameterSchema</a> extraction.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>reg</strong> The registry to register into</li>
-<li><strong>name</strong> Command name string (must match CommandT::commandName())</li>
-<li><strong>info</strong> Metadata — parameter_schema will be overwritten</li>
+<li><strong>reg</strong> The registry to register into.</li>
+<li><strong>name</strong> Command name string (must match CommandT::commandName()).</li>
+<li><strong>info</strong> Metadata — parameter_schema will be overwritten.</li>
 </ul>
 <p><strong>Template Parameters</strong>:</p>
 <ul>
-<li><strong>CommandT</strong> Concrete <a href="../../api_generated/Classes/classcommands_1_1ICommand.html">ICommand</a> subclass (must accept Params in its constructor)</li>
-<li><strong>Params</strong> reflect-cpp–annotated parameter struct</li>
+<li><strong>CommandT</strong> Concrete <a href="../../api_generated/Classes/classcommands_1_1ICommand.html">ICommand</a> subclass (must accept Params in its constructor).</li>
+<li><strong>Params</strong> reflect-cpp–annotated parameter struct.</li>
 </ul>
 <p>The creator function deserializes the JSON string into <code>Params</code> via <code>rfl::json::read&lt;Params, rfl::DefaultIfMissing&gt;</code>, applying C++ default member initializers for omitted JSON fields (same pattern as TransformsV2 and DataSynthesizer). The parameter_schema field of <code>info</code> is automatically populated via <a href="../../api_generated/Files/ParameterSchema_8hpp.html#function-extractparameterschema">extractParameterSchema<params>()</params></a>.</p>
 </section>
@@ -784,12 +811,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Execute a sequence of command descriptors.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>seq</strong> The command sequence descriptor (JSON-deserialized)</li>
-<li><strong>ctx</strong> Runtime context with <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> and runtime variables</li>
-<li><strong>stop_on_error</strong> If true, stop on the first command failure (default: true)</li>
-<li><strong>recorder</strong> Optional <a href="../../api_generated/Classes/classcommands_1_1CommandRecorder.html">CommandRecorder</a> to record each successfully executed command’s descriptor. Pass nullptr (default) to disable recording.</li>
+<li><strong>seq</strong> The command sequence descriptor (JSON-deserialized).</li>
+<li><strong>ctx</strong> Runtime context with <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> and runtime variables.</li>
+<li><strong>stop_on_error</strong> If true, stop on the first command failure (default: true).</li>
+<li><strong>recorder</strong> Optional <a href="../../api_generated/Classes/classcommands_1_1CommandRecorder.html">CommandRecorder</a> to record each successfully executed command’s descriptor. Pass nullptr (default) to disable recording. Falls back to ctx.recorder when nullptr.</li>
 </ul>
-<p><strong>Return</strong>: <a href="../../api_generated/Classes/structcommands_1_1SequenceResult.html">SequenceResult</a> containing the overall result and executed commands</p>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structcommands_1_1SequenceResult.html">SequenceResult</a> containing the overall result, executed commands, and failure index.</p>
 <p>Applies two-pass variable substitution:</p>
 <ol type="1">
 <li>Static pass from <a href="../../api_generated/Classes/structcommands_1_1CommandSequenceDescriptor.html#variable-variables">CommandSequenceDescriptor::variables</a></li>
@@ -807,11 +834,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Execute a single command through the sequence execution pipeline.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>command_name</strong> The command factory name (e.g., “SaveData”, “SynthesizeData”)</li>
-<li><strong>params_json</strong> JSON-serialized command parameters</li>
-<li><strong>ctx</strong> Runtime context with <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>, runtime variables, and optional recorder</li>
+<li><strong>command_name</strong> The command factory name (e.g., “SaveData”, “SynthesizeData”).</li>
+<li><strong>params_json</strong> JSON-serialized command parameters.</li>
+<li><strong>ctx</strong> Runtime context with <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>, runtime variables, and optional recorder.</li>
 </ul>
-<p><strong>Return</strong>: <a href="../../api_generated/Classes/structcommands_1_1CommandResult.html">CommandResult</a> indicating success or failure</p>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structcommands_1_1CommandResult.html">CommandResult</a> indicating success or failure.</p>
 <p>Convenience wrapper that routes a single command through <a href="../../api_generated/Namespaces/namespacecommands.html#function-executesequence">executeSequence()</a>, enabling recording (via ctx.recorder) and MutationGuard support.</p>
 </section>
 <section id="function-findunresolvedvariables" class="level3">
@@ -820,6 +847,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> input</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Find all unresolved ${variable} references in a string.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>input</strong> String potentially containing ${variable} references.</li>
+</ul>
+<p><strong>Return</strong>: Variable names for each ${…} pattern found in <code>input</code>.</p>
 <p>Returns the variable names (without the ${} delimiters) for each reference that remains in the string.</p>
 </section>
 <section id="function-validatesequence" class="level3">
@@ -831,10 +863,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Validate a command sequence without executing it.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>seq</strong> The command sequence descriptor to validate</li>
-<li><strong>ctx</strong> Runtime context (for variable resolution and optional <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>)</li>
+<li><strong>seq</strong> The command sequence descriptor to validate.</li>
+<li><strong>ctx</strong> Runtime context (for variable resolution and optional <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>).</li>
 </ul>
-<p><strong>Return</strong>: <a href="../../api_generated/Classes/structcommands_1_1ValidationResult.html">ValidationResult</a> with any errors and warnings found</p>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structcommands_1_1ValidationResult.html">ValidationResult</a> with any errors and warnings found.</p>
 <p>Performs five checks in order of increasing specificity:</p>
 <ol type="1">
 <li>Structural: all command_name values map to known commands in the factory</li>
@@ -851,14 +883,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> variables</span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Replace all ${variable_name} patterns in a string with values from the variables map.</p>
+<p>Replace all ${variable_name} patterns in a string with values from <code>variables</code>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>input</strong> The string potentially containing ${variable} references</li>
-<li><strong>variables</strong> Map of variable names to their replacement values</li>
+<li><strong>input</strong> The string potentially containing ${variable} references.</li>
+<li><strong>variables</strong> Map of variable names to their replacement values.</li>
 </ul>
-<p><strong>Return</strong>: The string with all resolved variables substituted</p>
-<p>Unresolved variables are left as-is.</p>
+<p><strong>Return</strong>: The string with all resolved variables substituted.</p>
+<p>Unresolved variables are left as-is. When a substitution appears inside a JSON string literal and the replacement value is a JSON number, boolean, or null, surrounding quotes are stripped so the substituted value preserves JSON typing.</p>
 </section>
 <section id="function-normalizejsonnumbers" class="level3">
 <h3 class="anchored" data-anchor-id="function-normalizejsonnumbers">function normalizeJsonNumbers</h3>
@@ -866,6 +898,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json</span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Normalize whole-number floating-point values in a JSON string to integers.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>json</strong> JSON string to normalize.</li>
+</ul>
+<p><strong>Return</strong>: A copy of <code>json</code> with whole-number floats rewritten as integers.</p>
 <p>Converts values like <code>10.0</code> to <code>10</code> while leaving <code>10.5</code> and strings untouched. This fixes an rfl::Generic round-trip issue where integers become doubles after <code>rfl::json::write(Generic) → rfl::json::read&lt;Generic&gt;</code>, producing values like <code>10.0</code> that fail to deserialize into int64_t fields.</p>
 </section>
 <section id="function-getentityidsinrange" class="level3">
@@ -995,7 +1032,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Postcondition</strong>: On success, <code>output_key</code> exists with replaced data bound to <code>time_key</code></p>
 <p>Used by full-dataset commands that mirror TransformsV2 widget semantics.</p>
 <hr>
-<p>Updated on 2026-07-09 at 17:06:34 +0000</p>
+<p>Updated on 2026-07-21 at 20:17:06 +0000</p>
 
 
 </section>

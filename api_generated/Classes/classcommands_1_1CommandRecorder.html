@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -417,11 +417,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>size_t</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1CommandRecorder.html#function-size">size</a></strong>() const<br>Number of recorded descriptors.</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1CommandRecorder.html#function-size">size</a></strong>() const<br>Return the number of recorded descriptors.</td>
 </tr>
 <tr class="even">
 <td>bool</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1CommandRecorder.html#function-empty">empty</a></strong>() const<br>Whether the trace is empty.</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1CommandRecorder.html#function-empty">empty</a></strong>() const<br>Report whether the trace is empty.</td>
 </tr>
 </tbody>
 </table>
@@ -440,11 +440,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    CommandDescriptor desc</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Append a command descriptor to the trace.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>desc</strong> Descriptor to record (moved into internal storage).</li>
+</ul>
 </section>
 <section id="function-trace" class="level3">
 <h3 class="anchored" data-anchor-id="function-trace">function trace</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> trace<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Access the recorded trace.</p>
+<p><strong>Return</strong>: Const reference to the ordered list of recorded descriptors.</p>
 </section>
 <section id="function-tosequence" class="level3">
 <h3 class="anchored" data-anchor-id="function-tosequence">function toSequence</h3>
@@ -454,8 +459,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Produce a <a href="">CommandSequenceDescriptor</a> from the recorded trace.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>name</strong> Optional name for the generated sequence</li>
+<li><strong>name</strong> Optional name for the generated sequence.</li>
 </ul>
+<p><strong>Return</strong>: A sequence descriptor containing the recorded commands.</p>
 </section>
 <section id="function-clear" class="level3">
 <h3 class="anchored" data-anchor-id="function-clear">function clear</h3>
@@ -465,14 +471,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-size" class="level3">
 <h3 class="anchored" data-anchor-id="function-size">function size</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">size_t</span> size<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Number of recorded descriptors.</p>
+<p>Return the number of recorded descriptors.</p>
+<p><strong>Return</strong>: Count of descriptors in the trace.</p>
 </section>
 <section id="function-empty" class="level3">
 <h3 class="anchored" data-anchor-id="function-empty">function empty</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> empty<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Whether the trace is empty.</p>
+<p>Report whether the trace is empty.</p>
+<p><strong>Return</strong>: True if no descriptors have been recorded.</p>
 <hr>
-<p>Updated on 2026-07-09 at 17:06:34 +0000</p>
+<p>Updated on 2026-07-21 at 20:17:06 +0000</p>
 
 
 </section>

@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -408,31 +408,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>virtual <a href="../../api_generated/Classes/structcommands_1_1CommandResult.html">CommandResult</a></td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1ICommand.html#function-execute">execute</a></strong>(<a href="../../api_generated/Classes/structcommands_1_1CommandContext.html">CommandContext</a> const &amp; ctx) =0<br>Execute the command against the <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> in ctx.</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1ICommand.html#function-execute">execute</a></strong>(<a href="../../api_generated/Classes/structcommands_1_1CommandContext.html">CommandContext</a> const &amp; ctx) =0<br>Execute the command against the <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> in <code>ctx</code>.</td>
 </tr>
 <tr class="odd">
 <td>virtual std::string</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1ICommand.html#function-commandname">commandName</a></strong>() const =0<br>Human-readable name used for journal entries and UI display.</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1ICommand.html#function-commandname">commandName</a></strong>() const =0<br>Return the human-readable command name.</td>
 </tr>
 <tr class="even">
 <td>virtual std::string</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1ICommand.html#function-tojson">toJson</a></strong>() const =0<br>Serialize parameters to JSON (via rfl::json::write on the params struct)</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1ICommand.html#function-tojson">toJson</a></strong>() const =0<br>Serialize command parameters to JSON.</td>
 </tr>
 <tr class="odd">
 <td>virtual bool</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1ICommand.html#function-isundoable">isUndoable</a></strong>() const<br>Undo support (opt-in). Default: not undoable.</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1ICommand.html#function-isundoable">isUndoable</a></strong>() const<br>Report whether this command supports undo.</td>
 </tr>
 <tr class="even">
 <td>virtual <a href="../../api_generated/Classes/structcommands_1_1CommandResult.html">CommandResult</a></td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1ICommand.html#function-undo">undo</a></strong>(<a href="../../api_generated/Classes/structcommands_1_1CommandContext.html">CommandContext</a> const &amp; ctx)</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1ICommand.html#function-undo">undo</a></strong>(<a href="../../api_generated/Classes/structcommands_1_1CommandContext.html">CommandContext</a> const &amp; ctx)<br>Revert the effects of a prior <a href="../../api_generated/Classes/classcommands_1_1ICommand.html#function-execute">execute()</a> call.</td>
 </tr>
 <tr class="odd">
 <td>virtual int</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1ICommand.html#function-mergeid">mergeId</a></strong>() const<br>For undo merging (Phase 5). Same id = mergeable. -1 = never merge.</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1ICommand.html#function-mergeid">mergeId</a></strong>() const<br>Return an identifier used for undo merging.</td>
 </tr>
 <tr class="even">
 <td>virtual bool</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1ICommand.html#function-mergewith">mergeWith</a></strong>(<a href="../../api_generated/Classes/classcommands_1_1ICommand.html">ICommand</a> const &amp; )</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1ICommand.html#function-mergewith">mergeWith</a></strong>(<a href="../../api_generated/Classes/classcommands_1_1ICommand.html">ICommand</a> const &amp; other)<br>Attempt to merge this command with a subsequent command of the same type.</td>
 </tr>
 </tbody>
 </table>
@@ -454,25 +454,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> CommandResult execute<span class="op">(</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    CommandContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Execute the command against the <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> in ctx.</p>
+<p>Execute the command against the <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> in <code>ctx</code>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>ctx</strong> Runtime execution context (<a href="../../api_generated/Classes/classDataManager.html">DataManager</a>, time controller, etc.).</li>
+</ul>
+<p><strong>Return</strong>: Success or failure result, including affected data keys on success.</p>
 <p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classcommands_1_1AdvanceFrame.html#function-execute">commands::AdvanceFrame::execute</a>, <a href="../../api_generated/Classes/classcommands_1_1CopyByTimeRange.html#function-execute">commands::CopyByTimeRange::execute</a>, <a href="../../api_generated/Classes/classcommands_1_1AddInterval.html#function-execute">commands::AddInterval::execute</a>, <a href="../../api_generated/Classes/classcommands_1_1FlipEventAtTime.html#function-execute">commands::FlipEventAtTime::execute</a>, <a href="../../api_generated/Classes/classcommands_1_1SetEventAtTime.html#function-execute">commands::SetEventAtTime::execute</a>, <a href="../../api_generated/Classes/classcommands_1_1ClearLineDataAtTime.html#function-execute">commands::ClearLineDataAtTime::execute</a>, <a href="../../api_generated/Classes/classcommands_1_1ForEachKey.html#function-execute">commands::ForEachKey::execute</a>, <a href="../../api_generated/Classes/classcommands_1_1LoadData.html#function-execute">commands::LoadData::execute</a>, <a href="../../api_generated/Classes/classcommands_1_1SaveData.html#function-execute">commands::SaveData::execute</a>, <a href="../../api_generated/Classes/classcommands_1_1MoveByTimeRange.html#function-execute">commands::MoveByTimeRange::execute</a>, <a href="../../api_generated/Classes/classcommands_1_1UpsampleTimeFrame.html#function-execute">commands::UpsampleTimeFrame::execute</a>, <a href="../../api_generated/Classes/classcommands_1_1SynthesizeData.html#function-execute">commands::SynthesizeData::execute</a>, <a href="../../api_generated/Classes/classcommands_1_1RunTransformsV2Pipeline.html#function-execute">commands::RunTransformsV2Pipeline::execute</a>, <a href="../../api_generated/Classes/classcommands_1_1RunTransformsV2PipelineAtTime.html#function-execute">commands::RunTransformsV2PipelineAtTime::execute</a></p>
 </section>
 <section id="function-commandname" class="level3">
 <h3 class="anchored" data-anchor-id="function-commandname">function commandName</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>string commandName<span class="op">()</span> <span class="at">const</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Human-readable name used for journal entries and UI display.</p>
+<p>Return the human-readable command name.</p>
+<p><strong>Return</strong>: Stable command name string.</p>
 <p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classcommands_1_1AdvanceFrame.html#function-commandname">commands::AdvanceFrame::commandName</a>, <a href="../../api_generated/Classes/classcommands_1_1CopyByTimeRange.html#function-commandname">commands::CopyByTimeRange::commandName</a>, <a href="../../api_generated/Classes/classcommands_1_1AddInterval.html#function-commandname">commands::AddInterval::commandName</a>, <a href="../../api_generated/Classes/classcommands_1_1FlipEventAtTime.html#function-commandname">commands::FlipEventAtTime::commandName</a>, <a href="../../api_generated/Classes/classcommands_1_1SetEventAtTime.html#function-commandname">commands::SetEventAtTime::commandName</a>, <a href="../../api_generated/Classes/classcommands_1_1ClearLineDataAtTime.html#function-commandname">commands::ClearLineDataAtTime::commandName</a>, <a href="../../api_generated/Classes/classcommands_1_1ForEachKey.html#function-commandname">commands::ForEachKey::commandName</a>, <a href="../../api_generated/Classes/classcommands_1_1LoadData.html#function-commandname">commands::LoadData::commandName</a>, <a href="../../api_generated/Classes/classcommands_1_1SaveData.html#function-commandname">commands::SaveData::commandName</a>, <a href="../../api_generated/Classes/classcommands_1_1MoveByTimeRange.html#function-commandname">commands::MoveByTimeRange::commandName</a>, <a href="../../api_generated/Classes/classcommands_1_1UpsampleTimeFrame.html#function-commandname">commands::UpsampleTimeFrame::commandName</a>, <a href="../../api_generated/Classes/classcommands_1_1SynthesizeData.html#function-commandname">commands::SynthesizeData::commandName</a>, <a href="../../api_generated/Classes/classcommands_1_1RunTransformsV2Pipeline.html#function-commandname">commands::RunTransformsV2Pipeline::commandName</a>, <a href="../../api_generated/Classes/classcommands_1_1RunTransformsV2PipelineAtTime.html#function-commandname">commands::RunTransformsV2PipelineAtTime::commandName</a></p>
+<p>Used for journal entries and UI display. Must match the name registered in <a href="../../api_generated/Classes/classcommands_1_1CommandRegistry.html">CommandRegistry</a>.</p>
 </section>
 <section id="function-tojson" class="level3">
 <h3 class="anchored" data-anchor-id="function-tojson">function toJson</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>string toJson<span class="op">()</span> <span class="at">const</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Serialize parameters to JSON (via rfl::json::write on the params struct)</p>
+<p>Serialize command parameters to JSON.</p>
+<p><strong>Return</strong>: JSON string representing the command parameters.</p>
 <p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classcommands_1_1AdvanceFrame.html#function-tojson">commands::AdvanceFrame::toJson</a>, <a href="../../api_generated/Classes/classcommands_1_1CopyByTimeRange.html#function-tojson">commands::CopyByTimeRange::toJson</a>, <a href="../../api_generated/Classes/classcommands_1_1AddInterval.html#function-tojson">commands::AddInterval::toJson</a>, <a href="../../api_generated/Classes/classcommands_1_1FlipEventAtTime.html#function-tojson">commands::FlipEventAtTime::toJson</a>, <a href="../../api_generated/Classes/classcommands_1_1SetEventAtTime.html#function-tojson">commands::SetEventAtTime::toJson</a>, <a href="../../api_generated/Classes/classcommands_1_1ClearLineDataAtTime.html#function-tojson">commands::ClearLineDataAtTime::toJson</a>, <a href="../../api_generated/Classes/classcommands_1_1ForEachKey.html#function-tojson">commands::ForEachKey::toJson</a>, <a href="../../api_generated/Classes/classcommands_1_1LoadData.html#function-tojson">commands::LoadData::toJson</a>, <a href="../../api_generated/Classes/classcommands_1_1SaveData.html#function-tojson">commands::SaveData::toJson</a>, <a href="../../api_generated/Classes/classcommands_1_1MoveByTimeRange.html#function-tojson">commands::MoveByTimeRange::toJson</a>, <a href="../../api_generated/Classes/classcommands_1_1UpsampleTimeFrame.html#function-tojson">commands::UpsampleTimeFrame::toJson</a>, <a href="../../api_generated/Classes/classcommands_1_1SynthesizeData.html#function-tojson">commands::SynthesizeData::toJson</a>, <a href="../../api_generated/Classes/classcommands_1_1RunTransformsV2Pipeline.html#function-tojson">commands::RunTransformsV2Pipeline::toJson</a>, <a href="../../api_generated/Classes/classcommands_1_1RunTransformsV2PipelineAtTime.html#function-tojson">commands::RunTransformsV2PipelineAtTime::toJson</a></p>
+<p>Typically implemented via <code>rfl::json::write</code> on the command’s params struct.</p>
 </section>
 <section id="function-isundoable" class="level3">
 <h3 class="anchored" data-anchor-id="function-isundoable">function isUndoable</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">virtual</span> <span class="dt">bool</span> isUndoable<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Undo support (opt-in). Default: not undoable.</p>
+<p>Report whether this command supports undo.</p>
+<p><strong>Return</strong>: True if <a href="../../api_generated/Classes/classcommands_1_1ICommand.html#function-undo">undo()</a> is implemented; false by default.</p>
 <p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classcommands_1_1ForEachKey.html#function-isundoable">commands::ForEachKey::isUndoable</a>, <a href="../../api_generated/Classes/classcommands_1_1LoadData.html#function-isundoable">commands::LoadData::isUndoable</a>, <a href="../../api_generated/Classes/classcommands_1_1MoveByTimeRange.html#function-isundoable">commands::MoveByTimeRange::isUndoable</a></p>
 </section>
 <section id="function-undo" class="level3">
@@ -480,20 +490,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">virtual</span> CommandResult undo<span class="op">(</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    CommandContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Revert the effects of a prior <a href="../../api_generated/Classes/classcommands_1_1ICommand.html#function-execute">execute()</a> call.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>ctx</strong> Runtime execution context (<a href="../../api_generated/Classes/classDataManager.html">DataManager</a>, time controller, etc.).</li>
+</ul>
+<p><strong>Return</strong>: Success or failure result. Default implementation returns an error indicating undo is not supported.</p>
 <p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classcommands_1_1ForEachKey.html#function-undo">commands::ForEachKey::undo</a>, <a href="../../api_generated/Classes/classcommands_1_1LoadData.html#function-undo">commands::LoadData::undo</a>, <a href="../../api_generated/Classes/classcommands_1_1MoveByTimeRange.html#function-undo">commands::MoveByTimeRange::undo</a></p>
 </section>
 <section id="function-mergeid" class="level3">
 <h3 class="anchored" data-anchor-id="function-mergeid">function mergeId</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">virtual</span> <span class="dt">int</span> mergeId<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>For undo merging (Phase 5). Same id = mergeable. -1 = never merge.</p>
+<p>Return an identifier used for undo merging.</p>
+<p><strong>Return</strong>: Merge identifier, or -1 if not mergeable.</p>
+<p>Commands with the same non-negative merge id may be coalesced into a single undo step. A value of -1 means the command is never mergeable.</p>
 </section>
 <section id="function-mergewith" class="level3">
 <h3 class="anchored" data-anchor-id="function-mergewith">function mergeWith</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">virtual</span> <span class="dt">bool</span> mergeWith<span class="op">(</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    ICommand <span class="at">const</span> <span class="op">&amp;</span> </span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    ICommand <span class="at">const</span> <span class="op">&amp;</span> other</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Attempt to merge this command with a subsequent command of the same type.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>other</strong> The subsequent command candidate for merging.</li>
+</ul>
+<p><strong>Return</strong>: True if <code>other</code> was absorbed into this command; false by default.</p>
+<p>Called when two consecutive executed commands share the same <a href="../../api_generated/Classes/classcommands_1_1ICommand.html#function-mergeid">mergeId()</a>. If merge succeeds, only one undo step is retained.</p>
 <hr>
-<p>Updated on 2026-07-09 at 17:06:34 +0000</p>
+<p>Updated on 2026-07-21 at 20:17:06 +0000</p>
 
 
 </section>

@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -397,15 +397,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structcommands_1_1CommandResult.html">CommandResult</a></td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1SequenceResult.html#variable-result">result</a></strong></td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1SequenceResult.html#variable-result">result</a></strong> <br>Overall success or failure result for the sequence.</td>
 </tr>
 <tr class="even">
 <td>std::vector&lt; std::unique_ptr&lt; <a href="../../api_generated/Classes/classcommands_1_1ICommand.html">ICommand</a> &gt; &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1SequenceResult.html#variable-executed-commands">executed_commands</a></strong> <br>Commands that were successfully executed (retained for undo support)</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1SequenceResult.html#variable-executed-commands">executed_commands</a></strong> <br>Commands that were successfully executed.</td>
 </tr>
 <tr class="odd">
 <td>int</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1SequenceResult.html#variable-failed-index">failed_index</a></strong> <br>Index of the command that failed (-1 if all succeeded)</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1SequenceResult.html#variable-failed-index">failed_index</a></strong> <br>Index of the command that failed, or -1 if all succeeded.</td>
 </tr>
 </tbody>
 </table>
@@ -415,18 +415,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="variable-result" class="level3">
 <h3 class="anchored" data-anchor-id="variable-result">variable result</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>CommandResult result<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Overall success or failure result for the sequence.</p>
 </section>
 <section id="variable-executed_commands" class="level3">
 <h3 class="anchored" data-anchor-id="variable-executed_commands">variable executed_commands</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span> ICommand <span class="op">&gt;</span> <span class="op">&gt;</span> executed_commands<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Commands that were successfully executed (retained for undo support)</p>
+<p>Commands that were successfully executed.</p>
+<p>Retained for undo support and partial-failure recovery.</p>
 </section>
 <section id="variable-failed_index" class="level3">
 <h3 class="anchored" data-anchor-id="variable-failed_index">variable failed_index</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> failed_index <span class="op">=</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Index of the command that failed (-1 if all succeeded)</p>
+<p>Index of the command that failed, or -1 if all succeeded.</p>
 <hr>
-<p>Updated on 2026-07-09 at 17:06:34 +0000</p>
+<p>Updated on 2026-07-21 at 20:17:06 +0000</p>
 
 
 </section>

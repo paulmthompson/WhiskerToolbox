@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -436,8 +436,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-recovervalueprojectionfactoryv2" id="toc-function-recovervalueprojectionfactoryv2" class="nav-link" data-scroll-target="#function-recovervalueprojectionfactoryv2">function recoverValueProjectionFactoryV2</a></li>
   <li><a href="#function-register_transformsv2_commands" id="toc-function-register_transformsv2_commands" class="nav-link" data-scroll-target="#function-register_transformsv2_commands">function register_transformsv2_commands</a></li>
   <li><a href="#function-builddimreductionoutput" id="toc-function-builddimreductionoutput" class="nav-link" data-scroll-target="#function-builddimreductionoutput">function buildDimReductionOutput</a></li>
-  <li><a href="#function-hasnonfiniterows" id="toc-function-hasnonfiniterows" class="nav-link" data-scroll-target="#function-hasnonfiniterows">function hasNonFiniteRows</a></li>
-  <li><a href="#function-filternonfiniterows" id="toc-function-filternonfiniterows" class="nav-link" data-scroll-target="#function-filternonfiniterows">function filterNonFiniteRows</a></li>
   </ul></li>
   <li><a href="#attributes-documentation" id="toc-attributes-documentation" class="nav-link" data-scroll-target="#attributes-documentation">Attributes Documentation</a>
   <ul class="collapse">
@@ -626,189 +624,185 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1NaNFilterResult.html">WhiskerToolbox::Transforms::V2::NaNFilterResult</a></strong> <br>Result of filtering non-finite rows from a matrix.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1NoParams.html">WhiskerToolbox::Transforms::V2::NoParams</a></strong> <br>Empty parameter struct for transforms that don’t need configuration.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1NoReductionParams.html">WhiskerToolbox::Transforms::V2::NoReductionParams</a></strong> <br>Empty parameter struct for reductions that don’t need configuration.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1NormalizeTimeParamsV2.html">WhiskerToolbox::Transforms::V2::NormalizeTimeParamsV2</a></strong> <br>Parameters for time normalization using value store bindings (<a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2.html">V2</a> pattern)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineOutputBuilder.html">WhiskerToolbox::Transforms::V2::PipelineOutputBuilder</a></strong> <br>Helper to build output containers efficiently.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineStep.html">WhiskerToolbox::Transforms::V2::PipelineStep</a></strong> <br>Represents a single step in a transform pipeline.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1PipelineValueStore.html">WhiskerToolbox::Transforms::V2::PipelineValueStore</a></strong> <br>Runtime key-value store for pipeline intermediate values.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1RangeReductionMetadata.html">WhiskerToolbox::Transforms::V2::RangeReductionMetadata</a></strong> <br>Metadata about a registered range reduction operation.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1RangeReductionRegistry.html">WhiskerToolbox::Transforms::V2::RangeReductionRegistry</a></strong> <br>Registry for range reduction operations.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1RangeReductionStep.html">WhiskerToolbox::Transforms::V2::RangeReductionStep</a></strong> <br>Descriptor for a terminal range reduction in a pipeline.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ReductionKey.html">WhiskerToolbox::Transforms::V2::ReductionKey</a></strong> <br>Key for looking up reductions by name and input type.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ReductionKeyHash.html">WhiskerToolbox::Transforms::V2::ReductionKeyHash</a></strong> <br>Hash function for <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ReductionKey.html">ReductionKey</a>.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ReductionStep.html">WhiskerToolbox::Transforms::V2::ReductionStep</a></strong> <br>Represents a reduction that computes a value for the store.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ReductionStepDescriptor.html">WhiskerToolbox::Transforms::V2::ReductionStepDescriptor</a></strong> <br>JSON descriptor for loading <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ReductionStep.html">ReductionStep</a> from pipelines.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ReductionTypeTriple.html">WhiskerToolbox::Transforms::V2::ReductionTypeTriple</a></strong> <br>Triple key for typed lookup (input, output, params)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ReductionTypeTripleHash.html">WhiskerToolbox::Transforms::V2::ReductionTypeTripleHash</a></strong></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1RegisterBinaryContainerTransform.html">WhiskerToolbox::Transforms::V2::RegisterBinaryContainerTransform</a></strong> <br>RAII helper for compile-time binary container transform registration.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1RegisterBinaryTransform.html">WhiskerToolbox::Transforms::V2::RegisterBinaryTransform</a></strong> <br>RAII helper for compile-time binary transform registration.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1RegisterBindingApplicator.html">WhiskerToolbox::Transforms::V2::RegisterBindingApplicator</a></strong> <br>RAII helper for registering binding applicators at static initialization.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1RegisterContainerTransform.html">WhiskerToolbox::Transforms::V2::RegisterContainerTransform</a></strong> <br>RAII helper for compile-time container transform registration.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1RegisterContextTimeGroupedTransform.html">WhiskerToolbox::Transforms::V2::RegisterContextTimeGroupedTransform</a></strong> <br>RAII helper for compile-time context-aware time-grouped transform registration.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1RegisterContextTransform.html">WhiskerToolbox::Transforms::V2::RegisterContextTransform</a></strong> <br>RAII helper for compile-time context-aware transform registration.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1RegisterStatelessTimeGroupedTransform.html">WhiskerToolbox::Transforms::V2::RegisterStatelessTimeGroupedTransform</a></strong> <br>RAII helper for compile-time stateless time-grouped transform registration.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1RegisterStatelessTransform.html">WhiskerToolbox::Transforms::V2::RegisterStatelessTransform</a></strong> <br>RAII helper for compile-time stateless transform registration.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1RegisterTimeGroupedTransform.html">WhiskerToolbox::Transforms::V2::RegisterTimeGroupedTransform</a></strong> <br>RAII helper for compile-time time-grouped transform registration.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1RegisterTransform.html">WhiskerToolbox::Transforms::V2::RegisterTransform</a></strong> <br>RAII helper for compile-time transform registration.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1StepTypeInfo.html">WhiskerToolbox::Transforms::V2::StepTypeInfo</a></strong> <br>Per-step type resolution result.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1TimeExtractor.html">WhiskerToolbox::Transforms::V2::TimeExtractor</a></strong> <br>Type trait to extract the time from a range element.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TransformChain.html">WhiskerToolbox::Transforms::V2::TransformChain</a></strong> <br>Chain multiple transforms.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1TransformMetadata.html">WhiskerToolbox::Transforms::V2::TransformMetadata</a></strong> <br>Metadata about a registered transform.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TransformPipeline.html">WhiskerToolbox::Transforms::V2::TransformPipeline</a></strong> <br>Builder for chaining multiple transforms together.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1TypeChainResult.html">WhiskerToolbox::Transforms::V2::TypeChainResult</a></strong> <br>Result of resolving a type chain through a sequence of transforms.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TypedContainerExecutor.html">WhiskerToolbox::Transforms::V2::TypedContainerExecutor</a></strong> <br>Executor for container transforms with captured parameters.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TypedContainerTransform.html">WhiskerToolbox::Transforms::V2::TypedContainerTransform</a></strong> <br>Type-erased wrapper for container transforms.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TypedParamExecutor.html">WhiskerToolbox::Transforms::V2::TypedParamExecutor</a></strong> <br>Concrete executor with full type information and captured parameters.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TypedRangeReduction.html">WhiskerToolbox::Transforms::V2::TypedRangeReduction</a></strong> <br>Typed implementation of range reduction.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TypedRangeReductionParamExecutor.html">WhiskerToolbox::Transforms::V2::TypedRangeReductionParamExecutor</a></strong> <br>Typed parameter executor with captured parameters and reduction function.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TypedTimeGroupedParamExecutor.html">WhiskerToolbox::Transforms::V2::TypedTimeGroupedParamExecutor</a></strong> <br>Concrete time-grouped executor with full type information and captured parameters.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TypedTimeGroupedTransform.html">WhiskerToolbox::Transforms::V2::TypedTimeGroupedTransform</a></strong> <br>Type-safe wrapper for time-grouped transforms.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TypedTimeGroupedTransform_3_01In_00_01Out_00_01void_01_4.html">WhiskerToolbox::Transforms::V2::TypedTimeGroupedTransform&lt; In, Out, void &gt;</a></strong> <br>Specialization for stateless time-grouped transforms (no parameters)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TypedTransform.html">WhiskerToolbox::Transforms::V2::TypedTransform</a></strong> <br>Compile-time typed transform function wrapper.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1TypedTransform_3_01In_00_01Out_00_01void_01_4.html">WhiskerToolbox::Transforms::V2::TypedTransform&lt; In, Out, void &gt;</a></strong> <br>Specialization for transforms with no parameters.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1TypeTriple.html">WhiskerToolbox::Transforms::V2::TypeTriple</a></strong> <br>Key for looking up typed executors by full type signature.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1TypeTripleHash.html">WhiskerToolbox::Transforms::V2::TypeTripleHash</a></strong> <br>Hash function for <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1TypeTriple.html">TypeTriple</a>.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1V2PipelineResult.html">WhiskerToolbox::Transforms::V2::V2PipelineResult</a></strong> <br>Result of executing a complete pipeline.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1V2StepResult.html">WhiskerToolbox::Transforms::V2::V2StepResult</a></strong> <br>Result of executing a single pipeline step.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1ZScoreNormalizationParamsV2.html">WhiskerToolbox::Transforms::V2::ZScoreNormalizationParamsV2</a></strong> <br><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2.html">V2</a> parameters for Z-Score normalization.</td>
 </tr>
@@ -1073,14 +1067,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2.html#function-builddimreductionoutput">buildDimReductionOutput</a></strong>(<a href="../../api_generated/Namespaces/namespacearma.html#using-mat">arma::mat</a> const &amp; reduced, <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> const &amp; input, std::vector&lt; std::size_t &gt; const &amp; valid_indices, <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2.html#enum-nanpolicy">NaNPolicy</a> policy, std::size_t n_components, std::vector&lt; std::string &gt; const &amp; col_names)<br>Build an output <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> from a reduced matrix, handling NaN policies.</td>
-</tr>
-<tr class="odd">
-<td>bool</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2.html#function-hasnonfiniterows">hasNonFiniteRows</a></strong>(arma::fmat const &amp; fmat)<br>Check whether any row of a float matrix contains NaN or Inf.</td>
-</tr>
-<tr class="even">
-<td><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1NaNFilterResult.html">NaNFilterResult</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2.html#function-filternonfiniterows">filterNonFiniteRows</a></strong>(<a href="../../api_generated/Namespaces/namespacearma.html#using-mat">arma::mat</a> const &amp; obs_matrix)<br>Remove rows containing NaN or Inf from an observations × features matrix.</td>
 </tr>
 </tbody>
 </table>
@@ -2231,67 +2217,34 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 <li><strong>Drop</strong>: Output has only the valid rows. <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> and Interval rows are filtered to match.</li>
 </ul>
 </section>
-<section id="function-hasnonfiniterows" class="level3">
-<h3 class="anchored" data-anchor-id="function-hasnonfiniterows">function hasNonFiniteRows</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb65"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasNonFiniteRows<span class="op">(</span></span>
-<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>    arma<span class="op">::</span>fmat <span class="at">const</span> <span class="op">&amp;</span> fmat</span>
-<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Check whether any row of a float matrix contains NaN or Inf.</p>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>fmat</strong> Matrix to check (any layout)</li>
-</ul>
-<p><strong>Return</strong>: true if at least one element is NaN or Inf</p>
-<p>Scans in row-major order with early exit on the first non-finite element.</p>
-</section>
-<section id="function-filternonfiniterows" class="level3">
-<h3 class="anchored" data-anchor-id="function-filternonfiniterows">function filterNonFiniteRows</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb66"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a>NaNFilterResult filterNonFiniteRows<span class="op">(</span></span>
-<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>    arma<span class="op">::</span>mat <span class="at">const</span> <span class="op">&amp;</span> obs_matrix</span>
-<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Remove rows containing NaN or Inf from an observations × features matrix.</p>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>obs_matrix</strong> Matrix in observations × features layout (double precision)</li>
-</ul>
-<p><strong>Return</strong>: <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1NaNFilterResult.html">NaNFilterResult</a> with clean matrix, valid indices, and drop count</p>
-<p><strong>Precondition</strong>: obs_matrix must not be empty</p>
-<p><strong>Postcondition</strong>:</p>
-<ul>
-<li>result.clean_matrix has no NaN or Inf values</li>
-<li>result.valid_row_indices.size() == result.clean_matrix.n_rows</li>
-<li>result.rows_dropped == obs_matrix.n_rows - result.clean_matrix.n_rows</li>
-</ul>
-<p>Returns the cleaned matrix together with the surviving row indices. If all rows are finite, returns the original matrix and a full index vector without copying.</p>
-</section>
 </section>
 <section id="attributes-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="attributes-documentation">Attributes Documentation</h2>
 <section id="variable-is_in_variant_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_in_variant_v">variable is_in_variant_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb67"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_in_variant_v <span class="op">=</span> is_in_variant<span class="op">&lt;</span>T<span class="op">,</span> Variant<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb65"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_in_variant_v <span class="op">=</span> is_in_variant<span class="op">&lt;</span>T<span class="op">,</span> Variant<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-always_false" class="level3">
 <h3 class="anchored" data-anchor-id="variable-always_false">variable always_false</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb68"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> always_false <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb66"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> always_false <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-is_tuple_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_tuple_v">variable is_tuple_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb69"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_tuple_v <span class="op">=</span> is_tuple<span class="op">&lt;</span>T<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb67"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_tuple_v <span class="op">=</span> is_tuple<span class="op">&lt;</span>T<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-input_arity_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-input_arity_v">variable input_arity_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb70"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">size_t</span> input_arity_v <span class="op">=</span> input_arity<span class="op">&lt;</span>In<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb68"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">size_t</span> input_arity_v <span class="op">=</span> input_arity<span class="op">&lt;</span>In<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-is_range_reduction_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_range_reduction_v">variable is_range_reduction_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb71"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_range_reduction_v <span class="op">=</span> is_range_reduction<span class="op">&lt;</span>F<span class="op">,</span> Element<span class="op">,</span> Scalar<span class="op">,</span> Params<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb69"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_range_reduction_v <span class="op">=</span> is_range_reduction<span class="op">&lt;</span>F<span class="op">,</span> Element<span class="op">,</span> Scalar<span class="op">,</span> Params<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-is_stateless_range_reduction_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_stateless_range_reduction_v">variable is_stateless_range_reduction_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb72"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_stateless_range_reduction_v <span class="op">=</span> is_stateless_range_reduction<span class="op">&lt;</span>F<span class="op">,</span> Element<span class="op">,</span> Scalar<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb70"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_stateless_range_reduction_v <span class="op">=</span> is_stateless_range_reduction<span class="op">&lt;</span>F<span class="op">,</span> Element<span class="op">,</span> Scalar<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-09 at 17:06:33 +0000</p>
+<p>Updated on 2026-07-21 at 20:17:05 +0000</p>
 
 
 </section>

@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-43b91e12268fbd7d1d34125f5e2d1e3e.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-ece30034953875be4eb6d050cde05e02.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -348,6 +348,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#commandscommandcontext" id="toc-commandscommandcontext" class="nav-link active" data-scroll-target="#commandscommandcontext">commands::CommandContext</a>
   <ul class="collapse">
   <li><a href="#public-attributes" id="toc-public-attributes" class="nav-link" data-scroll-target="#public-attributes">Public Attributes</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
   <li><a href="#public-attributes-documentation" id="toc-public-attributes-documentation" class="nav-link" data-scroll-target="#public-attributes-documentation">Public Attributes Documentation</a>
   <ul class="collapse">
   <li><a href="#variable-data_manager" id="toc-variable-data_manager" class="nav-link" data-scroll-target="#variable-data_manager">variable data_manager</a></li>
@@ -385,7 +386,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="commandscommandcontext" class="level1">
 <h1>commands::CommandContext</h1>
-<p>Runtime context provided to every command at execution time. This is not serialized — it is the environment that commands run in.</p>
+<p>Runtime context provided to every command at execution time. <a href="#detailed-description">More…</a></p>
 <p><code>#include &lt;CommandContext.hpp&gt;</code></p>
 <section id="public-attributes" class="level2">
 <h2 class="anchored" data-anchor-id="public-attributes">Public Attributes</h2>
@@ -399,54 +400,66 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandContext.html#variable-data-manager">data_manager</a></strong></td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandContext.html#variable-data-manager">data_manager</a></strong> <br>Shared <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> that commands read from and mutate.</td>
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Classes/classTimeController.html">TimeController</a> *</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandContext.html#variable-time-controller">time_controller</a></strong></td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandContext.html#variable-time-controller">time_controller</a></strong> <br>Optional visualization time controller.</td>
 </tr>
 <tr class="odd">
 <td>std::map&lt; std::string, std::string &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandContext.html#variable-runtime-variables">runtime_variables</a></strong></td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandContext.html#variable-runtime-variables">runtime_variables</a></strong> <br>Runtime-resolved values for ${variable} substitution in command parameters.</td>
 </tr>
 <tr class="even">
 <td>std::function&lt; void(float)&gt;</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandContext.html#variable-on-progress">on_progress</a></strong> <br>Optional progress reporting.</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandContext.html#variable-on-progress">on_progress</a></strong> <br>Optional progress callback invoked during long-running commands.</td>
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/classcommands_1_1CommandRecorder.html">CommandRecorder</a> *</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandContext.html#variable-recorder">recorder</a></strong></td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandContext.html#variable-recorder">recorder</a></strong> <br>Optional recorder for capturing executed command descriptors.</td>
 </tr>
 </tbody>
 </table>
+</section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> commands<span class="op">::</span>CommandContext<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Runtime context provided to every command at execution time.</p>
+<p>This struct is not serialized — it is the environment that commands run in.</p>
 </section>
 <section id="public-attributes-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-attributes-documentation">Public Attributes Documentation</h2>
 <section id="variable-data_manager" class="level3">
 <h3 class="anchored" data-anchor-id="variable-data_manager">variable data_manager</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> data_manager<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> data_manager<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Shared <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> that commands read from and mutate.</p>
+<p>Must be non-null for most commands.</p>
 </section>
 <section id="variable-time_controller" class="level3">
 <h3 class="anchored" data-anchor-id="variable-time_controller">variable time_controller</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>TimeController <span class="op">*</span> time_controller <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Optional visualization time (e.g.&nbsp;from <code>[EditorRegistry::timeController()](/api_generated/Classes/classEditorRegistry.md#function-timecontroller)</code>). Commands such as <code>[AdvanceFrame](/api_generated/Classes/classcommands_1_1AdvanceFrame.md)</code> require this to be non-null.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>TimeController <span class="op">*</span> time_controller <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Optional visualization time controller.</p>
+<p>Typically sourced from <code>[EditorRegistry::timeController()](/api_generated/Classes/classEditorRegistry.md#function-timecontroller)</code>. Commands such as <code>[AdvanceFrame](/api_generated/Classes/classcommands_1_1AdvanceFrame.md)</code> require this to be non-null.</p>
 </section>
 <section id="variable-runtime_variables" class="level3">
 <h3 class="anchored" data-anchor-id="variable-runtime_variables">variable runtime_variables</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string <span class="op">&gt;</span> runtime_variables<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Runtime-resolved values (current_frame, mark_frame, etc.) Used for ${variable} substitution in command parameters</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string <span class="op">&gt;</span> runtime_variables<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Runtime-resolved values for ${variable} substitution in command parameters.</p>
+<p>Examples include <code>current_frame</code> and <code>mark_frame</code>.</p>
 </section>
 <section id="variable-on_progress" class="level3">
 <h3 class="anchored" data-anchor-id="variable-on_progress">variable on_progress</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>function<span class="op">&lt;</span> <span class="dt">void</span><span class="op">(</span><span class="dt">float</span><span class="op">)&gt;</span> on_progress<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Optional progress reporting.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>function<span class="op">&lt;</span> <span class="dt">void</span><span class="op">(</span><span class="dt">float</span><span class="op">)&gt;</span> on_progress<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Optional progress callback invoked during long-running commands.</p>
+<p>Receives values in the range [0.0, 1.0].</p>
 </section>
 <section id="variable-recorder" class="level3">
 <h3 class="anchored" data-anchor-id="variable-recorder">variable recorder</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>CommandRecorder <span class="op">*</span> recorder <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Optional recorder for capturing executed command descriptors. Used by <a href="../../api_generated/Namespaces/namespacecommands.html#function-executesequence">executeSequence()</a> as a fallback when no explicit recorder is passed.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>CommandRecorder <span class="op">*</span> recorder <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Optional recorder for capturing executed command descriptors.</p>
+<p>Used by <a href="../../api_generated/Namespaces/namespacecommands.html#function-executesequence">executeSequence()</a> as a fallback when no explicit recorder is passed.</p>
 <hr>
-<p>Updated on 2026-07-09 at 17:06:34 +0000</p>
+<p>Updated on 2026-07-21 at 20:17:06 +0000</p>
 
 
 </section>
