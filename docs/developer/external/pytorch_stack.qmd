@@ -1,0 +1,46 @@
+---
+title: "PyTorch stack (libtorch / ExecuTorch)"
+format: html
+---
+
+LibTorch and optional ExecuTorch are fetched under [`external/`](../../external/). Version pins and URLs live in [`pytorch_stack_urls.cmake`](../../external/pytorch_stack_urls.cmake).
+
+## Version pins (independent)
+
+| Cache variable | Default | Role |
+|----------------|---------|------|
+| `NEURALYZER_LIBTORCH_VERSION` | `2.9.0` | Which libtorch release to download |
+| `NEURALYZER_LIBTORCH_CUDA_TAG` | `cu126` | PyTorch CUDA folder when `ENABLE_NEURALYZER_CUDA` is ON |
+| `NEURALYZER_EXECUTORCH_GIT_TAG` | `v1.0.1` | ExecuTorch git tag |
+
+`NEURALYZER_CUDA_VERSION` (e.g. `12.6`) is set from the manifest when your `(libtorch version, CUDA tag)` pair is resolved — it is not a separate user-facing pin.
+
+Override at configure time, for example:
+
+```bash
+cmake --preset my-clang-release -DNEURALYZER_LIBTORCH_VERSION=2.5.1 -DNEURALYZER_LIBTORCH_CUDA_TAG=cu121
+```
+
+## URLs
+
+[`pytorch_stack_urls.cmake`](../../external/pytorch_stack_urls.cmake) uses plain `if(NEURALYZER_LIBTORCH_VERSION …)` / `if(NEURALYZER_LIBTORCH_CUDA_TAG …)` blocks with **full zip URLs** under each version. PyTorch naming differs by platform and era (e.g. Linux cxx11-abi for 2.5.1). Paste exact links from:
+
+- [CPU](https://download.pytorch.org/libtorch/cpu/)
+- [cu126](https://download.pytorch.org/libtorch/cu126/)
+- [cu121](https://download.pytorch.org/libtorch/cu121/)
+
+When you add a new libtorch version, add a new `elseif(VERSION_EQUAL …)` section. When you add CUDA support for that version, add a nested `if(CUDA_TAG STREQUAL …)` with Linux/Windows CUDA URLs and append matching entries to `NEURALYZER_LIBTORCH_VERIFY_VERSIONS` and `NEURALYZER_LIBTORCH_VERIFY_CUDA_TAGS`.
+
+## Verify
+
+```bash
+cmake -P external/verify_libtorch_urls.cmake
+cmake -DNEURALYZER_VERIFY_ALL_LIBTORCH_CONFIGS=ON -P external/verify_libtorch_urls.cmake
+```
+
+## Other options
+
+- `NEURALYZER_LIBTORCH_URL` — override the single URL used for this configure.
+- `NEURALYZER_VERIFY_LIBTORCH_URL_AT_CONFIGURE` — probe the selected URL before FetchContent (needs `curl`).
+
+CTest: `verify_libtorch_download_urls` (labels `network`, `external`).

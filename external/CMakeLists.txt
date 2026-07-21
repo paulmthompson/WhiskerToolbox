@@ -162,83 +162,13 @@ FetchContent_Declare(
     GIT_TAG 1.9.5
 )
 
-#[[
-#Torch Stable URLs cpu
-https://https://download.pytorch.org/libtorch/cpu
-
-Cuda 12.6
-https://download.pytorch.org/libtorch/cu126
-
-]]
-if (LINUX)
-    if (ENABLE_NEURALYZER_CUDA)
-        message(STATUS "Fetching libtorch with CUDA")
-        FetchContent_Declare(
-            Torch
-           # URL https://download.pytorch.org/libtorch/cu121/libtorch-cxx11-abi-shared-with-deps-2.5.1%2Bcu121.zip
-           URL https://download.pytorch.org/libtorch/cu126/libtorch-shared-with-deps-2.9.0%2Bcu126.zip
-        )
-    else()
-        FetchContent_Declare(
-            Torch
-          #  URL https://download.pytorch.org/libtorch/cpu/libtorch-cxx11-abi-shared-with-deps-2.5.1%2Bcpu.zip
-            URL https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-2.9.0%2Bcpu.zip
-          )
-    endif()
-elseif (APPLE)
-    FetchContent_Declare(
-        Torch
-       # URL https://download.pytorch.org/libtorch/cpu/libtorch-macos-arm64-2.5.1.zip
-       URL https://download.pytorch.org/libtorch/cpu/libtorch-macos-arm64-2.9.0.zip
-    )
-elseif (WIN32)
-    if (ENABLE_NEURALYZER_CUDA)
-        FetchContent_Declare(
-            Torch
-            #URL https://download.pytorch.org/libtorch/cu121/libtorch-win-shared-with-deps-2.5.1%2Bcu121.zip
-            URL https://download.pytorch.org/libtorch/cu126/libtorch-win-shared-with-deps-2.9.0%2Bcu126.zip
-        )
-    else()
-        FetchContent_Declare(
-            Torch
-          #  URL https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-2.5.1%2Bcpu.zip
-          URL https://download.pytorch.org/libtorch/cpu/libtorch-win-shared-with-deps-2.9.0%2Bcpu.zip
-        )
-    endif()
-endif()
+include(pytorch_stack.cmake)
+neuralyzer_declare_libtorch()
 
 set(FETCHCONTENT_TARGETS "Whisker-Analysis" "Torch" "npy" "iir")
 
 if (ENABLE_EXECUTORCH)
-    message(STATUS "ExecuTorch support enabled")
-    FetchContent_Declare(
-        executorch
-        GIT_REPOSITORY https://github.com/pytorch/executorch.git
-        GIT_TAG v1.0.1
-        SOURCE_DIR ${CMAKE_CURRENT_BINARY_DIR}/_deps/executorch # https://github.com/pytorch/executorch/issues/6475
-    )
-
-    # Do NOT set EXECUTORCH_BUILD_PRESET_FILE to linux.cmake — it chains into
-    # llm.cmake which enables EXECUTORCH_BUILD_KERNELS_OPTIMIZED and other features
-    # that require a pip-installed torch (Python `import torch`). We use libtorch
-    # (C++ only) via FetchContent, so we must disable those code paths.
-    set(EXECUTORCH_BUILD_PORTABLE_OPS OFF)
-    set(EXECUTORCH_BUILD_EXECUTOR_RUNNER OFF)
-
-    # Enable ExecuTorch extensions needed by the ModelExecution wrapper (Phase 3).
-    # extension_module depends on extension_data_loader and extension_flat_tensor.
-    set(EXECUTORCH_BUILD_EXTENSION_DATA_LOADER ON)
-    set(EXECUTORCH_BUILD_EXTENSION_MODULE ON)
-    set(EXECUTORCH_BUILD_EXTENSION_TENSOR ON)
-    set(EXECUTORCH_BUILD_EXTENSION_FLAT_TENSOR ON)
-    set(EXECUTORCH_BUILD_EXTENSION_NAMED_DATA_MAP ON)
-    #[[
-    #v1.1.0 = torch 2.11.0
-    #v1.0.1 = torch 2.9.0 november 20, 2025
-    #v1.0.0 = torch 2.9.0 October 17, 2025
-    #v0.7.0 = torch 2.8.0 August 11, 2025
-    ]]
-
+    neuralyzer_declare_executorch()
     list(APPEND FETCHCONTENT_TARGETS "executorch")
 endif()
 
@@ -346,3 +276,9 @@ set(npy_SOURCE_DIR ${npy_SOURCE_DIR} PARENT_SCOPE)
 set(iir_SOURCE_DIR ${iir_SOURCE_DIR} PARENT_SCOPE)
 set(ortools_SOURCE_DIR ${ortools_SOURCE_DIR} PARENT_SCOPE)
 
+if(BUILD_TESTING)
+    add_test(
+        NAME verify_libtorch_download_urls
+        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_SOURCE_DIR}/external/verify_libtorch_urls.cmake)
+    set_tests_properties(verify_libtorch_download_urls PROPERTIES LABELS "network;external")
+endif()
