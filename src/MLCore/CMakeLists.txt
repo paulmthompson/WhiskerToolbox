@@ -104,6 +104,7 @@ target_include_directories(MLCore PUBLIC
 
 target_link_libraries(MLCore PRIVATE
    # nlohmann_json::nlohmann_json
+    WhiskerToolbox::CoreMath
     armadillo
     LAPACK::LAPACK
     OpenBLAS::OpenBLAS

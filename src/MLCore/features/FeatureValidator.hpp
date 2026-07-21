@@ -14,7 +14,8 @@
  * - Time frames are compatible when both features and labels are time-indexed
  *
  * Also provides LabelSourceDescriptor types for describing label sources,
- * and utility functions countNonFiniteRows() / findNonFiniteRows() for NaN auditing.
+ * and utility functions countNonFiniteRows() / findNonFiniteRows() for NaN auditing
+ * (row scans delegate to CoreMath::rowHasNonFiniteAcrossColumns).
  */
 
 #include <cstddef>

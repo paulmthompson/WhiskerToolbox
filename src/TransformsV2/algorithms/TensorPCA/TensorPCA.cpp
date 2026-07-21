@@ -5,11 +5,12 @@
 
 #include "TensorPCA.hpp"
 
+#include "CoreMath/non_finite_rows.hpp"
 #include "MLCore/models/MLModelParameters.hpp"
 #include "MLCore/models/unsupervised/PCAOperation.hpp"
 #include "Tensors/TensorData.hpp"
 #include "TransformsV2/utils/DimReductionOutputBuilder.hpp"
-#include "TransformsV2/utils/NaNFilter.hpp"
+#include "TransformsV2/utils/NaNPolicy.hpp"
 #include "core/ComputeContext.hpp"
 
 #include <string>
@@ -64,7 +65,7 @@ auto tensorPCA(
     arma::mat obs_matrix = arma::conv_to<arma::mat>::from(fmat);
 
     // Filter NaN rows if needed
-    NaNFilterResult filter_result;
+    NonFiniteRowFilterResult filter_result;
     if (has_nan) {
         filter_result = filterNonFiniteRows(obs_matrix);
         ctx.logMessage("TensorPCA: Filtered " + std::to_string(filter_result.rows_dropped) +

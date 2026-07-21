@@ -5,10 +5,10 @@
 
 #include "FeatureValidator.hpp"
 
+#include "CoreMath/non_finite_rows.hpp"
 #include "Tensors/RowDescriptor.hpp"
 #include "Tensors/TensorData.hpp"
 
-#include <cmath>
 #include <sstream>
 
 namespace MLCore {
@@ -70,23 +70,6 @@ TensorValidationResult validateFeatureTensor(TensorData const & features) {
 namespace {
 
 /**
- * @brief Check if any element in a row is non-finite
- *
- * Iterates all columns and checks the value at the given row index.
- * Materializes column data via getColumn() which handles lazy backends.
- */
-bool isRowNonFinite(
-        std::vector<std::vector<float>> const & columns,
-        std::size_t row) {
-    for (auto const & col: columns) {
-        if (!std::isfinite(col[row])) {
-            return true;
-        }
-    }
-    return false;
-}
-
-/**
  * @brief Materialize all columns from a TensorData into a vector-of-vectors
  *
  * This avoids repeated getColumn calls in the scanning loops.
@@ -113,7 +96,7 @@ std::size_t countNonFiniteRows(TensorData const & features) {
     std::size_t count = 0;
 
     for (std::size_t r = 0; r < num_rows; ++r) {
-        if (isRowNonFinite(columns, r)) {
+        if (rowHasNonFiniteAcrossColumns(columns, r)) {
             ++count;
         }
     }
@@ -131,7 +114,7 @@ std::vector<std::size_t> findNonFiniteRows(TensorData const & features) {
     std::vector<std::size_t> bad_rows;
 
     for (std::size_t r = 0; r < num_rows; ++r) {
-        if (isRowNonFinite(columns, r)) {
+        if (rowHasNonFiniteAcrossColumns(columns, r)) {
             bad_rows.push_back(r);
         }
     }
@@ -179,14 +162,8 @@ FeatureLabelValidationResult validateFeatureLabelCompatibility(
     auto const compatibility = std::visit([&](auto const & src) -> RowCompatibility {
         using T = std::decay_t<decltype(src)>;
 
-        if constexpr (std::is_same_v<T, LabelSourceTimeGroups>) {
-            // TimeGroups labels work with TimeFrameIndex rows
-            if (row_type == RowType::Interval) {
-                return RowCompatibility::RowTypeMismatch;
-            }
-        } else if constexpr (std::is_same_v<T, LabelSourceIntervals>) {
-            // Interval labels work with TimeFrameIndex rows (frame-by-frame labeling)
-            // and with Ordinal rows
+        if constexpr (std::is_same_v<T, LabelSourceTimeGroups> ||
+                      std::is_same_v<T, LabelSourceIntervals>) {
             if (row_type == RowType::Interval) {
                 return RowCompatibility::RowTypeMismatch;
             }

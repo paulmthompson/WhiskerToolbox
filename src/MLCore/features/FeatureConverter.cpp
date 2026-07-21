@@ -5,6 +5,7 @@
 
 #include "FeatureConverter.hpp"
 
+#include "CoreMath/non_finite_rows.hpp"
 #include "Tensors/TensorData.hpp"
 
 #include <spdlog/spdlog.h>
@@ -39,67 +40,6 @@ arma::mat buildObservationsMatrix(TensorData const & tensor) {
     }
 
     return mat;
-}
-
-/**
- * @brief Identify rows containing non-finite (NaN/Inf) values
- *
- * Returns a boolean vector where true = row is finite (keep), false = drop.
- */
-std::vector<bool> identifyFiniteRows(arma::mat const & mat) {
-    auto const num_rows = mat.n_rows;
-    auto const num_cols = mat.n_cols;
-    std::vector<bool> finite(num_rows, true);
-
-    for (arma::uword r = 0; r < num_rows; ++r) {
-        for (arma::uword c = 0; c < num_cols; ++c) {
-            if (!std::isfinite(mat(r, c))) {
-                finite[r] = false;
-                break;
-            }
-        }
-    }
-
-    return finite;
-}
-
-/**
- * @brief Remove non-finite rows from the matrix, returning the surviving row indices
- */
-std::pair<arma::mat, std::vector<std::size_t>> dropNonFiniteRows(arma::mat const & mat) {
-    auto const finite = identifyFiniteRows(mat);
-    auto const num_cols = mat.n_cols;
-
-    // Count surviving rows
-    std::size_t valid_count = 0;
-    for (bool const f: finite) {
-        if (f) ++valid_count;
-    }
-
-    // If all rows are finite, return as-is
-    if (valid_count == mat.n_rows) {
-        std::vector<std::size_t> all_indices(mat.n_rows);
-        for (std::size_t i = 0; i < mat.n_rows; ++i) {
-            all_indices[i] = i;
-        }
-        return {mat, all_indices};
-    }
-
-    // Build filtered matrix
-    arma::mat filtered(valid_count, num_cols);
-    std::vector<std::size_t> valid_indices;
-    valid_indices.reserve(valid_count);
-
-    std::size_t out_row = 0;
-    for (std::size_t r = 0; r < mat.n_rows; ++r) {
-        if (finite[r]) {
-            filtered.row(out_row) = mat.row(r);
-            valid_indices.push_back(r);
-            ++out_row;
-        }
-    }
-
-    return {filtered, valid_indices};
 }
 
 /**
@@ -224,10 +164,10 @@ ConvertedFeatures convertTensorToArma(
 
     // Optionally drop NaN/Inf rows
     if (config.drop_nan) {
-        auto [cleaned, valid_indices] = dropNonFiniteRows(obs_matrix);
-        result.rows_dropped = obs_matrix.n_rows - cleaned.n_rows;
-        result.valid_row_indices = std::move(valid_indices);
-        obs_matrix = std::move(cleaned);
+        auto const filtered = filterNonFiniteRows(obs_matrix);
+        result.rows_dropped = filtered.rows_dropped;
+        result.valid_row_indices = filtered.valid_row_indices;
+        obs_matrix = filtered.clean_matrix;
     } else {
         result.rows_dropped = 0;
         result.valid_row_indices.resize(obs_matrix.n_rows);
@@ -295,10 +235,10 @@ ConvertedFeatures convertTensorToArmaRowMajor(
 
     // Optionally drop NaN/Inf rows
     if (config.drop_nan) {
-        auto [cleaned, valid_indices] = dropNonFiniteRows(obs_matrix);
-        result.rows_dropped = obs_matrix.n_rows - cleaned.n_rows;
-        result.valid_row_indices = std::move(valid_indices);
-        obs_matrix = std::move(cleaned);
+        auto const filtered = filterNonFiniteRows(obs_matrix);
+        result.rows_dropped = filtered.rows_dropped;
+        result.valid_row_indices = filtered.valid_row_indices;
+        obs_matrix = filtered.clean_matrix;
     } else {
         result.rows_dropped = 0;
         result.valid_row_indices.resize(obs_matrix.n_rows);

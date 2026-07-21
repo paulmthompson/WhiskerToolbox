@@ -16,7 +16,7 @@
 #ifndef WHISKERTOOLBOX_V2_DIMREDUCTION_OUTPUT_BUILDER_HPP
 #define WHISKERTOOLBOX_V2_DIMREDUCTION_OUTPUT_BUILDER_HPP
 
-#include "NaNFilter.hpp"
+#include "NaNPolicy.hpp"
 
 #include <armadillo>
 

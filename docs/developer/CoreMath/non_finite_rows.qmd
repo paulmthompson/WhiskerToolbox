@@ -1,0 +1,25 @@
+---
+title: Non-finite row filtering
+---
+
+## Overview
+
+`CoreMath/non_finite_rows.hpp` centralizes detection and removal of rows that contain NaN or Inf values in observation matrices (`observations × features` layout).
+
+## API
+
+| Function | Purpose |
+|----------|---------|
+| `hasNonFiniteRows(arma::fmat)` | Early-exit scan for dim-red transforms reading float tensor storage |
+| `filterNonFiniteRows(arma::mat)` | Drop non-finite rows; returns cleaned matrix, surviving indices, drop count |
+| `rowHasNonFinite(std::span<float const>)` | Single contiguous row slice |
+| `rowHasNonFiniteAcrossColumns(...)` | Row scan over column-major materialized `TensorData` columns |
+
+`NonFiniteRowFilterResult` holds `clean_matrix`, `valid_row_indices`, and `rows_dropped`.
+
+## Callers
+
+- **TransformsV2** — `TensorPCA`, `TensorRobustPCA`, `TensorTSNE`, `TensorICA` (with `NaNPolicy` in `TransformsV2/utils/NaNPolicy.hpp`)
+- **MLCore** — `FeatureConverter` (drop during `arma::mat` conversion), `FeatureValidator` (pre-flight `countNonFiniteRows` / `findNonFiniteRows`)
+
+Previously this logic was duplicated in `TransformsV2/utils/NaNFilter` and MLCore feature utilities (see issue #270).

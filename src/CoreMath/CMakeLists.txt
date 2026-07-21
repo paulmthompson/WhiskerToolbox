@@ -1,6 +1,8 @@
 find_package(Armadillo CONFIG REQUIRED)
 
 set(NEURALYZER_COREMATH_SOURCES
+    non_finite_rows.cpp
+    non_finite_rows.hpp
     parametric_polynomial_utils.cpp
     parametric_polynomial_utils.hpp
     polynomial_fit.cpp
@@ -15,7 +17,10 @@ target_include_directories(CoreMath PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-target_link_libraries(CoreMath PRIVATE NEURALYZER_GEOMETRY armadillo)
+target_link_libraries(CoreMath
+    PUBLIC armadillo
+    PRIVATE NEURALYZER_GEOMETRY
+)
 
 set_target_compiler_warnings(CoreMath)
 

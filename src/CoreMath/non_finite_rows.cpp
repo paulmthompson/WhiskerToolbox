@@ -1,16 +1,17 @@
 /**
- * @file NaNFilter.cpp
+ * @file non_finite_rows.cpp
  * @brief Implementation of NaN/Inf row detection and filtering
- *
- * @see MLCore::FeatureConverter (FeatureConverter.cpp) for the equivalent
- *      implementation used by the MLCore_Widget pathway.
  */
 
-#include "NaNFilter.hpp"
+#include "non_finite_rows.hpp"
 
+#include <algorithm>
+#include <cassert>
 #include <cmath>
 
-namespace WhiskerToolbox::Transforms::V2 {
+bool rowHasNonFinite(std::span<float const> values) {
+    return std::ranges::any_of(values, [](float v) { return !std::isfinite(v); });
+}
 
 bool hasNonFiniteRows(arma::fmat const & fmat) {
     for (arma::uword r = 0; r < fmat.n_rows; ++r) {
@@ -23,11 +24,12 @@ bool hasNonFiniteRows(arma::fmat const & fmat) {
     return false;
 }
 
-NaNFilterResult filterNonFiniteRows(arma::mat const & obs_matrix) {
+NonFiniteRowFilterResult filterNonFiniteRows(arma::mat const & obs_matrix) {
+    assert(!obs_matrix.is_empty() && "filterNonFiniteRows: obs_matrix must not be empty");
+
     auto const num_rows = obs_matrix.n_rows;
     auto const num_cols = obs_matrix.n_cols;
 
-    // Identify finite rows
     std::vector<bool> finite(num_rows, true);
     for (arma::uword r = 0; r < num_rows; ++r) {
         for (arma::uword c = 0; c < num_cols; ++c) {
@@ -38,7 +40,6 @@ NaNFilterResult filterNonFiniteRows(arma::mat const & obs_matrix) {
         }
     }
 
-    // Count survivors
     std::size_t valid_count = 0;
     for (bool const f: finite) {
         if (f) {
@@ -46,7 +47,6 @@ NaNFilterResult filterNonFiniteRows(arma::mat const & obs_matrix) {
         }
     }
 
-    // Fast path: all rows finite
     if (valid_count == num_rows) {
         std::vector<std::size_t> all_indices(num_rows);
         for (std::size_t i = 0; i < num_rows; ++i) {
@@ -55,7 +55,6 @@ NaNFilterResult filterNonFiniteRows(arma::mat const & obs_matrix) {
         return {obs_matrix, std::move(all_indices), 0};
     }
 
-    // Build filtered matrix
     arma::mat filtered(valid_count, num_cols);
     std::vector<std::size_t> valid_indices;
     valid_indices.reserve(valid_count);
@@ -72,4 +71,10 @@ NaNFilterResult filterNonFiniteRows(arma::mat const & obs_matrix) {
     return {std::move(filtered), std::move(valid_indices), num_rows - valid_count};
 }
 
-}// namespace WhiskerToolbox::Transforms::V2
+bool rowHasNonFiniteAcrossColumns(
+        std::vector<std::vector<float>> const & columns,
+        std::size_t row) {
+    return std::ranges::any_of(columns, [&](std::vector<float> const & col) {
+        return !std::isfinite(col[row]);
+    });
+}

@@ -9,7 +9,7 @@
 #ifndef WHISKERTOOLBOX_V2_TENSOR_ICA_HPP
 #define WHISKERTOOLBOX_V2_TENSOR_ICA_HPP
 
-#include "TransformsV2/utils/NaNFilter.hpp"
+#include "TransformsV2/utils/NaNPolicy.hpp"
 
 #include <cstddef>
 #include <memory>

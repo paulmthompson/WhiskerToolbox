@@ -109,8 +109,7 @@ set(TRANSFORM_V2_SOURCES
         algorithms/TensorWhitening/TensorWhitening.cpp
         algorithms/TensorToAnalog/TensorToAnalog.hpp
         algorithms/TensorToAnalog/TensorToAnalog.cpp
-        utils/NaNFilter.hpp
-        utils/NaNFilter.cpp
+        utils/NaNPolicy.hpp
         utils/DimReductionOutputBuilder.hpp
         utils/DimReductionOutputBuilder.cpp
         algorithms/RangeReductions/EventRangeReductions.hpp

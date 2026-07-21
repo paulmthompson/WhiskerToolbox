@@ -1,41 +1,20 @@
 /**
- * @file NaNFilter.hpp
- * @brief NaN/Inf row detection and filtering for TensorData transforms
- *
- * Provides utilities for detecting and removing rows containing NaN or Inf
- * values from Armadillo matrices. Used by dimensionality reduction container
- * transforms (TensorPCA, TensorRobustPCA, TensorTSNE) to handle non-finite
- * input data.
- *
- * @see MLCore::FeatureConverter for the equivalent functionality used by the
- *      MLCore_Widget / DimReductionPipeline pathway. The logic here is
- *      intentionally duplicated to avoid adding a TransformsV2 → MLCore
- *      dependency for this lightweight utility.
+ * @file non_finite_rows.hpp
+ * @brief NaN/Inf row detection and filtering for Armadillo observation matrices
  */
-
-#ifndef WHISKERTOOLBOX_V2_NANFILTER_HPP
-#define WHISKERTOOLBOX_V2_NANFILTER_HPP
+#ifndef COREMATH_NON_FINITE_ROWS_HPP
+#define COREMATH_NON_FINITE_ROWS_HPP
 
 #include <armadillo>
 
 #include <cstddef>
+#include <span>
 #include <vector>
-
-namespace WhiskerToolbox::Transforms::V2 {
-
-/**
- * @brief Policy for handling NaN/Inf rows in dimensionality reduction transforms
- */
-enum class NaNPolicy {
-    Fail,     ///< Return nullptr if any NaN/Inf rows are present
-    Propagate,///< Skip NaN rows for computation, fill them with NaN in the output
-    Drop      ///< Remove NaN rows entirely (output has fewer rows than input)
-};
 
 /**
  * @brief Result of filtering non-finite rows from a matrix
  */
-struct NaNFilterResult {
+struct NonFiniteRowFilterResult {
     /// Matrix with only finite rows (observations × features layout)
     arma::mat clean_matrix;
 
@@ -45,6 +24,14 @@ struct NaNFilterResult {
     /// Number of rows removed
     std::size_t rows_dropped{0};
 };
+
+/**
+ * @brief Check whether any value in a contiguous row slice is non-finite
+ *
+ * @param values Row values to scan
+ * @return true if at least one element is NaN or Inf
+ */
+[[nodiscard]] bool rowHasNonFinite(std::span<float const> values);
 
 /**
  * @brief Check whether any row of a float matrix contains NaN or Inf
@@ -64,15 +51,26 @@ struct NaNFilterResult {
  * without copying.
  *
  * @param obs_matrix Matrix in observations × features layout (double precision)
- * @return NaNFilterResult with clean matrix, valid indices, and drop count
+ * @return NonFiniteRowFilterResult with clean matrix, valid indices, and drop count
  *
  * @pre obs_matrix must not be empty
  * @post result.clean_matrix has no NaN or Inf values
  * @post result.valid_row_indices.size() == result.clean_matrix.n_rows
  * @post result.rows_dropped == obs_matrix.n_rows - result.clean_matrix.n_rows
  */
-[[nodiscard]] NaNFilterResult filterNonFiniteRows(arma::mat const & obs_matrix);
+[[nodiscard]] NonFiniteRowFilterResult filterNonFiniteRows(arma::mat const & obs_matrix);
 
-}// namespace WhiskerToolbox::Transforms::V2
+/**
+ * @brief Check whether a row in column-major materialized storage contains NaN or Inf
+ *
+ * @param columns Materialized tensor columns (each column vector has one value per row)
+ * @param row Row index to check
+ * @return true if any column value at @p row is non-finite
+ *
+ * @pre row < columns.front().size() when columns is non-empty
+ */
+[[nodiscard]] bool rowHasNonFiniteAcrossColumns(
+        std::vector<std::vector<float>> const & columns,
+        std::size_t row);
 
-#endif// WHISKERTOOLBOX_V2_NANFILTER_HPP
+#endif// COREMATH_NON_FINITE_ROWS_HPP
