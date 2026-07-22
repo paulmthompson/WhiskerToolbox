@@ -78,7 +78,7 @@ public:
     /**
      * @brief Traits for generic trait-based dispatch in transforms v2
      */
-    struct DataTraits : WhiskerToolbox::TypeTraits::DataTypeTraitsBase<TensorData, float> {
+    struct DataTraits : Neuralyzer::TypeTraits::DataTypeTraitsBase<TensorData, float> {
         static constexpr bool is_ragged = false;
         static constexpr bool is_temporal = true;
         static constexpr bool has_entity_ids = false;

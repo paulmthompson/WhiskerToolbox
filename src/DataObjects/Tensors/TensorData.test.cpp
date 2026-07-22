@@ -576,11 +576,11 @@ TEST_CASE("TensorData DataTraits are correct", "[TensorData]") {
 }
 
 TEST_CASE("TensorData satisfies HasDataTraits concept", "[TensorData]") {
-    STATIC_CHECK(WhiskerToolbox::TypeTraits::HasDataTraits<TensorData>);
-    STATIC_CHECK(WhiskerToolbox::TypeTraits::TemporalContainer<TensorData>);
-    STATIC_CHECK_FALSE(WhiskerToolbox::TypeTraits::RaggedContainer<TensorData>);
-    STATIC_CHECK_FALSE(WhiskerToolbox::TypeTraits::EntityTrackedContainer<TensorData>);
-    STATIC_CHECK_FALSE(WhiskerToolbox::TypeTraits::SpatialContainer<TensorData>);
+    STATIC_CHECK(Neuralyzer::TypeTraits::HasDataTraits<TensorData>);
+    STATIC_CHECK(Neuralyzer::TypeTraits::TemporalContainer<TensorData>);
+    STATIC_CHECK_FALSE(Neuralyzer::TypeTraits::RaggedContainer<TensorData>);
+    STATIC_CHECK_FALSE(Neuralyzer::TypeTraits::EntityTrackedContainer<TensorData>);
+    STATIC_CHECK_FALSE(Neuralyzer::TypeTraits::SpatialContainer<TensorData>);
 }
 
 // =============================================================================

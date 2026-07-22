@@ -38,7 +38,7 @@ public:
      * Defines compile-time properties of PointData for use in generic algorithms
      * and the transformation system.
      */
-    struct DataTraits : WhiskerToolbox::TypeTraits::DataTypeTraitsBase<PointData, Point2D<float>> {
+    struct DataTraits : Neuralyzer::TypeTraits::DataTypeTraitsBase<PointData, Point2D<float>> {
         static constexpr bool is_ragged = true;
         static constexpr bool is_temporal = true;
         static constexpr bool has_entity_ids = true;

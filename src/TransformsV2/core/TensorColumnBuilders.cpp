@@ -20,7 +20,7 @@
 #include <utility>
 #include <variant>
 
-namespace WhiskerToolbox::TensorBuilders {
+namespace Neuralyzer::TensorBuilders {
 
 namespace {
 
@@ -35,7 +35,7 @@ namespace {
  * a span<string const> of step names.
  */
 std::vector<std::string> getStepNames(
-        Transforms::V2::TransformPipeline const & pipeline) {
+        WhiskerToolbox::Transforms::V2::TransformPipeline const & pipeline) {
     std::vector<std::string> names;
     names.reserve(pipeline.size());
     for (std::size_t i = 0; i < pipeline.size(); ++i) {
@@ -67,9 +67,9 @@ std::vector<std::string> getStepNames(
  */
 bool pipelineProducesFloat(
         std::type_index source_container_type,
-        Transforms::V2::TransformPipeline const & pipeline) {
-    using TypeTraits::TypeIndexMapper;
-    using Transforms::V2::resolveTypeChain;
+        WhiskerToolbox::Transforms::V2::TransformPipeline const & pipeline) {
+    using Neuralyzer::TypeTraits::TypeIndexMapper;
+    using WhiskerToolbox::Transforms::V2::resolveTypeChain;
 
     auto const step_names = getStepNames(pipeline);
 
@@ -235,7 +235,7 @@ ColumnProviderFn buildPipelineColumnProvider(
     DataManager & dm,
     std::string const & source_key,
     std::vector<TimeFrameIndex> const & row_times,
-    Transforms::V2::TransformPipeline pipeline)
+    WhiskerToolbox::Transforms::V2::TransformPipeline pipeline)
 {
     if (row_times.empty()) {
         throw std::runtime_error(
@@ -250,7 +250,7 @@ ColumnProviderFn buildPipelineColumnProvider(
             "' not found in DataManager");
     }
 
-    auto const src_type_index = TypeTraits::dmDataTypeToContainerTypeIndex(src_type);
+    auto const src_type_index = Neuralyzer::TypeTraits::dmDataTypeToContainerTypeIndex(src_type);
 
     bool const is_empty_pipeline = pipeline.empty() && !pipeline.hasRangeReduction();
 
@@ -295,7 +295,7 @@ ColumnProviderFn buildPipelineColumnProvider(
         }
 
         DataTypeVariant output =
-            Transforms::V2::executePipeline(*var, pipe);
+            WhiskerToolbox::Transforms::V2::executePipeline(*var, pipe);
 
         return sampleOutputAtRowTimes(output, times);
     };
@@ -309,7 +309,7 @@ ColumnProviderFn buildIntervalPipelineProvider(
     DataManager & dm,
     std::string const & source_key,
     std::shared_ptr<DigitalIntervalSeries> intervals,
-    Transforms::V2::TransformPipeline pipeline)
+    WhiskerToolbox::Transforms::V2::TransformPipeline pipeline)
 {
     if (!intervals) {
         throw std::runtime_error(
@@ -324,7 +324,7 @@ ColumnProviderFn buildIntervalPipelineProvider(
             "' not found in DataManager");
     }
 
-    auto const src_type_index = TypeTraits::dmDataTypeToContainerTypeIndex(src_type);
+    auto const src_type_index = Neuralyzer::TypeTraits::dmDataTypeToContainerTypeIndex(src_type);
 
     // ── Require a range reduction for interval rows ─────────────────────
     if (!pipeline.hasRangeReduction()) {
@@ -388,7 +388,7 @@ ColumnProviderFn buildProviderFromRecipe(
                 "with a range reduction (pipeline_json is empty)");
         }
 
-        auto pipeline_result = Transforms::V2::Examples::loadPipelineFromJson(recipe.pipeline_json);
+        auto pipeline_result = WhiskerToolbox::Transforms::V2::Examples::loadPipelineFromJson(recipe.pipeline_json);
         if (!pipeline_result) {
             throw std::runtime_error(
                 "buildProviderFromRecipe: failed to load pipeline from JSON: " +
@@ -406,9 +406,9 @@ ColumnProviderFn buildProviderFromRecipe(
     }
 
     // Load pipeline from JSON (empty JSON = empty pipeline = identity passthrough)
-    Transforms::V2::TransformPipeline pipeline;
+    WhiskerToolbox::Transforms::V2::TransformPipeline pipeline;
     if (!recipe.pipeline_json.empty()) {
-        auto pipeline_result = Transforms::V2::Examples::loadPipelineFromJson(recipe.pipeline_json);
+        auto pipeline_result = WhiskerToolbox::Transforms::V2::Examples::loadPipelineFromJson(recipe.pipeline_json);
         if (!pipeline_result) {
             throw std::runtime_error(
                 "buildProviderFromRecipe: failed to load pipeline from JSON: " +
@@ -449,4 +449,4 @@ InvalidationWiringFn buildInvalidationWiringFn(
     };
 }
 
-} // namespace WhiskerToolbox::TensorBuilders
+} // namespace Neuralyzer::TensorBuilders

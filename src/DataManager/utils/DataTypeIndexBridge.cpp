@@ -16,7 +16,7 @@
 #include <stdexcept>
 #include <unordered_map>
 
-namespace WhiskerToolbox::TypeTraits {
+namespace Neuralyzer::TypeTraits {
 
 std::type_index dmDataTypeToContainerTypeIndex(DM_DataType type) {
     switch (type) {
@@ -58,4 +58,4 @@ std::optional<DM_DataType> containerTypeIndexToDmDataType(std::type_index contai
     return std::nullopt;
 }
 
-} // namespace WhiskerToolbox::TypeTraits
+} // namespace Neuralyzer::TypeTraits

@@ -50,7 +50,7 @@
 #include <memory>
 #include <vector>
 
-using namespace WhiskerToolbox::TensorBuilders;
+using namespace Neuralyzer::TensorBuilders;
 using WhiskerToolbox::Transforms::V2::TransformPipeline;
 using WhiskerToolbox::Transforms::V2::Examples::MaskAreaParams;
 using WhiskerToolbox::Transforms::V2::Examples::LineLengthParams;

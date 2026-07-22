@@ -40,7 +40,7 @@ public:
      * Defines compile-time properties of LineData for use in generic algorithms
      * and the transformation system.
      */
-    struct DataTraits : WhiskerToolbox::TypeTraits::DataTypeTraitsBase<LineData, Line2D> {
+    struct DataTraits : Neuralyzer::TypeTraits::DataTypeTraitsBase<LineData, Line2D> {
         static constexpr bool is_ragged = true;
         static constexpr bool is_temporal = true;
         static constexpr bool has_entity_ids = true;

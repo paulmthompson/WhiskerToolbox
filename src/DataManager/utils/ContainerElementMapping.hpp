@@ -23,7 +23,7 @@ class Mask2D;
 template<typename T>
 struct Point2D;
 
-namespace WhiskerToolbox::TypeTraits {
+namespace Neuralyzer::TypeTraits {
 
 // ============================================================================
 // Element type → container type
@@ -117,6 +117,6 @@ template<typename Container>
 inline constexpr bool has_element_type_v =
         ElementForSafe<Container>::is_valid && HasElements<Container>;
 
-} // namespace WhiskerToolbox::TypeTraits
+} // namespace Neuralyzer::TypeTraits
 
 #endif // NEURALYZER_CONTAINER_ELEMENT_MAPPING_HPP

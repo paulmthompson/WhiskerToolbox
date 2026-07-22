@@ -36,7 +36,7 @@ public:
      * Defines compile-time properties of AnalogTimeSeries for use in generic algorithms
      * and the transformation system.
      */
-    struct DataTraits : WhiskerToolbox::TypeTraits::DataTypeTraitsBase<AnalogTimeSeries, float> {
+    struct DataTraits : Neuralyzer::TypeTraits::DataTypeTraitsBase<AnalogTimeSeries, float> {
         static constexpr bool is_ragged = false;
         static constexpr bool is_temporal = true;
         static constexpr bool has_entity_ids = false;

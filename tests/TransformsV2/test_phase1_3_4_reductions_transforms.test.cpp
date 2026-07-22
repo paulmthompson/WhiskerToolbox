@@ -52,7 +52,7 @@
 
 using namespace WhiskerToolbox::Transforms::V2::RangeReductions;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
-using namespace WhiskerToolbox::TensorBuilders;
+using namespace Neuralyzer::TensorBuilders;
 using Catch::Matchers::WithinAbs;
 
 // =============================================================================

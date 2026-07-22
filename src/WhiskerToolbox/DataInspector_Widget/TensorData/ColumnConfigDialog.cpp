@@ -30,7 +30,7 @@
 #include <QTextEdit>
 #include <QVBoxLayout>
 
-using namespace WhiskerToolbox::TensorBuilders;
+using namespace Neuralyzer::TensorBuilders;
 
 // =============================================================================
 // Construction

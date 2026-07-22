@@ -38,7 +38,7 @@
 #include <numeric>
 #include <vector>
 
-using namespace WhiskerToolbox::TensorBuilders;
+using namespace Neuralyzer::TensorBuilders;
 using WhiskerToolbox::Transforms::V2::TransformPipeline;
 using Catch::Matchers::WithinAbs;
 

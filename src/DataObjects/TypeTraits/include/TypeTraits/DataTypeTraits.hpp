@@ -4,7 +4,7 @@
 #include <concepts>
 #include <type_traits>
 
-namespace WhiskerToolbox::TypeTraits {
+namespace Neuralyzer::TypeTraits {
 
 /**
  * @brief Base trait structure for data container types
@@ -93,6 +93,6 @@ concept EntityTrackedContainer = HasDataTraits<T> && has_entity_ids_v<T>;
 template<typename T>
 concept SpatialContainer = HasDataTraits<T> && is_spatial_v<T>;
 
-} // namespace WhiskerToolbox::TypeTraits
+} // namespace Neuralyzer::TypeTraits
 
 #endif // NEURALYZER_DATA_TYPE_TRAITS_HPP

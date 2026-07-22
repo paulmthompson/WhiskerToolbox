@@ -32,8 +32,8 @@
 
 namespace WhiskerToolbox::Transforms::V2 {
 
-using TypeTraits::ElementForSafe_t;
-using TypeTraits::has_element_type_v;
+using Neuralyzer::TypeTraits::ElementForSafe_t;
+using Neuralyzer::TypeTraits::has_element_type_v;
 
 // ============================================================================
 // DataManagerPipelineExecutor Implementation

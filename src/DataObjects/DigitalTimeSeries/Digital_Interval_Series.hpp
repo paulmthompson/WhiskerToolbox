@@ -137,7 +137,7 @@ inline constexpr bool always_false_v = false;
  */
 class DigitalIntervalSeries : public ObserverData {
 public:
-    struct DataTraits : WhiskerToolbox::TypeTraits::DataTypeTraitsBase<DigitalIntervalSeries, IntervalWithId> {
+    struct DataTraits : Neuralyzer::TypeTraits::DataTypeTraitsBase<DigitalIntervalSeries, IntervalWithId> {
         static constexpr bool is_ragged = false;
         static constexpr bool is_temporal = true;
         static constexpr bool has_entity_ids = true;

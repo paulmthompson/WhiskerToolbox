@@ -44,7 +44,7 @@
 #include <string>
 #include <vector>
 
-using namespace WhiskerToolbox::TensorBuilders;
+using namespace Neuralyzer::TensorBuilders;
 using namespace WhiskerToolbox::Transforms::V2;
 using Catch::Matchers::WithinAbs;
 

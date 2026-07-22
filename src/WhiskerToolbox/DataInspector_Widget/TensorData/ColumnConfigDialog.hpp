@@ -45,10 +45,10 @@ struct EditorInstanceId;
 struct OperationId;
 }// namespace EditorLib
 
-namespace WhiskerToolbox::TensorBuilders {
+namespace Neuralyzer::TensorBuilders {
 struct ColumnRecipe;
 enum class IntervalProperty : std::uint8_t;
-}// namespace WhiskerToolbox::TensorBuilders
+}// namespace Neuralyzer::TensorBuilders
 
 /**
  * @brief Dialog for configuring a tensor column
@@ -85,7 +85,7 @@ public:
     ColumnConfigDialog(
             std::shared_ptr<DataManager> data_manager,
             DesignerRowType row_type,
-            WhiskerToolbox::TensorBuilders::ColumnRecipe const & recipe,
+            Neuralyzer::TensorBuilders::ColumnRecipe const & recipe,
             EditorLib::OperationContext * operation_context = nullptr,
             QString pipeline_library_dir = {},
             QWidget * parent = nullptr);
@@ -96,7 +96,7 @@ public:
      * @brief Get the configured column recipe
      * @return The ColumnRecipe built from user selections
      */
-    [[nodiscard]] WhiskerToolbox::TensorBuilders::ColumnRecipe getRecipe() const;
+    [[nodiscard]] Neuralyzer::TensorBuilders::ColumnRecipe getRecipe() const;
 
 private slots:
     void _onSourceKeyChanged(int index);
@@ -115,7 +115,7 @@ private:
     void _setupUi();
     void _connectSignals();
     void _populateSourceKeys();
-    void _applyRecipe(WhiskerToolbox::TensorBuilders::ColumnRecipe const & recipe);
+    void _applyRecipe(Neuralyzer::TensorBuilders::ColumnRecipe const & recipe);
 
     /// Clean up any pending OperationContext request on dialog close
     void _cleanupPendingOperation();

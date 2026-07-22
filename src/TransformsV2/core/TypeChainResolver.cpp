@@ -10,7 +10,7 @@
 
 namespace WhiskerToolbox::Transforms::V2 {
 
-using TypeTraits::TypeIndexMapper;
+using Neuralyzer::TypeTraits::TypeIndexMapper;
 
 // ---------------------------------------------------------------------------
 // Local helper — mirrors the dispatch in TransformPipeline::execute()

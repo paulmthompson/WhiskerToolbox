@@ -9,7 +9,7 @@
 #include <optional>
 #include <typeindex>
 
-namespace WhiskerToolbox::TypeTraits {
+namespace Neuralyzer::TypeTraits {
 
 /// @brief Map DM_DataType to the corresponding container std::type_index.
 /// @throws std::runtime_error for types that cannot be used as pipeline sources
@@ -19,6 +19,6 @@ namespace WhiskerToolbox::TypeTraits {
 /// @brief Reverse map container type_index to DM_DataType when unambiguous.
 [[nodiscard]] std::optional<DM_DataType> containerTypeIndexToDmDataType(std::type_index container_type);
 
-} // namespace WhiskerToolbox::TypeTraits
+} // namespace Neuralyzer::TypeTraits
 
 #endif // NEURALYZER_DATA_TYPE_INDEX_BRIDGE_HPP

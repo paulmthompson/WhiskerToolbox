@@ -50,10 +50,10 @@ namespace EditorLib {
 class OperationContext;
 }// namespace EditorLib
 
-namespace WhiskerToolbox::TensorBuilders {
+namespace Neuralyzer::TensorBuilders {
 struct ColumnRecipe;
 enum class IntervalProperty : std::uint8_t;
-}// namespace WhiskerToolbox::TensorBuilders
+}// namespace Neuralyzer::TensorBuilders
 
 /**
  * @brief Row source type for the tensor designer
@@ -210,7 +210,7 @@ private:
     std::string _row_source_key;
 
     // --- Column recipes ---
-    std::vector<WhiskerToolbox::TensorBuilders::ColumnRecipe> _column_recipes;
+    std::vector<Neuralyzer::TensorBuilders::ColumnRecipe> _column_recipes;
 
     // --- UI widgets ---
     QVBoxLayout * _main_layout{nullptr};

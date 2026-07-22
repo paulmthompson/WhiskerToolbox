@@ -35,7 +35,7 @@ namespace WhiskerToolbox::Transforms::V2 {
 class TransformPipeline;
 }// namespace WhiskerToolbox::Transforms::V2
 
-namespace WhiskerToolbox::TensorBuilders {
+namespace Neuralyzer::TensorBuilders {
 
 // ============================================================================
 // Interval Property Enum
@@ -247,6 +247,6 @@ InvalidationWiringFn buildInvalidationWiringFn(
         DataManager & dm,
         std::vector<std::string> const & source_keys);
 
-}// namespace WhiskerToolbox::TensorBuilders
+}// namespace Neuralyzer::TensorBuilders
 
 #endif// NEURALYZER_V2_TENSOR_COLUMN_BUILDERS_HPP

@@ -261,7 +261,7 @@ std::vector<float> gatherAndExecutePipeline(
         // RaggedAnalogTimeSeries is excluded — its per-interval gather semantics
         // are ill-defined.
         constexpr bool can_gather =
-            (TypeTraits::HasDataTraits<T> && !std::is_same_v<T, RaggedAnalogTimeSeries>) ||
+            (Neuralyzer::TypeTraits::HasDataTraits<T> && !std::is_same_v<T, RaggedAnalogTimeSeries>) ||
             std::is_same_v<T, DigitalEventSeries> ||
             std::is_same_v<T, DigitalIntervalSeries>;
 

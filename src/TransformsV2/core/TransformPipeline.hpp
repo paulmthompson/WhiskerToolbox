@@ -34,7 +34,7 @@
 
 namespace WhiskerToolbox::Transforms::V2 {
 
-using TypeTraits::ElementFor_t;
+using Neuralyzer::TypeTraits::ElementFor_t;
 
 
 // ============================================================================

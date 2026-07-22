@@ -42,7 +42,7 @@
 
 using namespace WhiskerToolbox::Transforms::V2;
 using namespace WhiskerToolbox::Transforms::V2::Examples;
-using namespace WhiskerToolbox::TypeTraits;
+using namespace Neuralyzer::TypeTraits;
 
 // ============================================================================
 // Construction / Destruction

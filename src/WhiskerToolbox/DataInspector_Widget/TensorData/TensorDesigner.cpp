@@ -34,7 +34,7 @@
 #include <iostream>
 #include <sstream>
 
-using namespace WhiskerToolbox::TensorBuilders;
+using namespace Neuralyzer::TensorBuilders;
 
 // =============================================================================
 // Construction

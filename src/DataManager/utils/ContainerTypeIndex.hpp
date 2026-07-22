@@ -7,7 +7,7 @@
 #include <string>
 #include <typeindex>
 
-namespace WhiskerToolbox::TypeTraits {
+namespace Neuralyzer::TypeTraits {
 
 /// @brief Runtime mapping between element/container types, strings, and raggedness.
 class TypeIndexMapper {
@@ -31,6 +31,6 @@ public:
     [[nodiscard]] static bool isContainerRagged(std::type_index container_type);
 };
 
-} // namespace WhiskerToolbox::TypeTraits
+} // namespace Neuralyzer::TypeTraits
 
 #endif // NEURALYZER_CONTAINER_TYPE_INDEX_HPP

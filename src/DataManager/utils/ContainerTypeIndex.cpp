@@ -20,7 +20,7 @@
 #include <stdexcept>
 #include <unordered_map>
 
-namespace WhiskerToolbox::TypeTraits {
+namespace Neuralyzer::TypeTraits {
 
 namespace {
 
@@ -118,4 +118,4 @@ bool TypeIndexMapper::isContainerRagged(std::type_index container_type) {
            isRaggedContainerType<TensorData>(container_type);
 }
 
-} // namespace WhiskerToolbox::TypeTraits
+} // namespace Neuralyzer::TypeTraits

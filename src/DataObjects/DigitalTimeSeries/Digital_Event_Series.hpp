@@ -130,7 +130,7 @@ class EntityRegistry;
  */
 class DigitalEventSeries : public ObserverData {
 public:
-    struct DataTraits : WhiskerToolbox::TypeTraits::DataTypeTraitsBase<DigitalEventSeries, EventWithId> {
+    struct DataTraits : Neuralyzer::TypeTraits::DataTypeTraitsBase<DigitalEventSeries, EventWithId> {
         static constexpr bool is_ragged = false;
         static constexpr bool is_temporal = true;
         static constexpr bool has_entity_ids = true;

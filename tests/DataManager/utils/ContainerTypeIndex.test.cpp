@@ -18,7 +18,7 @@
 
 #include <type_traits>
 
-using namespace WhiskerToolbox::TypeTraits;
+using namespace Neuralyzer::TypeTraits;
 
 static_assert(std::is_same_v<ElementFor_t<MaskData>, Mask2D>);
 static_assert(std::is_same_v<ContainerFor_t<Mask2D>, MaskData>);
