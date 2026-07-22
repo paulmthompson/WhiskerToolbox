@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_V2_TRANSFORM_TYPES_HPP
-#define WHISKERTOOLBOX_V2_TRANSFORM_TYPES_HPP
+#ifndef NEURALYZER_V2_TRANSFORM_TYPES_HPP
+#define NEURALYZER_V2_TRANSFORM_TYPES_HPP
 
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
@@ -73,4 +73,4 @@ using BatchVariant = std::variant<
 
 } // namespace WhiskerToolbox::Transforms::V2
 
-#endif // WHISKERTOOLBOX_V2_TRANSFORM_TYPES_HPP
+#endif // NEURALYZER_V2_TRANSFORM_TYPES_HPP

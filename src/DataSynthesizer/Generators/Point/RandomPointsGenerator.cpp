@@ -69,10 +69,10 @@ DataTypeVariant generateRandomPoints(RandomPointsParams const & params) {
 }
 
 auto const random_points_reg =
-        WhiskerToolbox::DataSynthesizer::RegisterGenerator<RandomPointsParams>(
+        Neuralyzer::DataSynthesizer::RegisterGenerator<RandomPointsParams>(
                 "RandomPoints",
                 generateRandomPoints,
-                WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+                Neuralyzer::DataSynthesizer::GeneratorMetadata{
                         .description = "Generates uniformly distributed random points repeated at "
                                        "every frame. Points are sampled within a bounding box "
                                        "[min_x, max_x] × [min_y, max_y]. "

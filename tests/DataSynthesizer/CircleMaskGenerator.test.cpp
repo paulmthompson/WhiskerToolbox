@@ -10,7 +10,7 @@
 #include <numbers>
 #include <vector>
 
-using namespace WhiskerToolbox::DataSynthesizer;
+using namespace Neuralyzer::DataSynthesizer;
 
 static std::shared_ptr<MaskData> runCircleMask(std::string const & json) {
     auto result = GeneratorRegistry::instance().generate("CircleMask", json);

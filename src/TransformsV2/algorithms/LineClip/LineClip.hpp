@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_V2_LINE_CLIP_TRANSFORM_HPP
-#define WHISKERTOOLBOX_V2_LINE_CLIP_TRANSFORM_HPP
+#ifndef NEURALYZER_V2_LINE_CLIP_TRANSFORM_HPP
+#define NEURALYZER_V2_LINE_CLIP_TRANSFORM_HPP
 
 #include "CoreGeometry/line_geometry.hpp" // ClipSide
 
@@ -62,4 +62,4 @@ Line2D clipLineAtReferenceWithContext(
 
 }// namespace WhiskerToolbox::Transforms::V2::Examples
 
-#endif// WHISKERTOOLBOX_V2_LINE_CLIP_TRANSFORM_HPP
+#endif// NEURALYZER_V2_LINE_CLIP_TRANSFORM_HPP

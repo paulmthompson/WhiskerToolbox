@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_V2_ELEMENT_REGISTRY_HPP
-#define WHISKERTOOLBOX_V2_ELEMENT_REGISTRY_HPP
+#ifndef NEURALYZER_V2_ELEMENT_REGISTRY_HPP
+#define NEURALYZER_V2_ELEMENT_REGISTRY_HPP
 
 #include "ComputeContext.hpp"
 #include "ParameterSchema/ParameterSchema.hpp"// ParameterSchema, extractParameterSchema
@@ -1656,4 +1656,4 @@ public:
 
 }// namespace WhiskerToolbox::Transforms::V2
 
-#endif// WHISKERTOOLBOX_V2_ELEMENT_REGISTRY_HPP
+#endif// NEURALYZER_V2_ELEMENT_REGISTRY_HPP

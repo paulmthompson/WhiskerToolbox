@@ -26,8 +26,8 @@
  * @see PostEncoderPipeline.hpp for chaining multiple modules
  */
 
-#ifndef WHISKERTOOLBOX_POST_ENCODER_MODULE_HPP
-#define WHISKERTOOLBOX_POST_ENCODER_MODULE_HPP
+#ifndef NEURALYZER_POST_ENCODER_MODULE_HPP
+#define NEURALYZER_POST_ENCODER_MODULE_HPP
 
 #include <cstdint>
 #include <string>
@@ -89,4 +89,4 @@ public:
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_POST_ENCODER_MODULE_HPP
+#endif// NEURALYZER_POST_ENCODER_MODULE_HPP

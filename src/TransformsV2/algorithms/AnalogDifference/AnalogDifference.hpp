@@ -7,8 +7,8 @@
  * frame gaps). Supports configurable window lag and edge policies.
  */
 
-#ifndef WHISKERTOOLBOX_V2_ANALOG_DIFFERENCE_HPP
-#define WHISKERTOOLBOX_V2_ANALOG_DIFFERENCE_HPP
+#ifndef NEURALYZER_V2_ANALOG_DIFFERENCE_HPP
+#define NEURALYZER_V2_ANALOG_DIFFERENCE_HPP
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -78,4 +78,4 @@ struct AnalogDifferenceParams {
 
 }// namespace WhiskerToolbox::Transforms::V2::Examples
 
-#endif// WHISKERTOOLBOX_V2_ANALOG_DIFFERENCE_HPP
+#endif// NEURALYZER_V2_ANALOG_DIFFERENCE_HPP

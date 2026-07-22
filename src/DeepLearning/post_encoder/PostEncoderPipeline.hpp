@@ -3,8 +3,8 @@
  * @brief Sequential pipeline of PostEncoderModule instances.
  */
 
-#ifndef WHISKERTOOLBOX_POST_ENCODER_PIPELINE_HPP
-#define WHISKERTOOLBOX_POST_ENCODER_PIPELINE_HPP
+#ifndef NEURALYZER_POST_ENCODER_PIPELINE_HPP
+#define NEURALYZER_POST_ENCODER_PIPELINE_HPP
 
 #include "PostEncoderModule.hpp"
 
@@ -74,4 +74,4 @@ private:
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_POST_ENCODER_PIPELINE_HPP
+#endif// NEURALYZER_POST_ENCODER_PIPELINE_HPP

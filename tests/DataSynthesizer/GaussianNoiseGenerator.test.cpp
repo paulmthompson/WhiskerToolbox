@@ -10,7 +10,7 @@
 #include <cmath>
 #include <numeric>
 
-using namespace WhiskerToolbox::DataSynthesizer;
+using namespace Neuralyzer::DataSynthesizer;
 
 static std::shared_ptr<AnalogTimeSeries> runGaussianNoise(std::string const & json) {
     auto result = GeneratorRegistry::instance().generate("GaussianNoise", json);

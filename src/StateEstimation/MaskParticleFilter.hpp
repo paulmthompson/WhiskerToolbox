@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_MASK_PARTICLE_FILTER_HPP
-#define WHISKERTOOLBOX_MASK_PARTICLE_FILTER_HPP
+#ifndef NEURALYZER_MASK_PARTICLE_FILTER_HPP
+#define NEURALYZER_MASK_PARTICLE_FILTER_HPP
 
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
@@ -370,4 +370,4 @@ private:
 
 }// namespace StateEstimation
 
-#endif// WHISKERTOOLBOX_MASK_PARTICLE_FILTER_HPP
+#endif// NEURALYZER_MASK_PARTICLE_FILTER_HPP

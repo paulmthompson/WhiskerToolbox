@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_V2_TRANSFORM_PIPELINE_HPP
-#define WHISKERTOOLBOX_V2_TRANSFORM_PIPELINE_HPP
+#ifndef NEURALYZER_V2_TRANSFORM_PIPELINE_HPP
+#define NEURALYZER_V2_TRANSFORM_PIPELINE_HPP
 
 #include "ElementRegistry.hpp"// ElementRegistry
 #include "PipelineValueStore/PipelineValueStore.hpp"
@@ -1221,4 +1221,4 @@ ValueProjectionFactoryV2<InElement, Value> bindValueProjectionV2(TransformPipeli
 
 }// namespace WhiskerToolbox::Transforms::V2
 
-#endif// WHISKERTOOLBOX_V2_TRANSFORM_PIPELINE_HPP
+#endif// NEURALYZER_V2_TRANSFORM_PIPELINE_HPP

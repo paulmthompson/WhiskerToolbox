@@ -49,7 +49,7 @@ struct InhomogeneousPoissonEventsParams {
  */
 DataTypeVariant generateInhomogeneousPoissonEvents(
         InhomogeneousPoissonEventsParams const & params,
-        WhiskerToolbox::DataSynthesizer::GeneratorContext const & ctx) {
+        Neuralyzer::DataSynthesizer::GeneratorContext const & ctx) {
 
     if (!ctx.data_manager) {
         throw std::invalid_argument(
@@ -129,10 +129,10 @@ DataTypeVariant generateInhomogeneousPoissonEvents(
 }
 
 auto const inhomogeneous_poisson_events_reg =
-        WhiskerToolbox::DataSynthesizer::RegisterGenerator<InhomogeneousPoissonEventsParams>(
+        Neuralyzer::DataSynthesizer::RegisterGenerator<InhomogeneousPoissonEventsParams>(
                 "InhomogeneousPoissonEvents",
                 generateInhomogeneousPoissonEvents,
-                WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+                Neuralyzer::DataSynthesizer::GeneratorMetadata{
                         .description =
                                 "Generates events via an inhomogeneous Poisson process "
                                 "with time-varying rate read from an AnalogTimeSeries in "

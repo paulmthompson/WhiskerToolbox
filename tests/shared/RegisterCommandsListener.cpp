@@ -21,7 +21,7 @@ public:
 
     void testRunStarting(Catch::TestRunInfo const & /*info*/) override {
         commands::register_core_commands();
-        WhiskerToolbox::DataSynthesizer::register_datasynthesizer_commands();
+        Neuralyzer::DataSynthesizer::register_datasynthesizer_commands();
         WhiskerToolbox::Transforms::V2::register_transformsv2_commands();
         dl::register_deeplearning_commands();
     }

@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_V2_MASK_AREA_TRANSFORM_HPP
-#define WHISKERTOOLBOX_V2_MASK_AREA_TRANSFORM_HPP
+#ifndef NEURALYZER_V2_MASK_AREA_TRANSFORM_HPP
+#define NEURALYZER_V2_MASK_AREA_TRANSFORM_HPP
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -72,4 +72,4 @@ float calculateMaskAreaWithContext(
 
 }// namespace WhiskerToolbox::Transforms::V2::Examples
 
-#endif// WHISKERTOOLBOX_V2_MASK_AREA_TRANSFORM_HPP
+#endif// NEURALYZER_V2_MASK_AREA_TRANSFORM_HPP

@@ -3,8 +3,8 @@
  * @brief Serializable configuration parameters for GeneralEncoderModel.
  */
 
-#ifndef WHISKERTOOLBOX_GENERAL_ENCODER_MODEL_PARAMS_HPP
-#define WHISKERTOOLBOX_GENERAL_ENCODER_MODEL_PARAMS_HPP
+#ifndef NEURALYZER_GENERAL_ENCODER_MODEL_PARAMS_HPP
+#define NEURALYZER_GENERAL_ENCODER_MODEL_PARAMS_HPP
 
 #include <string>
 
@@ -28,4 +28,4 @@ struct GeneralEncoderModelParams {
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_GENERAL_ENCODER_MODEL_PARAMS_HPP
+#endif// NEURALYZER_GENERAL_ENCODER_MODEL_PARAMS_HPP

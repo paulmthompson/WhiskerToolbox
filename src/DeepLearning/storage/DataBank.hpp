@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_DATA_BANK_HPP
-#define WHISKERTOOLBOX_DATA_BANK_HPP
+#ifndef NEURALYZER_DATA_BANK_HPP
+#define NEURALYZER_DATA_BANK_HPP
 
 /**
  * @file DataBank.hpp
@@ -151,4 +151,4 @@ private:
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_DATA_BANK_HPP
+#endif// NEURALYZER_DATA_BANK_HPP

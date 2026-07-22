@@ -3,8 +3,8 @@
  * @brief RAII helper for static registration of post-encoder modules.
  */
 
-#ifndef WHISKERTOOLBOX_REGISTER_POST_ENCODER_MODULE_HPP
-#define WHISKERTOOLBOX_REGISTER_POST_ENCODER_MODULE_HPP
+#ifndef NEURALYZER_REGISTER_POST_ENCODER_MODULE_HPP
+#define NEURALYZER_REGISTER_POST_ENCODER_MODULE_HPP
 
 #include "PostEncoderModuleRegistry.hpp"
 
@@ -75,4 +75,4 @@ public:
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_REGISTER_POST_ENCODER_MODULE_HPP
+#endif// NEURALYZER_REGISTER_POST_ENCODER_MODULE_HPP

@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_V2_ANALOG_INTERVAL_PEAK_HPP
-#define WHISKERTOOLBOX_V2_ANALOG_INTERVAL_PEAK_HPP
+#ifndef NEURALYZER_V2_ANALOG_INTERVAL_PEAK_HPP
+#define NEURALYZER_V2_ANALOG_INTERVAL_PEAK_HPP
 
 #include <memory>
 
@@ -79,4 +79,4 @@ std::shared_ptr<DigitalEventSeries> analogIntervalPeak(
 
 }// namespace WhiskerToolbox::Transforms::V2
 
-#endif// WHISKERTOOLBOX_V2_ANALOG_INTERVAL_PEAK_HPP
+#endif// NEURALYZER_V2_ANALOG_INTERVAL_PEAK_HPP

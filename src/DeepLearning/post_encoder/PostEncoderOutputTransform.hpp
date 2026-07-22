@@ -3,8 +3,8 @@
  * @brief Free functions for applying post-encoder modules to model output tensors.
  */
 
-#ifndef WHISKERTOOLBOX_POST_ENCODER_OUTPUT_TRANSFORM_HPP
-#define WHISKERTOOLBOX_POST_ENCODER_OUTPUT_TRANSFORM_HPP
+#ifndef NEURALYZER_POST_ENCODER_OUTPUT_TRANSFORM_HPP
+#define NEURALYZER_POST_ENCODER_OUTPUT_TRANSFORM_HPP
 
 #include "models_v2/TensorSlotDescriptor.hpp"
 
@@ -51,4 +51,4 @@ effectiveOutputSlots(
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_POST_ENCODER_OUTPUT_TRANSFORM_HPP
+#endif// NEURALYZER_POST_ENCODER_OUTPUT_TRANSFORM_HPP

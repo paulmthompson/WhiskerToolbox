@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_V2_CONTAINER_REGISTRY_HPP
-#define WHISKERTOOLBOX_V2_CONTAINER_REGISTRY_HPP
+#ifndef NEURALYZER_V2_CONTAINER_REGISTRY_HPP
+#define NEURALYZER_V2_CONTAINER_REGISTRY_HPP
 
 #include <string>
 #include <typeindex>
@@ -46,4 +46,4 @@ struct ContainerTransformMetadata {
 }// namespace WhiskerToolbox::Transforms::V2
 
 
-#endif// WHISKERTOOLBOX_V2_CONTAINER_REGISTRY_HPP
+#endif// NEURALYZER_V2_CONTAINER_REGISTRY_HPP

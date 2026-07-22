@@ -6,8 +6,8 @@
  * and ParameterUIHints<T> for use by TransformsV2 and the Command Architecture.
  * No Qt dependency; depends only on reflect-cpp and the standard library.
  */
-#ifndef WHISKERTOOLBOX_V2_PARAMETER_SCHEMA_HPP
-#define WHISKERTOOLBOX_V2_PARAMETER_SCHEMA_HPP
+#ifndef NEURALYZER_V2_PARAMETER_SCHEMA_HPP
+#define NEURALYZER_V2_PARAMETER_SCHEMA_HPP
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -452,4 +452,4 @@ ParameterSchema extractParameterSchema() {
     return schema;
 }
 
-#endif// WHISKERTOOLBOX_V2_PARAMETER_SCHEMA_HPP
+#endif// NEURALYZER_V2_PARAMETER_SCHEMA_HPP

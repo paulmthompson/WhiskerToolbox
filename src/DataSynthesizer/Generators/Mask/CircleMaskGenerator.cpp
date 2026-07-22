@@ -58,10 +58,10 @@ DataTypeVariant generateCircleMask(CircleMaskParams const & params) {
 }
 
 auto const circle_mask_reg =
-        WhiskerToolbox::DataSynthesizer::RegisterGenerator<CircleMaskParams>(
+        Neuralyzer::DataSynthesizer::RegisterGenerator<CircleMaskParams>(
                 "CircleMask",
                 generateCircleMask,
-                WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+                Neuralyzer::DataSynthesizer::GeneratorMetadata{
                         .description = "Generates a circular mask repeated at every frame. "
                                        "The circle is defined by center position and radius, "
                                        "rasterized to pixel coordinates.",

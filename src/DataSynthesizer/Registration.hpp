@@ -13,10 +13,10 @@
  * #include "DataSynthesizer/GeneratorRegistry.hpp"
  *
  * namespace {
- * auto const reg = WhiskerToolbox::DataSynthesizer::RegisterGenerator<SineWaveParams>(
+ * auto const reg = Neuralyzer::DataSynthesizer::RegisterGenerator<SineWaveParams>(
  *     "SineWave",
  *     generateSineWave,
- *     WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+ *     Neuralyzer::DataSynthesizer::GeneratorMetadata{
  *         .description = "Generate a sine wave",
  *         .category = "Periodic",
  *         .output_type = "AnalogTimeSeries"
@@ -38,7 +38,7 @@
 #include <iostream>
 #include <string>
 
-namespace WhiskerToolbox::DataSynthesizer {
+namespace Neuralyzer::DataSynthesizer {
 
 /**
  * @brief RAII helper for compile-time generator registration.
@@ -112,6 +112,6 @@ public:
     }
 };
 
-}// namespace WhiskerToolbox::DataSynthesizer
+}// namespace Neuralyzer::DataSynthesizer
 
 #endif// NEURALYZER_DATASYNTHESIZER_REGISTRATION_HPP

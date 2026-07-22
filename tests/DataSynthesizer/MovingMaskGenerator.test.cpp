@@ -15,7 +15,7 @@
 #include <cmath>
 #include <numbers>
 
-using namespace WhiskerToolbox::DataSynthesizer;
+using namespace Neuralyzer::DataSynthesizer;
 using Catch::Matchers::WithinAbs;
 
 static std::shared_ptr<MaskData> runMovingMask(std::string const & json) {

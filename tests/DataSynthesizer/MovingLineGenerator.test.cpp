@@ -16,7 +16,7 @@
 #include <cmath>
 #include <vector>
 
-using namespace WhiskerToolbox::DataSynthesizer;
+using namespace Neuralyzer::DataSynthesizer;
 using Catch::Matchers::WithinAbs;
 
 static std::shared_ptr<LineData> runMovingLine(std::string const & json) {

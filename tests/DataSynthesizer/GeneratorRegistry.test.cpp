@@ -7,7 +7,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-using namespace WhiskerToolbox::DataSynthesizer;
+using namespace Neuralyzer::DataSynthesizer;
 
 TEST_CASE("GeneratorRegistry lists all five analog generators", "[registry]") {
     auto const names = GeneratorRegistry::instance().listGenerators("AnalogTimeSeries");

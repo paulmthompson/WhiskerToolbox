@@ -3,8 +3,8 @@
  * @brief JSON-serializable runtime model specification types and helpers.
  */
 
-#ifndef WHISKERTOOLBOX_RUNTIME_MODEL_SPEC_HPP
-#define WHISKERTOOLBOX_RUNTIME_MODEL_SPEC_HPP
+#ifndef NEURALYZER_RUNTIME_MODEL_SPEC_HPP
+#define NEURALYZER_RUNTIME_MODEL_SPEC_HPP
 
 #include "models_v2/TensorSlotDescriptor.hpp"
 
@@ -213,4 +213,4 @@ struct RuntimeModelSpec {
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_RUNTIME_MODEL_SPEC_HPP
+#endif// NEURALYZER_RUNTIME_MODEL_SPEC_HPP

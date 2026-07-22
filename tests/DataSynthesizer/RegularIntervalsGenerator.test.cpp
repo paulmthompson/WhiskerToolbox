@@ -10,7 +10,7 @@
 #include <memory>
 #include <string>
 
-using namespace WhiskerToolbox::DataSynthesizer;
+using namespace Neuralyzer::DataSynthesizer;
 
 static std::shared_ptr<DigitalIntervalSeries> runRegularIntervals(std::string const & json) {
     auto result = GeneratorRegistry::instance().generate("RegularIntervals", json);

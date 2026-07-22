@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_V2_COMPUTE_CONTEXT_HPP
-#define WHISKERTOOLBOX_V2_COMPUTE_CONTEXT_HPP
+#ifndef NEURALYZER_V2_COMPUTE_CONTEXT_HPP
+#define NEURALYZER_V2_COMPUTE_CONTEXT_HPP
 
 #include <functional>
 #include <string>
@@ -43,4 +43,4 @@ struct ComputeContext {
 
 } // namespace WhiskerToolbox::Transforms::V2
 
-#endif// WHISKERTOOLBOX_V2_COMPUTE_CONTEXT_HPP
+#endif// NEURALYZER_V2_COMPUTE_CONTEXT_HPP

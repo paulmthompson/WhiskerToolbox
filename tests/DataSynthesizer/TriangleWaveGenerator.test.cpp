@@ -8,7 +8,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-using namespace WhiskerToolbox::DataSynthesizer;
+using namespace Neuralyzer::DataSynthesizer;
 
 static std::shared_ptr<AnalogTimeSeries> runTriangleWave(std::string const & json) {
     auto result = GeneratorRegistry::instance().generate("TriangleWave", json);

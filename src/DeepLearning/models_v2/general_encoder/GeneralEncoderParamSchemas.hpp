@@ -1,8 +1,8 @@
 /// @file GeneralEncoderParamSchemas.hpp
 /// @brief ParameterUIHints specializations for GeneralEncoderModelParams.
 
-#ifndef WHISKERTOOLBOX_GENERAL_ENCODER_PARAM_SCHEMAS_HPP
-#define WHISKERTOOLBOX_GENERAL_ENCODER_PARAM_SCHEMAS_HPP
+#ifndef NEURALYZER_GENERAL_ENCODER_PARAM_SCHEMAS_HPP
+#define NEURALYZER_GENERAL_ENCODER_PARAM_SCHEMAS_HPP
 
 #include "GeneralEncoderModelParams.hpp"
 
@@ -38,4 +38,4 @@ struct ParameterUIHints<dl::GeneralEncoderModelParams> {
 };
 
 
-#endif// WHISKERTOOLBOX_GENERAL_ENCODER_PARAM_SCHEMAS_HPP
+#endif// NEURALYZER_GENERAL_ENCODER_PARAM_SCHEMAS_HPP

@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_PARAM_WIDGET_REGISTRY_HPP
-#define WHISKERTOOLBOX_PARAM_WIDGET_REGISTRY_HPP
+#ifndef NEURALYZER_V2_PARAM_WIDGET_REGISTRY_HPP
+#define NEURALYZER_V2_PARAM_WIDGET_REGISTRY_HPP
 
 /**
  * @file ParamWidgetRegistry.hpp
@@ -88,4 +88,4 @@ private:
     std::unordered_map<std::type_index, WidgetFactory> factories_;
 };
 
-#endif// WHISKERTOOLBOX_PARAM_WIDGET_REGISTRY_HPP
+#endif// NEURALYZER_V2_PARAM_WIDGET_REGISTRY_HPP

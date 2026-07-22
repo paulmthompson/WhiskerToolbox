@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_V2_ANALOG_INTERVAL_THRESHOLD_HPP
-#define WHISKERTOOLBOX_V2_ANALOG_INTERVAL_THRESHOLD_HPP
+#ifndef NEURALYZER_V2_ANALOG_INTERVAL_THRESHOLD_HPP
+#define NEURALYZER_V2_ANALOG_INTERVAL_THRESHOLD_HPP
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -97,4 +97,4 @@ std::shared_ptr<DigitalIntervalSeries> analogIntervalThreshold(
 
 }// namespace WhiskerToolbox::Transforms::V2
 
-#endif// WHISKERTOOLBOX_V2_ANALOG_INTERVAL_THRESHOLD_HPP
+#endif// NEURALYZER_V2_ANALOG_INTERVAL_THRESHOLD_HPP

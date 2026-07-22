@@ -71,10 +71,10 @@ DataTypeVariant generateSquareWave(SquareWaveParams const & params) {
 }
 
 auto const square_wave_reg =
-        WhiskerToolbox::DataSynthesizer::RegisterGenerator<SquareWaveParams>(
+        Neuralyzer::DataSynthesizer::RegisterGenerator<SquareWaveParams>(
                 "SquareWave",
                 generateSquareWave,
-                WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+                Neuralyzer::DataSynthesizer::GeneratorMetadata{
                         .description = "Generates a square wave analog time series with configurable duty cycle. "
                                        "num_cycles complete cycles over cycle_length samples (defaults to num_samples). "
                                        "duty_cycle in [0,1] controls the fraction of each period at +amplitude.",

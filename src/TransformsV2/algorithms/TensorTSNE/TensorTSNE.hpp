@@ -6,8 +6,8 @@
  * Preserves the input's RowDescriptor (TimeFrameIndex rows survive reduction).
  */
 
-#ifndef WHISKERTOOLBOX_V2_TENSOR_TSNE_HPP
-#define WHISKERTOOLBOX_V2_TENSOR_TSNE_HPP
+#ifndef NEURALYZER_V2_TENSOR_TSNE_HPP
+#define NEURALYZER_V2_TENSOR_TSNE_HPP
 
 #include "TransformsV2/utils/NaNPolicy.hpp"
 
@@ -59,4 +59,4 @@ struct TensorTSNEParams {
 
 }// namespace WhiskerToolbox::Transforms::V2::Examples
 
-#endif// WHISKERTOOLBOX_V2_TENSOR_TSNE_HPP
+#endif// NEURALYZER_V2_TENSOR_TSNE_HPP

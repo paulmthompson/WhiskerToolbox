@@ -69,10 +69,10 @@ DataTypeVariant generateRegularEvents(RegularEventsParams const & params) {
 }
 
 auto const regular_events_reg =
-        WhiskerToolbox::DataSynthesizer::RegisterGenerator<RegularEventsParams>(
+        Neuralyzer::DataSynthesizer::RegisterGenerator<RegularEventsParams>(
                 "RegularEvents",
                 generateRegularEvents,
-                WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+                Neuralyzer::DataSynthesizer::GeneratorMetadata{
                         .description = "Generates evenly spaced events with optional Gaussian jitter. "
                                        "Deterministic: same seed always produces the same output.",
                         .category = "Events",

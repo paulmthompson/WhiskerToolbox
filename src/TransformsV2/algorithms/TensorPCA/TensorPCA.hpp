@@ -6,8 +6,8 @@
  * Preserves the input's RowDescriptor (TimeFrameIndex rows survive reduction).
  */
 
-#ifndef WHISKERTOOLBOX_V2_TENSOR_PCA_HPP
-#define WHISKERTOOLBOX_V2_TENSOR_PCA_HPP
+#ifndef NEURALYZER_V2_TENSOR_PCA_HPP
+#define NEURALYZER_V2_TENSOR_PCA_HPP
 
 #include "TransformsV2/utils/NaNPolicy.hpp"
 
@@ -55,4 +55,4 @@ struct TensorPCAParams {
 
 }// namespace WhiskerToolbox::Transforms::V2::Examples
 
-#endif// WHISKERTOOLBOX_V2_TENSOR_PCA_HPP
+#endif// NEURALYZER_V2_TENSOR_PCA_HPP

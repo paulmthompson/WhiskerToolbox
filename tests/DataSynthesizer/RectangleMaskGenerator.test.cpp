@@ -8,7 +8,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
 
-using namespace WhiskerToolbox::DataSynthesizer;
+using namespace Neuralyzer::DataSynthesizer;
 
 static std::shared_ptr<MaskData> runRectangleMask(std::string const & json) {
     auto result = GeneratorRegistry::instance().generate("RectangleMask", json);

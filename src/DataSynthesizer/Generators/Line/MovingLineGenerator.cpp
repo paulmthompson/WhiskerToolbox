@@ -26,10 +26,10 @@
 
 namespace {
 
-using WhiskerToolbox::DataSynthesizer::BoundaryMode;
-using WhiskerToolbox::DataSynthesizer::BoundaryParams;
-using WhiskerToolbox::DataSynthesizer::LinearMotionParams;
-using WhiskerToolbox::DataSynthesizer::MotionModelVariant;
+using Neuralyzer::DataSynthesizer::BoundaryMode;
+using Neuralyzer::DataSynthesizer::BoundaryParams;
+using Neuralyzer::DataSynthesizer::LinearMotionParams;
+using Neuralyzer::DataSynthesizer::MotionModelVariant;
 
 struct MovingLineParams {
     float start_x = 0.0f;
@@ -84,10 +84,10 @@ DataTypeVariant generateMovingLine(MovingLineParams const & params) {
             params.bounds_max_x,
             params.bounds_min_y,
             params.bounds_max_y};
-    auto const tp = WhiskerToolbox::DataSynthesizer::toTrajectoryParams(
+    auto const tp = Neuralyzer::DataSynthesizer::toTrajectoryParams(
             params.motion, boundary);
 
-    auto const trajectory = WhiskerToolbox::DataSynthesizer::computeTrajectory(
+    auto const trajectory = Neuralyzer::DataSynthesizer::computeTrajectory(
             params.trajectory_start_x,
             params.trajectory_start_y,
             params.num_frames, tp);
@@ -109,10 +109,10 @@ DataTypeVariant generateMovingLine(MovingLineParams const & params) {
 }
 
 auto const moving_line_reg =
-        WhiskerToolbox::DataSynthesizer::RegisterGenerator<MovingLineParams>(
+        Neuralyzer::DataSynthesizer::RegisterGenerator<MovingLineParams>(
                 "MovingLine",
                 generateMovingLine,
-                WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+                Neuralyzer::DataSynthesizer::GeneratorMetadata{
                         .description = "Generates a line segment that moves along a trajectory. "
                                        "The line shape is defined by start/end points and rigidly "
                                        "translated so its centroid follows the trajectory. "

@@ -10,7 +10,7 @@
 #include <numbers>
 #include <vector>
 
-using namespace WhiskerToolbox::DataSynthesizer;
+using namespace Neuralyzer::DataSynthesizer;
 
 static std::shared_ptr<MaskData> runEllipseMask(std::string const & json) {
     auto result = GeneratorRegistry::instance().generate("EllipseMask", json);

@@ -80,10 +80,10 @@ DataTypeVariant generateBurstEvents(BurstEventsParams const & params) {
 }
 
 auto const burst_events_reg =
-        WhiskerToolbox::DataSynthesizer::RegisterGenerator<BurstEventsParams>(
+        Neuralyzer::DataSynthesizer::RegisterGenerator<BurstEventsParams>(
                 "BurstEvents",
                 generateBurstEvents,
-                WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+                Neuralyzer::DataSynthesizer::GeneratorMetadata{
                         .description = "Generates clustered burst event patterns. Bursts arrive "
                                        "via a Poisson process at burst_rate, and within each burst, "
                                        "events occur at within_burst_rate for burst_duration samples. "

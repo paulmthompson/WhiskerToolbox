@@ -50,10 +50,10 @@ DataTypeVariant generateUniformNoise(UniformNoiseParams const & params) {
 }
 
 auto const uniform_noise_reg =
-        WhiskerToolbox::DataSynthesizer::RegisterGenerator<UniformNoiseParams>(
+        Neuralyzer::DataSynthesizer::RegisterGenerator<UniformNoiseParams>(
                 "UniformNoise",
                 generateUniformNoise,
-                WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+                Neuralyzer::DataSynthesizer::GeneratorMetadata{
                         .description = "Generates i.i.d. uniform noise samples in [min_value, max_value). "
                                        "Deterministic: same seed always produces the same output.",
                         .category = "Noise",

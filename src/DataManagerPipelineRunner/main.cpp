@@ -160,7 +160,7 @@ int main(int argc, char ** argv) {
 
     try {
         commands::register_core_commands();
-        WhiskerToolbox::DataSynthesizer::register_datasynthesizer_commands();
+        Neuralyzer::DataSynthesizer::register_datasynthesizer_commands();
         WhiskerToolbox::Transforms::V2::register_transformsv2_commands();
         dl::register_deeplearning_commands();
 

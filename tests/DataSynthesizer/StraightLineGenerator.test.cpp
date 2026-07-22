@@ -10,7 +10,7 @@
 #include <cmath>
 #include <vector>
 
-using namespace WhiskerToolbox::DataSynthesizer;
+using namespace Neuralyzer::DataSynthesizer;
 
 static std::shared_ptr<LineData> runStraightLine(std::string const & json) {
     auto result = GeneratorRegistry::instance().generate("StraightLine", json);

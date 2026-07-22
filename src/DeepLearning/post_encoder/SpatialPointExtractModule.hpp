@@ -3,8 +3,8 @@
  * @brief Point-based spatial feature extraction post-encoder module.
  */
 
-#ifndef WHISKERTOOLBOX_SPATIAL_POINT_EXTRACT_MODULE_HPP
-#define WHISKERTOOLBOX_SPATIAL_POINT_EXTRACT_MODULE_HPP
+#ifndef NEURALYZER_SPATIAL_POINT_EXTRACT_MODULE_HPP
+#define NEURALYZER_SPATIAL_POINT_EXTRACT_MODULE_HPP
 
 #include "PostEncoderModule.hpp"
 #include "PostEncoderModuleParams.hpp"
@@ -133,4 +133,4 @@ private:
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_SPATIAL_POINT_EXTRACT_MODULE_HPP
+#endif// NEURALYZER_SPATIAL_POINT_EXTRACT_MODULE_HPP

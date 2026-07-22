@@ -1,12 +1,11 @@
-#ifndef WHISKERTOOLBOX_IO_CAPNPROTO_SERIALIZATION_HPP
-#define WHISKERTOOLBOX_IO_CAPNPROTO_SERIALIZATION_HPP
+#ifndef NEURALYZER_IO_CAPNPROTO_SERIALIZATION_HPP
+#define NEURALYZER_IO_CAPNPROTO_SERIALIZATION_HPP
 
 #include <capnp/message.h>
 #include <capnp/serialize.h>
 #include <kj/std/iostream.h>
 #include <memory>
 
-// Forward declarations to avoid including concrete types
 class LineData;
 
 namespace IO::CapnProto {
@@ -31,4 +30,4 @@ std::shared_ptr<LineData> deserializeLineData(
 
 } // namespace IO::CapnProto
 
-#endif // WHISKERTOOLBOX_IO_CAPNPROTO_SERIALIZATION_HPP
+#endif // NEURALYZER_IO_CAPNPROTO_SERIALIZATION_HPP

@@ -3,8 +3,8 @@
  * @brief Element-level mask skeletonization transform (Mask2D → Mask2D).
  */
 
-#ifndef WHISKERTOOLBOX_V2_MASK_SKELETONIZE_TRANSFORM_HPP
-#define WHISKERTOOLBOX_V2_MASK_SKELETONIZE_TRANSFORM_HPP
+#ifndef NEURALYZER_V2_MASK_SKELETONIZE_TRANSFORM_HPP
+#define NEURALYZER_V2_MASK_SKELETONIZE_TRANSFORM_HPP
 
 class Mask2D;
 
@@ -94,4 +94,4 @@ Mask2D skeletonizeMaskWithContext(
 
 }// namespace WhiskerToolbox::Transforms::V2::Examples
 
-#endif// WHISKERTOOLBOX_V2_MASK_SKELETONIZE_TRANSFORM_HPP
+#endif// NEURALYZER_V2_MASK_SKELETONIZE_TRANSFORM_HPP

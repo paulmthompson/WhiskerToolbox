@@ -3,8 +3,8 @@
  * @brief ModelBase wrapper for the NeuroSAM segment-anything-style model.
  */
 
-#ifndef WHISKERTOOLBOX_NEUROSAM_MODEL_HPP
-#define WHISKERTOOLBOX_NEUROSAM_MODEL_HPP
+#ifndef NEURALYZER_NEUROSAM_MODEL_HPP
+#define NEURALYZER_NEUROSAM_MODEL_HPP
 
 #include "models_v2/ModelBase.hpp"
 #include "models_v2/ModelExecution.hpp"
@@ -89,4 +89,4 @@ private:
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_NEUROSAM_MODEL_HPP
+#endif// NEURALYZER_NEUROSAM_MODEL_HPP

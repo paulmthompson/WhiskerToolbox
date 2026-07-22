@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_INTERVAL_ADAPTERS_HPP
-#define WHISKERTOOLBOX_INTERVAL_ADAPTERS_HPP
+#ifndef NEURALYZER_INTERVAL_ADAPTERS_HPP
+#define NEURALYZER_INTERVAL_ADAPTERS_HPP
 
 /**
  * @file IntervalAdapters.hpp
@@ -494,4 +494,4 @@ inline IntervalWithAlignmentAdapter withAlignment(
 
 }// namespace WhiskerToolbox::Gather
 
-#endif// WHISKERTOOLBOX_INTERVAL_ADAPTERS_HPP
+#endif// NEURALYZER_INTERVAL_ADAPTERS_HPP

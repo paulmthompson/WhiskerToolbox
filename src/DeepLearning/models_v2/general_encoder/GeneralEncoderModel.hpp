@@ -3,8 +3,8 @@
  * @brief A general-purpose encoder model wrapper for image feature extraction.
  */
 
-#ifndef WHISKERTOOLBOX_GENERAL_ENCODER_MODEL_HPP
-#define WHISKERTOOLBOX_GENERAL_ENCODER_MODEL_HPP
+#ifndef NEURALYZER_GENERAL_ENCODER_MODEL_HPP
+#define NEURALYZER_GENERAL_ENCODER_MODEL_HPP
 
 #include "models_v2/ModelBase.hpp"
 #include "models_v2/ModelExecution.hpp"
@@ -144,4 +144,4 @@ private:
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_GENERAL_ENCODER_MODEL_HPP
+#endif// NEURALYZER_GENERAL_ENCODER_MODEL_HPP

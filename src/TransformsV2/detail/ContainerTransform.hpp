@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_V2_CONTAINER_TRANSFORM_HPP
-#define WHISKERTOOLBOX_V2_CONTAINER_TRANSFORM_HPP
+#ifndef NEURALYZER_V2_CONTAINER_TRANSFORM_HPP
+#define NEURALYZER_V2_CONTAINER_TRANSFORM_HPP
 
 #include "core/ElementRegistry.hpp"
 #include "detail/ExtractElement.hpp"        // extractElement
@@ -300,4 +300,4 @@ auto applyTransform(
 
 }// namespace WhiskerToolbox::Transforms::V2
 
-#endif// WHISKERTOOLBOX_V2_CONTAINER_TRANSFORM_HPP
+#endif// NEURALYZER_V2_CONTAINER_TRANSFORM_HPP

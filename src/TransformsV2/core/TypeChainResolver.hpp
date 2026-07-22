@@ -9,8 +9,8 @@
  * suitable for UI validation and display.
  */
 
-#ifndef WHISKERTOOLBOX_TYPE_CHAIN_RESOLVER_HPP
-#define WHISKERTOOLBOX_TYPE_CHAIN_RESOLVER_HPP
+#ifndef NEURALYZER_V2_TYPE_CHAIN_RESOLVER_HPP
+#define NEURALYZER_V2_TYPE_CHAIN_RESOLVER_HPP
 
 #include <span>         // std::span
 #include <string>       // std::string
@@ -67,4 +67,4 @@ TypeChainResult resolveTypeChain(
 
 } // namespace WhiskerToolbox::Transforms::V2
 
-#endif // WHISKERTOOLBOX_TYPE_CHAIN_RESOLVER_HPP
+#endif // NEURALYZER_V2_TYPE_CHAIN_RESOLVER_HPP

@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_DATATRANSFORM_WIDGET_HPP
-#define WHISKERTOOLBOX_DATATRANSFORM_WIDGET_HPP
+#ifndef NEURALYZER_V2_DATATRANSFORM_WIDGET_HPP
+#define NEURALYZER_V2_DATATRANSFORM_WIDGET_HPP
 
 #include "DataTransform_Widget/TransformParameter_Widget/TransformParameter_Widget.hpp"
 #include "DataManagerTypes.hpp"
@@ -153,4 +153,4 @@ private slots:
 };
 
 
-#endif//WHISKERTOOLBOX_DATATRANSFORM_WIDGET_HPP
+#endif//NEURALYZER_V2_DATATRANSFORM_WIDGET_HPP

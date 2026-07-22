@@ -77,10 +77,10 @@ DataTypeVariant generateEllipseMask(EllipseMaskParams const & params) {
 }
 
 auto const ellipse_mask_reg =
-        WhiskerToolbox::DataSynthesizer::RegisterGenerator<EllipseMaskParams>(
+        Neuralyzer::DataSynthesizer::RegisterGenerator<EllipseMaskParams>(
                 "EllipseMask",
                 generateEllipseMask,
-                WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+                Neuralyzer::DataSynthesizer::GeneratorMetadata{
                         .description = "Generates an elliptical mask repeated at every frame. "
                                        "The ellipse is defined by center, semi-major/minor axes, "
                                        "and an optional rotation angle (degrees). "

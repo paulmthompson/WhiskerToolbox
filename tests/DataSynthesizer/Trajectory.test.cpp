@@ -9,7 +9,7 @@
 #include <cmath>
 #include <numbers>
 
-using namespace WhiskerToolbox::DataSynthesizer;
+using namespace Neuralyzer::DataSynthesizer;
 using Catch::Matchers::WithinAbs;
 
 // =====================================================================

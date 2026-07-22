@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 
-namespace WhiskerToolbox::DataSynthesizer {
+namespace Neuralyzer::DataSynthesizer {
 
 /**
  * @brief Parameters controlling trajectory computation.
@@ -77,6 +77,6 @@ struct TrajectoryParams {
         int num_frames,
         TrajectoryParams const & params);
 
-}// namespace WhiskerToolbox::DataSynthesizer
+}// namespace Neuralyzer::DataSynthesizer
 
 #endif// NEURALYZER_DATASYNTHESIZER_TRAJECTORY_HPP

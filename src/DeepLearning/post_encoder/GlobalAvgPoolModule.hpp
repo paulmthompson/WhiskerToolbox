@@ -3,8 +3,8 @@
  * @brief Global average pooling post-encoder module.
  */
 
-#ifndef WHISKERTOOLBOX_GLOBAL_AVG_POOL_MODULE_HPP
-#define WHISKERTOOLBOX_GLOBAL_AVG_POOL_MODULE_HPP
+#ifndef NEURALYZER_GLOBAL_AVG_POOL_MODULE_HPP
+#define NEURALYZER_GLOBAL_AVG_POOL_MODULE_HPP
 
 #include "PostEncoderModule.hpp"
 
@@ -61,4 +61,4 @@ public:
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_GLOBAL_AVG_POOL_MODULE_HPP
+#endif// NEURALYZER_GLOBAL_AVG_POOL_MODULE_HPP

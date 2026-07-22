@@ -10,7 +10,7 @@
 #include <cmath>
 #include <numbers>
 
-using namespace WhiskerToolbox::DataSynthesizer;
+using namespace Neuralyzer::DataSynthesizer;
 
 static std::shared_ptr<AnalogTimeSeries> runSineWave(std::string const & json) {
     auto result = GeneratorRegistry::instance().generate("SineWave", json);

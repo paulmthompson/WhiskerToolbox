@@ -10,7 +10,7 @@
 #include <memory>
 #include <string>
 
-using namespace WhiskerToolbox::DataSynthesizer;
+using namespace Neuralyzer::DataSynthesizer;
 
 static std::shared_ptr<DigitalEventSeries> runBurstEvents(std::string const & json) {
     auto result = GeneratorRegistry::instance().generate("BurstEvents", json);

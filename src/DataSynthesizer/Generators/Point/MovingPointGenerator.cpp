@@ -22,10 +22,10 @@
 
 namespace {
 
-using WhiskerToolbox::DataSynthesizer::BoundaryMode;
-using WhiskerToolbox::DataSynthesizer::BoundaryParams;
-using WhiskerToolbox::DataSynthesizer::LinearMotionParams;
-using WhiskerToolbox::DataSynthesizer::MotionModelVariant;
+using Neuralyzer::DataSynthesizer::BoundaryMode;
+using Neuralyzer::DataSynthesizer::BoundaryParams;
+using Neuralyzer::DataSynthesizer::LinearMotionParams;
+using Neuralyzer::DataSynthesizer::MotionModelVariant;
 
 struct MovingPointParams {
     float start_x = 100.0f;
@@ -50,10 +50,10 @@ DataTypeVariant generateMovingPoint(MovingPointParams const & params) {
             params.bounds_max_x,
             params.bounds_min_y,
             params.bounds_max_y};
-    auto const tp = WhiskerToolbox::DataSynthesizer::toTrajectoryParams(
+    auto const tp = Neuralyzer::DataSynthesizer::toTrajectoryParams(
             params.motion, boundary);
 
-    auto const trajectory = WhiskerToolbox::DataSynthesizer::computeTrajectory(
+    auto const trajectory = Neuralyzer::DataSynthesizer::computeTrajectory(
             params.start_x,
             params.start_y,
             params.num_frames, tp);
@@ -69,10 +69,10 @@ DataTypeVariant generateMovingPoint(MovingPointParams const & params) {
 }
 
 auto const moving_point_reg =
-        WhiskerToolbox::DataSynthesizer::RegisterGenerator<MovingPointParams>(
+        Neuralyzer::DataSynthesizer::RegisterGenerator<MovingPointParams>(
                 "MovingPoint",
                 generateMovingPoint,
-                WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+                Neuralyzer::DataSynthesizer::GeneratorMetadata{
                         .description = "Generates a single point that moves along a trajectory. "
                                        "Supports linear, sinusoidal, and Brownian motion models "
                                        "with clamp, bounce, or wrap boundary modes. "

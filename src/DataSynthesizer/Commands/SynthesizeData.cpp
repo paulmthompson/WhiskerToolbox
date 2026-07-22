@@ -69,7 +69,7 @@ std::string SynthesizeData::commandName() const { return "SynthesizeData"; }
 std::string SynthesizeData::toJson() const { return rfl::json::write(_params); }
 
 CommandResult SynthesizeData::execute(CommandContext const & ctx) {
-    auto & registry = WhiskerToolbox::DataSynthesizer::GeneratorRegistry::instance();
+    auto & registry = Neuralyzer::DataSynthesizer::GeneratorRegistry::instance();
 
     if (!registry.hasGenerator(_params.generator_name)) {
         return CommandResult::error(
@@ -78,7 +78,7 @@ CommandResult SynthesizeData::execute(CommandContext const & ctx) {
 
     auto const params_json = rfl::json::write(_params.parameters);
 
-    auto const gen_ctx = WhiskerToolbox::DataSynthesizer::GeneratorContext{
+    auto const gen_ctx = Neuralyzer::DataSynthesizer::GeneratorContext{
             .data_manager = ctx.data_manager.get()};
     auto result = registry.generate(_params.generator_name, params_json, gen_ctx);
     if (!result.has_value()) {

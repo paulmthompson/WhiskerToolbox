@@ -8,7 +8,7 @@
 #include <cassert>
 #include <iostream>
 
-namespace WhiskerToolbox::DataSynthesizer {
+namespace Neuralyzer::DataSynthesizer {
 
 GeneratorRegistry & GeneratorRegistry::instance() {
     static GeneratorRegistry registry;
@@ -109,4 +109,4 @@ std::size_t GeneratorRegistry::size() const {
     return entries_.size();
 }
 
-}// namespace WhiskerToolbox::DataSynthesizer
+}// namespace Neuralyzer::DataSynthesizer

@@ -18,7 +18,7 @@
 
 class DataManager;
 
-namespace WhiskerToolbox::DataSynthesizer {
+namespace Neuralyzer::DataSynthesizer {
 
 /**
  * @brief Context passed to generators during execution.
@@ -63,6 +63,6 @@ struct GeneratorEntry {
     GeneratorMetadata metadata;
 };
 
-}// namespace WhiskerToolbox::DataSynthesizer
+}// namespace Neuralyzer::DataSynthesizer
 
 #endif// NEURALYZER_GENERATOR_TYPES_HPP

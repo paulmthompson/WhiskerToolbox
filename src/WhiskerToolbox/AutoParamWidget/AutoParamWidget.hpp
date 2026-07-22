@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_AUTO_PARAM_WIDGET_HPP
-#define WHISKERTOOLBOX_AUTO_PARAM_WIDGET_HPP
+#ifndef NEURALYZER_V2_AUTO_PARAM_WIDGET_HPP
+#define NEURALYZER_V2_AUTO_PARAM_WIDGET_HPP
 
 /**
  * @file AutoParamWidget.hpp
@@ -230,4 +230,4 @@ private:
     PostEditHook _post_edit_hook;// Optional post-edit transformation hook
 };
 
-#endif// WHISKERTOOLBOX_AUTO_PARAM_WIDGET_HPP
+#endif// NEURALYZER_V2_AUTO_PARAM_WIDGET_HPP

@@ -6,8 +6,8 @@
  * output samples using windowed-sinc interpolation. No TimeFrame awareness.
  */
 
-#ifndef WHISKERTOOLBOX_V2_SINC_INTERPOLATION_HPP
-#define WHISKERTOOLBOX_V2_SINC_INTERPOLATION_HPP
+#ifndef NEURALYZER_V2_SINC_INTERPOLATION_HPP
+#define NEURALYZER_V2_SINC_INTERPOLATION_HPP
 
 #include <memory>
 
@@ -92,4 +92,4 @@ std::shared_ptr<AnalogTimeSeries> sincInterpolation(
 
 }// namespace WhiskerToolbox::Transforms::V2::Examples
 
-#endif// WHISKERTOOLBOX_V2_SINC_INTERPOLATION_HPP
+#endif// NEURALYZER_V2_SINC_INTERPOLATION_HPP

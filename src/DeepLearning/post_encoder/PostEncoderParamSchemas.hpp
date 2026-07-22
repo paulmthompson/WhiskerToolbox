@@ -1,8 +1,8 @@
 /// @file PostEncoderParamSchemas.hpp
 /// @brief ParameterUIHints specializations for post-encoder module parameter structs.
 
-#ifndef WHISKERTOOLBOX_POST_ENCODER_PARAM_SCHEMAS_HPP
-#define WHISKERTOOLBOX_POST_ENCODER_PARAM_SCHEMAS_HPP
+#ifndef NEURALYZER_POST_ENCODER_PARAM_SCHEMAS_HPP
+#define NEURALYZER_POST_ENCODER_PARAM_SCHEMAS_HPP
 
 #include "ParameterSchema/ParameterSchema.hpp"
 #include "PostEncoderModuleParams.hpp"
@@ -28,4 +28,4 @@ struct ParameterUIHints<dl::SpatialPointModuleParams> {
 };
 
 
-#endif// WHISKERTOOLBOX_POST_ENCODER_PARAM_SCHEMAS_HPP
+#endif// NEURALYZER_POST_ENCODER_PARAM_SCHEMAS_HPP

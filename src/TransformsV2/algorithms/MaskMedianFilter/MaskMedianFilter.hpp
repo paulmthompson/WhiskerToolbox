@@ -3,8 +3,8 @@
  * @brief Element-level mask median filtering transform (Mask2D → Mask2D).
  */
 
-#ifndef WHISKERTOOLBOX_V2_MASK_MEDIAN_FILTER_TRANSFORM_HPP
-#define WHISKERTOOLBOX_V2_MASK_MEDIAN_FILTER_TRANSFORM_HPP
+#ifndef NEURALYZER_V2_MASK_MEDIAN_FILTER_TRANSFORM_HPP
+#define NEURALYZER_V2_MASK_MEDIAN_FILTER_TRANSFORM_HPP
 
 class Mask2D;
 
@@ -81,4 +81,4 @@ Mask2D applyMedianFilterWithContext(
 
 }// namespace WhiskerToolbox::Transforms::V2::Examples
 
-#endif// WHISKERTOOLBOX_V2_MASK_MEDIAN_FILTER_TRANSFORM_HPP
+#endif// NEURALYZER_V2_MASK_MEDIAN_FILTER_TRANSFORM_HPP

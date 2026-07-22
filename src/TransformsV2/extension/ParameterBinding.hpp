@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_V2_PARAMETER_BINDING_HPP
-#define WHISKERTOOLBOX_V2_PARAMETER_BINDING_HPP
+#ifndef NEURALYZER_V2_PARAMETER_BINDING_HPP
+#define NEURALYZER_V2_PARAMETER_BINDING_HPP
 
 /**
  * @file ParameterBinding.hpp
@@ -276,4 +276,4 @@ bool hasBindingApplicator(std::type_index params_type);
 
 }  // namespace WhiskerToolbox::Transforms::V2
 
-#endif  // WHISKERTOOLBOX_V2_PARAMETER_BINDING_HPP
+#endif  // NEURALYZER_V2_PARAMETER_BINDING_HPP

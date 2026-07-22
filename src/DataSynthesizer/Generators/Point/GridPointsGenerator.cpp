@@ -64,10 +64,10 @@ DataTypeVariant generateGridPoints(GridPointsParams const & params) {
 }
 
 auto const grid_points_reg =
-        WhiskerToolbox::DataSynthesizer::RegisterGenerator<GridPointsParams>(
+        Neuralyzer::DataSynthesizer::RegisterGenerator<GridPointsParams>(
                 "GridPoints",
                 generateGridPoints,
-                WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+                Neuralyzer::DataSynthesizer::GeneratorMetadata{
                         .description = "Generates a regular grid of points repeated at every frame. "
                                        "The grid is defined by rows, columns, spacing between points, "
                                        "and an origin position.",

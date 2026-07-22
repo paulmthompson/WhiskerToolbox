@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_V2_DATAMANAGER_INTEGRATION_HPP
-#define WHISKERTOOLBOX_V2_DATAMANAGER_INTEGRATION_HPP
+#ifndef NEURALYZER_V2_DATAMANAGER_INTEGRATION_HPP
+#define NEURALYZER_V2_DATAMANAGER_INTEGRATION_HPP
 
 #include "DataManager/DataManagerTypes.hpp"// DataTypeVariant
 
@@ -605,4 +605,4 @@ std::vector<DataInfo> load_data_from_json_config_v2(
 
 }// namespace WhiskerToolbox::Transforms::V2
 
-#endif// WHISKERTOOLBOX_V2_DATAMANAGER_INTEGRATION_HPP
+#endif// NEURALYZER_V2_DATAMANAGER_INTEGRATION_HPP

@@ -17,7 +17,7 @@
 #include <string>
 #include <vector>
 
-using namespace WhiskerToolbox::DataSynthesizer;
+using namespace Neuralyzer::DataSynthesizer;
 
 namespace {
 

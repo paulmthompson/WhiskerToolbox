@@ -8,7 +8,7 @@
 #include "Commands/Core/CommandRegistry.hpp"
 #include "DataSynthesizer/Commands/SynthesizeData.hpp"
 
-namespace WhiskerToolbox::DataSynthesizer {
+namespace Neuralyzer::DataSynthesizer {
 
 void register_datasynthesizer_commands() {
     auto & reg = commands::CommandRegistry::instance();
@@ -27,4 +27,4 @@ void register_datasynthesizer_commands() {
              .supported_data_types = {"AnalogTimeSeries"}});
 }
 
-}// namespace WhiskerToolbox::DataSynthesizer
+}// namespace Neuralyzer::DataSynthesizer

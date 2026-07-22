@@ -16,7 +16,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace WhiskerToolbox::DataSynthesizer {
+namespace Neuralyzer::DataSynthesizer {
 
 /**
  * @brief Singleton registry for data generators.
@@ -120,6 +120,6 @@ private:
     std::unordered_map<std::string, std::vector<std::string>> output_type_index_;
 };
 
-}// namespace WhiskerToolbox::DataSynthesizer
+}// namespace Neuralyzer::DataSynthesizer
 
 #endif// NEURALYZER_GENERATOR_REGISTRY_HPP

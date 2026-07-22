@@ -3,8 +3,8 @@
  * @brief Policy for handling NaN/Inf rows in dimensionality reduction transforms
  */
 
-#ifndef WHISKERTOOLBOX_V2_NANPOLICY_HPP
-#define WHISKERTOOLBOX_V2_NANPOLICY_HPP
+#ifndef NEURALYZER_V2_NANPOLICY_HPP
+#define NEURALYZER_V2_NANPOLICY_HPP
 
 namespace WhiskerToolbox::Transforms::V2 {
 
@@ -19,4 +19,4 @@ enum class NaNPolicy {
 
 }// namespace WhiskerToolbox::Transforms::V2
 
-#endif// WHISKERTOOLBOX_V2_NANPOLICY_HPP
+#endif// NEURALYZER_V2_NANPOLICY_HPP

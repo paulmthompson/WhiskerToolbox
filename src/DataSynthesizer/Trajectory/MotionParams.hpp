@@ -20,7 +20,7 @@
 #include <rfl.hpp>
 #include <string>
 
-namespace WhiskerToolbox::DataSynthesizer {
+namespace Neuralyzer::DataSynthesizer {
 
 // ============================================================================
 // Boundary
@@ -155,6 +155,6 @@ inline TrajectoryParams toTrajectoryParams(
     return tp;
 }
 
-}// namespace WhiskerToolbox::DataSynthesizer
+}// namespace Neuralyzer::DataSynthesizer
 
 #endif// NEURALYZER_DATASYNTHESIZER_MOTION_PARAMS_HPP

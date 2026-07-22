@@ -59,10 +59,10 @@ DataTypeVariant generateStraightLine(StraightLineParams const & params) {
 }
 
 auto const straight_line_reg =
-        WhiskerToolbox::DataSynthesizer::RegisterGenerator<StraightLineParams>(
+        Neuralyzer::DataSynthesizer::RegisterGenerator<StraightLineParams>(
                 "StraightLine",
                 generateStraightLine,
-                WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+                Neuralyzer::DataSynthesizer::GeneratorMetadata{
                         .description = "Generates a straight line segment repeated at every frame. "
                                        "The line is defined by start and end points, with "
                                        "num_points_per_line samples linearly interpolated between them.",

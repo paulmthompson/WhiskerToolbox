@@ -72,10 +72,10 @@ DataTypeVariant generateRandomIntervals(RandomIntervalsParams const & params) {
 }
 
 auto const random_intervals_reg =
-        WhiskerToolbox::DataSynthesizer::RegisterGenerator<RandomIntervalsParams>(
+        Neuralyzer::DataSynthesizer::RegisterGenerator<RandomIntervalsParams>(
                 "RandomIntervals",
                 generateRandomIntervals,
-                WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+                Neuralyzer::DataSynthesizer::GeneratorMetadata{
                         .description = "Generates randomly spaced intervals with exponentially "
                                        "distributed durations and gaps. "
                                        "Deterministic: same seed always produces the same output.",

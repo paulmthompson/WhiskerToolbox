@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_STEP_CONFIG_PANEL_HPP
-#define WHISKERTOOLBOX_STEP_CONFIG_PANEL_HPP
+#ifndef NEURALYZER_V2_STEP_CONFIG_PANEL_HPP
+#define NEURALYZER_V2_STEP_CONFIG_PANEL_HPP
 
 /**
  * @file StepConfigPanel.hpp
@@ -91,4 +91,4 @@ private:
     std::string _current_transform_name;
 };
 
-#endif// WHISKERTOOLBOX_STEP_CONFIG_PANEL_HPP
+#endif// NEURALYZER_V2_STEP_CONFIG_PANEL_HPP

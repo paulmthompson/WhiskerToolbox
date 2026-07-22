@@ -3,8 +3,8 @@
  * @brief Robust ZCA whitening container transform for multi-channel TensorData.
  */
 
-#ifndef WHISKERTOOLBOX_V2_TENSOR_WHITENING_HPP
-#define WHISKERTOOLBOX_V2_TENSOR_WHITENING_HPP
+#ifndef NEURALYZER_V2_TENSOR_WHITENING_HPP
+#define NEURALYZER_V2_TENSOR_WHITENING_HPP
 
 #include <memory>
 #include <vector>
@@ -70,4 +70,4 @@ struct TensorWhiteningParams {
 }// namespace WhiskerToolbox::Transforms::V2::Examples
 
 
-#endif// WHISKERTOOLBOX_V2_TENSOR_WHITENING_HPP
+#endif// NEURALYZER_V2_TENSOR_WHITENING_HPP

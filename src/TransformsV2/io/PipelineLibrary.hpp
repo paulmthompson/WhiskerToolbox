@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_V2_PIPELINE_LIBRARY_HPP
-#define WHISKERTOOLBOX_V2_PIPELINE_LIBRARY_HPP
+#ifndef NEURALYZER_V2_PIPELINE_LIBRARY_HPP
+#define NEURALYZER_V2_PIPELINE_LIBRARY_HPP
 
 /**
  * @file PipelineLibrary.hpp
@@ -90,4 +90,4 @@ struct PipelineLibraryEntry {
 
 }// namespace WhiskerToolbox::Transforms::V2::Examples
 
-#endif// WHISKERTOOLBOX_V2_PIPELINE_LIBRARY_HPP
+#endif// NEURALYZER_V2_PIPELINE_LIBRARY_HPP

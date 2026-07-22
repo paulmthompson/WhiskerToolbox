@@ -13,7 +13,7 @@
 #include <random>
 #include <stdexcept>
 
-namespace WhiskerToolbox::DataSynthesizer {
+namespace Neuralyzer::DataSynthesizer {
 
 namespace {
 
@@ -131,4 +131,4 @@ std::vector<Point2D<float>> computeTrajectory(
     return trajectory;
 }
 
-}// namespace WhiskerToolbox::DataSynthesizer
+}// namespace Neuralyzer::DataSynthesizer

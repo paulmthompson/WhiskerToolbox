@@ -59,10 +59,10 @@ DataTypeVariant generateSineWave(SineWaveParams const & params) {
 }
 
 auto const sine_wave_reg =
-        WhiskerToolbox::DataSynthesizer::RegisterGenerator<SineWaveParams>(
+        Neuralyzer::DataSynthesizer::RegisterGenerator<SineWaveParams>(
                 "SineWave",
                 generateSineWave,
-                WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+                Neuralyzer::DataSynthesizer::GeneratorMetadata{
                         .description = "Generates a sine wave analog time series. "
                                        "Produces y[t] = amplitude * sin(2π * frequency * t + phase) + dc_offset.",
                         .category = "Periodic",

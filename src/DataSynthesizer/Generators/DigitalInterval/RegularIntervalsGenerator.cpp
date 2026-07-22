@@ -58,10 +58,10 @@ DataTypeVariant generateRegularIntervals(RegularIntervalsParams const & params) 
 }
 
 auto const regular_intervals_reg =
-        WhiskerToolbox::DataSynthesizer::RegisterGenerator<RegularIntervalsParams>(
+        Neuralyzer::DataSynthesizer::RegisterGenerator<RegularIntervalsParams>(
                 "RegularIntervals",
                 generateRegularIntervals,
-                WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+                Neuralyzer::DataSynthesizer::GeneratorMetadata{
                         .description = "Generates periodic on/off intervals with constant "
                                        "on_duration and off_duration. Intervals are placed "
                                        "starting at start_offset (default 0).",

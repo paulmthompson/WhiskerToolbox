@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_V2_PARAMETER_IO_HPP
-#define WHISKERTOOLBOX_V2_PARAMETER_IO_HPP
+#ifndef NEURALYZER_V2_PARAMETER_IO_HPP
+#define NEURALYZER_V2_PARAMETER_IO_HPP
 
 #include <rfl.hpp>
 #include <rfl/DefaultIfMissing.hpp>
@@ -124,4 +124,4 @@ std::any loadParametersForTransform(
 
 } // namespace WhiskerToolbox::Transforms::V2::Examples
 
-#endif // WHISKERTOOLBOX_V2_PARAMETER_IO_HPP
+#endif // NEURALYZER_V2_PARAMETER_IO_HPP

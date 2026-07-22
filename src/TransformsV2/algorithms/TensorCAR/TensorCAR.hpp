@@ -2,13 +2,12 @@
  * @file TensorCAR.hpp
  * @brief Common Average Reference (CAR) container transform for multi-channel TensorData.
  *
- * Phase 2.1 of the multi-channel storage roadmap.
  * Takes a 2D TensorData (time × channels) and subtracts a cross-channel
  * reference signal (mean or median across included channels) from every channel.
  */
 
-#ifndef WHISKERTOOLBOX_V2_TENSOR_CAR_HPP
-#define WHISKERTOOLBOX_V2_TENSOR_CAR_HPP
+#ifndef NEURALYZER_V2_TENSOR_CAR_HPP
+#define NEURALYZER_V2_TENSOR_CAR_HPP
 
 #include <memory>
 #include <vector>
@@ -76,4 +75,4 @@ struct TensorCARParams {
 
 }// namespace WhiskerToolbox::Transforms::V2::Examples
 
-#endif// WHISKERTOOLBOX_V2_TENSOR_CAR_HPP
+#endif// NEURALYZER_V2_TENSOR_CAR_HPP

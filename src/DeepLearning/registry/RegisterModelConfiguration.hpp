@@ -3,8 +3,8 @@
  * @brief RAII helper for static registration of per-model configuration hooks.
  */
 
-#ifndef WHISKERTOOLBOX_REGISTER_MODEL_CONFIGURATION_HPP
-#define WHISKERTOOLBOX_REGISTER_MODEL_CONFIGURATION_HPP
+#ifndef NEURALYZER_REGISTER_MODEL_CONFIGURATION_HPP
+#define NEURALYZER_REGISTER_MODEL_CONFIGURATION_HPP
 
 #include "ModelRegistry.hpp"
 #include "models_v2/ModelBase.hpp"
@@ -121,4 +121,4 @@ public:
     }
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
-#endif// WHISKERTOOLBOX_REGISTER_MODEL_CONFIGURATION_HPP
+#endif// NEURALYZER_REGISTER_MODEL_CONFIGURATION_HPP

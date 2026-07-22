@@ -58,10 +58,10 @@ DataTypeVariant generatePoissonEvents(PoissonEventsParams const & params) {
 }
 
 auto const poisson_events_reg =
-        WhiskerToolbox::DataSynthesizer::RegisterGenerator<PoissonEventsParams>(
+        Neuralyzer::DataSynthesizer::RegisterGenerator<PoissonEventsParams>(
                 "PoissonEvents",
                 generatePoissonEvents,
-                WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+                Neuralyzer::DataSynthesizer::GeneratorMetadata{
                         .description = "Generates events via a homogeneous Poisson process with "
                                        "constant rate lambda (events per sample). "
                                        "Deterministic: same seed always produces the same output.",

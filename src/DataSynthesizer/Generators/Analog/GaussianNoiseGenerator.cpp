@@ -51,10 +51,10 @@ DataTypeVariant generateGaussianNoise(GaussianNoiseParams const & params) {
 }
 
 auto const gaussian_noise_reg =
-        WhiskerToolbox::DataSynthesizer::RegisterGenerator<GaussianNoiseParams>(
+        Neuralyzer::DataSynthesizer::RegisterGenerator<GaussianNoiseParams>(
                 "GaussianNoise",
                 generateGaussianNoise,
-                WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+                Neuralyzer::DataSynthesizer::GeneratorMetadata{
                         .description = "Generates i.i.d. Gaussian (normal) noise samples. "
                                        "Deterministic: same seed always produces the same output.",
                         .category = "Noise",

@@ -3,8 +3,8 @@
  * @brief User-configurable parameter structs for post-encoder modules.
  */
 
-#ifndef WHISKERTOOLBOX_POST_ENCODER_MODULE_PARAMS_HPP
-#define WHISKERTOOLBOX_POST_ENCODER_MODULE_PARAMS_HPP
+#ifndef NEURALYZER_POST_ENCODER_MODULE_PARAMS_HPP
+#define NEURALYZER_POST_ENCODER_MODULE_PARAMS_HPP
 
 #include <string>
 
@@ -34,4 +34,4 @@ struct SpatialPointModuleParams {
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_POST_ENCODER_MODULE_PARAMS_HPP
+#endif// NEURALYZER_POST_ENCODER_MODULE_PARAMS_HPP

@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_PRE_REDUCTION_PANEL_HPP
-#define WHISKERTOOLBOX_PRE_REDUCTION_PANEL_HPP
+#ifndef NEURALYZER_V2_PRE_REDUCTION_PANEL_HPP
+#define NEURALYZER_V2_PRE_REDUCTION_PANEL_HPP
 
 /**
  * @file PreReductionPanel.hpp
@@ -109,4 +109,4 @@ private:
     std::type_index _input_element_type{typeid(void)};
 };
 
-#endif// WHISKERTOOLBOX_PRE_REDUCTION_PANEL_HPP
+#endif// NEURALYZER_V2_PRE_REDUCTION_PANEL_HPP

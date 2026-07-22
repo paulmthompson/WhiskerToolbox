@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_V2_DETAIL_EXTRACT_ELEMENT_HPP
-#define WHISKERTOOLBOX_V2_DETAIL_EXTRACT_ELEMENT_HPP
+#ifndef NEURALYZER_V2_DETAIL_EXTRACT_ELEMENT_HPP
+#define NEURALYZER_V2_DETAIL_EXTRACT_ELEMENT_HPP
 
 #include <type_traits>
 
@@ -48,4 +48,4 @@ decltype(auto) extractElement(IterValue const & iter_value) {
 
 }// namespace WhiskerToolbox::Transforms::V2
 
-#endif// WHISKERTOOLBOX_V2_DETAIL_EXTRACT_ELEMENT_HPP
+#endif// NEURALYZER_V2_DETAIL_EXTRACT_ELEMENT_HPP

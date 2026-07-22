@@ -3,8 +3,8 @@
  * @brief Compile-time registry of available ModelBase subclasses.
  */
 
-#ifndef WHISKERTOOLBOX_MODEL_REGISTRY_HPP
-#define WHISKERTOOLBOX_MODEL_REGISTRY_HPP
+#ifndef NEURALYZER_MODEL_REGISTRY_HPP
+#define NEURALYZER_MODEL_REGISTRY_HPP
 
 #include "ParameterSchema/ParameterSchema.hpp"
 #include "models_v2/ModelBase.hpp"
@@ -258,4 +258,4 @@ private:
     }
 // NOLINTEND(cppcoreguidelines-avoid-non-const-global-variables)
 
-#endif// WHISKERTOOLBOX_MODEL_REGISTRY_HPP
+#endif// NEURALYZER_MODEL_REGISTRY_HPP

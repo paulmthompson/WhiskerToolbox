@@ -9,7 +9,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <numeric>
 
-using namespace WhiskerToolbox::DataSynthesizer;
+using namespace Neuralyzer::DataSynthesizer;
 
 static std::shared_ptr<AnalogTimeSeries> runUniformNoise(std::string const & json) {
     auto result = GeneratorRegistry::instance().generate("UniformNoise", json);

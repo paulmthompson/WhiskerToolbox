@@ -3,8 +3,8 @@
  * @brief ModelBase implementation driven by a JSON RuntimeModelSpec.
  */
 
-#ifndef WHISKERTOOLBOX_RUNTIME_MODEL_HPP
-#define WHISKERTOOLBOX_RUNTIME_MODEL_HPP
+#ifndef NEURALYZER_RUNTIME_MODEL_HPP
+#define NEURALYZER_RUNTIME_MODEL_HPP
 
 #include "RuntimeModelSpec.hpp"
 #include "models_v2/ModelBase.hpp"
@@ -99,4 +99,4 @@ private:
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_RUNTIME_MODEL_HPP
+#endif// NEURALYZER_RUNTIME_MODEL_HPP

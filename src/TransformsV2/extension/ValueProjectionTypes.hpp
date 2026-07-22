@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_V2_VALUE_PROJECTION_TYPES_HPP
-#define WHISKERTOOLBOX_V2_VALUE_PROJECTION_TYPES_HPP
+#ifndef NEURALYZER_V2_VALUE_PROJECTION_TYPES_HPP
+#define NEURALYZER_V2_VALUE_PROJECTION_TYPES_HPP
 
 /**
  * @file ValueProjectionTypes.hpp
@@ -389,4 +389,4 @@ ValueProjectionFactoryV2<InElement, Value> recoverValueProjectionFactoryV2(
 
 }// namespace WhiskerToolbox::Transforms::V2
 
-#endif// WHISKERTOOLBOX_V2_VALUE_PROJECTION_TYPES_HPP
+#endif// NEURALYZER_V2_VALUE_PROJECTION_TYPES_HPP

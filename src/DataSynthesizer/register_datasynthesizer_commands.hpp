@@ -6,7 +6,7 @@
 #ifndef REGISTER_DATASYNTHESIZER_COMMANDS_HPP
 #define REGISTER_DATASYNTHESIZER_COMMANDS_HPP
 
-namespace WhiskerToolbox::DataSynthesizer {
+namespace Neuralyzer::DataSynthesizer {
 
 /// @brief Register DataSynthesizer commands with the CommandRegistry singleton.
 ///
@@ -14,6 +14,6 @@ namespace WhiskerToolbox::DataSynthesizer {
 /// Safe to call multiple times (subsequent calls are no-ops).
 void register_datasynthesizer_commands();
 
-}// namespace WhiskerToolbox::DataSynthesizer
+}// namespace Neuralyzer::DataSynthesizer
 
 #endif// REGISTER_DATASYNTHESIZER_COMMANDS_HPP

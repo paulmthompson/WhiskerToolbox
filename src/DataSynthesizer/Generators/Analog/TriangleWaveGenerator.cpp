@@ -63,10 +63,10 @@ DataTypeVariant generateTriangleWave(TriangleWaveParams const & params) {
 }
 
 auto const triangle_wave_reg =
-        WhiskerToolbox::DataSynthesizer::RegisterGenerator<TriangleWaveParams>(
+        Neuralyzer::DataSynthesizer::RegisterGenerator<TriangleWaveParams>(
                 "TriangleWave",
                 generateTriangleWave,
-                WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+                Neuralyzer::DataSynthesizer::GeneratorMetadata{
                         .description = "Generates a triangle wave analog time series. "
                                        "num_cycles complete cycles over cycle_length samples (defaults to num_samples). "
                                        "Uses arcsin(sin(x)) formulation for consistent phase with SineWave.",

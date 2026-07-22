@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_V2_PIPELINE_LOADER_HPP
-#define WHISKERTOOLBOX_V2_PIPELINE_LOADER_HPP
+#ifndef NEURALYZER_V2_PIPELINE_LOADER_HPP
+#define NEURALYZER_V2_PIPELINE_LOADER_HPP
 
 #include "core/TransformPipeline.hpp"// TransformPipeline
 #include "detail/PipelineStep.hpp"   // PipelineStep
@@ -418,4 +418,4 @@ rfl::Result<PipelineDescriptor> loadPipelineDescriptorFromJsonFile(std::string c
 
 }// namespace WhiskerToolbox::Transforms::V2::Examples
 
-#endif// WHISKERTOOLBOX_V2_PIPELINE_LOADER_HPP
+#endif// NEURALYZER_V2_PIPELINE_LOADER_HPP

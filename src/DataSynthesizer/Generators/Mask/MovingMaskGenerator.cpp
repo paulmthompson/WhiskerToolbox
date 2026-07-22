@@ -25,22 +25,22 @@
 #include <stdexcept>
 #include <string>
 
-namespace WhiskerToolbox::DataSynthesizer {
+namespace Neuralyzer::DataSynthesizer {
 
 /// Shape type for the moving mask.
 enum class MaskShape { circle,
                        rectangle,
                        ellipse };
 
-}// namespace WhiskerToolbox::DataSynthesizer
+}// namespace Neuralyzer::DataSynthesizer
 
 namespace {
 
-using WhiskerToolbox::DataSynthesizer::BoundaryMode;
-using WhiskerToolbox::DataSynthesizer::BoundaryParams;
-using WhiskerToolbox::DataSynthesizer::LinearMotionParams;
-using WhiskerToolbox::DataSynthesizer::MaskShape;
-using WhiskerToolbox::DataSynthesizer::MotionModelVariant;
+using Neuralyzer::DataSynthesizer::BoundaryMode;
+using Neuralyzer::DataSynthesizer::BoundaryParams;
+using Neuralyzer::DataSynthesizer::LinearMotionParams;
+using Neuralyzer::DataSynthesizer::MaskShape;
+using Neuralyzer::DataSynthesizer::MotionModelVariant;
 
 struct MovingMaskParams {
     MaskShape shape = MaskShape::circle;
@@ -137,10 +137,10 @@ DataTypeVariant generateMovingMask(MovingMaskParams const & params) {
             params.bounds_max_x,
             params.bounds_min_y,
             params.bounds_max_y};
-    auto const tp = WhiskerToolbox::DataSynthesizer::toTrajectoryParams(
+    auto const tp = Neuralyzer::DataSynthesizer::toTrajectoryParams(
             params.motion, boundary);
 
-    auto const trajectory = WhiskerToolbox::DataSynthesizer::computeTrajectory(
+    auto const trajectory = Neuralyzer::DataSynthesizer::computeTrajectory(
             params.start_x,
             params.start_y,
             params.num_frames, tp);
@@ -160,10 +160,10 @@ DataTypeVariant generateMovingMask(MovingMaskParams const & params) {
 }
 
 auto const moving_mask_reg =
-        WhiskerToolbox::DataSynthesizer::RegisterGenerator<MovingMaskParams>(
+        Neuralyzer::DataSynthesizer::RegisterGenerator<MovingMaskParams>(
                 "MovingMask",
                 generateMovingMask,
-                WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+                Neuralyzer::DataSynthesizer::GeneratorMetadata{
                         .description = "Generates a shape (circle, rectangle, or ellipse) that moves "
                                        "along a trajectory. Supports linear, sinusoidal, and Brownian "
                                        "motion models with clamp, bounce, or wrap boundary modes. "

@@ -62,10 +62,10 @@ DataTypeVariant generateRectangleMask(RectangleMaskParams const & params) {
 }
 
 auto const rectangle_mask_reg =
-        WhiskerToolbox::DataSynthesizer::RegisterGenerator<RectangleMaskParams>(
+        Neuralyzer::DataSynthesizer::RegisterGenerator<RectangleMaskParams>(
                 "RectangleMask",
                 generateRectangleMask,
-                WhiskerToolbox::DataSynthesizer::GeneratorMetadata{
+                Neuralyzer::DataSynthesizer::GeneratorMetadata{
                         .description = "Generates a rectangular mask repeated at every frame. "
                                        "The rectangle is defined by center position and dimensions, "
                                        "rasterized to pixel coordinates.",

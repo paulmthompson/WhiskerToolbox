@@ -3,8 +3,8 @@
  * @brief Element-level mask-to-line transform (Mask2D → Line2D).
  */
 
-#ifndef WHISKERTOOLBOX_V2_MASK_TO_LINE_TRANSFORM_HPP
-#define WHISKERTOOLBOX_V2_MASK_TO_LINE_TRANSFORM_HPP
+#ifndef NEURALYZER_V2_MASK_TO_LINE_TRANSFORM_HPP
+#define NEURALYZER_V2_MASK_TO_LINE_TRANSFORM_HPP
 
 class Line2D;
 class Mask2D;
@@ -75,4 +75,4 @@ Line2D maskToLineWithContext(
 
 }// namespace WhiskerToolbox::Transforms::V2::Examples
 
-#endif// WHISKERTOOLBOX_V2_MASK_TO_LINE_TRANSFORM_HPP
+#endif// NEURALYZER_V2_MASK_TO_LINE_TRANSFORM_HPP

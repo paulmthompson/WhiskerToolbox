@@ -181,7 +181,7 @@ void DataSynthesizerProperties_Widget::_onPreviewClicked() {
     }
 
     auto const & param_json_str = _state->parameterJson();
-    auto const & registry = WhiskerToolbox::DataSynthesizer::GeneratorRegistry::instance();
+    auto const & registry = Neuralyzer::DataSynthesizer::GeneratorRegistry::instance();
 
     auto result = registry.generate(generator_name, param_json_str);
     if (!result) {
@@ -254,7 +254,7 @@ void DataSynthesizerProperties_Widget::_onGenerateClicked() {
 }
 
 void DataSynthesizerProperties_Widget::_populateOutputTypes() {
-    auto const & registry = WhiskerToolbox::DataSynthesizer::GeneratorRegistry::instance();
+    auto const & registry = Neuralyzer::DataSynthesizer::GeneratorRegistry::instance();
     auto const output_types = registry.listOutputTypes();
 
     _output_type_combo->blockSignals(true);
@@ -266,7 +266,7 @@ void DataSynthesizerProperties_Widget::_populateOutputTypes() {
 }
 
 void DataSynthesizerProperties_Widget::_populateGenerators(std::string const & output_type) {
-    auto const & registry = WhiskerToolbox::DataSynthesizer::GeneratorRegistry::instance();
+    auto const & registry = Neuralyzer::DataSynthesizer::GeneratorRegistry::instance();
     auto const generators = registry.listGenerators(output_type);
 
     _generator_combo->blockSignals(true);
@@ -286,7 +286,7 @@ void DataSynthesizerProperties_Widget::_populateGenerators(std::string const & o
 }
 
 void DataSynthesizerProperties_Widget::_setupGeneratorParams(std::string const & generator_name) {
-    auto const & registry = WhiskerToolbox::DataSynthesizer::GeneratorRegistry::instance();
+    auto const & registry = Neuralyzer::DataSynthesizer::GeneratorRegistry::instance();
     auto const schema = registry.getSchema(generator_name);
 
     if (schema) {
