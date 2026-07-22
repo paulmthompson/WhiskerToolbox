@@ -21,7 +21,7 @@
 #include <cmath>
 #include <numeric>
 
-using namespace WhiskerToolbox::Plots;
+using namespace Neuralyzer::Plots;
 using Catch::Approx;
 
 // =============================================================================

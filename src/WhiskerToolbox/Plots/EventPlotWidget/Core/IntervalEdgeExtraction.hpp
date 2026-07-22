@@ -19,7 +19,7 @@
 
 #include <memory>
 
-namespace WhiskerToolbox::Plots {
+namespace Neuralyzer::Plots {
 
 /**
  * @brief Extract edge events from a DigitalIntervalSeries
@@ -60,6 +60,6 @@ namespace WhiskerToolbox::Plots {
     return result;
 }
 
-} // namespace WhiskerToolbox::Plots
+} // namespace Neuralyzer::Plots
 
 #endif // INTERVAL_EDGE_EXTRACTION_HPP

@@ -240,7 +240,7 @@ void PlotAlignmentWidget::_updatePrunedCount() {
     }
 
     PlotAlignmentData const & alignment_data = _state->data();
-    size_t const pruned_count = WhiskerToolbox::Plots::countNonOverlappingAlignmentEvents(
+    size_t const pruned_count = Neuralyzer::Plots::countNonOverlappingAlignmentEvents(
             _data_manager, alignment_data);
 
     // Determine total count from the source series

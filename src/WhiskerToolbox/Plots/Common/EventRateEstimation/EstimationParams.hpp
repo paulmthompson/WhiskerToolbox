@@ -15,7 +15,7 @@
 
 #include <variant>
 
-namespace WhiskerToolbox::Plots {
+namespace Neuralyzer::Plots {
 
 // =============================================================================
 // Rate Estimation: parameter structs (one per method)
@@ -77,6 +77,6 @@ struct CausalExponentialParams {
  */
 using EstimationParams = std::variant<BinningParams, GaussianKernelParams, CausalExponentialParams>;
 
-} // namespace WhiskerToolbox::Plots
+} // namespace Neuralyzer::Plots
 
 #endif // ESTIMATION_PARAMS_HPP

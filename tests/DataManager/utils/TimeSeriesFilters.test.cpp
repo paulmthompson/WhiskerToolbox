@@ -25,8 +25,8 @@
 #include <vector>
 #include <ranges>
 
-using namespace WhiskerToolbox::Filters;
-using namespace WhiskerToolbox::Concepts;
+using namespace Neuralyzer::Filters;
+using namespace Neuralyzer::Concepts;
 
 // =============================================================================
 // Time Range Filtering Tests

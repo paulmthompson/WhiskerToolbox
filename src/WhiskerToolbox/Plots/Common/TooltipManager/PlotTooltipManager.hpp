@@ -67,7 +67,7 @@
 class QTimer;
 class QWidget;
 
-namespace WhiskerToolbox::Plots {
+namespace Neuralyzer::Plots {
 
 // =============================================================================
 // Hit result
@@ -277,6 +277,6 @@ private:
     std::unique_ptr<PixmapPopup> _pixmap_popup;
 };
 
-}// namespace WhiskerToolbox::Plots
+}// namespace Neuralyzer::Plots
 
 #endif// PLOT_TOOLTIP_MANAGER_HPP

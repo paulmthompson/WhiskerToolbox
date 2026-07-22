@@ -13,7 +13,7 @@
 #include <opencv2/core/mat.hpp>
 #include <string>
 
-namespace WhiskerToolbox::MediaProcessing {
+namespace Neuralyzer::MediaProcessing {
 
 /**
  * @brief Descriptor for a single image processing step
@@ -34,6 +34,6 @@ struct ProcessingStep {
     std::function<void(cv::Mat &, nlohmann::json const &)> apply;
 };
 
-}// namespace WhiskerToolbox::MediaProcessing
+}// namespace Neuralyzer::MediaProcessing
 
 #endif// MEDIA_PROCESSING_PIPELINE_PROCESSING_STEP_HPP

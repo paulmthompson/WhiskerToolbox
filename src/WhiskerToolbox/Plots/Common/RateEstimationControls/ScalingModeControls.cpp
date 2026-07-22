@@ -4,7 +4,7 @@
 #include <QLabel>
 #include <QVBoxLayout>
 
-using namespace WhiskerToolbox::Plots;
+using namespace Neuralyzer::Plots;
 
 // =============================================================================
 // Construction

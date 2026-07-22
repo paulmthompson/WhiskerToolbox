@@ -5,7 +5,7 @@
  * @file HeatmapOpenGLWidget.hpp
  * @brief OpenGL-based heatmap visualization using CorePlotting infrastructure
  *
- * Uses CorePlotting::ViewStateData for view state and WhiskerToolbox::Plots
+ * Uses CorePlotting::ViewStateData for view state and Neuralyzer::Plots
  * helpers for projection and interaction.
  */
 
@@ -125,7 +125,7 @@ private:
     /// Cached display-order unit keys (reflects current sort order)
     std::vector<std::string> _display_unit_keys;
 
-    std::unique_ptr<WhiskerToolbox::Plots::PlotTooltipManager> _tooltip_mgr;
+    std::unique_ptr<Neuralyzer::Plots::PlotTooltipManager> _tooltip_mgr;
 
     SelectionContext * _selection_context{nullptr};
     QMenu * _context_menu{nullptr};

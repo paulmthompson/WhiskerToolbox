@@ -58,7 +58,7 @@ struct CSVPointLoaderOptions {
 };
 
 // Compile-time validation that CSVPointLoaderOptions conforms to loader requirements
-static_assert(WhiskerToolbox::ValidLoaderOptions<CSVPointLoaderOptions>,
+static_assert(Neuralyzer::ValidLoaderOptions<CSVPointLoaderOptions>,
               "CSVPointLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
 DATAMANAGERIO_EXPORT std::map<TimeFrameIndex, Point2D<float>> load(CSVPointLoaderOptions const & opts);
@@ -198,7 +198,7 @@ struct DLCPointLoaderOptions {
 };
 
 // Compile-time validation that DLCPointLoaderOptions conforms to loader requirements
-static_assert(WhiskerToolbox::ValidLoaderOptions<DLCPointLoaderOptions>,
+static_assert(Neuralyzer::ValidLoaderOptions<DLCPointLoaderOptions>,
               "DLCPointLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
 DATAMANAGERIO_EXPORT std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLCPointLoaderOptions const & opts);

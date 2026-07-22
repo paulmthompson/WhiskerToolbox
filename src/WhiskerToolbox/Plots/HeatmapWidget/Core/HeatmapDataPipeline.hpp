@@ -28,7 +28,7 @@
 
 class DataManager;
 
-namespace WhiskerToolbox::Plots {
+namespace Neuralyzer::Plots {
 
 /**
  * @brief Configuration for the heatmap data pipeline
@@ -113,6 +113,6 @@ void applySortOrder(
         std::vector<std::string> & unit_keys,
         std::vector<std::size_t> const & sort_indices);
 
-}// namespace WhiskerToolbox::Plots
+}// namespace Neuralyzer::Plots
 
 #endif// HEATMAP_DATA_PIPELINE_HPP

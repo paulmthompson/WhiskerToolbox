@@ -24,7 +24,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-using namespace WhiskerToolbox::Concepts;
+using namespace Neuralyzer::Concepts;
 
 // =============================================================================
 // Compile-Time Concept Verification (static_assert)

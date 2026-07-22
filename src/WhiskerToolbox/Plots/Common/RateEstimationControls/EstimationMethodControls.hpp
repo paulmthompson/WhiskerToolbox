@@ -54,20 +54,20 @@ public:
      * @brief Get the currently configured estimation parameters
      * @return EstimationParams variant matching the selected method
      */
-    [[nodiscard]] WhiskerToolbox::Plots::EstimationParams params() const;
+    [[nodiscard]] Neuralyzer::Plots::EstimationParams params() const;
 
     /**
      * @brief Set the estimation parameters (updates combo box and parameter controls)
      * @param params EstimationParams variant to apply
      */
-    void setParams(WhiskerToolbox::Plots::EstimationParams const & params);
+    void setParams(Neuralyzer::Plots::EstimationParams const & params);
 
 signals:
     /**
      * @brief Emitted when the user changes the estimation method or any parameter
      * @param params The new EstimationParams variant
      */
-    void paramsChanged(WhiskerToolbox::Plots::EstimationParams const & params);
+    void paramsChanged(Neuralyzer::Plots::EstimationParams const & params);
 
 private slots:
     void onMethodChanged(int index);

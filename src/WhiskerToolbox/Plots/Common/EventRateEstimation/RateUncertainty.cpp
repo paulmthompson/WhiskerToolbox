@@ -1,6 +1,6 @@
 #include "RateUncertainty.hpp"
 
-namespace WhiskerToolbox::Plots {
+namespace Neuralyzer::Plots {
 
 ConfidenceBand computeSEM(
         RateEstimateWithTrials const & /*data*/,
@@ -28,4 +28,4 @@ ConfidenceBand bootstrapCI(
     return {};
 }
 
-} // namespace WhiskerToolbox::Plots
+} // namespace Neuralyzer::Plots

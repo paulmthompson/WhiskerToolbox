@@ -15,7 +15,7 @@
 
 class DataManager;
 
-namespace WhiskerToolbox::DataManagerPipeline {
+namespace Neuralyzer::DataManagerPipeline {
 
 /**
  * @brief Pipeline phase identifiers used for structured failure reporting.
@@ -94,6 +94,6 @@ struct JsonPipelineResult {
         std::string const & json_filepath,
         JsonPipelineOptions const & options = {});
 
-}// namespace WhiskerToolbox::DataManagerPipeline
+}// namespace Neuralyzer::DataManagerPipeline
 
 #endif// JSON_PIPELINE_RUNNER_HPP

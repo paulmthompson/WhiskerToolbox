@@ -85,7 +85,7 @@ struct BinaryAnalogLoaderOptions {
 };
 
 // Compile-time validation that BinaryAnalogLoaderOptions conforms to loader requirements
-static_assert(WhiskerToolbox::ValidLoaderOptions<BinaryAnalogLoaderOptions>,
+static_assert(Neuralyzer::ValidLoaderOptions<BinaryAnalogLoaderOptions>,
               "BinaryAnalogLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
 DATAMANAGERIO_EXPORT std::vector<std::shared_ptr<AnalogTimeSeries>> load(BinaryAnalogLoaderOptions const & opts);

@@ -216,7 +216,7 @@ void HeatmapPropertiesWidget::_syncTreeFromState() {
 // =============================================================================
 
 void HeatmapPropertiesWidget::_setupScalingSection() {
-    using WhiskerToolbox::Plots::ScalingMode;
+    using Neuralyzer::Plots::ScalingMode;
 
     _scaling_section = new Section(this, "Rate Estimation & Scaling");
 
@@ -254,7 +254,7 @@ void HeatmapPropertiesWidget::_setupScalingSection() {
 
     // --- Connect signals ---
     connect(_estimation_controls, &EstimationMethodControls::paramsChanged,
-            this, [this](WhiskerToolbox::Plots::EstimationParams const & params) {
+            this, [this](Neuralyzer::Plots::EstimationParams const & params) {
                 if (!_state) return;
                 _state->setEstimationParams(params);
             });

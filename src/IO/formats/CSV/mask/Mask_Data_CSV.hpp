@@ -63,7 +63,7 @@ struct CSVMaskRLELoaderOptions {
 };
 
 // Compile-time validation that CSVMaskRLELoaderOptions conforms to loader requirements
-static_assert(WhiskerToolbox::ValidLoaderOptions<CSVMaskRLELoaderOptions>,
+static_assert(Neuralyzer::ValidLoaderOptions<CSVMaskRLELoaderOptions>,
               "CSVMaskRLELoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
 /**

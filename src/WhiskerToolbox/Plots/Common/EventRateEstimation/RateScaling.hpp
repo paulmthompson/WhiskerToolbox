@@ -24,7 +24,7 @@
 
 #include <vector>
 
-namespace WhiskerToolbox::Plots {
+namespace Neuralyzer::Plots {
 
 // =============================================================================
 // Backward-compatibility alias
@@ -49,6 +49,6 @@ struct [[deprecated("Use RateEstimate with applyScaling() instead")]] Normalized
     double bin_width = 1.0;      ///< Width of each bin (uniform)
 };
 
-} // namespace WhiskerToolbox::Plots
+} // namespace Neuralyzer::Plots
 
 #endif // RATE_SCALING_HPP

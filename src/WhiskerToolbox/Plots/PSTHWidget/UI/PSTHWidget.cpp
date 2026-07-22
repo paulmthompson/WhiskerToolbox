@@ -381,11 +381,11 @@ void PSTHWidget::handleExportCSV() {
         auto const & params = _state->estimationParams();
         std::visit([&metadata](auto const & p) {
             using T = std::decay_t<decltype(p)>;
-            if constexpr (std::is_same_v<T, WhiskerToolbox::Plots::BinningParams>) {
+            if constexpr (std::is_same_v<T, Neuralyzer::Plots::BinningParams>) {
                 metadata.estimation_method = "Binning";
-            } else if constexpr (std::is_same_v<T, WhiskerToolbox::Plots::GaussianKernelParams>) {
+            } else if constexpr (std::is_same_v<T, Neuralyzer::Plots::GaussianKernelParams>) {
                 metadata.estimation_method = "GaussianKernel";
-            } else if constexpr (std::is_same_v<T, WhiskerToolbox::Plots::CausalExponentialParams>) {
+            } else if constexpr (std::is_same_v<T, Neuralyzer::Plots::CausalExponentialParams>) {
                 metadata.estimation_method = "CausalExponential";
             }
         },

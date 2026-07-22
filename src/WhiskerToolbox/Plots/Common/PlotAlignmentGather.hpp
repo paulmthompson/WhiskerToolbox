@@ -46,7 +46,7 @@
 #include <string>
 #include <vector>
 
-namespace WhiskerToolbox::Plots {
+namespace Neuralyzer::Plots {
 
 using WhiskerToolbox::Gather::AlignmentPoint;
 using WhiskerToolbox::Gather::expandEvents;
@@ -617,6 +617,6 @@ template<typename T>
     return createAlignedGatherResult<T>(data_manager, source_key, alignment_state->data());
 }
 
-}// namespace WhiskerToolbox::Plots
+}// namespace Neuralyzer::Plots
 
 #endif// PLOT_ALIGNMENT_GATHER_HPP

@@ -54,12 +54,12 @@ public:
     /**
      * @brief Get the currently selected scaling mode
      */
-    [[nodiscard]] WhiskerToolbox::Plots::ScalingMode scalingMode() const;
+    [[nodiscard]] Neuralyzer::Plots::ScalingMode scalingMode() const;
 
     /**
      * @brief Set the scaling mode (updates combo box without emitting signal)
      */
-    void setScalingMode(WhiskerToolbox::Plots::ScalingMode mode);
+    void setScalingMode(Neuralyzer::Plots::ScalingMode mode);
 
     /**
      * @brief Get the underlying combo box for custom styling or placement
@@ -71,7 +71,7 @@ signals:
      * @brief Emitted when the user selects a different scaling mode
      * @param mode The newly selected ScalingMode
      */
-    void scalingModeChanged(WhiskerToolbox::Plots::ScalingMode mode);
+    void scalingModeChanged(Neuralyzer::Plots::ScalingMode mode);
 
 private slots:
     void onComboChanged(int index);

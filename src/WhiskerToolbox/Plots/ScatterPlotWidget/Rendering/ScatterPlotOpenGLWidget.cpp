@@ -59,16 +59,16 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
     _scene_renderer = std::make_unique<PlottingOpenGL::SceneRenderer>();
 
     // Initialize tooltip manager
-    _tooltip_mgr = std::make_unique<WhiskerToolbox::Plots::PlotTooltipManager>(this);
+    _tooltip_mgr = std::make_unique<Neuralyzer::Plots::PlotTooltipManager>(this);
 
     _tooltip_mgr->setHitTestProvider(
-            [this](QPoint pos) -> std::optional<WhiskerToolbox::Plots::PlotTooltipHit> {
+            [this](QPoint pos) -> std::optional<Neuralyzer::Plots::PlotTooltipHit> {
                 auto const hit_index = hitTestPointAt(pos);
                 if (!hit_index.has_value()) {
                     return std::nullopt;
                 }
                 QPointF const world = screenToWorld(pos);
-                WhiskerToolbox::Plots::PlotTooltipHit result;
+                Neuralyzer::Plots::PlotTooltipHit result;
                 result.world_x = static_cast<float>(world.x());
                 result.world_y = static_cast<float>(world.y());
                 result.user_data = *hit_index;// std::size_t index into _scatter_data
@@ -76,7 +76,7 @@ ScatterPlotOpenGLWidget::ScatterPlotOpenGLWidget(QWidget * parent)
             });
 
     _tooltip_mgr->setTextProvider(
-            [this](WhiskerToolbox::Plots::PlotTooltipHit const & hit) -> QString {
+            [this](Neuralyzer::Plots::PlotTooltipHit const & hit) -> QString {
                 auto const idx = std::any_cast<std::size_t>(hit.user_data);
                 if (idx >= _scatter_data.size()) {
                     return {};
@@ -479,7 +479,7 @@ void ScatterPlotOpenGLWidget::updateBackgroundColor() {
 
 void ScatterPlotOpenGLWidget::updateMatrices() {
     _projection_matrix =
-            WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
+            Neuralyzer::Plots::computeOrthoProjection(_cached_view_state);
     _view_matrix = glm::mat4(1.0f);
 }
 
@@ -487,7 +487,7 @@ void ScatterPlotOpenGLWidget::handlePanning(int delta_x, int delta_y) {
     if (!_state) {
         return;
     }
-    WhiskerToolbox::Plots::handlePanning(
+    Neuralyzer::Plots::handlePanning(
             *_state, _cached_view_state, delta_x, delta_y, _widget_width,
             _widget_height);
 }
@@ -496,12 +496,12 @@ void ScatterPlotOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axe
     if (!_state) {
         return;
     }
-    WhiskerToolbox::Plots::handleZoom(
+    Neuralyzer::Plots::handleZoom(
             *_state, _cached_view_state, delta, y_only, both_axes);
 }
 
 QPointF ScatterPlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
-    return WhiskerToolbox::Plots::screenToWorld(
+    return Neuralyzer::Plots::screenToWorld(
             _projection_matrix, _widget_width, _widget_height, screen_pos);
 }
 
@@ -1211,7 +1211,7 @@ void ScatterPlotOpenGLWidget::drawClusterLabels() {
         auto const cx = static_cast<float>(accum.sum_x / accum.count);
         auto const cy = static_cast<float>(accum.sum_y / accum.count);
 
-        QPoint const screen = WhiskerToolbox::Plots::worldToScreen(
+        QPoint const screen = Neuralyzer::Plots::worldToScreen(
                 _projection_matrix, _widget_width, _widget_height, cx, cy);
 
         QString const label = QStringLiteral("%1 (n=%2)").arg(accum.name).arg(accum.count);

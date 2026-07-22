@@ -147,7 +147,7 @@ PSTHPlotOpenGLWidget::HistogramExportBundle PSTHPlotOpenGLWidget::collectHistogr
 
     double bin_size = 10.0;
     auto const & params = _state->estimationParams();
-    if (auto const * binning = std::get_if<WhiskerToolbox::Plots::BinningParams>(&params)) {
+    if (auto const * binning = std::get_if<Neuralyzer::Plots::BinningParams>(&params)) {
         bin_size = binning->bin_size;
     }
 
@@ -165,7 +165,7 @@ PSTHPlotOpenGLWidget::HistogramExportBundle PSTHPlotOpenGLWidget::collectHistogr
             continue;
         }
 
-        auto gathered = WhiskerToolbox::Plots::createAlignedGatherResult<DigitalEventSeries>(
+        auto gathered = Neuralyzer::Plots::createAlignedGatherResult<DigitalEventSeries>(
                 _data_manager,
                 event_options->event_key,
                 alignment_state->data());
@@ -214,7 +214,7 @@ PSTHPlotOpenGLWidget::HistogramExportBundle PSTHPlotOpenGLWidget::collectHistogr
         }
 
         // Apply scaling via RateEstimate
-        WhiskerToolbox::Plots::RateEstimate rate_estimate;
+        Neuralyzer::Plots::RateEstimate rate_estimate;
         rate_estimate.values = histogram;
         rate_estimate.num_trials = total_trials;
         rate_estimate.metadata.sample_spacing = bin_size;
@@ -222,7 +222,7 @@ PSTHPlotOpenGLWidget::HistogramExportBundle PSTHPlotOpenGLWidget::collectHistogr
         for (int i = 0; i < num_bins; ++i) {
             rate_estimate.times.push_back(-half_window + (i + 0.5) * bin_size);
         }
-        WhiskerToolbox::Plots::applyScaling(rate_estimate, scaling_mode, time_units_per_second);
+        Neuralyzer::Plots::applyScaling(rate_estimate, scaling_mode, time_units_per_second);
 
         CorePlotting::HistogramData hist_data;
         hist_data.bin_start = -half_window;
@@ -439,7 +439,7 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
     // Currently only BinningParams is implemented; other methods use default bin_size
     double bin_size = 10.0;// fallback default
     auto const & params = _state->estimationParams();
-    if (auto const * binning = std::get_if<WhiskerToolbox::Plots::BinningParams>(&params)) {
+    if (auto const * binning = std::get_if<Neuralyzer::Plots::BinningParams>(&params)) {
         bin_size = binning->bin_size;
     } else {
         qDebug() << "PSTHPlotOpenGLWidget: Non-binning estimation method not yet supported, using default bin_size";
@@ -464,7 +464,7 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
         }
 
         // Gather aligned event data using PlotAlignmentGather
-        auto gathered = WhiskerToolbox::Plots::createAlignedGatherResult<DigitalEventSeries>(
+        auto gathered = Neuralyzer::Plots::createAlignedGatherResult<DigitalEventSeries>(
                 _data_manager,
                 event_options->event_key,
                 alignment_state->data());
@@ -553,7 +553,7 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
 
     // Apply scaling/normalization using shared RateEstimate infrastructure
     // Build a RateEstimate from the histogram data
-    WhiskerToolbox::Plots::RateEstimate rate_estimate;
+    Neuralyzer::Plots::RateEstimate rate_estimate;
     rate_estimate.values = histogram;// Copy histogram counts
     rate_estimate.num_trials = total_trials;
     rate_estimate.metadata.sample_spacing = bin_size;
@@ -570,7 +570,7 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
     // TODO: Make this configurable or derive from TimeFrame
     constexpr double time_units_per_second = 1000.0;
     auto scaling_mode = _state->scaling();
-    WhiskerToolbox::Plots::applyScaling(rate_estimate, scaling_mode, time_units_per_second);
+    Neuralyzer::Plots::applyScaling(rate_estimate, scaling_mode, time_units_per_second);
 
     // Copy scaled values back to histogram
     histogram = rate_estimate.values;
@@ -625,13 +625,13 @@ void PSTHPlotOpenGLWidget::uploadHistogramScene() {
 }
 
 QPointF PSTHPlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
-    return WhiskerToolbox::Plots::screenToWorld(
+    return Neuralyzer::Plots::screenToWorld(
             _projection_matrix, _widget_width, _widget_height, screen_pos);
 }
 
 void PSTHPlotOpenGLWidget::updateMatrices() {
     _projection_matrix =
-            WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
+            Neuralyzer::Plots::computeOrthoProjection(_cached_view_state);
     _view_matrix = glm::mat4(1.0f);
 }
 
@@ -639,7 +639,7 @@ void PSTHPlotOpenGLWidget::handlePanning(int delta_x, int delta_y) {
     if (!_state) {
         return;
     }
-    WhiskerToolbox::Plots::handlePanning(
+    Neuralyzer::Plots::handlePanning(
             *_state, _cached_view_state, delta_x, delta_y, _widget_width,
             _widget_height);
 }
@@ -649,6 +649,6 @@ void PSTHPlotOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes) 
         return;
     }
 
-    WhiskerToolbox::Plots::handleZoom(
+    Neuralyzer::Plots::handleZoom(
             *_state, _cached_view_state, delta, y_only, both_axes);
 }

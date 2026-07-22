@@ -5,7 +5,7 @@
 #include <string>
 #include <type_traits>
 
-namespace WhiskerToolbox {
+namespace Neuralyzer {
 
 /**
  * @brief Concept to ensure loader options structs use consistent field naming
@@ -106,6 +106,6 @@ concept ValidLoaderOptions = HasFilepath<T> && NoReservedDataTypeField<T> && NoR
 template<typename T>
 concept ValidInternalLoaderOptions = NoReservedDataTypeField<T> && NoReservedNameField<T>;
 
-} // namespace WhiskerToolbox
+} // namespace Neuralyzer
 
 #endif // LOADER_OPTIONS_CONCEPTS_HPP

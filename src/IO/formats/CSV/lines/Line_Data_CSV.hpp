@@ -157,7 +157,7 @@ struct CSVSingleFileLineLoaderOptions {
 };
 
 // Compile-time validation that CSVSingleFileLineLoaderOptions conforms to loader requirements
-static_assert(WhiskerToolbox::ValidLoaderOptions<CSVSingleFileLineLoaderOptions>,
+static_assert(Neuralyzer::ValidLoaderOptions<CSVSingleFileLineLoaderOptions>,
               "CSVSingleFileLineLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
 void save_line_as_csv(Line2D const & line, std::string const & filename, int point_precision = 2);

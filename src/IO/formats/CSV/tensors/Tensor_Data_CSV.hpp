@@ -42,7 +42,7 @@ struct CSVTensorLoaderOptions {
     bool has_header = true;
 };
 
-static_assert(WhiskerToolbox::ValidLoaderOptions<CSVTensorLoaderOptions>,
+static_assert(Neuralyzer::ValidLoaderOptions<CSVTensorLoaderOptions>,
               "CSVTensorLoaderOptions must satisfy ValidLoaderOptions");
 
 /**

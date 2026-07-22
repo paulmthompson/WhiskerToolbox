@@ -58,8 +58,8 @@ struct PSTHStateData {
     PlotAlignmentData alignment;                                                              ///< Alignment settings (event key, interval type, offset, window size)
     std::map<std::string, PSTHEventOptions> plot_events;                                      ///< Map of event names to their plot options
     PSTHStyle style = PSTHStyle::Bar;                                                         ///< Plot style (bar or line)
-    WhiskerToolbox::Plots::EstimationParams estimation_params;                                ///< Rate estimation parameters (default: BinningParams{})
-    WhiskerToolbox::Plots::ScalingMode scaling = WhiskerToolbox::Plots::ScalingMode::RawCount;///< Normalization mode
+    Neuralyzer::Plots::EstimationParams estimation_params;                                ///< Rate estimation parameters (default: BinningParams{})
+    Neuralyzer::Plots::ScalingMode scaling = Neuralyzer::Plots::ScalingMode::RawCount;///< Normalization mode
     CorePlotting::ViewStateData view_state;                                                   ///< Zoom, pan, data bounds
     RelativeTimeAxisStateData time_axis;                                                      ///< Time axis settings (min_range, max_range)
     VerticalAxisStateData vertical_axis;                                                      ///< Vertical axis settings (y_min, y_max)
@@ -233,25 +233,25 @@ public:
      * @brief Get the estimation parameters
      * @return Estimation parameters (BinningParams, GaussianKernelParams, etc.)
      */
-    [[nodiscard]] WhiskerToolbox::Plots::EstimationParams const & estimationParams() const;
+    [[nodiscard]] Neuralyzer::Plots::EstimationParams const & estimationParams() const;
 
     /**
      * @brief Set the estimation parameters
      * @param params New estimation parameters
      */
-    void setEstimationParams(WhiskerToolbox::Plots::EstimationParams const & params);
+    void setEstimationParams(Neuralyzer::Plots::EstimationParams const & params);
 
     /**
      * @brief Get the scaling/normalization mode
      * @return Current scaling mode
      */
-    [[nodiscard]] WhiskerToolbox::Plots::ScalingMode scaling() const;
+    [[nodiscard]] Neuralyzer::Plots::ScalingMode scaling() const;
 
     /**
      * @brief Set the scaling/normalization mode
      * @param mode New scaling mode
      */
-    void setScaling(WhiskerToolbox::Plots::ScalingMode mode);
+    void setScaling(Neuralyzer::Plots::ScalingMode mode);
 
     /**
      * @brief Get the OpenGL / export background color
@@ -364,7 +364,7 @@ signals:
      * @brief Emitted when scaling/normalization mode changes
      * @param mode New scaling mode
      */
-    void scalingChanged(WhiskerToolbox::Plots::ScalingMode mode);
+    void scalingChanged(Neuralyzer::Plots::ScalingMode mode);
 
     /**
      * @brief Emitted when the plot background color changes

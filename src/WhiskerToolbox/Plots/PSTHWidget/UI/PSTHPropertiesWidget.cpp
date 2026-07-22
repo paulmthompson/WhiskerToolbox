@@ -146,7 +146,7 @@ PSTHPropertiesWidget::PSTHPropertiesWidget(std::shared_ptr<PSTHState> state,
                     _estimation_controls->setParams(_state->estimationParams());
                 });
         connect(_state.get(), &PSTHState::scalingChanged,
-                this, [this](WhiskerToolbox::Plots::ScalingMode mode) {
+                this, [this](Neuralyzer::Plots::ScalingMode mode) {
                     _scaling_controls->setScalingMode(mode);
                 });
         // Note: yMin/yMax changes are handled by VerticalAxisRangeControls

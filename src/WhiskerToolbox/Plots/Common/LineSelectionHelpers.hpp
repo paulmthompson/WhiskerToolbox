@@ -22,7 +22,7 @@
 
 #include <vector>
 
-namespace WhiskerToolbox::Plots {
+namespace Neuralyzer::Plots {
 
 /**
  * @brief Build a line-selection GlyphPreview for the selection rubber-band.
@@ -95,6 +95,6 @@ runLineSelectionIntersection(
     return result.intersected_line_indices;
 }
 
-} // namespace WhiskerToolbox::Plots
+} // namespace Neuralyzer::Plots
 
 #endif // PLOTS_COMMON_LINE_SELECTION_HELPERS_HPP

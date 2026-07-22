@@ -87,7 +87,7 @@ createEventSeries(std::vector<int> const & timestamps) {
 struct SingleUnitFixture {
     std::shared_ptr<DataManager> dm;
     PlotAlignmentData alignment_data;
-    WhiskerToolbox::Plots::HeatmapPipelineConfig config;
+    Neuralyzer::Plots::HeatmapPipelineConfig config;
 
     SingleUnitFixture() {
         dm = std::make_shared<DataManager>();
@@ -112,8 +112,8 @@ struct SingleUnitFixture {
 
         // Pipeline configuration
         config.window_size = 100.0;
-        config.scaling = WhiskerToolbox::Plots::ScalingMode::RawCount;
-        config.estimation_params = WhiskerToolbox::Plots::BinningParams{.bin_size = 10.0};
+        config.scaling = Neuralyzer::Plots::ScalingMode::RawCount;
+        config.estimation_params = Neuralyzer::Plots::BinningParams{.bin_size = 10.0};
         config.time_units_per_second = 1000.0;
     }
 };
@@ -124,7 +124,7 @@ struct SingleUnitFixture {
 struct MultiTrialFixture {
     std::shared_ptr<DataManager> dm;
     PlotAlignmentData alignment_data;
-    WhiskerToolbox::Plots::HeatmapPipelineConfig config;
+    Neuralyzer::Plots::HeatmapPipelineConfig config;
 
     MultiTrialFixture() {
         dm = std::make_shared<DataManager>();
@@ -147,8 +147,8 @@ struct MultiTrialFixture {
         alignment_data.window_size = 100.0;
 
         config.window_size = 100.0;
-        config.scaling = WhiskerToolbox::Plots::ScalingMode::RawCount;
-        config.estimation_params = WhiskerToolbox::Plots::BinningParams{.bin_size = 10.0};
+        config.scaling = Neuralyzer::Plots::ScalingMode::RawCount;
+        config.estimation_params = Neuralyzer::Plots::BinningParams{.bin_size = 10.0};
         config.time_units_per_second = 1000.0;
     }
 };
@@ -164,7 +164,7 @@ TEST_CASE("runHeatmapPipeline single unit produces non-empty result",
     SingleUnitFixture const f;
     std::vector<std::string> const unit_keys = {"spikes"};
 
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, unit_keys, f.alignment_data, f.config);
 
     REQUIRE(result.success);
@@ -178,7 +178,7 @@ TEST_CASE("runHeatmapPipeline single unit values are finite",
     SingleUnitFixture const f;
     std::vector<std::string> const unit_keys = {"spikes"};
 
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, unit_keys, f.alignment_data, f.config);
 
     REQUIRE(result.success);
@@ -196,7 +196,7 @@ TEST_CASE("runHeatmapPipeline single unit has non-zero spike counts",
     SingleUnitFixture const f;
     std::vector<std::string> const unit_keys = {"spikes"};
 
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, unit_keys, f.alignment_data, f.config);
 
     REQUIRE(result.success);
@@ -214,7 +214,7 @@ TEST_CASE("runHeatmapPipeline single unit rate estimates match",
     SingleUnitFixture const f;
     std::vector<std::string> const unit_keys = {"spikes"};
 
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, unit_keys, f.alignment_data, f.config);
 
     REQUIRE(result.success);
@@ -228,10 +228,10 @@ TEST_CASE("runHeatmapPipeline single unit rate estimates match",
 TEST_CASE("runHeatmapPipeline single unit with FiringRateHz scaling",
           "[HeatmapDataPipeline][n1]") {
     SingleUnitFixture f;
-    f.config.scaling = WhiskerToolbox::Plots::ScalingMode::FiringRateHz;
+    f.config.scaling = Neuralyzer::Plots::ScalingMode::FiringRateHz;
     std::vector<std::string> const unit_keys = {"spikes"};
 
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, unit_keys, f.alignment_data, f.config);
 
     REQUIRE(result.success);
@@ -245,10 +245,10 @@ TEST_CASE("runHeatmapPipeline single unit with FiringRateHz scaling",
 TEST_CASE("runHeatmapPipeline single unit with ZScore scaling",
           "[HeatmapDataPipeline][n1]") {
     SingleUnitFixture f;
-    f.config.scaling = WhiskerToolbox::Plots::ScalingMode::ZScore;
+    f.config.scaling = Neuralyzer::Plots::ScalingMode::ZScore;
     std::vector<std::string> const unit_keys = {"spikes"};
 
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, unit_keys, f.alignment_data, f.config);
 
     REQUIRE(result.success);
@@ -267,7 +267,7 @@ TEST_CASE("buildScene from single-unit pipeline produces rectangles",
     SingleUnitFixture const f;
     std::vector<std::string> const unit_keys = {"spikes"};
 
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, unit_keys, f.alignment_data, f.config);
     REQUIRE(result.success);
 
@@ -306,7 +306,7 @@ TEST_CASE("buildScene single-unit rectangles occupy correct Y range",
     SingleUnitFixture const f;
     std::vector<std::string> const unit_keys = {"spikes"};
 
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, unit_keys, f.alignment_data, f.config);
     REQUIRE(result.success);
 
@@ -333,7 +333,7 @@ TEST_CASE("buildScene single-unit rectangle X positions within window",
     SingleUnitFixture const f;
     std::vector<std::string> const unit_keys = {"spikes"};
 
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, unit_keys, f.alignment_data, f.config);
     REQUIRE(result.success);
 
@@ -377,7 +377,7 @@ TEST_CASE("runHeatmapPipeline two units produces two rows",
 
     std::vector<std::string> const unit_keys = {"spikes", "spikes2"};
 
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, unit_keys, f.alignment_data, f.config);
 
     REQUIRE(result.success);
@@ -397,7 +397,7 @@ TEST_CASE("runHeatmapPipeline multi-trial single unit",
     MultiTrialFixture const f;
     std::vector<std::string> const unit_keys = {"spikes"};
 
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, unit_keys, f.alignment_data, f.config);
 
     REQUIRE(result.success);
@@ -420,7 +420,7 @@ TEST_CASE("runHeatmapPipeline empty unit keys returns failure",
     SingleUnitFixture const f;
     std::vector<std::string> const unit_keys;
 
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, unit_keys, f.alignment_data, f.config);
 
     REQUIRE_FALSE(result.success);
@@ -433,7 +433,7 @@ TEST_CASE("runHeatmapPipeline missing alignment key returns failure",
     f.alignment_data.alignment_event_key = "nonexistent";
     std::vector<std::string> const unit_keys = {"spikes"};
 
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, unit_keys, f.alignment_data, f.config);
 
     REQUIRE_FALSE(result.success);
@@ -446,7 +446,7 @@ TEST_CASE("runHeatmapPipeline zero window size returns failure",
     f.config.window_size = 0.0;
     std::vector<std::string> const unit_keys = {"spikes"};
 
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, unit_keys, f.alignment_data, f.config);
 
     REQUIRE_FALSE(result.success);
@@ -457,7 +457,7 @@ TEST_CASE("runHeatmapPipeline null data manager returns failure",
     SingleUnitFixture const f;
     std::vector<std::string> const unit_keys = {"spikes"};
 
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             nullptr, unit_keys, f.alignment_data, f.config);
 
     REQUIRE_FALSE(result.success);
@@ -468,11 +468,11 @@ TEST_CASE("runHeatmapPipeline bin width matches configuration",
     SingleUnitFixture f;
     std::vector<std::string> const unit_keys = {"spikes"};
 
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, unit_keys, f.alignment_data, f.config);
 
     REQUIRE(result.success);
-    auto const & params = std::get<WhiskerToolbox::Plots::BinningParams>(
+    auto const & params = std::get<Neuralyzer::Plots::BinningParams>(
             f.config.estimation_params);
     REQUIRE(result.rows[0].bin_width == params.bin_size);
 }
@@ -482,12 +482,12 @@ TEST_CASE("runHeatmapPipeline number of bins matches window/bin_size",
     SingleUnitFixture f;
     std::vector<std::string> const unit_keys = {"spikes"};
 
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, unit_keys, f.alignment_data, f.config);
 
     REQUIRE(result.success);
 
-    auto const & params = std::get<WhiskerToolbox::Plots::BinningParams>(
+    auto const & params = std::get<Neuralyzer::Plots::BinningParams>(
             f.config.estimation_params);
     int const expected_bins =
             static_cast<int>(std::ceil(f.config.window_size / params.bin_size));
@@ -515,13 +515,13 @@ TEST_CASE("runHeatmapPipeline single unit no spikes in window",
     alignment_data.alignment_event_key = "alignment";
     alignment_data.window_size = 100.0;// window [4950, 5050] — no spikes
 
-    WhiskerToolbox::Plots::HeatmapPipelineConfig config;
+    Neuralyzer::Plots::HeatmapPipelineConfig config;
     config.window_size = 100.0;
-    config.scaling = WhiskerToolbox::Plots::ScalingMode::RawCount;
-    config.estimation_params = WhiskerToolbox::Plots::BinningParams{.bin_size = 10.0};
+    config.scaling = Neuralyzer::Plots::ScalingMode::RawCount;
+    config.estimation_params = Neuralyzer::Plots::BinningParams{.bin_size = 10.0};
 
     std::vector<std::string> const unit_keys = {"spikes"};
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             dm, unit_keys, alignment_data, config);
 
     // Pipeline should still succeed — just with all-zero bins
@@ -553,7 +553,7 @@ namespace {
 struct SortingFixture {
     std::shared_ptr<DataManager> dm;
     PlotAlignmentData alignment_data;
-    WhiskerToolbox::Plots::HeatmapPipelineConfig config;
+    Neuralyzer::Plots::HeatmapPipelineConfig config;
     std::vector<std::string> unit_keys;
 
     SortingFixture() {
@@ -587,8 +587,8 @@ struct SortingFixture {
         alignment_data.window_size = 100.0;
 
         config.window_size = 100.0;
-        config.scaling = WhiskerToolbox::Plots::ScalingMode::RawCount;
-        config.estimation_params = WhiskerToolbox::Plots::BinningParams{.bin_size = 10.0};
+        config.scaling = Neuralyzer::Plots::ScalingMode::RawCount;
+        config.estimation_params = Neuralyzer::Plots::BinningParams{.bin_size = 10.0};
         config.time_units_per_second = 1000.0;
 
         // Manual insertion order: early, mid, late
@@ -601,11 +601,11 @@ struct SortingFixture {
 TEST_CASE("computeSortOrder Manual returns identity",
           "[HeatmapDataPipeline][sorting]") {
     SortingFixture f;
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, f.unit_keys, f.alignment_data, f.config);
     REQUIRE(result.success);
 
-    auto indices = WhiskerToolbox::Plots::computeSortOrder(
+    auto indices = Neuralyzer::Plots::computeSortOrder(
             result, f.unit_keys, HeatmapSortMode::Manual, true);
 
     REQUIRE(indices.size() == 3);
@@ -617,11 +617,11 @@ TEST_CASE("computeSortOrder Manual returns identity",
 TEST_CASE("computeSortOrder TimeToPeak ascending sorts by peak latency",
           "[HeatmapDataPipeline][sorting]") {
     SortingFixture f;
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, f.unit_keys, f.alignment_data, f.config);
     REQUIRE(result.success);
 
-    auto indices = WhiskerToolbox::Plots::computeSortOrder(
+    auto indices = Neuralyzer::Plots::computeSortOrder(
             result, f.unit_keys, HeatmapSortMode::TimeToPeak, true);
 
     REQUIRE(indices.size() == 3);
@@ -634,11 +634,11 @@ TEST_CASE("computeSortOrder TimeToPeak ascending sorts by peak latency",
 TEST_CASE("computeSortOrder TimeToPeak descending reverses order",
           "[HeatmapDataPipeline][sorting]") {
     SortingFixture f;
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, f.unit_keys, f.alignment_data, f.config);
     REQUIRE(result.success);
 
-    auto indices = WhiskerToolbox::Plots::computeSortOrder(
+    auto indices = Neuralyzer::Plots::computeSortOrder(
             result, f.unit_keys, HeatmapSortMode::TimeToPeak, false);
 
     REQUIRE(indices.size() == 3);
@@ -651,12 +651,12 @@ TEST_CASE("computeSortOrder TimeToPeak descending reverses order",
 TEST_CASE("computeSortOrder PeakRate descending sorts highest first",
           "[HeatmapDataPipeline][sorting]") {
     SortingFixture f;
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, f.unit_keys, f.alignment_data, f.config);
     REQUIRE(result.success);
 
     // Default descending: highest peak rate first
-    auto indices = WhiskerToolbox::Plots::computeSortOrder(
+    auto indices = Neuralyzer::Plots::computeSortOrder(
             result, f.unit_keys, HeatmapSortMode::PeakRate, false);
 
     REQUIRE(indices.size() == 3);
@@ -668,11 +668,11 @@ TEST_CASE("computeSortOrder PeakRate descending sorts highest first",
 TEST_CASE("computeSortOrder MeanRate descending sorts highest first",
           "[HeatmapDataPipeline][sorting]") {
     SortingFixture f;
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, f.unit_keys, f.alignment_data, f.config);
     REQUIRE(result.success);
 
-    auto indices = WhiskerToolbox::Plots::computeSortOrder(
+    auto indices = Neuralyzer::Plots::computeSortOrder(
             result, f.unit_keys, HeatmapSortMode::MeanRate, false);
 
     REQUIRE(indices.size() == 3);
@@ -684,11 +684,11 @@ TEST_CASE("computeSortOrder MeanRate descending sorts highest first",
 TEST_CASE("computeSortOrder Alphabetical ascending",
           "[HeatmapDataPipeline][sorting]") {
     SortingFixture f;
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, f.unit_keys, f.alignment_data, f.config);
     REQUIRE(result.success);
 
-    auto indices = WhiskerToolbox::Plots::computeSortOrder(
+    auto indices = Neuralyzer::Plots::computeSortOrder(
             result, f.unit_keys, HeatmapSortMode::Alphabetical, true);
 
     REQUIRE(indices.size() == 3);
@@ -701,11 +701,11 @@ TEST_CASE("computeSortOrder Alphabetical ascending",
 TEST_CASE("computeSortOrder Alphabetical descending",
           "[HeatmapDataPipeline][sorting]") {
     SortingFixture f;
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, f.unit_keys, f.alignment_data, f.config);
     REQUIRE(result.success);
 
-    auto indices = WhiskerToolbox::Plots::computeSortOrder(
+    auto indices = Neuralyzer::Plots::computeSortOrder(
             result, f.unit_keys, HeatmapSortMode::Alphabetical, false);
 
     REQUIRE(indices.size() == 3);
@@ -718,19 +718,19 @@ TEST_CASE("computeSortOrder Alphabetical descending",
 TEST_CASE("applySortOrder reorders rows rate_estimates and unit_keys",
           "[HeatmapDataPipeline][sorting]") {
     SortingFixture f;
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, f.unit_keys, f.alignment_data, f.config);
     REQUIRE(result.success);
 
     // Sort by time to peak descending (late → mid → early)
-    auto indices = WhiskerToolbox::Plots::computeSortOrder(
+    auto indices = Neuralyzer::Plots::computeSortOrder(
             result, f.unit_keys, HeatmapSortMode::TimeToPeak, false);
 
     // Save original data for reference
     auto original_row0_values = result.rows[0].values;
     auto const original_key0 = f.unit_keys[0];
 
-    WhiskerToolbox::Plots::applySortOrder(result, f.unit_keys, indices);
+    Neuralyzer::Plots::applySortOrder(result, f.unit_keys, indices);
 
     // After descending time-to-peak sort: late_unit should be first
     REQUIRE(f.unit_keys[0] == "late_unit");
@@ -747,11 +747,11 @@ TEST_CASE("computeSortOrder with single row returns identity",
     SingleUnitFixture f;
     std::vector<std::string> unit_keys = {"spikes"};
 
-    auto result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto result = Neuralyzer::Plots::runHeatmapPipeline(
             f.dm, unit_keys, f.alignment_data, f.config);
     REQUIRE(result.success);
 
-    auto indices = WhiskerToolbox::Plots::computeSortOrder(
+    auto indices = Neuralyzer::Plots::computeSortOrder(
             result, unit_keys, HeatmapSortMode::TimeToPeak, true);
 
     REQUIRE(indices.size() == 1);
@@ -760,10 +760,10 @@ TEST_CASE("computeSortOrder with single row returns identity",
 
 TEST_CASE("computeSortOrder with empty result returns empty",
           "[HeatmapDataPipeline][sorting][edge]") {
-    WhiskerToolbox::Plots::HeatmapPipelineResult empty_result;
+    Neuralyzer::Plots::HeatmapPipelineResult empty_result;
     std::vector<std::string> unit_keys;
 
-    auto indices = WhiskerToolbox::Plots::computeSortOrder(
+    auto indices = Neuralyzer::Plots::computeSortOrder(
             empty_result, unit_keys, HeatmapSortMode::PeakRate, true);
 
     REQUIRE(indices.empty());

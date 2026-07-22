@@ -52,9 +52,9 @@ struct TestState {
 // Concept checks (compile-time)
 // =============================================================================
 
-static_assert(WhiskerToolbox::Plots::ViewStateLike<TestViewState>);
-static_assert(WhiskerToolbox::Plots::ViewStateLike<TestMinimalViewState>);
-static_assert(WhiskerToolbox::Plots::ZoomPanSettable<TestState>);
+static_assert(Neuralyzer::Plots::ViewStateLike<TestViewState>);
+static_assert(Neuralyzer::Plots::ViewStateLike<TestMinimalViewState>);
+static_assert(Neuralyzer::Plots::ZoomPanSettable<TestState>);
 
 // =============================================================================
 // screenToWorld tests
@@ -69,7 +69,7 @@ TEST_CASE("screenToWorld center of widget returns world origin for symmetric pro
     int const height = 600;
 
     QPoint center(width / 2, height / 2);
-    QPointF world = WhiskerToolbox::Plots::screenToWorld(proj, width, height, center);
+    QPointF world = Neuralyzer::Plots::screenToWorld(proj, width, height, center);
 
     REQUIRE_THAT(world.x(), Catch::Matchers::WithinAbs(0.0, 0.5));
     REQUIRE_THAT(world.y(), Catch::Matchers::WithinAbs(0.0, 0.5));
@@ -83,7 +83,7 @@ TEST_CASE("screenToWorld top-left corner maps to (left, top)",
     int const height = 600;
 
     QPoint top_left(0, 0);
-    QPointF world = WhiskerToolbox::Plots::screenToWorld(proj, width, height, top_left);
+    QPointF world = Neuralyzer::Plots::screenToWorld(proj, width, height, top_left);
 
     REQUIRE_THAT(world.x(), Catch::Matchers::WithinAbs(-100.0, 1.0));
     REQUIRE_THAT(world.y(), Catch::Matchers::WithinAbs(50.0, 1.0));
@@ -100,7 +100,7 @@ TEST_CASE("worldToScreen origin maps to center of widget",
     int const width = 800;
     int const height = 600;
 
-    QPoint screen = WhiskerToolbox::Plots::worldToScreen(proj, width, height, 0.0f, 0.0f);
+    QPoint screen = Neuralyzer::Plots::worldToScreen(proj, width, height, 0.0f, 0.0f);
 
     REQUIRE(screen.x() == width / 2);
     REQUIRE(screen.y() == height / 2);
@@ -124,7 +124,7 @@ TEST_CASE("computeOrthoProjection with no zoom or pan matches manual ortho",
     float const y_range = 2.0f;     // -1 to 1
     float const y_center = 0.0f;
 
-    glm::mat4 result = WhiskerToolbox::Plots::computeOrthoProjection(
+    glm::mat4 result = Neuralyzer::Plots::computeOrthoProjection(
         vs, x_range, x_center, y_range, y_center);
     glm::mat4 expected = glm::ortho(-500.0f, 500.0f, -1.0f, 1.0f, -1.0f, 1.0f);
 
@@ -150,7 +150,7 @@ TEST_CASE("computeOrthoProjection with 2x zoom halves visible range",
     float const y_range = 2.0f;
     float const y_center = 0.0f;
 
-    glm::mat4 result = WhiskerToolbox::Plots::computeOrthoProjection(
+    glm::mat4 result = Neuralyzer::Plots::computeOrthoProjection(
         vs, x_range, x_center, y_range, y_center);
     // 2x zoom: visible range = 1000/2 = 500, so [-250, 250] x [-0.5, 0.5]
     glm::mat4 expected = glm::ortho(-250.0f, 250.0f, -0.5f, 0.5f, -1.0f, 1.0f);
@@ -171,7 +171,7 @@ TEST_CASE("computeOrthoProjection works with MinimalViewState (no x_min/x_max)",
     vs.y_zoom = 1.0;
 
     // Caller provides ranges directly
-    glm::mat4 result = WhiskerToolbox::Plots::computeOrthoProjection(
+    glm::mat4 result = Neuralyzer::Plots::computeOrthoProjection(
         vs, 200.0f, 50.0f, 100.0f, 50.0f);
     glm::mat4 expected = glm::ortho(-50.0f, 150.0f, 0.0f, 100.0f, -1.0f, 1.0f);
 
@@ -199,7 +199,7 @@ TEST_CASE("handlePanning converts pixel drag to world-space pan",
 
     // Widget is 1000px wide, data range is 1000 units => 1 unit/pixel
     // Drag 10 pixels right => pan left by 10 units
-    WhiskerToolbox::Plots::handlePanning(
+    Neuralyzer::Plots::handlePanning(
         state, vs,
         10, 0,       // delta_x, delta_y
         1000.0f,     // x_range
@@ -224,7 +224,7 @@ TEST_CASE("handlePanning respects zoom level",
 
     // 1000px wide, 1000 unit range, but 2x zoom => 0.5 units/pixel
     // Drag 10px => pan 5 units
-    WhiskerToolbox::Plots::handlePanning(
+    Neuralyzer::Plots::handlePanning(
         state, vs,
         10, 0,
         1000.0f, 2.0f,
@@ -246,7 +246,7 @@ TEST_CASE("handleZoom x-only by default",
     vs.x_zoom = 1.0;
     vs.y_zoom = 1.0;
 
-    WhiskerToolbox::Plots::handleZoom(state, vs, 1.0f, false, false);
+    Neuralyzer::Plots::handleZoom(state, vs, 1.0f, false, false);
 
     REQUIRE_THAT(state.last_x_zoom, Catch::Matchers::WithinAbs(1.1, 0.01));
     REQUIRE_THAT(state.last_y_zoom, Catch::Matchers::WithinAbs(1.0, 0.01));
@@ -260,7 +260,7 @@ TEST_CASE("handleZoom y-only when y_only is true",
     vs.x_zoom = 1.0;
     vs.y_zoom = 1.0;
 
-    WhiskerToolbox::Plots::handleZoom(state, vs, 1.0f, true, false);
+    Neuralyzer::Plots::handleZoom(state, vs, 1.0f, true, false);
 
     REQUIRE_THAT(state.last_x_zoom, Catch::Matchers::WithinAbs(1.0, 0.01));
     REQUIRE_THAT(state.last_y_zoom, Catch::Matchers::WithinAbs(1.1, 0.01));
@@ -274,7 +274,7 @@ TEST_CASE("handleZoom both axes when both_axes is true",
     vs.x_zoom = 1.0;
     vs.y_zoom = 1.0;
 
-    WhiskerToolbox::Plots::handleZoom(state, vs, 1.0f, false, true);
+    Neuralyzer::Plots::handleZoom(state, vs, 1.0f, false, true);
 
     REQUIRE_THAT(state.last_x_zoom, Catch::Matchers::WithinAbs(1.1, 0.01));
     REQUIRE_THAT(state.last_y_zoom, Catch::Matchers::WithinAbs(1.1, 0.01));
@@ -288,7 +288,7 @@ TEST_CASE("handleZoom negative delta zooms out",
     vs.x_zoom = 1.0;
     vs.y_zoom = 1.0;
 
-    WhiskerToolbox::Plots::handleZoom(state, vs, -1.0f, false, false);
+    Neuralyzer::Plots::handleZoom(state, vs, -1.0f, false, false);
 
     REQUIRE(state.last_x_zoom < 1.0);
 }

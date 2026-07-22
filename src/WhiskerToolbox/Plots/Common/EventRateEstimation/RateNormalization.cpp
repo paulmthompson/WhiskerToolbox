@@ -4,7 +4,7 @@
 #include <cmath>
 #include <numeric>
 
-namespace WhiskerToolbox::Plots {
+namespace Neuralyzer::Plots {
 
 // =============================================================================
 // Normalization primitives
@@ -238,4 +238,4 @@ void applyScaling(RateEstimateWithTrials & data,
     }
 }
 
-} // namespace WhiskerToolbox::Plots
+} // namespace Neuralyzer::Plots

@@ -111,7 +111,7 @@ LinePlotPropertiesWidget::LinePlotPropertiesWidget(std::shared_ptr<LinePlotState
         auto * instructions_label = new QLabel();
         instructions_label->setWordWrap(true);
         instructions_label->setStyleSheet("color: #888; font-size: 11px;");
-        instructions_label->setText(WhiskerToolbox::Plots::SelectionInstructions::lineCrossing());
+        instructions_label->setText(Neuralyzer::Plots::SelectionInstructions::lineCrossing());
         sel_layout->addWidget(instructions_label);
 
         // Color by group checkbox

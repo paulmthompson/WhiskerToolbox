@@ -46,7 +46,7 @@ struct CSVAnalogLoaderOptions {
 };
 
 // Compile-time validation that CSVAnalogLoaderOptions conforms to loader requirements
-static_assert(WhiskerToolbox::ValidLoaderOptions<CSVAnalogLoaderOptions>,
+static_assert(Neuralyzer::ValidLoaderOptions<CSVAnalogLoaderOptions>,
               "CSVAnalogLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
 /**

@@ -25,7 +25,7 @@ struct CliParseResult {
     bool m_show_help = false;                                          ///< True when usage should be printed.
     std::string m_error;                                               ///< Error message when parsing fails.
     std::string m_config_path;                                         ///< Pipeline JSON config path.
-    WhiskerToolbox::DataManagerPipeline::JsonPipelineOptions m_options;///< Runner options.
+    Neuralyzer::DataManagerPipeline::JsonPipelineOptions m_options;///< Runner options.
 };
 
 /**
@@ -110,7 +110,7 @@ CliParseResult parseArguments(int const argc, char ** argv) {
  * @param result Successful pipeline result to summarize.
  * @post Summary text is written to stdout.
  */
-void printSuccessSummary(WhiskerToolbox::DataManagerPipeline::JsonPipelineResult const & result) {
+void printSuccessSummary(Neuralyzer::DataManagerPipeline::JsonPipelineResult const & result) {
     std::cout << "Pipeline succeeded\n";
     std::cout << "Loaded data entries: " << result.m_loaded_data.size() << '\n';
     std::cout << "Command affected keys: " << result.m_command_affected_keys.size() << '\n';
@@ -125,9 +125,9 @@ void printSuccessSummary(WhiskerToolbox::DataManagerPipeline::JsonPipelineResult
  * @param result Failed pipeline result to summarize.
  * @post Summary text is written to stderr.
  */
-void printFailureSummary(WhiskerToolbox::DataManagerPipeline::JsonPipelineResult const & result) {
+void printFailureSummary(Neuralyzer::DataManagerPipeline::JsonPipelineResult const & result) {
     std::cerr << "Pipeline failed during phase '"
-              << WhiskerToolbox::DataManagerPipeline::phaseToString(result.m_failed_phase)
+              << Neuralyzer::DataManagerPipeline::phaseToString(result.m_failed_phase)
               << "'";
     if (result.m_failed_command_index >= 0) {
         std::cerr << " at command index " << result.m_failed_command_index;
@@ -165,7 +165,7 @@ int main(int argc, char ** argv) {
         dl::register_deeplearning_commands();
 
         DataManager data_manager;
-        auto const result = WhiskerToolbox::DataManagerPipeline::runJsonPipelineFile(
+        auto const result = Neuralyzer::DataManagerPipeline::runJsonPipelineFile(
                 data_manager,
                 args.m_config_path,
                 args.m_options);

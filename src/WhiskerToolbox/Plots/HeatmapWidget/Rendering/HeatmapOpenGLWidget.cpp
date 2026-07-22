@@ -139,13 +139,13 @@ HeatmapOpenGLWidget::HeatmapExportBundle HeatmapOpenGLWidget::collectHeatmapExpo
         return bundle;
     }
 
-    WhiskerToolbox::Plots::HeatmapPipelineConfig config;
+    Neuralyzer::Plots::HeatmapPipelineConfig config;
     config.window_size = window_size;
     config.scaling = _state->scaling();
     config.estimation_params = _state->estimationParams();
     config.time_units_per_second = 1000.0;
 
-    auto pipeline_result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto pipeline_result = Neuralyzer::Plots::runHeatmapPipeline(
             _data_manager, unit_keys, alignment_state->data(), config);
 
     if (!pipeline_result.success || pipeline_result.rows.empty()) {
@@ -155,9 +155,9 @@ HeatmapOpenGLWidget::HeatmapExportBundle HeatmapOpenGLWidget::collectHeatmapExpo
     bundle.unit_keys = unit_keys;
     auto const sort_mode = _state->sortMode();
     if (sort_mode != HeatmapSortMode::Manual) {
-        auto sort_indices = WhiskerToolbox::Plots::computeSortOrder(
+        auto sort_indices = Neuralyzer::Plots::computeSortOrder(
                 pipeline_result, bundle.unit_keys, sort_mode, _state->sortAscending());
-        WhiskerToolbox::Plots::applySortOrder(
+        Neuralyzer::Plots::applySortOrder(
                 pipeline_result, bundle.unit_keys, sort_indices);
     }
 
@@ -413,14 +413,14 @@ void HeatmapOpenGLWidget::rebuildScene() {
     }
 
     // Run the pure-data pipeline (gather → estimate → scale → convert)
-    WhiskerToolbox::Plots::HeatmapPipelineConfig config;
+    Neuralyzer::Plots::HeatmapPipelineConfig config;
     config.window_size = window_size;
     config.scaling = _state->scaling();
     config.estimation_params = _state->estimationParams();
     // TODO: make time_units_per_second configurable if data uses non-ms units
     config.time_units_per_second = 1000.0;
 
-    auto pipeline_result = WhiskerToolbox::Plots::runHeatmapPipeline(
+    auto pipeline_result = Neuralyzer::Plots::runHeatmapPipeline(
             _data_manager, unit_keys, alignment_state->data(), config);
 
     if (!pipeline_result.success || pipeline_result.rows.empty()) {
@@ -434,9 +434,9 @@ void HeatmapOpenGLWidget::rebuildScene() {
     auto sorted_keys = std::vector<std::string>(unit_keys);
     auto const sort_mode = _state->sortMode();
     if (sort_mode != HeatmapSortMode::Manual) {
-        auto sort_indices = WhiskerToolbox::Plots::computeSortOrder(
+        auto sort_indices = Neuralyzer::Plots::computeSortOrder(
                 pipeline_result, sorted_keys, sort_mode, _state->sortAscending());
-        WhiskerToolbox::Plots::applySortOrder(
+        Neuralyzer::Plots::applySortOrder(
                 pipeline_result, sorted_keys, sort_indices);
     }
 
@@ -481,12 +481,12 @@ void HeatmapOpenGLWidget::rebuildScene() {
 
 void HeatmapOpenGLWidget::updateMatrices() {
     _projection_matrix =
-            WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
+            Neuralyzer::Plots::computeOrthoProjection(_cached_view_state);
     _view_matrix = glm::mat4(1.0f);
 }
 
 QPointF HeatmapOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
-    return WhiskerToolbox::Plots::screenToWorld(
+    return Neuralyzer::Plots::screenToWorld(
             _projection_matrix, _widget_width, _widget_height, screen_pos);
 }
 
@@ -494,7 +494,7 @@ void HeatmapOpenGLWidget::handlePanning(int delta_x, int delta_y) {
     if (!_state) {
         return;
     }
-    WhiskerToolbox::Plots::handlePanning(
+    Neuralyzer::Plots::handlePanning(
             *_state, _cached_view_state, delta_x, delta_y, _widget_width,
             _widget_height);
 }
@@ -504,7 +504,7 @@ void HeatmapOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes) {
         return;
     }
 
-    WhiskerToolbox::Plots::handleZoom(
+    Neuralyzer::Plots::handleZoom(
             *_state, _cached_view_state, delta, y_only, both_axes);
 }
 
@@ -528,16 +528,16 @@ void HeatmapOpenGLWidget::updateBackgroundColor() {
 }
 
 void HeatmapOpenGLWidget::setupTooltip() {
-    _tooltip_mgr = std::make_unique<WhiskerToolbox::Plots::PlotTooltipManager>(this);
+    _tooltip_mgr = std::make_unique<Neuralyzer::Plots::PlotTooltipManager>(this);
 
     _tooltip_mgr->setHitTestProvider(
-            [this](QPoint pos) -> std::optional<WhiskerToolbox::Plots::PlotTooltipHit> {
+            [this](QPoint pos) -> std::optional<Neuralyzer::Plots::PlotTooltipHit> {
                 QPointF const world = screenToWorld(pos);
                 int const unit_index = worldToUnitIndex(world);
                 if (unit_index < 0) {
                     return std::nullopt;
                 }
-                WhiskerToolbox::Plots::PlotTooltipHit hit;
+                Neuralyzer::Plots::PlotTooltipHit hit;
                 hit.world_x = static_cast<float>(world.x());
                 hit.world_y = static_cast<float>(world.y());
                 hit.user_data = unit_index;
@@ -545,7 +545,7 @@ void HeatmapOpenGLWidget::setupTooltip() {
             });
 
     _tooltip_mgr->setTextProvider(
-            [this](WhiskerToolbox::Plots::PlotTooltipHit const & hit) -> QString {
+            [this](Neuralyzer::Plots::PlotTooltipHit const & hit) -> QString {
                 auto const unit_index = std::any_cast<int>(hit.user_data);
                 if (unit_index < 0 ||
                     static_cast<size_t>(unit_index) >= _display_unit_keys.size()) {

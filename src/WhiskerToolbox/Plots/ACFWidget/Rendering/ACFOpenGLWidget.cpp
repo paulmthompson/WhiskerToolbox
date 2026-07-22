@@ -197,7 +197,7 @@ void ACFOpenGLWidget::onViewStateChanged() {
 
 void ACFOpenGLWidget::updateMatrices() {
     _projection_matrix =
-            WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
+            Neuralyzer::Plots::computeOrthoProjection(_cached_view_state);
     _view_matrix = glm::mat4(1.0f);
 }
 
@@ -205,7 +205,7 @@ void ACFOpenGLWidget::handlePanning(int delta_x, int delta_y) {
     if (!_state) {
         return;
     }
-    WhiskerToolbox::Plots::handlePanning(
+    Neuralyzer::Plots::handlePanning(
             *_state, _cached_view_state, delta_x, delta_y, _widget_width,
             _widget_height);
 }
@@ -214,12 +214,12 @@ void ACFOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes) {
     if (!_state) {
         return;
     }
-    WhiskerToolbox::Plots::handleZoom(
+    Neuralyzer::Plots::handleZoom(
             *_state, _cached_view_state, delta, y_only, both_axes);
 }
 
 QPointF ACFOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
-    return WhiskerToolbox::Plots::screenToWorld(
+    return Neuralyzer::Plots::screenToWorld(
             _projection_matrix, _widget_width, _widget_height, screen_pos);
 }
 

@@ -552,7 +552,7 @@ void TemporalProjectionOpenGLWidget::rebuildScene() {
 
 void TemporalProjectionOpenGLWidget::updateMatrices() {
     _projection_matrix =
-            WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
+            Neuralyzer::Plots::computeOrthoProjection(_cached_view_state);
     _view_matrix = glm::mat4(1.0f);
 }
 
@@ -560,7 +560,7 @@ void TemporalProjectionOpenGLWidget::handlePanning(int delta_x, int delta_y) {
     if (!_state) {
         return;
     }
-    WhiskerToolbox::Plots::handlePanning(
+    Neuralyzer::Plots::handlePanning(
             *_state, _cached_view_state, delta_x, delta_y, _widget_width,
             _widget_height);
 }
@@ -569,11 +569,11 @@ void TemporalProjectionOpenGLWidget::handleZoom(float delta, bool y_only, bool b
     if (!_state) {
         return;
     }
-    WhiskerToolbox::Plots::handleZoom(*_state, _cached_view_state, delta, y_only, both_axes);
+    Neuralyzer::Plots::handleZoom(*_state, _cached_view_state, delta, y_only, both_axes);
 }
 
 QPointF TemporalProjectionOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
-    return WhiskerToolbox::Plots::screenToWorld(_projection_matrix, _widget_width,
+    return Neuralyzer::Plots::screenToWorld(_projection_matrix, _widget_width,
                                                 _widget_height, screen_pos);
 }
 
@@ -635,7 +635,7 @@ void TemporalProjectionOpenGLWidget::clearSelection() {
 }
 
 glm::vec2 TemporalProjectionOpenGLWidget::screenToNDC(QPoint const & screen_pos) const {
-    return WhiskerToolbox::Plots::screenToNDC(screen_pos, _widget_width,
+    return Neuralyzer::Plots::screenToNDC(screen_pos, _widget_width,
                                               _widget_height);
 }
 
@@ -715,7 +715,7 @@ void TemporalProjectionOpenGLWidget::completeLineSelection() {
         return;
     }
     std::vector<CorePlotting::LineBatchIndex> const hit_indices =
-            WhiskerToolbox::Plots::runLineSelectionIntersection(
+            Neuralyzer::Plots::runLineSelectionIntersection(
                     *_intersector, _line_store.cpuData(), _selection_start_ndc,
                     _selection_end_ndc, _projection_matrix, _view_matrix);
     applyLineIntersectionResults(hit_indices, _selection_remove_mode);
@@ -730,7 +730,7 @@ void TemporalProjectionOpenGLWidget::cancelLineSelection() {
 
 CorePlotting::Interaction::GlyphPreview
 TemporalProjectionOpenGLWidget::buildSelectionPreview() const {
-    auto preview = WhiskerToolbox::Plots::buildLineSelectionPreview(
+    auto preview = Neuralyzer::Plots::buildLineSelectionPreview(
             _selection_start_screen, _selection_end_screen, _selection_remove_mode);
     // Override stroke color: light background needs dark line (not white)
     if (!_selection_remove_mode) {

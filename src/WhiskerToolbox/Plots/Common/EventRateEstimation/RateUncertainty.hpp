@@ -18,7 +18,7 @@
 #include <cstddef>
 #include <vector>
 
-namespace WhiskerToolbox::Plots {
+namespace Neuralyzer::Plots {
 
 /**
  * @brief Lower and upper bounds at each time point
@@ -71,6 +71,6 @@ struct ConfidenceBand {
         size_t n_resamples = 1000,
         double ci_level = 0.95);
 
-} // namespace WhiskerToolbox::Plots
+} // namespace Neuralyzer::Plots
 
 #endif // RATE_UNCERTAINTY_HPP

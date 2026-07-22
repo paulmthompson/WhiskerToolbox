@@ -249,26 +249,26 @@ void HeatmapState::setBackgroundColor(QString const & hex_color) {
 
 // === Scaling ===
 
-void HeatmapState::setScaling(WhiskerToolbox::Plots::ScalingMode scaling) {
+void HeatmapState::setScaling(Neuralyzer::Plots::ScalingMode scaling) {
     if (_data.scaling != scaling) {
         _data.scaling = scaling;
 
         // When switching to ZScore, auto-suggest Symmetric color range and Coolwarm colormap
-        if (scaling == WhiskerToolbox::Plots::ScalingMode::ZScore && _data.color_range.mode == HeatmapColorRangeConfig::Mode::Auto) {
+        if (scaling == Neuralyzer::Plots::ScalingMode::ZScore && _data.color_range.mode == HeatmapColorRangeConfig::Mode::Auto) {
             _data.color_range.mode = HeatmapColorRangeConfig::Mode::Symmetric;
             emit colorRangeChanged();
         }
-        if (scaling == WhiskerToolbox::Plots::ScalingMode::ZScore &&
+        if (scaling == Neuralyzer::Plots::ScalingMode::ZScore &&
             _data.colormap != CorePlotting::Colormaps::ColormapPreset::Coolwarm) {
             _data.colormap = CorePlotting::Colormaps::ColormapPreset::Coolwarm;
             emit colormapChanged();
         }
         // When switching away from ZScore with Symmetric, revert to Auto and Inferno
-        if (scaling != WhiskerToolbox::Plots::ScalingMode::ZScore && _data.color_range.mode == HeatmapColorRangeConfig::Mode::Symmetric) {
+        if (scaling != Neuralyzer::Plots::ScalingMode::ZScore && _data.color_range.mode == HeatmapColorRangeConfig::Mode::Symmetric) {
             _data.color_range.mode = HeatmapColorRangeConfig::Mode::Auto;
             emit colorRangeChanged();
         }
-        if (scaling != WhiskerToolbox::Plots::ScalingMode::ZScore &&
+        if (scaling != Neuralyzer::Plots::ScalingMode::ZScore &&
             _data.colormap == CorePlotting::Colormaps::ColormapPreset::Coolwarm) {
             _data.colormap = CorePlotting::Colormaps::ColormapPreset::Inferno;
             emit colormapChanged();
@@ -280,7 +280,7 @@ void HeatmapState::setScaling(WhiskerToolbox::Plots::ScalingMode scaling) {
     }
 }
 
-void HeatmapState::setEstimationParams(WhiskerToolbox::Plots::EstimationParams const & params) {
+void HeatmapState::setEstimationParams(Neuralyzer::Plots::EstimationParams const & params) {
     if (_data.estimation_params != params) {
         _data.estimation_params = params;
         markDirty();

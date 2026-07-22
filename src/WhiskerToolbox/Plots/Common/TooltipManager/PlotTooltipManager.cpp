@@ -13,7 +13,7 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
-namespace WhiskerToolbox::Plots {
+namespace Neuralyzer::Plots {
 
 // =============================================================================
 // PixmapPopup — lightweight floating widget for rich tooltips
@@ -215,4 +215,4 @@ void PlotTooltipManager::hidePixmapPopup() {
     }
 }
 
-}// namespace WhiskerToolbox::Plots
+}// namespace Neuralyzer::Plots

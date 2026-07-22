@@ -98,12 +98,12 @@ TEST_CASE("JsonPipelineRunner loads object-root data config",
     }
 
     DataManager data_manager;
-    auto const result = WhiskerToolbox::DataManagerPipeline::runJsonPipelineFile(
+    auto const result = Neuralyzer::DataManagerPipeline::runJsonPipelineFile(
             data_manager,
             json_path.string());
 
     REQUIRE(result.m_success);
-    REQUIRE(result.m_failed_phase == WhiskerToolbox::DataManagerPipeline::JsonPipelinePhase::None);
+    REQUIRE(result.m_failed_phase == Neuralyzer::DataManagerPipeline::JsonPipelinePhase::None);
 
     auto loaded = data_manager.getData<PointData>("tracked_points");
     REQUIRE(loaded != nullptr);
@@ -141,7 +141,7 @@ TEST_CASE("JsonPipelineRunner expands loops in object-root data config",
     }
 
     DataManager data_manager;
-    auto const result = WhiskerToolbox::DataManagerPipeline::runJsonPipelineFile(
+    auto const result = Neuralyzer::DataManagerPipeline::runJsonPipelineFile(
             data_manager,
             json_path.string());
 
@@ -171,7 +171,7 @@ TEST_CASE("JsonPipelineRunner preserves legacy array config loading",
                                                           {"column_delim", ","}}});
 
     DataManager data_manager;
-    auto const result = WhiskerToolbox::DataManagerPipeline::runJsonPipeline(
+    auto const result = Neuralyzer::DataManagerPipeline::runJsonPipeline(
             data_manager,
             config,
             temp_dir.path().string());
@@ -189,13 +189,13 @@ TEST_CASE("JsonPipelineRunner accepts root-level transformations section",
             {"transformations", {{"steps", nlohmann::json::array()}}}};
 
     DataManager data_manager;
-    auto const result = WhiskerToolbox::DataManagerPipeline::runJsonPipeline(
+    auto const result = Neuralyzer::DataManagerPipeline::runJsonPipeline(
             data_manager,
             config,
             temp_dir.path().string());
 
     REQUIRE(result.m_success);
-    REQUIRE(result.m_failed_phase == WhiskerToolbox::DataManagerPipeline::JsonPipelinePhase::None);
+    REQUIRE(result.m_failed_phase == Neuralyzer::DataManagerPipeline::JsonPipelinePhase::None);
 }
 
 TEST_CASE("JsonPipelineRunner executes root-level saves",
@@ -229,7 +229,7 @@ TEST_CASE("JsonPipelineRunner executes root-level saves",
     }
 
     DataManager data_manager;
-    auto const result = WhiskerToolbox::DataManagerPipeline::runJsonPipelineFile(
+    auto const result = Neuralyzer::DataManagerPipeline::runJsonPipelineFile(
             data_manager,
             json_path.string());
 
@@ -253,7 +253,7 @@ TEST_CASE("JsonPipelineRunner executes root-level command sequences",
                                        {"create_if_missing", true}}}}})}};
 
     DataManager data_manager;
-    auto const result = WhiskerToolbox::DataManagerPipeline::runJsonPipeline(
+    auto const result = Neuralyzer::DataManagerPipeline::runJsonPipeline(
             data_manager,
             config,
             temp_dir.path().string());
@@ -276,13 +276,13 @@ TEST_CASE("JsonPipelineRunner reports command sequence failures",
                                      {"parameters", nlohmann::json::object()}}})}};
 
     DataManager data_manager;
-    auto const result = WhiskerToolbox::DataManagerPipeline::runJsonPipeline(
+    auto const result = Neuralyzer::DataManagerPipeline::runJsonPipeline(
             data_manager,
             config,
             temp_dir.path().string());
 
     REQUIRE_FALSE(result.m_success);
-    REQUIRE(result.m_failed_phase == WhiskerToolbox::DataManagerPipeline::JsonPipelinePhase::Command);
+    REQUIRE(result.m_failed_phase == Neuralyzer::DataManagerPipeline::JsonPipelinePhase::Command);
     REQUIRE(result.m_failed_command_index == 0);
     REQUIRE(result.m_error_message.find("UnknownCommand") != std::string::npos);
 }
@@ -297,13 +297,13 @@ TEST_CASE("JsonPipelineRunner reports save command failures",
                                      {"path", "missing.csv"}}})}};
 
     DataManager data_manager;
-    auto const result = WhiskerToolbox::DataManagerPipeline::runJsonPipeline(
+    auto const result = Neuralyzer::DataManagerPipeline::runJsonPipeline(
             data_manager,
             config,
             temp_dir.path().string());
 
     REQUIRE_FALSE(result.m_success);
-    REQUIRE(result.m_failed_phase == WhiskerToolbox::DataManagerPipeline::JsonPipelinePhase::Save);
+    REQUIRE(result.m_failed_phase == Neuralyzer::DataManagerPipeline::JsonPipelinePhase::Save);
     REQUIRE(result.m_error_message.find("missing_points") != std::string::npos);
 }
 
@@ -311,12 +311,12 @@ TEST_CASE("JsonPipelineRunner reports normalize errors",
           "[DataManager][JsonPipelineRunner]") {
     DataManager data_manager;
     nlohmann::json const scalar_root = 42;
-    auto const result = WhiskerToolbox::DataManagerPipeline::runJsonPipeline(
+    auto const result = Neuralyzer::DataManagerPipeline::runJsonPipeline(
             data_manager,
             scalar_root,
             ".");
 
     REQUIRE_FALSE(result.m_success);
-    REQUIRE(result.m_failed_phase == WhiskerToolbox::DataManagerPipeline::JsonPipelinePhase::Normalize);
+    REQUIRE(result.m_failed_phase == Neuralyzer::DataManagerPipeline::JsonPipelinePhase::Normalize);
     REQUIRE_FALSE(result.m_error_message.empty());
 }

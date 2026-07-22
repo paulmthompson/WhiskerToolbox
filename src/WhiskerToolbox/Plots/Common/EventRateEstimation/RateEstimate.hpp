@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-namespace WhiskerToolbox::Plots {
+namespace Neuralyzer::Plots {
 
 // =============================================================================
 // Core Output
@@ -139,6 +139,6 @@ enum class ScalingMode {
     };
 }
 
-} // namespace WhiskerToolbox::Plots
+} // namespace Neuralyzer::Plots
 
 #endif // RATE_ESTIMATE_HPP

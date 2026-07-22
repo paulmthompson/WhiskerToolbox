@@ -227,7 +227,7 @@ private:
     QPoint _last_mouse_pos;
     QPoint _click_start_pos;                ///< For click-vs-drag detection
     static constexpr int DRAG_THRESHOLD = 5;///< Pixels moved to count as drag
-    std::unique_ptr<WhiskerToolbox::Plots::PlotTooltipManager> _tooltip_mgr;
+    std::unique_ptr<Neuralyzer::Plots::PlotTooltipManager> _tooltip_mgr;
 
     // Cached alignment times for relative→absolute time conversion
     std::vector<int64_t> _cached_alignment_times;///< Per-trial alignment times (absolute)

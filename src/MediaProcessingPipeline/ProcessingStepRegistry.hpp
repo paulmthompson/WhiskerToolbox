@@ -12,7 +12,7 @@
 #include <string>
 #include <vector>
 
-namespace WhiskerToolbox::MediaProcessing {
+namespace Neuralyzer::MediaProcessing {
 
 /**
  * @brief Singleton registry mapping step names to ProcessingStep descriptors
@@ -72,6 +72,6 @@ struct RegisterStep {
     }
 };
 
-}// namespace WhiskerToolbox::MediaProcessing
+}// namespace Neuralyzer::MediaProcessing
 
 #endif// MEDIA_PROCESSING_PIPELINE_PROCESSING_STEP_REGISTRY_HPP

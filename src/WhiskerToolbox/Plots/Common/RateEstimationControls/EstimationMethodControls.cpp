@@ -9,7 +9,7 @@
 
 #include <variant>
 
-using namespace WhiskerToolbox::Plots;
+using namespace Neuralyzer::Plots;
 
 // =============================================================================
 // Method index constants (must match insertion order in constructor)

@@ -12,7 +12,7 @@
 #include <numeric>
 #include <utility>
 
-namespace WhiskerToolbox::Plots {
+namespace Neuralyzer::Plots {
 
 HeatmapPipelineResult runHeatmapPipeline(
         std::shared_ptr<DataManager> const & data_manager,
@@ -81,7 +81,7 @@ namespace {
  * Returns the time at which the maximum rate occurs. If the rate estimate
  * is empty, returns +infinity so empty rows sort to the end.
  */
-double computeTimeToPeak(WhiskerToolbox::Plots::RateEstimate const & estimate) {
+double computeTimeToPeak(Neuralyzer::Plots::RateEstimate const & estimate) {
     if (estimate.values.empty() || estimate.times.empty()) {
         return std::numeric_limits<double>::infinity();
     }
@@ -95,7 +95,7 @@ double computeTimeToPeak(WhiskerToolbox::Plots::RateEstimate const & estimate) {
 /**
  * @brief Compute the peak rate value for a rate estimate
  */
-double computePeakRate(WhiskerToolbox::Plots::RateEstimate const & estimate) {
+double computePeakRate(Neuralyzer::Plots::RateEstimate const & estimate) {
     if (estimate.values.empty()) {
         return -std::numeric_limits<double>::infinity();
     }
@@ -105,7 +105,7 @@ double computePeakRate(WhiskerToolbox::Plots::RateEstimate const & estimate) {
 /**
  * @brief Compute the mean rate value for a rate estimate
  */
-double computeMeanRate(WhiskerToolbox::Plots::RateEstimate const & estimate) {
+double computeMeanRate(Neuralyzer::Plots::RateEstimate const & estimate) {
     if (estimate.values.empty()) {
         return -std::numeric_limits<double>::infinity();
     }
@@ -212,7 +212,7 @@ void applySortOrder(
 
     // Reorder rate estimates
     if (!result.rate_estimates.empty()) {
-        std::vector<WhiskerToolbox::Plots::RateEstimate> sorted_estimates;
+        std::vector<Neuralyzer::Plots::RateEstimate> sorted_estimates;
         sorted_estimates.reserve(n);
         for (auto const idx: sort_indices) {
             if (idx < result.rate_estimates.size()) {
@@ -235,4 +235,4 @@ void applySortOrder(
     }
 }
 
-}// namespace WhiskerToolbox::Plots
+}// namespace Neuralyzer::Plots

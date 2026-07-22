@@ -34,7 +34,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace WhiskerToolbox::Plots {
+namespace Neuralyzer::Plots {
 class PlotTooltipManager;
 }
 
@@ -171,7 +171,7 @@ private:
     std::vector<std::optional<float>> _feature_values;
 
     // Tooltip manager
-    std::unique_ptr<WhiskerToolbox::Plots::PlotTooltipManager> _tooltip_mgr;
+    std::unique_ptr<Neuralyzer::Plots::PlotTooltipManager> _tooltip_mgr;
 
     // Hit testing (double-click-to-navigate)
     std::unique_ptr<CorePlotting::SceneHitTester> _hit_tester;

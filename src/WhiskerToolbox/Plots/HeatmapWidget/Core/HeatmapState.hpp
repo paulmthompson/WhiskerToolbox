@@ -122,9 +122,9 @@ struct HeatmapStateData {
     VerticalAxisStateData vertical_axis;
     std::string background_color = "#FFFFFF";
     std::vector<std::string> unit_keys;///< Selected DigitalEventSeries keys
-    WhiskerToolbox::Plots::ScalingMode scaling =
-            WhiskerToolbox::Plots::ScalingMode::FiringRateHz;
-    WhiskerToolbox::Plots::EstimationParams estimation_params;
+    Neuralyzer::Plots::ScalingMode scaling =
+            Neuralyzer::Plots::ScalingMode::FiringRateHz;
+    Neuralyzer::Plots::EstimationParams estimation_params;
     HeatmapColorRangeConfig color_range;
     CorePlotting::Colormaps::ColormapPreset colormap =
             CorePlotting::Colormaps::ColormapPreset::Inferno;
@@ -193,17 +193,17 @@ public:
 
     // === Scaling ===
     /** @brief Get the current scaling mode */
-    [[nodiscard]] WhiskerToolbox::Plots::ScalingMode scaling() const { return _data.scaling; }
+    [[nodiscard]] Neuralyzer::Plots::ScalingMode scaling() const { return _data.scaling; }
     /** @brief Set the scaling mode. Emits scalingChanged() and stateChanged(). */
-    void setScaling(WhiskerToolbox::Plots::ScalingMode scaling);
+    void setScaling(Neuralyzer::Plots::ScalingMode scaling);
 
     // === Estimation Parameters ===
     /** @brief Get the current estimation parameters */
-    [[nodiscard]] WhiskerToolbox::Plots::EstimationParams const & estimationParams() const {
+    [[nodiscard]] Neuralyzer::Plots::EstimationParams const & estimationParams() const {
         return _data.estimation_params;
     }
     /** @brief Set the estimation parameters. Emits estimationParamsChanged() and stateChanged(). */
-    void setEstimationParams(WhiskerToolbox::Plots::EstimationParams const & params);
+    void setEstimationParams(Neuralyzer::Plots::EstimationParams const & params);
 
     // === Sorting ===
     /** @brief Get the current sort mode */

@@ -13,7 +13,7 @@
 
 #include <QString>
 
-namespace WhiskerToolbox::Plots::SelectionInstructions {
+namespace Neuralyzer::Plots::SelectionInstructions {
 
 /**
  * @brief Instructions for single-point selection mode
@@ -60,6 +60,6 @@ inline QString none()
     return QStringLiteral("No selection mode active");
 }
 
-}  // namespace WhiskerToolbox::Plots::SelectionInstructions
+}  // namespace Neuralyzer::Plots::SelectionInstructions
 
 #endif  // SELECTION_INSTRUCTIONS_HPP

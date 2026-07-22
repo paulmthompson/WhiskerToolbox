@@ -224,11 +224,11 @@ void PSTHState::setStyle(PSTHStyle style) {
     }
 }
 
-WhiskerToolbox::Plots::EstimationParams const & PSTHState::estimationParams() const {
+Neuralyzer::Plots::EstimationParams const & PSTHState::estimationParams() const {
     return _data.estimation_params;
 }
 
-void PSTHState::setEstimationParams(WhiskerToolbox::Plots::EstimationParams const & params) {
+void PSTHState::setEstimationParams(Neuralyzer::Plots::EstimationParams const & params) {
     if (_data.estimation_params != params) {
         _data.estimation_params = params;
         markDirty();
@@ -237,11 +237,11 @@ void PSTHState::setEstimationParams(WhiskerToolbox::Plots::EstimationParams cons
     }
 }
 
-WhiskerToolbox::Plots::ScalingMode PSTHState::scaling() const {
+Neuralyzer::Plots::ScalingMode PSTHState::scaling() const {
     return _data.scaling;
 }
 
-void PSTHState::setScaling(WhiskerToolbox::Plots::ScalingMode mode) {
+void PSTHState::setScaling(Neuralyzer::Plots::ScalingMode mode) {
     if (_data.scaling != mode) {
         _data.scaling = mode;
         markDirty();

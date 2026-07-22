@@ -16,7 +16,7 @@
 #include <memory>
 #include <vector>
 
-using namespace WhiskerToolbox::Plots;
+using namespace Neuralyzer::Plots;
 using WhiskerToolbox::Gather::AlignmentPoint;
 
 // =============================================================================

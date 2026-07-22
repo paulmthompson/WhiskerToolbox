@@ -688,7 +688,7 @@ void OnionSkinViewOpenGLWidget::handlePanning(int delta_x, int delta_y) {
     // Negate delta_y because the Y-axis is inverted (image coordinates:
     // screen-down corresponds to increasing world Y, but the standard
     // panning helper assumes screen-down corresponds to decreasing world Y).
-    WhiskerToolbox::Plots::handlePanning(
+    Neuralyzer::Plots::handlePanning(
             *_state, _cached_view_state, delta_x, -delta_y, _widget_width,
             _widget_height);
 }
@@ -697,11 +697,11 @@ void OnionSkinViewOpenGLWidget::handleZoom(float delta, bool y_only, bool both_a
     if (!_state) {
         return;
     }
-    WhiskerToolbox::Plots::handleZoom(*_state, _cached_view_state, delta, y_only, both_axes);
+    Neuralyzer::Plots::handleZoom(*_state, _cached_view_state, delta, y_only, both_axes);
 }
 
 QPointF OnionSkinViewOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
-    return WhiskerToolbox::Plots::screenToWorld(_projection_matrix, _widget_width,
+    return Neuralyzer::Plots::screenToWorld(_projection_matrix, _widget_width,
                                                 _widget_height, screen_pos);
 }
 

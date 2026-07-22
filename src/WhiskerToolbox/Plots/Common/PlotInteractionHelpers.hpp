@@ -18,18 +18,18 @@
  *
  * @code
  * // In updateMatrices():
- * _projection_matrix = WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
+ * _projection_matrix = Neuralyzer::Plots::computeOrthoProjection(_cached_view_state);
  * _view_matrix = glm::mat4(1.0f);
  *
  * // In handlePanning():
- * WhiskerToolbox::Plots::handlePanning(*_state, _cached_view_state,
+ * Neuralyzer::Plots::handlePanning(*_state, _cached_view_state,
  *     delta_x, delta_y, _widget_width, _widget_height);
  *
  * // In handleZoom():
- * WhiskerToolbox::Plots::handleZoom(*_state, _cached_view_state, delta, y_only, both_axes);
+ * Neuralyzer::Plots::handleZoom(*_state, _cached_view_state, delta, y_only, both_axes);
  *
  * // In screenToWorld():
- * QPointF world = WhiskerToolbox::Plots::screenToWorld(
+ * QPointF world = Neuralyzer::Plots::screenToWorld(
  *     _projection_matrix, _widget_width, _widget_height, screen_pos);
  * @endcode
  *
@@ -49,7 +49,7 @@
 #include <cmath>
 #include <concepts>
 
-namespace WhiskerToolbox::Plots {
+namespace Neuralyzer::Plots {
 
 // =============================================================================
 // Concepts
@@ -369,6 +369,6 @@ void handleZoom(
     }
 }
 
-}// namespace WhiskerToolbox::Plots
+}// namespace Neuralyzer::Plots
 
 #endif// PLOT_INTERACTION_HELPERS_HPP

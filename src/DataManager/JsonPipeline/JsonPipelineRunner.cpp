@@ -27,7 +27,7 @@
 #include <string>
 #include <utility>
 
-namespace WhiskerToolbox::DataManagerPipeline {
+namespace Neuralyzer::DataManagerPipeline {
 
 namespace {
 
@@ -395,4 +395,4 @@ JsonPipelineResult runJsonPipelineFile(
     }
 }
 
-}// namespace WhiskerToolbox::DataManagerPipeline
+}// namespace Neuralyzer::DataManagerPipeline

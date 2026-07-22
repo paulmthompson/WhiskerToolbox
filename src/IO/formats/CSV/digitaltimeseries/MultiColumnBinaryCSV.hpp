@@ -88,7 +88,7 @@ struct MultiColumnBinaryCSVLoaderOptions {
 };
 
 // Compile-time validation
-static_assert(WhiskerToolbox::ValidLoaderOptions<MultiColumnBinaryCSVLoaderOptions>,
+static_assert(Neuralyzer::ValidLoaderOptions<MultiColumnBinaryCSVLoaderOptions>,
               "MultiColumnBinaryCSVLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
 
@@ -131,7 +131,7 @@ struct MultiColumnBinaryCSVTimeFrameOptions {
 };
 
 // Compile-time validation
-static_assert(WhiskerToolbox::ValidLoaderOptions<MultiColumnBinaryCSVTimeFrameOptions>,
+static_assert(Neuralyzer::ValidLoaderOptions<MultiColumnBinaryCSVTimeFrameOptions>,
               "MultiColumnBinaryCSVTimeFrameOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
 

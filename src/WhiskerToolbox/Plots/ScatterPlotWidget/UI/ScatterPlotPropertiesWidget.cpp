@@ -480,11 +480,11 @@ void ScatterPlotPropertiesWidget::_updateSelectionInstructions() {
     if (idx == 0) {
         // Single Point
         _selection_instructions_label->setText(
-                WhiskerToolbox::Plots::SelectionInstructions::singlePoint());
+                Neuralyzer::Plots::SelectionInstructions::singlePoint());
     } else {
         // Polygon
         _selection_instructions_label->setText(
-                WhiskerToolbox::Plots::SelectionInstructions::polygon());
+                Neuralyzer::Plots::SelectionInstructions::polygon());
     }
 }
 

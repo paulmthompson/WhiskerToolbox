@@ -20,7 +20,7 @@
 
 #include <span>
 
-namespace WhiskerToolbox::Plots {
+namespace Neuralyzer::Plots {
 
 // =============================================================================
 // Normalization primitives (operate on value vectors in-place)
@@ -111,6 +111,6 @@ void applyScaling(RateEstimateWithTrials & data,
                   ScalingMode mode,
                   double time_units_per_second);
 
-} // namespace WhiskerToolbox::Plots
+} // namespace Neuralyzer::Plots
 
 #endif // RATE_NORMALIZATION_HPP

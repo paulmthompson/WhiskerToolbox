@@ -75,10 +75,9 @@
 #include <vector>
 #include <algorithm>
 
-namespace WhiskerToolbox::Filters {
+namespace Neuralyzer::Filters {
 
-// Import concepts from Concepts namespace
-using namespace WhiskerToolbox::Concepts;
+using namespace Neuralyzer::Concepts;
 
 // ============================================================================
 // Time Range Filtering
@@ -555,6 +554,6 @@ template<std::ranges::input_range R>
     return std::make_pair((*min_it).time(), (*max_it).time());
 }
 
-} // namespace WhiskerToolbox::Filters
+} // namespace Neuralyzer::Filters
 
 #endif // TIME_SERIES_FILTERS_HPP

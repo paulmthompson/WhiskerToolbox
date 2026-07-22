@@ -27,7 +27,7 @@
 #include <QVBoxLayout>
 #include <iostream>
 
-using namespace WhiskerToolbox::MediaProcessing;
+using namespace Neuralyzer::MediaProcessing;
 
 // =============================================================================
 // Helper: map chain_key → active flag field in MediaDisplayOptions

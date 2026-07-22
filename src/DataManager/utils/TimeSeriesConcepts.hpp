@@ -63,7 +63,7 @@
 #include <type_traits>
 #include <unordered_set>
 
-namespace WhiskerToolbox::Concepts {
+namespace Neuralyzer::Concepts {
 
 /**
  * @brief Concept for time series element types
@@ -221,6 +221,6 @@ template<EntityElement T>
     return ids.contains(elem.id());
 }
 
-}// namespace WhiskerToolbox::Concepts
+}// namespace Neuralyzer::Concepts
 
 #endif// TIME_SERIES_CONCEPTS_HPP

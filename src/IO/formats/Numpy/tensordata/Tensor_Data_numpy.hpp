@@ -45,7 +45,7 @@ struct NpyTensorLoaderOptions {
     std::string row_type = "ordinal";
 };
 
-static_assert(WhiskerToolbox::ValidLoaderOptions<NpyTensorLoaderOptions>,
+static_assert(Neuralyzer::ValidLoaderOptions<NpyTensorLoaderOptions>,
               "NpyTensorLoaderOptions must satisfy ValidLoaderOptions");
 
 /**

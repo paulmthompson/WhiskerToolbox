@@ -450,19 +450,19 @@ void TemporalProjectionViewPropertiesWidget::_updateSelectionInstructions()
     switch (idx) {
     case 1:  // Point
         ui->selection_instructions_label->setText(
-            WhiskerToolbox::Plots::SelectionInstructions::singlePoint());
+            Neuralyzer::Plots::SelectionInstructions::singlePoint());
         break;
     case 2:  // Line
         ui->selection_instructions_label->setText(
-            WhiskerToolbox::Plots::SelectionInstructions::lineCrossing());
+            Neuralyzer::Plots::SelectionInstructions::lineCrossing());
         break;
     case 3:  // Polygon
         ui->selection_instructions_label->setText(
-            WhiskerToolbox::Plots::SelectionInstructions::polygon());
+            Neuralyzer::Plots::SelectionInstructions::polygon());
         break;
     default:  // None
         ui->selection_instructions_label->setText(
-            WhiskerToolbox::Plots::SelectionInstructions::none());
+            Neuralyzer::Plots::SelectionInstructions::none());
         break;
     }
 }

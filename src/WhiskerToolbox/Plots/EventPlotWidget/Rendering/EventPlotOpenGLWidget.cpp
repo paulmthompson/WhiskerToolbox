@@ -85,17 +85,17 @@ EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
     setFormat(format);
 
     // Initialize tooltip manager
-    _tooltip_mgr = std::make_unique<WhiskerToolbox::Plots::PlotTooltipManager>(this);
+    _tooltip_mgr = std::make_unique<Neuralyzer::Plots::PlotTooltipManager>(this);
 
     // Hit test provider: reuses the same findEventNear / screenToWorld as click handling
     _tooltip_mgr->setHitTestProvider(
-            [this](QPoint pos) -> std::optional<WhiskerToolbox::Plots::PlotTooltipHit> {
+            [this](QPoint pos) -> std::optional<Neuralyzer::Plots::PlotTooltipHit> {
                 auto hit = findEventNear(pos);
                 if (!hit) {
                     return std::nullopt;
                 }
                 QPointF const world = screenToWorld(pos);
-                WhiskerToolbox::Plots::PlotTooltipHit result;
+                Neuralyzer::Plots::PlotTooltipHit result;
                 result.world_x = static_cast<float>(world.x());
                 result.world_y = static_cast<float>(world.y());
                 result.user_data = *hit;// std::pair<int, std::string>
@@ -104,7 +104,7 @@ EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
 
     // Text provider: generates tooltip content from the hit result
     _tooltip_mgr->setTextProvider(
-            [](WhiskerToolbox::Plots::PlotTooltipHit const & hit) -> QString {
+            [](Neuralyzer::Plots::PlotTooltipHit const & hit) -> QString {
                 auto const & data =
                         std::any_cast<std::pair<int, std::string> const &>(hit.user_data);
                 return QString("Trial %1\nTime: %2 ms")
@@ -237,7 +237,7 @@ EventPlotOpenGLWidget::RasterExportBundle EventPlotOpenGLWidget::collectRasterEx
             if (!interval_series) {
                 continue;
             }
-            series = WhiskerToolbox::Plots::extractEdgeEvents(
+            series = Neuralyzer::Plots::extractEdgeEvents(
                     interval_series, *opts->interval_edge);
             if (!series) {
                 continue;
@@ -572,7 +572,7 @@ void EventPlotOpenGLWidget::rebuildScene() {
             if (!interval_series) {
                 continue;
             }
-            series = WhiskerToolbox::Plots::extractEdgeEvents(
+            series = Neuralyzer::Plots::extractEdgeEvents(
                     interval_series, *opts->interval_edge);
             if (!series) {
                 continue;
@@ -725,7 +725,7 @@ void EventPlotOpenGLWidget::rebuildScene() {
 
 void EventPlotOpenGLWidget::updateMatrices() {
     _projection_matrix =
-            WhiskerToolbox::Plots::computeOrthoProjection(_cached_view_state);
+            Neuralyzer::Plots::computeOrthoProjection(_cached_view_state);
     _view_matrix = glm::mat4(1.0f);
 
     // Keep the cached scene in sync so exportToSVG() uses current matrices.
@@ -734,7 +734,7 @@ void EventPlotOpenGLWidget::updateMatrices() {
 }
 
 QPointF EventPlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
-    return WhiskerToolbox::Plots::screenToWorld(
+    return Neuralyzer::Plots::screenToWorld(
             _projection_matrix, _widget_width, _widget_height, screen_pos);
 }
 
@@ -752,7 +752,7 @@ void EventPlotOpenGLWidget::handlePanning(int delta_x, int delta_y) {
     if (!_state) {
         return;
     }
-    WhiskerToolbox::Plots::handlePanning(
+    Neuralyzer::Plots::handlePanning(
             *_state, _cached_view_state, delta_x, delta_y, _widget_width,
             _widget_height);
 }
@@ -762,7 +762,7 @@ void EventPlotOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)
         return;
     }
 
-    WhiskerToolbox::Plots::handleZoom(
+    Neuralyzer::Plots::handleZoom(
             *_state, _cached_view_state, delta, y_only, both_axes);
 }
 
@@ -943,7 +943,7 @@ GatherResult<DigitalEventSeries> EventPlotOpenGLWidget::gatherTrialData(
     auto const & alignment_data = alignment_state->data();
 
     // Get alignment source with optional overlap pruning
-    auto alignment_source = WhiskerToolbox::Plots::getFilteredAlignmentSource(
+    auto alignment_source = Neuralyzer::Plots::getFilteredAlignmentSource(
             _data_manager, alignment_data);
     if (!alignment_source.isValid()) {
         return GatherResult<DigitalEventSeries>{};
@@ -953,16 +953,16 @@ GatherResult<DigitalEventSeries> EventPlotOpenGLWidget::gatherTrialData(
     // This supports both DataManager-owned and derived (edge-extracted) series.
     if (alignment_source.is_event_series) {
         double const half_window = alignment_data.window_size / 2.0;
-        return WhiskerToolbox::Plots::gatherWithEventAlignment<DigitalEventSeries>(
+        return Neuralyzer::Plots::gatherWithEventAlignment<DigitalEventSeries>(
                 source,
                 alignment_source.event_series,
                 half_window,
                 half_window);
     } else {
         double const half_window = alignment_data.window_size / 2.0;
-        auto align = WhiskerToolbox::Plots::toAlignmentPoint(
+        auto align = Neuralyzer::Plots::toAlignmentPoint(
                 alignment_data.interval_alignment_type);
-        return WhiskerToolbox::Plots::gatherWithIntervalAlignment<DigitalEventSeries>(
+        return Neuralyzer::Plots::gatherWithIntervalAlignment<DigitalEventSeries>(
                 source,
                 alignment_source.interval_series,
                 align,

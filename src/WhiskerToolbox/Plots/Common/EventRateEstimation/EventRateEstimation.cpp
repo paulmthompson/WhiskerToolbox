@@ -15,7 +15,7 @@
 #include <numeric>
 #include <vector>
 
-namespace WhiskerToolbox::Plots {
+namespace Neuralyzer::Plots {
 
 // =============================================================================
 // Internal gather helpers (subset of PlotAlignmentGather.hpp — no Qt needed)
@@ -36,7 +36,7 @@ using WhiskerToolbox::Gather::withAlignment;
 /**
  * @brief Prune alignment times whose expanded windows would overlap (local copy)
  *
- * This is a local copy of WhiskerToolbox::Plots::pruneOverlappingAlignmentTimes
+ * This is a local copy of Neuralyzer::Plots::pruneOverlappingAlignmentTimes
  * to avoid a transitive Qt dependency from PlotAlignmentGather.hpp.
  */
 [[nodiscard]] std::vector<size_t> pruneOverlappingAlignmentTimesLocal(
@@ -500,4 +500,4 @@ std::vector<RateEstimate> estimateRates(
     return results;
 }
 
-}// namespace WhiskerToolbox::Plots
+}// namespace Neuralyzer::Plots

@@ -131,7 +131,7 @@ TEST_CASE("EstimationMethodControls layout resilience — Binning mode width swe
     ensureQApp();
 
     EstimationMethodControls controls;
-    controls.setParams(WhiskerToolbox::Plots::BinningParams{10.0});
+    controls.setParams(Neuralyzer::Plots::BinningParams{10.0});
     controls.show();
     QCoreApplication::processEvents();
 
@@ -172,10 +172,10 @@ TEST_CASE("EstimationMethodControls layout resilience — method transitions at 
     QCoreApplication::processEvents();
 
     std::vector<int> const widths = {50, 100, 150, 200, 300, 500};
-    std::vector<WhiskerToolbox::Plots::EstimationParams> const methods = {
-            WhiskerToolbox::Plots::BinningParams{10.0},
-            WhiskerToolbox::Plots::GaussianKernelParams{20.0, 1.0},
-            WhiskerToolbox::Plots::CausalExponentialParams{50.0, 1.0},
+    std::vector<Neuralyzer::Plots::EstimationParams> const methods = {
+            Neuralyzer::Plots::BinningParams{10.0},
+            Neuralyzer::Plots::GaussianKernelParams{20.0, 1.0},
+            Neuralyzer::Plots::CausalExponentialParams{50.0, 1.0},
     };
 
     for (int const w: widths) {

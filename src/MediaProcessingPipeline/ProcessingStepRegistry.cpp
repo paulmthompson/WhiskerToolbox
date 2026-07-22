@@ -9,7 +9,7 @@
 
 #include "ImageProcessing/OpenCVUtility.hpp"
 
-namespace WhiskerToolbox::MediaProcessing {
+namespace Neuralyzer::MediaProcessing {
 
 ProcessingStepRegistry & ProcessingStepRegistry::instance() {
     static ProcessingStepRegistry registry;
@@ -59,4 +59,4 @@ static RegisterStep<MedianOptions> const reg_median{
         "6__median",
         [](cv::Mat & m, MedianOptions const & o) { ImageProcessing::median_filter(m, o); }};
 
-}// namespace WhiskerToolbox::MediaProcessing
+}// namespace Neuralyzer::MediaProcessing

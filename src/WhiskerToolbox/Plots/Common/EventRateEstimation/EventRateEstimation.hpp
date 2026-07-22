@@ -85,7 +85,7 @@
 
 class TimeFrame;
 
-namespace WhiskerToolbox::Plots {
+namespace Neuralyzer::Plots {
 
 // =============================================================================
 // Gather Context
@@ -232,6 +232,6 @@ struct UnitGatherContext {
         double window_size,
         EstimationParams const & params = BinningParams{});
 
-} // namespace WhiskerToolbox::Plots
+} // namespace Neuralyzer::Plots
 
 #endif // EVENT_RATE_ESTIMATION_HPP
