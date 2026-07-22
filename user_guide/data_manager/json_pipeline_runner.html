@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-c66b74bd64534bb69244e3f3ef8184bb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -1051,7 +1051,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#minimal-load-and-save" id="toc-minimal-load-and-save" class="nav-link" data-scroll-target="#minimal-load-and-save">Minimal Load And Save</a></li>
   <li><a href="#commands" id="toc-commands" class="nav-link" data-scroll-target="#commands">Commands</a></li>
   <li><a href="#transformations" id="toc-transformations" class="nav-link" data-scroll-target="#transformations">Transformations</a></li>
-  <li><a href="#paths-and-variables" id="toc-paths-and-variables" class="nav-link" data-scroll-target="#paths-and-variables">Paths And Variables</a></li>
+  <li><a href="#paths-and-variables" id="toc-paths-and-variables" class="nav-link" data-scroll-target="#paths-and-variables">Paths And Variables</a>
+  <ul class="collapse">
+  <li><a href="#looping-over-data-entries" id="toc-looping-over-data-entries" class="nav-link" data-scroll-target="#looping-over-data-entries">Looping over data entries</a></li>
+  </ul></li>
   <li><a href="#transformsv2-pipelines" id="toc-transformsv2-pipelines" class="nav-link" data-scroll-target="#transformsv2-pipelines">TransformsV2 Pipelines</a></li>
   <li><a href="#useful-options" id="toc-useful-options" class="nav-link" data-scroll-target="#useful-options">Useful Options</a></li>
   </ul>
@@ -1178,31 +1181,47 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="paths-and-variables" class="level2">
 <h2 class="anchored" data-anchor-id="paths-and-variables">Paths And Variables</h2>
 <p>Paths in <code>data[].filepath</code> are resolved by the existing DataManager JSON loading system. Relative <code>saves[].path</code> values are resolved against the directory containing the pipeline JSON file. String variables in the top-level <code>variables</code> object can be referenced as <code>${name}</code> in load entries, commands, and saves.</p>
+<section id="looping-over-data-entries" class="level3">
+<h3 class="anchored" data-anchor-id="looping-over-data-entries">Looping over data entries</h3>
+<p>Use a top-level <code>"loops"</code> object to expand templated load entries. Placeholders use single braces (<code>{whisker_id}</code>), not <code>${...}</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"loops"</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">"whisker_id"</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">"from"</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">"to"</span><span class="fu">:</span> <span class="dv">4</span> <span class="fu">}</span> <span class="fu">},</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"data"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"data_type"</span><span class="fu">:</span> <span class="st">"line"</span><span class="fu">,</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"whisker_{whisker_id}"</span><span class="fu">,</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"csv"</span><span class="fu">,</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"filepath"</span><span class="fu">:</span> <span class="st">"whiskers/whisker_{whisker_id}.csv"</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Loop expansion runs before <code>${variable}</code> substitution. See the developer <a href="../../developer/DataManager/file_io.html">file I/O</a> notes for full rules.</p>
+</section>
 </section>
 <section id="transformsv2-pipelines" class="level2">
 <h2 class="anchored" data-anchor-id="transformsv2-pipelines">TransformsV2 Pipelines</h2>
 <p>Use <code>RunTransformsV2Pipeline</code> in <code>commands</code> to run a saved TransformsV2 pipeline library JSON over an entire data object. Input and output DataManager keys are specified in the command, not in the pipeline file:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"commands"</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"command_name"</span><span class="fu">:</span> <span class="st">"RunTransformsV2Pipeline"</span><span class="fu">,</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"input_key"</span><span class="fu">:</span> <span class="st">"whisker_masks"</span><span class="fu">,</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"output_key"</span><span class="fu">:</span> <span class="st">"whisker_lines"</span><span class="fu">,</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"pipeline_path"</span><span class="fu">:</span> <span class="st">"/path/to/mask_to_line.json"</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"commands"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"command_name"</span><span class="fu">:</span> <span class="st">"RunTransformsV2Pipeline"</span><span class="fu">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"input_key"</span><span class="fu">:</span> <span class="st">"whisker_masks"</span><span class="fu">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"output_key"</span><span class="fu">:</span> <span class="st">"whisker_lines"</span><span class="fu">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        <span class="dt">"pipeline_path"</span><span class="fu">:</span> <span class="st">"/path/to/mask_to_line.json"</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>      <span class="fu">}</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>For transforms that change sample count (for example <code>SincInterpolation</code>), register an upsampled <code>TimeFrame</code> first (for example with <code>UpsampleTimeFrame</code>) and pass <code>output_time_key</code>.</p>
 </section>
 <section id="useful-options" class="level2">
 <h2 class="anchored" data-anchor-id="useful-options">Useful Options</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">DataManagerPipelineRunner</span> <span class="at">--no-load-transform</span> pipeline.json</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">DataManagerPipelineRunner</span> <span class="at">--no-commands</span> pipeline.json</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="ex">DataManagerPipelineRunner</span> <span class="at">--no-saves</span> pipeline.json</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="ex">DataManagerPipelineRunner</span> <span class="at">--continue-on-command-error</span> pipeline.json</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="ex">DataManagerPipelineRunner</span> <span class="at">--continue-on-save-error</span> pipeline.json</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">DataManagerPipelineRunner</span> <span class="at">--no-load-transform</span> pipeline.json</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">DataManagerPipelineRunner</span> <span class="at">--no-commands</span> pipeline.json</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">DataManagerPipelineRunner</span> <span class="at">--no-saves</span> pipeline.json</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">DataManagerPipelineRunner</span> <span class="at">--continue-on-command-error</span> pipeline.json</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="ex">DataManagerPipelineRunner</span> <span class="at">--continue-on-save-error</span> pipeline.json</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Use these options when debugging one phase of a pipeline or when intentionally collecting multiple command/save failures in one run.</p>
 
 

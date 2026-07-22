@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-c66b74bd64534bb69244e3f3ef8184bb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -1546,6 +1546,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#legacy-format-backward-compatible-plain-array" id="toc-legacy-format-backward-compatible-plain-array" class="nav-link" data-scroll-target="#legacy-format-backward-compatible-plain-array">Legacy format (backward-compatible plain array)</a></li>
   <li><a href="#extended-format-env-vars-only-no-variables-section-needed" id="toc-extended-format-env-vars-only-no-variables-section-needed" class="nav-link" data-scroll-target="#extended-format-env-vars-only-no-variables-section-needed">Extended format — env vars only (no <code>"variables"</code> section needed)</a></li>
   <li><a href="#extended-format-inline-variables-with-env-var-fallback" id="toc-extended-format-inline-variables-with-env-var-fallback" class="nav-link" data-scroll-target="#extended-format-inline-variables-with-env-var-fallback">Extended format — inline variables with env-var fallback</a></li>
+  <li><a href="#loop-expansion-loop_var" id="toc-loop-expansion-loop_var" class="nav-link" data-scroll-target="#loop-expansion-loop_var">Loop expansion (<code>{loop_var}</code>)</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -1845,6 +1846,51 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Variables can appear anywhere in a string value — in <code>filepath</code>, <code>name</code>, <code>clock</code>, or any other field. Transformation blocks embedded in the array are substituted before execution as well.</p>
+</section>
+<section id="loop-expansion-loop_var" class="level2">
+<h2 class="anchored" data-anchor-id="loop-expansion-loop_var">Loop expansion (<code>{loop_var}</code>)</h2>
+<p>When using the extended object format, a top-level <code>"loops"</code> object defines iteration values that expand templated <code>data</code> entries before <code>${variable}</code> substitution runs.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 47%">
+<col style="width: 52%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Syntax</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>{whisker_id}</code> in string fields</td>
+<td>Replaced once per loop iteration (single-brace; distinct from <code>${name}</code>)</td>
+</tr>
+<tr class="even">
+<td><code>"loops": { "whisker_id": { "from": 0, "to": 4 } }</code></td>
+<td>Inclusive integer range (<code>step</code> optional, default <code>1</code>)</td>
+</tr>
+<tr class="odd">
+<td><code>"loops": { "whisker_id": [0, 1, 2] }</code></td>
+<td>Explicit iteration values (numbers or strings)</td>
+</tr>
+</tbody>
+</table>
+<p>Each <code>data</code> entry that contains <code>{...}</code> placeholders must reference <strong>exactly one</strong> loop variable name defined in <code>"loops"</code>. Entries without placeholders load once. Embedded <code>"transformations"</code> objects are not expanded.</p>
+<p>Processing order: <strong>loops → <code>${variables}</code> / environment → load</strong>.</p>
+<p>Plain JSON arrays (no root object) do not support <code>"loops"</code>; use <code>{ "loops", "data" }</code> or a pipeline JSON file.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"variables"</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">"session_root"</span><span class="fu">:</span> <span class="st">"/data/session1"</span> <span class="fu">},</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"loops"</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">"whisker_id"</span><span class="fu">:</span> <span class="fu">{</span> <span class="dt">"from"</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span> <span class="dt">"to"</span><span class="fu">:</span> <span class="dv">4</span> <span class="fu">}</span> <span class="fu">},</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"data"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"filepath"</span><span class="fu">:</span> <span class="st">"whiskers/whisker_{whisker_id}.csv"</span><span class="fu">,</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"data_type"</span><span class="fu">:</span> <span class="st">"line"</span><span class="fu">,</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"whisker_{whisker_id}"</span><span class="fu">,</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"csv"</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 
 
 </section>
