@@ -109,4 +109,34 @@ Inline `"variables"` entries override env vars of the same name, so you can prov
 
 Variables can appear anywhere in a string value — in `filepath`, `name`, `clock`, or any other field. Transformation blocks embedded in the array are substituted before execution as well.
 
+## Loop expansion (`{loop_var}`)
+
+When using the extended object format, a top-level `"loops"` object defines iteration values that expand templated `data` entries before `${variable}` substitution runs.
+
+| Syntax | Meaning |
+|--------|---------|
+| `{whisker_id}` in string fields | Replaced once per loop iteration (single-brace; distinct from `${name}`) |
+| `"loops": { "whisker_id": { "from": 0, "to": 4 } }` | Inclusive integer range (`step` optional, default `1`) |
+| `"loops": { "whisker_id": [0, 1, 2] }` | Explicit iteration values (numbers or strings) |
+
+Each `data` entry that contains `{...}` placeholders must reference **exactly one** loop variable name defined in `"loops"`. Entries without placeholders load once. Embedded `"transformations"` objects are not expanded.
+
+Processing order: **loops → `${variables}` / environment → load**.
+
+Plain JSON arrays (no root object) do not support `"loops"`; use `{ "loops", "data" }` or a pipeline JSON file.
+
+```json
+{
+  "variables": { "session_root": "/data/session1" },
+  "loops": { "whisker_id": { "from": 0, "to": 4 } },
+  "data": [
+    {
+      "filepath": "whiskers/whisker_{whisker_id}.csv",
+      "data_type": "line",
+      "name": "whisker_{whisker_id}",
+      "format": "csv"
+    }
+  ]
+}
+```
 

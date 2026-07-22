@@ -41,6 +41,8 @@ set(DATAMANAGER_SOURCES
         utils/TimeIndexExtractor.cpp
         utils/DerivedTimeFrame.hpp
         utils/DerivedTimeFrame.cpp
+        utils/JsonDataLoadExpansion.hpp
+        utils/JsonDataLoadExpansion.cpp
         utils/ContainerElementMapping.hpp
         utils/ContainerTypeIndex.hpp
         utils/ContainerTypeIndex.cpp

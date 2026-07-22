@@ -1,0 +1,35 @@
+---
+title: "JsonDataLoadExpansion"
+description: "Loop expansion for DataManager JSON load configs"
+---
+
+## Overview
+
+`expandDataArrayLoops()` in `src/DataManager/utils/JsonDataLoadExpansion.cpp` expands templated entries in the root `"data"` array before `${variable}` substitution in `load_data_from_json_config()`.
+
+## Placeholder syntax
+
+| Form | When |
+|------|------|
+| `{loop_name}` | Loop iteration; replaced per value in `"loops"` |
+| `${name}` | Inline `variables` or environment (unchanged) |
+
+Brace placeholders are not expanded inside `${...}` tokens.
+
+## Loop definitions
+
+Root `"loops"` maps names to either:
+
+- An array of numbers or strings
+- An object `{ "from": int, "to": int, "step": int? }` with inclusive endpoints
+
+## Rules
+
+- Each expandable `data` entry must reference exactly one loop variable in its string fields.
+- Entries without `{...}` placeholders are emitted once.
+- Objects with `"transformations"` are copied unchanged.
+- Invalid entries are skipped with `spdlog::error` diagnostics.
+
+## Tests
+
+`tests/DataManager/json_data_load_expansion.test.cpp` and loop integration coverage in `JsonPipelineRunner.test.cpp`.

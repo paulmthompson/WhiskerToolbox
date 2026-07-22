@@ -122,6 +122,27 @@ Relative `saves[].path` values are resolved against the directory containing the
 file. String variables in the top-level `variables` object can be referenced as `${name}` in
 load entries, commands, and saves.
 
+### Looping over data entries
+
+Use a top-level `"loops"` object to expand templated load entries. Placeholders use single
+braces (`{whisker_id}`), not `${...}`:
+
+```json
+{
+  "loops": { "whisker_id": { "from": 0, "to": 4 } },
+  "data": [
+    {
+      "data_type": "line",
+      "name": "whisker_{whisker_id}",
+      "format": "csv",
+      "filepath": "whiskers/whisker_{whisker_id}.csv"
+    }
+  ]
+}
+```
+
+Loop expansion runs before `${variable}` substitution. See the developer [file I/O](../../developer/DataManager/file_io.qmd) notes for full rules.
+
 ## TransformsV2 Pipelines
 
 Use `RunTransformsV2Pipeline` in `commands` to run a saved TransformsV2 pipeline library JSON

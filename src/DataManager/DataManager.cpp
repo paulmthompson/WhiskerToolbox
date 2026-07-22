@@ -19,6 +19,7 @@
 // Data type IO includes
 #include "IO/formats/CSV/points/Point_Data_CSV.hpp"// For load_multiple_PointData_from_dlc
 // Tensor numpy loading now handled through the IO registry (DataManagerNumpy library)
+#include "utils/JsonDataLoadExpansion.hpp"
 #include "utils/TableView/TableRegistry.hpp"
 
 #include "IO/formats/Binary/common/binary_loaders.hpp"              // For Time data type loading
@@ -971,8 +972,12 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 }
             }
         }
+        json data_array = j["data"];
+        if (j.contains("loops")) {
+            data_array = expandDataArrayLoops(data_array, j["loops"]);
+        }
         // Always run substitution: inline variables take priority, env vars are the fallback
-        auto data_str = j["data"].dump();
+        auto data_str = data_array.dump();
         data_str = substituteVariablesInJsonString(data_str, variables);
         resolved = json::parse(data_str);
         working_ptr = &resolved;

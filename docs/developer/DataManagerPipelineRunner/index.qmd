@@ -62,7 +62,7 @@ An array is passed unchanged to `load_data_from_json_config()`:
 
 ### Object root (recommended)
 
-An object with optional `variables`, `data`, `transformations`, `commands`, and `saves`:
+An object with optional `variables`, `loops`, `data`, `transformations`, `commands`, and `saves`:
 
 ```json
 {
@@ -95,6 +95,7 @@ An object with optional `variables`, `data`, `transformations`, `commands`, and 
 
 - A root-level `transformations` object is appended to the legacy `data` array as `{ "transformations": ... }`.
 - Root `variables` are copied into the normalized loader config.
+- Root `loops` are copied into the normalized loader config for `{loop_var}` expansion in `data` entries (see [JsonDataLoadExpansion](../DataManager/utils/JsonDataLoadExpansion.qmd)).
 - An object with only `commands` and/or `saves` (no `data`) is valid — useful for command-only or save-only workflows.
 
 **Path resolution:**
