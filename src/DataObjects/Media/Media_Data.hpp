@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_MEDIA_DATA_HPP
-#define WHISKERTOOLBOX_MEDIA_DATA_HPP
+#ifndef NEURALYZER_MEDIA_DATA_HPP
+#define NEURALYZER_MEDIA_DATA_HPP
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "Observer/Observer_Data.hpp"
@@ -316,4 +316,4 @@ protected:
 };
 
 
-#endif//WHISKERTOOLBOX_MEDIA_DATA_HPP
+#endif//NEURALYZER_MEDIA_DATA_HPP

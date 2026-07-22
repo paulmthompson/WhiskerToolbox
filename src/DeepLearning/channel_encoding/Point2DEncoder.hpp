@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_POINT2D_ENCODER_HPP
-#define WHISKERTOOLBOX_POINT2D_ENCODER_HPP
+#ifndef NEURALYZER_POINT2D_ENCODER_HPP
+#define NEURALYZER_POINT2D_ENCODER_HPP
 
 /** @file Point2DEncoder.hpp
  *  @brief Encoder for Point2D<float> data into tensor channels.
@@ -128,4 +128,4 @@ public:
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_POINT2D_ENCODER_HPP
+#endif// NEURALYZER_POINT2D_ENCODER_HPP

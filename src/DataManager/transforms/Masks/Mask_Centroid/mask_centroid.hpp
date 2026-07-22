@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_MASK_CENTROID_HPP
-#define WHISKERTOOLBOX_MASK_CENTROID_HPP
+#ifndef NEURALYZER_MASK_CENTROID_HPP
+#define NEURALYZER_MASK_CENTROID_HPP
 
 #include "transforms/data_transforms.hpp"
 
@@ -98,4 +98,4 @@ public:
                             ProgressCallback progressCallback) override;
 };
 
-#endif//WHISKERTOOLBOX_MASK_CENTROID_HPP
+#endif//NEURALYZER_MASK_CENTROID_HPP

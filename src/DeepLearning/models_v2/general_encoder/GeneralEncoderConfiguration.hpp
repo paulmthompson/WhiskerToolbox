@@ -3,8 +3,8 @@
  * @brief Apply and validate GeneralEncoderModelParams against GeneralEncoderModel.
  */
 
-#ifndef WHISKERTOOLBOX_GENERAL_ENCODER_CONFIGURATION_HPP
-#define WHISKERTOOLBOX_GENERAL_ENCODER_CONFIGURATION_HPP
+#ifndef NEURALYZER_GENERAL_ENCODER_CONFIGURATION_HPP
+#define NEURALYZER_GENERAL_ENCODER_CONFIGURATION_HPP
 
 #include "GeneralEncoderModelParams.hpp"
 
@@ -60,4 +60,4 @@ generalEncoderStoredJsonFromForm(std::string const & form_json, bool applied);
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_GENERAL_ENCODER_CONFIGURATION_HPP
+#endif// NEURALYZER_GENERAL_ENCODER_CONFIGURATION_HPP

@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_MEDIA_DATA_FACTORY_HPP
-#define WHISKERTOOLBOX_MEDIA_DATA_FACTORY_HPP
+#ifndef NEURALYZER_MEDIA_DATA_FACTORY_HPP
+#define NEURALYZER_MEDIA_DATA_FACTORY_HPP
 
 #include "DataTypeEnum/DM_DataType.hpp"
 #include "Media/Media_Data.hpp"
@@ -114,4 +114,4 @@ public:
 #define REGISTER_MEDIA_LOADER(dm_type, loader_func) \
     static MediaLoaderRegistrar<DM_DataType::dm_type> dm_type##_loader_registrar(loader_func);
 
-#endif// WHISKERTOOLBOX_MEDIA_DATA_FACTORY_HPP
+#endif// NEURALYZER_MEDIA_DATA_FACTORY_HPP

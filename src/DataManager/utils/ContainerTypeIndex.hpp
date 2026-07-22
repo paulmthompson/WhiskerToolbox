@@ -1,8 +1,8 @@
 /// @file ContainerTypeIndex.hpp
 /// @brief Runtime std::type_index and string mapping for DataManager container types.
 
-#ifndef WHISKERTOOLBOX_CONTAINER_TYPE_INDEX_HPP
-#define WHISKERTOOLBOX_CONTAINER_TYPE_INDEX_HPP
+#ifndef NEURALYZER_CONTAINER_TYPE_INDEX_HPP
+#define NEURALYZER_CONTAINER_TYPE_INDEX_HPP
 
 #include <string>
 #include <typeindex>
@@ -33,4 +33,4 @@ public:
 
 } // namespace WhiskerToolbox::TypeTraits
 
-#endif // WHISKERTOOLBOX_CONTAINER_TYPE_INDEX_HPP
+#endif // NEURALYZER_CONTAINER_TYPE_INDEX_HPP

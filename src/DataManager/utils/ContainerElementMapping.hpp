@@ -1,8 +1,8 @@
 /// @file ContainerElementMapping.hpp
 /// @brief Compile-time mapping between data element types and container types.
 
-#ifndef WHISKERTOOLBOX_CONTAINER_ELEMENT_MAPPING_HPP
-#define WHISKERTOOLBOX_CONTAINER_ELEMENT_MAPPING_HPP
+#ifndef NEURALYZER_CONTAINER_ELEMENT_MAPPING_HPP
+#define NEURALYZER_CONTAINER_ELEMENT_MAPPING_HPP
 
 #include "TypeTraits/DataTypeTraits.hpp"
 
@@ -119,4 +119,4 @@ inline constexpr bool has_element_type_v =
 
 } // namespace WhiskerToolbox::TypeTraits
 
-#endif // WHISKERTOOLBOX_CONTAINER_ELEMENT_MAPPING_HPP
+#endif // NEURALYZER_CONTAINER_ELEMENT_MAPPING_HPP

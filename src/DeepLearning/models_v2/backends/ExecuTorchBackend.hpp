@@ -3,8 +3,8 @@
  * @brief ExecuTorch inference backend for `.pte` model programs.
  */
 
-#ifndef WHISKERTOOLBOX_EXECUTORCH_BACKEND_HPP
-#define WHISKERTOOLBOX_EXECUTORCH_BACKEND_HPP
+#ifndef NEURALYZER_EXECUTORCH_BACKEND_HPP
+#define NEURALYZER_EXECUTORCH_BACKEND_HPP
 
 #include "InferenceBackend.hpp"
 
@@ -63,4 +63,4 @@ private:
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_EXECUTORCH_BACKEND_HPP
+#endif// NEURALYZER_EXECUTORCH_BACKEND_HPP

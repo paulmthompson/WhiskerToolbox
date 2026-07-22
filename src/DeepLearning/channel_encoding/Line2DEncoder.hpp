@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_LINE2D_ENCODER_HPP
-#define WHISKERTOOLBOX_LINE2D_ENCODER_HPP
+#ifndef NEURALYZER_LINE2D_ENCODER_HPP
+#define NEURALYZER_LINE2D_ENCODER_HPP
 
 /** @file Line2DEncoder.hpp
  *  @brief Encoder for ordered polyline (Line2D) data into tensor channels.
@@ -80,4 +80,4 @@ public:
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_LINE2D_ENCODER_HPP
+#endif// NEURALYZER_LINE2D_ENCODER_HPP

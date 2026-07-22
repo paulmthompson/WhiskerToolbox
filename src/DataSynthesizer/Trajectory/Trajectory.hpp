@@ -6,8 +6,8 @@
  * which produces a sequence of 2D positions given a motion model and
  * boundary mode. Used by MovingPoint, MovingMask, and MovingLine generators.
  */
-#ifndef WHISKERTOOLBOX_DATASYNTHESIZER_TRAJECTORY_HPP
-#define WHISKERTOOLBOX_DATASYNTHESIZER_TRAJECTORY_HPP
+#ifndef NEURALYZER_DATASYNTHESIZER_TRAJECTORY_HPP
+#define NEURALYZER_DATASYNTHESIZER_TRAJECTORY_HPP
 
 #include "CoreGeometry/points.hpp"
 
@@ -79,4 +79,4 @@ struct TrajectoryParams {
 
 }// namespace WhiskerToolbox::DataSynthesizer
 
-#endif// WHISKERTOOLBOX_DATASYNTHESIZER_TRAJECTORY_HPP
+#endif// NEURALYZER_DATASYNTHESIZER_TRAJECTORY_HPP

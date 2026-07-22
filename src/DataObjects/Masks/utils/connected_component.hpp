@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_CONNECTED_COMPONENT_HPP
-#define WHISKERTOOLBOX_CONNECTED_COMPONENT_HPP
+#ifndef NEURALYZER_CONNECTED_COMPONENT_HPP
+#define NEURALYZER_CONNECTED_COMPONENT_HPP
 
 #include "CoreGeometry/Image.hpp"
 #include "CoreGeometry/ImageSize.hpp"
@@ -56,4 +56,4 @@ std::vector<uint8_t> remove_small_clusters(std::vector<uint8_t> const & image, I
 Image remove_small_clusters(Image const & input_image, int threshold);
 
 
-#endif//WHISKERTOOLBOX_CONNECTED_COMPONENT_HPP
+#endif//NEURALYZER_CONNECTED_COMPONENT_HPP

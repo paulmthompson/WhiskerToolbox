@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_DATA_TYPE_TRAITS_HPP
-#define WHISKERTOOLBOX_DATA_TYPE_TRAITS_HPP
+#ifndef NEURALYZER_DATA_TYPE_TRAITS_HPP
+#define NEURALYZER_DATA_TYPE_TRAITS_HPP
 
 #include <concepts>
 #include <type_traits>
@@ -95,4 +95,4 @@ concept SpatialContainer = HasDataTraits<T> && is_spatial_v<T>;
 
 } // namespace WhiskerToolbox::TypeTraits
 
-#endif // WHISKERTOOLBOX_DATA_TYPE_TRAITS_HPP
+#endif // NEURALYZER_DATA_TYPE_TRAITS_HPP

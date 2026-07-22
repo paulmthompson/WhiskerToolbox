@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_HOLE_FILLING_HPP
-#define WHISKERTOOLBOX_HOLE_FILLING_HPP
+#ifndef NEURALYZER_HOLE_FILLING_HPP
+#define NEURALYZER_HOLE_FILLING_HPP
 
 #include "CoreGeometry/Image.hpp"
 #include "CoreGeometry/ImageSize.hpp"
@@ -55,4 +55,4 @@ std::vector<uint8_t> fill_holes(std::vector<uint8_t> const & image, ImageSize im
  */
 Image fill_holes(Image const & input_image);
 
-#endif//WHISKERTOOLBOX_HOLE_FILLING_HPP 
+#endif//NEURALYZER_HOLE_FILLING_HPP 

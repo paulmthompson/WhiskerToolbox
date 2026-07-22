@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_TENSOR_DTYPE_UTILS_HPP
-#define WHISKERTOOLBOX_TENSOR_DTYPE_UTILS_HPP
+#ifndef NEURALYZER_TENSOR_DTYPE_UTILS_HPP
+#define NEURALYZER_TENSOR_DTYPE_UTILS_HPP
 
 #include "TensorSlotDescriptor.hpp"
 
@@ -22,4 +22,4 @@ inline torch::ScalarType toTorchDType(TensorDType dtype)
 
 } // namespace dl
 
-#endif // WHISKERTOOLBOX_TENSOR_DTYPE_UTILS_HPP
+#endif // NEURALYZER_TENSOR_DTYPE_UTILS_HPP

@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_IMAGE_PROCESSOR_HPP
-#define WHISKERTOOLBOX_IMAGE_PROCESSOR_HPP
+#ifndef NEURALYZER_IMAGE_PROCESSOR_HPP
+#define NEURALYZER_IMAGE_PROCESSOR_HPP
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "MediaStorage.hpp"
@@ -134,4 +134,4 @@ private:
 
 } // namespace ImageProcessing
 
-#endif // WHISKERTOOLBOX_IMAGE_PROCESSOR_HPP
+#endif // NEURALYZER_IMAGE_PROCESSOR_HPP

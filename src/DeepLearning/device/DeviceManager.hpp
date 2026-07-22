@@ -3,8 +3,8 @@
  * @brief Centralized device context for deep-learning inference.
  */
 
-#ifndef WHISKERTOOLBOX_DEVICE_MANAGER_HPP
-#define WHISKERTOOLBOX_DEVICE_MANAGER_HPP
+#ifndef NEURALYZER_DEVICE_MANAGER_HPP
+#define NEURALYZER_DEVICE_MANAGER_HPP
 
 #include <ATen/core/Tensor.h> // at::Tensor
 #include <c10/core/Device.h> // at::Device
@@ -69,4 +69,4 @@ private:
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_DEVICE_MANAGER_HPP
+#endif// NEURALYZER_DEVICE_MANAGER_HPP

@@ -3,8 +3,8 @@
  * @brief TorchScript inference backend for `.pt` model files.
  */
 
-#ifndef WHISKERTOOLBOX_TORCHSCRIPT_BACKEND_HPP
-#define WHISKERTOOLBOX_TORCHSCRIPT_BACKEND_HPP
+#ifndef NEURALYZER_TORCHSCRIPT_BACKEND_HPP
+#define NEURALYZER_TORCHSCRIPT_BACKEND_HPP
 
 #include "InferenceBackend.hpp"
 
@@ -66,4 +66,4 @@ private:
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_TORCHSCRIPT_BACKEND_HPP
+#endif// NEURALYZER_TORCHSCRIPT_BACKEND_HPP

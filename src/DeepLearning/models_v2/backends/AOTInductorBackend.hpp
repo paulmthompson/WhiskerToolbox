@@ -3,8 +3,8 @@
  * @brief AOT Inductor inference backend for `.pt2` model packages.
  */
 
-#ifndef WHISKERTOOLBOX_AOT_INDUCTOR_BACKEND_HPP
-#define WHISKERTOOLBOX_AOT_INDUCTOR_BACKEND_HPP
+#ifndef NEURALYZER_AOT_INDUCTOR_BACKEND_HPP
+#define NEURALYZER_AOT_INDUCTOR_BACKEND_HPP
 
 #include "InferenceBackend.hpp"
 
@@ -67,4 +67,4 @@ private:
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_AOT_INDUCTOR_BACKEND_HPP
+#endif// NEURALYZER_AOT_INDUCTOR_BACKEND_HPP

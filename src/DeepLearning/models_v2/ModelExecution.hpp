@@ -3,8 +3,8 @@
  * @brief Multi-backend model execution layer for v2 deep-learning models.
  */
 
-#ifndef WHISKERTOOLBOX_MODEL_EXECUTION_HPP
-#define WHISKERTOOLBOX_MODEL_EXECUTION_HPP
+#ifndef NEURALYZER_MODEL_EXECUTION_HPP
+#define NEURALYZER_MODEL_EXECUTION_HPP
 
 #include "backends/BackendType.hpp"// BackendType
 
@@ -151,4 +151,4 @@ private:
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_MODEL_EXECUTION_HPP
+#endif// NEURALYZER_MODEL_EXECUTION_HPP

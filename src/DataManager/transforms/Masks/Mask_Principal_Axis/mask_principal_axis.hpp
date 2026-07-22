@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_MASK_PRINCIPAL_AXIS_HPP
-#define WHISKERTOOLBOX_MASK_PRINCIPAL_AXIS_HPP
+#ifndef NEURALYZER_MASK_PRINCIPAL_AXIS_HPP
+#define NEURALYZER_MASK_PRINCIPAL_AXIS_HPP
 
 #include "transforms/data_transforms.hpp"
 
@@ -102,4 +102,4 @@ public:
                             ProgressCallback progressCallback) override;
 };
 
-#endif//WHISKERTOOLBOX_MASK_PRINCIPAL_AXIS_HPP
+#endif//NEURALYZER_MASK_PRINCIPAL_AXIS_HPP

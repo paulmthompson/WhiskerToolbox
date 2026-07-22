@@ -1,8 +1,8 @@
 /// @file EncoderParamSchemas.hpp
 /// @brief ParameterUIHints specializations for per-encoder parameter structs.
 
-#ifndef WHISKERTOOLBOX_ENCODER_PARAM_SCHEMAS_HPP
-#define WHISKERTOOLBOX_ENCODER_PARAM_SCHEMAS_HPP
+#ifndef NEURALYZER_ENCODER_PARAM_SCHEMAS_HPP
+#define NEURALYZER_ENCODER_PARAM_SCHEMAS_HPP
 
 #include "ChannelEncoder.hpp"
 #include "ParameterSchema/ParameterSchema.hpp"
@@ -69,4 +69,4 @@ struct ParameterUIHints<dl::Line2DEncoderParams> {
 };
 
 
-#endif// WHISKERTOOLBOX_ENCODER_PARAM_SCHEMAS_HPP
+#endif// NEURALYZER_ENCODER_PARAM_SCHEMAS_HPP

@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_MEDIAN_FILTER_HPP
-#define WHISKERTOOLBOX_MEDIAN_FILTER_HPP
+#ifndef NEURALYZER_MEDIAN_FILTER_HPP
+#define NEURALYZER_MEDIAN_FILTER_HPP
 
 #include "CoreGeometry/Image.hpp"
 #include "CoreGeometry/ImageSize.hpp"
@@ -57,4 +57,4 @@ std::vector<uint8_t> median_filter(std::vector<uint8_t> const & image, ImageSize
  */
 Image median_filter(Image const & input_image, int window_size);
 
-#endif//WHISKERTOOLBOX_MEDIAN_FILTER_HPP 
+#endif//NEURALYZER_MEDIAN_FILTER_HPP 

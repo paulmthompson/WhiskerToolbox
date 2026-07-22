@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_DIGITAL_INTERVAL_GROUP_HPP
-#define WHISKERTOOLBOX_DIGITAL_INTERVAL_GROUP_HPP
+#ifndef NEURALYZER_DIGITAL_INTERVAL_GROUP_HPP
+#define NEURALYZER_DIGITAL_INTERVAL_GROUP_HPP
 
 #include "transforms/data_transforms.hpp"
 
@@ -102,4 +102,4 @@ public:
                             ProgressCallback progressCallback) override;
 };
 
-#endif//WHISKERTOOLBOX_DIGITAL_INTERVAL_GROUP_HPP
+#endif//NEURALYZER_DIGITAL_INTERVAL_GROUP_HPP

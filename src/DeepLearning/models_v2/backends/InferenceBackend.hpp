@@ -3,8 +3,8 @@
  * @brief Abstract inference backend interface and backend type utilities.
  */
 
-#ifndef WHISKERTOOLBOX_INFERENCE_BACKEND_HPP
-#define WHISKERTOOLBOX_INFERENCE_BACKEND_HPP
+#ifndef NEURALYZER_INFERENCE_BACKEND_HPP
+#define NEURALYZER_INFERENCE_BACKEND_HPP
 
 #include "BackendType.hpp"// BackendType
 
@@ -125,4 +125,4 @@ protected:
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_INFERENCE_BACKEND_HPP
+#endif// NEURALYZER_INFERENCE_BACKEND_HPP

@@ -1,8 +1,8 @@
 /// @file DataTypeIndexBridge.hpp
 /// @brief Bridge DM_DataType enum values to container std::type_index.
 
-#ifndef WHISKERTOOLBOX_DATA_TYPE_INDEX_BRIDGE_HPP
-#define WHISKERTOOLBOX_DATA_TYPE_INDEX_BRIDGE_HPP
+#ifndef NEURALYZER_DATA_TYPE_INDEX_BRIDGE_HPP
+#define NEURALYZER_DATA_TYPE_INDEX_BRIDGE_HPP
 
 #include "DataTypeEnum/DM_DataType.hpp"
 
@@ -21,4 +21,4 @@ namespace WhiskerToolbox::TypeTraits {
 
 } // namespace WhiskerToolbox::TypeTraits
 
-#endif // WHISKERTOOLBOX_DATA_TYPE_INDEX_BRIDGE_HPP
+#endif // NEURALYZER_DATA_TYPE_INDEX_BRIDGE_HPP

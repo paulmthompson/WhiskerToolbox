@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_VIDEO_DATA_HPP
-#define WHISKERTOOLBOX_VIDEO_DATA_HPP
+#ifndef NEURALYZER_VIDEO_DATA_HPP
+#define NEURALYZER_VIDEO_DATA_HPP
 
 #include "Media/Media_Data.hpp"
 
@@ -45,4 +45,4 @@ private:
     std::unique_ptr<ffmpeg_wrapper::VideoDecoder> _vd;
 };
 
-#endif//WHISKERTOOLBOX_VIDEO_DATA_HPP
+#endif//NEURALYZER_VIDEO_DATA_HPP

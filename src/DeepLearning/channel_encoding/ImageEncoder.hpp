@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_IMAGE_ENCODER_HPP
-#define WHISKERTOOLBOX_IMAGE_ENCODER_HPP
+#ifndef NEURALYZER_IMAGE_ENCODER_HPP
+#define NEURALYZER_IMAGE_ENCODER_HPP
 
 /** @file ImageEncoder.hpp
  *  @brief Encoder for image pixel data (grayscale or RGB) into tensor channels.
@@ -111,4 +111,4 @@ public:
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_IMAGE_ENCODER_HPP
+#endif// NEURALYZER_IMAGE_ENCODER_HPP

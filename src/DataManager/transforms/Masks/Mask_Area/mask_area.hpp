@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_MASK_AREA_HPP
-#define WHISKERTOOLBOX_MASK_AREA_HPP
+#ifndef NEURALYZER_MASK_AREA_HPP
+#define NEURALYZER_MASK_AREA_HPP
 
 #include "transforms/data_transforms.hpp"
 
@@ -63,4 +63,4 @@ public:
                             TransformParametersBase const * transformParameters) override;
 };
 
-#endif//WHISKERTOOLBOX_MASK_AREA_HPP
+#endif//NEURALYZER_MASK_AREA_HPP

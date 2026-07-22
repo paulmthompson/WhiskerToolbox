@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_VIDEO_DATA_LOADER_HPP
-#define WHISKERTOOLBOX_VIDEO_DATA_LOADER_HPP
+#ifndef NEURALYZER_VIDEO_DATA_LOADER_HPP
+#define NEURALYZER_VIDEO_DATA_LOADER_HPP
 
 #include "Media/Video_Data.hpp"
 
@@ -18,4 +18,4 @@ inline std::shared_ptr<VideoData> load_video_into_VideoData(std::string const & 
     return video_data;
 }
 
-#endif//WHISKERTOOLBOX_VIDEO_DATA_LOADER_HPP
+#endif//NEURALYZER_VIDEO_DATA_LOADER_HPP

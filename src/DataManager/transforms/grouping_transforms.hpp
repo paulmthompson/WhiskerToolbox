@@ -1,11 +1,10 @@
-#ifndef WHISKERTOOLBOX_GROUPING_TRANSFORMS_HPP
-#define WHISKERTOOLBOX_GROUPING_TRANSFORMS_HPP
+#ifndef NEURALYZER_GROUPING_TRANSFORMS_HPP
+#define NEURALYZER_GROUPING_TRANSFORMS_HPP
 
 #include "data_transforms.hpp"
 
 #include <memory>
 
-// Forward declaration
 class EntityGroupManager;
 
 /**
@@ -47,4 +46,4 @@ private:
     EntityGroupManager* group_manager_;
 };
 
-#endif//WHISKERTOOLBOX_GROUPING_TRANSFORMS_HPP
+#endif//NEURALYZER_GROUPING_TRANSFORMS_HPP

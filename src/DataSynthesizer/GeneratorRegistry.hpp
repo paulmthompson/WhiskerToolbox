@@ -6,8 +6,8 @@
  * the generator function and metadata. Generators self-register at static init
  * time using the Registration.hpp RAII helper.
  */
-#ifndef WHISKERTOOLBOX_GENERATOR_REGISTRY_HPP
-#define WHISKERTOOLBOX_GENERATOR_REGISTRY_HPP
+#ifndef NEURALYZER_GENERATOR_REGISTRY_HPP
+#define NEURALYZER_GENERATOR_REGISTRY_HPP
 
 #include "GeneratorTypes.hpp"
 
@@ -122,4 +122,4 @@ private:
 
 }// namespace WhiskerToolbox::DataSynthesizer
 
-#endif// WHISKERTOOLBOX_GENERATOR_REGISTRY_HPP
+#endif// NEURALYZER_GENERATOR_REGISTRY_HPP

@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_ANALOG_INTERVAL_PEAK_HPP
-#define WHISKERTOOLBOX_ANALOG_INTERVAL_PEAK_HPP
+#ifndef NEURALYZER_ANALOG_INTERVAL_PEAK_HPP
+#define NEURALYZER_ANALOG_INTERVAL_PEAK_HPP
 
 #include "transforms/data_transforms.hpp"
 
@@ -107,4 +107,4 @@ public:
                             ProgressCallback progressCallback) override;
 };
 
-#endif//WHISKERTOOLBOX_ANALOG_INTERVAL_PEAK_HPP
+#endif//NEURALYZER_ANALOG_INTERVAL_PEAK_HPP

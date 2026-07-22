@@ -3,8 +3,8 @@
  * @brief Abstract base class for v2 deep-learning model wrappers.
  */
 
-#ifndef WHISKERTOOLBOX_MODEL_BASE_HPP
-#define WHISKERTOOLBOX_MODEL_BASE_HPP
+#ifndef NEURALYZER_MODEL_BASE_HPP
+#define NEURALYZER_MODEL_BASE_HPP
 
 #include "TensorSlotDescriptor.hpp"
 
@@ -129,4 +129,4 @@ public:
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_MODEL_BASE_HPP
+#endif// NEURALYZER_MODEL_BASE_HPP

@@ -3,8 +3,8 @@
  * @brief Torch-free aggregated metadata for a deep-learning model.
  */
 
-#ifndef WHISKERTOOLBOX_MODEL_INFO_HPP
-#define WHISKERTOOLBOX_MODEL_INFO_HPP
+#ifndef NEURALYZER_MODEL_INFO_HPP
+#define NEURALYZER_MODEL_INFO_HPP
 
 #include "TensorSlotDescriptor.hpp"
 
@@ -36,4 +36,4 @@ struct ModelInfo {
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_MODEL_INFO_HPP
+#endif// NEURALYZER_MODEL_INFO_HPP

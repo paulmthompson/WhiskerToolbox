@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_DIGITAL_INTERVAL_BOOLEAN_HPP
-#define WHISKERTOOLBOX_DIGITAL_INTERVAL_BOOLEAN_HPP
+#ifndef NEURALYZER_DIGITAL_INTERVAL_BOOLEAN_HPP
+#define NEURALYZER_DIGITAL_INTERVAL_BOOLEAN_HPP
 
 #include "transforms/data_transforms.hpp"
 
@@ -108,4 +108,4 @@ public:
                             ProgressCallback progressCallback) override;
 };
 
-#endif//WHISKERTOOLBOX_DIGITAL_INTERVAL_BOOLEAN_HPP
+#endif//NEURALYZER_DIGITAL_INTERVAL_BOOLEAN_HPP

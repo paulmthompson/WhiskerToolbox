@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_MEDIA_STORAGE_HPP
-#define WHISKERTOOLBOX_MEDIA_STORAGE_HPP
+#ifndef NEURALYZER_MEDIA_STORAGE_HPP
+#define NEURALYZER_MEDIA_STORAGE_HPP
 
 #include <vector>
 #include <variant>
@@ -84,4 +84,4 @@ inline BitDepth getBitDepth(ImageDataVariant const& data) {
 
 } // namespace MediaStorage
 
-#endif // WHISKERTOOLBOX_MEDIA_STORAGE_HPP
+#endif // NEURALYZER_MEDIA_STORAGE_HPP

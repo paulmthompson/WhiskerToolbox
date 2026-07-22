@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_JSON_HELPERS_HPP
-#define WHISKERTOOLBOX_JSON_HELPERS_HPP
+#ifndef NEURALYZER_JSON_HELPERS_HPP
+#define NEURALYZER_JSON_HELPERS_HPP
 
 #include "nlohmann/json.hpp"
 
@@ -32,4 +32,4 @@ inline bool requiredFieldsExist(
     return true;
 }
 
-#endif//WHISKERTOOLBOX_JSON_HELPERS_HPP
+#endif//NEURALYZER_JSON_HELPERS_HPP

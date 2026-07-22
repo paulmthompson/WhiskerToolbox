@@ -3,8 +3,8 @@
  * @brief ParameterUIHints specializations for per-decoder parameter structs.
  */
 
-#ifndef WHISKERTOOLBOX_DECODER_PARAM_SCHEMAS_HPP
-#define WHISKERTOOLBOX_DECODER_PARAM_SCHEMAS_HPP
+#ifndef NEURALYZER_DECODER_PARAM_SCHEMAS_HPP
+#define NEURALYZER_DECODER_PARAM_SCHEMAS_HPP
 
 #include "ChannelDecoder.hpp"
 #include "ParameterSchema/ParameterSchema.hpp"
@@ -52,4 +52,4 @@ struct ParameterUIHints<dl::LineDecoderParams> {
 // FeatureVectorDecoderParams has no user-configurable fields — no hints needed.
 
 
-#endif// WHISKERTOOLBOX_DECODER_PARAM_SCHEMAS_HPP
+#endif// NEURALYZER_DECODER_PARAM_SCHEMAS_HPP

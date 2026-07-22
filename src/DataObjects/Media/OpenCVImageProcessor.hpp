@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_OPENCV_IMAGE_PROCESSOR_HPP
-#define WHISKERTOOLBOX_OPENCV_IMAGE_PROCESSOR_HPP
+#ifndef NEURALYZER_OPENCV_IMAGE_PROCESSOR_HPP
+#define NEURALYZER_OPENCV_IMAGE_PROCESSOR_HPP
 
 #include "ImageProcessor.hpp"
 #include <opencv2/opencv.hpp>
@@ -106,4 +106,4 @@ void registerOpenCVProcessor();
 
 } // namespace ImageProcessing
 
-#endif // WHISKERTOOLBOX_OPENCV_IMAGE_PROCESSOR_HPP
+#endif // NEURALYZER_OPENCV_IMAGE_PROCESSOR_HPP

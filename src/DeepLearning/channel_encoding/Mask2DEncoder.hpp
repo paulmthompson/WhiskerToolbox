@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_MASK2D_ENCODER_HPP
-#define WHISKERTOOLBOX_MASK2D_ENCODER_HPP
+#ifndef NEURALYZER_MASK2D_ENCODER_HPP
+#define NEURALYZER_MASK2D_ENCODER_HPP
 
 /** @file Mask2DEncoder.hpp
  *  @brief Encoder for Mask2D (set of pixel coordinates) into tensor channels.
@@ -75,4 +75,4 @@ public:
 
 }// namespace dl
 
-#endif// WHISKERTOOLBOX_MASK2D_ENCODER_HPP
+#endif// NEURALYZER_MASK2D_ENCODER_HPP
