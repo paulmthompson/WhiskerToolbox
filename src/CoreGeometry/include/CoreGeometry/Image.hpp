@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_IMAGE_HPP
-#define WHISKERTOOLBOX_IMAGE_HPP
+#ifndef NEURALYZER_IMAGE_HPP
+#define NEURALYZER_IMAGE_HPP
 
 #include "ImageSize.hpp"
 #include "points.hpp"
@@ -139,4 +139,4 @@ struct Image {
     }
 };
 
-#endif// WHISKERTOOLBOX_IMAGE_HPP
+#endif// NEURALYZER_IMAGE_HPP

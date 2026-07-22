@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-namespace WhiskerToolbox::Entity::Lineage {
+namespace Neuralyzer::Entity::Lineage {
 
 LineageResolver::LineageResolver(IEntityDataSource const * data_source,
                                  LineageRegistry const * registry)
@@ -350,4 +350,4 @@ std::vector<EntityId> LineageResolver::resolveAllToOneToRoot(
     return all_root_ids;
 }
 
-}// namespace WhiskerToolbox::Entity::Lineage
+}// namespace Neuralyzer::Entity::Lineage

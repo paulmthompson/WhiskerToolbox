@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_LINEAGE_RECORDER_HPP
-#define WHISKERTOOLBOX_LINEAGE_RECORDER_HPP
+#ifndef NEURALYZER_LINEAGE_RECORDER_HPP
+#define NEURALYZER_LINEAGE_RECORDER_HPP
 
 #include "Entity/Lineage/LineageRegistry.hpp"
 #include "Entity/Lineage/LineageTypes.hpp"
@@ -8,7 +8,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace WhiskerToolbox::Entity::Lineage {
+namespace Neuralyzer::Entity::Lineage {
 
 /**
  * @brief Helper to record lineage from v2 transform pipelines
@@ -53,7 +53,7 @@ public:
             LineageRegistry & registry,
             std::string const & output_key,
             std::string const & input_key,
-            Transforms::V2::TransformLineageType lineage_type);
+            WhiskerToolbox::Transforms::V2::TransformLineageType lineage_type);
 
     /**
      * @brief Record lineage for multi-input transforms
@@ -69,7 +69,7 @@ public:
             LineageRegistry & registry,
             std::string const & output_key,
             std::vector<std::string> const & input_keys,
-            Transforms::V2::TransformLineageType lineage_type);
+            WhiskerToolbox::Transforms::V2::TransformLineageType lineage_type);
 
     /**
      * @brief Record source lineage (for original/loaded data)
@@ -97,6 +97,6 @@ public:
             FileOrigin file_origin);
 };
 
-}// namespace WhiskerToolbox::Entity::Lineage
+}// namespace Neuralyzer::Entity::Lineage
 
-#endif// WHISKERTOOLBOX_LINEAGE_RECORDER_HPP
+#endif// NEURALYZER_LINEAGE_RECORDER_HPP

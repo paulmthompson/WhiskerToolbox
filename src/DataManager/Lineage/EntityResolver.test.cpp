@@ -13,7 +13,7 @@
 #include "CoreGeometry/points.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 
-using namespace WhiskerToolbox::Entity::Lineage;
+using namespace Neuralyzer::Entity::Lineage;
 using Catch::Matchers::UnorderedEquals;
 
 // Helper to create test data

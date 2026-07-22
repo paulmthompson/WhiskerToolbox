@@ -233,11 +233,11 @@ TEST_CASE("SavePathResolver prefers matching file origin",
     auto ctx = makeContextWithPoints("pts");
     auto const origin_path = (temp_dir / "source_points.csv").string();
 
-    WhiskerToolbox::Entity::Lineage::FileOrigin origin{
+    Neuralyzer::Entity::Lineage::FileOrigin origin{
             .m_path = origin_path,
             .m_format = "csv",
             .m_data_type = "PointData"};
-    WhiskerToolbox::Entity::Lineage::LineageRecorder::recordFileSource(
+    Neuralyzer::Entity::Lineage::LineageRecorder::recordFileSource(
             *ctx.data_manager->getLineageRegistry(), "pts", std::move(origin));
 
     auto const resolution = resolveDefaultSavePath(

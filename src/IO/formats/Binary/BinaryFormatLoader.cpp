@@ -10,7 +10,7 @@
 
 #include <iostream>
 
-using namespace WhiskerToolbox::Reflection;
+using namespace Neuralyzer::Reflection;
 
 LoadResult BinaryFormatLoader::load(std::string const & filepath,
                                     DM_DataType dataType,

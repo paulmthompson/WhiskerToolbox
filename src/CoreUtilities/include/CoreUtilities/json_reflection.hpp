@@ -9,7 +9,7 @@
 #include <iostream>
 #include <optional>
 
-namespace WhiskerToolbox {
+namespace Neuralyzer {
 namespace Reflection {
 
 /**
@@ -108,6 +108,6 @@ std::optional<T> tryParseWithErrors(nlohmann::json const& json,
 }
 
 } // namespace Reflection
-} // namespace WhiskerToolbox
+} // namespace Neuralyzer
 
 #endif // JSON_REFLECTION_HPP

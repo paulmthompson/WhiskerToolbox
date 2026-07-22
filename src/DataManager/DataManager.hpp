@@ -30,7 +30,7 @@ class TableRegistry;
 struct TableEvent;
 class TimeFrame;
 
-namespace WhiskerToolbox::Entity::Lineage {
+namespace Neuralyzer::Entity::Lineage {
 class LineageRegistry;
 }
 
@@ -452,7 +452,7 @@ public:
      * The LineageRegistry tracks relationships between derived data containers
      * and their source containers, enabling entity propagation.
      */
-    [[nodiscard]] WhiskerToolbox::Entity::Lineage::LineageRegistry * getLineageRegistry() const {
+    [[nodiscard]] Neuralyzer::Entity::Lineage::LineageRegistry * getLineageRegistry() const {
         return _lineage_registry.get();
     }
 
@@ -481,7 +481,7 @@ private:
     std::unique_ptr<EntityGroupManager> _entity_group_manager;
 
     // ======= Lineage registry =======
-    std::unique_ptr<WhiskerToolbox::Entity::Lineage::LineageRegistry> _lineage_registry;
+    std::unique_ptr<Neuralyzer::Entity::Lineage::LineageRegistry> _lineage_registry;
 };
 
 /**

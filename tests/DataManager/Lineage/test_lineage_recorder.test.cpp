@@ -5,7 +5,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-using namespace WhiskerToolbox::Entity::Lineage;
+using namespace Neuralyzer::Entity::Lineage;
 using namespace WhiskerToolbox::Transforms::V2;
 
 TEST_CASE("LineageRecorder - Basic Recording", "[lineage][recorder]") {

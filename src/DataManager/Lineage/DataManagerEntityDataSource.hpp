@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_DATAMANAGER_ENTITY_DATA_SOURCE_HPP
-#define WHISKERTOOLBOX_DATAMANAGER_ENTITY_DATA_SOURCE_HPP
+#ifndef NEURALYZER_DATAMANAGER_ENTITY_DATA_SOURCE_HPP
+#define NEURALYZER_DATAMANAGER_ENTITY_DATA_SOURCE_HPP
 
 #include "Entity/Lineage/LineageResolver.hpp"
 
@@ -7,10 +7,9 @@
 #include <unordered_set>
 #include <vector>
 
-// Forward declarations
 class DataManager;
 
-namespace WhiskerToolbox::Lineage {
+namespace Neuralyzer::Lineage {
 
 /**
  * @brief Implements IEntityDataSource using DataManager for data access
@@ -39,7 +38,7 @@ namespace WhiskerToolbox::Lineage {
  * @endcode
  */
 class DataManagerEntityDataSource
-    : public WhiskerToolbox::Entity::Lineage::IEntityDataSource {
+    : public Neuralyzer::Entity::Lineage::IEntityDataSource {
 public:
     /**
      * @brief Construct a data source adapter for a DataManager
@@ -120,6 +119,6 @@ private:
     DataManager * _dm;
 };
 
-}// namespace WhiskerToolbox::Lineage
+}// namespace Neuralyzer::Lineage
 
-#endif// WHISKERTOOLBOX_DATAMANAGER_ENTITY_DATA_SOURCE_HPP
+#endif// NEURALYZER_DATAMANAGER_ENTITY_DATA_SOURCE_HPP

@@ -14,7 +14,7 @@
 #include "CoreGeometry/points.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 
-using namespace WhiskerToolbox::Lineage;
+using namespace Neuralyzer::Lineage;
 using Catch::Matchers::UnorderedEquals;
 
 // =============================================================================

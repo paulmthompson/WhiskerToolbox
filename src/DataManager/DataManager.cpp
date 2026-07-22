@@ -70,13 +70,13 @@ void recordLoadedFileSource(
         return;
     }
 
-    WhiskerToolbox::Entity::Lineage::FileOrigin origin{
+    Neuralyzer::Entity::Lineage::FileOrigin origin{
             .m_path = file_path,
             .m_format = item.value("format", std::string{}),
             .m_data_type = item.value("data_type", std::string{}),
             .m_source_config_json = item.dump()};
 
-    WhiskerToolbox::Entity::Lineage::LineageRecorder::recordFileSource(
+    Neuralyzer::Entity::Lineage::LineageRecorder::recordFileSource(
             *dm->getLineageRegistry(), data_key, std::move(origin));
 }
 
@@ -392,7 +392,7 @@ DataManager::DataManager() {
     _entity_group_manager = std::make_unique<EntityGroupManager>();
 
     // Initialize LineageRegistry
-    _lineage_registry = std::make_unique<WhiskerToolbox::Entity::Lineage::LineageRegistry>();
+    _lineage_registry = std::make_unique<Neuralyzer::Entity::Lineage::LineageRegistry>();
 
     // Register all available loaders
     static bool loaders_registered = false;

@@ -1,5 +1,5 @@
-#ifndef WHISKERTOOLBOX_ENTITY_RESOLVER_HPP
-#define WHISKERTOOLBOX_ENTITY_RESOLVER_HPP
+#ifndef NEURALYZER_ENTITY_RESOLVER_HPP
+#define NEURALYZER_ENTITY_RESOLVER_HPP
 
 #include "Entity/EntityTypes.hpp"
 #include "Entity/Lineage/LineageTypes.hpp"
@@ -11,14 +11,13 @@
 #include <unordered_set>
 #include <vector>
 
-// Forward declarations
 class DataManager;
 
-namespace WhiskerToolbox::Lineage {
+namespace Neuralyzer::Lineage {
 class DataManagerEntityDataSource;
 }
 
-namespace WhiskerToolbox::Entity::Lineage {
+namespace Neuralyzer::Entity::Lineage {
 
 // Forward declaration
 class LineageResolver;
@@ -190,7 +189,7 @@ private:
 
     // Composition: delegates resolution to the generic LineageResolver
     // These are created lazily when needed
-    std::unique_ptr<WhiskerToolbox::Lineage::DataManagerEntityDataSource> _data_source;
+    std::unique_ptr<Neuralyzer::Lineage::DataManagerEntityDataSource> _data_source;
     std::unique_ptr<LineageResolver> _resolver;
 
     /**
@@ -203,6 +202,6 @@ private:
     void ensureResolverInitialized() const;
 };
 
-}// namespace WhiskerToolbox::Entity::Lineage
+}// namespace Neuralyzer::Entity::Lineage
 
-#endif// WHISKERTOOLBOX_ENTITY_RESOLVER_HPP
+#endif// NEURALYZER_ENTITY_RESOLVER_HPP

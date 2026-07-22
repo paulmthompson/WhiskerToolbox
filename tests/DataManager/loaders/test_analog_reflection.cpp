@@ -8,7 +8,7 @@
 #include <nlohmann/json.hpp>
 #include <string>
 
-using namespace WhiskerToolbox::Reflection;
+using namespace Neuralyzer::Reflection;
 using Catch::Matchers::ContainsSubstring;
 
 // Minimal test struct to verify reflect-cpp works

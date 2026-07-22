@@ -4,7 +4,7 @@
 #include "Entity/Lineage/LineageRegistry.hpp"
 #include "Entity/Lineage/LineageResolver.hpp"
 
-namespace WhiskerToolbox::Entity::Lineage {
+namespace Neuralyzer::Entity::Lineage {
 
 EntityResolver::EntityResolver(DataManager * dm)
     : _dm(dm),
@@ -26,7 +26,7 @@ void EntityResolver::ensureResolverInitialized() const {
     if (!_data_source) {
         // const_cast is safe here because we're only initializing mutable members
         auto * mutable_this = const_cast<EntityResolver *>(this);
-        mutable_this->_data_source = std::make_unique<WhiskerToolbox::Lineage::DataManagerEntityDataSource>(_dm);
+        mutable_this->_data_source = std::make_unique<Neuralyzer::Lineage::DataManagerEntityDataSource>(_dm);
     }
 
     if (!_resolver) {
@@ -124,4 +124,4 @@ bool EntityResolver::isSource(std::string const & data_key) const {
     return _resolver->isSource(data_key);
 }
 
-}// namespace WhiskerToolbox::Entity::Lineage
+}// namespace Neuralyzer::Entity::Lineage

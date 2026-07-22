@@ -5,7 +5,7 @@
 #include <queue>
 #include <unordered_set>
 
-namespace WhiskerToolbox::Entity::Lineage {
+namespace Neuralyzer::Entity::Lineage {
 
 void LineageRegistry::setLineage(std::string const & data_key, Descriptor lineage) {
     _lineages[data_key] = LineageEntry(std::move(lineage));
@@ -176,4 +176,4 @@ void LineageRegistry::setInvalidationCallback(InvalidationCallback callback) {
     _invalidation_callback = std::move(callback);
 }
 
-}// namespace WhiskerToolbox::Entity::Lineage
+}// namespace Neuralyzer::Entity::Lineage

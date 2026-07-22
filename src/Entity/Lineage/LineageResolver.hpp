@@ -7,8 +7,8 @@
  * lineage resolution, and the LineageResolver class for resolving derived
  * entities back to their source entities.
  */
-#ifndef WHISKERTOOLBOX_ENTITY_LINEAGE_RESOLVER_HPP
-#define WHISKERTOOLBOX_ENTITY_LINEAGE_RESOLVER_HPP
+#ifndef NEURALYZER_ENTITY_LINEAGE_RESOLVER_HPP
+#define NEURALYZER_ENTITY_LINEAGE_RESOLVER_HPP
 
 #include "Entity/EntityTypes.hpp"
 #include "Entity/Lineage/LineageRegistry.hpp"
@@ -19,7 +19,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace WhiskerToolbox::Entity::Lineage {
+namespace Neuralyzer::Entity::Lineage {
 
 /**
  * @brief Interface for data-source-specific entity resolution
@@ -299,6 +299,6 @@ private:
             TimeFrameIndex time) const;
 };
 
-}// namespace WhiskerToolbox::Entity::Lineage
+}// namespace   Neuralyzer::Entity::Lineage
 
-#endif// WHISKERTOOLBOX_ENTITY_LINEAGE_RESOLVER_HPP
+#endif// NEURALYZER_ENTITY_LINEAGE_RESOLVER_HPP

@@ -8,7 +8,7 @@
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
 
-namespace WhiskerToolbox::Lineage {
+namespace Neuralyzer::Lineage {
 
 namespace {
 
@@ -344,4 +344,4 @@ std::size_t DataManagerEntityDataSource::getElementCount(
     return 0;
 }
 
-}// namespace WhiskerToolbox::Lineage
+}// namespace Neuralyzer::Lineage

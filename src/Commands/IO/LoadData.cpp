@@ -96,12 +96,12 @@ CommandResult LoadData::execute(CommandContext const & ctx) {
     ctx.data_manager->setData(_params.data_key, std::move(*dm_variant), TimeKey("time"));
     if (auto * registry = ctx.data_manager->getLineageRegistry()) {
         auto const resolved_path = std::filesystem::absolute(_params.filepath).lexically_normal().string();
-        WhiskerToolbox::Entity::Lineage::FileOrigin origin{
+        Neuralyzer::Entity::Lineage::FileOrigin origin{
                 .m_path = resolved_path,
                 .m_format = _params.format,
                 .m_data_type = _params.data_type,
                 .m_source_config_json = toJson()};
-        WhiskerToolbox::Entity::Lineage::LineageRecorder::recordFileSource(
+        Neuralyzer::Entity::Lineage::LineageRecorder::recordFileSource(
                 *registry, _params.data_key, std::move(origin));
     }
 

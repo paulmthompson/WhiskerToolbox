@@ -14,8 +14,8 @@
  * - EntityMappedLineage: Explicit EntityId-to-EntityId mapping
  * - ImplicitEntityMapping: Cardinality-based inference
  */
-#ifndef WHISKERTOOLBOX_ENTITY_LINEAGE_TYPES_HPP
-#define WHISKERTOOLBOX_ENTITY_LINEAGE_TYPES_HPP
+#ifndef NEURALYZER_ENTITY_LINEAGE_TYPES_HPP
+#define NEURALYZER_ENTITY_LINEAGE_TYPES_HPP
 
 #include "Entity/EntityTypes.hpp"
 
@@ -27,7 +27,7 @@
 #include <variant>
 #include <vector>
 
-namespace WhiskerToolbox::Entity::Lineage {
+namespace Neuralyzer::Entity::Lineage {
 
 /**
  * @brief No lineage - this is source data or data loaded from file
@@ -255,6 +255,6 @@ using Descriptor = std::variant<
                       desc);
 }
 
-}// namespace WhiskerToolbox::Entity::Lineage
+}// namespace Neuralyzer::Entity::Lineage
 
-#endif// WHISKERTOOLBOX_ENTITY_LINEAGE_TYPES_HPP
+#endif// NEURALYZER_ENTITY_LINEAGE_TYPES_HPP

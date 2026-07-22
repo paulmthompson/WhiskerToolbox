@@ -8,8 +8,8 @@
 
 namespace {
 
-using namespace WhiskerToolbox::Entity::Lineage;
-// EntityId is in global namespace, not in WhiskerToolbox
+using namespace Neuralyzer::Entity::Lineage;
+// EntityId is in global namespace, not in Neuralyzer
 
 /**
  * @brief Mock data source for testing without DataManager

@@ -262,7 +262,7 @@ std::map<std::string, std::shared_ptr<PointData>> load_multiple_PointData_from_d
     json_with_path["filepath"] = file_path;
 
     // Use reflection-based parsing
-    auto result = WhiskerToolbox::Reflection::parseJson<DLCPointLoaderOptions>(json_with_path);
+    auto result = Neuralyzer::Reflection::parseJson<DLCPointLoaderOptions>(json_with_path);
     if (!result) {
         std::cerr << "Error parsing DLCPointLoaderOptions: " << result.error()->what() << std::endl;
         return {};

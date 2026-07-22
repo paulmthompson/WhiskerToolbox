@@ -7,8 +7,8 @@
  * containers, enabling provenance tracking and lineage resolution. Supports
  * staleness tracking for cache invalidation.
  */
-#ifndef WHISKERTOOLBOX_ENTITY_LINEAGE_REGISTRY_HPP
-#define WHISKERTOOLBOX_ENTITY_LINEAGE_REGISTRY_HPP
+#ifndef NEURALYZER_ENTITY_LINEAGE_REGISTRY_HPP
+#define NEURALYZER_ENTITY_LINEAGE_REGISTRY_HPP
 
 #include "Entity/Lineage/LineageTypes.hpp"
 
@@ -19,7 +19,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace WhiskerToolbox::Entity::Lineage {
+namespace Neuralyzer::Entity::Lineage {
 
 /**
  * @brief Entry in the lineage registry with metadata
@@ -244,6 +244,6 @@ private:
     InvalidationCallback _invalidation_callback;
 };
 
-}// namespace WhiskerToolbox::Entity::Lineage
+}// namespace Neuralyzer::Entity::Lineage
 
-#endif// WHISKERTOOLBOX_ENTITY_LINEAGE_REGISTRY_HPP
+#endif// NEURALYZER_ENTITY_LINEAGE_REGISTRY_HPP
