@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-c66b74bd64534bb69244e3f3ef8184bb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -393,10 +393,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox.html">WhiskerToolbox</a></strong></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer.html">Neuralyzer</a></strong></td>
 </tr>
 <tr class="even">
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html">WhiskerToolbox::Plots</a></strong></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html">Neuralyzer::Plots</a></strong></td>
 </tr>
 </tbody>
 </table>
@@ -413,15 +413,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1PlotTooltipHit.html">WhiskerToolbox::Plots::PlotTooltipHit</a></strong> <br>Result of a tooltip hit test.</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PlotTooltipHit.html">Neuralyzer::Plots::PlotTooltipHit</a></strong> <br>Result of a tooltip hit test.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Plots_1_1PlotTooltipContent.html">WhiskerToolbox::Plots::PlotTooltipContent</a></strong> <br>Content to display in the tooltip.</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PlotTooltipContent.html">Neuralyzer::Plots::PlotTooltipContent</a></strong> <br>Content to display in the tooltip.</td>
 </tr>
 <tr class="odd">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Plots_1_1PlotTooltipManager.html">WhiskerToolbox::Plots::PlotTooltipManager</a></strong> <br>Manages tooltip lifecycle for plot widgets.</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotTooltipManager.html">Neuralyzer::Plots::PlotTooltipManager</a></strong> <br>Manages tooltip lifecycle for plot widgets.</td>
 </tr>
 </tbody>
 </table>
@@ -482,7 +482,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="ex">QTimer</span><span class="op">;</span></span>
 <span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="ex">QWidget</span><span class="op">;</span></span>
 <span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Plots <span class="op">{</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> Neuralyzer<span class="op">::</span>Plots <span class="op">{</span></span>
 <span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
 <span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">// Hit result</span></span>
@@ -587,11 +587,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-119"><a href="#cb2-119" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>PixmapPopup<span class="op">&gt;</span> _pixmap_popup<span class="op">;</span></span>
 <span id="cb2-120"><a href="#cb2-120" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
 <span id="cb2-121"><a href="#cb2-121" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-122"><a href="#cb2-122" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace WhiskerToolbox::Plots</span></span>
+<span id="cb2-122"><a href="#cb2-122" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace Neuralyzer::Plots</span></span>
 <span id="cb2-123"><a href="#cb2-123" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-124"><a href="#cb2-124" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// PLOT_TOOLTIP_MANAGER_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-22 at 14:33:45 +0000</p>
+<p>Updated on 2026-07-23 at 18:20:45 +0000</p>
 
 
 </section>

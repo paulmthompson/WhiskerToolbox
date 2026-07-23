@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-c66b74bd64534bb69244e3f3ef8184bb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -468,7 +468,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> pipeline_result <span class="op">=</span></span>
-<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>            WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>Examples<span class="op">::</span>loadPipelineFromFile<span class="op">(</span>_params<span class="op">.</span>pipeline_path<span class="op">);</span></span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>            Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>Examples<span class="op">::</span>loadPipelineFromFile<span class="op">(</span>_params<span class="op">.</span>pipeline_path<span class="op">);</span></span>
 <span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>pipeline_result<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> CommandResult<span class="op">::</span>error<span class="op">(</span></span>
 <span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a>                <span class="bu">std::</span>string<span class="op">(</span>kCommandName<span class="op">)</span> <span class="op">+</span> <span class="st">": failed to load pipeline '"</span> <span class="op">+</span></span>
@@ -478,7 +478,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a>    DataTypeVariant output<span class="op">;</span></span>
 <span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span> <span class="op">{</span></span>
-<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a>        output <span class="op">=</span> WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>executePipeline<span class="op">(</span></span>
+<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a>        output <span class="op">=</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>executePipeline<span class="op">(</span></span>
 <span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a>                input_variant<span class="op">.</span>value<span class="op">(),</span></span>
 <span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a>                pipeline_result<span class="op">.</span>value<span class="op">());</span></span>
 <span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">catch</span> <span class="op">(</span><span class="bu">std::</span>exception <span class="at">const</span> <span class="op">&amp;</span> ex<span class="op">)</span> <span class="op">{</span></span>
@@ -501,7 +501,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-104"><a href="#cb1-104" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace commands</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-22 at 14:33:44 +0000</p>
+<p>Updated on 2026-07-23 at 18:20:44 +0000</p>
 
 
 </section>

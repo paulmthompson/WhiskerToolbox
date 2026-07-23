@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-c66b74bd64534bb69244e3f3ef8184bb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -406,7 +406,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classScalingModeControls.html#signal-scalingmodechanged">scalingModeChanged</a></strong>(<a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#enum-scalingmode">WhiskerToolbox::Plots::ScalingMode</a> mode)<br>Emitted when the user selects a different scaling mode.</td>
+<td><strong><a href="../../api_generated/Classes/classScalingModeControls.html#signal-scalingmodechanged">scalingModeChanged</a></strong>(<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-scalingmode">Neuralyzer::Plots::ScalingMode</a> mode)<br>Emitted when the user selects a different scaling mode.</td>
 </tr>
 </tbody>
 </table>
@@ -430,12 +430,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classScalingModeControls.html#function-~scalingmodecontrols">~ScalingModeControls</a></strong>() override =default</td>
 </tr>
 <tr class="odd">
-<td><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#enum-scalingmode">WhiskerToolbox::Plots::ScalingMode</a></td>
+<td><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-scalingmode">Neuralyzer::Plots::ScalingMode</a></td>
 <td><strong><a href="../../api_generated/Classes/classScalingModeControls.html#function-scalingmode">scalingMode</a></strong>() const<br>Get the currently selected scaling mode.</td>
 </tr>
 <tr class="even">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classScalingModeControls.html#function-setscalingmode">setScalingMode</a></strong>(<a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Plots.html#enum-scalingmode">WhiskerToolbox::Plots::ScalingMode</a> mode)<br>Set the scaling mode (updates combo box without emitting signal)</td>
+<td><strong><a href="../../api_generated/Classes/classScalingModeControls.html#function-setscalingmode">setScalingMode</a></strong>(<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-scalingmode">Neuralyzer::Plots::ScalingMode</a> mode)<br>Set the scaling mode (updates combo box without emitting signal)</td>
 </tr>
 <tr class="odd">
 <td>QComboBox *</td>
@@ -455,7 +455,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="signal-scalingmodechanged" class="level3">
 <h3 class="anchored" data-anchor-id="signal-scalingmodechanged">signal scalingModeChanged</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> scalingModeChanged<span class="op">(</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>ScalingMode mode</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>ScalingMode mode</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Emitted when the user selects a different scaling mode.</p>
 <p><strong>Parameters</strong>:</p>
@@ -485,13 +485,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-scalingmode" class="level3">
 <h3 class="anchored" data-anchor-id="function-scalingmode">function scalingMode</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>ScalingMode scalingMode<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>ScalingMode scalingMode<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the currently selected scaling mode.</p>
 </section>
 <section id="function-setscalingmode" class="level3">
 <h3 class="anchored" data-anchor-id="function-setscalingmode">function setScalingMode</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setScalingMode<span class="op">(</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>ScalingMode mode</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>ScalingMode mode</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Set the scaling mode (updates combo box without emitting signal)</p>
 </section>
@@ -500,7 +500,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="ex">QComboBox</span> <span class="op">*</span> comboBox<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the underlying combo box for custom styling or placement.</p>
 <hr>
-<p>Updated on 2026-07-22 at 14:33:40 +0000</p>
+<p>Updated on 2026-07-23 at 18:20:39 +0000</p>
 
 
 </section>

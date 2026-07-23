@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-c66b74bd64534bb69244e3f3ef8184bb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -401,10 +401,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="op">{</span></span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>DataSynthesizer<span class="op">::</span>BoundaryMode<span class="op">;</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>DataSynthesizer<span class="op">::</span>BoundaryParams<span class="op">;</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>DataSynthesizer<span class="op">::</span>LinearMotionParams<span class="op">;</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> WhiskerToolbox<span class="op">::</span>DataSynthesizer<span class="op">::</span>MotionModelVariant<span class="op">;</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Neuralyzer<span class="op">::</span>DataSynthesizer<span class="op">::</span>BoundaryMode<span class="op">;</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Neuralyzer<span class="op">::</span>DataSynthesizer<span class="op">::</span>BoundaryParams<span class="op">;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Neuralyzer<span class="op">::</span>DataSynthesizer<span class="op">::</span>LinearMotionParams<span class="op">;</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Neuralyzer<span class="op">::</span>DataSynthesizer<span class="op">::</span>MotionModelVariant<span class="op">;</span></span>
 <span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> MovingPointParams <span class="op">{</span></span>
 <span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> start_x <span class="op">=</span> <span class="fl">100.0</span><span class="bu">f</span><span class="op">;</span></span>
@@ -429,10 +429,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>            params<span class="op">.</span>bounds_max_x<span class="op">,</span></span>
 <span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>            params<span class="op">.</span>bounds_min_y<span class="op">,</span></span>
 <span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>            params<span class="op">.</span>bounds_max_y<span class="op">};</span></span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> tp <span class="op">=</span> WhiskerToolbox<span class="op">::</span>DataSynthesizer<span class="op">::</span>toTrajectoryParams<span class="op">(</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> tp <span class="op">=</span> Neuralyzer<span class="op">::</span>DataSynthesizer<span class="op">::</span>toTrajectoryParams<span class="op">(</span></span>
 <span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>            params<span class="op">.</span>motion<span class="op">,</span> boundary<span class="op">);</span></span>
 <span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> trajectory <span class="op">=</span> WhiskerToolbox<span class="op">::</span>DataSynthesizer<span class="op">::</span>computeTrajectory<span class="op">(</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> trajectory <span class="op">=</span> Neuralyzer<span class="op">::</span>DataSynthesizer<span class="op">::</span>computeTrajectory<span class="op">(</span></span>
 <span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>            params<span class="op">.</span>start_x<span class="op">,</span></span>
 <span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>            params<span class="op">.</span>start_y<span class="op">,</span></span>
 <span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>            params<span class="op">.</span>num_frames<span class="op">,</span> tp<span class="op">);</span></span>
@@ -448,10 +448,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> <span class="at">const</span> moving_point_reg <span class="op">=</span></span>
-<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>        WhiskerToolbox<span class="op">::</span>DataSynthesizer<span class="op">::</span>RegisterGenerator<span class="op">&lt;</span>MovingPointParams<span class="op">&gt;(</span></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>        Neuralyzer<span class="op">::</span>DataSynthesizer<span class="op">::</span>RegisterGenerator<span class="op">&lt;</span>MovingPointParams<span class="op">&gt;(</span></span>
 <span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>                <span class="st">"MovingPoint"</span><span class="op">,</span></span>
 <span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>                generateMovingPoint<span class="op">,</span></span>
-<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>                WhiskerToolbox<span class="op">::</span>DataSynthesizer<span class="op">::</span>GeneratorMetadata<span class="op">{</span></span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>                Neuralyzer<span class="op">::</span>DataSynthesizer<span class="op">::</span>GeneratorMetadata<span class="op">{</span></span>
 <span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>                        <span class="op">.</span>description <span class="op">=</span> <span class="st">"Generates a single point that moves along a trajectory. "</span></span>
 <span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>                                       <span class="st">"Supports linear, sinusoidal, and Brownian motion models "</span></span>
 <span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>                                       <span class="st">"with clamp, bounce, or wrap boundary modes. "</span></span>
@@ -461,7 +461,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-22 at 14:33:43 +0000</p>
+<p>Updated on 2026-07-23 at 18:20:43 +0000</p>
 
 
 </section>

@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-c66b74bd64534bb69244e3f3ef8184bb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -933,7 +933,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-552"><a href="#cb1-552" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-553"><a href="#cb1-553" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> TemporalProjectionOpenGLWidget<span class="op">::</span>updateMatrices<span class="op">()</span> <span class="op">{</span></span>
 <span id="cb1-554"><a href="#cb1-554" aria-hidden="true" tabindex="-1"></a>    _projection_matrix <span class="op">=</span></span>
-<span id="cb1-555"><a href="#cb1-555" aria-hidden="true" tabindex="-1"></a>            WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>computeOrthoProjection<span class="op">(</span>_cached_view_state<span class="op">);</span></span>
+<span id="cb1-555"><a href="#cb1-555" aria-hidden="true" tabindex="-1"></a>            Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>computeOrthoProjection<span class="op">(</span>_cached_view_state<span class="op">);</span></span>
 <span id="cb1-556"><a href="#cb1-556" aria-hidden="true" tabindex="-1"></a>    _view_matrix <span class="op">=</span> glm<span class="op">::</span>mat4<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">);</span></span>
 <span id="cb1-557"><a href="#cb1-557" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-558"><a href="#cb1-558" aria-hidden="true" tabindex="-1"></a></span>
@@ -941,7 +941,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-560"><a href="#cb1-560" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_state<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-561"><a href="#cb1-561" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
 <span id="cb1-562"><a href="#cb1-562" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-563"><a href="#cb1-563" aria-hidden="true" tabindex="-1"></a>    WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>handlePanning<span class="op">(</span></span>
+<span id="cb1-563"><a href="#cb1-563" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>handlePanning<span class="op">(</span></span>
 <span id="cb1-564"><a href="#cb1-564" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>_state<span class="op">,</span> _cached_view_state<span class="op">,</span> delta_x<span class="op">,</span> delta_y<span class="op">,</span> _widget_width<span class="op">,</span></span>
 <span id="cb1-565"><a href="#cb1-565" aria-hidden="true" tabindex="-1"></a>            _widget_height<span class="op">);</span></span>
 <span id="cb1-566"><a href="#cb1-566" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
@@ -950,11 +950,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-569"><a href="#cb1-569" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_state<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-570"><a href="#cb1-570" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
 <span id="cb1-571"><a href="#cb1-571" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-572"><a href="#cb1-572" aria-hidden="true" tabindex="-1"></a>    WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>handleZoom<span class="op">(*</span>_state<span class="op">,</span> _cached_view_state<span class="op">,</span> delta<span class="op">,</span> y_only<span class="op">,</span> both_axes<span class="op">);</span></span>
+<span id="cb1-572"><a href="#cb1-572" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>handleZoom<span class="op">(*</span>_state<span class="op">,</span> _cached_view_state<span class="op">,</span> delta<span class="op">,</span> y_only<span class="op">,</span> both_axes<span class="op">);</span></span>
 <span id="cb1-573"><a href="#cb1-573" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-574"><a href="#cb1-574" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-575"><a href="#cb1-575" aria-hidden="true" tabindex="-1"></a><span class="ex">QPointF</span> TemporalProjectionOpenGLWidget<span class="op">::</span>screenToWorld<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-576"><a href="#cb1-576" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>screenToWorld<span class="op">(</span>_projection_matrix<span class="op">,</span> _widget_width<span class="op">,</span></span>
+<span id="cb1-576"><a href="#cb1-576" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>screenToWorld<span class="op">(</span>_projection_matrix<span class="op">,</span> _widget_width<span class="op">,</span></span>
 <span id="cb1-577"><a href="#cb1-577" aria-hidden="true" tabindex="-1"></a>                                                _widget_height<span class="op">,</span> screen_pos<span class="op">);</span></span>
 <span id="cb1-578"><a href="#cb1-578" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-579"><a href="#cb1-579" aria-hidden="true" tabindex="-1"></a></span>
@@ -1016,7 +1016,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-635"><a href="#cb1-635" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-636"><a href="#cb1-636" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-637"><a href="#cb1-637" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>vec2 TemporalProjectionOpenGLWidget<span class="op">::</span>screenToNDC<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-638"><a href="#cb1-638" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>screenToNDC<span class="op">(</span>screen_pos<span class="op">,</span> _widget_width<span class="op">,</span></span>
+<span id="cb1-638"><a href="#cb1-638" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>screenToNDC<span class="op">(</span>screen_pos<span class="op">,</span> _widget_width<span class="op">,</span></span>
 <span id="cb1-639"><a href="#cb1-639" aria-hidden="true" tabindex="-1"></a>                                              _widget_height<span class="op">);</span></span>
 <span id="cb1-640"><a href="#cb1-640" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-641"><a href="#cb1-641" aria-hidden="true" tabindex="-1"></a></span>
@@ -1096,7 +1096,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-715"><a href="#cb1-715" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
 <span id="cb1-716"><a href="#cb1-716" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-717"><a href="#cb1-717" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>CorePlotting<span class="op">::</span>LineBatchIndex<span class="op">&gt;</span> <span class="at">const</span> hit_indices <span class="op">=</span></span>
-<span id="cb1-718"><a href="#cb1-718" aria-hidden="true" tabindex="-1"></a>            WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>runLineSelectionIntersection<span class="op">(</span></span>
+<span id="cb1-718"><a href="#cb1-718" aria-hidden="true" tabindex="-1"></a>            Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>runLineSelectionIntersection<span class="op">(</span></span>
 <span id="cb1-719"><a href="#cb1-719" aria-hidden="true" tabindex="-1"></a>                    <span class="op">*</span>_intersector<span class="op">,</span> _line_store<span class="op">.</span>cpuData<span class="op">(),</span> _selection_start_ndc<span class="op">,</span></span>
 <span id="cb1-720"><a href="#cb1-720" aria-hidden="true" tabindex="-1"></a>                    _selection_end_ndc<span class="op">,</span> _projection_matrix<span class="op">,</span> _view_matrix<span class="op">);</span></span>
 <span id="cb1-721"><a href="#cb1-721" aria-hidden="true" tabindex="-1"></a>    applyLineIntersectionResults<span class="op">(</span>hit_indices<span class="op">,</span> _selection_remove_mode<span class="op">);</span></span>
@@ -1111,7 +1111,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-730"><a href="#cb1-730" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-731"><a href="#cb1-731" aria-hidden="true" tabindex="-1"></a>CorePlotting<span class="op">::</span>Interaction<span class="op">::</span>GlyphPreview</span>
 <span id="cb1-732"><a href="#cb1-732" aria-hidden="true" tabindex="-1"></a>TemporalProjectionOpenGLWidget<span class="op">::</span>buildSelectionPreview<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-733"><a href="#cb1-733" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> preview <span class="op">=</span> WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>buildLineSelectionPreview<span class="op">(</span></span>
+<span id="cb1-733"><a href="#cb1-733" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> preview <span class="op">=</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>buildLineSelectionPreview<span class="op">(</span></span>
 <span id="cb1-734"><a href="#cb1-734" aria-hidden="true" tabindex="-1"></a>            _selection_start_screen<span class="op">,</span> _selection_end_screen<span class="op">,</span> _selection_remove_mode<span class="op">);</span></span>
 <span id="cb1-735"><a href="#cb1-735" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Override stroke color: light background needs dark line (not white)</span></span>
 <span id="cb1-736"><a href="#cb1-736" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_selection_remove_mode<span class="op">)</span> <span class="op">{</span></span>
@@ -1361,7 +1361,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-980"><a href="#cb1-980" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
 <span id="cb1-981"><a href="#cb1-981" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-22 at 14:33:46 +0000</p>
+<p>Updated on 2026-07-23 at 18:20:45 +0000</p>
 
 
 </section>

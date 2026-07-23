@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-c66b74bd64534bb69244e3f3ef8184bb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -394,13 +394,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox.html">WhiskerToolbox</a></strong></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer.html">Neuralyzer</a></strong></td>
 </tr>
 <tr class="even">
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms.html">WhiskerToolbox::Transforms</a></strong></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms.html">Neuralyzer::Transforms</a></strong></td>
 </tr>
 <tr class="odd">
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Transforms_1_1V2.html">WhiskerToolbox::Transforms::V2</a></strong></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2.html">Neuralyzer::Transforms::V2</a></strong></td>
 </tr>
 </tbody>
 </table>
@@ -417,7 +417,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classWhiskerToolbox_1_1Transforms_1_1V2_1_1RegisterBindingApplicator.html">WhiskerToolbox::Transforms::V2::RegisterBindingApplicator</a></strong> <br>RAII helper for registering binding applicators at static initialization.</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Transforms_1_1V2_1_1RegisterBindingApplicator.html">Neuralyzer::Transforms::V2::RegisterBindingApplicator</a></strong> <br>RAII helper for registering binding applicators at static initialization.</td>
 </tr>
 </tbody>
 </table>
@@ -467,8 +467,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="source-code" class="level2">
 <h2 class="anchored" data-anchor-id="source-code">Source code</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef WHISKERTOOLBOX_V2_PARAMETER_BINDING_HPP</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define WHISKERTOOLBOX_V2_PARAMETER_BINDING_HPP</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef NEURALYZER_V2_PARAMETER_BINDING_HPP</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define NEURALYZER_V2_PARAMETER_BINDING_HPP</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"PipelineValueStore/PipelineValueStore.hpp"</span><span class="pp"> </span><span class="co">// For PipelineValueStore</span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
@@ -486,7 +486,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;typeindex&gt;</span><span class="pp">        </span><span class="co">// std::type_index</span></span>
 <span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;unordered_map&gt;</span><span class="pp">    </span><span class="co">// std::unordered_map   </span></span>
 <span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2 <span class="op">{</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2 <span class="op">{</span></span>
 <span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
 <span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="co">// Binding Application (Templated - for compile-time known types)</span></span>
@@ -601,11 +601,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-132"><a href="#cb2-132" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-133"><a href="#cb2-133" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasBindingApplicator<span class="op">(</span><span class="bu">std::</span>type_index <span class="dt">params_type</span><span class="op">);</span></span>
 <span id="cb2-134"><a href="#cb2-134" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-135"><a href="#cb2-135" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>  <span class="co">// namespace WhiskerToolbox::Transforms::V2</span></span>
+<span id="cb2-135"><a href="#cb2-135" aria-hidden="true" tabindex="-1"></a><span class="op">}</span>  <span class="co">// namespace Neuralyzer::Transforms::V2</span></span>
 <span id="cb2-136"><a href="#cb2-136" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-137"><a href="#cb2-137" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif  </span><span class="co">// WHISKERTOOLBOX_V2_PARAMETER_BINDING_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-137"><a href="#cb2-137" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif  </span><span class="co">// NEURALYZER_V2_PARAMETER_BINDING_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-22 at 14:33:44 +0000</p>
+<p>Updated on 2026-07-23 at 18:20:44 +0000</p>
 
 
 </section>

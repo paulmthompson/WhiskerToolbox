@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-c66b74bd64534bb69244e3f3ef8184bb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -530,7 +530,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a>            <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"transformv2_pipeline_open"</span><span class="op">),</span></span>
 <span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a>            <span class="op">[</span><span class="kw">this</span><span class="op">]()</span> <span class="op">-&gt;</span> <span class="ex">QString</span> <span class="op">{</span></span>
 <span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> <span class="ex">QString::fromStdString</span><span class="op">(</span></span>
-<span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a>                        WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>Examples<span class="op">::</span>defaultUserPipelineDirectory<span class="op">(</span></span>
+<span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a>                        Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>Examples<span class="op">::</span>defaultUserPipelineDirectory<span class="op">(</span></span>
 <span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a>                                <span class="bu">std::</span>filesystem::path<span class="op">{</span></span>
 <span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a>                                        _state_manager<span class="op">-&gt;</span>configDir<span class="op">().</span>toStdString<span class="op">()})</span></span>
 <span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a>                                <span class="op">.</span>string<span class="op">());</span></span>
@@ -609,8 +609,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-228"><a href="#cb1-228" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-229"><a href="#cb1-229" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Register all commands with the CommandRegistry (before any command usage)</span></span>
 <span id="cb1-230"><a href="#cb1-230" aria-hidden="true" tabindex="-1"></a>    commands<span class="op">::</span>register_core_commands<span class="op">();</span></span>
-<span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a>    WhiskerToolbox<span class="op">::</span>DataSynthesizer<span class="op">::</span>register_datasynthesizer_commands<span class="op">();</span></span>
-<span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a>    WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>register_transformsv2_commands<span class="op">();</span></span>
+<span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>DataSynthesizer<span class="op">::</span>register_datasynthesizer_commands<span class="op">();</span></span>
+<span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>register_transformsv2_commands<span class="op">();</span></span>
 <span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a>    dl<span class="op">::</span>register_deeplearning_commands<span class="op">();</span></span>
 <span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Wire the openEditor callback so ContextActions can open/focus editors</span></span>
@@ -1499,7 +1499,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-1118"><a href="#cb1-1118" aria-hidden="true" tabindex="-1"></a>            <span class="kw">this</span><span class="op">,</span></span>
 <span id="cb1-1119"><a href="#cb1-1119" aria-hidden="true" tabindex="-1"></a>            <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Save Workspace"</span><span class="op">),</span></span>
 <span id="cb1-1120"><a href="#cb1-1120" aria-hidden="true" tabindex="-1"></a>            initial_dir<span class="op">,</span></span>
-<span id="cb1-1121"><a href="#cb1-1121" aria-hidden="true" tabindex="-1"></a>            <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"WhiskerToolbox Workspace (*.wtb)"</span><span class="op">));</span></span>
+<span id="cb1-1121"><a href="#cb1-1121" aria-hidden="true" tabindex="-1"></a>            <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Neuralyzer Workspace (*.wtb)"</span><span class="op">));</span></span>
 <span id="cb1-1122"><a href="#cb1-1122" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-1123"><a href="#cb1-1123" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>path<span class="op">.</span>isEmpty<span class="op">())</span> <span class="op">{</span></span>
 <span id="cb1-1124"><a href="#cb1-1124" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
@@ -1523,7 +1523,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-1142"><a href="#cb1-1142" aria-hidden="true" tabindex="-1"></a>            <span class="kw">this</span><span class="op">,</span></span>
 <span id="cb1-1143"><a href="#cb1-1143" aria-hidden="true" tabindex="-1"></a>            <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Open Workspace"</span><span class="op">),</span></span>
 <span id="cb1-1144"><a href="#cb1-1144" aria-hidden="true" tabindex="-1"></a>            initial_dir<span class="op">,</span></span>
-<span id="cb1-1145"><a href="#cb1-1145" aria-hidden="true" tabindex="-1"></a>            <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"WhiskerToolbox Workspace (*.wtb)"</span><span class="op">));</span></span>
+<span id="cb1-1145"><a href="#cb1-1145" aria-hidden="true" tabindex="-1"></a>            <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Neuralyzer Workspace (*.wtb)"</span><span class="op">));</span></span>
 <span id="cb1-1146"><a href="#cb1-1146" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-1147"><a href="#cb1-1147" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>path<span class="op">.</span>isEmpty<span class="op">())</span> <span class="op">{</span></span>
 <span id="cb1-1148"><a href="#cb1-1148" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
@@ -1611,7 +1611,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-1230"><a href="#cb1-1230" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-1231"><a href="#cb1-1231" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-1232"><a href="#cb1-1232" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MainWindow<span class="op">::</span>_updateTitleBar<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-1233"><a href="#cb1-1233" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> title <span class="op">=</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"WhiskerToolbox"</span><span class="op">);</span></span>
+<span id="cb1-1233"><a href="#cb1-1233" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> title <span class="op">=</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Neuralyzer"</span><span class="op">);</span></span>
 <span id="cb1-1234"><a href="#cb1-1234" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-1235"><a href="#cb1-1235" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ws_path <span class="op">=</span> _state_manager<span class="op">-&gt;</span>workspace<span class="op">()-&gt;</span>currentWorkspacePath<span class="op">();</span></span>
 <span id="cb1-1236"><a href="#cb1-1236" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>ws_path<span class="op">.</span>isEmpty<span class="op">())</span> <span class="op">{</span></span>
@@ -1998,7 +1998,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-1617"><a href="#cb1-1617" aria-hidden="true" tabindex="-1"></a>            <span class="op">});</span></span>
 <span id="cb1-1618"><a href="#cb1-1618" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-22 at 14:33:45 +0000</p>
+<p>Updated on 2026-07-23 at 18:20:44 +0000</p>
 
 
 </section>

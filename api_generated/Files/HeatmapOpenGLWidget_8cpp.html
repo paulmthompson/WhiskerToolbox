@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-c66b74bd64534bb69244e3f3ef8184bb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -520,13 +520,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-139"><a href="#cb1-139" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> bundle<span class="op">;</span></span>
 <span id="cb1-140"><a href="#cb1-140" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-141"><a href="#cb1-141" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a>    WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>HeatmapPipelineConfig config<span class="op">;</span></span>
+<span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>HeatmapPipelineConfig config<span class="op">;</span></span>
 <span id="cb1-143"><a href="#cb1-143" aria-hidden="true" tabindex="-1"></a>    config<span class="op">.</span>window_size <span class="op">=</span> window_size<span class="op">;</span></span>
 <span id="cb1-144"><a href="#cb1-144" aria-hidden="true" tabindex="-1"></a>    config<span class="op">.</span>scaling <span class="op">=</span> _state<span class="op">-&gt;</span>scaling<span class="op">();</span></span>
 <span id="cb1-145"><a href="#cb1-145" aria-hidden="true" tabindex="-1"></a>    config<span class="op">.</span>estimation_params <span class="op">=</span> _state<span class="op">-&gt;</span>estimationParams<span class="op">();</span></span>
 <span id="cb1-146"><a href="#cb1-146" aria-hidden="true" tabindex="-1"></a>    config<span class="op">.</span>time_units_per_second <span class="op">=</span> <span class="fl">1000.0</span><span class="op">;</span></span>
 <span id="cb1-147"><a href="#cb1-147" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-148"><a href="#cb1-148" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> pipeline_result <span class="op">=</span> WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>runHeatmapPipeline<span class="op">(</span></span>
+<span id="cb1-148"><a href="#cb1-148" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> pipeline_result <span class="op">=</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>runHeatmapPipeline<span class="op">(</span></span>
 <span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a>            _data_manager<span class="op">,</span> unit_keys<span class="op">,</span> alignment_state<span class="op">-&gt;</span>data<span class="op">(),</span> config<span class="op">);</span></span>
 <span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>pipeline_result<span class="op">.</span>success <span class="op">||</span> pipeline_result<span class="op">.</span>rows<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
@@ -536,9 +536,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a>    bundle<span class="op">.</span>unit_keys <span class="op">=</span> unit_keys<span class="op">;</span></span>
 <span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> sort_mode <span class="op">=</span> _state<span class="op">-&gt;</span>sortMode<span class="op">();</span></span>
 <span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>sort_mode <span class="op">!=</span> HeatmapSortMode<span class="op">::</span>Manual<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> sort_indices <span class="op">=</span> WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>computeSortOrder<span class="op">(</span></span>
+<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> sort_indices <span class="op">=</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>computeSortOrder<span class="op">(</span></span>
 <span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a>                pipeline_result<span class="op">,</span> bundle<span class="op">.</span>unit_keys<span class="op">,</span> sort_mode<span class="op">,</span> _state<span class="op">-&gt;</span>sortAscending<span class="op">());</span></span>
-<span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a>        WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>applySortOrder<span class="op">(</span></span>
+<span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a>        Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>applySortOrder<span class="op">(</span></span>
 <span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a>                pipeline_result<span class="op">,</span> bundle<span class="op">.</span>unit_keys<span class="op">,</span> sort_indices<span class="op">);</span></span>
 <span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-163"><a href="#cb1-163" aria-hidden="true" tabindex="-1"></a></span>
@@ -794,14 +794,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-413"><a href="#cb1-413" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-414"><a href="#cb1-414" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-415"><a href="#cb1-415" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Run the pure-data pipeline (gather → estimate → scale → convert)</span></span>
-<span id="cb1-416"><a href="#cb1-416" aria-hidden="true" tabindex="-1"></a>    WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>HeatmapPipelineConfig config<span class="op">;</span></span>
+<span id="cb1-416"><a href="#cb1-416" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>HeatmapPipelineConfig config<span class="op">;</span></span>
 <span id="cb1-417"><a href="#cb1-417" aria-hidden="true" tabindex="-1"></a>    config<span class="op">.</span>window_size <span class="op">=</span> window_size<span class="op">;</span></span>
 <span id="cb1-418"><a href="#cb1-418" aria-hidden="true" tabindex="-1"></a>    config<span class="op">.</span>scaling <span class="op">=</span> _state<span class="op">-&gt;</span>scaling<span class="op">();</span></span>
 <span id="cb1-419"><a href="#cb1-419" aria-hidden="true" tabindex="-1"></a>    config<span class="op">.</span>estimation_params <span class="op">=</span> _state<span class="op">-&gt;</span>estimationParams<span class="op">();</span></span>
 <span id="cb1-420"><a href="#cb1-420" aria-hidden="true" tabindex="-1"></a>    <span class="co">// </span><span class="al">TODO</span><span class="co">: make time_units_per_second configurable if data uses non-ms units</span></span>
 <span id="cb1-421"><a href="#cb1-421" aria-hidden="true" tabindex="-1"></a>    config<span class="op">.</span>time_units_per_second <span class="op">=</span> <span class="fl">1000.0</span><span class="op">;</span></span>
 <span id="cb1-422"><a href="#cb1-422" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-423"><a href="#cb1-423" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> pipeline_result <span class="op">=</span> WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>runHeatmapPipeline<span class="op">(</span></span>
+<span id="cb1-423"><a href="#cb1-423" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> pipeline_result <span class="op">=</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>runHeatmapPipeline<span class="op">(</span></span>
 <span id="cb1-424"><a href="#cb1-424" aria-hidden="true" tabindex="-1"></a>            _data_manager<span class="op">,</span> unit_keys<span class="op">,</span> alignment_state<span class="op">-&gt;</span>data<span class="op">(),</span> config<span class="op">);</span></span>
 <span id="cb1-425"><a href="#cb1-425" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-426"><a href="#cb1-426" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>pipeline_result<span class="op">.</span>success <span class="op">||</span> pipeline_result<span class="op">.</span>rows<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
@@ -815,9 +815,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-434"><a href="#cb1-434" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> sorted_keys <span class="op">=</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;(</span>unit_keys<span class="op">);</span></span>
 <span id="cb1-435"><a href="#cb1-435" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> sort_mode <span class="op">=</span> _state<span class="op">-&gt;</span>sortMode<span class="op">();</span></span>
 <span id="cb1-436"><a href="#cb1-436" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>sort_mode <span class="op">!=</span> HeatmapSortMode<span class="op">::</span>Manual<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-437"><a href="#cb1-437" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> sort_indices <span class="op">=</span> WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>computeSortOrder<span class="op">(</span></span>
+<span id="cb1-437"><a href="#cb1-437" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> sort_indices <span class="op">=</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>computeSortOrder<span class="op">(</span></span>
 <span id="cb1-438"><a href="#cb1-438" aria-hidden="true" tabindex="-1"></a>                pipeline_result<span class="op">,</span> sorted_keys<span class="op">,</span> sort_mode<span class="op">,</span> _state<span class="op">-&gt;</span>sortAscending<span class="op">());</span></span>
-<span id="cb1-439"><a href="#cb1-439" aria-hidden="true" tabindex="-1"></a>        WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>applySortOrder<span class="op">(</span></span>
+<span id="cb1-439"><a href="#cb1-439" aria-hidden="true" tabindex="-1"></a>        Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>applySortOrder<span class="op">(</span></span>
 <span id="cb1-440"><a href="#cb1-440" aria-hidden="true" tabindex="-1"></a>                pipeline_result<span class="op">,</span> sorted_keys<span class="op">,</span> sort_indices<span class="op">);</span></span>
 <span id="cb1-441"><a href="#cb1-441" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-442"><a href="#cb1-442" aria-hidden="true" tabindex="-1"></a></span>
@@ -862,12 +862,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-481"><a href="#cb1-481" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-482"><a href="#cb1-482" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> HeatmapOpenGLWidget<span class="op">::</span>updateMatrices<span class="op">()</span> <span class="op">{</span></span>
 <span id="cb1-483"><a href="#cb1-483" aria-hidden="true" tabindex="-1"></a>    _projection_matrix <span class="op">=</span></span>
-<span id="cb1-484"><a href="#cb1-484" aria-hidden="true" tabindex="-1"></a>            WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>computeOrthoProjection<span class="op">(</span>_cached_view_state<span class="op">);</span></span>
+<span id="cb1-484"><a href="#cb1-484" aria-hidden="true" tabindex="-1"></a>            Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>computeOrthoProjection<span class="op">(</span>_cached_view_state<span class="op">);</span></span>
 <span id="cb1-485"><a href="#cb1-485" aria-hidden="true" tabindex="-1"></a>    _view_matrix <span class="op">=</span> glm<span class="op">::</span>mat4<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">);</span></span>
 <span id="cb1-486"><a href="#cb1-486" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-487"><a href="#cb1-487" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-488"><a href="#cb1-488" aria-hidden="true" tabindex="-1"></a><span class="ex">QPointF</span> HeatmapOpenGLWidget<span class="op">::</span>screenToWorld<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-489"><a href="#cb1-489" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>screenToWorld<span class="op">(</span></span>
+<span id="cb1-489"><a href="#cb1-489" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>screenToWorld<span class="op">(</span></span>
 <span id="cb1-490"><a href="#cb1-490" aria-hidden="true" tabindex="-1"></a>            _projection_matrix<span class="op">,</span> _widget_width<span class="op">,</span> _widget_height<span class="op">,</span> screen_pos<span class="op">);</span></span>
 <span id="cb1-491"><a href="#cb1-491" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-492"><a href="#cb1-492" aria-hidden="true" tabindex="-1"></a></span>
@@ -875,7 +875,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-494"><a href="#cb1-494" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_state<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-495"><a href="#cb1-495" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
 <span id="cb1-496"><a href="#cb1-496" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-497"><a href="#cb1-497" aria-hidden="true" tabindex="-1"></a>    WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>handlePanning<span class="op">(</span></span>
+<span id="cb1-497"><a href="#cb1-497" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>handlePanning<span class="op">(</span></span>
 <span id="cb1-498"><a href="#cb1-498" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>_state<span class="op">,</span> _cached_view_state<span class="op">,</span> delta_x<span class="op">,</span> delta_y<span class="op">,</span> _widget_width<span class="op">,</span></span>
 <span id="cb1-499"><a href="#cb1-499" aria-hidden="true" tabindex="-1"></a>            _widget_height<span class="op">);</span></span>
 <span id="cb1-500"><a href="#cb1-500" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
@@ -885,7 +885,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-504"><a href="#cb1-504" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
 <span id="cb1-505"><a href="#cb1-505" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-506"><a href="#cb1-506" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-507"><a href="#cb1-507" aria-hidden="true" tabindex="-1"></a>    WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>handleZoom<span class="op">(</span></span>
+<span id="cb1-507"><a href="#cb1-507" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>handleZoom<span class="op">(</span></span>
 <span id="cb1-508"><a href="#cb1-508" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>_state<span class="op">,</span> _cached_view_state<span class="op">,</span> delta<span class="op">,</span> y_only<span class="op">,</span> both_axes<span class="op">);</span></span>
 <span id="cb1-509"><a href="#cb1-509" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-510"><a href="#cb1-510" aria-hidden="true" tabindex="-1"></a></span>
@@ -909,16 +909,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-528"><a href="#cb1-528" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-529"><a href="#cb1-529" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-530"><a href="#cb1-530" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> HeatmapOpenGLWidget<span class="op">::</span>setupTooltip<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-531"><a href="#cb1-531" aria-hidden="true" tabindex="-1"></a>    _tooltip_mgr <span class="op">=</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>PlotTooltipManager<span class="op">&gt;(</span><span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-531"><a href="#cb1-531" aria-hidden="true" tabindex="-1"></a>    _tooltip_mgr <span class="op">=</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>PlotTooltipManager<span class="op">&gt;(</span><span class="kw">this</span><span class="op">);</span></span>
 <span id="cb1-532"><a href="#cb1-532" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-533"><a href="#cb1-533" aria-hidden="true" tabindex="-1"></a>    _tooltip_mgr<span class="op">-&gt;</span>setHitTestProvider<span class="op">(</span></span>
-<span id="cb1-534"><a href="#cb1-534" aria-hidden="true" tabindex="-1"></a>            <span class="op">[</span><span class="kw">this</span><span class="op">](</span><span class="ex">QPoint</span> pos<span class="op">)</span> <span class="op">-&gt;</span> <span class="bu">std::</span>optional<span class="op">&lt;</span>WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>PlotTooltipHit<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb1-534"><a href="#cb1-534" aria-hidden="true" tabindex="-1"></a>            <span class="op">[</span><span class="kw">this</span><span class="op">](</span><span class="ex">QPoint</span> pos<span class="op">)</span> <span class="op">-&gt;</span> <span class="bu">std::</span>optional<span class="op">&lt;</span>Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>PlotTooltipHit<span class="op">&gt;</span> <span class="op">{</span></span>
 <span id="cb1-535"><a href="#cb1-535" aria-hidden="true" tabindex="-1"></a>                <span class="ex">QPointF</span> <span class="at">const</span> world <span class="op">=</span> screenToWorld<span class="op">(</span>pos<span class="op">);</span></span>
 <span id="cb1-536"><a href="#cb1-536" aria-hidden="true" tabindex="-1"></a>                <span class="dt">int</span> <span class="at">const</span> unit_index <span class="op">=</span> worldToUnitIndex<span class="op">(</span>world<span class="op">);</span></span>
 <span id="cb1-537"><a href="#cb1-537" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(</span>unit_index <span class="op">&lt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-538"><a href="#cb1-538" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">return</span> <span class="bu">std::</span>nullopt<span class="op">;</span></span>
 <span id="cb1-539"><a href="#cb1-539" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
-<span id="cb1-540"><a href="#cb1-540" aria-hidden="true" tabindex="-1"></a>                WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>PlotTooltipHit hit<span class="op">;</span></span>
+<span id="cb1-540"><a href="#cb1-540" aria-hidden="true" tabindex="-1"></a>                Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>PlotTooltipHit hit<span class="op">;</span></span>
 <span id="cb1-541"><a href="#cb1-541" aria-hidden="true" tabindex="-1"></a>                hit<span class="op">.</span>world_x <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>world<span class="op">.</span>x<span class="op">());</span></span>
 <span id="cb1-542"><a href="#cb1-542" aria-hidden="true" tabindex="-1"></a>                hit<span class="op">.</span>world_y <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>world<span class="op">.</span>y<span class="op">());</span></span>
 <span id="cb1-543"><a href="#cb1-543" aria-hidden="true" tabindex="-1"></a>                hit<span class="op">.</span>user_data <span class="op">=</span> unit_index<span class="op">;</span></span>
@@ -926,7 +926,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-545"><a href="#cb1-545" aria-hidden="true" tabindex="-1"></a>            <span class="op">});</span></span>
 <span id="cb1-546"><a href="#cb1-546" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-547"><a href="#cb1-547" aria-hidden="true" tabindex="-1"></a>    _tooltip_mgr<span class="op">-&gt;</span>setTextProvider<span class="op">(</span></span>
-<span id="cb1-548"><a href="#cb1-548" aria-hidden="true" tabindex="-1"></a>            <span class="op">[</span><span class="kw">this</span><span class="op">](</span>WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>PlotTooltipHit <span class="at">const</span> <span class="op">&amp;</span> hit<span class="op">)</span> <span class="op">-&gt;</span> <span class="ex">QString</span> <span class="op">{</span></span>
+<span id="cb1-548"><a href="#cb1-548" aria-hidden="true" tabindex="-1"></a>            <span class="op">[</span><span class="kw">this</span><span class="op">](</span>Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>PlotTooltipHit <span class="at">const</span> <span class="op">&amp;</span> hit<span class="op">)</span> <span class="op">-&gt;</span> <span class="ex">QString</span> <span class="op">{</span></span>
 <span id="cb1-549"><a href="#cb1-549" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> <span class="at">const</span> unit_index <span class="op">=</span> <span class="bu">std::</span>any_cast<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>hit<span class="op">.</span>user_data<span class="op">);</span></span>
 <span id="cb1-550"><a href="#cb1-550" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(</span>unit_index <span class="op">&lt;</span> <span class="dv">0</span> <span class="op">||</span></span>
 <span id="cb1-551"><a href="#cb1-551" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">size_t</span><span class="op">&gt;(</span>unit_index<span class="op">)</span> <span class="op">&gt;=</span> _display_unit_keys<span class="op">.</span>size<span class="op">())</span> <span class="op">{</span></span>
@@ -945,7 +945,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-564"><a href="#cb1-564" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> index<span class="op">;</span></span>
 <span id="cb1-565"><a href="#cb1-565" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-22 at 14:33:46 +0000</p>
+<p>Updated on 2026-07-23 at 18:20:45 +0000</p>
 
 
 </section>

@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-c66b74bd64534bb69244e3f3ef8184bb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -597,7 +597,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-216"><a href="#cb1-216" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
 <span id="cb1-217"><a href="#cb1-217" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-218"><a href="#cb1-218" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> HeatmapPropertiesWidget<span class="op">::</span>_setupScalingSection<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-219"><a href="#cb1-219" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>ScalingMode<span class="op">;</span></span>
+<span id="cb1-219"><a href="#cb1-219" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>ScalingMode<span class="op">;</span></span>
 <span id="cb1-220"><a href="#cb1-220" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-221"><a href="#cb1-221" aria-hidden="true" tabindex="-1"></a>    _scaling_section <span class="op">=</span> <span class="kw">new</span> Section<span class="op">(</span><span class="kw">this</span><span class="op">,</span> <span class="st">"Rate Estimation &amp; Scaling"</span><span class="op">);</span></span>
 <span id="cb1-222"><a href="#cb1-222" aria-hidden="true" tabindex="-1"></a></span>
@@ -635,7 +635,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-254"><a href="#cb1-254" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-255"><a href="#cb1-255" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- Connect signals ---</span></span>
 <span id="cb1-256"><a href="#cb1-256" aria-hidden="true" tabindex="-1"></a>    <span class="fu">connect</span><span class="op">(</span>_estimation_controls<span class="op">,</span> <span class="op">&amp;</span>EstimationMethodControls<span class="op">::</span>paramsChanged<span class="op">,</span></span>
-<span id="cb1-257"><a href="#cb1-257" aria-hidden="true" tabindex="-1"></a>            <span class="kw">this</span><span class="op">,</span> <span class="op">[</span><span class="kw">this</span><span class="op">](</span>WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>EstimationParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-257"><a href="#cb1-257" aria-hidden="true" tabindex="-1"></a>            <span class="kw">this</span><span class="op">,</span> <span class="op">[</span><span class="kw">this</span><span class="op">](</span>Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>EstimationParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-258"><a href="#cb1-258" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(!</span>_state<span class="op">)</span> <span class="cf">return</span><span class="op">;</span></span>
 <span id="cb1-259"><a href="#cb1-259" aria-hidden="true" tabindex="-1"></a>                _state<span class="op">-&gt;</span>setEstimationParams<span class="op">(</span>params<span class="op">);</span></span>
 <span id="cb1-260"><a href="#cb1-260" aria-hidden="true" tabindex="-1"></a>            <span class="op">});</span></span>
@@ -798,7 +798,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-417"><a href="#cb1-417" aria-hidden="true" tabindex="-1"></a>            <span class="kw">this</span><span class="op">,</span> <span class="op">&amp;</span>HeatmapPropertiesWidget<span class="op">::</span>exportCSVRequested<span class="op">);</span></span>
 <span id="cb1-418"><a href="#cb1-418" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-22 at 14:33:46 +0000</p>
+<p>Updated on 2026-07-23 at 18:20:45 +0000</p>
 
 
 </section>

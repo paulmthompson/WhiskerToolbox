@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-c66b74bd64534bb69244e3f3ef8184bb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -616,9 +616,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a>    VerticalAxisStateData vertical_axis<span class="op">;</span></span>
 <span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string background_color <span class="op">=</span> <span class="st">"#FFFFFF"</span><span class="op">;</span></span>
 <span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> unit_keys<span class="op">;</span></span>
-<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a>    WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>ScalingMode scaling <span class="op">=</span></span>
-<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a>            WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>ScalingMode<span class="op">::</span>FiringRateHz<span class="op">;</span></span>
-<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a>    WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>EstimationParams estimation_params<span class="op">;</span></span>
+<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>ScalingMode scaling <span class="op">=</span></span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a>            Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>ScalingMode<span class="op">::</span>FiringRateHz<span class="op">;</span></span>
+<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>EstimationParams estimation_params<span class="op">;</span></span>
 <span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a>    HeatmapColorRangeConfig color_range<span class="op">;</span></span>
 <span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>Colormaps<span class="op">::</span>ColormapPreset colormap <span class="op">=</span></span>
 <span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a>            CorePlotting<span class="op">::</span>Colormaps<span class="op">::</span>ColormapPreset<span class="op">::</span>Inferno<span class="op">;</span></span>
@@ -670,14 +670,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-141"><a href="#cb3-141" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">size_t</span> unitCount<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _data<span class="op">.</span>unit_keys<span class="op">.</span>size<span class="op">();</span> <span class="op">}</span></span>
 <span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Scaling ===</span></span>
-<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>ScalingMode scaling<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _data<span class="op">.</span>scaling<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setScaling<span class="op">(</span>WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>ScalingMode scaling<span class="op">);</span></span>
+<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>ScalingMode scaling<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _data<span class="op">.</span>scaling<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setScaling<span class="op">(</span>Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>ScalingMode scaling<span class="op">);</span></span>
 <span id="cb3-146"><a href="#cb3-146" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-147"><a href="#cb3-147" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Estimation Parameters ===</span></span>
-<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>EstimationParams <span class="at">const</span> <span class="op">&amp;</span> estimationParams<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>EstimationParams <span class="at">const</span> <span class="op">&amp;</span> estimationParams<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
 <span id="cb3-149"><a href="#cb3-149" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> _data<span class="op">.</span>estimation_params<span class="op">;</span></span>
 <span id="cb3-150"><a href="#cb3-150" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-151"><a href="#cb3-151" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setEstimationParams<span class="op">(</span>WhiskerToolbox<span class="op">::</span>Plots<span class="op">::</span>EstimationParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">);</span></span>
+<span id="cb3-151"><a href="#cb3-151" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setEstimationParams<span class="op">(</span>Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>EstimationParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">);</span></span>
 <span id="cb3-152"><a href="#cb3-152" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-153"><a href="#cb3-153" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Sorting ===</span></span>
 <span id="cb3-154"><a href="#cb3-154" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> HeatmapSortMode sortMode<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _data<span class="op">.</span>sort_mode<span class="op">;</span> <span class="op">}</span></span>
@@ -731,7 +731,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-202"><a href="#cb3-202" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-203"><a href="#cb3-203" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// HEATMAP_STATE_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-22 at 14:33:45 +0000</p>
+<p>Updated on 2026-07-23 at 18:20:45 +0000</p>
 
 
 </section>

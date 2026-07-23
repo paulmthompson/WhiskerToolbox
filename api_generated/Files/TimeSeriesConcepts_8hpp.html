@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-c66b74bd64534bb69244e3f3ef8184bb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -394,10 +394,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox.html">WhiskerToolbox</a></strong></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer.html">Neuralyzer</a></strong></td>
 </tr>
 <tr class="even">
-<td><strong><a href="../../api_generated/Namespaces/namespaceWhiskerToolbox_1_1Concepts.html">WhiskerToolbox::Concepts</a></strong></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Concepts.html">Neuralyzer::Concepts</a></strong></td>
 </tr>
 </tbody>
 </table>
@@ -414,11 +414,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Concepts_1_1is__time__series__element.html">WhiskerToolbox::Concepts::is_time_series_element</a></strong> <br>Type trait to check if a type satisfies TimeSeriesElement.</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Concepts_1_1is__time__series__element.html">Neuralyzer::Concepts::is_time_series_element</a></strong> <br>Type trait to check if a type satisfies TimeSeriesElement.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structWhiskerToolbox_1_1Concepts_1_1is__entity__element.html">WhiskerToolbox::Concepts::is_entity_element</a></strong> <br>Type trait to check if a type satisfies EntityElement.</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Concepts_1_1is__entity__element.html">Neuralyzer::Concepts::is_entity_element</a></strong> <br>Type trait to check if a type satisfies EntityElement.</td>
 </tr>
 </tbody>
 </table>
@@ -426,7 +426,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="detailed-description" class="level2">
 <h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
 <p>C++20 concepts for unified time series element types.</p>
-<p>This header defines concepts that enable generic programming across all time series data types in <a href="../../api_generated/Namespaces/namespaceWhiskerToolbox.html">WhiskerToolbox</a>. The concepts establish a common interface for element access while respecting the different characteristics of each data type.</p>
+<p>This header defines concepts that enable generic programming across all time series data types in <a href="../../api_generated/Namespaces/namespaceNeuralyzer.html">Neuralyzer</a>. The concepts establish a common interface for element access while respecting the different characteristics of each data type.</p>
 </section>
 <section id="element-type-hierarchy" class="level2">
 <h2 class="anchored" data-anchor-id="element-type-hierarchy">Element Type Hierarchy</h2>
@@ -482,7 +482,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;type_traits&gt;</span></span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;unordered_set&gt;</span></span>
 <span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Concepts <span class="op">{</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> Neuralyzer<span class="op">::</span>Concepts <span class="op">{</span></span>
 <span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
 <span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="kw">concept</span> TimeSeriesElement <span class="op">=</span> <span class="kw">requires</span><span class="op">(</span>T <span class="at">const</span> <span class="op">&amp;</span> t<span class="op">)</span> <span class="op">{</span></span>
@@ -551,11 +551,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ids<span class="op">.</span>contains<span class="op">(</span>elem<span class="op">.</span>id<span class="op">());</span></span>
 <span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace WhiskerToolbox::Concepts</span></span>
+<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace Neuralyzer::Concepts</span></span>
 <span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// TIME_SERIES_CONCEPTS_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-22 at 14:33:43 +0000</p>
+<p>Updated on 2026-07-23 at 18:20:42 +0000</p>
 
 
 </section>

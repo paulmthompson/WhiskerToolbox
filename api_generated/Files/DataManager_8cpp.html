@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-c66b74bd64534bb69244e3f3ef8184bb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -668,13 +668,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb14-61"><a href="#cb14-61" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
 <span id="cb14-62"><a href="#cb14-62" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb14-63"><a href="#cb14-63" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-64"><a href="#cb14-64" aria-hidden="true" tabindex="-1"></a>    WhiskerToolbox<span class="op">::</span>Entity<span class="op">::</span>Lineage<span class="op">::</span>FileOrigin origin<span class="op">{</span></span>
+<span id="cb14-64"><a href="#cb14-64" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Entity<span class="op">::</span>Lineage<span class="op">::</span>FileOrigin origin<span class="op">{</span></span>
 <span id="cb14-65"><a href="#cb14-65" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="va">m_path</span> <span class="op">=</span> file_path<span class="op">,</span></span>
 <span id="cb14-66"><a href="#cb14-66" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="va">m_format</span> <span class="op">=</span> item<span class="op">.</span>value<span class="op">(</span><span class="st">"format"</span><span class="op">,</span> <span class="bu">std::</span>string<span class="op">{}),</span></span>
 <span id="cb14-67"><a href="#cb14-67" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="dt">m_data_type</span> <span class="op">=</span> item<span class="op">.</span>value<span class="op">(</span><span class="st">"data_type"</span><span class="op">,</span> <span class="bu">std::</span>string<span class="op">{}),</span></span>
 <span id="cb14-68"><a href="#cb14-68" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="va">m_source_config_json</span> <span class="op">=</span> item<span class="op">.</span>dump<span class="op">()};</span></span>
 <span id="cb14-69"><a href="#cb14-69" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-70"><a href="#cb14-70" aria-hidden="true" tabindex="-1"></a>    WhiskerToolbox<span class="op">::</span>Entity<span class="op">::</span>Lineage<span class="op">::</span>LineageRecorder<span class="op">::</span>recordFileSource<span class="op">(</span></span>
+<span id="cb14-70"><a href="#cb14-70" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Entity<span class="op">::</span>Lineage<span class="op">::</span>LineageRecorder<span class="op">::</span>recordFileSource<span class="op">(</span></span>
 <span id="cb14-71"><a href="#cb14-71" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>dm<span class="op">-&gt;</span>getLineageRegistry<span class="op">(),</span> data_key<span class="op">,</span> <span class="bu">std::</span>move<span class="op">(</span>origin<span class="op">));</span></span>
 <span id="cb14-72"><a href="#cb14-72" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb14-73"><a href="#cb14-73" aria-hidden="true" tabindex="-1"></a></span>
@@ -972,7 +972,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb14-365"><a href="#cb14-365" aria-hidden="true" tabindex="-1"></a>    _entity_group_manager <span class="op">=</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>EntityGroupManager<span class="op">&gt;();</span></span>
 <span id="cb14-366"><a href="#cb14-366" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-367"><a href="#cb14-367" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Initialize LineageRegistry</span></span>
-<span id="cb14-368"><a href="#cb14-368" aria-hidden="true" tabindex="-1"></a>    _lineage_registry <span class="op">=</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>WhiskerToolbox<span class="op">::</span>Entity<span class="op">::</span>Lineage<span class="op">::</span>LineageRegistry<span class="op">&gt;();</span></span>
+<span id="cb14-368"><a href="#cb14-368" aria-hidden="true" tabindex="-1"></a>    _lineage_registry <span class="op">=</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>Neuralyzer<span class="op">::</span>Entity<span class="op">::</span>Lineage<span class="op">::</span>LineageRegistry<span class="op">&gt;();</span></span>
 <span id="cb14-369"><a href="#cb14-369" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-370"><a href="#cb14-370" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Register all available loaders</span></span>
 <span id="cb14-371"><a href="#cb14-371" aria-hidden="true" tabindex="-1"></a>    <span class="at">static</span> <span class="dt">bool</span> loaders_registered <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
@@ -2268,7 +2268,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb14-1661"><a href="#cb14-1661" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">void</span> DataManager<span class="op">::</span>setData<span class="op">&lt;</span>TensorData<span class="op">&gt;(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span> TimeKey <span class="at">const</span> <span class="op">&amp;</span> time_key<span class="op">);</span></span>
 <span id="cb14-1662"><a href="#cb14-1662" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">void</span> DataManager<span class="op">::</span>setData<span class="op">&lt;</span>TensorData<span class="op">&gt;(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>TensorData<span class="op">&gt;</span> data<span class="op">,</span> TimeKey <span class="at">const</span> <span class="op">&amp;</span> time_key<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-22 at 14:33:43 +0000</p>
+<p>Updated on 2026-07-23 at 18:20:42 +0000</p>
 
 
 </section>

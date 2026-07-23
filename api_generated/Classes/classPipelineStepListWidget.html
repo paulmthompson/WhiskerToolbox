@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-c66b74bd64534bb69244e3f3ef8184bb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -479,7 +479,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>bool</td>
-<td><strong><a href="../../api_generated/Classes/classPipelineStepListWidget.html#function-loadfromdescriptors">loadFromDescriptors</a></strong>(std::vector&lt; <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1Examples_1_1PipelineStepDescriptor.html">WhiskerToolbox::Transforms::V2::Examples::PipelineStepDescriptor</a> &gt; const &amp; descriptors)<br>Rebuild all steps from a list of PipelineStepDescriptors.</td>
+<td><strong><a href="../../api_generated/Classes/classPipelineStepListWidget.html#function-loadfromdescriptors">loadFromDescriptors</a></strong>(std::vector&lt; <a href="../../api_generated/Classes/structNeuralyzer_1_1Transforms_1_1V2_1_1Examples_1_1PipelineStepDescriptor.html">Neuralyzer::Transforms::V2::Examples::PipelineStepDescriptor</a> &gt; const &amp; descriptors)<br>Rebuild all steps from a list of PipelineStepDescriptors.</td>
 </tr>
 </tbody>
 </table>
@@ -601,7 +601,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-loadfromdescriptors" class="level3">
 <h3 class="anchored" data-anchor-id="function-loadfromdescriptors">function loadFromDescriptors</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> loadFromDescriptors<span class="op">(</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>Examples<span class="op">::</span>PipelineStepDescriptor <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> descriptors</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>Examples<span class="op">::</span>PipelineStepDescriptor <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> descriptors</span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Rebuild all steps from a list of PipelineStepDescriptors.</p>
 <p><strong>Parameters</strong>:</p>
@@ -611,7 +611,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Return</strong>: true if all steps were loaded successfully</p>
 <p>Used by JSON → UI loading. Clears existing steps, then adds each step using the descriptor’s transform_name and serialized parameters.</p>
 <hr>
-<p>Updated on 2026-07-22 at 14:33:40 +0000</p>
+<p>Updated on 2026-07-23 at 18:20:39 +0000</p>
 
 
 </section>

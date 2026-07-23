@@ -78,9 +78,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-c66b74bd64534bb69244e3f3ef8184bb.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-f292c3aeb5ba29f88d00f7babd9618d0.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -409,7 +409,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td></td>
-<td><strong><a href="../../api_generated/Files/IntervalReduction_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“V2 <a href="../../api_generated/Classes/structWhiskerToolbox_1_1Transforms_1_1V2_1_1IntervalReductionParams.html">IntervalReductionParams</a> - <a href="../../api_generated/Files/IOFormats_8hpp.html#enumvalue-json">JSON</a> Rejection” , “” [transforms][v2][params][json][interval_reduction])</td>
+<td><strong><a href="../../api_generated/Files/IntervalReduction_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“V2 <a href="../../api_generated/Classes/structNeuralyzer_1_1Transforms_1_1V2_1_1IntervalReductionParams.html">IntervalReductionParams</a> - <a href="../../api_generated/Files/IOFormats_8hpp.html#enumvalue-json">JSON</a> Rejection” , “” [transforms][v2][params][json][interval_reduction])</td>
 </tr>
 </tbody>
 </table>
@@ -472,8 +472,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;memory&gt;</span></span>
 <span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
 <span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">;</span></span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>Examples<span class="op">;</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">;</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>Examples<span class="op">;</span></span>
 <span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
 <span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a><span class="co">// Helper to access TensorData element at (row, col) for 2D tensors</span></span>
@@ -836,7 +836,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-387"><a href="#cb5-387" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"V2 IntervalReduction: JSON Pipeline Execution"</span><span class="op">,</span></span>
 <span id="cb5-388"><a href="#cb5-388" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][binary_container][interval_reduction][pipeline]"</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb5-389"><a href="#cb5-389" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-390"><a href="#cb5-390" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> <span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">;</span></span>
+<span id="cb5-390"><a href="#cb5-390" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> <span class="kw">namespace</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">;</span></span>
 <span id="cb5-391"><a href="#cb5-391" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-392"><a href="#cb5-392" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"AnalogIntervalReduction via DataManagerPipelineExecutor"</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb5-393"><a href="#cb5-393" aria-hidden="true" tabindex="-1"></a>        DataManager dm<span class="op">;</span></span>
@@ -1208,7 +1208,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-759"><a href="#cb5-759" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"V2 IntervalReduction: Cross-TimeFrame JSON Pipeline"</span><span class="op">,</span></span>
 <span id="cb5-760"><a href="#cb5-760" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][binary_container][interval_reduction][cross_timeframe][pipeline]"</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb5-761"><a href="#cb5-761" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-762"><a href="#cb5-762" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> <span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">;</span></span>
+<span id="cb5-762"><a href="#cb5-762" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> <span class="kw">namespace</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">;</span></span>
 <span id="cb5-763"><a href="#cb5-763" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-764"><a href="#cb5-764" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"AnalogIntervalReduction with different TimeFrames via pipeline executor"</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb5-765"><a href="#cb5-765" aria-hidden="true" tabindex="-1"></a>        DataManager dm<span class="op">;</span></span>
@@ -1269,7 +1269,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-820"><a href="#cb5-820" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb5-821"><a href="#cb5-821" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-22 at 14:33:44 +0000</p>
+<p>Updated on 2026-07-23 at 18:20:43 +0000</p>
 
 
 </section>
