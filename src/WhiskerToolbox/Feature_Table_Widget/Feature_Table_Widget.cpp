@@ -1,8 +1,8 @@
 #include "Feature_Table_Widget.hpp"
 #include "ui_Feature_Table_Widget.h"
 
-#include "DataManager/DataManager.hpp"
 #include "CoreUtilities/color.hpp"
+#include "DataManager/DataManager.hpp"
 
 #include <QHBoxLayout>
 #include <QPushButton>
@@ -13,6 +13,14 @@
 #include <qcheckbox.h>
 
 #include <iostream>
+
+namespace {
+
+void setReadOnlyTableItem(QTableWidgetItem * item) {
+    item->setFlags(item->flags() & ~Qt::ItemIsEditable);
+}
+
+}// namespace
 
 
 Feature_Table_Widget::Feature_Table_Widget(QWidget * parent)
@@ -103,12 +111,14 @@ void Feature_Table_Widget::setDataManager(std::shared_ptr<DataManager> data_mana
 
     _data_manager->addObserver([this]() {
         _refreshFeatures();
-    }, "Feature_Table_Widget");
+    },
+                               "Feature_Table_Widget");
 }
 
 void Feature_Table_Widget::_addFeatureName(std::string const & key, int row, int col) {
     auto * item = new QTableWidgetItem(QString::fromStdString(key));
     item->setTextAlignment(Qt::AlignCenter);
+    setReadOnlyTableItem(item);
     ui->available_features_table->setItem(row, col, item);
 }
 
@@ -138,6 +148,7 @@ void Feature_Table_Widget::_addFeatureType(std::string const & key, int row, int
 
     auto * item = new QTableWidgetItem(QString::fromStdString(displayType));
     item->setTextAlignment(Qt::AlignCenter);
+    setReadOnlyTableItem(item);
     ui->available_features_table->setItem(row, col, item);
 }
 
@@ -151,6 +162,7 @@ void Feature_Table_Widget::_addFeatureClock(std::string const & key, int row, in
     std::string const clock = _data_manager->getTimeKey(key).str();
     auto * item = new QTableWidgetItem(QString::fromStdString(clock));
     item->setTextAlignment(Qt::AlignCenter);
+    setReadOnlyTableItem(item);
     ui->available_features_table->setItem(row, col, item);
 }
 
@@ -159,13 +171,14 @@ void Feature_Table_Widget::_addFeatureElements(std::string const & key, int row,
     static_cast<void>(key);
     auto * item = new QTableWidgetItem("1");
     item->setTextAlignment(Qt::AlignCenter);
+    setReadOnlyTableItem(item);
     ui->available_features_table->setItem(row, col, item);
 }
 
 void Feature_Table_Widget::_addFeatureEnabled(std::string const & key, int row, int col) {
     // Create a widget to center the checkbox
-    QWidget * centerWidget = new QWidget();
-    QHBoxLayout * layout = new QHBoxLayout(centerWidget);
+    auto * centerWidget = new QWidget();
+    auto * layout = new QHBoxLayout(centerWidget);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setAlignment(Qt::AlignCenter);
 
@@ -190,7 +203,7 @@ void Feature_Table_Widget::_addFeatureEnabled(std::string const & key, int row, 
     // Connect the state change signal
     connect(checkboxItem, &QCheckBox::stateChanged, [this, key](int state) {
         bool const isEnabled = (state == Qt::Checked);
-        
+
         if (isEnabled) {
             // Feature is enabled
             _enabled_features.insert(key);
@@ -207,9 +220,9 @@ void Feature_Table_Widget::_addFeatureEnabled(std::string const & key, int row, 
 
             // We don't change selection when unchecked
         }
-        
+
         // Find the current row for this feature (row may have changed due to sorting)
-        int currentRow = _findRowByFeatureName(QString::fromStdString(key));
+        int const currentRow = _findRowByFeatureName(QString::fromStdString(key));
         if (currentRow != -1) {
             _updateRowAppearance(currentRow, isEnabled);
         }
@@ -218,11 +231,11 @@ void Feature_Table_Widget::_addFeatureEnabled(std::string const & key, int row, 
 
 void Feature_Table_Widget::_updateRowAppearance(int row, bool enabled) {
     // Define colors for enabled and disabled text
-    QColor const enabledColor(204, 204, 204);    // Normal text color (light gray)
-    QColor const disabledColor(100, 100, 100);   // Faded text color (darker gray)
-    
+    QColor const enabledColor(204, 204, 204); // Normal text color (light gray)
+    QColor const disabledColor(100, 100, 100);// Faded text color (darker gray)
+
     QColor const textColor = enabled ? enabledColor : disabledColor;
-    
+
     // Update all items in this row (except the Enabled column which has a widget)
     for (int col = 0; col < ui->available_features_table->columnCount(); ++col) {
         QTableWidgetItem * item = ui->available_features_table->item(row, col);
@@ -241,11 +254,11 @@ int Feature_Table_Widget::_findRowByFeatureName(QString const & featureName) {
             break;
         }
     }
-    
+
     if (featureColumnIndex == -1) {
         return -1;
     }
-    
+
     // Search for the row with this feature name
     for (int row = 0; row < ui->available_features_table->rowCount(); ++row) {
         QTableWidgetItem * item = ui->available_features_table->item(row, featureColumnIndex);
@@ -253,25 +266,25 @@ int Feature_Table_Widget::_findRowByFeatureName(QString const & featureName) {
             return row;
         }
     }
-    
+
     return -1;
 }
 
 void Feature_Table_Widget::_updateAllRowAppearances() {
     // Only apply graying out if the Enabled column is present
     bool hasEnabledColumn = false;
-    for (int i = 0; i < _columns.size(); i++) {
-        if (_columns[i] == "Enabled") {
+    for (const auto & _column : _columns) {
+        if (_column == "Enabled") {
             hasEnabledColumn = true;
             break;
         }
     }
-    
+
     if (!hasEnabledColumn) {
         // No Enabled column - all rows should appear enabled
         return;
     }
-    
+
     // Find the Feature column index
     int featureColumnIndex = -1;
     for (int i = 0; i < _columns.size(); i++) {
@@ -280,11 +293,11 @@ void Feature_Table_Widget::_updateAllRowAppearances() {
             break;
         }
     }
-    
+
     if (featureColumnIndex == -1) {
         return;
     }
-    
+
     // Update appearance for all rows based on their enabled state
     for (int row = 0; row < ui->available_features_table->rowCount(); ++row) {
         QTableWidgetItem * featureItem = ui->available_features_table->item(row, featureColumnIndex);
@@ -416,10 +429,10 @@ void Feature_Table_Widget::populateTable() {
 
     // Adjust table height to show up to MAX_VISIBLE_ROWS rows (or fewer if less data)
     constexpr int MAX_VISIBLE_ROWS = 10;
-    int rowHeight = ui->available_features_table->verticalHeader()->defaultSectionSize();
-    int headerHeight = ui->available_features_table->horizontalHeader()->height();
-    int visibleRows = std::min(ui->available_features_table->rowCount(), MAX_VISIBLE_ROWS);
-    int totalHeight = (rowHeight * visibleRows) + headerHeight;
+    int const rowHeight = ui->available_features_table->verticalHeader()->defaultSectionSize();
+    int const headerHeight = ui->available_features_table->horizontalHeader()->height();
+    int const visibleRows = std::min(ui->available_features_table->rowCount(), MAX_VISIBLE_ROWS);
+    int const totalHeight = (rowHeight * visibleRows) + headerHeight;
     ui->available_features_table->setMinimumHeight(totalHeight);
     ui->available_features_table->setMaximumHeight(totalHeight);
 
@@ -492,10 +505,10 @@ void Feature_Table_Widget::resizeEvent(QResizeEvent * event) {
 
     // Calculate table height to determine if scrollbar will be visible
     constexpr int MAX_VISIBLE_ROWS = 10;
-    int rowHeight = ui->available_features_table->verticalHeader()->defaultSectionSize();
-    int headerHeight = ui->available_features_table->horizontalHeader()->height();
-    int visibleRows = std::min(ui->available_features_table->rowCount(), MAX_VISIBLE_ROWS);
-    int totalHeight = (rowHeight * visibleRows) + headerHeight;
+    int const rowHeight = ui->available_features_table->verticalHeader()->defaultSectionSize();
+    int const headerHeight = ui->available_features_table->horizontalHeader()->height();
+    int const visibleRows = std::min(ui->available_features_table->rowCount(), MAX_VISIBLE_ROWS);
+    int const totalHeight = (rowHeight * visibleRows) + headerHeight;
 
     // Set table height
     ui->available_features_table->setMinimumHeight(totalHeight);
@@ -544,7 +557,7 @@ void Feature_Table_Widget::_saveCurrentState() {
 
             if (featureItem && cellWidget) {
                 // Find the checkbox within the cell widget
-                QCheckBox * checkbox = cellWidget->findChild<QCheckBox *>();
+                auto * checkbox = cellWidget->findChild<QCheckBox *>();
                 if (checkbox && checkbox->isChecked()) {
                     _enabled_features.insert(featureItem->text().toStdString());
                 }
@@ -582,7 +595,7 @@ void Feature_Table_Widget::_restoreState() {
                 std::string const featureName = featureItem->text().toStdString();
 
                 // Find the checkbox within the cell widget
-                QCheckBox * checkbox = cellWidget->findChild<QCheckBox *>();
+                auto * checkbox = cellWidget->findChild<QCheckBox *>();
                 if (checkbox) {
                     // Restore checkbox state without triggering signals
                     bool const wasEnabled{_enabled_features.find(featureName) != _enabled_features.end()};

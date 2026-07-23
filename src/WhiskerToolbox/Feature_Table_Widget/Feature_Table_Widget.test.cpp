@@ -12,6 +12,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <QAbstractItemView>
 #include <QApplication>
 #include <QCheckBox>
 #include <QMetaObject>
@@ -49,7 +50,7 @@ protected:
         m_widget->setDataManager(m_data_manager);
 
         // Set up columns including the "Enabled" column
-        QStringList columns = {"Feature", "Type", "Clock", "Enabled"};
+        QStringList const columns = {"Feature", "Type", "Clock", "Enabled"};
         m_widget->setColumns(columns);
     }
 
@@ -71,7 +72,7 @@ private:
     void populateWithTestData() {
         // Create a default time frame
         auto timeframe = std::make_shared<TimeFrame>();
-        TimeKey time_key("time");
+        TimeKey const time_key("time");
         m_data_manager->setTime(time_key, timeframe);
 
         // Add some test PointData
@@ -94,8 +95,8 @@ private:
         m_data_manager->setData<LineData>("test_lines", line_data, time_key);
 
         // Add some test AnalogTimeSeries
-        std::vector<float> values = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        std::vector<int64_t> timestamps = {0, 1000, 2000, 3000, 4000};
+        std::vector<float> const values = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
+        std::vector<int64_t> const timestamps = {0, 1000, 2000, 3000, 4000};
         auto analog_data = std::make_shared<AnalogTimeSeries>(values, values.size());
         m_data_manager->setData<AnalogTimeSeries>("test_analog", analog_data, time_key);
 
@@ -130,6 +131,20 @@ TEST_CASE_METHOD(FeatureTableWidgetTestFixture, "Feature_Table_Widget - Basic Fu
         REQUIRE(table->rowCount() > 0);
         REQUIRE(table->columnCount() == 4);// Feature, Type, Clock, Enabled
     }
+
+    SECTION("Table cells are not editable") {
+        widget.populateTable();
+
+        auto * table = widget.findChild<QTableWidget *>("available_features_table");
+        REQUIRE(table != nullptr);
+        REQUIRE(table->editTriggers() == QAbstractItemView::NoEditTriggers);
+
+        for (int col = 0; col < 3; ++col) {
+            QTableWidgetItem * item = table->item(0, col);
+            REQUIRE(item != nullptr);
+            REQUIRE((item->flags() & Qt::ItemIsEditable) == 0);
+        }
+    }
 }
 
 TEST_CASE_METHOD(FeatureTableWidgetTestFixture, "Feature_Table_Widget - State Preservation", "[Feature_Table_Widget]") {
@@ -147,7 +162,7 @@ TEST_CASE_METHOD(FeatureTableWidgetTestFixture, "Feature_Table_Widget - State Pr
         int enabledColumnIndex = -1;
         int featureColumnIndex = -1;
         for (int col = 0; col < table->columnCount(); ++col) {
-            QString header = table->horizontalHeaderItem(col)->text();
+            QString const header = table->horizontalHeaderItem(col)->text();
             if (header == "Enabled") {
                 enabledColumnIndex = col;
             } else if (header == "Feature") {
@@ -165,7 +180,7 @@ TEST_CASE_METHOD(FeatureTableWidgetTestFixture, "Feature_Table_Widget - State Pr
             QWidget * cellWidget = table->cellWidget(row, enabledColumnIndex);
             REQUIRE(cellWidget != nullptr);
 
-            QCheckBox * checkbox = cellWidget->findChild<QCheckBox *>();
+            auto * checkbox = cellWidget->findChild<QCheckBox *>();
             REQUIRE(checkbox != nullptr);
 
             // Enable this checkbox
@@ -183,7 +198,7 @@ TEST_CASE_METHOD(FeatureTableWidgetTestFixture, "Feature_Table_Widget - State Pr
         // Add a new feature to trigger table rebuild
         auto new_point_data = std::make_shared<PointData>();
         new_point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{500.0f, 600.0f}, NotifyObservers::No);
-        TimeKey time_key("time");
+        TimeKey const time_key("time");
         dm.setData<PointData>("test_points_new", new_point_data, time_key);
 
         // Process Qt events to ensure the table is rebuilt
@@ -194,16 +209,16 @@ TEST_CASE_METHOD(FeatureTableWidgetTestFixture, "Feature_Table_Widget - State Pr
             QTableWidgetItem * featureItem = table->item(row, featureColumnIndex);
             REQUIRE(featureItem != nullptr);
 
-            std::string featureName = featureItem->text().toStdString();
+            std::string const featureName = featureItem->text().toStdString();
 
             QWidget * cellWidget = table->cellWidget(row, enabledColumnIndex);
             REQUIRE(cellWidget != nullptr);
 
-            QCheckBox * checkbox = cellWidget->findChild<QCheckBox *>();
+            auto * checkbox = cellWidget->findChild<QCheckBox *>();
             REQUIRE(checkbox != nullptr);
 
             // Check if this feature should be enabled
-            bool shouldBeEnabled = std::find(enabledFeatures.begin(), enabledFeatures.end(), featureName) != enabledFeatures.end();
+            bool const shouldBeEnabled = std::find(enabledFeatures.begin(), enabledFeatures.end(), featureName) != enabledFeatures.end();
 
             REQUIRE(checkbox->isChecked() == shouldBeEnabled);
         }
@@ -213,7 +228,7 @@ TEST_CASE_METHOD(FeatureTableWidgetTestFixture, "Feature_Table_Widget - State Pr
         // Find the feature column index
         int featureColumnIndex = -1;
         for (int col = 0; col < table->columnCount(); ++col) {
-            QString header = table->horizontalHeaderItem(col)->text();
+            QString const header = table->horizontalHeaderItem(col)->text();
             if (header == "Feature") {
                 featureColumnIndex = col;
                 break;
@@ -241,11 +256,11 @@ TEST_CASE_METHOD(FeatureTableWidgetTestFixture, "Feature_Table_Widget - State Pr
         REQUIRE(initialHighlighted == selectedFeature);
 
         // Add a new feature to trigger table rebuild
-        std::vector<float> values = {10.0f, 20.0f, 30.0f};
-        std::vector<int64_t> timestamps = {5000, 6000, 7000};
+        std::vector<float> const values = {10.0f, 20.0f, 30.0f};
+        std::vector<int64_t> const timestamps = {5000, 6000, 7000};
         auto new_analog_data = std::make_shared<AnalogTimeSeries>(values, values.size());
 
-        TimeKey time_key("time");
+        TimeKey const time_key("time");
         dm.setData<AnalogTimeSeries>("test_analog_new", new_analog_data, time_key);
 
         // Process Qt events to ensure the table is rebuilt
@@ -318,9 +333,9 @@ TEST_CASE_METHOD(FeatureTableWidgetTestFixture, "Feature_Table_Widget - No emiss
     });
 
     // Trigger table rebuild by adding analog data
-    std::vector<float> values = {1.0f, 2.0f, 3.0f};
+    std::vector<float> const values = {1.0f, 2.0f, 3.0f};
     auto analog = std::make_shared<AnalogTimeSeries>(values, values.size());
-    TimeKey time_key("time");
+    TimeKey const time_key("time");
     dm.setData<AnalogTimeSeries>("probe_table_analog_1", analog, time_key);
     QApplication::processEvents();
 
@@ -356,8 +371,8 @@ TEST_CASE_METHOD(FeatureTableWidgetTestFixture, "Feature_Table_Widget - No emiss
 
     // Find a row with a checkbox and toggle it
     bool toggled = false;
-    int prevAdd = addFeatureCount;
-    int prevRemove = removeFeatureCount;
+    int const prevAdd = addFeatureCount;
+    int const prevRemove = removeFeatureCount;
 
     for (int row = 0; row < table->rowCount(); ++row) {
         QWidget * cell = table->cellWidget(row, enabledCol);
