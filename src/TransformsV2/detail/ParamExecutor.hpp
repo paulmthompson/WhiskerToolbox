@@ -8,7 +8,7 @@
 #include <typeindex>
 #include <variant>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 // ============================================================================
 // Type Triple for Parameter Executor Lookup
@@ -116,7 +116,7 @@ private:
     Params params_;
 };
 
-} // namespace WhiskerToolbox::Transforms::V2
+} // namespace Neuralyzer::Transforms::V2
 
 
 #endif // PARAM_EXECUTOR_HPP

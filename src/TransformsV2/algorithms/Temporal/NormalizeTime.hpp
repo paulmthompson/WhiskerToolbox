@@ -57,7 +57,7 @@
 #include <optional>
 #include <stdexcept>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 // ============================================================================
 // V1 Parameters (manual alignment time setting)
@@ -162,6 +162,6 @@ struct NormalizeTimeParamsV2 {
     return static_cast<float>(sample.time().getValue() - params.alignment_time);
 }
 
-}  // namespace WhiskerToolbox::Transforms::V2
+}  // namespace Neuralyzer::Transforms::V2
 
 #endif  // NEURALYZER_V2_NORMALIZE_TIME_HPP

@@ -7,10 +7,10 @@
 #include "core/ElementRegistry.hpp"
 #include "io/PipelineLoader.hpp"
 
-namespace WhiskerToolbox::Transforms::V2::Temporal {
+namespace Neuralyzer::Transforms::V2::Temporal {
 
 // Use the registration helper from Examples namespace
-using WhiskerToolbox::Transforms::V2::Examples::registerPipelineStepFactoryFor;
+using Neuralyzer::Transforms::V2::Examples::registerPipelineStepFactoryFor;
 
 // ============================================================================
 // Static Initialization
@@ -170,4 +170,4 @@ void registerTemporalTransforms() {
     (void)register_binding_applicator_v2;
 }
 
-}  // namespace WhiskerToolbox::Transforms::V2::Temporal
+}  // namespace Neuralyzer::Transforms::V2::Temporal

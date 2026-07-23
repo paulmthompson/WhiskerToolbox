@@ -30,7 +30,7 @@
 #include <iostream>
 #include <ranges>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 using Neuralyzer::TypeTraits::ElementForSafe_t;
 using Neuralyzer::TypeTraits::has_element_type_v;
@@ -1145,4 +1145,4 @@ std::vector<DataInfo> load_data_from_json_config_v2(
     return data_info_list;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2

@@ -3,7 +3,7 @@
 
 /**
  * @file PythonEngine.hpp
- * @brief Embedded Python interpreter for WhiskerToolbox.
+ * @brief Embedded Python interpreter for Neuralyzer.
  *
  * PythonEngine owns a `pybind11::scoped_interpreter`, provides persistent
  * namespace execution (REPL behaviour), stdout/stderr capture, and script

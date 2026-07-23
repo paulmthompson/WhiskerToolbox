@@ -6,7 +6,7 @@
  * @brief Serializable data structures for workspace save/restore
  *
  * WorkspaceData defines the "envelope" that ties together all the state
- * needed to reconstruct a WhiskerToolbox session:
+ * needed to reconstruct a Neuralyzer session:
  *  - What data was loaded (DataLoadEntry list)
  *  - Widget states (serialized via EditorRegistry)
  *  - Zone layout (serialized via ZoneConfig)

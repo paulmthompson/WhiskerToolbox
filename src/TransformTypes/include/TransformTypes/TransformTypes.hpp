@@ -9,7 +9,7 @@
 #include <variant>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 /**
  * @brief Describes the lineage relationship a transform creates
@@ -71,6 +71,6 @@ using BatchVariant = std::variant<
     std::vector<Mask2D>
 >;
 
-} // namespace WhiskerToolbox::Transforms::V2
+} // namespace Neuralyzer::Transforms::V2
 
 #endif // NEURALYZER_V2_TRANSFORM_TYPES_HPP

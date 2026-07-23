@@ -18,7 +18,7 @@
 #include <map>
 #include <string>
 
-using namespace WhiskerToolbox::Transforms::V2;
+using namespace Neuralyzer::Transforms::V2;
 using Catch::Matchers::WithinRel;
 
 // ============================================================================

@@ -19,7 +19,7 @@
  * // Build a ColumnProviderFn for an interval-row tensor column:
  * auto var = dm.getDataVariant(source_key);
  * return [var, intervals, pipe]() -> std::vector<float> {
- *     return WhiskerToolbox::Gather::gatherAndExecutePipeline(*var, intervals, pipe);
+ *     return Neuralyzer::Gather::gatherAndExecutePipeline(*var, intervals, pipe);
  * };
  * ```
  *
@@ -43,11 +43,11 @@
 
 class DigitalIntervalSeries;
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 class TransformPipeline;
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2
 
-namespace WhiskerToolbox::Gather {
+namespace Neuralyzer::Gather {
 
 /**
  * @brief Extract a single float from a DataTypeVariant pipeline output.
@@ -100,8 +100,8 @@ namespace WhiskerToolbox::Gather {
 [[nodiscard]] std::vector<float> gatherAndExecutePipeline(
         DataTypeVariant const & source,
         std::shared_ptr<DigitalIntervalSeries> intervals,
-        WhiskerToolbox::Transforms::V2::TransformPipeline const & pipeline);
+        Neuralyzer::Transforms::V2::TransformPipeline const & pipeline);
 
-}// namespace WhiskerToolbox::Gather
+}// namespace Neuralyzer::Gather
 
 #endif// GATHER_PIPELINE_EXECUTOR_HPP

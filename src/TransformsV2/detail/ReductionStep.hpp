@@ -53,7 +53,7 @@
 #include <string>
 #include <typeindex>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 /**
  * @brief Represents a reduction that computes a value for the store
@@ -176,6 +176,6 @@ struct ReductionStepDescriptor {
     std::optional<std::string> description;
 };
 
-}  // namespace WhiskerToolbox::Transforms::V2
+}  // namespace Neuralyzer::Transforms::V2
 
 #endif  // NEURALYZER_V2_REDUCTION_STEP_HPP

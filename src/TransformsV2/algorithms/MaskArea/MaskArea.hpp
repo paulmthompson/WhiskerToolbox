@@ -8,11 +8,11 @@
 
 class Mask2D;
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 struct ComputeContext;
 }
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 /**
  * @brief Parameters for mask area calculation
@@ -70,6 +70,6 @@ float calculateMaskAreaWithContext(
         MaskAreaParams const & params,
         ComputeContext const & ctx);
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 #endif// NEURALYZER_V2_MASK_AREA_TRANSFORM_HPP

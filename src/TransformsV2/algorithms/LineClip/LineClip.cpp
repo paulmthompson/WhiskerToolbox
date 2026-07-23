@@ -4,7 +4,7 @@
 #include "CoreGeometry/line_geometry.hpp"
 #include "core/ComputeContext.hpp"
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 // ============================================================================
 // Transform Implementation (Binary - takes two inputs)
@@ -36,4 +36,4 @@ Line2D clipLineAtReferenceWithContext(
     return clipLineAtReference(line, reference_line, params);
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

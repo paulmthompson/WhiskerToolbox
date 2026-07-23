@@ -15,8 +15,8 @@
 #include "fixtures/pipeline/pipeline_json_test_helpers.hpp"
 #include "fixtures/scenarios/digital/digital_interval_boolean_scenarios.hpp"
 
-using namespace WhiskerToolbox::Transforms::V2;
-using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace Neuralyzer::Transforms::V2;
+using namespace Neuralyzer::Transforms::V2::Examples;
 
 // ============================================================================
 // Tests: Algorithm Correctness using scenarios

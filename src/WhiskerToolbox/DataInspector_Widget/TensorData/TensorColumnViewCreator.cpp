@@ -41,8 +41,8 @@ auto createTensorColumnViews(
         return 0;
     }
 
-    using namespace WhiskerToolbox::Transforms::V2;
-    using namespace WhiskerToolbox::Transforms::V2::Examples;
+    using namespace Neuralyzer::Transforms::V2;
+    using namespace Neuralyzer::Transforms::V2::Examples;
 
     TensorToAnalogParams params;
     params.columns = columns;
@@ -153,8 +153,8 @@ auto populateTensorFromAnalogKeys(
         channels.push_back(std::move(analog));
     }
 
-    using namespace WhiskerToolbox::Transforms::V2;
-    using namespace WhiskerToolbox::Transforms::V2::Examples;
+    using namespace Neuralyzer::Transforms::V2;
+    using namespace Neuralyzer::Transforms::V2::Examples;
 
     AnalogToTensorParams params;
     params.channel_keys = analog_keys;

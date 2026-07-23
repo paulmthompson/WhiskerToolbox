@@ -16,8 +16,8 @@
 #include <memory>
 #include <vector>
 
-using namespace WhiskerToolbox::Transforms::V2;
-using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace Neuralyzer::Transforms::V2;
+using namespace Neuralyzer::Transforms::V2::Examples;
 
 TEST_CASE("TransformsV2: Analog Interval Peak - Maximum Within Intervals", "[transforms][v2][analog_interval_peak]") {
     auto & registry = ElementRegistry::instance();

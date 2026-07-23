@@ -5,7 +5,7 @@
 #include <string>
 #include <typeindex>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 /**
  * @brief Descriptor for a terminal range reduction in a pipeline
@@ -38,6 +38,6 @@ struct RangeReductionStep {
           params_type(typeid(Params)) {}
 };
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2
 
 #endif // NEURALYZER_V2_RANGE_REDUCTION_STEP_HPP

@@ -23,8 +23,8 @@
 #include <limits>
 #include <vector>
 
-using namespace WhiskerToolbox::Transforms::V2::RangeReductions;
-using namespace WhiskerToolbox::Transforms::V2;
+using namespace Neuralyzer::Transforms::V2::RangeReductions;
+using namespace Neuralyzer::Transforms::V2;
 
 // ============================================================================
 // Test Fixtures

@@ -31,7 +31,7 @@
  * @see RangeReductionRegistry.hpp for the registry infrastructure
  */
 
-namespace WhiskerToolbox::Transforms::V2::RangeReductions {
+namespace Neuralyzer::Transforms::V2::RangeReductions {
 
 /**
  * @brief Register all built-in range reductions
@@ -86,6 +86,6 @@ void registerValueRangeReductions();
  */
 void registerIntervalRangeReductions();
 
-}// namespace WhiskerToolbox::Transforms::V2::RangeReductions
+}// namespace Neuralyzer::Transforms::V2::RangeReductions
 
 #endif// NEURALYZER_V2_REGISTERED_RANGE_REDUCTIONS_HPP

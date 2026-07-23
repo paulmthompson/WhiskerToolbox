@@ -149,7 +149,7 @@ MainWindow::MainWindow(QWidget * parent)
             QStringLiteral("transformv2_pipeline_open"),
             [this]() -> QString {
                 return QString::fromStdString(
-                        WhiskerToolbox::Transforms::V2::Examples::defaultUserPipelineDirectory(
+                        Neuralyzer::Transforms::V2::Examples::defaultUserPipelineDirectory(
                                 std::filesystem::path{
                                         _state_manager->configDir().toStdString()})
                                 .string());
@@ -229,7 +229,7 @@ MainWindow::MainWindow(QWidget * parent)
     // Register all commands with the CommandRegistry (before any command usage)
     commands::register_core_commands();
     Neuralyzer::DataSynthesizer::register_datasynthesizer_commands();
-    WhiskerToolbox::Transforms::V2::register_transformsv2_commands();
+    Neuralyzer::Transforms::V2::register_transformsv2_commands();
     dl::register_deeplearning_commands();
 
     // Wire the openEditor callback so ContextActions can open/focus editors
@@ -1118,7 +1118,7 @@ void MainWindow::_saveWorkspace() {
             this,
             QStringLiteral("Save Workspace"),
             initial_dir,
-            QStringLiteral("WhiskerToolbox Workspace (*.wtb)"));
+            QStringLiteral("Neuralyzer Workspace (*.wtb)"));
 
     if (path.isEmpty()) {
         return;
@@ -1142,7 +1142,7 @@ void MainWindow::_openWorkspace() {
             this,
             QStringLiteral("Open Workspace"),
             initial_dir,
-            QStringLiteral("WhiskerToolbox Workspace (*.wtb)"));
+            QStringLiteral("Neuralyzer Workspace (*.wtb)"));
 
     if (path.isEmpty()) {
         return;
@@ -1230,7 +1230,7 @@ void MainWindow::_openWorkspace() {
 }
 
 void MainWindow::_updateTitleBar() {
-    QString title = QStringLiteral("WhiskerToolbox");
+    QString title = QStringLiteral("Neuralyzer");
 
     auto const ws_path = _state_manager->workspace()->currentWorkspacePath();
     if (!ws_path.isEmpty()) {

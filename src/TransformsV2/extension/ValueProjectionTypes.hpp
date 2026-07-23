@@ -85,7 +85,7 @@
 #include <ranges>
 #include <utility>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 class PipelineValueStore;
 
@@ -387,6 +387,6 @@ ValueProjectionFactoryV2<InElement, Value> recoverValueProjectionFactoryV2(
     };
 }
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2
 
 #endif// NEURALYZER_V2_VALUE_PROJECTION_TYPES_HPP

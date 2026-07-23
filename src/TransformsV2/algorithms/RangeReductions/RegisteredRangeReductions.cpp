@@ -9,7 +9,7 @@
 #include "DigitalTimeSeries/EventWithId.hpp"
 #include "DigitalTimeSeries/IntervalWithId.hpp"
 
-namespace WhiskerToolbox::Transforms::V2::RangeReductions {
+namespace Neuralyzer::Transforms::V2::RangeReductions {
 
 // ============================================================================
 // Initialization Function
@@ -390,4 +390,4 @@ namespace {
 
 }// anonymous namespace
 
-}// namespace WhiskerToolbox::Transforms::V2::RangeReductions
+}// namespace Neuralyzer::Transforms::V2::RangeReductions

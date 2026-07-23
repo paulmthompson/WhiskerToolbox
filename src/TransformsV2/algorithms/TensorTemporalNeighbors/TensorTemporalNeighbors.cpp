@@ -19,7 +19,7 @@
 #include <string>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 // ============================================================================
 // buildOffsets
@@ -246,13 +246,13 @@ auto tensorTemporalNeighbors(
                     out_col_names));
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 /**
  * @brief ParameterUIHints specialization for TensorTemporalNeighborParams
  */
 template<>
-struct ParameterUIHints<WhiskerToolbox::Transforms::V2::Examples::TensorTemporalNeighborParams> {
+struct ParameterUIHints<Neuralyzer::Transforms::V2::Examples::TensorTemporalNeighborParams> {
     static void annotate(ParameterSchema & schema) {
         if (auto * f = schema.field("lag_range")) {
             f->tooltip = "Maximum lag offset magnitude (past). 0 disables lags.";

@@ -8,11 +8,11 @@
 
 class Mask2D;
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 struct ComputeContext;
 }
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 /**
  * @brief Skeletonization algorithm selection
@@ -92,6 +92,6 @@ Mask2D skeletonizeMaskWithContext(
         MaskSkeletonizeParams const & params,
         ComputeContext const & ctx);
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 #endif// NEURALYZER_V2_MASK_SKELETONIZE_TRANSFORM_HPP

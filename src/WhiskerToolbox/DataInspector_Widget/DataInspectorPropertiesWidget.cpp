@@ -115,7 +115,7 @@ void DataInspectorPropertiesWidget::setPipelineLibraryConfigDir(QString const & 
         return;
     }
 
-    auto const dir_result = WhiskerToolbox::Transforms::V2::Examples::ensureUserPipelineDirectory(
+    auto const dir_result = Neuralyzer::Transforms::V2::Examples::ensureUserPipelineDirectory(
             config_dir.toStdString());
     if (dir_result) {
         _pipeline_library_dir = QString::fromStdString(dir_result.value().string());

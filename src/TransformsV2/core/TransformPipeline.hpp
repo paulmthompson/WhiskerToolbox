@@ -32,7 +32,7 @@
 #include <variant>
 #include <vector>// std::vector
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 using Neuralyzer::TypeTraits::ElementFor_t;
 
@@ -1219,6 +1219,6 @@ ValueProjectionFactoryV2<InElement, Value> bindValueProjectionV2(TransformPipeli
     };
 }
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2
 
 #endif// NEURALYZER_V2_TRANSFORM_PIPELINE_HPP

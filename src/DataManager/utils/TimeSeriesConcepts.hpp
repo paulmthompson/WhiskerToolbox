@@ -6,7 +6,7 @@
  * @brief C++20 concepts for unified time series element types
  * 
  * This header defines concepts that enable generic programming across all
- * time series data types in WhiskerToolbox. The concepts establish a common
+ * time series data types in Neuralyzer. The concepts establish a common
  * interface for element access while respecting the different characteristics
  * of each data type.
  * 

@@ -53,8 +53,8 @@
 
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-using namespace WhiskerToolbox::Transforms::V2;
-using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace Neuralyzer::Transforms::V2;
+using namespace Neuralyzer::Transforms::V2::Examples;
 using namespace Neuralyzer::TypeTraits;
 
 // ============================================================================
@@ -758,7 +758,7 @@ TEST_CASE("PipelineLibraryDialog lists and previews saved pipelines",
             QDir::temp().filePath(QStringLiteral("wt_tv2_library_%1").arg(
                     QDateTime::currentMSecsSinceEpoch()));
 
-    auto const dir_result = WhiskerToolbox::Transforms::V2::Examples::ensureUserPipelineDirectory(
+    auto const dir_result = Neuralyzer::Transforms::V2::Examples::ensureUserPipelineDirectory(
             config_dir.toStdString());
     REQUIRE(dir_result);
 
@@ -768,7 +768,7 @@ TEST_CASE("PipelineLibraryDialog lists and previews saved pipelines",
             .step_id = "area", .transform_name = "CalculateMaskArea"}};
 
     auto const library_path = dir_result.value() / "catalog_test.json";
-    REQUIRE(WhiskerToolbox::Transforms::V2::Examples::savePipelineDescriptorToFile(
+    REQUIRE(Neuralyzer::Transforms::V2::Examples::savePipelineDescriptorToFile(
             library_path, descriptor));
 
     PipelineLibraryDialog dialog(QString::fromStdString(dir_result.value().string()));

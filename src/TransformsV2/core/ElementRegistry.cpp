@@ -1,6 +1,6 @@
 #include "ElementRegistry.hpp"
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 // ========================================================================
 // Container Transform Registration and Execution
@@ -213,4 +213,4 @@ bool ElementRegistry::validateParameters(
     return it->second(params_any);
 }
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2

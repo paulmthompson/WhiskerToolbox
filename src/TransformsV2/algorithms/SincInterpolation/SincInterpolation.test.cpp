@@ -39,8 +39,8 @@
 #include <numbers>
 #include <vector>
 
-using namespace WhiskerToolbox::Transforms::V2;
-using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace Neuralyzer::Transforms::V2;
+using namespace Neuralyzer::Transforms::V2::Examples;
 using namespace pipeline_json_test;
 
 // ============================================================================
@@ -1090,7 +1090,7 @@ TEST_CASE("SincInterpolation with offset TimeFrame mirrors widget workflow",
 TEST_CASE("SincInterpolation output carries upsampled TimeFrameIndex values",
           "[transforms][v2][sinc][timeframeindex]") {
 
-    using namespace WhiskerToolbox::Transforms::V2::Examples;
+    using namespace Neuralyzer::Transforms::V2::Examples;
 
     int const factor = 4;
 

@@ -18,7 +18,7 @@ void ensure_whiskertoolbox_bindings_linked() {
 }
 
 PYBIND11_EMBEDDED_MODULE(whiskertoolbox_python, m) {
-    m.doc() = "WhiskerToolbox Python Bindings — data types for neural analysis";
+    m.doc() = "Neuralyzer Python Bindings — data types for neural analysis";
 
     // Foundation types (must be registered first)
     init_geometry(m);

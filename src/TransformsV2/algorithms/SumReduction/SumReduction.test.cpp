@@ -6,7 +6,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
-using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace Neuralyzer::Transforms::V2::Examples;
 
 // ============================================================================
 // Tests: SumReductionParams JSON Loading

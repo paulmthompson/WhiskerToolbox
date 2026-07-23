@@ -50,8 +50,8 @@
 #include <memory>
 #include <vector>
 
-using namespace WhiskerToolbox::Transforms::V2::RangeReductions;
-using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace Neuralyzer::Transforms::V2::RangeReductions;
+using namespace Neuralyzer::Transforms::V2::Examples;
 using namespace Neuralyzer::TensorBuilders;
 using Catch::Matchers::WithinAbs;
 
@@ -325,7 +325,7 @@ TEST_CASE("buildAnalogSampleAtOffsetProvider — zero offset same as passthrough
 
     auto provider_offset = buildAnalogSampleAtOffsetProvider(*dm, "analog", row_times, 0);
     auto provider_direct = buildPipelineColumnProvider(*dm, "analog", row_times,
-        WhiskerToolbox::Transforms::V2::TransformPipeline{});
+        Neuralyzer::Transforms::V2::TransformPipeline{});
 
     auto vals_offset = provider_offset();
     auto vals_direct = provider_direct();
@@ -388,7 +388,7 @@ TEST_CASE("Builder scenario — IntervalCount through buildIntervalPipelineProvi
     auto row_intervals = createIntervalSeries({{0, 50}, {60, 100}});
 
     // Pipeline with IntervalCount reduction
-    WhiskerToolbox::Transforms::V2::TransformPipeline pipeline;
+    Neuralyzer::Transforms::V2::TransformPipeline pipeline;
     pipeline.setRangeReductionErased("IntervalCount", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
@@ -411,7 +411,7 @@ TEST_CASE("Builder scenario — IntervalStartExtract through builder",
     // Row interval [50, 250) overlaps source [100, 200]
     auto row_intervals = createIntervalSeries({{50, 250}});
 
-    WhiskerToolbox::Transforms::V2::TransformPipeline pipeline;
+    Neuralyzer::Transforms::V2::TransformPipeline pipeline;
     pipeline.setRangeReductionErased("IntervalStartExtract", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
@@ -432,7 +432,7 @@ TEST_CASE("Builder scenario — IntervalEndExtract through builder",
 
     auto row_intervals = createIntervalSeries({{50, 250}});
 
-    WhiskerToolbox::Transforms::V2::TransformPipeline pipeline;
+    Neuralyzer::Transforms::V2::TransformPipeline pipeline;
     pipeline.setRangeReductionErased("IntervalEndExtract", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
@@ -457,7 +457,7 @@ TEST_CASE("Builder scenario — EventPresence through builder",
     // Row 2: [60, 100) has event at 75  → presence = 1
     auto row_intervals = createIntervalSeries({{0, 50}, {50, 60}, {60, 100}});
 
-    WhiskerToolbox::Transforms::V2::TransformPipeline pipeline;
+    Neuralyzer::Transforms::V2::TransformPipeline pipeline;
     pipeline.setRangeReductionErased("EventPresence", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
@@ -480,7 +480,7 @@ TEST_CASE("Builder scenario — IntervalSourceIndex through builder",
 
     auto row_intervals = createIntervalSeries({{50, 250}});
 
-    WhiskerToolbox::Transforms::V2::TransformPipeline pipeline;
+    Neuralyzer::Transforms::V2::TransformPipeline pipeline;
     pipeline.setRangeReductionErased("IntervalSourceIndex", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
@@ -505,7 +505,7 @@ TEST_CASE("Builder scenario — empty interval overlap produces default values",
 
     // IntervalCount on empty gather should be 0
     {
-        WhiskerToolbox::Transforms::V2::TransformPipeline pipeline;
+        Neuralyzer::Transforms::V2::TransformPipeline pipeline;
         pipeline.setRangeReductionErased("IntervalCount", std::any{});
         auto provider = buildIntervalPipelineProvider(
             *dm, "source_ivals", row_intervals, std::move(pipeline));
@@ -516,7 +516,7 @@ TEST_CASE("Builder scenario — empty interval overlap produces default values",
 
     // IntervalStartExtract on empty gather should be NaN
     {
-        WhiskerToolbox::Transforms::V2::TransformPipeline pipeline;
+        Neuralyzer::Transforms::V2::TransformPipeline pipeline;
         pipeline.setRangeReductionErased("IntervalStartExtract", std::any{});
         auto provider = buildIntervalPipelineProvider(
             *dm, "source_ivals", row_intervals, std::move(pipeline));
@@ -540,17 +540,17 @@ TEST_CASE("Builder scenario — multi-column tensor with new reductions",
     auto row_intervals = createIntervalSeries({{0, 30}, {40, 70}});
 
     // Column 1: MeanValue of analog
-    WhiskerToolbox::Transforms::V2::TransformPipeline p1;
+    Neuralyzer::Transforms::V2::TransformPipeline p1;
     p1.setRangeReductionErased("MeanValue", std::any{});
     auto prov1 = buildIntervalPipelineProvider(*dm, "analog", row_intervals, std::move(p1));
 
     // Column 2: EventCount
-    WhiskerToolbox::Transforms::V2::TransformPipeline p2;
+    Neuralyzer::Transforms::V2::TransformPipeline p2;
     p2.setRangeReductionErased("EventCount", std::any{});
     auto prov2 = buildIntervalPipelineProvider(*dm, "events", row_intervals, std::move(p2));
 
     // Column 3: EventPresence
-    WhiskerToolbox::Transforms::V2::TransformPipeline p3;
+    Neuralyzer::Transforms::V2::TransformPipeline p3;
     p3.setRangeReductionErased("EventPresence", std::any{});
     auto prov3 = buildIntervalPipelineProvider(*dm, "events", row_intervals, std::move(p3));
 
@@ -621,31 +621,31 @@ TEST_CASE("Builder scenario — offset columns as lazy tensor",
 // =============================================================================
 
 TEST_CASE("RangeReductionRegistry — IntervalCount is registered", "[Phase1.3][Registry]") {
-    auto & registry = WhiskerToolbox::Transforms::V2::RangeReductionRegistry::instance();
+    auto & registry = Neuralyzer::Transforms::V2::RangeReductionRegistry::instance();
     CHECK(registry.hasReduction("IntervalCount"));
 }
 
 TEST_CASE("RangeReductionRegistry — IntervalStartExtract is registered", "[Phase1.3][Registry]") {
-    auto & registry = WhiskerToolbox::Transforms::V2::RangeReductionRegistry::instance();
+    auto & registry = Neuralyzer::Transforms::V2::RangeReductionRegistry::instance();
     CHECK(registry.hasReduction("IntervalStartExtract"));
 }
 
 TEST_CASE("RangeReductionRegistry — IntervalEndExtract is registered", "[Phase1.3][Registry]") {
-    auto & registry = WhiskerToolbox::Transforms::V2::RangeReductionRegistry::instance();
+    auto & registry = Neuralyzer::Transforms::V2::RangeReductionRegistry::instance();
     CHECK(registry.hasReduction("IntervalEndExtract"));
 }
 
 TEST_CASE("RangeReductionRegistry — IntervalSourceIndex is registered", "[Phase1.3][Registry]") {
-    auto & registry = WhiskerToolbox::Transforms::V2::RangeReductionRegistry::instance();
+    auto & registry = Neuralyzer::Transforms::V2::RangeReductionRegistry::instance();
     CHECK(registry.hasReduction("IntervalSourceIndex"));
 }
 
 TEST_CASE("RangeReductionRegistry — EventPresence is registered", "[Phase1.3][Registry]") {
-    auto & registry = WhiskerToolbox::Transforms::V2::RangeReductionRegistry::instance();
+    auto & registry = Neuralyzer::Transforms::V2::RangeReductionRegistry::instance();
     CHECK(registry.hasReduction("EventPresence"));
 }
 
 TEST_CASE("ElementRegistry — CalculateLineLength is registered", "[Phase1.4][Registry]") {
-    auto & registry = WhiskerToolbox::Transforms::V2::ElementRegistry::instance();
+    auto & registry = Neuralyzer::Transforms::V2::ElementRegistry::instance();
     CHECK(registry.hasTransform("CalculateLineLength"));
 }

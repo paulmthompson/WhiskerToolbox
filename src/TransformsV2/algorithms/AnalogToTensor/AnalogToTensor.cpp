@@ -17,7 +17,7 @@
 #include <string>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 auto analogToTensor(
         std::vector<std::shared_ptr<AnalogTimeSeries const>> const & channels,
@@ -111,4 +111,4 @@ auto analogToTensor(
     return std::make_shared<TensorData>(std::move(tensor));
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

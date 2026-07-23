@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 // ============================================================================
 // LinePointExtractionParams::validate() Implementation
@@ -88,4 +88,4 @@ Point2D<float> extractLinePointWithContext(
     return result;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

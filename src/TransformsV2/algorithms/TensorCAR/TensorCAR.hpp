@@ -13,11 +13,11 @@
 #include <vector>
 
 class TensorData;
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 struct ComputeContext;
 }
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 /**
  * @brief Method used to compute the cross-channel reference signal
@@ -73,6 +73,6 @@ struct TensorCARParams {
         TensorCARParams const & params,
         ComputeContext const & ctx) -> std::shared_ptr<TensorData>;
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 #endif// NEURALYZER_V2_TENSOR_CAR_HPP

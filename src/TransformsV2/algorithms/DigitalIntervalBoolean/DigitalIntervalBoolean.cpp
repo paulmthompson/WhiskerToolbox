@@ -15,7 +15,7 @@
 
 namespace {
 
-using WhiskerToolbox::Transforms::V2::DigitalIntervalBooleanParams;
+using Neuralyzer::Transforms::V2::DigitalIntervalBooleanParams;
 
 /// Extract plain Interval values from a DigitalIntervalSeries view
 std::vector<Interval> extract_intervals(auto const & view_data) {
@@ -138,7 +138,7 @@ std::vector<Interval> sweep_line_boolean(
 
 }// anonymous namespace
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 std::shared_ptr<DigitalIntervalSeries> digitalIntervalBoolean(
         DigitalIntervalSeries const & input_series,
@@ -202,14 +202,14 @@ std::shared_ptr<DigitalIntervalSeries> digitalIntervalBoolean(
     return result;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2
 
 namespace rfl::internal::enums {
 
 template <>
-class StringConverter<WhiskerToolbox::Transforms::V2::DigitalIntervalBooleanParams::Operation> {
+class StringConverter<Neuralyzer::Transforms::V2::DigitalIntervalBooleanParams::Operation> {
 public:
-    using Operation = WhiskerToolbox::Transforms::V2::DigitalIntervalBooleanParams::Operation;
+    using Operation = Neuralyzer::Transforms::V2::DigitalIntervalBooleanParams::Operation;
 
     static std::string enum_to_string(Operation const op) {
         switch (op) {

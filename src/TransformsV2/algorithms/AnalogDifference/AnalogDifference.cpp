@@ -17,7 +17,7 @@
 #include <span>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 namespace {
 
@@ -202,13 +202,13 @@ auto analogDifference(
     return std::make_shared<AnalogTimeSeries>(std::move(output), std::move(out_times));
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 /**
  * @brief ParameterUIHints specialization for AnalogDifferenceParams
  */
 template<>
-struct ParameterUIHints<WhiskerToolbox::Transforms::V2::Examples::AnalogDifferenceParams> {
+struct ParameterUIHints<Neuralyzer::Transforms::V2::Examples::AnalogDifferenceParams> {
     static void annotate(ParameterSchema & schema) {
         if (auto * f = schema.field("method")) {
             f->tooltip = "Backward: x[i] - x[i-window]. "

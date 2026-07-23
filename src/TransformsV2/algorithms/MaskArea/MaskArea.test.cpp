@@ -20,8 +20,8 @@
 
 #include <iostream>
 
-using namespace WhiskerToolbox::Transforms::V2::Examples;
-using namespace WhiskerToolbox::Transforms::V2;
+using namespace Neuralyzer::Transforms::V2::Examples;
+using namespace Neuralyzer::Transforms::V2;
 using namespace Neuralyzer::TypeTraits;
 using namespace pipeline_json_test;
 
@@ -221,7 +221,7 @@ TEST_CASE("TransformsV2 - Large mask count via scenario",
 
 TEST_CASE("TransformsV2 - DataManager JSON load via scenario", 
           "[transforms][v2][datamanager]") {
-    using namespace WhiskerToolbox::Transforms::V2;
+    using namespace Neuralyzer::Transforms::V2;
     
     DataManager dm;
     auto time_frame = std::make_shared<TimeFrame>();
@@ -267,7 +267,7 @@ TEST_CASE("TransformsV2 - DataManager JSON load via scenario",
 
 TEST_CASE("TransformsV2 - DataManager empty mask JSON via scenario", 
           "[transforms][v2][datamanager]") {
-    using namespace WhiskerToolbox::Transforms::V2;
+    using namespace Neuralyzer::Transforms::V2;
     
     DataManager dm;
     auto time_frame = std::make_shared<TimeFrame>();
@@ -296,7 +296,7 @@ TEST_CASE("TransformsV2 - DataManager empty mask JSON via scenario",
 
 TEST_CASE("TransformsV2 - DataManager multi-mask JSON via scenario", 
           "[transforms][v2][datamanager]") {
-    using namespace WhiskerToolbox::Transforms::V2;
+    using namespace Neuralyzer::Transforms::V2;
     
     DataManager dm;
     auto time_frame = std::make_shared<TimeFrame>();
@@ -1020,7 +1020,7 @@ TEST_CASE("TransformsV2 - Convenience Functions", "[transforms][v2][convenience]
 // ============================================================================
 
 TEST_CASE("TransformsV2 - DataManager Integration - load_data_from_json_config_v2", "[transforms][v2][datamanager][json_config]") {
-    using namespace WhiskerToolbox::Transforms::V2;
+    using namespace Neuralyzer::Transforms::V2;
     
     // Create DataManager and populate it with MaskData in code
     DataManager dm;
@@ -1135,7 +1135,7 @@ TEST_CASE("TransformsV2 - DataManager Integration - load_data_from_json_config_v
 }
 
 TEST_CASE("TransformsV2 - DataManager Integration - Pipeline Executor Direct", "[transforms][v2][datamanager][executor]") {
-    using namespace WhiskerToolbox::Transforms::V2;
+    using namespace Neuralyzer::Transforms::V2;
     
     // Create DataManager
     DataManager dm;

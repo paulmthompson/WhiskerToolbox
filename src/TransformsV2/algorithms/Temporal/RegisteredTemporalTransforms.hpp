@@ -23,7 +23,7 @@
  * @see PipelineValueStore.hpp
  */
 
-namespace WhiskerToolbox::Transforms::V2::Temporal {
+namespace Neuralyzer::Transforms::V2::Temporal {
 
 /**
  * @brief Register all temporal transforms with ElementRegistry
@@ -37,6 +37,6 @@ namespace WhiskerToolbox::Transforms::V2::Temporal {
  */
 void registerTemporalTransforms();
 
-}// namespace WhiskerToolbox::Transforms::V2::Temporal
+}// namespace Neuralyzer::Transforms::V2::Temporal
 
 #endif// NEURALYZER_V2_REGISTERED_TEMPORAL_TRANSFORMS_HPP

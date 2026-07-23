@@ -3,7 +3,7 @@
 
 #include <format>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 std::optional<std::string> PipelineValueStore::getJson(std::string const & key) const {
     auto it = values_.find(key);
@@ -76,4 +76,4 @@ std::optional<std::string> PipelineValueStore::getString(std::string const & key
     return std::nullopt;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2

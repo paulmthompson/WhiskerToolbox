@@ -61,7 +61,7 @@ std::string buildSVGDocument(
     doc << R"(<svg width=")" << params.canvas_width << R"(" height=")" << params.canvas_height
         << R"(" viewBox="0 0 )" << params.canvas_width << ' ' << params.canvas_height
         << R"(" xmlns="http://www.w3.org/2000/svg" version="1.1">)" << '\n';
-    doc << R"(  <desc>WhiskerToolbox DataViewer Export</desc>)" << '\n';
+    doc << R"(  <desc>Neuralyzer DataViewer Export</desc>)" << '\n';
     doc << R"(  <rect width="100%" height="100%" fill=")" << params.background_color << R"("/>)" << '\n';
 
     std::vector<std::string> const elements = renderSceneToSVG(scene, params);

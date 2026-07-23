@@ -4,7 +4,7 @@
 #include "CoreGeometry/points.hpp"
 #include "core/ComputeContext.hpp"
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 Point2D<float> calculateMaskCentroid(
         Mask2D const & mask,
@@ -64,4 +64,4 @@ Point2D<float> calculateMaskCentroidWithContext(
     return Point2D<float>(sum_x / count, sum_y / count);
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

@@ -16,7 +16,7 @@
 #include <cmath>
 #include <limits>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 namespace {
 
@@ -169,4 +169,4 @@ std::shared_ptr<TensorData> buildDimReductionOutput(
     return nullptr;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2

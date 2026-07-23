@@ -13,7 +13,7 @@
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
-using namespace WhiskerToolbox::Transforms::V2;
+using namespace Neuralyzer::Transforms::V2;
 
 // Helper to create PointData
 std::shared_ptr<PointData> createPointDataForPipeline(std::vector<std::pair<int, std::vector<Point2D<float>>>> const& data) {

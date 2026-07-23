@@ -99,7 +99,7 @@
 // Concepts for View Creation
 // =============================================================================
 
-namespace WhiskerToolbox::Gather {
+namespace Neuralyzer::Gather {
 
 /**
  * @brief Concept for types that support zero-copy view creation
@@ -207,7 +207,7 @@ struct element_type_of<DigitalIntervalSeries> {
 template<typename T>
 using element_type_of_t = typename element_type_of<T>::type;
 
-}// namespace WhiskerToolbox::Gather
+}// namespace Neuralyzer::Gather
 
 // =============================================================================
 // GatherResult Template
@@ -230,7 +230,7 @@ public:
     using size_type = typename std::vector<value_type>::size_type;
 
     /// Element type yielded by view iteration (e.g., EventWithId for DigitalEventSeries)
-    using element_type = WhiskerToolbox::Gather::element_type_of_t<T>;
+    using element_type = Neuralyzer::Gather::element_type_of_t<T>;
 
     // ========== Constructors ==========
 
@@ -254,7 +254,7 @@ public:
      * @note Requires T to satisfy ViewableDataType concept
      */
     template<typename U = T>
-        requires WhiskerToolbox::Gather::ViewableDataType<U>
+        requires Neuralyzer::Gather::ViewableDataType<U>
     static GatherResult create(
             std::shared_ptr<U> source,
             std::shared_ptr<DigitalIntervalSeries> intervals) {
@@ -286,8 +286,8 @@ public:
      * @return GatherResult containing views for each interval
      */
     template<typename U = T>
-        requires WhiskerToolbox::Gather::ViewableDataTypeInt64<U> &&
-                 (!WhiskerToolbox::Gather::ViewableDataType<U>)
+        requires Neuralyzer::Gather::ViewableDataTypeInt64<U> &&
+                 (!Neuralyzer::Gather::ViewableDataType<U>)
     static GatherResult create(
             std::shared_ptr<U> source,
             std::shared_ptr<DigitalIntervalSeries> intervals) {
@@ -319,9 +319,9 @@ public:
      * @return GatherResult containing copies for each interval
      */
     template<typename U = T>
-        requires WhiskerToolbox::Gather::CopyableTimeRangeDataType<U> &&
-                 (!WhiskerToolbox::Gather::ViewableDataType<U>) &&
-                 (!WhiskerToolbox::Gather::ViewableDataTypeInt64<U>)
+        requires Neuralyzer::Gather::CopyableTimeRangeDataType<U> &&
+                 (!Neuralyzer::Gather::ViewableDataType<U>) &&
+                 (!Neuralyzer::Gather::ViewableDataTypeInt64<U>)
     static GatherResult create(
             std::shared_ptr<U> source,
             std::shared_ptr<DigitalIntervalSeries> intervals) {
@@ -377,8 +377,8 @@ public:
      * @endcode
      */
     template<typename U = T, typename IntervalSourceT>
-        requires WhiskerToolbox::Gather::ViewableDataType<U> &&
-                 WhiskerToolbox::Gather::IntervalSource<IntervalSourceT>
+        requires Neuralyzer::Gather::ViewableDataType<U> &&
+                 Neuralyzer::Gather::IntervalSource<IntervalSourceT>
     static GatherResult create(
             std::shared_ptr<U> source,
             IntervalSourceT const & interval_source) {
@@ -391,7 +391,7 @@ public:
         // Resolve TimeFrames for absolute-time conversion
         auto source_tf = source ? source->getTimeFrame() : nullptr;
         std::shared_ptr<TimeFrame> adapter_tf = nullptr;
-        if constexpr (WhiskerToolbox::Gather::HasTimeFrameAccess<IntervalSourceT>) {
+        if constexpr (Neuralyzer::Gather::HasTimeFrameAccess<IntervalSourceT>) {
             adapter_tf = interval_source.getTimeFrame();
         }
 
@@ -453,9 +453,9 @@ public:
      * @brief Create GatherResult from source and IntervalSource (int64_t version)
      */
     template<typename U = T, typename IntervalSourceT>
-        requires WhiskerToolbox::Gather::ViewableDataTypeInt64<U> &&
-                 (!WhiskerToolbox::Gather::ViewableDataType<U>) &&
-                 WhiskerToolbox::Gather::IntervalSource<IntervalSourceT>
+        requires Neuralyzer::Gather::ViewableDataTypeInt64<U> &&
+                 (!Neuralyzer::Gather::ViewableDataType<U>) &&
+                 Neuralyzer::Gather::IntervalSource<IntervalSourceT>
     static GatherResult create(
             std::shared_ptr<U> source,
             IntervalSourceT const & interval_source) {
@@ -468,7 +468,7 @@ public:
         // Resolve TimeFrames for absolute-time conversion
         auto source_tf = source ? source->getTimeFrame() : nullptr;
         std::shared_ptr<TimeFrame> adapter_tf = nullptr;
-        if constexpr (WhiskerToolbox::Gather::HasTimeFrameAccess<IntervalSourceT>) {
+        if constexpr (Neuralyzer::Gather::HasTimeFrameAccess<IntervalSourceT>) {
             adapter_tf = interval_source.getTimeFrame();
         }
 
@@ -525,10 +525,10 @@ public:
      * @brief Create GatherResult from source and IntervalSource (copy version)
      */
     template<typename U = T, typename IntervalSourceT>
-        requires WhiskerToolbox::Gather::CopyableTimeRangeDataType<U> &&
-                 (!WhiskerToolbox::Gather::ViewableDataType<U>) &&
-                 (!WhiskerToolbox::Gather::ViewableDataTypeInt64<U>) &&
-                 WhiskerToolbox::Gather::IntervalSource<IntervalSourceT>
+        requires Neuralyzer::Gather::CopyableTimeRangeDataType<U> &&
+                 (!Neuralyzer::Gather::ViewableDataType<U>) &&
+                 (!Neuralyzer::Gather::ViewableDataTypeInt64<U>) &&
+                 Neuralyzer::Gather::IntervalSource<IntervalSourceT>
     static GatherResult create(
             std::shared_ptr<U> source,
             IntervalSourceT const & interval_source) {
@@ -541,7 +541,7 @@ public:
         // Resolve TimeFrames for absolute-time conversion
         auto source_tf = source ? source->getTimeFrame() : nullptr;
         std::shared_ptr<TimeFrame> adapter_tf = nullptr;
-        if constexpr (WhiskerToolbox::Gather::HasTimeFrameAccess<IntervalSourceT>) {
+        if constexpr (Neuralyzer::Gather::HasTimeFrameAccess<IntervalSourceT>) {
             adapter_tf = interval_source.getTimeFrame();
         }
 
@@ -837,7 +837,7 @@ public:
      * @see PipelineValueStore for store documentation
      * @see project() for applying store-based projections to all trials
      */
-    [[nodiscard]] WhiskerToolbox::Transforms::V2::PipelineValueStore buildTrialStore(size_type trial_idx) const {
+    [[nodiscard]] Neuralyzer::Transforms::V2::PipelineValueStore buildTrialStore(size_type trial_idx) const {
         if (trial_idx >= size()) {
             throw std::out_of_range("GatherResult::buildTrialStore: index out of range");
         }
@@ -850,7 +850,7 @@ public:
                                          ? _alignment_times[orig_idx]
                                          : static_cast<int64_t>(interval.start);
 
-        WhiskerToolbox::Transforms::V2::PipelineValueStore store;
+        Neuralyzer::Transforms::V2::PipelineValueStore store;
         store.set("alignment_time", alignment_time);
         store.set("trial_index", static_cast<int64_t>(orig_idx));
         store.set("trial_duration", interval.end - interval.start);
@@ -892,8 +892,8 @@ public:
      */
     template<typename Value>
     [[nodiscard]] auto project(
-            WhiskerToolbox::Transforms::V2::ValueProjectionFactoryV2<element_type, Value> const & factory) const {
-        using ProjectionFn = WhiskerToolbox::Transforms::V2::ValueProjectionFn<element_type, Value>;
+            Neuralyzer::Transforms::V2::ValueProjectionFactoryV2<element_type, Value> const & factory) const {
+        using ProjectionFn = Neuralyzer::Transforms::V2::ValueProjectionFn<element_type, Value>;
         std::vector<ProjectionFn> projections;
         projections.reserve(size());
 
@@ -933,7 +933,7 @@ public:
      */
     template<typename Scalar>
     [[nodiscard]] std::vector<Scalar> reduce(
-            WhiskerToolbox::Gather::ReducerFactoryV2<element_type, Scalar> const & reducer_factory) const {
+            Neuralyzer::Gather::ReducerFactoryV2<element_type, Scalar> const & reducer_factory) const {
         std::vector<Scalar> results;
         results.reserve(size());
 
@@ -981,7 +981,7 @@ public:
      */
     template<typename Scalar>
     [[nodiscard]] std::vector<size_type> sortIndicesBy(
-            WhiskerToolbox::Gather::ReducerFactoryV2<element_type, Scalar> const & reducer_factory,
+            Neuralyzer::Gather::ReducerFactoryV2<element_type, Scalar> const & reducer_factory,
             bool ascending = true) const {
 
         auto values = reduce(reducer_factory);
@@ -1111,7 +1111,7 @@ private:
      * @return A function int64_t -> int64_t for time conversion
      */
     template<typename U, typename IntervalSourceT>
-        requires WhiskerToolbox::Gather::HasTimeFrame<U>
+        requires Neuralyzer::Gather::HasTimeFrame<U>
     static std::function<int64_t(int64_t)> getTimeConverter(
             std::shared_ptr<U> const & source,
             IntervalSourceT const & interval_source) {
@@ -1121,7 +1121,7 @@ private:
 
         // Check if adapter has TimeFrame access
         std::shared_ptr<TimeFrame> adapter_tf = nullptr;
-        if constexpr (WhiskerToolbox::Gather::HasTimeFrameAccess<IntervalSourceT>) {
+        if constexpr (Neuralyzer::Gather::HasTimeFrameAccess<IntervalSourceT>) {
             adapter_tf = interval_source.getTimeFrame();
         }
 
@@ -1146,7 +1146,7 @@ private:
      * @brief Fallback for sources without TimeFrame access - no conversion
      */
     template<typename U, typename IntervalSourceT>
-        requires(!WhiskerToolbox::Gather::HasTimeFrame<U>)
+        requires(!Neuralyzer::Gather::HasTimeFrame<U>)
     static std::function<int64_t(int64_t)> getTimeConverter(
             std::shared_ptr<U> const & /*source*/,
             IntervalSourceT const & /*interval_source*/) {
@@ -1227,7 +1227,7 @@ template<typename T>
  * @endcode
  */
 template<typename T, typename IntervalSourceT>
-    requires WhiskerToolbox::Gather::IntervalSource<IntervalSourceT>
+    requires Neuralyzer::Gather::IntervalSource<IntervalSourceT>
 [[nodiscard]] GatherResult<T> gather(
         std::shared_ptr<T> source,
         IntervalSourceT & interval_source) {

@@ -4,7 +4,7 @@
 #include "core/ComputeContext.hpp"
 #include "transforms/AnalogTimeSeries/AnalogHilbertPhase/analog_hilbert_phase.hpp"// V1 implementation
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 std::shared_ptr<AnalogTimeSeries> analogHilbertPhase(
         AnalogTimeSeries const & input,
@@ -44,4 +44,4 @@ std::shared_ptr<AnalogTimeSeries> analogHilbertPhase(
     return result;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

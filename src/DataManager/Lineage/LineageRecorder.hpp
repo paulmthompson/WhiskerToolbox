@@ -53,7 +53,7 @@ public:
             LineageRegistry & registry,
             std::string const & output_key,
             std::string const & input_key,
-            WhiskerToolbox::Transforms::V2::TransformLineageType lineage_type);
+            Neuralyzer::Transforms::V2::TransformLineageType lineage_type);
 
     /**
      * @brief Record lineage for multi-input transforms
@@ -69,7 +69,7 @@ public:
             LineageRegistry & registry,
             std::string const & output_key,
             std::vector<std::string> const & input_keys,
-            WhiskerToolbox::Transforms::V2::TransformLineageType lineage_type);
+            Neuralyzer::Transforms::V2::TransformLineageType lineage_type);
 
     /**
      * @brief Record source lineage (for original/loaded data)

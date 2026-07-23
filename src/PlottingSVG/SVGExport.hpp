@@ -71,7 +71,7 @@ struct ScalebarTimeRange {
  *      (enforcement: none) [IMPORTANT]
  *
  * @post Returns a document starting with `<?xml version="1.0" encoding="UTF-8" standalone="no"?>`, a
- *       root `<svg>` with `viewBox="0 0 width height"`, a constant `<desc>WhiskerToolbox DataViewer
+ *       root `<svg>` with `viewBox="0 0 width height"`, a constant `<desc>Neuralyzer DataViewer
  *       Export</desc>`, a full-viewport background `<rect>`, then each string from `renderSceneToSVG`
  *       on its own line with leading indentation, and a closing `</svg>`.
  * @post Does not throw under normal stream behavior.

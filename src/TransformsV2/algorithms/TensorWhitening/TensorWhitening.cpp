@@ -74,7 +74,7 @@
 #pragma pop_macro("CHECK")
 #endif
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 #ifdef TENSOR_BACKEND_LIBTORCH
 
@@ -373,12 +373,12 @@ auto tensorWhitening(
 #endif
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 
 
 template<>
-struct ParameterUIHints<WhiskerToolbox::Transforms::V2::Examples::TensorWhiteningParams> {
+struct ParameterUIHints<Neuralyzer::Transforms::V2::Examples::TensorWhiteningParams> {
     static void annotate(ParameterSchema & schema) {
         if (auto * f = schema.field("mad_threshold_multiplier")) {
             f->tooltip = "MAD multiplier used to reject noisy samples when estimating the "

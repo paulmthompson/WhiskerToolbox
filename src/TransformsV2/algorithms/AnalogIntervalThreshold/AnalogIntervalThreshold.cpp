@@ -9,7 +9,7 @@
 #include <cmath>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 std::shared_ptr<DigitalIntervalSeries> analogIntervalThreshold(
         AnalogTimeSeries const & input,
@@ -167,4 +167,4 @@ std::shared_ptr<DigitalIntervalSeries> analogIntervalThreshold(
     return std::make_shared<DigitalIntervalSeries>(intervals);
 }
 
-}  // namespace WhiskerToolbox::Transforms::V2
+}  // namespace Neuralyzer::Transforms::V2

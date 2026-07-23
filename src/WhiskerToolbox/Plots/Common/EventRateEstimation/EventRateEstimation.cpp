@@ -23,9 +23,9 @@ namespace Neuralyzer::Plots {
 
 namespace {
 
-using WhiskerToolbox::Gather::AlignmentPoint;
-using WhiskerToolbox::Gather::expandEvents;
-using WhiskerToolbox::Gather::withAlignment;
+using Neuralyzer::Gather::AlignmentPoint;
+using Neuralyzer::Gather::expandEvents;
+using Neuralyzer::Gather::withAlignment;
 
 [[nodiscard]] AlignmentPoint toAlignmentPointLocal(IntervalAlignmentType type) noexcept {
     return (type == IntervalAlignmentType::End)

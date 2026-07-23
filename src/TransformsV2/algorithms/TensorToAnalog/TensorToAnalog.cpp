@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 auto tensorToAnalog(
         TensorData const & input,
@@ -107,4 +107,4 @@ auto tensorToAnalog(
     return result;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

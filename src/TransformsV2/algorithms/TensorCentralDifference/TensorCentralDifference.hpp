@@ -16,11 +16,11 @@
 #include <memory>
 
 class TensorData;
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 struct ComputeContext;
 }
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 /**
  * @brief Policy for handling boundary rows where t-1 or t+1 is out-of-range
@@ -73,6 +73,6 @@ struct TensorCentralDifferenceParams {
         TensorCentralDifferenceParams const & params,
         ComputeContext const & ctx) -> std::shared_ptr<TensorData>;
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 #endif// NEURALYZER_V2_TENSOR_CENTRAL_DIFFERENCE_HPP

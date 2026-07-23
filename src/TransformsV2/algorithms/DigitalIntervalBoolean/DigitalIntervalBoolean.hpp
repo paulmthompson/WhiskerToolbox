@@ -5,11 +5,11 @@
 
 class DigitalIntervalSeries;
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 struct ComputeContext;
 }
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 /**
  * @brief Parameters for digital interval boolean operations
@@ -75,6 +75,6 @@ std::shared_ptr<DigitalIntervalSeries> digitalIntervalBoolean(
         DigitalIntervalBooleanParams const & params,
         ComputeContext const & ctx);
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2
 
 #endif// NEURALYZER_V2_DIGITAL_INTERVAL_BOOLEAN_HPP

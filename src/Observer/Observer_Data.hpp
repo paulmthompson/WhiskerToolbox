@@ -6,7 +6,7 @@
  * @brief Observer pattern implementation for data change notifications
  *
  * This file provides the core observer pattern infrastructure used throughout
- * WhiskerToolbox for propagating data changes to dependent components.
+ * Neuralyzer for propagating data changes to dependent components.
  *
  * @note This library is NOT thread-safe. All observer operations (add, remove,
  *       notify) must be performed from the same thread, or external

@@ -17,7 +17,7 @@
 #include <QTextEdit>
 #include <QUrl>
 
-using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace Neuralyzer::Transforms::V2::Examples;
 
 PipelineLibraryDialog::PipelineLibraryDialog(QString const & library_dir, QWidget * parent)
     : QDialog(parent),

@@ -1,9 +1,8 @@
 #include "DataManagerParameter_Widget.hpp"
 
-#include <QMetaObject>
-
-// Prefer the same include form used elsewhere in WhiskerToolbox UI code
 #include "DataManager.hpp"
+
+#include <QMetaObject>
 
 void DataManagerParameter_Widget::setDataManager(std::shared_ptr<DataManager> dm) {
     if (_data_manager == dm) {

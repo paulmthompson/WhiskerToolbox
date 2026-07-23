@@ -4,7 +4,7 @@
 #include <functional>
 #include <string>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 /**
  * @brief Context for transform execution
@@ -41,6 +41,6 @@ struct ComputeContext {
     }
 };
 
-} // namespace WhiskerToolbox::Transforms::V2
+} // namespace Neuralyzer::Transforms::V2
 
 #endif// NEURALYZER_V2_COMPUTE_CONTEXT_HPP

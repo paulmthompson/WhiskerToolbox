@@ -21,12 +21,12 @@
 
 namespace pipeline_json_test {
 
-using WhiskerToolbox::Transforms::V2::DataManagerPipelineDescriptor;
-using WhiskerToolbox::Transforms::V2::DataManagerPipelineExecutor;
-using WhiskerToolbox::Transforms::V2::DataManagerPipelineMetadata;
-using WhiskerToolbox::Transforms::V2::DataManagerStepDescriptor;
-using WhiskerToolbox::Transforms::V2::load_data_from_json_config_v2;
-using WhiskerToolbox::Transforms::V2::V2PipelineResult;
+using Neuralyzer::Transforms::V2::DataManagerPipelineDescriptor;
+using Neuralyzer::Transforms::V2::DataManagerPipelineExecutor;
+using Neuralyzer::Transforms::V2::DataManagerPipelineMetadata;
+using Neuralyzer::Transforms::V2::DataManagerStepDescriptor;
+using Neuralyzer::Transforms::V2::load_data_from_json_config_v2;
+using Neuralyzer::Transforms::V2::V2PipelineResult;
 
 /**
  * @brief Convert typed transform parameters to rfl::Generic via reflect-cpp JSON
@@ -36,7 +36,7 @@ using WhiskerToolbox::Transforms::V2::V2PipelineResult;
  */
 template<typename ParamsT>
 inline rfl::Generic parametersAsGeneric(ParamsT const & params) {
-    auto const json_str = WhiskerToolbox::Transforms::V2::Examples::saveParametersToJson(params);
+    auto const json_str = Neuralyzer::Transforms::V2::Examples::saveParametersToJson(params);
     auto const result = rfl::json::read<rfl::Generic>(json_str);
     return result.value();
 }

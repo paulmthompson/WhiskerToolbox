@@ -3,7 +3,7 @@
 
 #include <type_traits>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 // ============================================================================
 // Helper to Extract Element Data from Various Iterator Types
@@ -46,6 +46,6 @@ decltype(auto) extractElement(IterValue const & iter_value) {
     }
 }
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2
 
 #endif// NEURALYZER_V2_DETAIL_EXTRACT_ELEMENT_HPP

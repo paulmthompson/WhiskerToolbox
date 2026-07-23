@@ -9,7 +9,7 @@
 #include <cmath>
 #include <limits>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 // ============================================================================
 // LineCurvatureParams::validate() Implementation
@@ -62,4 +62,4 @@ float calculateLineCurvatureWithContext(
     return result;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

@@ -23,8 +23,8 @@
 #include <memory>
 #include <vector>
 
-using namespace WhiskerToolbox::Transforms::V2;
-using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace Neuralyzer::Transforms::V2;
+using namespace Neuralyzer::Transforms::V2::Examples;
 
 // ============================================================================
 // Helper to access TensorData element at (row, col) for 2D tensors
@@ -387,7 +387,7 @@ TEST_CASE("V2 IntervalReduction: Registry and metadata",
 TEST_CASE("V2 IntervalReduction: JSON Pipeline Execution",
           "[transforms][v2][binary_container][interval_reduction][pipeline]") {
 
-    using namespace WhiskerToolbox::Transforms::V2;
+    using namespace Neuralyzer::Transforms::V2;
 
     SECTION("AnalogIntervalReduction via DataManagerPipelineExecutor") {
         DataManager dm;
@@ -759,7 +759,7 @@ for (int i = 0; i < 200; ++i) {
 TEST_CASE("V2 IntervalReduction: Cross-TimeFrame JSON Pipeline",
           "[transforms][v2][binary_container][interval_reduction][cross_timeframe][pipeline]") {
 
-    using namespace WhiskerToolbox::Transforms::V2;
+    using namespace Neuralyzer::Transforms::V2;
 
     SECTION("AnalogIntervalReduction with different TimeFrames via pipeline executor") {
         DataManager dm;

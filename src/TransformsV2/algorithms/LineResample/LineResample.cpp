@@ -7,7 +7,7 @@
 
 #include <algorithm>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 // ============================================================================
 // LineResampleParams::validate() Implementation
@@ -86,4 +86,4 @@ Line2D resampleLineWithContext(
     return result;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

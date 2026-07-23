@@ -20,9 +20,9 @@ namespace Ui {
 class PipelineLibraryDialog;
 }
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 struct PipelineLibraryEntry;
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 /**
  * @brief Browse, load, save, import, export, and delete library pipeline JSON files
@@ -31,7 +31,7 @@ class PipelineLibraryDialog : public QDialog {
     Q_OBJECT
 
 public:
-    using DescriptorSupplier = std::function<WhiskerToolbox::Transforms::V2::Examples::PipelineDescriptor()>;
+    using DescriptorSupplier = std::function<Neuralyzer::Transforms::V2::Examples::PipelineDescriptor()>;
 
     /**
      * @brief Construct the library dialog
@@ -80,15 +80,15 @@ private slots:
 private:
     void _setupConnections();
     void _updateActionButtons();
-    [[nodiscard]] std::optional<WhiskerToolbox::Transforms::V2::Examples::PipelineLibraryEntry>
+    [[nodiscard]] std::optional<Neuralyzer::Transforms::V2::Examples::PipelineLibraryEntry>
     _selectedEntry() const;
     void _setPreviewForEntry(
-            WhiskerToolbox::Transforms::V2::Examples::PipelineLibraryEntry const & entry);
+            Neuralyzer::Transforms::V2::Examples::PipelineLibraryEntry const & entry);
     void _clearPreview();
 
     std::unique_ptr<Ui::PipelineLibraryDialog> ui;
     std::filesystem::path _library_dir;
-    std::vector<WhiskerToolbox::Transforms::V2::Examples::PipelineLibraryEntry> _entries;
+    std::vector<Neuralyzer::Transforms::V2::Examples::PipelineLibraryEntry> _entries;
     DescriptorSupplier _descriptor_supplier;
     std::optional<std::string> _loaded_pipeline_json;
 };

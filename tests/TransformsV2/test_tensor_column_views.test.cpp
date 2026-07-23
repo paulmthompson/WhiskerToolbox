@@ -29,8 +29,8 @@
 #include <string>
 #include <vector>
 
-using namespace WhiskerToolbox::Transforms::V2;
-using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace Neuralyzer::Transforms::V2;
+using namespace Neuralyzer::Transforms::V2::Examples;
 
 // ============================================================================
 // Helpers
@@ -158,12 +158,12 @@ auto populateTensorFromAnalogKeysInDM(
         channels.push_back(std::move(analog));
     }
 
-    using namespace WhiskerToolbox::Transforms::V2::Examples;
+    using namespace Neuralyzer::Transforms::V2::Examples;
 
     AnalogToTensorParams params;
     params.channel_keys = analog_keys;
 
-    WhiskerToolbox::Transforms::V2::ComputeContext const ctx;
+    Neuralyzer::Transforms::V2::ComputeContext const ctx;
     auto new_tensor = analogToTensor(channels, params, ctx);
     if (!new_tensor) {
         return false;

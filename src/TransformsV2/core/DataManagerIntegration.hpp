@@ -16,7 +16,7 @@
 
 class DataManager;
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 // ============================================================================
 // Pipeline Step Descriptor with DataManager Keys (V1-compatible format)
@@ -603,6 +603,6 @@ std::vector<DataInfo> load_data_from_json_config_v2(
         nlohmann::json const & j,
         std::string const & base_path);
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2
 
 #endif// NEURALYZER_V2_DATAMANAGER_INTEGRATION_HPP

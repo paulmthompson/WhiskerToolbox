@@ -15,7 +15,7 @@
 #include <algorithm>
 #include <format>
 
-using namespace WhiskerToolbox::Transforms::V2;
+using namespace Neuralyzer::Transforms::V2;
 
 // ============================================================================
 // Construction / Destruction
@@ -180,7 +180,7 @@ std::vector<std::string> PreReductionPanel::getAvailableReductions() const {
 // ============================================================================
 
 bool PreReductionPanel::loadFromDescriptors(
-        std::vector<WhiskerToolbox::Transforms::V2::Examples::PreReductionStepDescriptor> const & descriptors) {
+        std::vector<Neuralyzer::Transforms::V2::Examples::PreReductionStepDescriptor> const & descriptors) {
 
     _entries.clear();
     _list_widget->clear();

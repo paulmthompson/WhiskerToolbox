@@ -5,11 +5,11 @@ class Line2D;
 template<typename T>
 struct Point2D;
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 struct ComputeContext;
 }
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 /**
  * @brief Parameters for line-to-point distance calculation
@@ -81,6 +81,6 @@ float calculateLineMinPointDistanceWithContext(
         LineMinPointDistParams const & params,
         ComputeContext const & ctx);
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 #endif// NEURALYZER_V2_LINE_MIN_POINT_DIST_TRANSFORM_HPP

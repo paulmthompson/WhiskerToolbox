@@ -11,7 +11,7 @@
 #include <cmath>
 #include <string>
 
-using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace Neuralyzer::Transforms::V2::Examples;
 
 // ============================================================================
 // Fuzz Tests: MaskAreaParams

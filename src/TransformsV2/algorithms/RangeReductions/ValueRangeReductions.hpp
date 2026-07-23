@@ -37,7 +37,7 @@
 #include <limits>
 #include <span>
 
-namespace WhiskerToolbox::Transforms::V2::RangeReductions {
+namespace Neuralyzer::Transforms::V2::RangeReductions {
 
 // ============================================================================
 // Parameter Types
@@ -471,6 +471,6 @@ template<typename Element>
     return min_val;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::RangeReductions
+}// namespace Neuralyzer::Transforms::V2::RangeReductions
 
 #endif// NEURALYZER_V2_VALUE_RANGE_REDUCTIONS_HPP

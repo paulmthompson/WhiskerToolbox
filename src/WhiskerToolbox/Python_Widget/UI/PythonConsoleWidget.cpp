@@ -71,7 +71,7 @@ void PythonConsoleWidget::_setupUI() {
     _output_edit->setPalette(output_pal);
 
     // Show welcome message
-    _appendOutput(QStringLiteral("WhiskerToolbox Python Console\n"), _prompt_color);
+    _appendOutput(QStringLiteral("Neuralyzer Python Console\n"), _prompt_color);
     if (_bridge) {
         auto const & engine = _bridge->engine();
         _appendOutput(

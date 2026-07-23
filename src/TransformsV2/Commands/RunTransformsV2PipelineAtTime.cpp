@@ -66,7 +66,7 @@ CommandResult RunTransformsV2PipelineAtTime::execute(CommandContext const & ctx)
     }
 
     auto const pipeline_result =
-            WhiskerToolbox::Transforms::V2::Examples::loadPipelineFromFile(_params.pipeline_path);
+            Neuralyzer::Transforms::V2::Examples::loadPipelineFromFile(_params.pipeline_path);
     if (!pipeline_result) {
         return CommandResult::error(
                 std::string(kCommandName) + ": failed to load pipeline '" +
@@ -91,7 +91,7 @@ CommandResult RunTransformsV2PipelineAtTime::execute(CommandContext const & ctx)
 
     DataTypeVariant output;
     try {
-        output = WhiskerToolbox::Transforms::V2::executePipeline(
+        output = Neuralyzer::Transforms::V2::executePipeline(
                 subset.value(), pipeline);
     } catch (std::exception const & ex) {
         return CommandResult::error(

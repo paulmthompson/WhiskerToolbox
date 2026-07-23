@@ -3,7 +3,7 @@
 #include "CoreGeometry/line_geometry.hpp"
 #include "core/ComputeContext.hpp"
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 Line2D flipLineBase(
         Line2D const & line,
@@ -38,4 +38,4 @@ Line2D flipLineBaseWithContext(
     return result;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

@@ -35,7 +35,7 @@ namespace {
  * a span<string const> of step names.
  */
 std::vector<std::string> getStepNames(
-        WhiskerToolbox::Transforms::V2::TransformPipeline const & pipeline) {
+        Neuralyzer::Transforms::V2::TransformPipeline const & pipeline) {
     std::vector<std::string> names;
     names.reserve(pipeline.size());
     for (std::size_t i = 0; i < pipeline.size(); ++i) {
@@ -67,9 +67,9 @@ std::vector<std::string> getStepNames(
  */
 bool pipelineProducesFloat(
         std::type_index source_container_type,
-        WhiskerToolbox::Transforms::V2::TransformPipeline const & pipeline) {
+        Neuralyzer::Transforms::V2::TransformPipeline const & pipeline) {
     using Neuralyzer::TypeTraits::TypeIndexMapper;
-    using WhiskerToolbox::Transforms::V2::resolveTypeChain;
+    using Neuralyzer::Transforms::V2::resolveTypeChain;
 
     auto const step_names = getStepNames(pipeline);
 
@@ -235,7 +235,7 @@ ColumnProviderFn buildPipelineColumnProvider(
     DataManager & dm,
     std::string const & source_key,
     std::vector<TimeFrameIndex> const & row_times,
-    WhiskerToolbox::Transforms::V2::TransformPipeline pipeline)
+    Neuralyzer::Transforms::V2::TransformPipeline pipeline)
 {
     if (row_times.empty()) {
         throw std::runtime_error(
@@ -295,7 +295,7 @@ ColumnProviderFn buildPipelineColumnProvider(
         }
 
         DataTypeVariant output =
-            WhiskerToolbox::Transforms::V2::executePipeline(*var, pipe);
+            Neuralyzer::Transforms::V2::executePipeline(*var, pipe);
 
         return sampleOutputAtRowTimes(output, times);
     };
@@ -309,7 +309,7 @@ ColumnProviderFn buildIntervalPipelineProvider(
     DataManager & dm,
     std::string const & source_key,
     std::shared_ptr<DigitalIntervalSeries> intervals,
-    WhiskerToolbox::Transforms::V2::TransformPipeline pipeline)
+    Neuralyzer::Transforms::V2::TransformPipeline pipeline)
 {
     if (!intervals) {
         throw std::runtime_error(
@@ -351,7 +351,7 @@ ColumnProviderFn buildIntervalPipelineProvider(
                 "buildIntervalPipelineProvider: source '" + key +
                 "' no longer available");
         }
-        return WhiskerToolbox::Gather::gatherAndExecutePipeline(*var, ivals, pipe);
+        return Neuralyzer::Gather::gatherAndExecutePipeline(*var, ivals, pipe);
     };
 }
 
@@ -388,7 +388,7 @@ ColumnProviderFn buildProviderFromRecipe(
                 "with a range reduction (pipeline_json is empty)");
         }
 
-        auto pipeline_result = WhiskerToolbox::Transforms::V2::Examples::loadPipelineFromJson(recipe.pipeline_json);
+        auto pipeline_result = Neuralyzer::Transforms::V2::Examples::loadPipelineFromJson(recipe.pipeline_json);
         if (!pipeline_result) {
             throw std::runtime_error(
                 "buildProviderFromRecipe: failed to load pipeline from JSON: " +
@@ -406,9 +406,9 @@ ColumnProviderFn buildProviderFromRecipe(
     }
 
     // Load pipeline from JSON (empty JSON = empty pipeline = identity passthrough)
-    WhiskerToolbox::Transforms::V2::TransformPipeline pipeline;
+    Neuralyzer::Transforms::V2::TransformPipeline pipeline;
     if (!recipe.pipeline_json.empty()) {
-        auto pipeline_result = WhiskerToolbox::Transforms::V2::Examples::loadPipelineFromJson(recipe.pipeline_json);
+        auto pipeline_result = Neuralyzer::Transforms::V2::Examples::loadPipelineFromJson(recipe.pipeline_json);
         if (!pipeline_result) {
             throw std::runtime_error(
                 "buildProviderFromRecipe: failed to load pipeline from JSON: " +

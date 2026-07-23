@@ -17,7 +17,7 @@
 #include <typeindex>    // std::type_index
 #include <vector>       // std::vector
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 /**
  * @brief Per-step type resolution result
@@ -65,6 +65,6 @@ TypeChainResult resolveTypeChain(
         std::type_index input_container_type,
         std::span<std::string const> step_names);
 
-} // namespace WhiskerToolbox::Transforms::V2
+} // namespace Neuralyzer::Transforms::V2
 
 #endif // NEURALYZER_V2_TYPE_CHAIN_RESOLVER_HPP

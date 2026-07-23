@@ -28,8 +28,8 @@
 #include <memory>
 #include <vector>
 
-using namespace WhiskerToolbox::Gather;
-using namespace WhiskerToolbox::Transforms::V2;
+using namespace Neuralyzer::Gather;
+using namespace Neuralyzer::Transforms::V2;
 using Catch::Matchers::WithinAbs;
 
 // =============================================================================

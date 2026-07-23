@@ -48,7 +48,7 @@
 #include <typeindex>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 // ============================================================================
 // Range Reduction Concepts
@@ -185,6 +185,6 @@ struct is_stateless_range_reduction : std::bool_constant<StatelessRangeReduction
 template<typename F, typename Element, typename Scalar>
 inline constexpr bool is_stateless_range_reduction_v = is_stateless_range_reduction<F, Element, Scalar>::value;
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2
 
 #endif// NEURALYZER_V2_RANGE_REDUCTION_TYPES_HPP

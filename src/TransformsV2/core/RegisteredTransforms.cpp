@@ -45,7 +45,7 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Tensors/TensorData.hpp"
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 // ============================================================================
 // Pipeline Step Factory Registration
@@ -977,4 +977,4 @@ auto const container_transform_registration = []() {
 
 }// anonymous namespace
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

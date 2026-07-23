@@ -12,7 +12,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 /**
  * @brief Type trait to extract the time from a range element
@@ -323,4 +323,4 @@ auto makeZipView(TS1 const & ts1, TS2 const & ts2) {
     return FlatZipView(ts1.elements(), ts2.elements());
 }
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2

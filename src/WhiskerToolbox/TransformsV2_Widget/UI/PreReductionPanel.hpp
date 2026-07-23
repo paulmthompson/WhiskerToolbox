@@ -21,9 +21,9 @@ class QListWidget;
 class QPushButton;
 class QVBoxLayout;
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 struct PreReductionStepDescriptor;
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 /**
  * @brief Represents a single pre-reduction step in the UI
@@ -84,7 +84,7 @@ public:
      * @return true if all entries were loaded successfully
      */
     bool loadFromDescriptors(
-            std::vector<WhiskerToolbox::Transforms::V2::Examples::PreReductionStepDescriptor> const & descriptors);
+            std::vector<Neuralyzer::Transforms::V2::Examples::PreReductionStepDescriptor> const & descriptors);
 
 signals:
     /**

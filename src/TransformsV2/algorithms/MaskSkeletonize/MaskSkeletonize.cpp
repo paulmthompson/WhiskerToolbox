@@ -17,7 +17,7 @@
 #include <utility>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 namespace {
 
@@ -177,4 +177,4 @@ Mask2D skeletonizeMaskWithContext(
     return result;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

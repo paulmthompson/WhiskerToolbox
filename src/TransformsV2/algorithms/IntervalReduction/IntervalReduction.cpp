@@ -18,7 +18,7 @@
 #include <utility>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 namespace {
 
@@ -205,9 +205,9 @@ std::shared_ptr<TensorData> analogIntervalReduction(
     ctx.reportProgress(15);
 
     // Build reducer factory
-    Gather::ReducerFactoryV2<TimeValuePoint, float> const factory =
+    Neuralyzer::Gather::ReducerFactoryV2<TimeValuePoint, float> const factory =
             [&reduction_name, &reduction_params](
-                    PipelineValueStore const &) -> WhiskerToolbox::Gather::ReducerFn<TimeValuePoint, float> {
+                    PipelineValueStore const &) -> Neuralyzer::Gather::ReducerFn<TimeValuePoint, float> {
         return [&reduction_name, &reduction_params](
                        std::span<TimeValuePoint const> input) -> float {
             auto & reg = RangeReductionRegistry::instance();
@@ -272,7 +272,7 @@ std::shared_ptr<TensorData> eventIntervalReduction(
     std::string const reduction_name = params.reduction_name;
     std::any reduction_params = ensureReductionParams(params.reduction_params_json);
 
-    using EventElement = WhiskerToolbox::Gather::element_type_of_t<DigitalEventSeries>;
+    using EventElement = Neuralyzer::Gather::element_type_of_t<DigitalEventSeries>;
 
     // Create GatherResult with cross-TimeFrame conversion if needed
     auto events_ptr = borrowAsShared(events);
@@ -282,9 +282,9 @@ std::shared_ptr<TensorData> eventIntervalReduction(
     ctx.reportProgress(15);
 
     // Build reducer factory
-    Gather::ReducerFactoryV2<EventElement, float> const factory =
+    Neuralyzer::Gather::ReducerFactoryV2<EventElement, float> const factory =
             [&reduction_name, &reduction_params](
-                    PipelineValueStore const &) -> WhiskerToolbox::Gather::ReducerFn<EventElement, float> {
+                    PipelineValueStore const &) -> Neuralyzer::Gather::ReducerFn<EventElement, float> {
         return [&reduction_name, &reduction_params](
                        std::span<EventElement const> input) -> float {
             auto & reg = RangeReductionRegistry::instance();
@@ -349,7 +349,7 @@ std::shared_ptr<TensorData> intervalOverlapReduction(
     std::string const reduction_name = params.reduction_name;
     std::any reduction_params = ensureReductionParams(params.reduction_params_json);
 
-    using IntervalElement = WhiskerToolbox::Gather::element_type_of_t<DigitalIntervalSeries>;
+    using IntervalElement = Neuralyzer::Gather::element_type_of_t<DigitalIntervalSeries>;
 
     // Create GatherResult with cross-TimeFrame conversion if needed
     auto source_ptr = borrowAsShared(source);
@@ -359,9 +359,9 @@ std::shared_ptr<TensorData> intervalOverlapReduction(
     ctx.reportProgress(15);
 
     // Build reducer factory
-    Gather::ReducerFactoryV2<IntervalElement, float> const factory =
+    Neuralyzer::Gather::ReducerFactoryV2<IntervalElement, float> const factory =
             [&reduction_name, &reduction_params](
-                    PipelineValueStore const &) -> WhiskerToolbox::Gather::ReducerFn<IntervalElement, float> {
+                    PipelineValueStore const &) -> Neuralyzer::Gather::ReducerFn<IntervalElement, float> {
         return [&reduction_name, &reduction_params](
                        std::span<IntervalElement const> input) -> float {
             auto & reg = RangeReductionRegistry::instance();
@@ -394,4 +394,4 @@ std::shared_ptr<TensorData> intervalOverlapReduction(
     return result;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2

@@ -6,7 +6,7 @@
  * @brief Main container widget for data import functionality
  * 
  * DataImport_Widget serves as the primary interface for importing data into
- * WhiskerToolbox. It implements the "Passive Awareness" pattern via DataFocusAware,
+ * Neuralyzer. It implements the "Passive Awareness" pattern via DataFocusAware,
  * automatically switching to the appropriate loader widget when data focus changes.
  * 
  * ## Architecture

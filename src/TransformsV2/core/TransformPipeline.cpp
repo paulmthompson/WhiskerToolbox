@@ -7,7 +7,7 @@
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 using Neuralyzer::TypeTraits::ElementFor_t;
 
@@ -266,4 +266,4 @@ template DataTypeVariant TransformPipeline::execute<MaskData>(MaskData const &) 
 template DataTypeVariant TransformPipeline::execute<LineData>(LineData const &) const;
 template DataTypeVariant TransformPipeline::execute<PointData>(PointData const &) const;
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2

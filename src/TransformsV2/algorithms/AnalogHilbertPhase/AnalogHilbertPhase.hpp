@@ -8,11 +8,11 @@
 #include <memory>
 
 class AnalogTimeSeries;
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 struct ComputeContext;
 }
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 /**
  * @brief Parameters for Hilbert phase/amplitude extraction
@@ -101,6 +101,6 @@ std::shared_ptr<AnalogTimeSeries> analogHilbertPhase(
         AnalogHilbertPhaseParams const & params,
         ComputeContext const & ctx);
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 #endif// NEURALYZER_V2_ANALOG_HILBERT_PHASE_HPP

@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 auto tensorICA(
         TensorData const & input,
@@ -131,4 +131,4 @@ auto tensorICA(
     return output;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

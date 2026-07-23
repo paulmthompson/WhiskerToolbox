@@ -21,7 +21,7 @@
 #include <variant>
 #include <vector>
 
-namespace WhiskerToolbox::Gather {
+namespace Neuralyzer::Gather {
 
 namespace {
 
@@ -133,13 +133,13 @@ float castReductionResult(std::any const & result) {
  */
 float applyRangeReductionToOutput(
         DataTypeVariant const & output,
-        WhiskerToolbox::Transforms::V2::TransformPipeline const & pipeline) {
+        Neuralyzer::Transforms::V2::TransformPipeline const & pipeline) {
     if (!pipeline.hasRangeReduction()) {
         return extractSingleFloat(output);
     }
 
     auto const & reduction = pipeline.getRangeReduction().value();
-    auto & registry = WhiskerToolbox::Transforms::V2::RangeReductionRegistry::instance();
+    auto & registry = Neuralyzer::Transforms::V2::RangeReductionRegistry::instance();
 
     return std::visit([&](auto const & ptr) -> float {
         using T = std::remove_reference_t<decltype(*ptr)>;
@@ -153,7 +153,7 @@ float applyRangeReductionToOutput(
 
             std::any params_to_use = reduction.params.has_value()
                 ? reduction.params
-                : std::any{WhiskerToolbox::Transforms::V2::NoReductionParams{}};
+                : std::any{Neuralyzer::Transforms::V2::NoReductionParams{}};
 
             std::any result = registry.executeErased(
                     reduction.reduction_name,
@@ -180,7 +180,7 @@ float applyRangeReductionToOutput(
 
             std::any params_to_use = reduction.params.has_value()
                 ? reduction.params
-                : std::any{WhiskerToolbox::Transforms::V2::NoReductionParams{}};
+                : std::any{Neuralyzer::Transforms::V2::NoReductionParams{}};
 
             std::any result = registry.executeErased(
                     reduction.reduction_name,
@@ -200,7 +200,7 @@ float applyRangeReductionToOutput(
 
             std::any params_to_use = reduction.params.has_value()
                 ? reduction.params
-                : std::any{WhiskerToolbox::Transforms::V2::NoReductionParams{}};
+                : std::any{Neuralyzer::Transforms::V2::NoReductionParams{}};
 
             std::any result = registry.executeErased(
                     reduction.reduction_name,
@@ -220,7 +220,7 @@ float applyRangeReductionToOutput(
 
             std::any params_to_use = reduction.params.has_value()
                 ? reduction.params
-                : std::any{WhiskerToolbox::Transforms::V2::NoReductionParams{}};
+                : std::any{Neuralyzer::Transforms::V2::NoReductionParams{}};
 
             std::any result = registry.executeErased(
                     reduction.reduction_name,
@@ -246,8 +246,8 @@ float applyRangeReductionToOutput(
 std::vector<float> gatherAndExecutePipeline(
         DataTypeVariant const & source,
         std::shared_ptr<DigitalIntervalSeries> intervals,
-        WhiskerToolbox::Transforms::V2::TransformPipeline const & pipeline) {
-    using WhiskerToolbox::Transforms::V2::executePipeline;
+        Neuralyzer::Transforms::V2::TransformPipeline const & pipeline) {
+    using Neuralyzer::Transforms::V2::executePipeline;
 
     return std::visit([&](auto const & ptr) -> std::vector<float> {
         using T = std::remove_reference_t<decltype(*ptr)>;
@@ -304,4 +304,4 @@ std::vector<float> gatherAndExecutePipeline(
                       source);
 }
 
-}// namespace WhiskerToolbox::Gather
+}// namespace Neuralyzer::Gather

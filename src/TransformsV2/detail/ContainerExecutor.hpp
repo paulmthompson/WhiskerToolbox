@@ -9,7 +9,7 @@
 #include <memory>
 #include <string>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 // ============================================================================
 // Container Executor Interface
@@ -117,6 +117,6 @@ private:
     Params params_;
 };
 
-} // namespace WhiskerToolbox::Transforms::V2
+} // namespace Neuralyzer::Transforms::V2
 
 #endif // CONTAINER_EXECUTOR_HPP

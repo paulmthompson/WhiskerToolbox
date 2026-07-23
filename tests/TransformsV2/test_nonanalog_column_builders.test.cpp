@@ -51,9 +51,9 @@
 #include <vector>
 
 using namespace Neuralyzer::TensorBuilders;
-using WhiskerToolbox::Transforms::V2::TransformPipeline;
-using WhiskerToolbox::Transforms::V2::Examples::MaskAreaParams;
-using WhiskerToolbox::Transforms::V2::Examples::LineLengthParams;
+using Neuralyzer::Transforms::V2::TransformPipeline;
+using Neuralyzer::Transforms::V2::Examples::MaskAreaParams;
+using Neuralyzer::Transforms::V2::Examples::LineLengthParams;
 using Catch::Matchers::WithinAbs;
 
 // =============================================================================

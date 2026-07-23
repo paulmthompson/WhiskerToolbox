@@ -33,7 +33,7 @@
 #include <iterator>
 #include <memory>
 
-namespace WhiskerToolbox::Gather {
+namespace Neuralyzer::Gather {
 
 // =============================================================================
 // Interval Element Types
@@ -492,6 +492,6 @@ inline IntervalWithAlignmentAdapter withAlignment(
             std::move(intervals), align, pre_window, post_window);
 }
 
-}// namespace WhiskerToolbox::Gather
+}// namespace Neuralyzer::Gather
 
 #endif// NEURALYZER_INTERVAL_ADAPTERS_HPP

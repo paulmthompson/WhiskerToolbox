@@ -24,7 +24,7 @@
 #include <span>
 #include <vector>
 
-using namespace WhiskerToolbox::Transforms::V2;
+using namespace Neuralyzer::Transforms::V2;
 
 // ============================================================================
 // Test Element Types

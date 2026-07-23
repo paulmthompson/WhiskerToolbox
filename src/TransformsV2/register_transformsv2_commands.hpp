@@ -6,7 +6,7 @@
 #ifndef REGISTER_TRANSFORMSV2_COMMANDS_HPP
 #define REGISTER_TRANSFORMSV2_COMMANDS_HPP
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 /// @brief Register TransformsV2 commands with the CommandRegistry singleton.
 ///
@@ -14,6 +14,6 @@ namespace WhiskerToolbox::Transforms::V2 {
 /// Safe to call multiple times (subsequent calls are no-ops once commands exist).
 void register_transformsv2_commands();
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2
 
 #endif// REGISTER_TRANSFORMSV2_COMMANDS_HPP

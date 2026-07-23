@@ -9,7 +9,7 @@
 #include <cmath>
 #include <limits>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 void LineAngleParams::validate() {
     position = std::clamp(position, 0.0f, 1.0f);
@@ -58,4 +58,4 @@ float calculateLineAngleWithContext(
     return result;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

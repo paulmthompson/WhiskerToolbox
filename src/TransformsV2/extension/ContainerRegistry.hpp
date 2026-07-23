@@ -5,7 +5,7 @@
 #include <typeindex>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 /**
  * @brief Metadata specific to container-level transforms
@@ -43,7 +43,7 @@ struct ContainerTransformMetadata {
 };
 
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2
 
 
 #endif// NEURALYZER_V2_CONTAINER_REGISTRY_HPP

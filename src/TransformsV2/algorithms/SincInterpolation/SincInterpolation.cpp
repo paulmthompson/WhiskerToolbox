@@ -12,7 +12,7 @@
 #include <numbers>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 namespace {
 
@@ -224,4 +224,4 @@ std::shared_ptr<AnalogTimeSeries> sincInterpolation(
     return std::make_shared<AnalogTimeSeries>(std::move(output), std::move(out_times));
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

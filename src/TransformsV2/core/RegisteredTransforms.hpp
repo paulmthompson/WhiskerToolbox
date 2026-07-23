@@ -29,11 +29,11 @@
  * See PipelineValueStore.hpp and ParameterBinding.hpp for the V2 mechanisms.
  */
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 // V2 transforms use pre-reductions and parameter bindings instead of preprocessing.
 // Include PipelineLoader.hpp for pipeline construction and execution.
 
-} // namespace WhiskerToolbox::Transforms::V2
+} // namespace Neuralyzer::Transforms::V2
 
 #endif// NEURALYZER_V2_REGISTERED_TRANSFORMS_HPP

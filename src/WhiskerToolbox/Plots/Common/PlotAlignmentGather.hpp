@@ -48,9 +48,9 @@
 
 namespace Neuralyzer::Plots {
 
-using WhiskerToolbox::Gather::AlignmentPoint;
-using WhiskerToolbox::Gather::expandEvents;
-using WhiskerToolbox::Gather::withAlignment;
+using Neuralyzer::Gather::AlignmentPoint;
+using Neuralyzer::Gather::expandEvents;
+using Neuralyzer::Gather::withAlignment;
 
 // =============================================================================
 // Type Conversion Helpers

@@ -11,7 +11,7 @@
 #include <map>       // std::map
 #include <string>    // std::string
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 
 // ============================================================================
@@ -169,6 +169,6 @@ public:
     }
 };
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2
 
 #endif// PIPELINE_STEP_HPP

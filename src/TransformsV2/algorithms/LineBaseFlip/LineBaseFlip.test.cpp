@@ -21,8 +21,8 @@
 
 #include <cmath>
 
-using namespace WhiskerToolbox::Transforms::V2;
-using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace Neuralyzer::Transforms::V2;
+using namespace Neuralyzer::Transforms::V2::Examples;
 using Catch::Matchers::WithinAbs;
 
 // ============================================================================

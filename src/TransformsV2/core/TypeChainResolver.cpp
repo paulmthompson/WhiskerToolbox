@@ -8,7 +8,7 @@
 #include "ElementRegistry.hpp"
 #include "DataManager/utils/ContainerTypeIndex.hpp"
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 using Neuralyzer::TypeTraits::TypeIndexMapper;
 
@@ -140,4 +140,4 @@ TypeChainResult resolveTypeChain(
     return result;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2

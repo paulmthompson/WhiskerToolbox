@@ -2,7 +2,7 @@
 
 #include "extension/ParameterBinding.hpp"  // tryApplyBindingsErased
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 void PipelineStep::applyBindings(PipelineValueStore const & store) const {
     if (param_bindings.empty()) {
@@ -21,4 +21,4 @@ bool PipelineStep::hasBindings() const noexcept {
     return !param_bindings.empty();
 }
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2

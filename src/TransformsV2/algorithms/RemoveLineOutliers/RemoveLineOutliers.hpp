@@ -8,11 +8,11 @@
 
 class Line2D;
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 struct ComputeContext;
 }
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 /**
  * @brief Parameters for geometric outlier removal on a line
@@ -75,6 +75,6 @@ Line2D removeLineOutliersWithContext(
         RemoveLineOutliersParams const & params,
         ComputeContext const & ctx);
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 #endif// NEURALYZER_V2_REMOVE_LINE_OUTLIERS_TRANSFORM_HPP

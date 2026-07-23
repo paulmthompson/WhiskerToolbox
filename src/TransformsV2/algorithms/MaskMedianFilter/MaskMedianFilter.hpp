@@ -8,11 +8,11 @@
 
 class Mask2D;
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 struct ComputeContext;
 }
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 /**
  * @brief Parameters for mask median filtering
@@ -79,6 +79,6 @@ Mask2D applyMedianFilterWithContext(
         MaskMedianFilterParams const & params,
         ComputeContext const & ctx);
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 #endif// NEURALYZER_V2_MASK_MEDIAN_FILTER_TRANSFORM_HPP

@@ -31,7 +31,7 @@
 #include <vector>
 
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 struct TimeSeriesOps;
 
@@ -1654,6 +1654,6 @@ public:
 };
 
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2
 
 #endif// NEURALYZER_V2_ELEMENT_REGISTRY_HPP

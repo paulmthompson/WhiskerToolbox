@@ -761,7 +761,7 @@ TEST_CASE("RasterMapper::mapEventsInWindow - includes pre-alignment events",
 TEST_CASE("GatherResult → RasterMapper produces negative x for pre-alignment events",
           "[Mappers][RasterMapper][GatherResult][integration][negative]") {
 
-    using WhiskerToolbox::Gather::expandEvents;
+    using Neuralyzer::Gather::expandEvents;
 
     // Identity TimeFrame: index i → time i  (like a 1-to-1 data stream)
     auto tf = createLinearTimeFrame(200, 1);

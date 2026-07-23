@@ -12,7 +12,7 @@
 #include <limits>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 std::shared_ptr<DigitalEventSeries> analogIntervalPeak(
         DigitalIntervalSeries const & intervals,
@@ -141,4 +141,4 @@ std::shared_ptr<DigitalEventSeries> analogIntervalPeak(
     return event_series;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2

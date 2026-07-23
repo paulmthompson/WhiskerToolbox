@@ -48,10 +48,10 @@ namespace Ui {
 class TransformsV2Properties_Widget;
 }
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 struct PipelineDescriptor;
 struct PipelineStepDescriptor;
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 /**
  * @brief Main properties widget for TransformsV2 pipeline builder
@@ -148,14 +148,14 @@ private:
      * @brief Build transform step descriptors from the step list widget
      * @return Step descriptors for the current UI pipeline list
      */
-    [[nodiscard]] std::vector<WhiskerToolbox::Transforms::V2::Examples::PipelineStepDescriptor>
+    [[nodiscard]] std::vector<Neuralyzer::Transforms::V2::Examples::PipelineStepDescriptor>
     buildStepDescriptorsFromUI() const;
 
     /**
      * @brief Parse the JSON panel into a PipelineDescriptor when valid
      * @return Parsed descriptor, or empty if the panel text is invalid
      */
-    [[nodiscard]] std::optional<WhiskerToolbox::Transforms::V2::Examples::PipelineDescriptor>
+    [[nodiscard]] std::optional<Neuralyzer::Transforms::V2::Examples::PipelineDescriptor>
     parseJsonPanelDescriptor() const;
 
     /**
@@ -163,13 +163,13 @@ private:
      * @param base Descriptor supplying metadata, pre_reductions, and range_reduction
      * @return Descriptor with steps replaced from the UI
      */
-    [[nodiscard]] WhiskerToolbox::Transforms::V2::Examples::PipelineDescriptor mergeStepsIntoDescriptor(
-            WhiskerToolbox::Transforms::V2::Examples::PipelineDescriptor base) const;
+    [[nodiscard]] Neuralyzer::Transforms::V2::Examples::PipelineDescriptor mergeStepsIntoDescriptor(
+            Neuralyzer::Transforms::V2::Examples::PipelineDescriptor base) const;
 
     /**
      * @brief Build the full PipelineDescriptor from JSON panel plus UI steps
      */
-    [[nodiscard]] WhiskerToolbox::Transforms::V2::Examples::PipelineDescriptor currentPipelineDescriptor() const;
+    [[nodiscard]] Neuralyzer::Transforms::V2::Examples::PipelineDescriptor currentPipelineDescriptor() const;
 
     /**
      * @brief Serialize the current pipeline descriptor to JSON

@@ -17,7 +17,7 @@
 #include <vector>
 
 using namespace Neuralyzer::Plots;
-using WhiskerToolbox::Gather::AlignmentPoint;
+using Neuralyzer::Gather::AlignmentPoint;
 
 // =============================================================================
 // Test Fixtures

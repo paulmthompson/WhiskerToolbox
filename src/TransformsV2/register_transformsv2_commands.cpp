@@ -11,7 +11,7 @@
 #include "TransformsV2/Commands/RunTransformsV2PipelineAtTimeUIHints.hpp"
 #include "TransformsV2/Commands/RunTransformsV2PipelineUIHints.hpp"
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 void register_transformsv2_commands() {
     auto & reg = commands::CommandRegistry::instance();
@@ -49,4 +49,4 @@ void register_transformsv2_commands() {
     }
 }
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2

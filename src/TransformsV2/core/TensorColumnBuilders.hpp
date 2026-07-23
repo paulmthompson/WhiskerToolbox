@@ -31,9 +31,9 @@
 class DataManager;
 class DigitalIntervalSeries;
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 class TransformPipeline;
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2
 
 namespace Neuralyzer::TensorBuilders {
 
@@ -164,7 +164,7 @@ ColumnProviderFn buildPipelineColumnProvider(
         DataManager & dm,
         std::string const & source_key,
         std::vector<TimeFrameIndex> const & row_times,
-        WhiskerToolbox::Transforms::V2::TransformPipeline pipeline);
+        Neuralyzer::Transforms::V2::TransformPipeline pipeline);
 
 /**
  * @brief Build a generic ColumnProviderFn for interval-row tensors from any
@@ -203,7 +203,7 @@ ColumnProviderFn buildIntervalPipelineProvider(
         DataManager & dm,
         std::string const & source_key,
         std::shared_ptr<DigitalIntervalSeries> intervals,
-        WhiskerToolbox::Transforms::V2::TransformPipeline pipeline);
+        Neuralyzer::Transforms::V2::TransformPipeline pipeline);
 
 /**
  * @brief Build a ColumnProviderFn from a ColumnRecipe.

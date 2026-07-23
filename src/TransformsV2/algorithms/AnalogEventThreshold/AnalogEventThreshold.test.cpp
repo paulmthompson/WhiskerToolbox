@@ -16,8 +16,8 @@
 #include "fixtures/vectors/analog/analog_event_threshold_test_helpers.hpp"
 #include "fixtures/vectors/analog/analog_event_threshold_vectors.hpp"
 
-using namespace WhiskerToolbox::Transforms::V2;
-using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace Neuralyzer::Transforms::V2;
+using namespace Neuralyzer::Transforms::V2::Examples;
 
 namespace {
 

@@ -4,7 +4,7 @@
 #include "CoreGeometry/lines.hpp"
 #include "core/ComputeContext.hpp"
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 // ============================================================================
 // Transform Implementation
@@ -31,4 +31,4 @@ float calculateLineLengthWithContext(
     return result;
 }
 
-} // namespace WhiskerToolbox::Transforms::V2::Examples
+} // namespace Neuralyzer::Transforms::V2::Examples

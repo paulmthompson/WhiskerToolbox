@@ -16,7 +16,7 @@
 #include <string_view>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 struct PipelineDescriptor;
 
@@ -88,6 +88,6 @@ struct PipelineLibraryEntry {
  */
 [[nodiscard]] rfl::Result<rfl::Nothing> deletePipelineFile(std::filesystem::path const & filepath);
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 #endif// NEURALYZER_V2_PIPELINE_LIBRARY_HPP

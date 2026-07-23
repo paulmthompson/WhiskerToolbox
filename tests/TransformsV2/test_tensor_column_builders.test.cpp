@@ -39,7 +39,7 @@
 #include <vector>
 
 using namespace Neuralyzer::TensorBuilders;
-using WhiskerToolbox::Transforms::V2::TransformPipeline;
+using Neuralyzer::Transforms::V2::TransformPipeline;
 using Catch::Matchers::WithinAbs;
 
 // =============================================================================
@@ -252,7 +252,7 @@ TEST_CASE("buildIntervalPipelineProvider - Analog MeanValue", "[TensorColumnBuil
     auto intervals = createIntervalSeries({{10, 20}, {50, 60}});
 
     // Pipeline with MeanValue reduction
-    auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    auto pipeline = Neuralyzer::Transforms::V2::TransformPipeline();
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
     auto provider = buildIntervalPipelineProvider(dm, "analog", intervals, std::move(pipeline));
@@ -274,7 +274,7 @@ TEST_CASE("buildIntervalPipelineProvider - Analog SumValue", "[TensorColumnBuild
 
     auto intervals = createIntervalSeries({{0, 4}});
 
-    auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    auto pipeline = Neuralyzer::Transforms::V2::TransformPipeline();
     pipeline.setRangeReductionErased("SumValue", std::any{});
 
     auto provider = buildIntervalPipelineProvider(dm, "analog", intervals, std::move(pipeline));
@@ -292,7 +292,7 @@ TEST_CASE("buildIntervalPipelineProvider - Analog MaxValue", "[TensorColumnBuild
 
     auto intervals = createIntervalSeries({{10, 20}, {90, 99}});
 
-    auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    auto pipeline = Neuralyzer::Transforms::V2::TransformPipeline();
     pipeline.setRangeReductionErased("MaxValue", std::any{});
 
     auto provider = buildIntervalPipelineProvider(dm, "analog", intervals, std::move(pipeline));
@@ -315,7 +315,7 @@ TEST_CASE("buildIntervalPipelineProvider - Event EventCount", "[TensorColumnBuil
     // Two intervals: [0,20] should contain 2 events (5,15); [30,50] should contain 2 events (35,45)
     auto intervals = createIntervalSeries({{0, 20}, {30, 50}});
 
-    auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    auto pipeline = Neuralyzer::Transforms::V2::TransformPipeline();
     pipeline.setRangeReductionErased("EventCount", std::any{});
 
     auto provider = buildIntervalPipelineProvider(dm, "events", intervals, std::move(pipeline));
@@ -335,7 +335,7 @@ TEST_CASE("buildIntervalPipelineProvider - Event empty interval returns zero cou
     // Interval [100, 200] has no events
     auto intervals = createIntervalSeries({{100, 200}});
 
-    auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    auto pipeline = Neuralyzer::Transforms::V2::TransformPipeline();
     pipeline.setRangeReductionErased("EventCount", std::any{});
 
     auto provider = buildIntervalPipelineProvider(dm, "events", intervals, std::move(pipeline));
@@ -354,7 +354,7 @@ TEST_CASE("buildIntervalPipelineProvider - null intervals throws", "[TensorColum
     auto analog = createLinearAnalog(10);
     dm.setData<AnalogTimeSeries>("analog", analog, TimeKey("time"));
 
-    auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    auto pipeline = Neuralyzer::Transforms::V2::TransformPipeline();
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
     CHECK_THROWS_AS(
@@ -368,7 +368,7 @@ TEST_CASE("buildIntervalPipelineProvider - missing reduction throws", "[TensorCo
     dm.setData<AnalogTimeSeries>("analog", analog, TimeKey("time"));
     auto intervals = createIntervalSeries({{0, 5}});
 
-    auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    auto pipeline = Neuralyzer::Transforms::V2::TransformPipeline();
     // No range reduction set
 
     CHECK_THROWS_AS(
@@ -384,7 +384,7 @@ TEST_CASE("buildIntervalPipelineProvider - PointData with incompatible reduction
     dm.setData<PointData>("points", TimeKey("time"));
     auto intervals = createIntervalSeries({{0, 10}});
 
-    auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    auto pipeline = Neuralyzer::Transforms::V2::TransformPipeline();
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
     // Build succeeds (pipelineProducesFloat passes — MeanValue declares float output)
@@ -480,13 +480,13 @@ TEST_CASE("Integration - build lazy tensor from interval reductions", "[TensorCo
     auto intervals = createIntervalSeries({{0, 9}, {10, 19}, {20, 29}});
 
     // Build mean column
-    auto mean_pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    auto mean_pipeline = Neuralyzer::Transforms::V2::TransformPipeline();
     mean_pipeline.setRangeReductionErased("MeanValue", std::any{});
     auto mean_provider = buildIntervalPipelineProvider(
         dm, "signal", intervals, std::move(mean_pipeline));
 
     // Build max column
-    auto max_pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    auto max_pipeline = Neuralyzer::Transforms::V2::TransformPipeline();
     max_pipeline.setRangeReductionErased("MaxValue", std::any{});
     auto max_provider = buildIntervalPipelineProvider(
         dm, "signal", intervals, std::move(max_pipeline));
@@ -563,7 +563,7 @@ TEST_CASE("Integration - multiple columns added via appendColumn", "[TensorColum
     auto intervals = createIntervalSeries({{0, 9}, {10, 19}});
 
     // Start with just one column
-    auto mean_pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    auto mean_pipeline = Neuralyzer::Transforms::V2::TransformPipeline();
     mean_pipeline.setRangeReductionErased("MeanValue", std::any{});
     auto mean_provider = buildIntervalPipelineProvider(
         dm, "signal", intervals, std::move(mean_pipeline));
@@ -623,7 +623,7 @@ TEST_CASE("buildIntervalPipelineProvider - cross-TimeFrame analog mean",
     intervals->setTimeFrame(interval_tf);
     dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("interval_clock"));
 
-    auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    auto pipeline = Neuralyzer::Transforms::V2::TransformPipeline();
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
@@ -668,7 +668,7 @@ TEST_CASE("buildIntervalPipelineProvider - cross-TimeFrame event count",
     intervals->setTimeFrame(interval_tf);
     dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("interval_clock"));
 
-    auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    auto pipeline = Neuralyzer::Transforms::V2::TransformPipeline();
     pipeline.setRangeReductionErased("EventCount", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
@@ -697,7 +697,7 @@ TEST_CASE("buildIntervalPipelineProvider - same TimeFrame produces same results"
     intervals->setTimeFrame(shared_tf);
     dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("default"));
 
-    auto pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    auto pipeline = Neuralyzer::Transforms::V2::TransformPipeline();
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
@@ -739,12 +739,12 @@ TEST_CASE("Integration - cross-TimeFrame lazy tensor assembly",
     dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("interval_clock"));
 
     // Build two columns: mean and max, both with cross-TimeFrame
-    auto mean_pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    auto mean_pipeline = Neuralyzer::Transforms::V2::TransformPipeline();
     mean_pipeline.setRangeReductionErased("MeanValue", std::any{});
     auto mean_provider = buildIntervalPipelineProvider(
             dm, "signal", intervals, std::move(mean_pipeline));
 
-    auto max_pipeline = WhiskerToolbox::Transforms::V2::TransformPipeline();
+    auto max_pipeline = Neuralyzer::Transforms::V2::TransformPipeline();
     max_pipeline.setRangeReductionErased("MaxValue", std::any{});
     auto max_provider = buildIntervalPipelineProvider(
             dm, "signal", intervals, std::move(max_pipeline));

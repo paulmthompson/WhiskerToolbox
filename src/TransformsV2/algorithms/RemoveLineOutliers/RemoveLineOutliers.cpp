@@ -11,7 +11,7 @@
 
 #include <algorithm>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 void RemoveLineOutliersParams::validate() {
     polynomial_order = std::max(1, std::min(polynomial_order, 9));
@@ -49,4 +49,4 @@ Line2D removeLineOutliersWithContext(
     return result;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

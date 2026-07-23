@@ -14,11 +14,11 @@
 #include <string>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 class ElementRegistry;
 }
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 // ============================================================================
 // Pipeline JSON Schema using reflect-cpp
@@ -416,6 +416,6 @@ rfl::Result<rfl::Nothing> savePipelineToFile(std::string const & filepath,
  */
 rfl::Result<PipelineDescriptor> loadPipelineDescriptorFromJsonFile(std::string const & filepath);
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 #endif// NEURALYZER_V2_PIPELINE_LOADER_HPP

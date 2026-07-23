@@ -17,7 +17,7 @@
 #include <type_traits>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 
 // ============================================================================
@@ -298,6 +298,6 @@ auto applyTransform(
     throw std::runtime_error("Unsupported output type for transform: " + transform_name);
 }
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2
 
 #endif// NEURALYZER_V2_CONTAINER_TRANSFORM_HPP

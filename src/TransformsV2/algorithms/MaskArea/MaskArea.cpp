@@ -3,7 +3,7 @@
 #include "CoreGeometry/masks.hpp"
 #include "core/ComputeContext.hpp"
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 float calculateMaskArea(
         Mask2D const & mask,
@@ -55,4 +55,4 @@ float calculateMaskAreaWithContext(
 }
 
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

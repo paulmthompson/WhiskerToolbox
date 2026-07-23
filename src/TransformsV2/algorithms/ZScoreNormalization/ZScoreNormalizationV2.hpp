@@ -62,7 +62,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 /**
  * @brief V2 parameters for Z-Score normalization
@@ -152,6 +152,6 @@ inline auto const register_zscore_v2_binding_applicator =
 
 }// namespace
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2
 
 #endif// NEURALYZER_V2_ZSCORE_NORMALIZATION_V2_HPP

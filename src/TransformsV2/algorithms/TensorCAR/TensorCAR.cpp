@@ -33,7 +33,7 @@
 #pragma pop_macro("CHECK")
 #endif
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 #ifdef TENSOR_BACKEND_LIBTORCH
 
@@ -407,14 +407,14 @@ auto tensorCAR(
     }
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 
 /**
  * @brief ParameterUIHints specialization for TensorCARParams
  */
 template<>
-struct ParameterUIHints<WhiskerToolbox::Transforms::V2::Examples::TensorCARParams> {
+struct ParameterUIHints<Neuralyzer::Transforms::V2::Examples::TensorCARParams> {
     static void annotate(ParameterSchema & schema) {
         if (auto * f = schema.field("method")) {
             f->tooltip = "Mean: arithmetic mean across channels. "

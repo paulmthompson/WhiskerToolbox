@@ -8,7 +8,7 @@
 #include <cmath>
 #include <limits>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 // ============================================================================
 // Helper Functions
@@ -124,4 +124,4 @@ float calculateLineMinPointDistanceWithContext(
     return result;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 // ============================================================================
 // LineSubsegmentParams::validate() Implementation
@@ -79,4 +79,4 @@ Line2D extractLineSubsegmentWithContext(
     return result;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

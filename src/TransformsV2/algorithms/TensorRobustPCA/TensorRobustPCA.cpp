@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 auto tensorRobustPCA(
         TensorData const & input,
@@ -127,4 +127,4 @@ auto tensorRobustPCA(
     return output;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

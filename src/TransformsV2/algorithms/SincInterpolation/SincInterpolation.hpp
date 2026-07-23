@@ -12,11 +12,11 @@
 #include <memory>
 
 class AnalogTimeSeries;
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 struct ComputeContext;
 }
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 /**
  * @brief Window function type for the sinc kernel
@@ -90,6 +90,6 @@ std::shared_ptr<AnalogTimeSeries> sincInterpolation(
         SincInterpolationParams const & params,
         ComputeContext const & ctx);
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 #endif// NEURALYZER_V2_SINC_INTERPOLATION_HPP

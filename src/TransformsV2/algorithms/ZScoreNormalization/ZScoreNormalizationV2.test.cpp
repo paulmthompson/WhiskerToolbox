@@ -18,8 +18,8 @@
 #include <memory>
 #include <vector>
 
-using namespace WhiskerToolbox::Transforms::V2;
-using namespace WhiskerToolbox::Transforms::V2::Examples;
+using namespace Neuralyzer::Transforms::V2;
+using namespace Neuralyzer::Transforms::V2::Examples;
 
 TEST_CASE("ZScoreNormalizationV2 - Parameter Deserialization", "[transforms][zscore][v2][debug]") {
     // Verify that the transform is registered

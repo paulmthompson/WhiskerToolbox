@@ -16,11 +16,11 @@
 #include <memory>
 
 class AnalogTimeSeries;
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 struct ComputeContext;
 }
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 /**
  * @brief Difference method applied to each sample
@@ -76,6 +76,6 @@ struct AnalogDifferenceParams {
         AnalogDifferenceParams const & params,
         ComputeContext const & ctx) -> std::shared_ptr<AnalogTimeSeries>;
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 #endif// NEURALYZER_V2_ANALOG_DIFFERENCE_HPP

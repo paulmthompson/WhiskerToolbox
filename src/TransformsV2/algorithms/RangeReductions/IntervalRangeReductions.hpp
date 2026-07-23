@@ -26,7 +26,7 @@
 #include <limits>
 #include <span>
 
-namespace WhiskerToolbox::Transforms::V2::RangeReductions {
+namespace Neuralyzer::Transforms::V2::RangeReductions {
 
 // ============================================================================
 // Interval Reduction Functions
@@ -95,6 +95,6 @@ template<typename Element>
     return static_cast<int>(intervals.front().id().id);
 }
 
-} // namespace WhiskerToolbox::Transforms::V2::RangeReductions
+} // namespace Neuralyzer::Transforms::V2::RangeReductions
 
 #endif // NEURALYZER_V2_INTERVAL_RANGE_REDUCTIONS_HPP

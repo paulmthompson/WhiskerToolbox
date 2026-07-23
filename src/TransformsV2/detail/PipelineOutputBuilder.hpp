@@ -6,7 +6,7 @@
 #include <memory>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 
 // ============================================================================
@@ -106,7 +106,7 @@ private:
 };
 
 
-} // namespace WhiskerToolbox::Transforms::V2
+} // namespace Neuralyzer::Transforms::V2
 
 
 #endif // PIPELINE_OUTPUT_BUILDER_HPP

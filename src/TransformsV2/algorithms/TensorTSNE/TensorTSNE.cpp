@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 auto tensorTSNE(
         TensorData const & input,
@@ -124,4 +124,4 @@ auto tensorTSNE(
     return output;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

@@ -45,7 +45,7 @@
 #include <vector>
 
 using namespace Neuralyzer::TensorBuilders;
-using namespace WhiskerToolbox::Transforms::V2;
+using namespace Neuralyzer::Transforms::V2;
 using Catch::Matchers::WithinAbs;
 
 // =============================================================================

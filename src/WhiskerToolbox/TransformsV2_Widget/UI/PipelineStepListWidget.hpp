@@ -29,9 +29,9 @@ class QTableWidget;
 class QLabel;
 class QPushButton;
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 struct PipelineStepDescriptor;
-} // namespace WhiskerToolbox::Transforms::V2::Examples
+} // namespace Neuralyzer::Transforms::V2::Examples
 
 /**
  * @brief Represents a single step in the pipeline UI
@@ -129,7 +129,7 @@ public:
      * @return true if all steps were loaded successfully
      */
     bool loadFromDescriptors(
-            std::vector<WhiskerToolbox::Transforms::V2::Examples::PipelineStepDescriptor> const & descriptors);
+            std::vector<Neuralyzer::Transforms::V2::Examples::PipelineStepDescriptor> const & descriptors);
 
 signals:
     void stepSelected(int step_index);
@@ -171,7 +171,7 @@ private:
     std::type_index _input_container_type{typeid(void)};
 
     /// Cached result of the last resolveTypeChain() call
-    WhiskerToolbox::Transforms::V2::TypeChainResult _chain_result;
+    Neuralyzer::Transforms::V2::TypeChainResult _chain_result;
 };
 
 #endif // NEURALYZER_V2_PIPELINE_STEP_LIST_WIDGET_HPP

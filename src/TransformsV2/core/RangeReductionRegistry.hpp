@@ -60,7 +60,7 @@
 #include <utility>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 // ============================================================================
 // Type Key for Reduction Lookup
@@ -619,6 +619,6 @@ private:
     std::unordered_map<ReductionTypeTriple, std::string, ReductionTypeTripleHash> type_to_name_;
 };
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2
 
 #endif// NEURALYZER_V2_RANGE_REDUCTION_REGISTRY_HPP

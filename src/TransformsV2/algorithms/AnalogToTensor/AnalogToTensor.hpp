@@ -16,11 +16,11 @@
 class AnalogTimeSeries;
 class TensorData;
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 struct ComputeContext;
 }
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 /**
  * @brief Parameters for AnalogToTensor transform (reflect-cpp compatible)
@@ -53,6 +53,6 @@ struct AnalogToTensorParams {
         AnalogToTensorParams const & params,
         ComputeContext const & ctx) -> std::shared_ptr<TensorData>;
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 #endif// NEURALYZER_V2_ANALOG_TO_TENSOR_HPP

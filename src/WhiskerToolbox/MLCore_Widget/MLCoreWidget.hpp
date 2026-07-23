@@ -6,7 +6,7 @@
  * @brief Main widget for the MLCore ML workflow UI
  *
  * MLCoreWidget is the top-level view widget for interactive machine learning
- * workflows in WhiskerToolbox. It provides a tab-based interface for:
+ * workflows in Neuralyzer. It provides a tab-based interface for:
  *
  * - **Classification**: Supervised classification using MLCore pipelines
  * - **Clustering**: Unsupervised clustering using MLCore pipelines

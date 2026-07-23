@@ -4,7 +4,7 @@
 #include "core/ElementRegistry.hpp"// elmentRegistry
 #include "io/ParameterIO.hpp"    // loadParametersForTransform
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 PipelineStep createPipelineStepFromRegistry(
         ElementRegistry const & registry,
@@ -304,4 +304,4 @@ rfl::Result<PipelineDescriptor> loadPipelineDescriptorFromJsonFile(std::string c
     }
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

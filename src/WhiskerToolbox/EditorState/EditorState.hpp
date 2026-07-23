@@ -6,7 +6,7 @@
  * @brief Base class for serializable widget/editor state
  * 
  * EditorState provides a common interface for managing the state of
- * widgets/editors in WhiskerToolbox. It supports:
+ * widgets/editors in Neuralyzer. It supports:
  * - JSON serialization via reflect-cpp
  * - Unique instance identification
  * - Dirty state tracking

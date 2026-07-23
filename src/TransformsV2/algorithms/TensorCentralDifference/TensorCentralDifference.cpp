@@ -18,7 +18,7 @@
 #include <string>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 namespace {
 
@@ -181,14 +181,14 @@ auto tensorCentralDifference(
                     out_col_names));
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 
 /**
  * @brief ParameterUIHints specialization for TensorCentralDifferenceParams
  */
 template<>
-struct ParameterUIHints<WhiskerToolbox::Transforms::V2::Examples::TensorCentralDifferenceParams> {
+struct ParameterUIHints<Neuralyzer::Transforms::V2::Examples::TensorCentralDifferenceParams> {
     static void annotate(ParameterSchema & schema) {
         if (auto * f = schema.field("boundary_policy")) {
             f->tooltip = "How to handle the first/last row where t-1 or t+1 is missing";

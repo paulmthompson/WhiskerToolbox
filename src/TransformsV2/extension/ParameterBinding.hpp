@@ -68,7 +68,7 @@
 #include <typeindex>        // std::type_index
 #include <unordered_map>    // std::unordered_map   
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 // ============================================================================
 // Binding Application (Templated - for compile-time known types)
@@ -274,6 +274,6 @@ std::any tryApplyBindingsErased(
  */
 bool hasBindingApplicator(std::type_index params_type);
 
-}  // namespace WhiskerToolbox::Transforms::V2
+}  // namespace Neuralyzer::Transforms::V2
 
 #endif  // NEURALYZER_V2_PARAMETER_BINDING_HPP

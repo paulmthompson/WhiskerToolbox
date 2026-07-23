@@ -14,7 +14,7 @@
 #include <fstream>
 #include <sstream>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 namespace {
 
@@ -172,4 +172,4 @@ rfl::Result<rfl::Nothing> deletePipelineFile(std::filesystem::path const & filep
     return rfl::Result<rfl::Nothing>(rfl::Nothing{});
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

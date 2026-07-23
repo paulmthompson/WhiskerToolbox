@@ -12,7 +12,7 @@
 
 #include <algorithm>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 Line2D maskToLine(
         Mask2D const & mask,
@@ -48,4 +48,4 @@ Line2D maskToLineWithContext(
     return result;
 }
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples

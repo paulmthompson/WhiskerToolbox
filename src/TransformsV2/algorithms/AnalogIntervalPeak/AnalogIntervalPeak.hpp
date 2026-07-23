@@ -7,11 +7,11 @@ class AnalogTimeSeries;
 class DigitalEventSeries;
 class DigitalIntervalSeries;
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 struct ComputeContext;
 }
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 /**
  * @brief Parameters for analog interval peak detection
@@ -77,6 +77,6 @@ std::shared_ptr<DigitalEventSeries> analogIntervalPeak(
         AnalogIntervalPeakParams const & params,
         ComputeContext const & ctx);
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2
 
 #endif// NEURALYZER_V2_ANALOG_INTERVAL_PEAK_HPP

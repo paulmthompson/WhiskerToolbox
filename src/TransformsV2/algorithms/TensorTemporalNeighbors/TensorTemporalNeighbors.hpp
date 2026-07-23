@@ -14,11 +14,11 @@
 #include <vector>
 
 class TensorData;
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 struct ComputeContext;
 }
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 /**
  * @brief Policy for handling boundary rows where a neighbor offset is out-of-range
@@ -90,6 +90,6 @@ struct TensorTemporalNeighborParams {
         TensorTemporalNeighborParams const & params,
         ComputeContext const & ctx) -> std::shared_ptr<TensorData>;
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 #endif// NEURALYZER_V2_TENSOR_TEMPORAL_NEIGHBORS_HPP

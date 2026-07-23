@@ -6,7 +6,7 @@
 
 #include <cmath>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 std::shared_ptr<DigitalEventSeries> analogEventThreshold(
     AnalogTimeSeries const& input,
@@ -81,4 +81,4 @@ std::shared_ptr<DigitalEventSeries> analogEventThreshold(
     return std::make_shared<DigitalEventSeries>(events);
 }
 
-} // namespace WhiskerToolbox::Transforms::V2::Examples
+} // namespace Neuralyzer::Transforms::V2::Examples

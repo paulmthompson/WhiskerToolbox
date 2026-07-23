@@ -17,9 +17,9 @@
 #include <memory>
 #include <vector>
 
-using WhiskerToolbox::Gather::expandEvents;
-using WhiskerToolbox::Gather::withAlignment;
-using WhiskerToolbox::Gather::AlignmentPoint;
+using Neuralyzer::Gather::expandEvents;
+using Neuralyzer::Gather::withAlignment;
+using Neuralyzer::Gather::AlignmentPoint;
 
 // =============================================================================
 // Test Fixtures

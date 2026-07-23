@@ -15,11 +15,11 @@
 #include <memory>
 
 class TensorData;
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 struct ComputeContext;
 }
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 /**
  * @brief Parameters for t-SNE container transform (reflect-cpp compatible)
@@ -33,8 +33,8 @@ struct TensorTSNEParams {
     double theta = 0.5;
 
     /// How to handle rows containing NaN/Inf values
-    WhiskerToolbox::Transforms::V2::NaNPolicy nan_policy =
-            WhiskerToolbox::Transforms::V2::NaNPolicy::Propagate;
+    Neuralyzer::Transforms::V2::NaNPolicy nan_policy =
+            Neuralyzer::Transforms::V2::NaNPolicy::Propagate;
 };
 
 /**
@@ -57,6 +57,6 @@ struct TensorTSNEParams {
         TensorTSNEParams const & params,
         ComputeContext const & ctx) -> std::shared_ptr<TensorData>;
 
-}// namespace WhiskerToolbox::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 #endif// NEURALYZER_V2_TENSOR_TSNE_HPP

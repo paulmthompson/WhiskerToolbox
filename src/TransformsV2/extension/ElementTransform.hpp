@@ -9,7 +9,7 @@
 #include <tuple>        // std::tuple
 #include <type_traits>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 // ============================================================================
 // Concepts for Element Transforms
@@ -421,6 +421,6 @@ private:
     std::tuple<Transforms...> transforms_;
 };
 
-} // namespace WhiskerToolbox::Transforms::V2
+} // namespace Neuralyzer::Transforms::V2
 
 #endif // NEURALYZER_V2_ELEMENT_TRANSFORM_HPP

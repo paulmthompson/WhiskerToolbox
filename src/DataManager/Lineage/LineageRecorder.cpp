@@ -10,9 +10,9 @@ void LineageRecorder::record(
         LineageRegistry & registry,
         std::string const & output_key,
         std::string const & input_key,
-        WhiskerToolbox::Transforms::V2::TransformLineageType lineage_type) {
+        Neuralyzer::Transforms::V2::TransformLineageType lineage_type) {
 
-    using LT = WhiskerToolbox::Transforms::V2::TransformLineageType;
+    using LT = Neuralyzer::Transforms::V2::TransformLineageType;
 
     switch (lineage_type) {
         case LT::None:
@@ -44,9 +44,9 @@ void LineageRecorder::recordMultiInput(
         LineageRegistry & registry,
         std::string const & output_key,
         std::vector<std::string> const & input_keys,
-        WhiskerToolbox::Transforms::V2::TransformLineageType lineage_type) {
+        Neuralyzer::Transforms::V2::TransformLineageType lineage_type) {
 
-    using LT = WhiskerToolbox::Transforms::V2::TransformLineageType;
+    using LT = Neuralyzer::Transforms::V2::TransformLineageType;
 
     if (input_keys.empty()) {
         throw std::invalid_argument("LineageRecorder::recordMultiInput(): input_keys cannot be empty");

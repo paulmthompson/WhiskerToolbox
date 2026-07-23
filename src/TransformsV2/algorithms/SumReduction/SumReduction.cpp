@@ -5,7 +5,7 @@
 #include <cmath>
 #include <numeric>
 
-namespace WhiskerToolbox::Transforms::V2::Examples {
+namespace Neuralyzer::Transforms::V2::Examples {
 
 std::vector<float> sumReduction(
     std::span<float const> values,
@@ -59,4 +59,4 @@ std::vector<float> sumReductionWithContext(
     return {sum};
 }
 
-} // namespace WhiskerToolbox::Transforms::V2::Examples
+} // namespace Neuralyzer::Transforms::V2::Examples

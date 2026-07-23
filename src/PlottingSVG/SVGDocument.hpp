@@ -77,7 +77,7 @@ private:
     int _width{};
     int _height{};
     std::string _background_hex{"#FFFFFF"};
-    std::string _description{"WhiskerToolbox Export"};
+    std::string _description{"Neuralyzer Export"};
     /// Layer names in insertion order; parallel index with `_layer_elements`.
     std::vector<std::string> _layer_order;
     std::vector<std::vector<std::string>> _layer_elements;

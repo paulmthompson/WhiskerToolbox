@@ -1,7 +1,7 @@
 
 #include "ParameterBinding.hpp"
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 std::unordered_map<std::type_index, BindingApplicatorFn> &
 getBindingApplicatorRegistry() {
@@ -47,4 +47,4 @@ bool hasBindingApplicator(std::type_index params_type) {
     return registry.find(params_type) != registry.end();
 }
 
-}// namespace WhiskerToolbox::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2

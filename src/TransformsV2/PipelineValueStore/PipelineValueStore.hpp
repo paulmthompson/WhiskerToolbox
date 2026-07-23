@@ -57,7 +57,7 @@
 #include <variant>
 #include <vector>
 
-namespace WhiskerToolbox::Transforms::V2 {
+namespace Neuralyzer::Transforms::V2 {
 
 // ============================================================================
 // Supported Value Types
@@ -278,6 +278,6 @@ private:
     std::unordered_map<std::string, PipelineValue> values_;
 };
 
-}  // namespace WhiskerToolbox::Transforms::V2
+}  // namespace Neuralyzer::Transforms::V2
 
 #endif  // NEURALYZER_V2_PIPELINE_VALUE_STORE_HPP

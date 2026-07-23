@@ -6,7 +6,7 @@
 #include <vector>
 #include <ranges>
 
-using namespace WhiskerToolbox::Transforms::V2;
+using namespace Neuralyzer::Transforms::V2;
 
 namespace {
 
