@@ -22,3 +22,7 @@ Testing makes sure that our code works as expected, and that future changes do n
 -   Prefer Catch::Matchers::WithinRel to Catch::Approx
 
 -   Test files are included in the same folder as a given translation unit. They should have the same name as the header file with the extension ".test.cpp". For example mask_to_line.hpp and mask_to_line.cpp will have the test file mask_to_line.test.cpp.
+
+### Integration test scenarios
+
+For multi-timeframe, correlated `DataManager` fixtures used in tensor/table integration tests, see [Integration test scenarios](test_scenarios.qmd). The [whisker-contact scenario](scenarios/whisker_contact.qmd) is the first documented example.

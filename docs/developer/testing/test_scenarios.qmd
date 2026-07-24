@@ -1,0 +1,103 @@
+---
+title: "Integration Test Scenarios"
+format: html
+---
+
+Integration test scenarios provide **deterministic, multi-object `DataManager` fixtures** for tests that need realistic neuroscience-style data — especially tensor/table building, cross-timeframe alignment, and statistical pipelines.
+
+This page describes when to use scenarios, how they relate to other fixture layers, and where to find documented scenarios.
+
+## When to use a scenario
+
+| Approach | Best for | Location |
+|----------|----------|----------|
+| **Builders** | Constructing a single data object without `DataManager` | `tests/DataManager/fixtures/builders/` |
+| **Test vectors** | Algorithm parity with explicit input + expected output rows | `tests/DataManager/fixtures/vectors/` |
+| **Scenarios** | Correlated multi-signal setups with known statistical structure | `tests/DataManager/fixtures/scenarios/` |
+| **Catch2 fixtures** | Thin wrappers that populate `DataManager` from a scenario | `tests/DataManager/fixtures/*_test_fixture.hpp` |
+
+Use a **scenario** when your test needs several named data objects on **different timeframes** with **controlled correlations** (e.g., elevated spike rate during contact intervals). For single-transform unit tests with hand-verified outputs, prefer [test vectors](../../test_fixture_porting_guide.md).
+
+## Architecture
+
+Scenarios follow the three-layer pattern documented in [`tests/DataManager/fixtures/README.md`](../../../../tests/DataManager/fixtures/README.md):
+
+```
+tests/DataManager/fixtures/
+├── builders/           # TimeFrameBuilder, AnalogTimeSeriesBuilder, ...
+├── stochastic/         # Reusable RNG utilities (AR(1), Poisson thinning, ...)
+├── scenarios/
+│   └── <domain>/       # Scenario config + generator + assertions
+└── <name>_test_fixture.hpp   # Optional Catch2 fixture
+```
+
+A typical scenario provides:
+
+1. **`ScenarioConfig`** — reflectable or plain struct with defaults and derived counts
+2. **`Scenario::generate(config)`** — returns data objects (no `DataManager` dependency)
+3. **`Scenario::populate(dm)`** — registers timeframes and data keys
+4. **`ScenarioAssertions.hpp`** — statistical checks for TDD (reproducibility, correlation structure)
+5. **Tests** — structure, reproducibility, and property validation
+
+Stochastic utilities live under `fixtures/stochastic/` as **header-only** helpers so `test_data_manager` and `test_TransformsV2` can share them without linking `DataSynthesizer`.
+
+## Using a scenario in a test
+
+```cpp
+#include "fixtures/whisker_contact_test_fixture.hpp"
+
+TEST_CASE("My integration test", "[my_feature][whisker_contact]") {
+    WhiskerContactScenarioConfig cfg;
+    cfg.duration_sec = 10.0;
+  WhiskerContactTestFixture fixture(cfg);
+
+    auto& dm = fixture.dm();
+    auto const& scenario = fixture.scenario();
+    // dm has Spikes, Contact, Curvature, Angle on Master / Time clocks
+}
+```
+
+Or generate without the fixture:
+
+```cpp
+#include "fixtures/scenarios/neural/WhiskerContactScenario.hpp"
+
+auto scenario = WhiskerContactScenario::generate({});
+DataManager dm;
+scenario.populate(dm);
+```
+
+## Running scenario tests
+
+Build and run with the `my-clang-release` preset:
+
+```bash
+cmake --build --preset my-clang-release > build_log.txt 2>&1
+
+# Catch2 tag filter (bundled test binaries)
+out/build/Clang/Release/bin/test_data_manager "[whisker_contact]"
+out/build/Clang/Release/tests/TransformsV2/test_TransformsV2 "[whisker_contact]"
+```
+
+## Documented scenarios
+
+| Scenario | Domain | Timeframes | Primary use |
+|----------|--------|------------|-------------|
+| [Whisker contact](scenarios/whisker_contact.qmd) | Neural / whisker | `Master` (30 kHz), `Time` (500 Hz) | Tensor column builders, contact-aligned spike analysis |
+
+## Adding a new scenario
+
+1. Add `fixtures/scenarios/<domain>/<Name>ScenarioConfig.hpp` with defaults and derived helpers.
+2. Add `fixtures/scenarios/<domain>/<Name>Scenario.hpp` with `generate()` and `populate()`.
+3. Extract reusable RNG logic into `fixtures/stochastic/` when it is not scenario-specific.
+4. Add `fixtures/scenarios/<domain>/<Name>ScenarioAssertions.hpp` for statistical TDD checks.
+5. Add tests in `tests/DataManager/test_<name>_scenario.cpp` and register in `tests/DataManager/CMakeLists.txt`.
+6. Add a page under `docs/developer/testing/scenarios/` and link it from this index.
+
+Future work may promote stochastic helpers to `DataSynthesizer` generators; scenarios should remain thin composition layers on top.
+
+## Related documentation
+
+- [Test fixture porting guide](../test_fixture_porting_guide.qmd) — vectors vs scenarios vs fixtures
+- [Testing guidelines](testing.qmd) — Catch2 conventions
+- [DataSynthesizer roadmap](../../DataSynthesizer/ROADMAP.md) — planned extraction of correlated generators

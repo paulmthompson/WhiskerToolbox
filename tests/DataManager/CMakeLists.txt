@@ -41,6 +41,10 @@ add_executable(test_data_manager
         
         # Builder tests
         fixtures/test_builders.cpp
+        fixtures/test_stochastic.cpp
+
+        # Whisker-contact scenario tests
+        test_whisker_contact_scenario.cpp
 
         # Shared RaggedTimeSeries tests (templated across LineData, MaskData, PointData)
         ragged_shared_unit.test.cpp

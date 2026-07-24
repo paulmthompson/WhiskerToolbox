@@ -1,12 +1,12 @@
 #ifndef TIMEFRAME_BUILDER_HPP
 #define TIMEFRAME_BUILDER_HPP
 
-#include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
-#include <vector>
 #include <memory>
 #include <numeric>
+#include <vector>
 
 /**
  * @brief Lightweight builder for TimeFrame objects
@@ -36,7 +36,7 @@ public:
      * @brief Specify time points explicitly
      * @param times Vector of time points in arbitrary units
      */
-    TimeFrameBuilder& withTimes(std::vector<int> times) {
+    TimeFrameBuilder & withTimes(std::vector<int> times) {
         m_times = std::move(times);
         return *this;
     }
@@ -53,7 +53,7 @@ public:
      * withRange(0, 100, 10);
      * @endcode
      */
-    TimeFrameBuilder& withRange(int start, int end, int step = 1) {
+    TimeFrameBuilder & withRange(int start, int end, int step = 1) {
         m_times.clear();
         for (int t = start; t <= end; t += step) {
             m_times.push_back(t);
@@ -71,7 +71,7 @@ public:
      * withCount(5);
      * @endcode
      */
-    TimeFrameBuilder& withCount(size_t count) {
+    TimeFrameBuilder & withCount(size_t count) {
         m_times.resize(count);
         std::iota(m_times.begin(), m_times.end(), 0);
         return *this;
@@ -88,9 +88,36 @@ public:
      * withCountFrom(5, 100);
      * @endcode
      */
-    TimeFrameBuilder& withCountFrom(size_t count, int start) {
+    TimeFrameBuilder & withCountFrom(size_t count, int start) {
         m_times.resize(count);
         std::iota(m_times.begin(), m_times.end(), start);
+        return *this;
+    }
+
+    /**
+     * @brief Create a child clock derived from a parent sampling rate.
+     *
+     * Frame i maps to parent absolute time (start + i * samples_per_parent_tick).
+     *
+     * @param frame_count Number of child frames
+     * @param samples_per_parent_tick Parent samples between consecutive child frames
+     * @param start Starting parent time for frame 0
+     *
+     * @example
+     * @code
+     * // 500 Hz camera from 30 kHz master: {0, 60, 120, ...}
+     * withDerivedClock(100, 60, 0);
+     * @endcode
+     */
+    TimeFrameBuilder & withDerivedClock(
+            size_t frame_count,
+            int samples_per_parent_tick,
+            int start = 0) {
+        m_times.clear();
+        m_times.reserve(frame_count);
+        for (size_t i = 0; i < frame_count; ++i) {
+            m_times.push_back(start + static_cast<int>(i) * samples_per_parent_tick);
+        }
         return *this;
     }
 
@@ -105,7 +132,7 @@ public:
     /**
      * @brief Get the time values (for inspection)
      */
-    const std::vector<int>& getTimes() const {
+    std::vector<int> const & getTimes() const {
         return m_times;
     }
 
@@ -113,4 +140,4 @@ private:
     std::vector<int> m_times;
 };
 
-#endif // TIMEFRAME_BUILDER_HPP
+#endif// TIMEFRAME_BUILDER_HPP

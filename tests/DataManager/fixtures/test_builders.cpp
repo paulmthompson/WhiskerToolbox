@@ -31,6 +31,18 @@ TEST_CASE("TimeFrameBuilder basic construction", "[fixtures][builders][timeframe
 
         REQUIRE(tf != nullptr);
     }
+
+    SECTION("Derived clock construction") {
+        auto tf = TimeFrameBuilder()
+                          .withDerivedClock(5, 60, 0)
+                          .build();
+
+        REQUIRE(tf != nullptr);
+        REQUIRE(tf->getTotalFrameCount() == 5);
+        REQUIRE(tf->getTimeAtIndex(TimeFrameIndex(0)) == 0);
+        REQUIRE(tf->getTimeAtIndex(TimeFrameIndex(1)) == 60);
+        REQUIRE(tf->getTimeAtIndex(TimeFrameIndex(4)) == 240);
+    }
 }
 
 TEST_CASE("AnalogTimeSeriesBuilder basic construction", "[fixtures][builders][analog]") {
@@ -90,8 +102,8 @@ TEST_CASE("AnalogTimeSeriesBuilder basic construction", "[fixtures][builders][an
 
 TEST_CASE("MaskDataBuilder basic construction", "[fixtures][builders][mask]") {
     SECTION("Single mask at one time") {
-        std::vector<uint32_t> xs = {1, 2, 3};
-        std::vector<uint32_t> ys = {1, 2, 3};
+        std::vector<uint32_t> const xs = {1, 2, 3};
+        std::vector<uint32_t> const ys = {1, 2, 3};
         auto mask_data = MaskDataBuilder()
                                  .atTime(0, Mask2D(xs, ys))
                                  .build();
@@ -126,10 +138,10 @@ TEST_CASE("MaskDataBuilder basic construction", "[fixtures][builders][mask]") {
     }
 
     SECTION("Multiple masks at different times") {
-        std::vector<uint32_t> xs1 = {1, 2};
-        std::vector<uint32_t> ys1 = {1, 2};
-        std::vector<uint32_t> xs2 = {3, 4, 5};
-        std::vector<uint32_t> ys2 = {3, 4, 5};
+        std::vector<uint32_t> const xs1 = {1, 2};
+        std::vector<uint32_t> const ys1 = {1, 2};
+        std::vector<uint32_t> const xs2 = {3, 4, 5};
+        std::vector<uint32_t> const ys2 = {3, 4, 5};
         auto mask_data = MaskDataBuilder()
                                  .atTime(0, Mask2D(xs1, ys1))
                                  .atTime(10, Mask2D(xs2, ys2))
@@ -210,7 +222,7 @@ TEST_CASE("DigitalTimeSeriesBuilder basic construction", "[fixtures][builders][d
         auto interval_view = intervals->getIntervalsInRange(TimeFrameIndex(0),
                                                             TimeFrameIndex(100),
                                                             *(intervals->getTimeFrame()));
-        std::vector<Interval> interval_data(interval_view.begin(), interval_view.end());
+        std::vector<Interval> const interval_data(interval_view.begin(), interval_view.end());
         REQUIRE(interval_data.size() >= 2);
     }
 
@@ -225,8 +237,8 @@ TEST_CASE("DigitalTimeSeriesBuilder basic construction", "[fixtures][builders][d
         auto interval_view = intervals->getIntervalsInRange(TimeFrameIndex(0),
                                                             TimeFrameIndex(100),
                                                             *(intervals->getTimeFrame()));
-        std::vector<Interval> interval_data(interval_view.begin(), interval_view.end());
-        REQUIRE(interval_data.size() > 0);
+        std::vector<Interval> const interval_data(interval_view.begin(), interval_view.end());
+        REQUIRE(!interval_data.empty());
     }
 }
 
