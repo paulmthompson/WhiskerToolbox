@@ -63,12 +63,12 @@ TEST_CASE("SVGDocument setBackground changes fill color",
     REQUIRE_THAT(svg, ContainsSubstring(R"(fill="#1A2B3C")"));
 }
 
-TEST_CASE("SVGDocument default description is WhiskerToolbox Export",
+TEST_CASE("SVGDocument default description is Neuralyzer Export",
           "[PlottingSVG][SVGDocument]") {
     PlottingSVG::SVGDocument const doc(100, 100);
     std::string const svg = doc.build();
 
-    REQUIRE_THAT(svg, ContainsSubstring("<desc>WhiskerToolbox Export</desc>"));
+    REQUIRE_THAT(svg, ContainsSubstring("<desc>Neuralyzer Export</desc>"));
 }
 
 TEST_CASE("SVGDocument setDescription changes desc text",

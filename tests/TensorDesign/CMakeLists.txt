@@ -10,10 +10,12 @@ endif()
 
 add_executable(test_tensor_design
     test_tensor_design_builder.cpp
+    test_tensor_whisker_contact_scenario.cpp
 )
 
 target_include_directories(test_tensor_design PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/tests/DataManager>"
 )
 
 target_link_libraries(test_tensor_design PRIVATE Catch2::Catch2WithMain)

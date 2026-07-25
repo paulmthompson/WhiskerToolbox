@@ -23,6 +23,7 @@
  */
 
 #include "DataInspector_Widget/Inspectors/BaseInspector.hpp"
+#include "TensorDesign/TensorColumnViews.hpp"
 
 class CSVTensorSaver_Widget;
 class QComboBox;
@@ -31,8 +32,6 @@ class QPushButton;
 class Section;
 class SelectionContext;
 class TensorDesigner;
-
-struct AnalogKeyGroup;
 
 namespace EditorLib {
 class OperationContext;
@@ -167,7 +166,7 @@ private:
     QPushButton * _populate_btn{nullptr};
     QPushButton * _refresh_groups_btn{nullptr};
 
-    std::vector<AnalogKeyGroup> _cached_groups;
+    std::vector<Neuralyzer::TensorDesign::AnalogKeyGroup> _cached_groups;
 };
 
 #endif// TENSOR_INSPECTOR_HPP

@@ -7,6 +7,8 @@ add_library(TensorDesign STATIC
     TensorDesignSpec.hpp
     TensorDesignBuilder.hpp
     TensorDesignBuilder.cpp
+    TensorColumnViews.hpp
+    TensorColumnViews.cpp
 )
 
 target_include_directories(TensorDesign PUBLIC

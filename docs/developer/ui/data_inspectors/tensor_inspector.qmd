@@ -38,8 +38,9 @@ channels in `DataViewer_Widget` and applying per-channel transforms.
 
 | File | Description |
 |------|-------------|
-| `src/WhiskerToolbox/DataInspector_Widget/TensorData/TensorColumnViewCreator.hpp` | Utility header |
-| `src/WhiskerToolbox/DataInspector_Widget/TensorData/TensorColumnViewCreator.cpp` | Implementation |
+| `src/TensorDesign/TensorColumnViews.hpp` | Qt-free API: `createTensorColumnViews`, `discoverAnalogKeyGroups` |
+| `src/TensorDesign/TensorColumnViews.cpp` | Implementation using `tensorToAnalog()` |
+| `src/WhiskerToolbox/DataInspector_Widget/TensorData/TensorInspector.cpp` | UI section; delegates to `TensorDesign` |
 | `tests/TransformsV2/test_tensor_column_views.test.cpp` | Integration tests |
 
 The utility calls `tensorToAnalog()` internally, which creates `TensorColumnAnalogStorage`
@@ -78,8 +79,8 @@ Keys without an underscore (or with `_` only at position 0) are excluded.
 
 | File | Description |
 |------|-------------|
-| `TensorColumnViewCreator.hpp` | `AnalogKeyGroup`, `discoverAnalogKeyGroups()`, `populateTensorFromAnalogKeys()` |
-| `TensorColumnViewCreator.cpp` | Implementation using `analogToTensor()` algorithm |
+| `TensorColumnViews.hpp` | `AnalogKeyGroup`, `discoverAnalogKeyGroups()`, `populateTensorFromAnalogKeys()` |
+| `TensorColumnViews.cpp` | Implementation using `analogToTensor()` algorithm |
 | `TensorInspector.cpp` | UI section with combo box, refresh/populate buttons, visibility toggling |
 | `test_tensor_column_views.test.cpp` | Tests for group discovery and tensor population |
 
@@ -90,7 +91,6 @@ notifications that can destroy the `TensorInspector` widget (the properties widg
 recreates inspectors when the inspected key changes). To prevent use-after-free:
 
 - All member data (`_active_key`, group keys) is copied to locals before the call.
-- `populateTensorFromAnalogKeys()` takes `tensor_key` **by value** (not by reference).
 - A `QPointer<TensorInspector>` guard detects destruction; if triggered, the slot returns
   without accessing `this`.
 

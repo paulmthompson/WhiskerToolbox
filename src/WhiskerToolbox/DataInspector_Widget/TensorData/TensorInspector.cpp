@@ -1,6 +1,6 @@
 #include "TensorInspector.hpp"
 
-#include "TensorColumnViewCreator.hpp"
+#include "TensorDesign/TensorColumnViews.hpp"
 #include "TensorDesigner.hpp"
 
 #include "Collapsible_Widget/Section.hpp"
@@ -114,7 +114,7 @@ void TensorInspector::_onCreateColumnViews() {
         prefix = _active_key;
     }
 
-    auto const count = createTensorColumnViews(
+    auto const count = Neuralyzer::TensorDesign::createTensorColumnViews(
             *dataManager(), _active_key, prefix, {});
 
     if (count > 0) {
@@ -319,7 +319,8 @@ void TensorInspector::_onPopulateFromAnalog() {
     auto dm = dataManager();
     QPointer<TensorInspector> const guard(this);
 
-    auto const success = populateTensorFromAnalogKeys(*dm, tensor_key, group.keys);
+    auto const success = Neuralyzer::TensorDesign::populateTensorFromAnalogKeys(
+            *dm, tensor_key, group.keys);
 
     if (!guard) {
         return;// 'this' was destroyed during observer notification
@@ -339,7 +340,7 @@ void TensorInspector::_onPopulateFromAnalog() {
 }
 
 void TensorInspector::_onRefreshAnalogGroups() {
-    _cached_groups = discoverAnalogKeyGroups(*dataManager());
+    _cached_groups = Neuralyzer::TensorDesign::discoverAnalogKeyGroups(*dataManager());
 
     _analog_group_combo->clear();
     for (auto const & group: _cached_groups) {

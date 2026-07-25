@@ -1,17 +1,19 @@
 ---
-title: "TensorDesign Builder"
+title: "TensorDesign Library"
 format: html
 ---
 
-The **TensorDesign** library (`src/TensorDesign/`) provides Qt-free assembly of lazy-column `TensorData` objects from JSON design specifications. It is the headless counterpart to the TensorDesigner UI panel.
+The **TensorDesign** library (`src/TensorDesign/`) provides Qt-free `DataManager` operations for tensor workflows. It is the headless counterpart to the TensorDesigner UI panel and TensorInspector column-view actions.
 
 ## Motivation
 
-`TensorColumnBuilders` can build individual column providers from `ColumnRecipe` + pipeline JSON, but assembling a full tensor (row source, `RowDescriptor`, invalidation wiring, optional `DataManager` registration) was previously duplicated in `TensorDesigner::_buildTensor()`. Extracting that logic enables:
+`TensorColumnBuilders` can build individual column providers from `ColumnRecipe` + pipeline JSON, but assembling a full tensor (row source, `RowDescriptor`, invalidation wiring, optional `DataManager` registration) was previously duplicated in `TensorDesigner::_buildTensor()`. Similarly, tensor↔analog `DataManager` glue lived in `TensorColumnViewCreator` inside the UI library. Extracting both enables:
 
-- Integration tests that load a JSON envelope after populating `DataManager`
+- Integration tests that exercise production code without linking `DataInspector_Widget`
 - Future workspace hooks (`tensor_designs` after `data_loads`)
 - A single source of truth shared by UI and library code
+
+See [Tensor stack overview](../tensor_stack.qmd) for how build, pack, and view operations relate.
 
 ## Dependency graph
 
@@ -62,7 +64,7 @@ The format matches `TensorDesigner::toJson()` / `fromJson()`:
 
 Each `pipeline_json` string is a [`PipelineDescriptor`](../transforms_v2/pipeline_loader.qmd) fragment. Interval-row columns require a terminal `range_reduction`.
 
-## Public API
+## Build API (lazy-column tensors)
 
 Header: `TensorDesign/TensorDesignBuilder.hpp`
 
@@ -84,7 +86,40 @@ bool populateDataManager(DataManager& dm, TensorDesignSpec const& spec);
 - **`populateDataManager`** — builds and calls `dm.setData<TensorData>(spec.tensor_key, …)`
 - Errors are logged via `spdlog` and surfaced as `std::nullopt` / `false`
 
-## Example
+## Tensor column views (pack / view in DataManager)
+
+Header: `TensorDesign/TensorColumnViews.hpp`
+
+```cpp
+namespace Neuralyzer::TensorDesign {
+
+struct AnalogKeyGroup {
+    std::string prefix;
+    std::vector<std::string> keys;
+};
+
+std::size_t createTensorColumnViews(
+    DataManager& dm, std::string const& tensor_key,
+    std::string const& prefix, std::vector<int> const& columns);
+
+std::vector<AnalogKeyGroup> discoverAnalogKeyGroups(DataManager& dm);
+
+bool populateTensorFromAnalogKeys(
+    DataManager& dm, std::string const& tensor_key,
+    std::vector<std::string> const& analog_keys);
+
+}
+```
+
+| Function | Direction | Description |
+|----------|-----------|-------------|
+| `createTensorColumnViews` | Tensor → Analog | Zero-copy views registered as `{prefix}/{column_name}` |
+| `discoverAnalogKeyGroups` | — | Find analog keys sharing a prefix (≥2 keys) |
+| `populateTensorFromAnalogKeys` | Analog → Tensor | Pack channels into an existing `TensorData` |
+
+`TensorInspector` delegates to these functions for its Column Views and Populate from AnalogTimeSeries sections.
+
+## Example (build)
 
 After loading scenario data (see [Whisker contact scenario](../testing/scenarios/whisker_contact.qmd)):
 
@@ -100,12 +135,13 @@ REQUIRE(tensor.has_value());
 | Binary | Tags |
 |--------|------|
 | `test_tensor_design` | `[TensorDesign]` |
-| `test_TransformsV2` | `[TensorDesign][whisker_contact]` |
+| `test_TransformsV2` | `[TensorColumnViews][TensorDesign]`, `[TensorColumnBuilders][whisker_contact]` |
 
 ## Related documentation
 
-- [Tensor Inspector (Dev)](../ui/data_inspectors/tensor_inspector.qmd) — UI save/load of the same JSON format
-- [TensorColumnBuilders](../transforms_v2/index.qmd) — per-column builder layer
+- [Tensor stack overview](../tensor_stack.qmd)
+- [Tensor Inspector (Dev)](../ui/data_inspectors/tensor_inspector.qmd) — UI delegates to this library
+- [TensorColumnBuilders](../transforms_v2/TensorColumnBuilders.qmd) — per-column builder layer
 - [Integration test scenarios](../testing/test_scenarios.qmd)
 
 ## Limitations

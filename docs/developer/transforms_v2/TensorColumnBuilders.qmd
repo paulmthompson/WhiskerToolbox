@@ -1,0 +1,89 @@
+---
+title: "TensorColumnBuilders"
+format: html
+---
+
+**TensorColumnBuilders** (`src/TransformsV2/core/TensorColumnBuilders.hpp`) is the builder layer that connects `DataManager` sources, `TransformPipeline` execution, and `GatherResult` gather+reduce patterns into `ColumnProviderFn` closures for [`LazyColumnTensorStorage`](../DataObjects/Tensors/LazyColumnTensorStorage.qmd).
+
+## Role in the tensor stack
+
+See [Tensor stack overview](../tensor_stack.qmd) for the full layered diagram. At a high level:
+
+```
+DataManager sources  →  TensorColumnBuilders  →  ColumnProviderFn closures
+                                                      ↓
+                                              LazyColumnTensorStorage
+                                                      ↓
+TensorDesign (assembly)  →  TensorData::createFromLazyColumns()
+```
+
+`TensorColumnBuilders` produces **individual column providers**. [`TensorDesign`](../TensorDesign/TensorDesignBuilder.qmd) assembles them into a full tensor (row source, `RowDescriptor`, invalidation wiring).
+
+## Location
+
+| File | Description |
+|------|-------------|
+| `src/TransformsV2/core/TensorColumnBuilders.hpp` | Public API: `ColumnRecipe`, builder functions |
+| `src/TransformsV2/core/TensorColumnBuilders.cpp` | Implementation |
+
+## ColumnRecipe
+
+A `ColumnRecipe` captures everything needed to reconstruct a `ColumnProviderFn` at runtime (closures themselves are not serializable):
+
+```cpp
+struct ColumnRecipe {
+    std::string column_name;
+    std::string source_key;       // empty for interval-property columns
+    std::string pipeline_json;    // embedded PipelineDescriptor JSON
+    std::optional<IntervalProperty> interval_property;  // start, end, duration
+};
+```
+
+Use `buildProviderFromRecipe()` to dispatch a recipe to the correct builder.
+
+## Builder functions
+
+| Function | Row type | Description |
+|----------|----------|-------------|
+| `buildIntervalPropertyProvider` | Interval | Extract start, end, or duration from row intervals |
+| `buildAnalogSampleAtOffsetProvider` | Timestamp | Sample analog at `row_time + offset` |
+| `buildPipelineColumnProvider` | Timestamp | Passthrough or pipeline per timestamp row |
+| `buildIntervalPipelineProvider` | Interval | Gather + pipeline + range reduction per interval |
+| `buildProviderFromRecipe` | Either | Dispatch from `ColumnRecipe` + JSON pipeline |
+| `buildInvalidationWiringFn` | — | Observer callbacks → column cache invalidation |
+
+Interval-row pipelines **must** end with a `range_reduction` (e.g. `MeanValue`, `EventCount`). Timestamp-row pipelines must **not** have a terminal range reduction.
+
+## Example: interval-row column
+
+```cpp
+#include "TransformsV2/core/TensorColumnBuilders.hpp"
+
+auto pipeline = TransformPipeline();
+pipeline.setRangeReductionErased("MeanValue", std::any{});
+
+auto provider = buildIntervalPipelineProvider(
+    dm, "Curvature", contact_intervals, std::move(pipeline));
+
+auto values = provider();  // one float per interval
+```
+
+## Tests
+
+| Binary | Tags |
+|--------|------|
+| `test_TransformsV2` | `[TensorColumnBuilders]` |
+
+Key test files:
+
+- `tests/TransformsV2/test_tensor_column_builders.test.cpp` — passthrough, reductions, recipes, invalidation
+- `tests/TransformsV2/test_nonanalog_column_builders.test.cpp` — Mask/Line/Point sources
+- `tests/TransformsV2/test_multistep_column_builders.test.cpp` — multi-step pipelines
+- `tests/TransformsV2/test_tensor_whisker_contact_scenario.cpp` — cross-timeframe integration
+
+## Related documentation
+
+- [Tensor stack overview](../tensor_stack.qmd)
+- [TensorDesign Builder](../TensorDesign/TensorDesignBuilder.qmd) — JSON assembly on top of builders
+- [Pipeline loader](pipeline_loader.qmd) — `PipelineDescriptor` JSON format
+- [TableView → Tensor refactoring plan](../tableview_to_tensor_refactoring_plan.md) — design history

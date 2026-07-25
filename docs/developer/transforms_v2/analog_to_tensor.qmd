@@ -15,8 +15,10 @@ N-ary container transform: packs N `AnalogTimeSeries` into one 2D `TensorData`
 
 ### TensorToAnalog
 
-Extracts selected columns from a 2D `TensorData` as independent owning
-`AnalogTimeSeries` objects.
+Extracts selected columns from a 2D `TensorData` as `AnalogTimeSeries` objects.
+When the source tensor uses Armadillo storage, outputs are **zero-copy views**
+via [`TensorColumnAnalogStorage`](../DataObjects/AnalogTimeSeries/tensor_column_analog_storage.qmd).
+For other storage backends, `getColumn()` produces owning copies.
 
 ## Location
 
@@ -73,10 +75,15 @@ auto tensorToAnalog(
 ### TensorToAnalog
 
 1. Determine columns to extract (all if `columns` is empty).
-2. For each column, call `TensorData::getColumn(i)` to get an owning copy.
+2. For each column, create an `AnalogTimeSeries` backed by `TensorColumnAnalogStorage`
+   when the source uses Armadillo storage (zero-copy `colptr()` access).
+   Otherwise, call `TensorData::getColumn(i)` for an owning copy.
 3. If the tensor has `RowType::TimeFrameIndex`, preserve time indices via
    `RowDescriptor::timeStoragePtr()->getAllTimeIndices()`.
 4. Set the `TimeFrame` from the source tensor on each output.
+
+To register views in `DataManager`, use
+[`TensorDesign::createTensorColumnViews`](../TensorDesign/TensorDesignBuilder.qmd#tensor-column-views-pack--view-in-datamanager).
 
 ## Constraints
 
@@ -100,9 +107,12 @@ N × AnalogTimeSeries  →  analogToTensor()  →  TensorData  →  tensorToAnal
 ```
 
 Values are preserved exactly. Time indices and TimeFrame are preserved for
-`TimeFrameIndex`-typed tensors.
+`TimeFrameIndex`-typed tensors. When `TensorColumnAnalogStorage` is used,
+the output `AnalogTimeSeries` objects share the source `TensorData` via
+`shared_ptr` — no data is copied.
 
-::: {.callout-note}
-Phase 1 creates owning copies in TensorToAnalog. Phase 3 will replace this
-with zero-copy `TensorColumnAnalogStorage` views into the Armadillo matrix.
-:::
+## Related documentation
+
+- [Tensor stack overview](../tensor_stack.qmd)
+- [TensorColumnAnalogStorage](../DataObjects/AnalogTimeSeries/tensor_column_analog_storage.qmd)
+- [TensorDesign column views](../TensorDesign/TensorDesignBuilder.qmd#tensor-column-views-pack--view-in-datamanager)
