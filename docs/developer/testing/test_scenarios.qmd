@@ -67,6 +67,12 @@ DataManager dm;
 scenario.populate(dm);
 ```
 
+## Specifying tensors from JSON
+
+After a scenario (or any data load) populates `DataManager`, lazy-column tensors can be built from a JSON design envelope via the Qt-free [`TensorDesign`](../../TensorDesign/TensorDesignBuilder.qmd) library. The format matches TensorDesigner save/load files.
+
+See [Whisker contact — JSON example](scenarios/whisker_contact.qmd#json-design-specification) for a full cross-timeframe tensor spec.
+
 ## Running scenario tests
 
 Build and run with the `my-clang-release` preset:

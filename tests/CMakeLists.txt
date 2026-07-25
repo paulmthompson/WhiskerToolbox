@@ -28,6 +28,7 @@ add_subdirectory(GatherResult)
 add_subdirectory(PlotDataExport)
 
 add_subdirectory(TransformsV2)
+add_subdirectory(TensorDesign)
 add_subdirectory(DataSynthesizer)
 
 add_subdirectory(MLCore)

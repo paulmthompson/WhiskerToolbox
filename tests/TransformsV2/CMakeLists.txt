@@ -91,6 +91,7 @@ target_link_libraries(test_TransformsV2 PRIVATE DeepLearning)
 target_link_libraries(test_TransformsV2 PRIVATE DataSynthesizer)
 
 target_link_libraries(test_TransformsV2 PRIVATE DataManager)
+target_link_libraries(test_TransformsV2 PRIVATE TensorDesign)
 target_link_libraries(test_TransformsV2 PRIVATE WhiskerToolbox::TensorData)
 
 if(TENSOR_BACKEND_LIBTORCH)

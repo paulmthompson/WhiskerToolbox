@@ -32,6 +32,7 @@ add_subdirectory(DataSynthesizer)
 add_subdirectory(MediaProcessingPipeline)
 add_subdirectory(TriageSession)
 add_subdirectory(TransformsV2)
+add_subdirectory(TensorDesign)
 add_subdirectory(GatherResult)
 add_subdirectory(PlotDataExport)
 

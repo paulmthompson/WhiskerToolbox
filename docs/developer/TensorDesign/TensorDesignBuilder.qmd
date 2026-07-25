@@ -1,0 +1,115 @@
+---
+title: "TensorDesign Builder"
+format: html
+---
+
+The **TensorDesign** library (`src/TensorDesign/`) provides Qt-free assembly of lazy-column `TensorData` objects from JSON design specifications. It is the headless counterpart to the TensorDesigner UI panel.
+
+## Motivation
+
+`TensorColumnBuilders` can build individual column providers from `ColumnRecipe` + pipeline JSON, but assembling a full tensor (row source, `RowDescriptor`, invalidation wiring, optional `DataManager` registration) was previously duplicated in `TensorDesigner::_buildTensor()`. Extracting that logic enables:
+
+- Integration tests that load a JSON envelope after populating `DataManager`
+- Future workspace hooks (`tensor_designs` after `data_loads`)
+- A single source of truth shared by UI and library code
+
+## Dependency graph
+
+```
+TensorData  ←  TransformsV2  ←  TensorDesign  ←  DataInspector_Widget
+DataManager  ←─────────────────┘
+```
+
+Consumers that execute pipelines must link `TransformsV2` with **whole-archive** on Linux so static transform registrations are not stripped.
+
+## JSON envelope
+
+The format matches `TensorDesigner::toJson()` / `fromJson()`:
+
+```json
+{
+  "tensor_key": "contact_features",
+  "output_time_key": "default",
+  "row_source": {
+    "data_key": "Contact",
+    "row_type": "interval"
+  },
+  "columns": [
+    {
+      "name": "mean_curvature",
+      "source_key": "Curvature",
+      "pipeline_json": "{\"steps\": [], \"range_reduction\": {\"reduction_name\": \"MeanValue\"}}"
+    },
+    {
+      "name": "spike_count",
+      "source_key": "Spikes",
+      "pipeline_json": "{\"steps\": [], \"range_reduction\": {\"reduction_name\": \"EventCount\"}}"
+    }
+  ]
+}
+```
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `tensor_key` | For `populateDataManager` only | DataManager key for the output tensor |
+| `output_time_key` | No (default `"default"`) | `TimeKey` when registering in DataManager |
+| `row_source.data_key` | Yes | Row source object in DataManager |
+| `row_source.row_type` | Yes | `interval`, `timestamp`, `derived_from_source`, `ordinal` (unsupported), or `none` |
+| `columns[].name` | Yes | Column display name |
+| `columns[].source_key` | For data columns | DataManager source key |
+| `columns[].pipeline_json` | For interval/timestamp data columns | Embedded `PipelineDescriptor` JSON string |
+| `columns[].interval_property` | For property columns | `start`, `end`, or `duration` (no `source_key` needed) |
+
+Each `pipeline_json` string is a [`PipelineDescriptor`](../transforms_v2/pipeline_loader.qmd) fragment. Interval-row columns require a terminal `range_reduction`.
+
+## Public API
+
+Header: `TensorDesign/TensorDesignBuilder.hpp`
+
+```cpp
+namespace Neuralyzer::TensorDesign {
+
+std::optional<TensorDesignSpec> parseDesignJson(std::string const& json);
+std::string serializeDesignJson(TensorDesignSpec const& spec);
+
+std::optional<TensorData> buildTensor(DataManager& dm, TensorDesignSpec const& spec);
+std::optional<TensorData> buildTensorFromDesignJson(DataManager& dm, std::string const& json);
+
+bool populateDataManager(DataManager& dm, TensorDesignSpec const& spec);
+
+}
+```
+
+- **`buildTensor`** — returns lazy `TensorData` without registering in DataManager
+- **`populateDataManager`** — builds and calls `dm.setData<TensorData>(spec.tensor_key, …)`
+- Errors are logged via `spdlog` and surfaced as `std::nullopt` / `false`
+
+## Example
+
+After loading scenario data (see [Whisker contact scenario](../testing/scenarios/whisker_contact.qmd)):
+
+```cpp
+#include "TensorDesign/TensorDesignBuilder.hpp"
+
+auto tensor = Neuralyzer::TensorDesign::buildTensorFromDesignJson(dm, json);
+REQUIRE(tensor.has_value());
+```
+
+## Tests
+
+| Binary | Tags |
+|--------|------|
+| `test_tensor_design` | `[TensorDesign]` |
+| `test_TransformsV2` | `[TensorDesign][whisker_contact]` |
+
+## Related documentation
+
+- [Tensor Inspector (Dev)](../ui/data_inspectors/tensor_inspector.qmd) — UI save/load of the same JSON format
+- [TensorColumnBuilders](../transforms_v2/index.qmd) — per-column builder layer
+- [Integration test scenarios](../testing/test_scenarios.qmd)
+
+## Limitations
+
+- **Ordinal rows** — not yet supported (same as TensorDesigner UI)
+- **Round-trip from built tensor** — cannot recover `ColumnRecipe` list from existing `LazyColumnTensorStorage`
+- **Workspace restore** — tensor designs are not replayed automatically after `data_loads` (future work)

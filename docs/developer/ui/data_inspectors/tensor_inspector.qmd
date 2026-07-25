@@ -18,7 +18,7 @@ The **Tensor Inspector** is designed to view and manipulate `TensorData` objects
 The `TensorDesigner` uses `TransformPipeline` to define how computed columns are populated.
 
 -   **Lazy Columns**: Columns can be defined by a pipeline but not computed until requested.
--   **Serialization**: The pipeline definition is stored in the column metadata.
+-   **Serialization**: TensorDesigner save/load files use a JSON envelope (`row_source` + `columns` with embedded `pipeline_json` strings). The same format is consumed headlessly by the [`TensorDesign`](../../TensorDesign/TensorDesignBuilder.qmd) library for integration tests and future workspace hooks.
 
 ## Column Views
 

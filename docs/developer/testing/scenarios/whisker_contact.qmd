@@ -141,6 +141,8 @@ Increase `duration_sec` for statistical tests that need more contact intervals (
 
 ## Example: tensor per contact interval
 
+### Programmatic assembly
+
 `test_tensor_whisker_contact_scenario.cpp` builds a lazy tensor with:
 
 - **Rows**: `Contact` intervals
@@ -155,6 +157,42 @@ auto spike_provider = buildIntervalPipelineProvider(
 auto tensor = TensorData::createFromLazyColumns(...);
 ```
 
+### JSON design specification
+
+The same tensor can be built from a [TensorDesigner-compatible JSON envelope](../../TensorDesign/TensorDesignBuilder.qmd) using the Qt-free `TensorDesign` library:
+
+```json
+{
+  "tensor_key": "contact_features",
+  "row_source": {
+    "data_key": "Contact",
+    "row_type": "interval"
+  },
+  "columns": [
+    {
+      "name": "mean_curvature",
+      "source_key": "Curvature",
+      "pipeline_json": "{\"steps\": [], \"range_reduction\": {\"reduction_name\": \"MeanValue\"}}"
+    },
+    {
+      "name": "spike_count",
+      "source_key": "Spikes",
+      "pipeline_json": "{\"steps\": [], \"range_reduction\": {\"reduction_name\": \"EventCount\"}}"
+    }
+  ]
+}
+```
+
+```cpp
+#include "TensorDesign/TensorDesignBuilder.hpp"
+
+WhiskerContactTestFixture fixture(cfg);
+auto tensor = Neuralyzer::TensorDesign::buildTensorFromDesignJson(fixture.dm(), json);
+REQUIRE(tensor.has_value());
+```
+
+Note that `pipeline_json` is an **embedded JSON string** (double-encoded in the outer file). Cross-timeframe spike counting works because interval gather resolves timebases automatically.
+
 ## Running tests
 
 ```bash
@@ -162,6 +200,7 @@ cmake --build --preset my-clang-release > build_log.txt 2>&1
 
 out/build/Clang/Release/bin/test_data_manager "[whisker_contact]"
 out/build/Clang/Release/tests/TransformsV2/test_TransformsV2 "[whisker_contact]"
+out/build/Clang/Release/bin/test_tensor_design "[TensorDesign]"
 ```
 
 Catch2 tags: `[whisker_contact]`, `[scenario]`, `[statistics]`, `[stochastic]`.
