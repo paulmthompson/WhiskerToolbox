@@ -2,6 +2,98 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "Entity/EntityRegistry.hpp"
+
+TEST_CASE("DigitalIntervalSeries - interval entity identity uses start and end",
+          "[DataManager][interval][entity]") {
+    EntityRegistry registry;
+    DigitalIntervalSeries series;
+    series.setIdentityContext("test_intervals", &registry);
+
+    series.addEvent(Interval{100, 200});
+    series.rebuildAllEntityIds();
+
+    auto const view = series.view();
+    REQUIRE(series.size() == 1);
+    EntityId const original_id = view[0].id();
+    REQUIRE(original_id != EntityId{0});
+
+    SECTION("rebuildAllEntityIds is stable for unchanged intervals") {
+        series.rebuildAllEntityIds();
+        REQUIRE(series.view()[0].id() == original_id);
+    }
+
+    SECTION("identity survives unrelated interval removal") {
+        series.addEvent(Interval{500, 600});
+        series.rebuildAllEntityIds();
+        series.removeInterval(Interval{500, 600});
+        series.rebuildAllEntityIds();
+
+        REQUIRE(series.size() == 1);
+        REQUIRE(series.view()[0].id() == original_id);
+        REQUIRE(series.getIntervalByEntityId(original_id)->start == 100);
+        REQUIRE(series.getIntervalByEntityId(original_id)->end == 200);
+    }
+
+    SECTION("registry descriptor stores interval end in local_index") {
+        auto desc = registry.get(original_id);
+        REQUIRE(desc.has_value());
+        REQUIRE(desc->kind == EntityKind::IntervalEntity);
+        REQUIRE(desc->time_value == 100);
+        REQUIRE(desc->local_index == 200);
+    }
+}
+
+TEST_CASE("DigitalIntervalSeries - extend preserves EntityId",
+          "[DataManager][interval][entity]") {
+    EntityRegistry registry;
+    DigitalIntervalSeries series;
+    series.setIdentityContext("test_intervals", &registry);
+
+    series.addEvent(Interval{100, 200});
+    series.rebuildAllEntityIds();
+
+    EntityId const original_id = series.view()[0].id();
+
+    series.addEvent(Interval{100, 250});
+
+    REQUIRE(series.size() == 1);
+    REQUIRE(series.view()[0].id() == original_id);
+    REQUIRE(series.view()[0].value().start == 100);
+    REQUIRE(series.view()[0].value().end == 250);
+
+    auto desc = registry.get(original_id);
+    REQUIRE(desc.has_value());
+    REQUIRE(desc->time_value == 100);
+    REQUIRE(desc->local_index == 250);
+
+    auto interval = series.getIntervalByEntityId(original_id);
+    REQUIRE(interval.has_value());
+    REQUIRE(interval->start == 100);
+    REQUIRE(interval->end == 250);
+}
+
+TEST_CASE("DigitalIntervalSeries - merge inherits earliest-start EntityId",
+          "[DataManager][interval][entity]") {
+    EntityRegistry registry;
+    DigitalIntervalSeries series;
+    series.setIdentityContext("test_intervals", &registry);
+
+    series.addEvent(Interval{100, 150});
+    series.addEvent(Interval{200, 250});
+    series.rebuildAllEntityIds();
+
+    EntityId const first_id = series.view()[0].id();
+    EntityId const second_id = series.view()[1].id();
+    REQUIRE(first_id != second_id);
+
+    series.addEvent(Interval{100, 250});
+
+    REQUIRE(series.size() == 1);
+    REQUIRE(series.view()[0].id() == first_id);
+    REQUIRE(series.view()[0].value().start == 100);
+    REQUIRE(series.view()[0].value().end == 250);
+}
 
 TEST_CASE("Digital Interval Overlap Left", "[DataManager]") {
 
@@ -31,7 +123,7 @@ TEST_CASE("DigitalIntervalSeries - Range-based access", "[DataManager]") {
     SECTION("View-based iteration") {
         // Test using the range view directly
         auto range = dis.getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(TimeFrameIndex(5),
-                                                                                            TimeFrameIndex(35), 
+                                                                                            TimeFrameIndex(35),
                                                                                             *timeframe);
 
         std::vector<Interval> collected;

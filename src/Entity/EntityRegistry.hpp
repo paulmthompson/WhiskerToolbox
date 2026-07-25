@@ -31,7 +31,8 @@ public:
      * @param data_key Logical key for the data object (opaque; empty allowed)
      * @param kind Entity kind (Point, Line, Event, Interval, Mask, TimeEntity)
      * @param time TimeFrameIndex for the entity
-     * @param local_index Stable 0-based index within that time
+     * @param local_index Stable 0-based index within that time. For IntervalEntity,
+     *                    this is the interval end time (not a storage index).
      * @return EntityId for the tuple; same tuple always returns the same id
      *
      * @pre local_index >= 0 (enforcement: assert)
@@ -51,6 +52,22 @@ public:
      * @note Thread-safe
      */
     [[nodiscard]] std::optional<EntityDescriptor> get(EntityId id) const;
+
+    /**
+     * @brief Rebind an existing EntityId to a new (time, local_index) tuple.
+     *
+     * Updates both lookup maps so ensureId on the new tuple returns the same id.
+     * Used when interval bounds change but the logical entity identity is preserved.
+     *
+     * @param id EntityId previously allocated by ensureId on this registry
+     * @param time New TimeFrameIndex for the entity
+     * @param local_index New local_index (interval end for IntervalEntity)
+     *
+     * @pre local_index >= 0 (enforcement: assert)
+     * @pre id was previously registered via ensureId
+     * @note Thread-safe; no-op if id is unknown
+     */
+    void rebindKey(EntityId id, TimeFrameIndex const & time, int local_index);
 
     /**
      * @brief Clear all registered entities (session reset).

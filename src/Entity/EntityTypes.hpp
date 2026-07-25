@@ -13,24 +13,24 @@
 #ifndef ENTITYTYPES_HPP
 #define ENTITYTYPES_HPP
 
-#include "EntityId.hpp" // EntityId definition
+#include "EntityId.hpp"// EntityId definition
 
 #include <cstdint>
-#include <utility> // std::forward
 #include <string>
+#include <utility>// std::forward
 
 
 /**
  * @brief Hash function specialization for EntityId to enable use in unordered containers.
  */
 namespace std {
-template <>
+template<>
 struct hash<EntityId> {
     std::size_t operator()(EntityId const & e) const noexcept {
         return std::hash<uint64_t>{}(e.id);
     }
 };
-} // namespace std
+}// namespace std
 
 /**
  * @brief Kinds of discrete entities that can be identified by an EntityId.
@@ -41,24 +41,25 @@ enum class EntityKind : std::uint8_t {
     EventEntity = 2,
     IntervalEntity = 3,
     MaskEntity = 4,
-    TimeEntity = 5      ///< A single time point within a specific TimeFrame (clock)
+    TimeEntity = 5///< A single time point within a specific TimeFrame (clock)
 };
 
 /**
  * @brief Descriptor for a discrete entity, sufficient to regenerate or reason about its origin.
  */
 struct EntityDescriptor {
-    std::string data_key;        ///< DataManager key for the data object
-    EntityKind kind;             ///< Kind of entity
-    std::int64_t time_value;     ///< Time index value of the entity (session index)
-    int local_index;             ///< Stable index within the time (0-based)
+    std::string data_key;   ///< DataManager key for the data object
+    EntityKind kind;        ///< Kind of entity
+    std::int64_t time_value;///< Time index value of the entity (session index)
+    int local_index;        ///< Stable index within the time (0-based). For IntervalEntity,
+                            ///< stores the interval end time instead of a storage index.
 };
 
 // Internal key used by EntityRegistry maps
 struct EntityTupleKey {
     std::string data_key;
     EntityKind kind;
-    std::int64_t time_value; // store as primitive for hashing
+    std::int64_t time_value;// store as primitive for hashing
     int local_index;
 
     bool operator==(EntityTupleKey const & other) const {
@@ -90,18 +91,16 @@ struct EntityTupleKeyHash {
  * DataEntry is a struct that holds a data object and its associated EntityId.
  * It is used to store data objects in a data manager.
  */
-template <typename TData>
+template<typename TData>
 struct DataEntry {
     TData data;
     EntityId entity_id;
 
-    template <typename... TDataArgs>
-    DataEntry(EntityId id, TDataArgs&&... args)
-        : data(std::forward<TDataArgs>(args)...), 
+    template<typename... TDataArgs>
+    DataEntry(EntityId id, TDataArgs &&... args)
+        : data(std::forward<TDataArgs>(args)...),
           entity_id(id) {}
 };
 
 
-#endif // ENTITYTYPES_HPP
-
-
+#endif// ENTITYTYPES_HPP

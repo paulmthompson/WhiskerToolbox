@@ -59,21 +59,21 @@
  * @see EntityRegistry for entity ID management
  */
 
-#include "DigitalTimeSeries/IntervalWithId.hpp"     // IntervalWithId struct for element access
-#include "Entity/EntityTypes.hpp"                   // EntityId
-#include "Observer/Observer_Data.hpp"               // ObserverData base class
-#include "TimeFrame/TimeFrame.hpp"                  // TimeFrame and TimeFrameIndex
+#include "DigitalTimeSeries/IntervalWithId.hpp"// IntervalWithId struct for element access
+#include "Entity/EntityTypes.hpp"              // EntityId
+#include "Observer/Observer_Data.hpp"          // ObserverData base class
+#include "TimeFrame/TimeFrame.hpp"             // TimeFrame and TimeFrameIndex
+#include "TimeFrame/interval_data.hpp"         // Interval struct
 #include "TypeTraits/DataTypeTraits.hpp"
-#include "TimeFrame/interval_data.hpp"              // Interval struct
 #include "storage/DigitalIntervalStorage.hpp"
 
 #include <cstdint>
-#include <memory>           // std::shared_ptr
-#include <optional>         // std::optional
-#include <ranges>           // std::ranges::views
-#include <unordered_set>    // std::unordered_set
-#include <utility>          // std::pair
-#include <vector>           // std::vector
+#include <memory>       // std::shared_ptr
+#include <optional>     // std::optional
+#include <ranges>       // std::ranges::views
+#include <unordered_set>// std::unordered_set
+#include <utility>      // std::pair
+#include <vector>       // std::vector
 
 
 class EntityRegistry;
@@ -492,7 +492,7 @@ public:
      * @return Shared pointer to new view-based series
      */
     [[nodiscard]] static std::shared_ptr<DigitalIntervalSeries> createView(
-            const std::shared_ptr<DigitalIntervalSeries const>& source,
+            std::shared_ptr<DigitalIntervalSeries const> const & source,
             int64_t start,
             int64_t end);
 
@@ -504,7 +504,7 @@ public:
      * @return Shared pointer to new view-based series
      */
     [[nodiscard]] static std::shared_ptr<DigitalIntervalSeries> createView(
-            const std::shared_ptr<DigitalIntervalSeries const>& source,
+            std::shared_ptr<DigitalIntervalSeries const> const & source,
             std::unordered_set<EntityId> const & entity_ids);
 
     /**
@@ -575,7 +575,12 @@ private:
     // Cache management
     void _cacheOptimizationPointers();
 
-    void _addEventInternal(Interval new_interval);// Core mutation logic
+    /**
+     * @brief Core mutation logic for adding/merging intervals.
+     * @return The merged interval if storage changed, std::nullopt if the new interval
+     *         was fully contained in an existing interval (no-op).
+     */
+    std::optional<Interval> _addEventInternal(Interval new_interval);
     void _setEventAtTimeInternal(TimeFrameIndex time, bool event);
     void _removeEventAtTimeInternal(TimeFrameIndex time);
 

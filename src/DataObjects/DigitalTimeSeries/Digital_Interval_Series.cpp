@@ -6,10 +6,31 @@
 #include "Entity/EntityRegistry.hpp"
 
 #include <algorithm>
+#include <cassert>
+#include <climits>
 #include <iostream>
+#include <limits>
 #include <ranges>
 #include <utility>
 #include <vector>
+
+namespace {
+
+/**
+ * @brief Get or create an EntityId keyed on interval (start, end) bounds.
+ * @pre interval.end >= 0 && interval.end <= INT_MAX
+ */
+EntityId ensureIntervalEntityId(EntityRegistry & registry,
+                                std::string const & data_key,
+                                Interval const & interval) {
+    assert(interval.end >= 0 && interval.end <= INT_MAX);
+    return registry.ensureId(data_key,
+                             EntityKind::IntervalEntity,
+                             TimeFrameIndex{interval.start},
+                             static_cast<int>(interval.end));
+}
+
+}// namespace
 
 // ========== Constructors ==========
 
@@ -59,22 +80,14 @@ void DigitalIntervalSeries::addEvent(Interval new_interval) {
         }
     }
 
-    size_t const old_size = owning->size();
-    _addEventInternal(new_interval);
-    size_t const new_size = owning->size();
+    auto const result_interval = _addEventInternal(new_interval);
 
-    // If an interval was actually added (not merged into existing), assign EntityId
-    if (new_size > old_size && _identity_registry) {
-        // Find the index of the newly added interval (search in storage)
-        for (size_t idx = 0; idx < owning->size(); ++idx) {
-            if (owning->getInterval(idx) == new_interval) {
-                EntityId const entity_id = _identity_registry->ensureId(
-                        _identity_data_key,
-                        EntityKind::IntervalEntity,
-                        TimeFrameIndex{new_interval.start},
-                        static_cast<int>(idx));
-                owning->setEntityId(idx, entity_id);
-                break;
+    if (result_interval && _identity_registry) {
+        if (auto const idx = owning->findByInterval(*result_interval)) {
+            if (owning->getEntityId(*idx) == EntityId{0}) {
+                EntityId const entity_id = ensureIntervalEntityId(
+                        *_identity_registry, _identity_data_key, *result_interval);
+                owning->setEntityId(*idx, entity_id);
             }
         }
     }
@@ -93,23 +106,33 @@ void DigitalIntervalSeries::addEvent(TimeFrameIndex start, TimeFrameIndex end) {
     addEvent(Interval{start.getValue(), end.getValue()});
 }
 
-void DigitalIntervalSeries::_addEventInternal(Interval new_interval) {
+std::optional<Interval> DigitalIntervalSeries::_addEventInternal(Interval new_interval) {
     auto * owning = _storage.tryGetMutableOwning();
     if (!owning) {
-        return;// Caller should have ensured mutable storage
+        return std::nullopt;// Caller should have ensured mutable storage
     }
 
     // Collect indices of overlapping/contiguous intervals to merge
     std::vector<size_t> indices_to_remove;
+    EntityId inherited_id{0};
+    int64_t min_start = std::numeric_limits<int64_t>::max();
+
     for (size_t i = 0; i < owning->size(); ++i) {
         Interval const existing = owning->getInterval(i);
         if (is_overlapping(existing, new_interval) || is_contiguous(existing, new_interval)) {
             new_interval.start = std::min(new_interval.start, existing.start);
             new_interval.end = std::max(new_interval.end, existing.end);
             indices_to_remove.push_back(i);
+
+            if (existing.start < min_start) {
+                min_start = existing.start;
+                inherited_id = owning->getEntityId(i);
+            } else if (existing.start == min_start && inherited_id == EntityId{0}) {
+                inherited_id = owning->getEntityId(i);
+            }
         } else if (is_contained(new_interval, existing)) {
             // The new interval is completely contained within an existing interval, so we do nothing.
-            return;
+            return std::nullopt;
         }
     }
 
@@ -120,8 +143,16 @@ void DigitalIntervalSeries::_addEventInternal(Interval new_interval) {
     }
 
     // Add the merged interval
-    owning->addInterval(new_interval, EntityId{0});
+    owning->addInterval(new_interval, inherited_id);
     owning->sort();
+
+    if (inherited_id != EntityId{0} && _identity_registry) {
+        _identity_registry->rebindKey(inherited_id,
+                                      TimeFrameIndex{new_interval.start},
+                                      static_cast<int>(new_interval.end));
+    }
+
+    return new_interval;
 }
 
 void DigitalIntervalSeries::setEventAtTime(TimeFrameIndex time, bool const event) {
@@ -240,11 +271,7 @@ void DigitalIntervalSeries::rebuildAllEntityIds() {
     for (size_t i = 0; i < owning->size(); ++i) {
         if (_identity_registry) {
             Interval const interval = owning->getInterval(i);
-            EntityId const id = _identity_registry->ensureId(
-                    _identity_data_key,
-                    EntityKind::IntervalEntity,
-                    TimeFrameIndex{interval.start},
-                    static_cast<int>(i));
+            EntityId const id = ensureIntervalEntityId(*_identity_registry, _identity_data_key, interval);
             owning->setEntityId(i, id);
         } else {
             owning->setEntityId(i, EntityId{0});
@@ -287,13 +314,11 @@ std::optional<Interval> DigitalIntervalSeries::getIntervalByEntityId(EntityId en
         return std::nullopt;
     }
 
-    int const local_index = descriptor->local_index;
-
-    if (local_index < 0 || static_cast<size_t>(local_index) >= _storage.size()) {
-        return std::nullopt;
+    if (auto const idx = _storage.findByEntityId(entity_id)) {
+        return _storage.getInterval(*idx);
     }
 
-    return _storage.getInterval(static_cast<size_t>(local_index));
+    return std::nullopt;
 }
 
 std::vector<std::pair<EntityId, Interval>> DigitalIntervalSeries::getIntervalsByEntityIds(std::vector<EntityId> const & entity_ids) const {
