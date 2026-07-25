@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.38">
+<meta name="generator" content="quarto-1.10.18">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -12,10 +12,13 @@
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
 */
-code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -38,14 +41,14 @@ ul.task-list li input[type="checkbox"] {
 <script src="../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-b953592e4a23838a304e2d6f1e057d89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../../site_libs/bootstrap/bootstrap-dark-b194be8c6145450876393aceb1e5b7bc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../../site_libs/bootstrap/bootstrap-b953592e4a23838a304e2d6f1e057d89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -1556,7 +1559,7 @@ ul.task-list li input[type="checkbox"] {
 <p>The <code>TensorDesigner</code> uses <code>TransformPipeline</code> to define how computed columns are populated.</p>
 <ul>
 <li><strong>Lazy Columns</strong>: Columns can be defined by a pipeline but not computed until requested.</li>
-<li><strong>Serialization</strong>: The pipeline definition is stored in the column metadata.</li>
+<li><strong>Serialization</strong>: TensorDesigner save/load files use a JSON envelope (<code>row_source</code> + <code>columns</code> with embedded <code>pipeline_json</code> strings). The same format is consumed headlessly by the <a href="../../../developer/TensorDesign/TensorDesignBuilder.html"><code>TensorDesign</code></a> library for integration tests and future workspace hooks.</li>
 </ul>
 </section>
 <section id="column-views" class="level2">
@@ -1586,14 +1589,18 @@ ul.task-list li input[type="checkbox"] {
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>src/WhiskerToolbox/DataInspector_Widget/TensorData/TensorColumnViewCreator.hpp</code></td>
-<td>Utility header</td>
+<td><code>src/TensorDesign/TensorColumnViews.hpp</code></td>
+<td>Qt-free API: <code>createTensorColumnViews</code>, <code>discoverAnalogKeyGroups</code></td>
 </tr>
 <tr class="even">
-<td><code>src/WhiskerToolbox/DataInspector_Widget/TensorData/TensorColumnViewCreator.cpp</code></td>
-<td>Implementation</td>
+<td><code>src/TensorDesign/TensorColumnViews.cpp</code></td>
+<td>Implementation using <code>tensorToAnalog()</code></td>
 </tr>
 <tr class="odd">
+<td><code>src/WhiskerToolbox/DataInspector_Widget/TensorData/TensorInspector.cpp</code></td>
+<td>UI section; delegates to <code>TensorDesign</code></td>
+</tr>
+<tr class="even">
 <td><code>tests/TransformsV2/test_tensor_column_views.test.cpp</code></td>
 <td>Integration tests</td>
 </tr>
@@ -1648,11 +1655,11 @@ Note
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>TensorColumnViewCreator.hpp</code></td>
+<td><code>TensorColumnViews.hpp</code></td>
 <td><code>AnalogKeyGroup</code>, <code>discoverAnalogKeyGroups()</code>, <code>populateTensorFromAnalogKeys()</code></td>
 </tr>
 <tr class="even">
-<td><code>TensorColumnViewCreator.cpp</code></td>
+<td><code>TensorColumnViews.cpp</code></td>
 <td>Implementation using <code>analogToTensor()</code> algorithm</td>
 </tr>
 <tr class="odd">
@@ -1671,7 +1678,6 @@ Note
 <p><code>_onPopulateFromAnalog()</code> calls <code>DataManager::setData()</code>, which triggers observer notifications that can destroy the <code>TensorInspector</code> widget (the properties widget recreates inspectors when the inspected key changes). To prevent use-after-free:</p>
 <ul>
 <li>All member data (<code>_active_key</code>, group keys) is copied to locals before the call.</li>
-<li><code>populateTensorFromAnalogKeys()</code> takes <code>tensor_key</code> <strong>by value</strong> (not by reference).</li>
 <li>A <code>QPointer&lt;TensorInspector&gt;</code> guard detects destruction; if triggered, the slot returns without accessing <code>this</code>.</li>
 </ul>
 </section>

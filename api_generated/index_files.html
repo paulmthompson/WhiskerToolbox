@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.38">
+<meta name="generator" content="quarto-1.10.18">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -12,10 +12,13 @@
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
 */
-code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -38,14 +41,14 @@ ul.task-list li input[type="checkbox"] {
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-0a6b7249c26820e032cb0bd839ff02b1.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-f8a889158c9f7ca0580ade2fff1949e8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-3668dfe8ff7bfe388e30b5ebd8735154.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-b953592e4a23838a304e2d6f1e057d89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-b194be8c6145450876393aceb1e5b7bc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-b953592e4a23838a304e2d6f1e057d89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -1957,6 +1960,14 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/tracking__framework__demo_8cpp.html#file-tracking-framework-demo.cpp">cpp</a></strong></li>
 </ul></li>
 </ul></li>
+<li><strong>dir <a href="../api_generated/Files/dir_a1221678cbd17d304a91de2298353e05.html#dir-src/tensordesign">src/TensorDesign</a></strong>
+<ul>
+<li><strong>file <a href="../api_generated/Files/TensorColumnViews_8cpp.html#file-tensorcolumnviews.cpp">cpp</a></strong> <br>Implementation of <a href="../api_generated/Classes/classTensorData.html">TensorData</a> ↔︎ <a href="../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> bridge utilities.</li>
+<li><strong>file <a href="../api_generated/Files/TensorColumnViews_8hpp.html#file-tensorcolumnviews.hpp">hpp</a></strong> <br>Qt-free utilities bridging <a href="../api_generated/Classes/classTensorData.html">TensorData</a> and <a href="../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> in <a href="../api_generated/Classes/classDataManager.html">DataManager</a>.</li>
+<li><strong>file <a href="../api_generated/Files/TensorDesignBuilder_8cpp.html#file-tensordesignbuilder.cpp">cpp</a></strong> <br>Implementation of lazy-column tensor building from design JSON.</li>
+<li><strong>file <a href="../api_generated/Files/TensorDesignBuilder_8hpp.html#file-tensordesignbuilder.hpp">hpp</a></strong> <br>Qt-free builder for lazy-column tensors from JSON design specifications.</li>
+<li><strong>file <a href="../api_generated/Files/TensorDesignSpec_8hpp.html#file-tensordesignspec.hpp">hpp</a></strong> <br>Data structures describing a lazy-column tensor design specification.</li>
+</ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_99ecd15e8ccbaa8c4885fa579dc319c6.html#dir-src/timecontroller">src/TimeController</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/TimeController_8cpp.html#file-timecontroller.cpp">cpp</a></strong> <br>Implementation of Qt-free visualization time state.</li>
@@ -2608,8 +2619,6 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/ColumnConfigDialog_8cpp.html#file-columnconfigdialog.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/ColumnConfigDialog_8hpp.html#file-columnconfigdialog.hpp">hpp</a></strong> <br>Dialog for configuring a single tensor column.</li>
 <li><strong>file <a href="../api_generated/Files/ColumnConfigDialog_8test_8cpp.html#file-columnconfigdialog.test.cpp">cpp</a></strong> <br>Tests for <a href="../api_generated/Classes/classColumnConfigDialog.html">ColumnConfigDialog</a> pipeline library integration.</li>
-<li><strong>file <a href="../api_generated/Files/TensorColumnViewCreator_8cpp.html#file-tensorcolumnviewcreator.cpp">cpp</a></strong> <br>Implementation of <a href="../api_generated/Classes/classTensorData.html">TensorData</a> ↔︎ <a href="../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> bridge utilities.</li>
-<li><strong>file <a href="../api_generated/Files/TensorColumnViewCreator_8hpp.html#file-tensorcolumnviewcreator.hpp">hpp</a></strong> <br>Utilities bridging <a href="../api_generated/Classes/classTensorData.html">TensorData</a> and <a href="../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> in <a href="../api_generated/Classes/classDataManager.html">DataManager</a>.</li>
 <li><strong>file <a href="../api_generated/Files/TensorDataView_8cpp.html#file-tensordataview.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/TensorDataView_8hpp.html#file-tensordataview.hpp">hpp</a></strong> <br>Table view widget for <a href="../api_generated/Classes/classTensorData.html">TensorData</a> with dimension controls.</li>
 <li><strong>file <a href="../api_generated/Files/TensorDesigner_8cpp.html#file-tensordesigner.cpp">cpp</a></strong></li>
@@ -3992,7 +4001,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/tableview__design__doc_8md.html#file-tableview-design-doc.md">tableview_design_doc.md</a></strong></li>
 </ul>
 <hr>
-<p>Updated on 2026-07-23 at 18:20:45 +0000</p>
+<p>Updated on 2026-07-25 at 13:31:02 +0000</p>
 
 
 </section>
