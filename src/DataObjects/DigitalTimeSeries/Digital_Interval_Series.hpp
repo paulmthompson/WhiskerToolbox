@@ -80,6 +80,23 @@ class EntityRegistry;
 template<typename T>
 inline constexpr bool always_false_v = false;
 
+/**
+ * @brief Controls whether intervals in a series may overlap in time.
+ *
+ * - Disjoint: intervals are merged on insert via addEvent(); suitable for user annotations.
+ * - Overlapping: intervals are inserted without merging; suitable for transform intermediates.
+ *
+ * Layout is fixed at construction and exposed via layout() only (no setter).
+ *
+ * Range-query behavior in storage backends depends on layout; see
+ * @ref OwningDigitalIntervalStorage::assumeDisjointIntervals(),
+ * @ref ViewDigitalIntervalStorage::filterByOverlappingRange(), and
+ * @ref LazyDigitalIntervalStorage::getOverlappingRangeImpl().
+ */
+enum class IntervalLayout {
+    Disjoint,   ///< Non-overlapping intervals; addEvent merges on insert
+    Overlapping,///< Overlapping intervals allowed; addEvent does not merge
+};
 
 /**
  * @brief A sorted collection of time intervals with entity tracking
@@ -333,8 +350,8 @@ public:
      * Copied intervals get new EntityIds in the target based on the target's
      * identity context (via addEvent which auto-assigns EntityIds).
      *
-     * @note Because addEvent merges overlapping intervals, the number of intervals
-     *       added to the target may be fewer than the number of EntityIds matched.
+     * @note When the target layout is Disjoint, addEvent merges overlapping intervals and
+     *       the number of intervals added may be fewer than the number of EntityIds matched.
      *
      * @param target The target series to copy intervals to
      * @param entity_ids Set of EntityIds to copy
@@ -348,7 +365,7 @@ public:
     // NOTE: moveByEntityIds is intentionally NOT implemented for DigitalIntervalSeries.
     //
     // Moving intervals between series has unresolved edge cases due to interval merging:
-    //   - DigitalIntervalSeries guarantees non-overlapping intervals by merging on insert.
+    //   - Disjoint-layout series merge overlapping intervals on insert.
     //   - If a moved interval overlaps with an existing interval in the target, the two
     //     will be merged into a single new interval.
     //   - The original EntityId of the moved interval is lost during merging, but any
@@ -365,6 +382,11 @@ public:
 
     [[nodiscard]] size_t size() const { return _storage.size(); };
 
+    /**
+     * @brief Get the interval layout fixed at construction.
+     * @return IntervalLayout::Disjoint (default) or IntervalLayout::Overlapping
+     */
+    [[nodiscard]] IntervalLayout layout() const noexcept { return _layout; }
 
     // ========== Range-Mode Interval Queries ==========
 
@@ -482,6 +504,20 @@ public:
     // ========== Factory Methods ==========
 
     /**
+     * @brief Create a series that preserves overlapping intervals on insert.
+     *
+     * Intervals are sorted and stored without merging. Intended for transform
+     * pipeline intermediates rather than interactive annotation.
+     *
+     * @param intervals Initial intervals (sorted during construction)
+     * @param time_frame Optional time frame for the series
+     * @return Shared pointer to new owning series with Overlapping layout
+     */
+    [[nodiscard]] static std::shared_ptr<DigitalIntervalSeries> createOverlapping(
+            std::vector<Interval> intervals,
+            std::shared_ptr<TimeFrame> time_frame = nullptr);
+
+    /**
      * @brief Create a view of this series filtered by time range
      * 
      * Returns a new DigitalIntervalSeries that references this series' data
@@ -556,7 +592,8 @@ public:
     [[nodiscard]] static std::shared_ptr<DigitalIntervalSeries> createFromView(
             ViewType view,
             size_t num_elements,
-            std::shared_ptr<TimeFrame> time_frame = nullptr);
+            std::shared_ptr<TimeFrame> time_frame = nullptr,
+            IntervalLayout layout = IntervalLayout::Overlapping);
 
     /**
      * @brief Get the storage cache for fast-path iteration
@@ -571,9 +608,22 @@ private:
     DigitalIntervalStorageWrapper _storage;
     DigitalIntervalStorageCache _cached_storage;// Fast-path cache
     std::shared_ptr<TimeFrame> _time_frame{nullptr};
+    IntervalLayout _layout{IntervalLayout::Disjoint};
 
     // Cache management
     void _cacheOptimizationPointers();
+
+    /**
+     * @brief Sync owning storage disjoint-interval hint for range-query fast paths.
+     *
+     * Maps `IntervalLayout::Disjoint` to `OwningDigitalIntervalStorage::setAssumeDisjointIntervals(true)`
+     * and `IntervalLayout::Overlapping` to `false`. View storage reads the source hint via
+     * @ref ViewDigitalIntervalStorage::filterByOverlappingRange().
+     *
+     * @see OwningDigitalIntervalStorage::setAssumeDisjointIntervals()
+     * @see OwningDigitalIntervalStorage::getOverlappingRangeImpl()
+     */
+    void _syncStorageDisjointHint();
 
     /**
      * @brief Core mutation logic for adding/merging intervals.
@@ -745,13 +795,14 @@ template<typename ViewType>
 std::shared_ptr<DigitalIntervalSeries> DigitalIntervalSeries::createFromView(
         ViewType view,
         size_t num_elements,
-        std::shared_ptr<TimeFrame> time_frame) {
+        std::shared_ptr<TimeFrame> time_frame,
+        IntervalLayout layout) {
     auto result = std::make_shared<DigitalIntervalSeries>();
+    result->_layout = layout;
     result->_storage = DigitalIntervalStorageWrapper{
             LazyDigitalIntervalStorage<ViewType>{std::move(view), num_elements}};
     result->_time_frame = std::move(time_frame);
     result->_cacheOptimizationPointers();
-    // Note: _data vector left empty - storage wrapper handles all access
     return result;
 }
 

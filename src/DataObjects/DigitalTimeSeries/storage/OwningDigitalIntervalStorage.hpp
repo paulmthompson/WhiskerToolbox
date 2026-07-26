@@ -103,6 +103,28 @@ public:
      */
     void sort();
 
+    /**
+     * @brief Set whether intervals are assumed disjoint for range-query fast paths.
+     *
+     * When `true` (default), @ref getOverlappingRangeImpl() uses O(log n) binary search,
+     * which requires intervals to be sorted by start and pairwise non-overlapping.
+     * When `false`, falls back to an O(n) linear scan that is correct for overlapping
+     * intervals. Set via @ref DigitalIntervalSeries::_syncStorageDisjointHint() from
+     * `IntervalLayout`.
+     *
+     * @see assumeDisjointIntervals()
+     * @see getOverlappingRangeImpl()
+     * @see ViewDigitalIntervalStorage::filterByOverlappingRange()
+     * @see LazyDigitalIntervalStorage::getOverlappingRangeImpl()
+     */
+    void setAssumeDisjointIntervals(bool assume_disjoint) { _assume_disjoint_intervals = assume_disjoint; }
+
+    /**
+     * @brief Whether intervals are assumed disjoint for range-query fast paths.
+     * @see setAssumeDisjointIntervals()
+     */
+    [[nodiscard]] bool assumeDisjointIntervals() const { return _assume_disjoint_intervals; }
+
     // ========== CRTP Implementation ==========
 
     [[nodiscard]] size_t sizeImpl() const { return _intervals.size(); }
@@ -119,6 +141,19 @@ public:
 
     [[nodiscard]] bool hasIntervalAtTimeImpl(int64_t time) const;
 
+    /**
+     * @brief Get index range of intervals overlapping [start, end].
+     *
+     * **Disjoint fast path** (`assumeDisjointIntervals() == true`): O(log n) binary search
+     * on sorted starts and ends. Requires pairwise non-overlapping intervals.
+     *
+     * **Overlapping fallback** (`assumeDisjointIntervals() == false`): O(n) linear scan;
+     * correct when intervals may overlap.
+     *
+     * @see setAssumeDisjointIntervals()
+     * @see ViewDigitalIntervalStorage::getOverlappingRangeImpl()
+     * @see LazyDigitalIntervalStorage::getOverlappingRangeImpl()
+     */
     [[nodiscard]] std::pair<size_t, size_t> getOverlappingRangeImpl(int64_t start, int64_t end) const;
 
     [[nodiscard]] std::pair<size_t, size_t> getContainedRangeImpl(int64_t start, int64_t end) const;
@@ -165,6 +200,7 @@ private:
     std::vector<Interval> _intervals;
     std::vector<EntityId> _entity_ids;
     std::unordered_map<EntityId, size_t> _entity_id_to_index;
+    bool _assume_disjoint_intervals{true};
 };
 
 

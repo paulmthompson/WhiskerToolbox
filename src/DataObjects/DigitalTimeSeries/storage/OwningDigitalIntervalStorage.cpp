@@ -212,6 +212,19 @@ std::pair<size_t, size_t> OwningDigitalIntervalStorage::getOverlappingRangeImpl(
         return {0, 0};
     }
 
+    if (!_assume_disjoint_intervals) {
+        size_t start_idx = _intervals.size();
+        size_t end_idx = 0;
+        for (size_t i = 0; i < _intervals.size(); ++i) {
+            Interval const & interval = _intervals[i];
+            if (interval.start <= end && interval.end >= start) {
+                start_idx = std::min(start_idx, i);
+                end_idx = std::max(end_idx, i + 1);
+            }
+        }
+        return start_idx <= end_idx ? std::pair{start_idx, end_idx} : std::pair<size_t, size_t>{0, 0};
+    }
+
     // An interval overlaps [start, end] if interval.start <= end && interval.end >= start
     //
     // Key insight: Since intervals are disjoint (merged on insertion) and sorted by start,
@@ -230,8 +243,8 @@ std::pair<size_t, size_t> OwningDigitalIntervalStorage::getOverlappingRangeImpl(
     auto it_start = std::ranges::lower_bound(_intervals.begin(), it_end, start, {},
                                              [](Interval const & i) { return i.end; });
 
-    size_t start_idx = static_cast<size_t>(std::distance(_intervals.begin(), it_start));
-    size_t end_idx = static_cast<size_t>(std::distance(_intervals.begin(), it_end));
+    auto const start_idx = static_cast<size_t>(std::distance(_intervals.begin(), it_start));
+    auto const end_idx = static_cast<size_t>(std::distance(_intervals.begin(), it_end));
 
     return {start_idx, end_idx};
 }
@@ -250,7 +263,7 @@ std::pair<size_t, size_t> OwningDigitalIntervalStorage::getContainedRangeImpl(in
         return {0, 0};
     }
 
-    size_t start_idx = static_cast<size_t>(std::distance(_intervals.begin(), it_start));
+    auto const start_idx = static_cast<size_t>(std::distance(_intervals.begin(), it_start));
     size_t end_idx = start_idx;
 
     // Find last interval where end <= end
@@ -284,9 +297,9 @@ void OwningDigitalIntervalStorage::_sortIntervalsWithEntityIds() {
     std::vector<EntityId> sorted_ids;
     sorted_ids.reserve(_entity_ids.size());
 
-    for (size_t i = 0; i < indices.size(); ++i) {
-        sorted_intervals.push_back(_intervals[indices[i]]);
-        sorted_ids.push_back(_entity_ids[indices[i]]);
+    for (size_t const indice: indices) {
+        sorted_intervals.push_back(_intervals[indice]);
+        sorted_ids.push_back(_entity_ids[indice]);
     }
 
     _intervals = std::move(sorted_intervals);

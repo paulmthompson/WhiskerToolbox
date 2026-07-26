@@ -233,3 +233,74 @@ TEST_CASE("DigitalIntervalSeries - view() concept-compliant iteration", "[DataMa
         REQUIRE(collected_values[1].end == 400);
     }
 }
+
+TEST_CASE("DigitalIntervalSeries - IntervalLayout", "[DataManager][interval][layout]") {
+    SECTION("Default layout is Disjoint") {
+        DigitalIntervalSeries series;
+        REQUIRE(series.layout() == IntervalLayout::Disjoint);
+    }
+
+    SECTION("Disjoint layout merges overlapping addEvent calls") {
+        DigitalIntervalSeries series;
+        series.addEvent(Interval{0, 10});
+        series.addEvent(Interval{5, 15});
+        REQUIRE(series.size() == 1);
+        REQUIRE(series.view()[0].value().start == 0);
+        REQUIRE(series.view()[0].value().end == 15);
+    }
+
+    SECTION("Overlapping layout preserves intervals on addEvent") {
+        auto series = DigitalIntervalSeries::createOverlapping({});
+        series->addEvent(Interval{0, 10});
+        series->addEvent(Interval{5, 15});
+        REQUIRE(series->layout() == IntervalLayout::Overlapping);
+        REQUIRE(series->size() == 2);
+    }
+
+    SECTION("Overlapping layout does not suppress contained intervals") {
+        auto series = DigitalIntervalSeries::createOverlapping({});
+        series->addEvent(Interval{100, 200});
+        series->addEvent(Interval{120, 150});
+        REQUIRE(series->size() == 2);
+    }
+
+    SECTION("Overlapping layout rejects exact duplicate addEvent") {
+        auto series = DigitalIntervalSeries::createOverlapping({});
+        series->addEvent(Interval{10, 20});
+        series->addEvent(Interval{10, 20});
+        REQUIRE(series->size() == 1);
+    }
+
+    SECTION("layout propagates through materialize and createView") {
+        auto overlapping = DigitalIntervalSeries::createOverlapping(
+                {Interval{0, 10}, Interval{20, 30}});
+        auto materialized = overlapping->materialize();
+        REQUIRE(materialized->layout() == IntervalLayout::Overlapping);
+
+        auto shared = std::const_pointer_cast<DigitalIntervalSeries const>(overlapping);
+        auto view = DigitalIntervalSeries::createView(shared, 0, 100);
+        REQUIRE(view->layout() == IntervalLayout::Overlapping);
+    }
+
+    SECTION("createFromView defaults to Overlapping layout") {
+        std::vector<std::pair<Interval, EntityId>> data{
+                {Interval{0, 10}, EntityId{1}},
+                {Interval{20, 30}, EntityId{2}},
+        };
+        auto range_view = data | std::views::transform([](auto const & p) {
+                              return IntervalWithId{p.first, p.second};
+                          });
+        auto lazy = DigitalIntervalSeries::createFromView(range_view, data.size());
+        REQUIRE(lazy->layout() == IntervalLayout::Overlapping);
+    }
+
+    SECTION("createView time filter includes all overlapping intervals") {
+        auto overlapping = DigitalIntervalSeries::createOverlapping(
+                {Interval{0, 100}, Interval{50, 60}});
+        auto shared = std::const_pointer_cast<DigitalIntervalSeries const>(overlapping);
+        auto filtered = DigitalIntervalSeries::createView(shared, 62, 65);
+        REQUIRE(filtered->size() == 1);
+        REQUIRE(filtered->view()[0].value().start == 0);
+        REQUIRE(filtered->view()[0].value().end == 100);
+    }
+}

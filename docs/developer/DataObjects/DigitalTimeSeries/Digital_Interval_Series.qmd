@@ -1,0 +1,50 @@
+---
+title: "DigitalIntervalSeries"
+format: html
+---
+
+## Interval layout
+
+`DigitalIntervalSeries` has a construction-time `IntervalLayout` exposed via `layout()` (no setter):
+
+| Layout | `addEvent` behavior | Typical use |
+|--------|---------------------|-------------|
+| `Disjoint` (default) | Merges overlapping/contiguous intervals | User annotations, IO, interactive editing |
+| `Overlapping` | Inserts without merging | Transform intermediates, bulk algorithm output |
+
+Create overlapping series with:
+
+```cpp
+auto series = DigitalIntervalSeries::createOverlapping(std::vector<Interval>{...});
+```
+
+`createFromView()` defaults to `Overlapping` because lazy storage backs transform pipelines.
+
+Layout propagates through `materialize()` and `createView()`. Owning storage's disjoint hint is synced via `DigitalIntervalSeries::_syncStorageDisjointHint()`.
+
+## Mutation APIs
+
+- `setEventAtTime()` / `setEventsAtTimes()` require `Disjoint` layout (debug `assert`).
+- Overlapping series support read/query APIs (`view()`, `viewInRange()`, `hasIntervalAtTime()`, etc.) and `addEvent()` without merging.
+
+## Storage range queries (`getOverlappingRange`)
+
+All backends return indices `[start_idx, end_idx)` where each interval satisfies `interval.start <= end && interval.end >= start`. **Implementation differs by backend and layout:**
+
+| Backend | Disjoint fast path | Overlapping fallback | Notes |
+|---------|-------------------|----------------------|-------|
+| `OwningDigitalIntervalStorage` | O(log n) binary search when `assumeDisjointIntervals()` is true | O(n) linear scan when false | Hint set from `IntervalLayout` via `_syncStorageDisjointHint()` |
+| `ViewDigitalIntervalStorage` | O(log n) when `source()->assumeDisjointIntervals()` | O(n) via `filterByOverlappingRangeLinear()` | `filterByOverlappingRange()` picks path from source hint |
+| `LazyDigitalIntervalStorage` | **Not available** | **Always O(n) linear scan** | See limitation below |
+
+Doxygen `@see` links on each `getOverlappingRangeImpl()` cross-reference the other backends.
+
+### Lazy storage limitation
+
+`LazyDigitalIntervalStorage::getOverlappingRangeImpl()` **always** uses a linear scan. Unlike owning and view storage, lazy storage does not read `assumeDisjointIntervals()` and therefore cannot use the binary-search fast path, even when the underlying transform view yields sorted disjoint intervals.
+
+This is acceptable for current use (`createFromView()` + `IntervalLayout::Overlapping` intermediates) where overlaps are possible and range queries are infrequent. If disjoint lazy views become hot paths, add an `assumeDisjointIntervals()` hook to lazy storage mirroring owning storage.
+
+### Why the fast path requires disjoint intervals
+
+The O(log n) optimization assumes sorted-by-start intervals are also sorted-by-end (true only when intervals are pairwise non-overlapping). With overlaps such as `[0, 100]` and `[50, 60]`, binary search on end times can return incorrect index bounds; the linear fallback avoids that.

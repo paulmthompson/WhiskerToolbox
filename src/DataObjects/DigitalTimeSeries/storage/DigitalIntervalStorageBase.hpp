@@ -3,11 +3,11 @@
 
 #include "DigitalIntervalStorageCache.hpp"
 
-#include "Entity/EntityId.hpp"                  // EntityId
-#include "TimeFrame/interval_data.hpp"          // Interval struct
+#include "Entity/EntityId.hpp"        // EntityId
+#include "TimeFrame/interval_data.hpp"// Interval struct
 
-#include <optional> // std::optional
-#include <utility>  // std::pair
+#include <optional>// std::optional
+#include <utility> // std::pair
 
 
 // =============================================================================
@@ -31,14 +31,14 @@ template<typename Derived>
 class DigitalIntervalStorageBase {
 public:
     // ========== Size & Bounds ==========
-    
+
     /**
      * @brief Get total number of intervals
      */
     [[nodiscard]] size_t size() const {
-        return static_cast<Derived const*>(this)->sizeImpl();
+        return static_cast<Derived const *>(this)->sizeImpl();
     }
-    
+
     /**
      * @brief Check if storage is empty
      */
@@ -47,64 +47,68 @@ public:
     }
 
     // ========== Element Access ==========
-    
+
     /**
      * @brief Get the interval at a flat index
      * @param idx Flat index in [0, size())
      */
-    [[nodiscard]] Interval const& getInterval(size_t idx) const {
-        return static_cast<Derived const*>(this)->getIntervalImpl(idx);
+    [[nodiscard]] Interval const & getInterval(size_t idx) const {
+        return static_cast<Derived const *>(this)->getIntervalImpl(idx);
     }
-    
+
     /**
      * @brief Get the EntityId at a flat index
      * @param idx Flat index in [0, size())
      */
     [[nodiscard]] EntityId getEntityId(size_t idx) const {
-        return static_cast<Derived const*>(this)->getEntityIdImpl(idx);
+        return static_cast<Derived const *>(this)->getEntityIdImpl(idx);
     }
 
     // ========== Lookup Operations ==========
-    
+
     /**
      * @brief Find the index of an interval by its exact start/end times
      * @param interval The exact Interval to find
      * @return Index of the interval, or std::nullopt if not found
      */
-    [[nodiscard]] std::optional<size_t> findByInterval(Interval const& interval) const {
-        return static_cast<Derived const*>(this)->findByIntervalImpl(interval);
+    [[nodiscard]] std::optional<size_t> findByInterval(Interval const & interval) const {
+        return static_cast<Derived const *>(this)->findByIntervalImpl(interval);
     }
-    
+
     /**
      * @brief Find the index of an interval by its EntityId
      * @param id The EntityId to search for
      * @return Index of the interval, or std::nullopt if not found
      */
     [[nodiscard]] std::optional<size_t> findByEntityId(EntityId id) const {
-        return static_cast<Derived const*>(this)->findByEntityIdImpl(id);
+        return static_cast<Derived const *>(this)->findByEntityIdImpl(id);
     }
-    
+
     /**
      * @brief Check if any interval contains the specified time
      * @param time The time to check
      * @return true if any interval contains the time
      */
     [[nodiscard]] bool hasIntervalAtTime(int64_t time) const {
-        return static_cast<Derived const*>(this)->hasIntervalAtTimeImpl(time);
+        return static_cast<Derived const *>(this)->hasIntervalAtTimeImpl(time);
     }
-    
+
     /**
      * @brief Get range of indices for intervals overlapping [start, end]
      * @param start Start time (inclusive)
      * @param end End time (inclusive)
      * @return Pair of (start_idx, end_idx) where end is exclusive
      * 
-     * @note Returns intervals where interval.start <= end && interval.end >= start
+     * @note Returns intervals where interval.start <= end && interval.end >= start.
+     *       Implementation strategy depends on storage backend; see
+     *       @ref OwningDigitalIntervalStorage::getOverlappingRangeImpl(),
+     *       @ref ViewDigitalIntervalStorage::getOverlappingRangeImpl(), and
+     *       @ref LazyDigitalIntervalStorage::getOverlappingRangeImpl().
      */
     [[nodiscard]] std::pair<size_t, size_t> getOverlappingRange(int64_t start, int64_t end) const {
-        return static_cast<Derived const*>(this)->getOverlappingRangeImpl(start, end);
+        return static_cast<Derived const *>(this)->getOverlappingRangeImpl(start, end);
     }
-    
+
     /**
      * @brief Get range of indices for intervals fully contained in [start, end]
      * @param start Start time (inclusive)
@@ -114,25 +118,25 @@ public:
      * @note Returns intervals where interval.start >= start && interval.end <= end
      */
     [[nodiscard]] std::pair<size_t, size_t> getContainedRange(int64_t start, int64_t end) const {
-        return static_cast<Derived const*>(this)->getContainedRangeImpl(start, end);
+        return static_cast<Derived const *>(this)->getContainedRangeImpl(start, end);
     }
 
     // ========== Storage Type ==========
-    
+
     /**
      * @brief Get the storage type identifier
      */
     [[nodiscard]] DigitalIntervalStorageType getStorageType() const {
-        return static_cast<Derived const*>(this)->getStorageTypeImpl();
+        return static_cast<Derived const *>(this)->getStorageTypeImpl();
     }
-    
+
     /**
      * @brief Check if this is a view (doesn't own data)
      */
     [[nodiscard]] bool isView() const {
         return getStorageType() == DigitalIntervalStorageType::View;
     }
-    
+
     /**
      * @brief Check if this is lazy storage
      */
@@ -141,14 +145,14 @@ public:
     }
 
     // ========== Cache Optimization ==========
-    
+
     /**
      * @brief Try to get cached pointers for fast-path access
      * 
      * @return DigitalIntervalStorageCache with valid pointers if contiguous, invalid otherwise
      */
     [[nodiscard]] DigitalIntervalStorageCache tryGetCache() const {
-        return static_cast<Derived const*>(this)->tryGetCacheImpl();
+        return static_cast<Derived const *>(this)->tryGetCacheImpl();
     }
 
 protected:
@@ -156,4 +160,4 @@ protected:
 };
 
 
-#endif // DIGITAL_INTERVAL_STORAGE_BASE_HPP
+#endif// DIGITAL_INTERVAL_STORAGE_BASE_HPP

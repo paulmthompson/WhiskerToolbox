@@ -4,13 +4,13 @@
 #include "DigitalIntervalStorageBase.hpp"
 #include "DigitalIntervalStorageCache.hpp"
 
-#include "Entity/EntityTypes.hpp"       // EntityId with hash specialization
-#include "TimeFrame/interval_data.hpp"  // Interval struct
+#include "Entity/EntityTypes.hpp"     // EntityId with hash specialization
+#include "TimeFrame/interval_data.hpp"// Interval struct
 
-#include <algorithm>        // std::ranges::lower_bound, std::ranges::upper_bound, std::min, std::max
-#include <optional>         // std::optional
-#include <ranges>           // std::ranges::random_access_range, std::ranges::views::iota
-#include <unordered_map>    // std::unordered_map
+#include <algorithm>    // std::ranges::lower_bound, std::ranges::upper_bound, std::min, std::max
+#include <optional>     // std::optional
+#include <ranges>       // std::ranges::random_access_range, std::ranges::views::iota
+#include <unordered_map>// std::unordered_map
 
 // =============================================================================
 // Lazy Storage (View-based Computation on Demand)
@@ -25,7 +25,16 @@
  * 
  * The view must yield objects with .interval and .entity_id members
  * (or convertible to Interval/EntityId pair).
- * 
+ *
+ * ## Range-query limitation
+ *
+ * @ref getOverlappingRangeImpl() always uses an O(n) linear scan. Unlike
+ * @ref OwningDigitalIntervalStorage and @ref ViewDigitalIntervalStorage, lazy storage
+ * does not expose `assumeDisjointIntervals()` and therefore does not use the O(log n)
+ * binary-search fast path, even when the underlying view yields disjoint intervals.
+ * This is intentional for transform intermediates (`IntervalLayout::Overlapping`) where
+ * overlaps are possible; a disjoint fast path may be added later if needed.
+ *
  * @tparam ViewType Type of the random-access range view
  */
 template<typename ViewType>
@@ -100,35 +109,38 @@ public:
         return false;
     }
 
+    /**
+     * @brief Get index range of intervals overlapping [start, end].
+     *
+     * **Always O(n) linear scan** over computed elements. Correct for overlapping
+     * intervals. Does not use the disjoint binary-search optimization available on
+     * @ref OwningDigitalIntervalStorage::getOverlappingRangeImpl() and
+     * @ref ViewDigitalIntervalStorage::getOverlappingRangeImpl().
+     *
+     * @note Lazy storage has no `assumeDisjointIntervals()` hook; disjoint transform
+     *       views still pay linear cost for this query.
+     *
+     * @see OwningDigitalIntervalStorage::getOverlappingRangeImpl()
+     * @see ViewDigitalIntervalStorage::getOverlappingRangeImpl()
+     */
     [[nodiscard]] std::pair<size_t, size_t> getOverlappingRangeImpl(int64_t start, int64_t end) const {
         if (_num_elements == 0 || start > end) {
             return {0, 0};
         }
 
-        // Lazy storage also maintains sorted disjoint intervals, so we can use binary search.
-        // Use std::views::iota to create an index range for binary searching.
-        auto indices = std::views::iota(size_t{0}, _num_elements);
+        // Linear scan: lazy storage backs transform intermediates that may overlap.
+        size_t start_idx = _num_elements;
+        size_t end_idx = 0;
 
-        // Find first index where interval ends at or after start
-        auto it_start = std::ranges::lower_bound(indices, start, {},
-                                                 [this](size_t idx) { return getIntervalImpl(idx).end; });
-
-        // Find first index where interval starts strictly after end
-        auto it_end = std::ranges::upper_bound(indices, end, {},
-                                               [this](size_t idx) { return getIntervalImpl(idx).start; });
-
-        size_t start_idx = *it_start;
-        size_t end_idx = *it_end;
-
-        // Handle edge cases where iterators are at end
-        if (it_start == indices.end()) {
-            return {0, 0};
-        }
-        if (it_end == indices.end()) {
-            end_idx = _num_elements;
+        for (size_t i = 0; i < _num_elements; ++i) {
+            Interval const & interval = getIntervalImpl(i);
+            if (interval.start <= end && interval.end >= start) {
+                start_idx = std::min(start_idx, i);
+                end_idx = std::max(end_idx, i + 1);
+            }
         }
 
-        return {start_idx, end_idx};
+        return start_idx <= end_idx ? std::pair{start_idx, end_idx} : std::pair<size_t, size_t>{0, 0};
     }
 
     [[nodiscard]] std::pair<size_t, size_t> getContainedRangeImpl(int64_t start, int64_t end) const {

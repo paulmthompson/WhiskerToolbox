@@ -44,9 +44,29 @@ public:
     void setAllIndices();
 
     /**
-     * @brief Filter by overlapping time range [start, end]
+     * @brief Filter by overlapping time range [start, end].
+     *
+     * Delegates to the source owning storage when
+     * `source()->assumeDisjointIntervals()` is true (O(log n) on source size), otherwise
+     * uses @ref filterByOverlappingRangeLinear().
+     *
+     * @see filterByOverlappingRangeLinear()
+     * @see OwningDigitalIntervalStorage::getOverlappingRangeImpl()
+     * @see LazyDigitalIntervalStorage::getOverlappingRangeImpl()
      */
     void filterByOverlappingRange(int64_t start, int64_t end);
+
+    /**
+     * @brief Filter by overlapping time range [start, end] using linear scan.
+     *
+     * O(n) over source intervals; correct when intervals may overlap. Same overlap test
+     * as @ref OwningDigitalIntervalStorage::getOverlappingRangeImpl() in overlapping mode
+     * and @ref LazyDigitalIntervalStorage::getOverlappingRangeImpl().
+     *
+     * @see filterByOverlappingRange()
+     * @see OwningDigitalIntervalStorage::getOverlappingRangeImpl()
+     */
+    void filterByOverlappingRangeLinear(int64_t start, int64_t end);
 
     /**
      * @brief Filter by contained time range [start, end]
@@ -84,6 +104,18 @@ public:
 
     [[nodiscard]] bool hasIntervalAtTimeImpl(int64_t time) const;
 
+    /**
+     * @brief Get index range of view-local indices overlapping [start, end].
+     *
+     * **Disjoint fast path** (`source()->assumeDisjointIntervals() == true`): O(log n)
+     * binary search over view indices (requires disjoint source intervals).
+     *
+     * **Overlapping fallback**: O(n) linear scan over view indices.
+     *
+     * @see filterByOverlappingRange()
+     * @see OwningDigitalIntervalStorage::getOverlappingRangeImpl()
+     * @see LazyDigitalIntervalStorage::getOverlappingRangeImpl()
+     */
     [[nodiscard]] std::pair<size_t, size_t> getOverlappingRangeImpl(int64_t start, int64_t end) const;
 
     [[nodiscard]] std::pair<size_t, size_t> getContainedRangeImpl(int64_t start, int64_t end) const;

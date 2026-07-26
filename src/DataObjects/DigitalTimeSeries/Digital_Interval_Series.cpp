@@ -46,6 +46,7 @@ DigitalIntervalSeries::DigitalIntervalSeries(std::vector<Interval> digital_vecto
     }
     _storage = DigitalIntervalStorageWrapper{std::move(new_storage)};
     _cacheOptimizationPointers();
+    _syncStorageDisjointHint();
 }
 
 DigitalIntervalSeries::DigitalIntervalSeries(std::vector<std::pair<float, float>> const & digital_vector) {
@@ -64,6 +65,26 @@ DigitalIntervalSeries::DigitalIntervalSeries(std::vector<std::pair<float, float>
     }
     _storage = DigitalIntervalStorageWrapper{std::move(new_storage)};
     _cacheOptimizationPointers();
+    _syncStorageDisjointHint();
+}
+
+std::shared_ptr<DigitalIntervalSeries> DigitalIntervalSeries::createOverlapping(
+        std::vector<Interval> intervals,
+        std::shared_ptr<TimeFrame> time_frame) {
+    auto result = std::make_shared<DigitalIntervalSeries>();
+    result->_layout = IntervalLayout::Overlapping;
+    result->_time_frame = std::move(time_frame);
+
+    std::sort(intervals.begin(), intervals.end());
+    OwningDigitalIntervalStorage new_storage;
+    new_storage.reserve(intervals.size());
+    for (auto const & interval: intervals) {
+        new_storage.addInterval(interval, EntityId{0});
+    }
+    new_storage.setAssumeDisjointIntervals(false);
+    result->_storage = DigitalIntervalStorageWrapper{std::move(new_storage)};
+    result->_cacheOptimizationPointers();
+    return result;
 }
 
 // ========== Getters ==========
@@ -78,6 +99,7 @@ void DigitalIntervalSeries::addEvent(Interval new_interval) {
         if (!owning) {
             throw std::runtime_error("Failed to get mutable storage for addEvent");
         }
+        _syncStorageDisjointHint();
     }
 
     auto const result_interval = _addEventInternal(new_interval);
@@ -110,6 +132,13 @@ std::optional<Interval> DigitalIntervalSeries::_addEventInternal(Interval new_in
     auto * owning = _storage.tryGetMutableOwning();
     if (!owning) {
         return std::nullopt;// Caller should have ensured mutable storage
+    }
+
+    if (_layout == IntervalLayout::Overlapping) {
+        if (owning->addInterval(new_interval, EntityId{0})) {
+            return new_interval;
+        }
+        return std::nullopt;
     }
 
     // Collect indices of overlapping/contiguous intervals to merge
@@ -156,6 +185,7 @@ std::optional<Interval> DigitalIntervalSeries::_addEventInternal(Interval new_in
 }
 
 void DigitalIntervalSeries::setEventAtTime(TimeFrameIndex time, bool const event) {
+    assert(_layout == IntervalLayout::Disjoint && "setEventAtTime requires Disjoint layout");
     _setEventAtTimeInternal(time, event);
     _cacheOptimizationPointers();
     notifyObservers();
@@ -226,6 +256,7 @@ size_t DigitalIntervalSeries::removeIntervals(std::vector<Interval> const & inte
 }
 
 void DigitalIntervalSeries::_setEventAtTimeInternal(TimeFrameIndex time, bool const event) {
+    assert(_layout == IntervalLayout::Disjoint && "setEventAtTime requires Disjoint layout");
     if (!event) {
         _removeEventAtTimeInternal(time);
     } else {
@@ -375,6 +406,12 @@ void DigitalIntervalSeries::_cacheOptimizationPointers() {
     _cached_storage = _storage.tryGetCache();
 }
 
+void DigitalIntervalSeries::_syncStorageDisjointHint() {
+    if (auto * owning = _storage.tryGetMutableOwning()) {
+        owning->setAssumeDisjointIntervals(_layout == IntervalLayout::Disjoint);
+    }
+}
+
 // ========== Factory Methods ==========
 
 std::shared_ptr<DigitalIntervalSeries> DigitalIntervalSeries::createView(
@@ -394,6 +431,7 @@ std::shared_ptr<DigitalIntervalSeries> DigitalIntervalSeries::createView(
     view.filterByOverlappingRange(start, end);
 
     auto result = std::make_shared<DigitalIntervalSeries>();
+    result->_layout = source->layout();
     result->_storage = DigitalIntervalStorageWrapper{std::move(view)};
     result->_time_frame = source->_time_frame;
     result->_identity_data_key = source->_identity_data_key;
@@ -406,6 +444,7 @@ std::shared_ptr<DigitalIntervalSeries> DigitalIntervalSeries::createView(
         std::shared_ptr<DigitalIntervalSeries const> const & source,
         std::unordered_set<EntityId> const & entity_ids) {
     auto result = std::make_shared<DigitalIntervalSeries>();
+    result->_layout = source->layout();
     result->_time_frame = source->_time_frame;
     result->_identity_data_key = source->_identity_data_key;
     result->_identity_registry = source->_identity_registry;
@@ -432,6 +471,7 @@ std::shared_ptr<DigitalIntervalSeries> DigitalIntervalSeries::createView(
 
 std::shared_ptr<DigitalIntervalSeries> DigitalIntervalSeries::materialize() const {
     auto result = std::make_shared<DigitalIntervalSeries>();
+    result->_layout = _layout;
     result->_time_frame = _time_frame;
     result->_identity_data_key = _identity_data_key;
     result->_identity_registry = _identity_registry;
@@ -445,6 +485,7 @@ std::shared_ptr<DigitalIntervalSeries> DigitalIntervalSeries::materialize() cons
     }
 
     result->_storage = DigitalIntervalStorageWrapper{std::move(new_storage)};
+    result->_syncStorageDisjointHint();
     result->_cacheOptimizationPointers();
     return result;
 }
