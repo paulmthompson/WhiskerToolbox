@@ -140,6 +140,7 @@ REQUIRE(tensor.has_value());
 ## Related documentation
 
 - [Tensor stack overview](../tensor_stack.qmd)
+- [Column row pipeline (design)](column_row_pipeline.qmd) — planned per-column gather geometry
 - [Tensor Inspector (Dev)](../ui/data_inspectors/tensor_inspector.qmd) — UI delegates to this library
 - [TensorColumnBuilders](../transforms_v2/TensorColumnBuilders.qmd) — per-column builder layer
 - [Integration test scenarios](../testing/test_scenarios.qmd)
