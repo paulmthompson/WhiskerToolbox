@@ -1,0 +1,81 @@
+---
+title: "Prune Overlapping Intervals Transform"
+---
+
+## Overview
+
+The `PruneOverlappingIntervals` transform applies greedy keep-first overlap pruning to a `DigitalIntervalSeries`, producing a disjoint (non-overlapping) `DigitalIntervalSeries`. This is the materialized counterpart to the overlap pruning in `PlotAlignmentGather`, applied directly to interval bounds rather than alignment-point windows.
+
+The transform is parameterless and preserves the input `TimeFrame`.
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `src/TransformsV2/algorithms/PruneOverlappingIntervals/PruneOverlappingIntervals.hpp` | Function declaration |
+| `src/TransformsV2/algorithms/PruneOverlappingIntervals/PruneOverlappingIntervals.cpp` | Algorithm implementation |
+| `src/TransformsV2/algorithms/PruneOverlappingIntervals/PruneOverlappingIntervals.test.cpp` | Unit tests |
+
+## Parameters
+
+```cpp
+struct PruneOverlappingIntervalsParams {};
+```
+
+Currently empty; reserved for future pruning policy options (e.g. alternative overlap policies).
+
+## Algorithm
+
+1. Collect all intervals from the input series (sorted by start time).
+2. Greedy left-to-right scan:
+   - Keep the first interval.
+   - For each subsequent interval, keep it only if `interval.start > last_kept.end`.
+   - Touching intervals (`start == last_kept.end`) are treated as overlapping and pruned.
+3. Return a new `DigitalIntervalSeries` with `IntervalLayout::Disjoint` and the input `TimeFrame`.
+
+This matches `pruneOverlappingAlignmentTimes` in `PlotAlignmentGather.hpp` with interval bounds used directly as the pruning window.
+
+## Registration
+
+Registered in `RegisteredTransforms.cpp` as:
+
+```cpp
+RegisterContainerTransform<DigitalIntervalSeries, DigitalIntervalSeries, PruneOverlappingIntervalsParams>(
+    "PruneOverlappingIntervals", pruneOverlappingIntervals, ...);
+```
+
+## Pipeline Usage
+
+```json
+{
+  "steps": [{
+    "step_id": "prune_windows",
+    "transform_name": "PruneOverlappingIntervals",
+    "input_key": "stimulus_windows",
+    "output_key": "stimulus_windows_disjoint"
+  }]
+}
+```
+
+## Relationship to GatherResult Migration
+
+This transform implements the overlap pruning step described in `digital_interval_series_migration_design.qmd`. Typical composition after event window expansion:
+
+```text
+DigitalEventSeries -> EventToInterval -> PruneOverlappingIntervals -> DigitalIntervalSeries
+```
+
+## Edge Cases
+
+| Input | Behavior |
+|-------|----------|
+| Empty interval series | Returns empty disjoint `DigitalIntervalSeries` |
+| Single interval | Returns that interval unchanged |
+| Well-separated intervals | All intervals kept |
+| Overlapping or touching intervals | Greedy keep-first pruning |
+| Overlapping input layout | Output is always `Disjoint` |
+| Cancellation | Returns empty disjoint series |
+
+## Tests
+
+Colocated tests cover empty input, single interval, well-separated intervals, overlapping/touching pruning, chain pruning, TimeFrame propagation, overlapping input layout, and registry execution.

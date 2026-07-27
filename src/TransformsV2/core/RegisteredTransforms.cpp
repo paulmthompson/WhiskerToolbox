@@ -23,6 +23,7 @@
 #include "algorithms/MaskMedianFilter/MaskMedianFilter.hpp"
 #include "algorithms/MaskSkeletonize/MaskSkeletonize.hpp"
 #include "algorithms/MaskToLine/MaskToLine.hpp"
+#include "algorithms/PruneOverlappingIntervals/PruneOverlappingIntervals.hpp"
 #include "algorithms/RemoveLineOutliers/RemoveLineOutliers.hpp"
 #include "algorithms/SincInterpolation/SincInterpolation.hpp"
 #include "algorithms/SumReduction/SumReduction.hpp"
@@ -87,6 +88,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<DigitalIntervalBooleanParams>();
     registerPipelineStepFactoryFor<EventToIntervalParams>();
     registerPipelineStepFactoryFor<IntervalToEventParams>();
+    registerPipelineStepFactoryFor<PruneOverlappingIntervalsParams>();
     registerPipelineStepFactoryFor<IntervalReductionParams>();
     registerPipelineStepFactoryFor<ZScoreNormalizationParamsV2>();
     registerPipelineStepFactoryFor<AnalogDifferenceParams>();
@@ -994,6 +996,20 @@ auto const register_interval_to_event = RegisterContainerTransform<
                 .input_type_name = "DigitalIntervalSeries",
                 .output_type_name = "DigitalEventSeries",
                 .params_type_name = "IntervalToEventParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+auto const register_prune_overlapping_intervals = RegisterContainerTransform<
+        DigitalIntervalSeries, DigitalIntervalSeries, PruneOverlappingIntervalsParams>(
+        "PruneOverlappingIntervals",
+        pruneOverlappingIntervals,
+        ContainerTransformMetadata{
+                .description = "Greedy keep-first pruning of overlapping intervals",
+                .category = "Signal Processing",
+                .input_type_name = "DigitalIntervalSeries",
+                .output_type_name = "DigitalIntervalSeries",
+                .params_type_name = "PruneOverlappingIntervalsParams",
                 .is_expensive = false,
                 .is_deterministic = true,
                 .supports_cancellation = true});
