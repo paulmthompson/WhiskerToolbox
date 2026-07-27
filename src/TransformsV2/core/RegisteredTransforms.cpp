@@ -6,6 +6,7 @@
 #include "algorithms/AnalogIntervalThreshold/AnalogIntervalThreshold.hpp"
 #include "algorithms/AnalogToTensor/AnalogToTensor.hpp"
 #include "algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp"
+#include "algorithms/EventToInterval/EventToInterval.hpp"
 #include "algorithms/IntervalReduction/IntervalReduction.hpp"
 #include "algorithms/LineAngle/LineAngle.hpp"
 #include "algorithms/LineBaseFlip/LineBaseFlip.hpp"
@@ -83,6 +84,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<AnalogIntervalPeakParams>();
     registerPipelineStepFactoryFor<AnalogIntervalThresholdParams>();
     registerPipelineStepFactoryFor<DigitalIntervalBooleanParams>();
+    registerPipelineStepFactoryFor<EventToIntervalParams>();
     registerPipelineStepFactoryFor<IntervalReductionParams>();
     registerPipelineStepFactoryFor<ZScoreNormalizationParamsV2>();
     registerPipelineStepFactoryFor<AnalogDifferenceParams>();
@@ -963,6 +965,20 @@ auto const register_sinc_interpolation = RegisterContainerTransform<
                 .output_type_name = "AnalogTimeSeries",
                 .params_type_name = "SincInterpolationParams",
                 .is_expensive = true,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+auto const register_event_to_interval = RegisterContainerTransform<
+        DigitalEventSeries, DigitalIntervalSeries, EventToIntervalParams>(
+        "EventToInterval",
+        eventToInterval,
+        ContainerTransformMetadata{
+                .description = "Expand each event into a pre/post window interval",
+                .category = "Signal Processing",
+                .input_type_name = "DigitalEventSeries",
+                .output_type_name = "DigitalIntervalSeries",
+                .params_type_name = "EventToIntervalParams",
+                .is_expensive = false,
                 .is_deterministic = true,
                 .supports_cancellation = true});
 

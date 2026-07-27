@@ -1,0 +1,89 @@
+---
+title: "Event To Interval Transform"
+---
+
+## Overview
+
+The `EventToInterval` transform expands each event in a `DigitalEventSeries` into a window interval, producing a `DigitalIntervalSeries` with `IntervalLayout::Overlapping`. This is the materialized counterpart to the lazy `EventExpanderAdapter` used by `GatherResult`, and is the first step in the GatherResult `DigitalIntervalSeries` migration.
+
+Each event at `TimeFrameIndex` T becomes one interval:
+
+```text
+[T - pre_expansion, T + post_expansion]
+```
+
+Expansion is performed in **TimeFrameIndex space** (not absolute clock time). The output preserves the input `TimeFrame`.
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `src/TransformsV2/algorithms/EventToInterval/EventToInterval.hpp` | Parameter struct and function declaration |
+| `src/TransformsV2/algorithms/EventToInterval/EventToInterval.cpp` | Algorithm implementation |
+| `src/TransformsV2/algorithms/EventToInterval/EventToInterval.test.cpp` | Unit tests |
+
+## Parameters
+
+```cpp
+struct EventToIntervalParams {
+    TimeFrameIndex pre_expansion = TimeFrameIndex{0};
+    TimeFrameIndex post_expansion = TimeFrameIndex{0};
+};
+```
+
+Both fields serialize as `int64_t` via `TimeFrameIndexReflector.hpp` for JSON pipeline loading.
+
+## Algorithm
+
+1. For each event at index `T`, compute `Interval{T - pre, T + post}`.
+2. Collect all intervals into a vector.
+3. Return `DigitalIntervalSeries::createOverlapping(intervals, input.getTimeFrame())`.
+
+Interval bounds are **inclusive** on both ends, matching `EventExpanderAdapter` semantics.
+
+## Registration
+
+Registered in `RegisteredTransforms.cpp` as:
+
+```cpp
+RegisterContainerTransform<DigitalEventSeries, DigitalIntervalSeries, EventToIntervalParams>(
+    "EventToInterval", eventToInterval, ...);
+```
+
+## Pipeline Usage
+
+```json
+{
+  "steps": [{
+    "step_id": "expand_events",
+    "transform_name": "EventToInterval",
+    "input_key": "stimulus_events",
+    "output_key": "stimulus_windows",
+    "parameters": {
+      "pre_expansion": 50,
+      "post_expansion": 100
+    }
+  }]
+}
+```
+
+## Relationship to GatherResult Migration
+
+This transform implements the event-to-window portion described in `digital_interval_series_migration_design.qmd`. Future work may add:
+
+- Companion `DigitalEventSeries` alignment output
+- Cross-timeframe `output_time_frame` parameter
+- Replacement of `expandEvents()` in plot and gather code paths
+
+## Edge Cases
+
+| Input | Behavior |
+|-------|----------|
+| Empty event series | Returns empty overlapping `DigitalIntervalSeries` |
+| Zero pre/post | Produces point interval `[T, T]` |
+| Close/overlapping events | Intervals remain separate (not merged) |
+| Cancellation | Returns empty overlapping series |
+
+## Tests
+
+Colocated tests cover empty input, symmetric/asymmetric windows, overlapping preservation, TimeFrame propagation, registry execution, and JSON parameter loading.
