@@ -711,6 +711,7 @@ x[0] = \varepsilon[0],\quad x[t] = \phi\, x[t-1] + \varepsilon[t],\quad \varepsi
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensor <span class="op">=</span> Neuralyzer<span class="op">::</span>TensorDesign<span class="op">::</span>buildTensorFromDesignJson<span class="op">(</span>fixture<span class="op">.</span>dm<span class="op">(),</span> json<span class="op">);</span></span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>REQUIRE<span class="op">(</span>tensor<span class="op">.</span>has_value<span class="op">());</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Note that <code>pipeline_json</code> is an <strong>embedded JSON string</strong> (double-encoded in the outer file). Cross-timeframe spike counting works because interval gather resolves timebases automatically.</p>
+<p>For <strong>onset-aligned windows</strong> and <strong>per-column gather geometry</strong> (spike presence near onset, angle at onset, tuning-curve tables), see the planned <a href="../../../developer/TensorDesign/column_row_pipeline.html">column row pipeline design</a> and <a href="../../../developer/TensorDesign/column_row_pipeline_roadmap.html">roadmap</a>. That work is not implemented yet; current JSON always gathers over the full contact interval.</p>
 </section>
 </section>
 <section id="running-tests" class="level2">

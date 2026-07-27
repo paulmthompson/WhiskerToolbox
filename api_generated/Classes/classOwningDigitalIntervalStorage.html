@@ -368,6 +368,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-setinterval" id="toc-function-setinterval" class="nav-link" data-scroll-target="#function-setinterval">function setInterval</a></li>
   <li><a href="#function-removeat" id="toc-function-removeat" class="nav-link" data-scroll-target="#function-removeat">function removeAt</a></li>
   <li><a href="#function-sort" id="toc-function-sort" class="nav-link" data-scroll-target="#function-sort">function sort</a></li>
+  <li><a href="#function-setassumedisjointintervals" id="toc-function-setassumedisjointintervals" class="nav-link" data-scroll-target="#function-setassumedisjointintervals">function setAssumeDisjointIntervals</a></li>
+  <li><a href="#function-assumedisjointintervals" id="toc-function-assumedisjointintervals" class="nav-link" data-scroll-target="#function-assumedisjointintervals">function assumeDisjointIntervals</a></li>
   <li><a href="#function-sizeimpl" id="toc-function-sizeimpl" class="nav-link" data-scroll-target="#function-sizeimpl">function sizeImpl</a></li>
   <li><a href="#function-getintervalimpl" id="toc-function-getintervalimpl" class="nav-link" data-scroll-target="#function-getintervalimpl">function getIntervalImpl</a></li>
   <li><a href="#function-getentityidimpl" id="toc-function-getentityidimpl" class="nav-link" data-scroll-target="#function-getentityidimpl">function getEntityIdImpl</a></li>
@@ -478,6 +480,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-sort">sort</a></strong>()<br>Sort intervals and entity IDs together.</td>
 </tr>
 <tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-setassumedisjointintervals">setAssumeDisjointIntervals</a></strong>(bool assume_disjoint)<br>Set whether intervals are assumed disjoint for range-query fast paths.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-assumedisjointintervals">assumeDisjointIntervals</a></strong>() const<br>Whether intervals are assumed disjoint for range-query fast paths.</td>
+</tr>
+<tr class="even">
 <td>size_t</td>
 <td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-sizeimpl">sizeImpl</a></strong>() const</td>
 </tr>
@@ -503,7 +513,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>std::pair&lt; size_t, size_t &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-getoverlappingrangeimpl">getOverlappingRangeImpl</a></strong>(int64_t start, int64_t end) const</td>
+<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-getoverlappingrangeimpl">getOverlappingRangeImpl</a></strong>(int64_t start, int64_t end) const<br>Get index range of intervals overlapping [start, end].</td>
 </tr>
 <tr class="odd">
 <td>std::pair&lt; size_t, size_t &gt;</td>
@@ -733,81 +743,111 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> sort<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Sort intervals and entity IDs together.</p>
 </section>
+<section id="function-setassumedisjointintervals" class="level3">
+<h3 class="anchored" data-anchor-id="function-setassumedisjointintervals">function setAssumeDisjointIntervals</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> setAssumeDisjointIntervals<span class="op">(</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> assume_disjoint</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set whether intervals are assumed disjoint for range-query fast paths.</p>
+<p><strong>See</strong>:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-assumedisjointintervals">assumeDisjointIntervals()</a></li>
+<li><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-getoverlappingrangeimpl">getOverlappingRangeImpl()</a></li>
+<li><a href="../../api_generated/Classes/classViewDigitalIntervalStorage.html#function-filterbyoverlappingrange">ViewDigitalIntervalStorage::filterByOverlappingRange()</a></li>
+<li><a href="../../api_generated/Classes/classLazyDigitalIntervalStorage.html#function-getoverlappingrangeimpl">LazyDigitalIntervalStorage::getOverlappingRangeImpl()</a></li>
+</ul>
+<p>When <code>true</code> (default), <a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-getoverlappingrangeimpl">getOverlappingRangeImpl()</a> uses O(log n) binary search, which requires intervals to be sorted by start and pairwise non-overlapping. When <code>false</code>, falls back to an O(n) linear scan that is correct for overlapping intervals. Set via DigitalIntervalSeries::_syncStorageDisjointHint() from <code>IntervalLayout</code>.</p>
+</section>
+<section id="function-assumedisjointintervals" class="level3">
+<h3 class="anchored" data-anchor-id="function-assumedisjointintervals">function assumeDisjointIntervals</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> assumeDisjointIntervals<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether intervals are assumed disjoint for range-query fast paths.</p>
+<p><strong>See</strong>: <a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-setassumedisjointintervals">setAssumeDisjointIntervals()</a></p>
+</section>
 <section id="function-sizeimpl" class="level3">
 <h3 class="anchored" data-anchor-id="function-sizeimpl">function sizeImpl</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">size_t</span> sizeImpl<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">size_t</span> sizeImpl<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-getintervalimpl" class="level3">
 <h3 class="anchored" data-anchor-id="function-getintervalimpl">function getIntervalImpl</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Interval <span class="at">const</span> <span class="op">&amp;</span> getIntervalImpl<span class="op">(</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> idx</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Interval <span class="at">const</span> <span class="op">&amp;</span> getIntervalImpl<span class="op">(</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> idx</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-getentityidimpl" class="level3">
 <h3 class="anchored" data-anchor-id="function-getentityidimpl">function getEntityIdImpl</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> EntityId getEntityIdImpl<span class="op">(</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> idx</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> EntityId getEntityIdImpl<span class="op">(</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> idx</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-findbyintervalimpl" class="level3">
 <h3 class="anchored" data-anchor-id="function-findbyintervalimpl">function findByIntervalImpl</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="dt">size_t</span> <span class="op">&gt;</span> findByIntervalImpl<span class="op">(</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> interval</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="dt">size_t</span> <span class="op">&gt;</span> findByIntervalImpl<span class="op">(</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> interval</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-findbyentityidimpl" class="level3">
 <h3 class="anchored" data-anchor-id="function-findbyentityidimpl">function findByEntityIdImpl</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="dt">size_t</span> <span class="op">&gt;</span> findByEntityIdImpl<span class="op">(</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    EntityId id</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="dt">size_t</span> <span class="op">&gt;</span> findByEntityIdImpl<span class="op">(</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    EntityId id</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-hasintervalattimeimpl" class="level3">
 <h3 class="anchored" data-anchor-id="function-hasintervalattimeimpl">function hasIntervalAtTimeImpl</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasIntervalAtTimeImpl<span class="op">(</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> time</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasIntervalAtTimeImpl<span class="op">(</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> time</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-getoverlappingrangeimpl" class="level3">
 <h3 class="anchored" data-anchor-id="function-getoverlappingrangeimpl">function getOverlappingRangeImpl</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>pair<span class="op">&lt;</span> <span class="dt">size_t</span><span class="op">,</span> <span class="dt">size_t</span> <span class="op">&gt;</span> getOverlappingRangeImpl<span class="op">(</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> start<span class="op">,</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> end</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>pair<span class="op">&lt;</span> <span class="dt">size_t</span><span class="op">,</span> <span class="dt">size_t</span> <span class="op">&gt;</span> getOverlappingRangeImpl<span class="op">(</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> start<span class="op">,</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> end</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get index range of intervals overlapping [start, end].</p>
+<p><strong>See</strong>:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-setassumedisjointintervals">setAssumeDisjointIntervals()</a></li>
+<li><a href="../../api_generated/Classes/classViewDigitalIntervalStorage.html#function-getoverlappingrangeimpl">ViewDigitalIntervalStorage::getOverlappingRangeImpl()</a></li>
+<li><a href="../../api_generated/Classes/classLazyDigitalIntervalStorage.html#function-getoverlappingrangeimpl">LazyDigitalIntervalStorage::getOverlappingRangeImpl()</a></li>
+</ul>
+<p><strong>Disjoint fast path</strong> (<code>[assumeDisjointIntervals()](/api_generated/Classes/classOwningDigitalIntervalStorage.md#function-assumedisjointintervals) == true</code>): O(log n) binary search on sorted starts and ends. Requires pairwise non-overlapping intervals.</p>
+<p><strong>Overlapping fallback</strong> (<code>[assumeDisjointIntervals()](/api_generated/Classes/classOwningDigitalIntervalStorage.md#function-assumedisjointintervals) == false</code>): O(n) linear scan; correct when intervals may overlap.</p>
 </section>
 <section id="function-getcontainedrangeimpl" class="level3">
 <h3 class="anchored" data-anchor-id="function-getcontainedrangeimpl">function getContainedRangeImpl</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>pair<span class="op">&lt;</span> <span class="dt">size_t</span><span class="op">,</span> <span class="dt">size_t</span> <span class="op">&gt;</span> getContainedRangeImpl<span class="op">(</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> start<span class="op">,</span></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> end</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>pair<span class="op">&lt;</span> <span class="dt">size_t</span><span class="op">,</span> <span class="dt">size_t</span> <span class="op">&gt;</span> getContainedRangeImpl<span class="op">(</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> start<span class="op">,</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> end</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-getstoragetypeimpl" class="level3">
 <h3 class="anchored" data-anchor-id="function-getstoragetypeimpl">function getStorageTypeImpl</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> DigitalIntervalStorageType getStorageTypeImpl<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> DigitalIntervalStorageType getStorageTypeImpl<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-trygetcacheimpl" class="level3">
 <h3 class="anchored" data-anchor-id="function-trygetcacheimpl">function tryGetCacheImpl</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> DigitalIntervalStorageCache tryGetCacheImpl<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> DigitalIntervalStorageCache tryGetCacheImpl<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get cache with pointers to contiguous data.</p>
 <p><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html">OwningDigitalIntervalStorage</a> stores data contiguously in SoA layout, so it always returns a valid cache for fast-path iteration.</p>
 </section>
 <section id="function-intervals" class="level3">
 <h3 class="anchored" data-anchor-id="function-intervals">function intervals</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> Interval <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> intervals<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> Interval <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> intervals<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-entityids" class="level3">
 <h3 class="anchored" data-anchor-id="function-entityids">function entityIds</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entityIds<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entityIds<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-intervalsspan" class="level3">
 <h3 class="anchored" data-anchor-id="function-intervalsspan">function intervalsSpan</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>span<span class="op">&lt;</span> Interval <span class="at">const</span> <span class="op">&gt;</span> intervalsSpan<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>span<span class="op">&lt;</span> Interval <span class="at">const</span> <span class="op">&gt;</span> intervalsSpan<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-entityidsspan" class="level3">
 <h3 class="anchored" data-anchor-id="function-entityidsspan">function entityIdsSpan</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>span<span class="op">&lt;</span> EntityId <span class="at">const</span> <span class="op">&gt;</span> entityIdsSpan<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>span<span class="op">&lt;</span> EntityId <span class="at">const</span> <span class="op">&gt;</span> entityIdsSpan<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-25 at 13:30:56 +0000</p>
+<p>Updated on 2026-07-27 at 20:05:51 +0000</p>
 
 
 </section>

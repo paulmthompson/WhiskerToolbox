@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Column Row Pipeline Design – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-b953592e4a23838a304e2d6f1e057d89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-b194be8c6145450876393aceb1e5b7bc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-b953592e4a23838a304e2d6f1e057d89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#goal" id="toc-goal" class="nav-link active" data-scroll-target="#goal">Goal</a></li>
+  <li><a href="#current-state" id="toc-current-state" class="nav-link" data-scroll-target="#current-state">Current State</a></li>
+  <li><a href="#problem" id="toc-problem" class="nav-link" data-scroll-target="#problem">Problem</a></li>
+  <li><a href="#core-model" id="toc-core-model" class="nav-link" data-scroll-target="#core-model">Core Model</a></li>
+  <li><a href="#responsibilities" id="toc-responsibilities" class="nav-link" data-scroll-target="#responsibilities">Responsibilities</a></li>
+  <li><a href="#row-identity-and-gather-inputs" id="toc-row-identity-and-gather-inputs" class="nav-link" data-scroll-target="#row-identity-and-gather-inputs">Row Identity And Gather Inputs</a></li>
+  <li><a href="#transform-composition" id="toc-transform-composition" class="nav-link" data-scroll-target="#transform-composition">Transform Composition</a></li>
+  <li><a href="#proposed-recipe-shape" id="toc-proposed-recipe-shape" class="nav-link" data-scroll-target="#proposed-recipe-shape">Proposed Recipe Shape</a></li>
+  <li><a href="#proposed-json" id="toc-proposed-json" class="nav-link" data-scroll-target="#proposed-json">Proposed JSON</a></li>
+  <li><a href="#json-authoring-levels" id="toc-json-authoring-levels" class="nav-link" data-scroll-target="#json-authoring-levels">JSON Authoring Levels</a>
+  <ul class="collapse">
+  <li><a href="#level-1-presets" id="toc-level-1-presets" class="nav-link" data-scroll-target="#level-1-presets">Level 1: Presets</a></li>
+  <li><a href="#level-2-assisted-domain-json" id="toc-level-2-assisted-domain-json" class="nav-link" data-scroll-target="#level-2-assisted-domain-json">Level 2: Assisted Domain JSON</a></li>
+  <li><a href="#level-3-raw-pipeline-json" id="toc-level-3-raw-pipeline-json" class="nav-link" data-scroll-target="#level-3-raw-pipeline-json">Level 3: Raw Pipeline JSON</a></li>
+  <li><a href="#saved-design-strategy" id="toc-saved-design-strategy" class="nav-link" data-scroll-target="#saved-design-strategy">Saved Design Strategy</a></li>
+  <li><a href="#preset-library" id="toc-preset-library" class="nav-link" data-scroll-target="#preset-library">Preset Library</a></li>
+  </ul></li>
+  <li><a href="#pipelinevaluestore-iterable-binding" id="toc-pipelinevaluestore-iterable-binding" class="nav-link" data-scroll-target="#pipelinevaluestore-iterable-binding">PipelineValueStore Iterable Binding</a></li>
+  <li><a href="#rasterpsth-example" id="toc-rasterpsth-example" class="nav-link" data-scroll-target="#rasterpsth-example">Raster/PSTH Example</a></li>
+  <li><a href="#provider-dispatch" id="toc-provider-dispatch" class="nav-link" data-scroll-target="#provider-dispatch">Provider Dispatch</a></li>
+  <li><a href="#timeframe-semantics" id="toc-timeframe-semantics" class="nav-link" data-scroll-target="#timeframe-semantics">TimeFrame Semantics</a></li>
+  <li><a href="#overlapping-windows" id="toc-overlapping-windows" class="nav-link" data-scroll-target="#overlapping-windows">Overlapping Windows</a></li>
+  <li><a href="#relationship-to-plot-alignment" id="toc-relationship-to-plot-alignment" class="nav-link" data-scroll-target="#relationship-to-plot-alignment">Relationship To Plot Alignment</a></li>
+  <li><a href="#out-of-scope" id="toc-out-of-scope" class="nav-link" data-scroll-target="#out-of-scope">Out Of Scope</a></li>
+  <li><a href="#open-questions" id="toc-open-questions" class="nav-link" data-scroll-target="#open-questions">Open Questions</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Column Row Pipeline Design</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p><strong>Status:</strong> Design target. The underlying GatherResult and interval-window primitives are implemented; TensorDesign <code>row_pipeline_json</code> wiring is planned.</p>
+<p>This document describes the target architecture for per-column gather geometry in lazy-column tensors. The implementation sequence is tracked separately in <a href="../../developer/TensorDesign/column_row_pipeline_roadmap.html">Column Row Pipeline Roadmap</a>.</p>
+<p>See also:</p>
+<ul>
+<li><a href="../../developer/tensor_stack.html">Tensor stack overview</a></li>
+<li><a href="../../developer/TensorDesign/TensorDesignBuilder.html">TensorDesign library</a></li>
+<li><a href="../../developer/transforms_v2/TensorColumnBuilders.html">TensorColumnBuilders</a></li>
+<li><a href="../../developer/GatherResult/row_aligned_dataobject_container_design.html">GatherResult row-aligned container design</a></li>
+<li><a href="../../developer/DataObjects/DigitalTimeSeries/Digital_Interval_Series.html">DigitalIntervalSeries interval layouts</a></li>
+<li><a href="../../developer/testing/scenarios/whisker_contact.html">Whisker-contact scenario</a></li>
+</ul>
+<section id="goal" class="level2">
+<h2 class="anchored" data-anchor-id="goal">Goal</h2>
+<p>TensorDesign should support feature tables where every row comes from one row source, but each column can choose a different row-aligned temporal geometry before gathering its source data.</p>
+<p>The motivating table is:</p>
+<ul>
+<li>One row per whisker <code>Contact</code> interval.</li>
+<li>A curvature column reduced over the full contact interval.</li>
+<li>A spike column reduced over a short window around contact onset.</li>
+<li>An angle column sampled at contact onset.</li>
+<li>Downstream analysis, such as binning angle and estimating <code>P(spike | bin)</code>, remains outside tensor building.</li>
+</ul>
+<p>The design should use existing project primitives instead of tensor-specific interval abstractions:</p>
+<ul>
+<li>DataObjects carry <code>TimeFrame</code> and entity identity.</li>
+<li>TransformPipelines mutate or derive DataObjects.</li>
+<li><code>GatherResult</code> stores gathered row DataObjects plus prepared window metadata when direct gathering is needed.</li>
+<li>TensorDesign assembles the row source, column recipes, lazy providers, and output <code>TensorData</code>.</li>
+</ul>
+</section>
+<section id="current-state" class="level2">
+<h2 class="anchored" data-anchor-id="current-state">Current State</h2>
+<p>Implemented today:</p>
+<ul>
+<li><code>TensorDesign</code> can build lazy-column tensors from interval, timestamp, and derived timestamp row sources.</li>
+<li>Interval-row columns gather over the full row interval.</li>
+<li><code>ColumnRecipe::pipeline_json</code> describes source processing and interval range reductions.</li>
+<li><code>ColumnRecipe::interval_property</code> provides row metadata columns such as interval start, end, and duration.</li>
+<li><code>GatherResult</code> consumes prepared <code>DigitalIntervalSeries</code> windows and can hold companion alignment events, but TensorDesign should not rely on that metadata path for column transformations.</li>
+<li><code>GatherResult</code> converts prepared window bounds to the gathered source <code>TimeFrame</code> with <code>convertTimeFrameRange()</code>.</li>
+<li><code>DigitalIntervalSeries</code> supports <code>IntervalLayout::Overlapping</code> through <code>createOverlapping()</code>.</li>
+<li><code>IntervalToEvent</code>, <code>EventToInterval</code>, and <code>PruneOverlappingIntervals</code> are registered TransformsV2 algorithms.</li>
+</ul>
+<p>Not implemented yet:</p>
+<ul>
+<li><code>ColumnRecipe::row_pipeline_json</code>.</li>
+<li>TensorDesign JSON parse/serialize support for <code>row_pipeline_json</code>.</li>
+<li>Tensor column provider dispatch based on row-pipeline output type.</li>
+<li>A way to bind row-specific iterable values, such as one normalization event per row, into the column TransformPipeline’s <code>PipelineValueStore</code>.</li>
+<li>Replacement of the temporary <code>pipeline_json</code> <code>"offset"</code> sample-at-offset compatibility path.</li>
+<li>UI support for configuring row pipelines.</li>
+</ul>
+</section>
+<section id="problem" class="level2">
+<h2 class="anchored" data-anchor-id="problem">Problem</h2>
+<p>Current interval-row tensor columns always gather source data over the full row interval. This makes these common per-row features hard or impossible to express in TensorDesign JSON:</p>
+<ul>
+<li>Spike presence within <code>[-W, +W]</code> of contact onset.</li>
+<li>Analog value sampled at contact onset.</li>
+<li>Statistics over a lagged or shifted version of the row interval.</li>
+<li>Statistics aligned to a data-derived point inside a row, such as a peak curvature time.</li>
+</ul>
+<p>Adding tensor-specific fields such as <code>lag</code>, <code>window_start</code>, or <code>gather_mode</code> would duplicate the TransformPipeline and DataObject systems. Those systems already handle TimeFrame conversion and entity identity, which are core requirements for correct scientific analysis.</p>
+</section>
+<section id="core-model" class="level2">
+<h2 class="anchored" data-anchor-id="core-model">Core Model</h2>
+<p>The target per-column data flow is:</p>
+<pre class="mermaid"><code>flowchart LR
+    RowSource["row_source DataObject"]
+    RowDesc["RowDescriptor"]
+    RowPipeline["row_pipeline_json\nTransformPipeline"]
+    Metadata["row-aligned gather geometry\nDIS windows or DES sample times"]
+    Gather["GatherResult&lt;SourceT&gt;"]
+    Context["iterable bindings\noptional marker per row"]
+    SourcePipeline["pipeline_json\nper-row transform + reduction"]
+    Value["one value per row"]
+
+    RowSource --&gt; RowDesc
+    RowSource --&gt; RowPipeline --&gt; Metadata --&gt; Gather --&gt; SourcePipeline --&gt; Value
+    RowSource --&gt; Context --&gt; SourcePipeline</code></pre>
+<p><code>row_source</code> defines row identity. <code>row_pipeline_json</code> defines where a column looks for data. <code>pipeline_json</code> defines how the gathered source data becomes a column value.</p>
+<p>The invariant is that row <code>i</code> remains row <code>i</code>. A row pipeline may change the gather bounds or sample time for row <code>i</code>, but it must not silently reorder rows, merge rows, or create extra rows unless the column builder explicitly supports that behavior.</p>
+</section>
+<section id="responsibilities" class="level2">
+<h2 class="anchored" data-anchor-id="responsibilities">Responsibilities</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>DataObjects</td>
+<td>Store data, <code>TimeFrame</code>, entity IDs, view/copy semantics, and materialization behavior.</td>
+</tr>
+<tr class="even">
+<td>TransformsV2 row pipeline</td>
+<td>Derive row-aligned gather inputs from the row source, such as windows or sample times.</td>
+</tr>
+<tr class="odd">
+<td><code>GatherResult</code></td>
+<td>Gather source rows from prepared windows. It does not execute TransformPipelines or own per-row column context.</td>
+</tr>
+<tr class="even">
+<td>TransformsV2 iterable binding</td>
+<td>Maps one element per row from a DataObject iterable into <code>PipelineValueStore</code> keys.</td>
+</tr>
+<tr class="odd">
+<td><code>pipeline_json</code></td>
+<td>Processes gathered source rows with <code>PipelineValueStore</code> parameter bindings and produces a scalar column value or supported DataObject output.</td>
+</tr>
+<tr class="even">
+<td>TensorDesign</td>
+<td>Parse recipes, build row descriptors, connect row pipelines to column providers, and assemble <code>TensorData</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>This keeps the dependency direction aligned with the GatherResult refactor:</p>
+<pre class="text"><code>TensorDesign / TransformsV2 extensions -&gt; GatherResult -&gt; DataObjects</code></pre>
+<p>not:</p>
+<pre class="text"><code>GatherResult -&gt; TensorDesign or TransformPipeline execution</code></pre>
+</section>
+<section id="row-identity-and-gather-inputs" class="level2">
+<h2 class="anchored" data-anchor-id="row-identity-and-gather-inputs">Row Identity And Gather Inputs</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Concept</th>
+<th>Defined by</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Row identity</td>
+<td><code>TensorDesignSpec::row_source</code></td>
+<td><code>Contact</code> interval <code>i</code></td>
+</tr>
+<tr class="even">
+<td>Row descriptor</td>
+<td>Original row source</td>
+<td>Contact start/end metadata</td>
+</tr>
+<tr class="odd">
+<td>Gather windows</td>
+<td><code>row_pipeline_json</code> output or identity row source</td>
+<td>Trial window or onset window around contact <code>i</code></td>
+</tr>
+<tr class="even">
+<td>Sample times</td>
+<td><code>row_pipeline_json</code> output, when sampling</td>
+<td>Contact onset event for row <code>i</code></td>
+</tr>
+<tr class="odd">
+<td>Iterable binding values</td>
+<td>DataManager object or row-pipeline output</td>
+<td>Normalization event for raster/PSTH row <code>i</code></td>
+</tr>
+<tr class="even">
+<td>Feature value</td>
+<td><code>pipeline_json</code> over gathered source rows</td>
+<td>Spike presence, mean curvature, angle sample</td>
+</tr>
+</tbody>
+</table>
+<p>Prepared windows should be represented as <code>DigitalIntervalSeries</code>. Per-row sample times should be represented as <code>DigitalEventSeries</code>. These are normal DataObjects, not tensor-specific side channels.</p>
+<p>When a column needs to normalize gathered data relative to a marker that is not the gather window start, that marker should be supplied through <code>PipelineValueStore</code> parameter binding for <code>pipeline_json</code>, not encoded as a second output of <code>row_pipeline_json</code>.</p>
+<p>For example, a spike raster column may gather spikes inside each trial window, then run a normalize-time transform with the contact onset event for that row supplied through the value store.</p>
+</section>
+<section id="transform-composition" class="level2">
+<h2 class="anchored" data-anchor-id="transform-composition">Transform Composition</h2>
+<p>TensorDesign should express per-column geometry through composed registered transforms rather than new tensor enums.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Intent</th>
+<th>Row pipeline output</th>
+<th>Source pipeline</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mean over full contact</td>
+<td>Identity row <code>DigitalIntervalSeries</code></td>
+<td>Range reduction such as <code>MeanValue</code></td>
+</tr>
+<tr class="even">
+<td>Spike near onset</td>
+<td><code>IntervalToEvent(start)</code> sample times followed by <code>EventToInterval(pre, post)</code> windows</td>
+<td>Event presence or event count reduction</td>
+</tr>
+<tr class="odd">
+<td>Angle at onset</td>
+<td><code>IntervalToEvent(start)</code> sample times</td>
+<td>Sample-at-event provider or equivalent source transform</td>
+</tr>
+<tr class="even">
+<td>Raster/PSTH over trials</td>
+<td>Trial windows from identity row source</td>
+<td>Normalize event times with one marker per row, then count/bin/export</td>
+</tr>
+<tr class="odd">
+<td>Lagged contact statistic</td>
+<td><code>IntervalShift(delta)</code> windows</td>
+<td>Any interval reduction</td>
+</tr>
+<tr class="even">
+<td>Peak-centered feature</td>
+<td>Data-derived row transform producing one event per row</td>
+<td>Sample or windowed reduction around that event</td>
+</tr>
+</tbody>
+</table>
+<p>Implemented transforms that should be reused:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Transform</th>
+<th>Status</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>IntervalToEvent</code></td>
+<td>Implemented</td>
+<td>Extract start, end, or center events from interval rows.</td>
+</tr>
+<tr class="even">
+<td><code>EventToInterval</code></td>
+<td>Implemented</td>
+<td>Expand events into overlapping gather windows.</td>
+</tr>
+<tr class="odd">
+<td><code>PruneOverlappingIntervals</code></td>
+<td>Implemented</td>
+<td>Optional keep-first pruning when a caller explicitly wants to drop overlapping windows.</td>
+</tr>
+</tbody>
+</table>
+<p>Potential future transforms should be added only when there is a concrete use case:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Transform</th>
+<th>Need</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>IntervalShift</code></td>
+<td>Lag or lead a row interval while preserving row count.</td>
+</tr>
+<tr class="even">
+<td>Data-derived event transforms</td>
+<td>Produce one event per row from a row object plus another source object.</td>
+</tr>
+<tr class="odd">
+<td>Fused convenience transforms</td>
+<td>Optional wrappers around common compositions; they should still return normal DataObjects.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="proposed-recipe-shape" class="level2">
+<h2 class="anchored" data-anchor-id="proposed-recipe-shape">Proposed Recipe Shape</h2>
+<p>The minimal API extension is one optional field on <code>ColumnRecipe</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ColumnRecipe <span class="op">{</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string column_name<span class="op">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string source_key<span class="op">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string pipeline_json<span class="op">;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string row_pipeline_json<span class="op">;</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span>IntervalProperty<span class="op">&gt;</span> interval_property<span class="op">;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>An omitted or empty <code>row_pipeline_json</code> means identity: use the original row source as the gather geometry.</p>
+<p>For interval row sources, identity means the existing full-interval behavior. This preserves current JSON designs.</p>
+</section>
+<section id="proposed-json" class="level2">
+<h2 class="anchored" data-anchor-id="proposed-json">Proposed JSON</h2>
+<p>Raw row-pipeline JSON is the low-level target shape and is not valid until <code>row_pipeline_json</code> support is implemented:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"tensor_key"</span><span class="fu">:</span> <span class="st">"contact_onset_features"</span><span class="fu">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"row_source"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"data_key"</span><span class="fu">:</span> <span class="st">"Contact"</span><span class="fu">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"row_type"</span><span class="fu">:</span> <span class="st">"interval"</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"columns"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"mean_curvature"</span><span class="fu">,</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"Curvature"</span><span class="fu">,</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: [], </span><span class="ch">\"</span><span class="st">range_reduction</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">reduction_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">MeanValue</span><span class="ch">\"</span><span class="st">}}"</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"spike_in_window"</span><span class="fu">,</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"Spikes"</span><span class="fu">,</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"row_pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: [{</span><span class="ch">\"</span><span class="st">transform_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">IntervalToEvent</span><span class="ch">\"</span><span class="st">, </span><span class="ch">\"</span><span class="st">parameters</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">point</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">start</span><span class="ch">\"</span><span class="st">}}, {</span><span class="ch">\"</span><span class="st">transform_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">EventToInterval</span><span class="ch">\"</span><span class="st">, </span><span class="ch">\"</span><span class="st">parameters</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">pre_expansion</span><span class="ch">\"</span><span class="st">: 150, </span><span class="ch">\"</span><span class="st">post_expansion</span><span class="ch">\"</span><span class="st">: 150}}]}"</span><span class="fu">,</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: [], </span><span class="ch">\"</span><span class="st">range_reduction</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">reduction_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">EventPresence</span><span class="ch">\"</span><span class="st">}}"</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"angle_at_onset"</span><span class="fu">,</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"Angle"</span><span class="fu">,</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"row_pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: [{</span><span class="ch">\"</span><span class="st">transform_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">IntervalToEvent</span><span class="ch">\"</span><span class="st">, </span><span class="ch">\"</span><span class="st">parameters</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">point</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">start</span><span class="ch">\"</span><span class="st">}}]}"</span><span class="fu">,</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: []}"</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>row_pipeline_json</code> describes only the row-aligned gather or sample input. It should not also be responsible for carrying a separate normalization marker. If a column needs one marker per row for a transform such as normalize-time, that marker should be loaded into <code>PipelineValueStore</code> during per-row <code>pipeline_json</code> execution.</p>
+</section>
+<section id="json-authoring-levels" class="level2">
+<h2 class="anchored" data-anchor-id="json-authoring-levels">JSON Authoring Levels</h2>
+<p>The raw schema is functional but not friendly: users should not need to remember transform names, parameter names, <code>PipelineValueStore</code> keys, or binding syntax for common analyses. TensorDesign should support multiple authoring levels that all expand to the same low-level column recipe model.</p>
+<section id="level-1-presets" class="level3">
+<h3 class="anchored" data-anchor-id="level-1-presets">Level 1: Presets</h3>
+<p>Presets are the preferred user-facing format for common analysis patterns. They name the intent and expose only the parameters a user should edit.</p>
+<p>Example: spike presence around interval onset:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"spike_in_onset_window"</span><span class="fu">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"preset"</span><span class="fu">:</span> <span class="st">"event_presence_around_interval_start"</span><span class="fu">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"Spikes"</span><span class="fu">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"pre"</span><span class="fu">:</span> <span class="dv">150</span><span class="fu">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"post"</span><span class="fu">:</span> <span class="dv">150</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Example: raster/PSTH events normalized to interval onset:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"trial_relative_spikes"</span><span class="fu">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"preset"</span><span class="fu">:</span> <span class="st">"raster_events_relative_to_interval_start"</span><span class="fu">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"Spikes"</span><span class="fu">,</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"window"</span><span class="fu">:</span> <span class="st">"row_interval"</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Presets should be backed by a registry, not hard-coded in UI code. The registry should expose display names, descriptions, parameter schemas, and an expansion function that produces the low-level <code>ColumnRecipe</code> fields.</p>
+<p>Conceptual registry descriptor:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ColumnRecipePresetDescriptor <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string name<span class="op">;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string display_name<span class="op">;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string description<span class="op">;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    ParameterSchema parameters<span class="op">;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span>ColumnRecipe<span class="op">(</span>ColumnPresetArgs <span class="at">const</span> <span class="op">&amp;)&gt;</span> expand<span class="op">;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This matches existing project patterns: transforms and generators are registered, parameter schemas drive UI, and AutoParamWidget can render parameter forms.</p>
+</section>
+<section id="level-2-assisted-domain-json" class="level3">
+<h3 class="anchored" data-anchor-id="level-2-assisted-domain-json">Level 2: Assisted Domain JSON</h3>
+<p>Assisted domain JSON is for advanced users who want readable JSON without writing full TransformPipeline descriptors. It uses domain terms such as row geometry, alignment point, and reduction, then expands to raw pipeline fields.</p>
+<p>Example:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"spike_in_onset_window"</span><span class="fu">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"Spikes"</span><span class="fu">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"row_geometry"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"from"</span><span class="fu">:</span> <span class="st">"row_interval"</span><span class="fu">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"point"</span><span class="fu">:</span> <span class="st">"start"</span><span class="fu">,</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"window"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"pre"</span><span class="fu">:</span> <span class="dv">150</span><span class="fu">,</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"post"</span><span class="fu">:</span> <span class="dv">150</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"reduction"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"EventPresence"</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This level is optional. It should be added only if presets are too restrictive but raw JSON remains too verbose for common scripted workflows.</p>
+</section>
+<section id="level-3-raw-pipeline-json" class="level3">
+<h3 class="anchored" data-anchor-id="level-3-raw-pipeline-json">Level 3: Raw Pipeline JSON</h3>
+<p>Raw pipeline JSON is the developer and power-user format. It directly specifies <code>row_pipeline_json</code>, iterable <code>PipelineValueStore</code> bindings, and <code>pipeline_json</code>.</p>
+<p>Example:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"trial_relative_spikes"</span><span class="fu">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"Spikes"</span><span class="fu">,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"row_pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: []}"</span><span class="fu">,</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"pipeline_value_bindings"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"ContactOnset"</span><span class="fu">,</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"element"</span><span class="fu">:</span> <span class="st">"physical_time"</span><span class="fu">,</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"store_key"</span><span class="fu">:</span> <span class="st">"row_alignment_time"</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: [{</span><span class="ch">\"</span><span class="st">transform_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">NormalizeTime</span><span class="ch">\"</span><span class="st">, </span><span class="ch">\"</span><span class="st">param_bindings</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">alignment_time</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">row_alignment_time</span><span class="ch">\"</span><span class="st">}}]}"</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The raw format should remain stable because it is the execution interchange format and the best target for focused tests.</p>
+</section>
+<section id="saved-design-strategy" class="level3">
+<h3 class="anchored" data-anchor-id="saved-design-strategy">Saved Design Strategy</h3>
+<p>For user-facing saved designs, prefer storing both the user-authored preset and the expanded raw recipe:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"spike_in_onset_window"</span><span class="fu">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"preset"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"event_presence_around_interval_start"</span><span class="fu">,</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"version"</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"Spikes"</span><span class="fu">,</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"pre"</span><span class="fu">:</span> <span class="dv">150</span><span class="fu">,</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"post"</span><span class="fu">:</span> <span class="dv">150</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"expanded"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"Spikes"</span><span class="fu">,</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"row_pipeline_json"</span><span class="fu">:</span> <span class="st">"..."</span><span class="fu">,</span></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"pipeline_json"</span><span class="fu">:</span> <span class="st">"..."</span></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This preserves readability while keeping execution reproducible if a preset changes later. Early implementation may store only the expanded raw fields until preset versioning exists.</p>
+</section>
+<section id="preset-library" class="level3">
+<h3 class="anchored" data-anchor-id="preset-library">Preset Library</h3>
+<p>TransformsV2 already has a <a href="../../developer/transforms_v2/pipeline_library.html"><code>PipelineLibrary</code></a> for user-saved <code>PipelineDescriptor</code> JSON files under:</p>
+<pre class="text"><code>{config_dir}/pipelines/transforms_v2/*.json</code></pre>
+<p>Column recipe presets should reuse the same library pattern where it helps, but they are not identical to raw TransformPipeline descriptors. A column preset may expand to several fields: <code>source_key</code>, <code>row_pipeline_json</code>, <code>pipeline_value_bindings</code>, and <code>pipeline_json</code>. It may also include UI-facing parameter metadata. Therefore the preferred design is a sibling library for TensorDesign column presets rather than overloading the existing transform pipeline file format.</p>
+<p>Proposed library layers:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Layer</th>
+<th>Purpose</th>
+<th>Example location</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Bundled presets</td>
+<td>Presets distributed with Neuralyzer</td>
+<td><code>resources/presets/tensor_design/columns/*.json</code></td>
+</tr>
+<tr class="even">
+<td>User presets</td>
+<td>User-saved or imported column presets</td>
+<td><code>{config_dir}/presets/tensor_design/columns/*.json</code></td>
+</tr>
+<tr class="odd">
+<td>Raw TransformPipelines</td>
+<td>Existing saved transform pipelines</td>
+<td><code>{config_dir}/pipelines/transforms_v2/*.json</code></td>
+</tr>
+</tbody>
+</table>
+<p>The bundled preset directory gives users useful defaults immediately after installation. The user preset directory lets users save lab-specific recipes without modifying the installation.</p>
+<p>A preset JSON file should be self-describing:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"schema"</span><span class="fu">:</span> <span class="st">"neuralyzer.tensor_design.column_preset"</span><span class="fu">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"version"</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"id"</span><span class="fu">:</span> <span class="st">"event_presence_around_interval_start"</span><span class="fu">,</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"display_name"</span><span class="fu">:</span> <span class="st">"Event presence around interval start"</span><span class="fu">,</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"description"</span><span class="fu">:</span> <span class="st">"Gather events in a window around each row interval start and report whether any event occurred."</span><span class="fu">,</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"parameters"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">"name"</span><span class="fu">:</span> <span class="st">"source_key"</span><span class="fu">,</span> <span class="dt">"type"</span><span class="fu">:</span> <span class="st">"data_key"</span><span class="fu">,</span> <span class="dt">"data_type"</span><span class="fu">:</span> <span class="st">"DigitalEventSeries"</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">"name"</span><span class="fu">:</span> <span class="st">"pre"</span><span class="fu">,</span> <span class="dt">"type"</span><span class="fu">:</span> <span class="st">"int"</span><span class="fu">,</span> <span class="dt">"default"</span><span class="fu">:</span> <span class="dv">150</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">"name"</span><span class="fu">:</span> <span class="st">"post"</span><span class="fu">,</span> <span class="dt">"type"</span><span class="fu">:</span> <span class="st">"int"</span><span class="fu">,</span> <span class="dt">"default"</span><span class="fu">:</span> <span class="dv">150</span><span class="fu">}</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"expansion"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"${source_key}"</span><span class="fu">,</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"row_pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: [{</span><span class="ch">\"</span><span class="st">transform_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">IntervalToEvent</span><span class="ch">\"</span><span class="st">, </span><span class="ch">\"</span><span class="st">parameters</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">point</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">start</span><span class="ch">\"</span><span class="st">}}, {</span><span class="ch">\"</span><span class="st">transform_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">EventToInterval</span><span class="ch">\"</span><span class="st">, </span><span class="ch">\"</span><span class="st">parameters</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">pre_expansion</span><span class="ch">\"</span><span class="st">: ${pre}, </span><span class="ch">\"</span><span class="st">post_expansion</span><span class="ch">\"</span><span class="st">: ${post}}}]}"</span><span class="fu">,</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: [], </span><span class="ch">\"</span><span class="st">range_reduction</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">reduction_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">EventPresence</span><span class="ch">\"</span><span class="st">}}"</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>This can start as a simple JSON-template expansion system. If templates become too limited, the registry can later support compiled C++ expansion functions while preserving the same catalog metadata.</p>
+<p>The preset catalog should merge bundled and user entries by <code>id</code>:</p>
+<ul>
+<li>Bundled presets provide defaults.</li>
+<li>User presets with the same <code>id</code> can either override bundled entries or be rejected; choose one policy and document it before implementation.</li>
+<li>Display should sort by <code>display_name</code>, with source badges such as <code>Built-in</code> and <code>User</code>.</li>
+</ul>
+<p>This is intentionally similar to <code>PipelineLibrary</code>: list entries, load JSON, save user JSON, delete user JSON, import/export files. The difference is schema and expansion target, not the library mechanics.</p>
+</section>
+</section>
+<section id="pipelinevaluestore-iterable-binding" class="level2">
+<h2 class="anchored" data-anchor-id="pipelinevaluestore-iterable-binding">PipelineValueStore Iterable Binding</h2>
+<p>TransformsV2 already has the mechanism needed to inject runtime values into a <code>TransformPipeline</code>: <code>PipelineValueStore</code> plus parameter bindings loaded from pipeline JSON. GatherResult previously used this mechanism through TransformsV2 gather extension helpers such as <code>buildGatherRowStore()</code>.</p>
+<p>The row-pipeline refactor should reuse that mechanism rather than adding TensorData-specific context plumbing. The missing piece is an iterable binding layer owned by TransformsV2 or the TensorColumnBuilders/TransformsV2 integration:</p>
+<ol type="1">
+<li>A column recipe or pipeline descriptor identifies an iterable context source.</li>
+<li>The source is a DataObject in <code>DataManager</code> or a DataObject produced by a row TransformPipeline.</li>
+<li>The source has one row-aligned element per tensor row.</li>
+<li>For row <code>i</code>, the iterable binding extracts element <code>i</code> and writes one or more values into <code>PipelineValueStore</code> under declared keys.</li>
+<li><code>pipeline_json</code> parameter bindings map those store keys onto transform parameters.</li>
+</ol>
+<p>Example binding shape, shown as design intent rather than final JSON:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: [{</span><span class="ch">\"</span><span class="st">transform_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">NormalizeTime</span><span class="ch">\"</span><span class="st">, </span><span class="ch">\"</span><span class="st">param_bindings</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">alignment_time</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">row_alignment_time</span><span class="ch">\"</span><span class="st">}}]}"</span><span class="fu">,</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"pipeline_value_bindings"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"ContactOnset"</span><span class="fu">,</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"element"</span><span class="fu">:</span> <span class="st">"time"</span><span class="fu">,</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"store_key"</span><span class="fu">:</span> <span class="st">"row_alignment_time"</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The exact schema can change, but the ownership should remain clear: TransformsV2 binds row-specific values into <code>PipelineValueStore</code>; TensorDesign selects the row source, gather/sample input, and column recipe; TensorData stores the resulting column values.</p>
+</section>
+<section id="rasterpsth-example" class="level2">
+<h2 class="anchored" data-anchor-id="rasterpsth-example">Raster/PSTH Example</h2>
+<p>A raster or PSTH-like tensor column illustrates the separation between gather input and transform context:</p>
+<ol type="1">
+<li>The row source defines trials, such as one <code>DigitalIntervalSeries</code> interval per contact or behavioral trial.</li>
+<li><code>row_pipeline_json</code> defines which spikes are gathered for each row. This can be identity for full-trial windows or a window-producing transform for a restricted interval.</li>
+<li>The gathered row DataObject is a <code>DigitalEventSeries</code> subset in source coordinates.</li>
+<li><code>pipeline_json</code> runs per row and includes a normalize-time transform.</li>
+<li>The normalize-time transform needs one marker for the current row, such as contact onset or cue time.</li>
+<li>That marker is supplied through <code>PipelineValueStore</code> when executing <code>pipeline_json</code>, not through <code>GatherResult</code> row metadata and not as a paired output of <code>row_pipeline_json</code>.</li>
+</ol>
+<p>Conceptually:</p>
+<pre class="text"><code>row_pipeline_json: trial interval -&gt; spike gather window
+gather:            Spikes + window_i -&gt; spikes_i
+iterable binding:  ContactOnset[i] -&gt; PipelineValueStore["row_alignment_time"]
+pipeline_json:     NormalizeTime(spikes_i, row_alignment_time) -&gt; PSTH/bin/reduction output</code></pre>
+<p>This keeps <code>row_pipeline_json</code> focused on selecting rows of source data and keeps transformations such as normalization inside the column pipeline where they belong.</p>
+</section>
+<section id="provider-dispatch" class="level2">
+<h2 class="anchored" data-anchor-id="provider-dispatch">Provider Dispatch</h2>
+<p>The target dispatch for interval-row columns is:</p>
+<ol type="1">
+<li>If <code>interval_property</code> is present, use the existing row metadata provider and ignore source gather.</li>
+<li>Resolve <code>row_pipeline_json</code>.</li>
+<li>If <code>row_pipeline_json</code> is empty, use the current full-interval gather path.</li>
+<li>If the row pipeline produces <code>DigitalIntervalSeries</code> windows, verify row count and gather the column source through <code>GatherResult</code>.</li>
+<li>If the row pipeline produces <code>DigitalEventSeries</code> sample times without windows, use timestamp/sample provider behavior or expand to windows with <code>EventToInterval</code>, depending on the column recipe.</li>
+<li>Build any iterable <code>PipelineValueStore</code> bindings requested by <code>pipeline_json</code>, such as one normalization marker per row.</li>
+<li>Run <code>pipeline_json</code> over gathered rows or sampled timestamps with the row store to produce one value per tensor row.</li>
+</ol>
+<p>The dispatch should reject row-pipeline outputs that do not preserve row count unless the recipe explicitly opts into row filtering.</p>
+</section>
+<section id="timeframe-semantics" class="level2">
+<h2 class="anchored" data-anchor-id="timeframe-semantics">TimeFrame Semantics</h2>
+<p>Window-producing transforms operate in their input DataObject’s <code>TimeFrame</code>. They should not need a hidden tensor-specific output-timeframe parameter.</p>
+<p><code>GatherResult</code> handles source query conversion at gather time:</p>
+<pre class="text"><code>prepared window TimeFrame -&gt; source DataObject TimeFrame</code></pre>
+<p>Projection and trial-relative transforms should use values supplied through <code>PipelineValueStore</code> and existing TimeFrame primitives such as <code>convert_time_index()</code> or physical-time lookups.</p>
+<p>The row descriptor should continue to describe the original row source, not the per-column gather window. Per-column geometry is column metadata used to produce a value; it does not redefine tensor row identity.</p>
+</section>
+<section id="overlapping-windows" class="level2">
+<h2 class="anchored" data-anchor-id="overlapping-windows">Overlapping Windows</h2>
+<p>Gather geometry can overlap even when the semantic row source is disjoint.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Role</th>
+<th>Layout</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Row source</td>
+<td>Usually <code>Disjoint</code></td>
+<td>Contact intervals or trial epochs.</td>
+</tr>
+<tr class="even">
+<td>Gather geometry</td>
+<td>Usually <code>Overlapping</code></td>
+<td>Onset windows around nearby contacts.</td>
+</tr>
+</tbody>
+</table>
+<p>Window-producing row pipelines should use <code>DigitalIntervalSeries::createOverlapping()</code> when overlap is possible. They should not rely on default disjoint insertion behavior because disjoint series merge overlapping intervals and destroy row identity.</p>
+<p>Overlap pruning is not a tensor default. It drops rows and changes the analysis question. Use <code>PruneOverlappingIntervals</code> only when a recipe or caller explicitly requests this behavior, and apply the same kept-row selection to any iterable context sources.</p>
+</section>
+<section id="relationship-to-plot-alignment" class="level2">
+<h2 class="anchored" data-anchor-id="relationship-to-plot-alignment">Relationship To Plot Alignment</h2>
+<p><code>PlotAlignmentGather</code> already follows the core prepared-window model for UI plotting:</p>
+<ul>
+<li>Build <code>DigitalIntervalSeries</code> windows.</li>
+<li>Build or reuse companion <code>DigitalEventSeries</code> alignment events.</li>
+<li>Call <code>GatherResult::create(source, windows, alignment_events)</code>.</li>
+</ul>
+<p>Tensor row pipelines should use the same DataObject vocabulary for windows and events, but column normalization should be modeled as <code>PipelineValueStore</code> parameter binding rather than inherited from <code>GatherResult</code> alignment metadata. Plot code may later share descriptor-building helpers with TensorDesign, but the TensorDesign row-pipeline design does not require a plot refactor.</p>
+</section>
+<section id="out-of-scope" class="level2">
+<h2 class="anchored" data-anchor-id="out-of-scope">Out Of Scope</h2>
+<ul>
+<li>Binned or grouped downstream analysis such as <code>P(spike | angle bin)</code>.</li>
+<li>Nonlinear time warping.</li>
+<li>Persisting gather windows as a new DataManager object type.</li>
+<li>UI affordances for editing row-pipeline JSON or presets.</li>
+<li>Backward compatibility for removed GatherResult interval adapters.</li>
+</ul>
+</section>
+<section id="open-questions" class="level2">
+<h2 class="anchored" data-anchor-id="open-questions">Open Questions</h2>
+<ul>
+<li>What JSON schema should declare iterable bindings from DataObjects into <code>PipelineValueStore</code> keys?</li>
+<li>Should row pipelines be allowed to use <code>additional_input_keys</code>, and if so should those keys be declared per column or at the tensor level?</li>
+<li>Should identical row pipelines be cached across columns during one tensor build?</li>
+<li>How should timestamp-only row-pipeline output choose between sampling, window expansion, or rejection?</li>
+<li>Should row filtering ever be supported, or should row pipelines always be required to preserve row count?</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

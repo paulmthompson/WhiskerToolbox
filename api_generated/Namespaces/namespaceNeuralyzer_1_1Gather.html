@@ -355,7 +355,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
   <li><a href="#types-documentation" id="toc-types-documentation" class="nav-link" data-scroll-target="#types-documentation">Types Documentation</a>
   <ul class="collapse">
-  <li><a href="#enum-alignmentpoint" id="toc-enum-alignmentpoint" class="nav-link" data-scroll-target="#enum-alignmentpoint">enum AlignmentPoint</a></li>
   <li><a href="#using-element_type_of_t" id="toc-using-element_type_of_t" class="nav-link" data-scroll-target="#using-element_type_of_t">using element_type_of_t</a></li>
   <li><a href="#using-viewadaptorfn" id="toc-using-viewadaptorfn" class="nav-link" data-scroll-target="#using-viewadaptorfn">using ViewAdaptorFn</a></li>
   <li><a href="#using-erasedviewadaptorfn" id="toc-using-erasedviewadaptorfn" class="nav-link" data-scroll-target="#using-erasedviewadaptorfn">using ErasedViewAdaptorFn</a></li>
@@ -366,12 +365,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
   <ul class="collapse">
-  <li><a href="#function-expandevents" id="toc-function-expandevents" class="nav-link" data-scroll-target="#function-expandevents">function expandEvents</a></li>
-  <li><a href="#function-expandevents-1" id="toc-function-expandevents-1" class="nav-link" data-scroll-target="#function-expandevents-1">function expandEvents</a></li>
-  <li><a href="#function-withalignment" id="toc-function-withalignment" class="nav-link" data-scroll-target="#function-withalignment">function withAlignment</a></li>
-  <li><a href="#function-withalignment-1" id="toc-function-withalignment-1" class="nav-link" data-scroll-target="#function-withalignment-1">function withAlignment</a></li>
+  <li><a href="#function-convertintervaltotimeframe" id="toc-function-convertintervaltotimeframe" class="nav-link" data-scroll-target="#function-convertintervaltotimeframe">function convertIntervalToTimeFrame</a></li>
+  <li><a href="#function-convertpreparedwindowtosourceinterval" id="toc-function-convertpreparedwindowtosourceinterval" class="nav-link" data-scroll-target="#function-convertpreparedwindowtosourceinterval">function convertPreparedWindowToSourceInterval</a></li>
   <li><a href="#function-extractsinglefloat" id="toc-function-extractsinglefloat" class="nav-link" data-scroll-target="#function-extractsinglefloat">function extractSingleFloat</a></li>
   <li><a href="#function-gatherandexecutepipeline" id="toc-function-gatherandexecutepipeline" class="nav-link" data-scroll-target="#function-gatherandexecutepipeline">function gatherAndExecutePipeline</a></li>
+  <li><a href="#function-buildgatherrowstore" id="toc-function-buildgatherrowstore" class="nav-link" data-scroll-target="#function-buildgatherrowstore">function buildGatherRowStore</a></li>
+  <li><a href="#function-projectgatherrows" id="toc-function-projectgatherrows" class="nav-link" data-scroll-target="#function-projectgatherrows">function projectGatherRows</a></li>
+  <li><a href="#function-reducegatherrows" id="toc-function-reducegatherrows" class="nav-link" data-scroll-target="#function-reducegatherrows">function reduceGatherRows</a></li>
+  <li><a href="#function-sortgatherrowsby" id="toc-function-sortgatherrowsby" class="nav-link" data-scroll-target="#function-sortgatherrowsby">function sortGatherRowsBy</a></li>
+  <li><a href="#function-transformgatherrows" id="toc-function-transformgatherrows" class="nav-link" data-scroll-target="#function-transformgatherrows">function transformGatherRows</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -414,39 +416,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Gather_1_1AlignedInterval.html">Neuralyzer::Gather::AlignedInterval</a></strong> <br>An interval with an associated alignment time.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Gather_1_1BoundReducer.html">Neuralyzer::Gather::BoundReducer</a></strong> <br>Result of binding a pipeline to produce a reducer.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Gather_1_1BoundViewAdaptor.html">Neuralyzer::Gather::BoundViewAdaptor</a></strong> <br>Result of binding a pipeline to produce a view adaptor.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Gather_1_1element__type__of.html">Neuralyzer::Gather::element_type_of</a></strong> <br>Helper to get element type from a data container.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Gather_1_1element__type__of_3_01AnalogTimeSeries_01_4.html">Neuralyzer::Gather::element_type_of&lt; AnalogTimeSeries &gt;</a></strong></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Gather_1_1element__type__of_3_01DigitalEventSeries_01_4.html">Neuralyzer::Gather::element_type_of&lt; DigitalEventSeries &gt;</a></strong></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Gather_1_1element__type__of_3_01DigitalIntervalSeries_01_4.html">Neuralyzer::Gather::element_type_of&lt; DigitalIntervalSeries &gt;</a></strong></td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Gather_1_1EventExpanderAdapter.html">Neuralyzer::Gather::EventExpanderAdapter</a></strong> <br>Lazily expands a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> into intervals.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Gather_1_1IntervalWithAlignmentAdapter.html">Neuralyzer::Gather::IntervalWithAlignmentAdapter</a></strong> <br>Adapter that provides intervals with custom alignment points.</td>
 </tr>
 </tbody>
 </table>
@@ -462,34 +452,30 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>enum class</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#enum-alignmentpoint">AlignmentPoint</a></strong> { Start, End, Center}<br>Alignment point options for intervals.</td>
-</tr>
-<tr class="even">
 <td>template &lt;typename T &gt; <br>using typename <a href="../../api_generated/Classes/structNeuralyzer_1_1Gather_1_1element__type__of.html">element_type_of</a>&lt; T &gt;<a href="../../api_generated/Files/LayoutRequestBuilder_8cpp.html#variable-type">::type</a></td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#using-element-type-of-t">element_type_of_t</a></strong></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>template &lt;typename InElement ,typename OutElement &gt; <br>using std::function&lt; std::vector&lt; OutElement &gt;(std::span&lt; InElement const &gt;)&gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#using-viewadaptorfn">ViewAdaptorFn</a></strong> <br>Type-erased view adaptor function.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>using std::function&lt; std::any(std::any const &amp;)&gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#using-erasedviewadaptorfn">ErasedViewAdaptorFn</a></strong> <br>Type-erased view adaptor that works with std::any.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>template &lt;typename InElement ,typename Scalar &gt; <br>using std::function&lt; Scalar(std::span&lt; InElement const &gt;)&gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#using-reducerfn">ReducerFn</a></strong> <br>Typed reducer function.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>using std::function&lt; std::any(std::any const &amp;)&gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#using-erasedreducerfn">ErasedReducerFn</a></strong> <br>Type-erased reducer that works with std::any.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>template &lt;typename InElement ,typename Scalar &gt; <br>using std::function&lt; <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#using-reducerfn">ReducerFn</a>&lt; InElement, Scalar &gt;(<a href="../../api_generated/Classes/classNeuralyzer_1_1Transforms_1_1V2_1_1PipelineValueStore.html">Neuralyzer::Transforms::V2::PipelineValueStore</a> const &amp;)&gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#using-reducerfactoryv2">ReducerFactoryV2</a></strong> <br>Factory that creates a reducer from PipelineValueStore.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>using std::function&lt; <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#using-erasedreducerfn">ErasedReducerFn</a>(<a href="../../api_generated/Classes/classNeuralyzer_1_1Transforms_1_1V2_1_1PipelineValueStore.html">Neuralyzer::Transforms::V2::PipelineValueStore</a> const &amp;)&gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#using-erasedreducerfactoryv2">ErasedReducerFactoryV2</a></strong> <br>Type-erased reducer factory (V2 pattern)</td>
 </tr>
@@ -507,20 +493,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td><a href="../../api_generated/Classes/classNeuralyzer_1_1Gather_1_1EventExpanderAdapter.html">EventExpanderAdapter</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-expandevents">expandEvents</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &gt; events, int64_t pre_window, int64_t post_window)<br>Create an <a href="">EventExpanderAdapter</a>.</td>
+<td><a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-convertintervaltotimeframe">convertIntervalToTimeFrame</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> const &amp; interval, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const &amp; from_time_frame, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const &amp; to_time_frame)<br>Convert an interval from one <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> coordinate system to another.</td>
 </tr>
 <tr class="even">
-<td><a href="../../api_generated/Classes/classNeuralyzer_1_1Gather_1_1EventExpanderAdapter.html">EventExpanderAdapter</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-expandevents">expandEvents</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &gt; events, int64_t window)<br>Create an <a href="">EventExpanderAdapter</a> with symmetric window.</td>
-</tr>
-<tr class="odd">
-<td><a href="../../api_generated/Classes/classNeuralyzer_1_1Gather_1_1IntervalWithAlignmentAdapter.html">IntervalWithAlignmentAdapter</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-withalignment">withAlignment</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; intervals, <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#enum-alignmentpoint">AlignmentPoint</a> align =<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#enumvalue-start">AlignmentPoint::Start</a>)<br>Create an <a href="">IntervalWithAlignmentAdapter</a>.</td>
-</tr>
-<tr class="even">
-<td><a href="../../api_generated/Classes/classNeuralyzer_1_1Gather_1_1IntervalWithAlignmentAdapter.html">IntervalWithAlignmentAdapter</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-withalignment">withAlignment</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; intervals, <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#enum-alignmentpoint">AlignmentPoint</a> align, int64_t pre_window, int64_t post_window)<br>Create an <a href="">IntervalWithAlignmentAdapter</a> with explicit window.</td>
+<td><a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-convertpreparedwindowtosourceinterval">convertPreparedWindowToSourceInterval</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> const &amp; interval, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; interval_time_frame, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; source_time_frame)<br>Convert prepared gather-window bounds to source-data query bounds.</td>
 </tr>
 <tr class="odd">
 <td>float</td>
@@ -528,43 +506,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>std::vector&lt; float &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-gatherandexecutepipeline">gatherAndExecutePipeline</a></strong>(<a href="../../api_generated/Files/DataManagerTypes_8hpp.html#using-datatypevariant">DataTypeVariant</a> const &amp; source, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> &gt; intervals, <a href="../../api_generated/Classes/classNeuralyzer_1_1Transforms_1_1V2_1_1TransformPipeline.html">Neuralyzer::Transforms::V2::TransformPipeline</a> const &amp; pipeline)<br><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html">Gather</a> source data over intervals and execute a pipeline on each gathered view, returning one float per interval.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-gatherandexecutepipeline">gatherAndExecutePipeline</a></strong>(<a href="../../api_generated/Files/DataManagerTypes_8hpp.html#using-datatypevariant">DataTypeVariant</a> const &amp; source, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; intervals, <a href="../../api_generated/Classes/classNeuralyzer_1_1Transforms_1_1V2_1_1TransformPipeline.html">Neuralyzer::Transforms::V2::TransformPipeline</a> const &amp; pipeline)<br><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html">Gather</a> source data over intervals and execute a pipeline on each gathered view, returning one float per interval.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename T &gt; <br><a href="../../api_generated/Classes/classNeuralyzer_1_1Transforms_1_1V2_1_1PipelineValueStore.html">Neuralyzer::Transforms::V2::PipelineValueStore</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-buildgatherrowstore">buildGatherRowStore</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt; const &amp; gather, typename <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt;::size_type row_index)<br>Build a TransformsV2 value store for one gathered row.</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename T ,typename Value &gt; <br>std::vector&lt; <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2.html#using-valueprojectionfn">Neuralyzer::Transforms::V2::ValueProjectionFn</a>&lt; typename <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt;::element_type, Value &gt; &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-projectgatherrows">projectGatherRows</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt; const &amp; gather, <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2.html#using-valueprojectionfactoryv2">Neuralyzer::Transforms::V2::ValueProjectionFactoryV2</a>&lt; typename <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt;::element_type, Value &gt; const &amp; factory)<br>Project each gathered row with a row-context-aware projection factory.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename T ,typename Scalar &gt; <br>std::vector&lt; Scalar &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-reducegatherrows">reduceGatherRows</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt; const &amp; gather, <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#using-reducerfactoryv2">ReducerFactoryV2</a>&lt; typename <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt;::element_type, Scalar &gt; const &amp; reducer_factory)<br>Reduce each gathered row with a row-context-aware reducer factory.</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename T ,typename Scalar &gt; <br>std::vector&lt; typename <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt;::size_type &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-sortgatherrowsby">sortGatherRowsBy</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt; const &amp; gather, <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#using-reducerfactoryv2">ReducerFactoryV2</a>&lt; typename <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt;::element_type, Scalar &gt; const &amp; reducer_factory, bool ascending =true)<br>Return row indices sorted by a row-context-aware reduction.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;typename InputT ,typename OutputT &gt; <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; OutputT &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-transformgatherrows">transformGatherRows</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; InputT &gt; const &amp; gather, <a href="../../api_generated/Classes/classNeuralyzer_1_1Transforms_1_1V2_1_1TransformPipeline.html">Neuralyzer::Transforms::V2::TransformPipeline</a> const &amp; pipeline)<br>Execute a TransformsV2 pipeline for each row and return row-aligned DataObjects.</td>
 </tr>
 </tbody>
 </table>
 </section>
 <section id="types-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="types-documentation">Types Documentation</h2>
-<section id="enum-alignmentpoint" class="level3">
-<h3 class="anchored" data-anchor-id="enum-alignmentpoint">enum AlignmentPoint</h3>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Enumerator</th>
-<th>Value</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>Start</td>
-<td></td>
-<td>Use interval start as alignment time.</td>
-</tr>
-<tr class="even">
-<td>End</td>
-<td></td>
-<td>Use interval end as alignment time.</td>
-</tr>
-<tr class="odd">
-<td>Center</td>
-<td></td>
-<td>Use interval center as alignment time.</td>
-</tr>
-</tbody>
-</table>
-<p>Alignment point options for intervals.</p>
-</section>
 <section id="using-element_type_of_t" class="level3">
 <h3 class="anchored" data-anchor-id="using-element_type_of_t">using element_type_of_t</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
@@ -611,7 +579,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>See</strong>:</p>
 <ul>
-<li><a href="../../api_generated/Classes/classGatherResult.html#function-reduce">GatherResult::reduce()</a> for usage</li>
+<li>GatherResult::reduce() for usage</li>
 <li>PipelineValueStore for store documentation</li>
 </ul>
 </section>
@@ -623,65 +591,47 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="functions-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="functions-documentation">Functions Documentation</h2>
-<section id="function-expandevents" class="level3">
-<h3 class="anchored" data-anchor-id="function-expandevents">function expandEvents</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> EventExpanderAdapter expandEvents<span class="op">(</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="at">const</span> <span class="op">&gt;</span> events<span class="op">,</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> pre_window<span class="op">,</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> post_window</span>
+<section id="function-convertintervaltotimeframe" class="level3">
+<h3 class="anchored" data-anchor-id="function-convertintervaltotimeframe">function convertIntervalToTimeFrame</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Interval convertIntervalToTimeFrame<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">&amp;</span> from_time_frame<span class="op">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">&amp;</span> to_time_frame</span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Create an <a href="">EventExpanderAdapter</a>.</p>
+<p>Convert an interval from one <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> coordinate system to another.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>events</strong> Event series to expand</li>
-<li><strong>pre_window</strong> Time before each event</li>
-<li><strong>post_window</strong> Time after each event</li>
+<li><strong>interval</strong> Interval expressed in <code>from_time_frame</code> indices</li>
+<li><strong>from_time_frame</strong> <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> that owns <code>interval</code> coordinates</li>
+<li><strong>to_time_frame</strong> <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> used by the source data being queried</li>
 </ul>
+<p><strong>Return</strong>: Interval expressed in <code>to_time_frame</code> indices</p>
+<p><strong>Precondition</strong>: <code>from_time_frame</code> and <code>to_time_frame</code> are valid <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> references.</p>
+<p><strong>Postcondition</strong>: Returned bounds are expressed in <code>to_time_frame</code> coordinates.</p>
 </section>
-<section id="function-expandevents-1" class="level3">
-<h3 class="anchored" data-anchor-id="function-expandevents-1">function expandEvents</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> EventExpanderAdapter expandEvents<span class="op">(</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="at">const</span> <span class="op">&gt;</span> events<span class="op">,</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> window</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Create an <a href="">EventExpanderAdapter</a> with symmetric window.</p>
-</section>
-<section id="function-withalignment" class="level3">
-<h3 class="anchored" data-anchor-id="function-withalignment">function withAlignment</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> IntervalWithAlignmentAdapter withAlignment<span class="op">(</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> intervals<span class="op">,</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    AlignmentPoint align <span class="op">=</span>AlignmentPoint<span class="op">::</span>Start</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Create an <a href="">IntervalWithAlignmentAdapter</a>.</p>
+<section id="function-convertpreparedwindowtosourceinterval" class="level3">
+<h3 class="anchored" data-anchor-id="function-convertpreparedwindowtosourceinterval">function convertPreparedWindowToSourceInterval</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Interval convertPreparedWindowToSourceInterval<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> interval_time_frame<span class="op">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> source_time_frame</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Convert prepared gather-window bounds to source-data query bounds.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>intervals</strong> Interval series</li>
-<li><strong>align</strong> Alignment point (default: Start)</li>
+<li><strong>interval</strong> Window bounds in the interval series <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a></li>
+<li><strong>interval_time_frame</strong> Non-null <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> from the interval/window series</li>
+<li><strong>source_time_frame</strong> Non-null <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> from the source data</li>
 </ul>
-</section>
-<section id="function-withalignment-1" class="level3">
-<h3 class="anchored" data-anchor-id="function-withalignment-1">function withAlignment</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> IntervalWithAlignmentAdapter withAlignment<span class="op">(</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> intervals<span class="op">,</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    AlignmentPoint align<span class="op">,</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> pre_window<span class="op">,</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> post_window</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Create an <a href="">IntervalWithAlignmentAdapter</a> with explicit window.</p>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>intervals</strong> Interval series</li>
-<li><strong>align</strong> Alignment point (Start, End, Center)</li>
-<li><strong>pre_window</strong> Absolute time units before alignment point</li>
-<li><strong>post_window</strong> Absolute time units after alignment point</li>
-</ul>
-<p>The window is specified in absolute time units. The adapter produces intervals centered on the alignment point: [align - pre, align + post].</p>
+<p><strong>Return</strong>: Query interval in source-data <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> coordinates</p>
+<p><strong>Precondition</strong>: Prepared gather windows and source data must both carry non-null TimeFrames.</p>
+<p><strong>Postcondition</strong>: Returned bounds are expressed in the source data <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a>.</p>
 </section>
 <section id="function-extractsinglefloat" class="level3">
 <h3 class="anchored" data-anchor-id="function-extractsinglefloat">function extractSingleFloat</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> extractSingleFloat<span class="op">(</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> output</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> extractSingleFloat<span class="op">(</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> output</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Extract a single float from a DataTypeVariant pipeline output.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -701,11 +651,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-gatherandexecutepipeline" class="level3">
 <h3 class="anchored" data-anchor-id="function-gatherandexecutepipeline">function gatherAndExecutePipeline</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> gatherAndExecutePipeline<span class="op">(</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">,</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="op">&gt;</span> intervals<span class="op">,</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>TransformPipeline <span class="at">const</span> <span class="op">&amp;</span> pipeline</span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> gatherAndExecutePipeline<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> intervals<span class="op">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>TransformPipeline <span class="at">const</span> <span class="op">&amp;</span> pipeline</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html">Gather</a> source data over intervals and execute a pipeline on each gathered view, returning one float per interval.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -724,10 +674,133 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Executes <code>pipeline</code> on that gathered view (T → DataTypeVariant).</li>
 <li>Calls <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-extractsinglefloat">extractSingleFloat()</a> on the result.</li>
 </ol>
-<p>If the source data and <code>intervals</code> use different TimeFrames, the interval boundaries are converted to the source’s coordinate system before gathering (same logic as TensorColumnBuilders::prepareIntervalsForGather).</p>
+<p>If the source data and <code>intervals</code> use different TimeFrames, <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> converts interval boundaries to the source coordinate system when each view is created.</p>
 <p>Dispatch is fully type-erased: the function visits the DataTypeVariant and uses <a href="../../api_generated/Classes/classGatherResult.html#function-create">GatherResult<t>::create()</t></a> + pipeline.execute<t>() for each concrete contained type that satisfies TypeTraits::HasDataTraits<t>.</t></t></p>
+</section>
+<section id="function-buildgatherrowstore" class="level3">
+<h3 class="anchored" data-anchor-id="function-buildgatherrowstore">function buildGatherRowStore</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>PipelineValueStore buildGatherRowStore<span class="op">(</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    GatherResult<span class="op">&lt;</span> T <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> gather<span class="op">,</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">typename</span> GatherResult<span class="op">&lt;</span> T <span class="op">&gt;::</span><span class="dt">size_type</span> row_index</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Build a TransformsV2 value store for one gathered row.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>gather</strong> <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> supplying row metadata</li>
+<li><strong>row_index</strong> Visible row index, respecting any <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> reorder mapping</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>T</strong> <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> row DataObject type</li>
+</ul>
+<p><strong>Return</strong>: PipelineValueStore populated with row metadata</p>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li><code>row_index</code> must be less than <code>gather.size()</code>.</li>
+<li><code>gather</code> must have interval metadata for <code>row_index</code>.</li>
+</ul>
+<p><strong>Postcondition</strong>: Returned store contains <code>alignment_time</code>, <code>trial_index</code>, <code>trial_duration</code>, and <code>end_time</code>.</p>
+</section>
+<section id="function-projectgatherrows" class="level3">
+<h3 class="anchored" data-anchor-id="function-projectgatherrows">function projectGatherRows</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">,</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Value <span class="op">&gt;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>ValueProjectionFn<span class="op">&lt;</span> <span class="kw">typename</span> GatherResult<span class="op">&lt;</span> T <span class="op">&gt;::</span><span class="dt">element_type</span><span class="op">,</span> Value <span class="op">&gt;</span> <span class="op">&gt;</span> projectGatherRows<span class="op">(</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    GatherResult<span class="op">&lt;</span> T <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> gather<span class="op">,</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>ValueProjectionFactoryV2<span class="op">&lt;</span> <span class="kw">typename</span> GatherResult<span class="op">&lt;</span> T <span class="op">&gt;::</span><span class="dt">element_type</span><span class="op">,</span> Value <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> factory</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Project each gathered row with a row-context-aware projection factory.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>gather</strong> <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> supplying rows and metadata</li>
+<li><strong>factory</strong> Factory that binds one projection per row store</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>T</strong> <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> row DataObject type</li>
+<li><strong>Value</strong> Projected value type</li>
+</ul>
+<p><strong>Return</strong>: One projection function per row</p>
+<p><strong>Precondition</strong>: <code>factory</code> must return a valid projection for each row store.</p>
+<p><strong>Postcondition</strong>: Return size equals <code>gather.size()</code>.</p>
+</section>
+<section id="function-reducegatherrows" class="level3">
+<h3 class="anchored" data-anchor-id="function-reducegatherrows">function reduceGatherRows</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">,</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Scalar <span class="op">&gt;</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> Scalar <span class="op">&gt;</span> reduceGatherRows<span class="op">(</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    GatherResult<span class="op">&lt;</span> T <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> gather<span class="op">,</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    ReducerFactoryV2<span class="op">&lt;</span> <span class="kw">typename</span> GatherResult<span class="op">&lt;</span> T <span class="op">&gt;::</span><span class="dt">element_type</span><span class="op">,</span> Scalar <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> reducer_factory</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Reduce each gathered row with a row-context-aware reducer factory.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>gather</strong> <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> supplying rows and metadata</li>
+<li><strong>reducer_factory</strong> Factory that binds one reducer per row store</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>T</strong> <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> row DataObject type</li>
+<li><strong>Scalar</strong> Scalar reduction output type</li>
+</ul>
+<p><strong>Return</strong>: One scalar value per row</p>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>Each row DataObject must expose <code>view()</code>.</li>
+<li><code>reducer_factory</code> must return a valid reducer for each row store.</li>
+</ul>
+<p><strong>Postcondition</strong>: Return size equals <code>gather.size()</code>.</p>
+</section>
+<section id="function-sortgatherrowsby" class="level3">
+<h3 class="anchored" data-anchor-id="function-sortgatherrowsby">function sortGatherRowsBy</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">,</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Scalar <span class="op">&gt;</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="kw">typename</span> GatherResult<span class="op">&lt;</span> T <span class="op">&gt;::</span><span class="dt">size_type</span> <span class="op">&gt;</span> sortGatherRowsBy<span class="op">(</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    GatherResult<span class="op">&lt;</span> T <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> gather<span class="op">,</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    ReducerFactoryV2<span class="op">&lt;</span> <span class="kw">typename</span> GatherResult<span class="op">&lt;</span> T <span class="op">&gt;::</span><span class="dt">element_type</span><span class="op">,</span> Scalar <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> reducer_factory<span class="op">,</span></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> ascending <span class="op">=</span><span class="kw">true</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Return row indices sorted by a row-context-aware reduction.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>gather</strong> <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> supplying rows and metadata</li>
+<li><strong>reducer_factory</strong> Factory that binds one reducer per row store</li>
+<li><strong>ascending</strong> Sort smallest values first when true</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>T</strong> <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> row DataObject type</li>
+<li><strong>Scalar</strong> Comparable scalar reduction output type</li>
+</ul>
+<p><strong>Return</strong>: Row indices that sort the reduction outputs</p>
+<p><strong>Precondition</strong>: <code>reducer_factory</code> must return comparable values.</p>
+<p><strong>Postcondition</strong>: NaN floating-point values sort to the end, matching the former core helper.</p>
+</section>
+<section id="function-transformgatherrows" class="level3">
+<h3 class="anchored" data-anchor-id="function-transformgatherrows">function transformGatherRows</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InputT <span class="op">,</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutputT <span class="op">&gt;</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>GatherResult<span class="op">&lt;</span> OutputT <span class="op">&gt;</span> transformGatherRows<span class="op">(</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    GatherResult<span class="op">&lt;</span> InputT <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> gather<span class="op">,</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>TransformPipeline <span class="at">const</span> <span class="op">&amp;</span> pipeline</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Execute a TransformsV2 pipeline for each row and return row-aligned DataObjects.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>gather</strong> <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> supplying input rows and metadata</li>
+<li><strong>pipeline</strong> <a href="../../api_generated/Classes/classTransformPipeline.html">TransformPipeline</a> executed once per row</li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>InputT</strong> Input <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> row DataObject type</li>
+<li><strong>OutputT</strong> Pipeline output DataObject type</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> containing one output DataObject per input row</p>
+<p><strong>Precondition</strong>: <code>pipeline</code> must produce <code>std::shared_ptr&lt;OutputT&gt;</code> for every row.</p>
+<p><strong>Postcondition</strong>: Returned <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> preserves <code>gather</code> row metadata and ordering.</p>
 <hr>
-<p>Updated on 2026-07-25 at 13:30:57 +0000</p>
+<p>Updated on 2026-07-27 at 20:05:52 +0000</p>
 
 
 </section>

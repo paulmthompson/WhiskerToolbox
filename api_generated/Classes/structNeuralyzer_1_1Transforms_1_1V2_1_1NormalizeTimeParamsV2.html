@@ -432,7 +432,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">// At runtime with GatherResult</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> store <span class="op">=</span> gather_result<span class="op">.</span>buildTrialStore<span class="op">(</span>i<span class="op">);</span>  <span class="co">// Contains "alignment_time"</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> store <span class="op">=</span> buildGatherRowStore<span class="op">(</span>gather_result<span class="op">,</span> i<span class="op">);</span>  <span class="co">// Contains "alignment_time"</span></span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co">// Pipeline applies bindings automatically</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>NormalizeTimeParams for legacy approach</p>
 <p><a href="../../api_generated/Classes/classNeuralyzer_1_1Transforms_1_1V2_1_1PipelineValueStore.html">PipelineValueStore</a> for value store documentation</p>
@@ -445,7 +445,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int64_t</span> alignment_time <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Alignment time (t=0 reference point) - populated via binding.</p>
 <hr>
-<p>Updated on 2026-07-25 at 13:30:57 +0000</p>
+<p>Updated on 2026-07-27 at 20:05:52 +0000</p>
 
 
 </section>

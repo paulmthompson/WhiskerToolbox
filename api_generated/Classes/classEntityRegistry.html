@@ -356,6 +356,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#function-ensureid" id="toc-function-ensureid" class="nav-link" data-scroll-target="#function-ensureid">function ensureId</a></li>
   <li><a href="#function-get" id="toc-function-get" class="nav-link" data-scroll-target="#function-get">function get</a></li>
+  <li><a href="#function-rebindkey" id="toc-function-rebindkey" class="nav-link" data-scroll-target="#function-rebindkey">function rebindKey</a></li>
   <li><a href="#function-clear" id="toc-function-clear" class="nav-link" data-scroll-target="#function-clear">function clear</a></li>
   </ul></li>
   </ul></li>
@@ -409,6 +410,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>void</td>
+<td><strong><a href="../../api_generated/Classes/classEntityRegistry.html#function-rebindkey">rebindKey</a></strong>(<a href="../../api_generated/Classes/structEntityId.html">EntityId</a> id, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> const &amp; time, int local_index)<br>Rebind an existing <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> to a new (time, local_index) tuple.</td>
+</tr>
+<tr class="even">
+<td>void</td>
 <td><strong><a href="../../api_generated/Classes/classEntityRegistry.html#function-clear">clear</a></strong>()<br>Clear all registered entities (session reset).</td>
 </tr>
 </tbody>
@@ -436,7 +441,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>data_key</strong> Logical key for the data object (opaque; empty allowed)</li>
 <li><strong>kind</strong> Entity kind (<a href="../../api_generated/Classes/structPoint.html">Point</a>, <a href="../../api_generated/Classes/structLine.html">Line</a>, Event, Interval, Mask, TimeEntity)</li>
 <li><strong>time</strong> <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> for the entity</li>
-<li><strong>local_index</strong> Stable 0-based index within that time</li>
+<li><strong>local_index</strong> Stable 0-based index within that time. For IntervalEntity, this is the interval end time (not a storage index).</li>
 </ul>
 <p><strong>Return</strong>: <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> for the tuple; same tuple always returns the same id</p>
 <p><strong>Note</strong>: Thread-safe</p>
@@ -455,13 +460,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Return</strong>: <a href="../../api_generated/Classes/structEntityDescriptor.html">EntityDescriptor</a> if the id was ever produced by ensureId on this registry, otherwise std::nullopt. No preconditions on id; unknown ids return nullopt.</p>
 <p><strong>Note</strong>: Thread-safe</p>
 </section>
+<section id="function-rebindkey" class="level3">
+<h3 class="anchored" data-anchor-id="function-rebindkey">function rebindKey</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> rebindKey<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    EntityId id<span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex <span class="at">const</span> <span class="op">&amp;</span> time<span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> local_index</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Rebind an existing <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> to a new (time, local_index) tuple.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>id</strong> <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> previously allocated by ensureId on this registry</li>
+<li><strong>time</strong> New <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> for the entity</li>
+<li><strong>local_index</strong> New local_index (interval end for IntervalEntity)</li>
+</ul>
+<p><strong>Note</strong>: Thread-safe; no-op if id is unknown</p>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>local_index &gt;= 0 (enforcement: assert)</li>
+<li>id was previously registered via ensureId</li>
+</ul>
+<p>Updates both lookup maps so ensureId on the new tuple returns the same id. Used when interval bounds change but the logical entity identity is preserved.</p>
+</section>
 <section id="function-clear" class="level3">
 <h3 class="anchored" data-anchor-id="function-clear">function clear</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clear<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clear<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Clear all registered entities (session reset).</p>
 <p><strong>Note</strong>: Thread-safe</p>
 <hr>
-<p>Updated on 2026-07-25 at 13:30:56 +0000</p>
+<p>Updated on 2026-07-27 at 20:05:52 +0000</p>
 
 
 </section>

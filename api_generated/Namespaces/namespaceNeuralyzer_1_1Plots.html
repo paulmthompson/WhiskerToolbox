@@ -357,6 +357,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#types-documentation" id="toc-types-documentation" class="nav-link" data-scroll-target="#types-documentation">Types Documentation</a>
   <ul class="collapse">
   <li><a href="#enum-scalingmode" id="toc-enum-scalingmode" class="nav-link" data-scroll-target="#enum-scalingmode">enum ScalingMode</a></li>
+  <li><a href="#enum-alignmentpoint" id="toc-enum-alignmentpoint" class="nav-link" data-scroll-target="#enum-alignmentpoint">enum AlignmentPoint</a></li>
   <li><a href="#using-estimationparams" id="toc-using-estimationparams" class="nav-link" data-scroll-target="#using-estimationparams">using EstimationParams</a></li>
   <li><a href="#using-heatmapscaling" id="toc-using-heatmapscaling" class="nav-link" data-scroll-target="#using-heatmapscaling">using HeatmapScaling</a></li>
   <li><a href="#using-tooltiphittestfn" id="toc-using-tooltiphittestfn" class="nav-link" data-scroll-target="#using-tooltiphittestfn">using TooltipHitTestFn</a></li>
@@ -384,20 +385,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-bootstrapci" id="toc-function-bootstrapci" class="nav-link" data-scroll-target="#function-bootstrapci">function bootstrapCI</a></li>
   <li><a href="#function-buildlineselectionpreview" id="toc-function-buildlineselectionpreview" class="nav-link" data-scroll-target="#function-buildlineselectionpreview">function buildLineSelectionPreview</a></li>
   <li><a href="#function-runlineselectionintersection" id="toc-function-runlineselectionintersection" class="nav-link" data-scroll-target="#function-runlineselectionintersection">function runLineSelectionIntersection</a></li>
-  <li><a href="#function-toalignmentpoint" id="toc-function-toalignmentpoint" class="nav-link" data-scroll-target="#function-toalignmentpoint">function toAlignmentPoint</a></li>
   <li><a href="#function-gatherwitheventalignment" id="toc-function-gatherwitheventalignment" class="nav-link" data-scroll-target="#function-gatherwitheventalignment">function gatherWithEventAlignment</a></li>
   <li><a href="#function-gatherwithintervalalignment" id="toc-function-gatherwithintervalalignment" class="nav-link" data-scroll-target="#function-gatherwithintervalalignment">function gatherWithIntervalAlignment</a></li>
   <li><a href="#function-gatherwithintervalalignment-1" id="toc-function-gatherwithintervalalignment-1" class="nav-link" data-scroll-target="#function-gatherwithintervalalignment-1">function gatherWithIntervalAlignment</a></li>
-  <li><a href="#function-pruneoverlappingalignmenttimes" id="toc-function-pruneoverlappingalignmenttimes" class="nav-link" data-scroll-target="#function-pruneoverlappingalignmenttimes">function pruneOverlappingAlignmentTimes</a></li>
-  <li><a href="#function-extractalignmenttimes" id="toc-function-extractalignmenttimes" class="nav-link" data-scroll-target="#function-extractalignmenttimes">function extractAlignmentTimes</a></li>
-  <li><a href="#function-extractalignmenttimes-1" id="toc-function-extractalignmenttimes-1" class="nav-link" data-scroll-target="#function-extractalignmenttimes-1">function extractAlignmentTimes</a></li>
-  <li><a href="#function-createfilteredeventseries" id="toc-function-createfilteredeventseries" class="nav-link" data-scroll-target="#function-createfilteredeventseries">function createFilteredEventSeries</a></li>
-  <li><a href="#function-createfilteredintervalseries" id="toc-function-createfilteredintervalseries" class="nav-link" data-scroll-target="#function-createfilteredintervalseries">function createFilteredIntervalSeries</a></li>
-  <li><a href="#function-countnonoverlappingalignmentevents" id="toc-function-countnonoverlappingalignmentevents" class="nav-link" data-scroll-target="#function-countnonoverlappingalignmentevents">function countNonOverlappingAlignmentEvents</a></li>
-  <li><a href="#function-getalignmentsource" id="toc-function-getalignmentsource" class="nav-link" data-scroll-target="#function-getalignmentsource">function getAlignmentSource</a></li>
-  <li><a href="#function-getfilteredalignmentsource" id="toc-function-getfilteredalignmentsource" class="nav-link" data-scroll-target="#function-getfilteredalignmentsource">function getFilteredAlignmentSource</a></li>
   <li><a href="#function-createalignedgatherresult" id="toc-function-createalignedgatherresult" class="nav-link" data-scroll-target="#function-createalignedgatherresult">function createAlignedGatherResult</a></li>
   <li><a href="#function-createalignedgatherresult-1" id="toc-function-createalignedgatherresult-1" class="nav-link" data-scroll-target="#function-createalignedgatherresult-1">function createAlignedGatherResult</a></li>
+  <li><a href="#function-toalignmentpoint" id="toc-function-toalignmentpoint" class="nav-link" data-scroll-target="#function-toalignmentpoint">function toAlignmentPoint</a></li>
+  <li><a href="#function-tointervaleventpoint" id="toc-function-tointervaleventpoint" class="nav-link" data-scroll-target="#function-tointervaleventpoint">function toIntervalEventPoint</a></li>
+  <li><a href="#function-getalignmentsource" id="toc-function-getalignmentsource" class="nav-link" data-scroll-target="#function-getalignmentsource">function getAlignmentSource</a></li>
+  <li><a href="#function-extractalignmenttimes" id="toc-function-extractalignmenttimes" class="nav-link" data-scroll-target="#function-extractalignmenttimes">function extractAlignmentTimes</a></li>
+  <li><a href="#function-extractalignmenttimes-1" id="toc-function-extractalignmenttimes-1" class="nav-link" data-scroll-target="#function-extractalignmenttimes-1">function extractAlignmentTimes</a></li>
+  <li><a href="#function-pruneoverlappingalignmenttimes" id="toc-function-pruneoverlappingalignmenttimes" class="nav-link" data-scroll-target="#function-pruneoverlappingalignmenttimes">function pruneOverlappingAlignmentTimes</a></li>
+  <li><a href="#function-createfilteredeventseries" id="toc-function-createfilteredeventseries" class="nav-link" data-scroll-target="#function-createfilteredeventseries">function createFilteredEventSeries</a></li>
+  <li><a href="#function-createfilteredintervalseries" id="toc-function-createfilteredintervalseries" class="nav-link" data-scroll-target="#function-createfilteredintervalseries">function createFilteredIntervalSeries</a></li>
+  <li><a href="#function-physicalwindowtointerval" id="toc-function-physicalwindowtointerval" class="nav-link" data-scroll-target="#function-physicalwindowtointerval">function physicalWindowToInterval</a></li>
+  <li><a href="#function-createwindowsaroundevents" id="toc-function-createwindowsaroundevents" class="nav-link" data-scroll-target="#function-createwindowsaroundevents">function createWindowsAroundEvents</a></li>
+  <li><a href="#function-keptwindowindices" id="toc-function-keptwindowindices" class="nav-link" data-scroll-target="#function-keptwindowindices">function keptWindowIndices</a></li>
+  <li><a href="#function-prunepreparedalignmentwindows" id="toc-function-prunepreparedalignmentwindows" class="nav-link" data-scroll-target="#function-prunepreparedalignmentwindows">function prunePreparedAlignmentWindows</a></li>
+  <li><a href="#function-prepareeventalignmentwindows" id="toc-function-prepareeventalignmentwindows" class="nav-link" data-scroll-target="#function-prepareeventalignmentwindows">function prepareEventAlignmentWindows</a></li>
+  <li><a href="#function-prepareintervalalignmentwindows" id="toc-function-prepareintervalalignmentwindows" class="nav-link" data-scroll-target="#function-prepareintervalalignmentwindows">function prepareIntervalAlignmentWindows</a></li>
+  <li><a href="#function-prepareintervalalignmentwindows-1" id="toc-function-prepareintervalalignmentwindows-1" class="nav-link" data-scroll-target="#function-prepareintervalalignmentwindows-1">function prepareIntervalAlignmentWindows</a></li>
+  <li><a href="#function-getfilteredalignmentsource" id="toc-function-getfilteredalignmentsource" class="nav-link" data-scroll-target="#function-getfilteredalignmentsource">function getFilteredAlignmentSource</a></li>
+  <li><a href="#function-countnonoverlappingalignmentevents" id="toc-function-countnonoverlappingalignmentevents" class="nav-link" data-scroll-target="#function-countnonoverlappingalignmentevents">function countNonOverlappingAlignmentEvents</a></li>
+  <li><a href="#function-preparealignmentwindows" id="toc-function-preparealignmentwindows" class="nav-link" data-scroll-target="#function-preparealignmentwindows">function prepareAlignmentWindows</a></li>
   <li><a href="#function-screentondc" id="toc-function-screentondc" class="nav-link" data-scroll-target="#function-screentondc">function screenToNDC</a></li>
   <li><a href="#function-screentoworld" id="toc-function-screentoworld" class="nav-link" data-scroll-target="#function-screentoworld">function screenToWorld</a></li>
   <li><a href="#function-worldtoscreen" id="toc-function-worldtoscreen" class="nav-link" data-scroll-target="#function-worldtoscreen">function worldToScreen</a></li>
@@ -515,13 +525,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1RateEstimate.html">Neuralyzer::Plots::RateEstimate</a></strong> <br>The universal output of any rate estimation method.</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PreparedAlignmentWindows.html">Neuralyzer::Plots::PreparedAlignmentWindows</a></strong> <br>Prepared row metadata for a plot-aligned gather.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1RateEstimateWithTrials.html">Neuralyzer::Plots::RateEstimateWithTrials</a></strong> <br>Extended output when per-trial data is requested.</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1RateEstimate.html">Neuralyzer::Plots::RateEstimate</a></strong> <br>The universal output of any rate estimation method.</td>
 </tr>
 <tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1RateEstimateWithTrials.html">Neuralyzer::Plots::RateEstimateWithTrials</a></strong> <br>Extended output when per-trial data is requested.</td>
+</tr>
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1UnitGatherContext.html">Neuralyzer::Plots::UnitGatherContext</a></strong> <br>Bundles a <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> with its <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> and source key.</td>
 </tr>
@@ -543,22 +557,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-scalingmode">ScalingMode</a></strong> { FiringRateHz, ZScore, Normalized01, RawCount, CountPerTrial}<br>Scaling mode for rate estimate values.</td>
 </tr>
 <tr class="even">
+<td>enum class</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-alignmentpoint">AlignmentPoint</a></strong> { Start, End, Center}<br>Plot-facing interval alignment point.</td>
+</tr>
+<tr class="odd">
 <td>using std::variant&lt; <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1BinningParams.html">BinningParams</a>, <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1GaussianKernelParams.html">GaussianKernelParams</a>, <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1CausalExponentialParams.html">CausalExponentialParams</a> &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#using-estimationparams">EstimationParams</a></strong> <br>Tagged union of all supported rate estimation method parameter structs.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>using <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-scalingmode">ScalingMode</a></td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#using-heatmapscaling">HeatmapScaling</a></strong></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>using std::function&lt; std::optional&lt; <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PlotTooltipHit.html">PlotTooltipHit</a> &gt;(QPoint screen_pos)&gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#using-tooltiphittestfn">TooltipHitTestFn</a></strong> <br>Callback that performs a hit test at a screen position.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>using std::function&lt; QString(<a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PlotTooltipHit.html">PlotTooltipHit</a> const &amp;hit)&gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#using-tooltiptextfn">TooltipTextFn</a></strong> <br>Callback that generates tooltip text from a hit result.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>using std::function&lt; <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PlotTooltipContent.html">PlotTooltipContent</a>(<a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PlotTooltipHit.html">PlotTooltipHit</a> const &amp;hit)&gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#using-tooltipcontentfn">TooltipContentFn</a></strong> <br>Callback that generates rich tooltip content from a hit result.</td>
 </tr>
@@ -652,106 +670,142 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-runlineselectionintersection">runLineSelectionIntersection</a></strong>(<a href="../../api_generated/Classes/classCorePlotting_1_1ILineBatchIntersector.html">CorePlotting::ILineBatchIntersector</a> &amp; intersector, <a href="../../api_generated/Classes/structCorePlotting_1_1LineBatchData.html">CorePlotting::LineBatchData</a> const &amp; cpu_data, glm::vec2 start_ndc, glm::vec2 end_ndc, glm::mat4 const &amp; projection_matrix, glm::mat4 const &amp; view_matrix)<br>Run line-vs-batch intersection and return hit line indices.</td>
 </tr>
 <tr class="even">
-<td>AlignmentPoint</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-toalignmentpoint">toAlignmentPoint</a></strong>(<a href="../../api_generated/Files/PlotAlignmentData_8hpp.html#enum-intervalalignmenttype">IntervalAlignmentType</a> type)<br>Convert IntervalAlignmentType to AlignmentPoint.</td>
-</tr>
-<tr class="odd">
 <td>template &lt;typename T &gt; <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-gatherwitheventalignment">gatherWithEventAlignment</a></strong>(std::shared_ptr&lt; T &gt; source, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt; alignment_events, double pre_window, double post_window)</td>
 </tr>
+<tr class="odd">
+<td>template &lt;typename T &gt; <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-gatherwithintervalalignment">gatherWithIntervalAlignment</a></strong>(std::shared_ptr&lt; T &gt; source, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> &gt; alignment_intervals, <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-alignmentpoint">AlignmentPoint</a> align =<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enumvalue-start">AlignmentPoint::Start</a>)</td>
+</tr>
 <tr class="even">
 <td>template &lt;typename T &gt; <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-gatherwithintervalalignment">gatherWithIntervalAlignment</a></strong>(std::shared_ptr&lt; T &gt; source, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> &gt; alignment_intervals, AlignmentPoint align =AlignmentPoint::Start)</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-gatherwithintervalalignment">gatherWithIntervalAlignment</a></strong>(std::shared_ptr&lt; T &gt; source, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> &gt; alignment_intervals, <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-alignmentpoint">AlignmentPoint</a> align, double pre_window, double post_window)<br><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html">Gather</a> data aligned to a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> with explicit window.</td>
 </tr>
 <tr class="odd">
 <td>template &lt;typename T &gt; <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-gatherwithintervalalignment">gatherWithIntervalAlignment</a></strong>(std::shared_ptr&lt; T &gt; source, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> &gt; alignment_intervals, AlignmentPoint align, double pre_window, double post_window)<br><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html">Gather</a> data aligned to a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> with explicit window.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-createalignedgatherresult">createAlignedGatherResult</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, std::string const &amp; source_key, <a href="../../api_generated/Classes/structPlotAlignmentData.html">PlotAlignmentData</a> const &amp; alignment_data)</td>
+</tr>
+<tr class="even">
+<td>template &lt;typename T &gt; <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-createalignedgatherresult">createAlignedGatherResult</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, std::string const &amp; source_key, <a href="../../api_generated/Classes/classPlotAlignmentState.html">PlotAlignmentState</a> const * alignment_state)<br>Overload using <a href="../../api_generated/Classes/classPlotAlignmentState.html">PlotAlignmentState</a> pointer.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-alignmentpoint">AlignmentPoint</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-toalignmentpoint">toAlignmentPoint</a></strong>(<a href="../../api_generated/Files/PlotAlignmentData_8hpp.html#enum-intervalalignmenttype">IntervalAlignmentType</a> type)<br>Convert IntervalAlignmentType to the plot-facing AlignmentPoint enum.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2_1_1Examples.html#enum-intervaleventpoint">Neuralyzer::Transforms::V2::Examples::IntervalEventPoint</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-tointervaleventpoint">toIntervalEventPoint</a></strong>(<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-alignmentpoint">AlignmentPoint</a> point)<br>Convert a plot alignment point to the TransformsV2 interval-to-event enum.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1AlignmentSourceResult.html">AlignmentSourceResult</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-getalignmentsource">getAlignmentSource</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, std::string const &amp; alignment_key)<br>Look up an alignment source from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; int64_t &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-extractalignmenttimes">extractAlignmentTimes</a></strong>(<a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &amp; events)<br>Extract absolute alignment times from a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>.</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; int64_t &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-extractalignmenttimes">extractAlignmentTimes</a></strong>(<a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &amp; intervals, <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-alignmentpoint">AlignmentPoint</a> align)<br>Extract absolute alignment times from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</td>
 </tr>
 <tr class="even">
 <td>std::vector&lt; size_t &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-pruneoverlappingalignmenttimes">pruneOverlappingAlignmentTimes</a></strong>(std::vector&lt; int64_t &gt; const &amp; alignment_times, int64_t pre_window, int64_t post_window)<br>Prune alignment times whose expanded windows would overlap.</td>
 </tr>
 <tr class="odd">
-<td>std::vector&lt; int64_t &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-extractalignmenttimes">extractAlignmentTimes</a></strong>(<a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &amp; events)<br>Extract absolute alignment times from a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>.</td>
-</tr>
-<tr class="even">
-<td>std::vector&lt; int64_t &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-extractalignmenttimes">extractAlignmentTimes</a></strong>(<a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &amp; intervals, AlignmentPoint align)<br>Extract absolute alignment times from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</td>
-</tr>
-<tr class="odd">
 <td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-createfilteredeventseries">createFilteredEventSeries</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt; const &amp; source, std::vector&lt; size_t &gt; const &amp; kept_indices)<br>Create a filtered copy of a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> keeping only specified indices.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-createfilteredeventseries">createFilteredEventSeries</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &gt; const &amp; source, std::vector&lt; size_t &gt; const &amp; kept_indices)<br>Create a filtered copy of a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>.</td>
 </tr>
 <tr class="even">
 <td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-createfilteredintervalseries">createFilteredIntervalSeries</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> &gt; const &amp; source, std::vector&lt; size_t &gt; const &amp; kept_indices)<br>Create a filtered copy of a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> keeping only specified indices.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-createfilteredintervalseries">createFilteredIntervalSeries</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; const &amp; source, std::vector&lt; size_t &gt; const &amp; kept_indices)<br>Create a filtered copy of a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</td>
 </tr>
 <tr class="odd">
-<td>size_t</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-countnonoverlappingalignmentevents">countNonOverlappingAlignmentEvents</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, <a href="../../api_generated/Classes/structPlotAlignmentData.html">PlotAlignmentData</a> const &amp; alignment_data)<br>Compute the number of alignment events that survive overlap pruning.</td>
+<td><a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-physicalwindowtointerval">physicalWindowToInterval</a></strong>(int64_t alignment_time, int64_t pre_window, int64_t post_window, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; target_time_frame)<br>Convert an absolute-time window to interval indices in a target <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a>.</td>
 </tr>
 <tr class="even">
-<td><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1AlignmentSourceResult.html">AlignmentSourceResult</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-getalignmentsource">getAlignmentSource</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, std::string const &amp; alignment_key)<br>Look up alignment series from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</td>
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-createwindowsaroundevents">createWindowsAroundEvents</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &gt; const &amp; alignment_events, int64_t pre_window, int64_t post_window, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; window_time_frame)<br>Build overlapping window intervals around alignment events.</td>
 </tr>
 <tr class="odd">
+<td>std::vector&lt; size_t &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-keptwindowindices">keptWindowIndices</a></strong>(<a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &amp; windows)<br>Compute kept row indices for greedy overlap pruning of interval bounds.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PreparedAlignmentWindows.html">PreparedAlignmentWindows</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-prunepreparedalignmentwindows">prunePreparedAlignmentWindows</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; const &amp; windows, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &gt; const &amp; alignment_points)<br>Prune windows and companion alignment points together.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PreparedAlignmentWindows.html">PreparedAlignmentWindows</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-prepareeventalignmentwindows">prepareEventAlignmentWindows</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &gt; const &amp; alignment_events, int64_t pre_window, int64_t post_window, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; window_time_frame, bool prevent_overlap =false)<br>Prepare event-aligned gather windows.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PreparedAlignmentWindows.html">PreparedAlignmentWindows</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-prepareintervalalignmentwindows">prepareIntervalAlignmentWindows</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; const &amp; alignment_intervals, <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-alignmentpoint">AlignmentPoint</a> align =<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enumvalue-start">AlignmentPoint::Start</a>)<br>Prepare interval-aligned gather windows that use the full interval bounds.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PreparedAlignmentWindows.html">PreparedAlignmentWindows</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-prepareintervalalignmentwindows">prepareIntervalAlignmentWindows</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; const &amp; alignment_intervals, <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-alignmentpoint">AlignmentPoint</a> align, int64_t pre_window, int64_t post_window, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; window_time_frame, bool prevent_overlap =false)<br>Prepare interval-aligned gather windows around selected interval points.</td>
+</tr>
+<tr class="even">
 <td><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1AlignmentSourceResult.html">AlignmentSourceResult</a></td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-getfilteredalignmentsource">getFilteredAlignmentSource</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, <a href="../../api_generated/Classes/structPlotAlignmentData.html">PlotAlignmentData</a> const &amp; alignment_data)<br>Look up alignment source with optional overlap pruning.</td>
 </tr>
+<tr class="odd">
+<td>size_t</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-countnonoverlappingalignmentevents">countNonOverlappingAlignmentEvents</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, <a href="../../api_generated/Classes/structPlotAlignmentData.html">PlotAlignmentData</a> const &amp; alignment_data)<br>Compute the number of alignment rows that survive overlap pruning.</td>
+</tr>
 <tr class="even">
-<td>template &lt;typename T &gt; <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-createalignedgatherresult">createAlignedGatherResult</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, std::string const &amp; source_key, <a href="../../api_generated/Classes/structPlotAlignmentData.html">PlotAlignmentData</a> const &amp; alignment_data)</td>
+<td><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PreparedAlignmentWindows.html">PreparedAlignmentWindows</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-preparealignmentwindows">prepareAlignmentWindows</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, <a href="../../api_generated/Classes/structPlotAlignmentData.html">PlotAlignmentData</a> const &amp; alignment_data, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; window_time_frame)<br>Prepare windows from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> and <a href="../../api_generated/Classes/structPlotAlignmentData.html">PlotAlignmentData</a>.</td>
 </tr>
 <tr class="odd">
-<td>template &lt;typename T &gt; <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; T &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-createalignedgatherresult">createAlignedGatherResult</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, std::string const &amp; source_key, <a href="../../api_generated/Classes/classPlotAlignmentState.html">PlotAlignmentState</a> const * alignment_state)<br>Overload using <a href="../../api_generated/Classes/classPlotAlignmentState.html">PlotAlignmentState</a> pointer.</td>
-</tr>
-<tr class="even">
 <td>glm::vec2</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-screentondc">screenToNDC</a></strong>(QPoint const &amp; screen_pos, int widget_width, int widget_height)<br>Convert screen pixel coordinates to normalized device coordinates (NDC).</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>QPointF</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-screentoworld">screenToWorld</a></strong>(glm::mat4 const &amp; projection_matrix, int widget_width, int widget_height, QPoint const &amp; screen_pos)<br>Convert screen pixel coordinates to world coordinates.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>QPoint</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-worldtoscreen">worldToScreen</a></strong>(glm::mat4 const &amp; projection_matrix, int widget_width, int widget_height, float world_x, float world_y)<br>Convert world coordinates to screen pixel coordinates.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>template &lt;ViewStateLike ViewState&gt; <br>glm::mat4</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-computeorthoprojection">computeOrthoProjection</a></strong>(ViewState const &amp; view_state, float x_range, float x_center, float y_range, float y_center)<br>Compute an orthographic projection matrix from zoom/pan view state.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>template &lt;ViewStateWithBounds ViewState&gt; <br>glm::mat4</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-computeorthoprojection">computeOrthoProjection</a></strong>(ViewState const &amp; view_state)<br>Compute orthographic projection from view state with bounds.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>template &lt;ZoomPanSettable State,ViewStateLike ViewState&gt; <br>void</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-handlepanning">handlePanning</a></strong>(State &amp; state, ViewState const &amp; view_state, int delta_x, int delta_y, float x_range, float y_range, int widget_width, int widget_height)<br>Apply a pixel-space drag delta as a pan update to the state.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>template &lt;ZoomPanSettable State,ViewStateWithBounds ViewState&gt; <br>void</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-handlepanning">handlePanning</a></strong>(State &amp; state, ViewState const &amp; view_state, int delta_x, int delta_y, int widget_width, int widget_height)<br>Apply pan from view state with bounds (derives x_range/y_range).</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>template &lt;ZoomPanSettable State,ViewStateLike ViewState&gt; <br>void</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-handlezoom">handleZoom</a></strong>(State &amp; state, ViewState const &amp; view_state, float delta, bool y_only, bool both_axes)<br>Apply a scroll-wheel zoom step to the state.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-extractedgeevents">extractEdgeEvents</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; intervals, <a href="../../api_generated/Files/PlotAlignmentData_8hpp.html#enum-intervalalignmenttype">IntervalAlignmentType</a> edge)<br>Extract edge events from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1HeatmapPipelineResult.html">HeatmapPipelineResult</a></td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-runheatmappipeline">runHeatmapPipeline</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, std::vector&lt; std::string &gt; const &amp; unit_keys, <a href="../../api_generated/Classes/structPlotAlignmentData.html">PlotAlignmentData</a> const &amp; alignment_data, <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1HeatmapPipelineConfig.html">HeatmapPipelineConfig</a> const &amp; config)<br>Execute the heatmap data pipeline without an OpenGL context.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>std::vector&lt; std::size_t &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-computesortorder">computeSortOrder</a></strong>(<a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1HeatmapPipelineResult.html">HeatmapPipelineResult</a> const &amp; result, std::vector&lt; std::string &gt; const &amp; unit_keys, <a href="../../api_generated/Files/HeatmapState_8hpp.html#enum-heatmapsortmode">HeatmapSortMode</a> sort_mode, bool ascending)<br>Compute a permutation vector that sorts the pipeline rows.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>void</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-applysortorder">applySortOrder</a></strong>(<a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1HeatmapPipelineResult.html">HeatmapPipelineResult</a> &amp; result, std::vector&lt; std::string &gt; &amp; unit_keys, std::vector&lt; std::size_t &gt; const &amp; sort_indices)<br>Apply a precomputed permutation to the pipeline result and unit keys.</td>
 </tr>
@@ -805,6 +859,42 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <p>Scaling mode for rate estimate values.</p>
 <p>Controls how raw event counts are transformed. Shared between <a href="../../api_generated/Classes/classHeatmapWidget.html">HeatmapWidget</a>, <a href="../../api_generated/Classes/classPSTHWidget.html">PSTHWidget</a>, and any future rate-based plot widgets. Applied per-unit (per-row for heatmaps) after rate estimation.</p>
+</section>
+<section id="enum-alignmentpoint" class="level3">
+<h3 class="anchored" data-anchor-id="enum-alignmentpoint">enum AlignmentPoint</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 38%">
+<col style="width: 19%">
+<col style="width: 42%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Enumerator</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Start</td>
+<td></td>
+<td>Use interval.start as alignment time.</td>
+</tr>
+<tr class="even">
+<td>End</td>
+<td></td>
+<td>Use interval.end as alignment time.</td>
+</tr>
+<tr class="odd">
+<td>Center</td>
+<td></td>
+<td>Use (interval.start + interval.end) / 2 as alignment time.</td>
+</tr>
+</tbody>
+</table>
+<p>Plot-facing interval alignment point.</p>
+<p>This mirrors the UI choices without depending on <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> interval adapters.</p>
 </section>
 <section id="using-estimationparams" class="level3">
 <h3 class="anchored" data-anchor-id="using-estimationparams">using EstimationParams</h3>
@@ -1170,48 +1260,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Return</strong>: Indices of lines that intersect the selection segment (0-based into cpu_data.lines). Empty if no intersector or batch empty.</p>
 <p>Builds a LineIntersectionQuery from the selection segment (NDC) and current projection/view matrices, then calls the intersector. The caller applies the result to its own selection state (e.g.&nbsp;trial indices or entity IDs).</p>
 </section>
-<section id="function-toalignmentpoint" class="level3">
-<h3 class="anchored" data-anchor-id="function-toalignmentpoint">function toAlignmentPoint</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> AlignmentPoint toAlignmentPoint<span class="op">(</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    IntervalAlignmentType type</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Convert IntervalAlignmentType to AlignmentPoint.</p>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>type</strong> UI alignment type (Beginning/End)</li>
-</ul>
-<p><strong>Return</strong>: Corresponding AlignmentPoint for <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> adapters</p>
-<p>Maps the UI-facing enum to the <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> API enum.</p>
-</section>
 <section id="function-gatherwitheventalignment" class="level3">
 <h3 class="anchored" data-anchor-id="function-gatherwitheventalignment">function gatherWithEventAlignment</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>GatherResult<span class="op">&lt;</span> T <span class="op">&gt;</span> gatherWithEventAlignment<span class="op">(</span></span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> T <span class="op">&gt;</span> source<span class="op">,</span></span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> alignment_events<span class="op">,</span></span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> pre_window<span class="op">,</span></span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> post_window</span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>GatherResult<span class="op">&lt;</span> T <span class="op">&gt;</span> gatherWithEventAlignment<span class="op">(</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> T <span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> alignment_events<span class="op">,</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> pre_window<span class="op">,</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> post_window</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-gatherwithintervalalignment" class="level3">
 <h3 class="anchored" data-anchor-id="function-gatherwithintervalalignment">function gatherWithIntervalAlignment</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>GatherResult<span class="op">&lt;</span> T <span class="op">&gt;</span> gatherWithIntervalAlignment<span class="op">(</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> T <span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="op">&gt;</span> alignment_intervals<span class="op">,</span></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    AlignmentPoint align <span class="op">=</span>AlignmentPoint<span class="op">::</span>Start</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-gatherwithintervalalignment-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-gatherwithintervalalignment-1">function gatherWithIntervalAlignment</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>GatherResult<span class="op">&lt;</span> T <span class="op">&gt;</span> gatherWithIntervalAlignment<span class="op">(</span></span>
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> T <span class="op">&gt;</span> source<span class="op">,</span></span>
 <span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="op">&gt;</span> alignment_intervals<span class="op">,</span></span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    AlignmentPoint align <span class="op">=</span>AlignmentPoint<span class="op">::</span>Start</span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="function-gatherwithintervalalignment-1" class="level3">
-<h3 class="anchored" data-anchor-id="function-gatherwithintervalalignment-1">function gatherWithIntervalAlignment</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>GatherResult<span class="op">&lt;</span> T <span class="op">&gt;</span> gatherWithIntervalAlignment<span class="op">(</span></span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> T <span class="op">&gt;</span> source<span class="op">,</span></span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="op">&gt;</span> alignment_intervals<span class="op">,</span></span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    AlignmentPoint align<span class="op">,</span></span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> pre_window<span class="op">,</span></span>
-<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> post_window</span>
-<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    AlignmentPoint align<span class="op">,</span></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> pre_window<span class="op">,</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> post_window</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html">Gather</a> data aligned to a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> with explicit window.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1229,155 +1306,330 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Uses the specified alignment point (Start/End/Center) of each interval, but creates a view window of [alignment - pre_window, alignment + post_window] in absolute time units rather than using the raw interval bounds.</p>
 <p>This is essential for raster plots where the user specifies a display window that extends beyond the interval boundaries.</p>
 </section>
-<section id="function-pruneoverlappingalignmenttimes" class="level3">
-<h3 class="anchored" data-anchor-id="function-pruneoverlappingalignmenttimes">function pruneOverlappingAlignmentTimes</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">size_t</span> <span class="op">&gt;</span> pruneOverlappingAlignmentTimes<span class="op">(</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> alignment_times<span class="op">,</span></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> pre_window<span class="op">,</span></span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> post_window</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Prune alignment times whose expanded windows would overlap.</p>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>alignment_times</strong> Sorted absolute alignment times</li>
-<li><strong>pre_window</strong> Time units before each alignment time</li>
-<li><strong>post_window</strong> Time units after each alignment time</li>
-</ul>
-<p><strong>Return</strong>: Indices into alignment_times that survive pruning</p>
-<p><strong>Precondition</strong>: alignment_times is sorted in ascending order</p>
-<p>Uses a greedy left-to-right scan: keeps the first alignment time, then for each subsequent time checks whether its window [time - pre_window, time + post_window] overlaps with the window of the last <em>kept</em> time. If it overlaps, the event is skipped; otherwise it is kept.</p>
-<p>Alignment times must be sorted in ascending order.</p>
-</section>
-<section id="function-extractalignmenttimes" class="level3">
-<h3 class="anchored" data-anchor-id="function-extractalignmenttimes">function extractAlignmentTimes</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> extractAlignmentTimes<span class="op">(</span></span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    DigitalEventSeries <span class="at">const</span> <span class="op">&amp;</span> events</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Extract absolute alignment times from a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>.</p>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>events</strong> Event series to extract times from</li>
-</ul>
-<p><strong>Return</strong>: Vector of absolute times (sorted, matching event order)</p>
-<p>Converts each event’s <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> to absolute time using the series’ <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a>. If the series has no <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a>, uses the raw index value.</p>
-</section>
-<section id="function-extractalignmenttimes-1" class="level3">
-<h3 class="anchored" data-anchor-id="function-extractalignmenttimes-1">function extractAlignmentTimes</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> extractAlignmentTimes<span class="op">(</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeries <span class="at">const</span> <span class="op">&amp;</span> intervals<span class="op">,</span></span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    AlignmentPoint align</span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Extract absolute alignment times from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</p>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>intervals</strong> Interval series to extract from</li>
-<li><strong>align</strong> Which point in each interval to use</li>
-</ul>
-<p><strong>Return</strong>: Vector of absolute alignment times (sorted, matching interval order)</p>
-<p>Extracts the alignment point (Start, End, or Center) for each interval and converts it to absolute time using the series’ <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a>.</p>
-</section>
-<section id="function-createfilteredeventseries" class="level3">
-<h3 class="anchored" data-anchor-id="function-createfilteredeventseries">function createFilteredEventSeries</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> createFilteredEventSeries<span class="op">(</span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">,</span></span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">size_t</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> kept_indices</span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Create a filtered copy of a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> keeping only specified indices.</p>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>source</strong> Source event series</li>
-<li><strong>kept_indices</strong> Indices (into the source’s view order) to keep</li>
-</ul>
-<p><strong>Return</strong>: New <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> containing only the specified events</p>
-<p>The returned series shares the same <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> as the source but is a new owning series (not registered in <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>).</p>
-</section>
-<section id="function-createfilteredintervalseries" class="level3">
-<h3 class="anchored" data-anchor-id="function-createfilteredintervalseries">function createFilteredIntervalSeries</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="op">&gt;</span> createFilteredIntervalSeries<span class="op">(</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">,</span></span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">size_t</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> kept_indices</span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Create a filtered copy of a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> keeping only specified indices.</p>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>source</strong> Source interval series</li>
-<li><strong>kept_indices</strong> Indices (into the source’s view order) to keep</li>
-</ul>
-<p><strong>Return</strong>: New <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> containing only the specified intervals</p>
-</section>
-<section id="function-countnonoverlappingalignmentevents" class="level3">
-<h3 class="anchored" data-anchor-id="function-countnonoverlappingalignmentevents">function countNonOverlappingAlignmentEvents</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">size_t</span> countNonOverlappingAlignmentEvents<span class="op">(</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data</span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Compute the number of alignment events that survive overlap pruning.</p>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>data_manager</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> to query</li>
-<li><strong>alignment_data</strong> Alignment configuration (includes window_size and prevent_overlap)</li>
-</ul>
-<p><strong>Return</strong>: Number of non-overlapping alignment events, or 0 on error</p>
-<p>Lightweight function for UI display — computes the count without creating a filtered series.</p>
-</section>
-<section id="function-getalignmentsource" class="level3">
-<h3 class="anchored" data-anchor-id="function-getalignmentsource">function getAlignmentSource</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> AlignmentSourceResult getAlignmentSource<span class="op">(</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> alignment_key</span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Look up alignment series from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</p>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>data_manager</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> to query</li>
-<li><strong>alignment_key</strong> Key of the alignment series</li>
-</ul>
-<p><strong>Return</strong>: <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1AlignmentSourceResult.html">AlignmentSourceResult</a> with the series or error info</p>
-<p>Determines whether the alignment key refers to a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> or <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> and retrieves the appropriate type.</p>
-</section>
-<section id="function-getfilteredalignmentsource" class="level3">
-<h3 class="anchored" data-anchor-id="function-getfilteredalignmentsource">function getFilteredAlignmentSource</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> AlignmentSourceResult getFilteredAlignmentSource<span class="op">(</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data</span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Look up alignment source with optional overlap pruning.</p>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>data_manager</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> to query</li>
-<li><strong>alignment_data</strong> Full alignment configuration</li>
-</ul>
-<p><strong>Return</strong>: <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1AlignmentSourceResult.html">AlignmentSourceResult</a> with (optionally filtered) series</p>
-<p>When alignment_data.prevent_overlap is true, the returned series is a filtered copy containing only non-overlapping alignment events. When false, this behaves identically to <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-getalignmentsource">getAlignmentSource()</a>.</p>
-<p>Pruning for intervals is based on the <strong>alignment point</strong> (Start/End/Center), not raw interval bounds. An interval whose raw end overlaps another interval’s alignment-point window is NOT pruned.</p>
-</section>
 <section id="function-createalignedgatherresult" class="level3">
 <h3 class="anchored" data-anchor-id="function-createalignedgatherresult">function createAlignedGatherResult</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>GatherResult<span class="op">&lt;</span> T <span class="op">&gt;</span> createAlignedGatherResult<span class="op">(</span></span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> source_key<span class="op">,</span></span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data</span>
-<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>GatherResult<span class="op">&lt;</span> T <span class="op">&gt;</span> createAlignedGatherResult<span class="op">(</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> source_key<span class="op">,</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-createalignedgatherresult-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-createalignedgatherresult-1">function createAlignedGatherResult</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>GatherResult<span class="op">&lt;</span> T <span class="op">&gt;</span> createAlignedGatherResult<span class="op">(</span></span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> source_key<span class="op">,</span></span>
-<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentState <span class="at">const</span> <span class="op">*</span> alignment_state</span>
-<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>GatherResult<span class="op">&lt;</span> T <span class="op">&gt;</span> createAlignedGatherResult<span class="op">(</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> source_key<span class="op">,</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentState <span class="at">const</span> <span class="op">*</span> alignment_state</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Overload using <a href="../../api_generated/Classes/classPlotAlignmentState.html">PlotAlignmentState</a> pointer.</p>
 <p>Convenience overload that extracts data() from the state object.</p>
 </section>
+<section id="function-toalignmentpoint" class="level3">
+<h3 class="anchored" data-anchor-id="function-toalignmentpoint">function toAlignmentPoint</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> AlignmentPoint toAlignmentPoint<span class="op">(</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    IntervalAlignmentType type</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Convert IntervalAlignmentType to the plot-facing AlignmentPoint enum.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>type</strong> UI alignment type.</li>
+</ul>
+<p><strong>Return</strong>: Corresponding plot alignment point.</p>
+<p><strong>Postcondition</strong>: End maps to <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enumvalue-end">AlignmentPoint::End</a>; all other current values map to Start.</p>
+</section>
+<section id="function-tointervaleventpoint" class="level3">
+<h3 class="anchored" data-anchor-id="function-tointervaleventpoint">function toIntervalEventPoint</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>Examples<span class="op">::</span>IntervalEventPoint toIntervalEventPoint<span class="op">(</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    AlignmentPoint point</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Convert a plot alignment point to the TransformsV2 interval-to-event enum.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>point</strong> Plot-facing alignment point.</li>
+</ul>
+<p><strong>Return</strong>: Equivalent TransformsV2 interval event point.</p>
+<p><strong>Postcondition</strong>: The returned value preserves start/end/center semantics.</p>
+</section>
+<section id="function-getalignmentsource" class="level3">
+<h3 class="anchored" data-anchor-id="function-getalignmentsource">function getAlignmentSource</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> AlignmentSourceResult getAlignmentSource<span class="op">(</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> alignment_key</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Look up an alignment source from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data_manager</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> to query.</li>
+<li><strong>alignment_key</strong> Key of a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> or <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1AlignmentSourceResult.html">AlignmentSourceResult</a> containing the series or an error message.</p>
+<p><strong>Postcondition</strong>: The result is valid only for digital event or digital interval data.</p>
+</section>
+<section id="function-extractalignmenttimes" class="level3">
+<h3 class="anchored" data-anchor-id="function-extractalignmenttimes">function extractAlignmentTimes</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> extractAlignmentTimes<span class="op">(</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    DigitalEventSeries <span class="at">const</span> <span class="op">&amp;</span> events</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Extract absolute alignment times from a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>events</strong> Event series to inspect.</li>
+</ul>
+<p><strong>Return</strong>: Absolute-time values in event row order.</p>
+<p><strong>Postcondition</strong>: If the series has no <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a>, raw event indices are returned.</p>
+</section>
+<section id="function-extractalignmenttimes-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-extractalignmenttimes-1">function extractAlignmentTimes</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> extractAlignmentTimes<span class="op">(</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeries <span class="at">const</span> <span class="op">&amp;</span> intervals<span class="op">,</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    AlignmentPoint align</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Extract absolute alignment times from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>intervals</strong> Interval series to inspect.</li>
+<li><strong>align</strong> Which interval point to use.</li>
+</ul>
+<p><strong>Return</strong>: Absolute-time values in interval row order.</p>
+<p><strong>Postcondition</strong>: If the series has no <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a>, raw interval indices are returned.</p>
+</section>
+<section id="function-pruneoverlappingalignmenttimes" class="level3">
+<h3 class="anchored" data-anchor-id="function-pruneoverlappingalignmenttimes">function pruneOverlappingAlignmentTimes</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">size_t</span> <span class="op">&gt;</span> pruneOverlappingAlignmentTimes<span class="op">(</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> alignment_times<span class="op">,</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> pre_window<span class="op">,</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> post_window</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Prune alignment times whose expanded windows would overlap.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>alignment_times</strong> Sorted absolute alignment times.</li>
+<li><strong>pre_window</strong> Time units before each alignment time.</li>
+<li><strong>post_window</strong> Time units after each alignment time.</li>
+</ul>
+<p><strong>Return</strong>: Indices into alignment_times that survive greedy keep-first pruning.</p>
+<p><strong>Precondition</strong>: alignment_times is sorted in ascending order.</p>
+<p><strong>Postcondition</strong>: Touching windows are treated as overlapping.</p>
+</section>
+<section id="function-createfilteredeventseries" class="level3">
+<h3 class="anchored" data-anchor-id="function-createfilteredeventseries">function createFilteredEventSeries</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> createFilteredEventSeries<span class="op">(</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="at">const</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">,</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">size_t</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> kept_indices</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a filtered copy of a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>source</strong> Source event series.</li>
+<li><strong>kept_indices</strong> Indices in source view order to keep.</li>
+</ul>
+<p><strong>Return</strong>: Owning event series with the same <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> as source.</p>
+<p><strong>Precondition</strong>: source must be non-null and kept_indices must be sorted ascending.</p>
+<p><strong>Postcondition</strong>: Output row order follows kept_indices.</p>
+</section>
+<section id="function-createfilteredintervalseries" class="level3">
+<h3 class="anchored" data-anchor-id="function-createfilteredintervalseries">function createFilteredIntervalSeries</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="op">&gt;</span> createFilteredIntervalSeries<span class="op">(</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">,</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">size_t</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> kept_indices</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a filtered copy of a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>source</strong> Source interval series.</li>
+<li><strong>kept_indices</strong> Indices in source view order to keep.</li>
+</ul>
+<p><strong>Return</strong>: Owning interval series with the same <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> as source.</p>
+<p><strong>Precondition</strong>: source must be non-null and kept_indices must be sorted ascending.</p>
+<p><strong>Postcondition</strong>: Output row order follows kept_indices.</p>
+</section>
+<section id="function-physicalwindowtointerval" class="level3">
+<h3 class="anchored" data-anchor-id="function-physicalwindowtointerval">function physicalWindowToInterval</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Interval physicalWindowToInterval<span class="op">(</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> alignment_time<span class="op">,</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> pre_window<span class="op">,</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> post_window<span class="op">,</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> target_time_frame</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Convert an absolute-time window to interval indices in a target <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>alignment_time</strong> Absolute alignment time.</li>
+<li><strong>pre_window</strong> Time units before alignment.</li>
+<li><strong>post_window</strong> Time units after alignment.</li>
+<li><strong>target_time_frame</strong> <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> for the output interval, or null for raw time indices.</li>
+</ul>
+<p><strong>Return</strong>: Interval expressed in target_time_frame indices.</p>
+<p><strong>Postcondition</strong>: The start uses the next index at/after the window start; the end uses the nearest preceding index.</p>
+</section>
+<section id="function-createwindowsaroundevents" class="level3">
+<h3 class="anchored" data-anchor-id="function-createwindowsaroundevents">function createWindowsAroundEvents</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="op">&gt;</span> createWindowsAroundEvents<span class="op">(</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="at">const</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> alignment_events<span class="op">,</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> pre_window<span class="op">,</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> post_window<span class="op">,</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> window_time_frame</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Build overlapping window intervals around alignment events.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>alignment_events</strong> Events providing t=0 points.</li>
+<li><strong>pre_window</strong> Absolute time units before each event.</li>
+<li><strong>post_window</strong> Absolute time units after each event.</li>
+<li><strong>window_time_frame</strong> <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> in which output windows should be expressed.</li>
+</ul>
+<p><strong>Return</strong>: Overlapping <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> row windows.</p>
+<p><strong>Precondition</strong>: alignment_events must be non-null.</p>
+<p><strong>Postcondition</strong>: Output row count matches alignment_events size.</p>
+</section>
+<section id="function-keptwindowindices" class="level3">
+<h3 class="anchored" data-anchor-id="function-keptwindowindices">function keptWindowIndices</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">size_t</span> <span class="op">&gt;</span> keptWindowIndices<span class="op">(</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeries <span class="at">const</span> <span class="op">&amp;</span> windows</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Compute kept row indices for greedy overlap pruning of interval bounds.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>windows</strong> Candidate window series.</li>
+</ul>
+<p><strong>Return</strong>: Kept row indices in input order.</p>
+<p><strong>Precondition</strong>: windows must be non-null and sorted by start time.</p>
+<p><strong>Postcondition</strong>: Touching windows are treated as overlapping.</p>
+</section>
+<section id="function-prunepreparedalignmentwindows" class="level3">
+<h3 class="anchored" data-anchor-id="function-prunepreparedalignmentwindows">function prunePreparedAlignmentWindows</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> PreparedAlignmentWindows prunePreparedAlignmentWindows<span class="op">(</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> windows<span class="op">,</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="at">const</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> alignment_points</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Prune windows and companion alignment points together.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>windows</strong> Candidate window series.</li>
+<li><strong>alignment_points</strong> Companion event series with matching row order.</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PreparedAlignmentWindows.html">PreparedAlignmentWindows</a> containing pruned windows and alignment events.</p>
+<p><strong>Precondition</strong>: windows and alignment_points must be non-null and have the same row count.</p>
+<p><strong>Postcondition</strong>: Output windows and alignment points have matching row counts.</p>
+</section>
+<section id="function-prepareeventalignmentwindows" class="level3">
+<h3 class="anchored" data-anchor-id="function-prepareeventalignmentwindows">function prepareEventAlignmentWindows</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> PreparedAlignmentWindows prepareEventAlignmentWindows<span class="op">(</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="at">const</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> alignment_events<span class="op">,</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> pre_window<span class="op">,</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> post_window<span class="op">,</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> window_time_frame<span class="op">,</span></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> prevent_overlap <span class="op">=</span><span class="kw">false</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Prepare event-aligned gather windows.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>alignment_events</strong> Events defining one row per event.</li>
+<li><strong>pre_window</strong> Absolute time units before each event.</li>
+<li><strong>post_window</strong> Absolute time units after each event.</li>
+<li><strong>window_time_frame</strong> <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> in which windows should be expressed.</li>
+<li><strong>prevent_overlap</strong> Whether to greedily prune overlapping windows.</li>
+</ul>
+<p><strong>Return</strong>: Prepared windows and companion alignment events.</p>
+<p><strong>Precondition</strong>: alignment_events must be non-null.</p>
+<p><strong>Postcondition</strong>: If valid, windows and alignment_points have matching row counts.</p>
+</section>
+<section id="function-prepareintervalalignmentwindows" class="level3">
+<h3 class="anchored" data-anchor-id="function-prepareintervalalignmentwindows">function prepareIntervalAlignmentWindows</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> PreparedAlignmentWindows prepareIntervalAlignmentWindows<span class="op">(</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> alignment_intervals<span class="op">,</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    AlignmentPoint align <span class="op">=</span>AlignmentPoint<span class="op">::</span>Start</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Prepare interval-aligned gather windows that use the full interval bounds.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>alignment_intervals</strong> Intervals defining row windows.</li>
+<li><strong>align</strong> Which interval point to use as t=0.</li>
+</ul>
+<p><strong>Return</strong>: Prepared windows and companion alignment events.</p>
+<p><strong>Precondition</strong>: alignment_intervals must be non-null.</p>
+<p><strong>Postcondition</strong>: If valid, windows and alignment_points have matching row counts.</p>
+</section>
+<section id="function-prepareintervalalignmentwindows-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-prepareintervalalignmentwindows-1">function prepareIntervalAlignmentWindows</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> PreparedAlignmentWindows prepareIntervalAlignmentWindows<span class="op">(</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> alignment_intervals<span class="op">,</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>    AlignmentPoint align<span class="op">,</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> pre_window<span class="op">,</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> post_window<span class="op">,</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> window_time_frame<span class="op">,</span></span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> prevent_overlap <span class="op">=</span><span class="kw">false</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Prepare interval-aligned gather windows around selected interval points.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>alignment_intervals</strong> Intervals that provide alignment points.</li>
+<li><strong>align</strong> Which interval point to use as t=0.</li>
+<li><strong>pre_window</strong> Absolute time units before each alignment point.</li>
+<li><strong>post_window</strong> Absolute time units after each alignment point.</li>
+<li><strong>window_time_frame</strong> <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> in which windows should be expressed.</li>
+<li><strong>prevent_overlap</strong> Whether to greedily prune overlapping windows.</li>
+</ul>
+<p><strong>Return</strong>: Prepared windows and companion alignment events.</p>
+<p><strong>Precondition</strong>: alignment_intervals must be non-null.</p>
+<p><strong>Postcondition</strong>: If valid, windows and alignment_points have matching row counts.</p>
+</section>
+<section id="function-getfilteredalignmentsource" class="level3">
+<h3 class="anchored" data-anchor-id="function-getfilteredalignmentsource">function getFilteredAlignmentSource</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> AlignmentSourceResult getFilteredAlignmentSource<span class="op">(</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Look up alignment source with optional overlap pruning.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data_manager</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> to query.</li>
+<li><strong>alignment_data</strong> Full alignment configuration.</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1AlignmentSourceResult.html">AlignmentSourceResult</a> with a filtered copy when prevent_overlap is enabled.</p>
+<p><strong>Postcondition</strong>: Filtering is based on physical display windows around alignment points.</p>
+</section>
+<section id="function-countnonoverlappingalignmentevents" class="level3">
+<h3 class="anchored" data-anchor-id="function-countnonoverlappingalignmentevents">function countNonOverlappingAlignmentEvents</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">size_t</span> countNonOverlappingAlignmentEvents<span class="op">(</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Compute the number of alignment rows that survive overlap pruning.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data_manager</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> to query.</li>
+<li><strong>alignment_data</strong> Alignment configuration.</li>
+</ul>
+<p><strong>Return</strong>: Number of non-overlapping alignment rows, or 0 on error.</p>
+<p><strong>Postcondition</strong>: The count uses the same physical-window pruning policy as plot preparation.</p>
+</section>
+<section id="function-preparealignmentwindows" class="level3">
+<h3 class="anchored" data-anchor-id="function-preparealignmentwindows">function prepareAlignmentWindows</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> PreparedAlignmentWindows prepareAlignmentWindows<span class="op">(</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data<span class="op">,</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> window_time_frame</span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Prepare windows from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> and <a href="../../api_generated/Classes/structPlotAlignmentData.html">PlotAlignmentData</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>data_manager</strong> <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> containing the alignment source.</li>
+<li><strong>alignment_data</strong> Alignment configuration.</li>
+<li><strong>window_time_frame</strong> <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> in which generated display windows should be expressed.</li>
+</ul>
+<p><strong>Return</strong>: Prepared window/alignment metadata, or an invalid result on error.</p>
+<p><strong>Postcondition</strong>: Event and interval display-window paths use physical window units.</p>
+</section>
 <section id="function-screentondc" class="level3">
 <h3 class="anchored" data-anchor-id="function-screentondc">function screenToNDC</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> glm<span class="op">::</span>vec2 screenToNDC<span class="op">(</span></span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">,</span></span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height</span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> glm<span class="op">::</span>vec2 screenToNDC<span class="op">(</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">,</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height</span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Convert screen pixel coordinates to normalized device coordinates (NDC).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1390,12 +1642,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-screentoworld" class="level3">
 <h3 class="anchored" data-anchor-id="function-screentoworld">function screenToWorld</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="ex">QPointF</span> screenToWorld<span class="op">(</span></span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> projection_matrix<span class="op">,</span></span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height<span class="op">,</span></span>
-<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos</span>
-<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="ex">QPointF</span> screenToWorld<span class="op">(</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> projection_matrix<span class="op">,</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height<span class="op">,</span></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Convert screen pixel coordinates to world coordinates.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1409,13 +1661,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-worldtoscreen" class="level3">
 <h3 class="anchored" data-anchor-id="function-worldtoscreen">function worldToScreen</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="ex">QPoint</span> worldToScreen<span class="op">(</span></span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> projection_matrix<span class="op">,</span></span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
-<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height<span class="op">,</span></span>
-<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> world_x<span class="op">,</span></span>
-<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> world_y</span>
-<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="ex">QPoint</span> worldToScreen<span class="op">(</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> projection_matrix<span class="op">,</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height<span class="op">,</span></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> world_x<span class="op">,</span></span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> world_y</span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Convert world coordinates to screen pixel coordinates.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1429,14 +1681,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-computeorthoprojection" class="level3">
 <h3 class="anchored" data-anchor-id="function-computeorthoprojection">function computeOrthoProjection</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ViewStateLike ViewState<span class="op">&gt;</span></span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>mat4 computeOrthoProjection<span class="op">(</span></span>
-<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
-<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_range<span class="op">,</span></span>
-<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_center<span class="op">,</span></span>
-<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_range<span class="op">,</span></span>
-<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_center</span>
-<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ViewStateLike ViewState<span class="op">&gt;</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>mat4 computeOrthoProjection<span class="op">(</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_range<span class="op">,</span></span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_center<span class="op">,</span></span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_range<span class="op">,</span></span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_center</span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Compute an orthographic projection matrix from zoom/pan view state.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1455,10 +1707,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-computeorthoprojection-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-computeorthoprojection-1">function computeOrthoProjection</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ViewStateWithBounds ViewState<span class="op">&gt;</span></span>
-<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>mat4 computeOrthoProjection<span class="op">(</span></span>
-<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state</span>
-<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ViewStateWithBounds ViewState<span class="op">&gt;</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>mat4 computeOrthoProjection<span class="op">(</span></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Compute orthographic projection from view state with bounds.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1473,18 +1725,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-handlepanning" class="level3">
 <h3 class="anchored" data-anchor-id="function-handlepanning">function handlePanning</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ZoomPanSettable State<span class="op">,</span></span>
-<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>ViewStateLike ViewState<span class="op">&gt;</span></span>
-<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> handlePanning<span class="op">(</span></span>
-<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>    State <span class="op">&amp;</span> state<span class="op">,</span></span>
-<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
-<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> delta_x<span class="op">,</span></span>
-<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> delta_y<span class="op">,</span></span>
-<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_range<span class="op">,</span></span>
-<span id="cb44-9"><a href="#cb44-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_range<span class="op">,</span></span>
-<span id="cb44-10"><a href="#cb44-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
-<span id="cb44-11"><a href="#cb44-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height</span>
-<span id="cb44-12"><a href="#cb44-12" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ZoomPanSettable State<span class="op">,</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>ViewStateLike ViewState<span class="op">&gt;</span></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> handlePanning<span class="op">(</span></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>    State <span class="op">&amp;</span> state<span class="op">,</span></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> delta_x<span class="op">,</span></span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> delta_y<span class="op">,</span></span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_range<span class="op">,</span></span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_range<span class="op">,</span></span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height</span>
+<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply a pixel-space drag delta as a pan update to the state.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1506,16 +1758,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-handlepanning-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-handlepanning-1">function handlePanning</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ZoomPanSettable State<span class="op">,</span></span>
-<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>ViewStateWithBounds ViewState<span class="op">&gt;</span></span>
-<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> handlePanning<span class="op">(</span></span>
-<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    State <span class="op">&amp;</span> state<span class="op">,</span></span>
-<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
-<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> delta_x<span class="op">,</span></span>
-<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> delta_y<span class="op">,</span></span>
-<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
-<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height</span>
-<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ZoomPanSettable State<span class="op">,</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>ViewStateWithBounds ViewState<span class="op">&gt;</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> handlePanning<span class="op">(</span></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>    State <span class="op">&amp;</span> state<span class="op">,</span></span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> delta_x<span class="op">,</span></span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> delta_y<span class="op">,</span></span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height</span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply pan from view state with bounds (derives x_range/y_range).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1535,15 +1787,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-handlezoom" class="level3">
 <h3 class="anchored" data-anchor-id="function-handlezoom">function handleZoom</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ZoomPanSettable State<span class="op">,</span></span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>ViewStateLike ViewState<span class="op">&gt;</span></span>
-<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> handleZoom<span class="op">(</span></span>
-<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>    State <span class="op">&amp;</span> state<span class="op">,</span></span>
-<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
-<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> delta<span class="op">,</span></span>
-<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> y_only<span class="op">,</span></span>
-<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> both_axes</span>
-<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ZoomPanSettable State<span class="op">,</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>ViewStateLike ViewState<span class="op">&gt;</span></span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> handleZoom<span class="op">(</span></span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>    State <span class="op">&amp;</span> state<span class="op">,</span></span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> delta<span class="op">,</span></span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> y_only<span class="op">,</span></span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> both_axes</span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply a scroll-wheel zoom step to the state.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1567,10 +1819,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-extractedgeevents" class="level3">
 <h3 class="anchored" data-anchor-id="function-extractedgeevents">function extractEdgeEvents</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> extractEdgeEvents<span class="op">(</span></span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> intervals<span class="op">,</span></span>
-<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    IntervalAlignmentType edge</span>
-<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb56"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> extractEdgeEvents<span class="op">(</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> intervals<span class="op">,</span></span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>    IntervalAlignmentType edge</span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Extract edge events from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1582,12 +1834,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-runheatmappipeline" class="level3">
 <h3 class="anchored" data-anchor-id="function-runheatmappipeline">function runHeatmapPipeline</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>HeatmapPipelineResult runHeatmapPipeline<span class="op">(</span></span>
-<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
-<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
-<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data<span class="op">,</span></span>
-<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineConfig <span class="at">const</span> <span class="op">&amp;</span> config</span>
-<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb57"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>HeatmapPipelineResult runHeatmapPipeline<span class="op">(</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data<span class="op">,</span></span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineConfig <span class="at">const</span> <span class="op">&amp;</span> config</span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Execute the heatmap data pipeline without an OpenGL context.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1607,12 +1859,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-computesortorder" class="level3">
 <h3 class="anchored" data-anchor-id="function-computesortorder">function computeSortOrder</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> computeSortOrder<span class="op">(</span></span>
-<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineResult <span class="at">const</span> <span class="op">&amp;</span> result<span class="op">,</span></span>
-<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
-<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    HeatmapSortMode sort_mode<span class="op">,</span></span>
-<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> ascending</span>
-<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> computeSortOrder<span class="op">(</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineResult <span class="at">const</span> <span class="op">&amp;</span> result<span class="op">,</span></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>    HeatmapSortMode sort_mode<span class="op">,</span></span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> ascending</span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Compute a permutation vector that sorts the pipeline rows.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1626,11 +1878,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-applysortorder" class="level3">
 <h3 class="anchored" data-anchor-id="function-applysortorder">function applySortOrder</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> applySortOrder<span class="op">(</span></span>
-<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineResult <span class="op">&amp;</span> result<span class="op">,</span></span>
-<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
-<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> sort_indices</span>
-<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> applySortOrder<span class="op">(</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineResult <span class="op">&amp;</span> result<span class="op">,</span></span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> sort_indices</span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply a precomputed permutation to the pipeline result and unit keys.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1640,7 +1892,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p>Reorders <code>result.rows</code>, <code>result.rate_estimates</code>, and <code>unit_keys</code> in-place according to the given index permutation.</p>
 <hr>
-<p>Updated on 2026-07-25 at 13:30:57 +0000</p>
+<p>Updated on 2026-07-27 at 20:05:52 +0000</p>
 
 
 </section>

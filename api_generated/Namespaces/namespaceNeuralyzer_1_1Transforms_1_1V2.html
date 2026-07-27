@@ -1272,7 +1272,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> factory <span class="op">=</span> bindValueProjectionV2<span class="op">&lt;</span>EventWithId<span class="op">,</span> <span class="dt">float</span><span class="op">&gt;(</span>pipeline<span class="op">);</span></span>
 <span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> result<span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> store <span class="op">=</span> result<span class="op">.</span>buildTrialStore<span class="op">(</span>i<span class="op">);</span>  <span class="co">// V2 method</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> store <span class="op">=</span> buildGatherRowStore<span class="op">(</span>result<span class="op">,</span> i<span class="op">);</span></span>
 <span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> projection <span class="op">=</span> factory<span class="op">(</span>store<span class="op">);</span></span>
 <span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> event <span class="op">:</span> result<span class="op">[</span>i<span class="op">]-&gt;</span>view<span class="op">())</span> <span class="op">{</span></span>
@@ -1283,7 +1283,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>ValueOutput value type (e.g., float)</p>
 <p><a href="../../api_generated/Classes/classNeuralyzer_1_1Transforms_1_1V2_1_1PipelineValueStore.html">PipelineValueStore</a> for store documentation</p>
 <p><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2.html#function-bindvalueprojectionv2">bindValueProjectionV2()</a> for creating factories from pipelines</p>
-<p><a href="../../api_generated/Classes/classGatherResult.html#function-buildtrialstore">GatherResult::buildTrialStore()</a> for populating store with trial values</p>
+<p>buildGatherRowStore() for populating store with trial values</p>
 <section id="using-erasedvalueprojectionfn" class="level3">
 <h3 class="anchored" data-anchor-id="using-erasedvalueprojectionfn">using ErasedValueProjectionFn</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>ErasedValueProjectionFn <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>any<span class="op">(</span><span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -1688,7 +1688,7 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 <span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> factory <span class="op">=</span> bindValueProjectionV2<span class="op">&lt;</span>EventWithId<span class="op">,</span> <span class="dt">float</span><span class="op">&gt;(</span>pipeline<span class="op">);</span></span>
 <span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> gather_result<span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> store <span class="op">=</span> gather_result<span class="op">.</span>buildTrialStore<span class="op">(</span>i<span class="op">);</span>  <span class="co">// V2 method</span></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> store <span class="op">=</span> buildGatherRowStore<span class="op">(</span>gather_result<span class="op">,</span> i<span class="op">);</span></span>
 <span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> projection <span class="op">=</span> factory<span class="op">(</span>store<span class="op">);</span></span>
 <span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> event <span class="op">:</span> gather_result<span class="op">[</span>i<span class="op">]-&gt;</span>view<span class="op">())</span> <span class="op">{</span></span>
@@ -1713,7 +1713,7 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 <p>ValueProjectionFactoryV2 that produces projections from value store</p>
 <p>std::runtime_errorif pipeline is empty or contains unsupported transforms</p>
 <p><a href="../../api_generated/Classes/classNeuralyzer_1_1Transforms_1_1V2_1_1PipelineValueStore.html">PipelineValueStore</a> For value store documentation</p>
-<p><a href="../../api_generated/Classes/classGatherResult.html#function-buildtrialstore">GatherResult::buildTrialStore()</a> For populating store with trial values</p>
+<p>buildGatherRowStore() For populating store with trial values</p>
 <section id="function-resolvetypechain" class="level3">
 <h3 class="anchored" data-anchor-id="function-resolvetypechain">function resolveTypeChain</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>TypeChainResult resolveTypeChain<span class="op">(</span></span>
@@ -2247,7 +2247,7 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 <h3 class="anchored" data-anchor-id="variable-is_stateless_range_reduction_v">variable is_stateless_range_reduction_v</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb70"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_stateless_range_reduction_v <span class="op">=</span> is_stateless_range_reduction<span class="op">&lt;</span>F<span class="op">,</span> Element<span class="op">,</span> Scalar<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-25 at 13:30:57 +0000</p>
+<p>Updated on 2026-07-27 at 20:05:52 +0000</p>
 
 
 </section>

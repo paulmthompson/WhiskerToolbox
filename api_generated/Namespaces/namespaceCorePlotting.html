@@ -434,6 +434,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-operator-1" id="toc-function-operator-1" class="nav-link" data-scroll-target="#function-operator-1">function operator!=</a></li>
   <li><a href="#function-buildlinebatchfromlinedata" id="toc-function-buildlinebatchfromlinedata" class="nav-link" data-scroll-target="#function-buildlinebatchfromlinedata">function buildLineBatchFromLineData</a></li>
   <li><a href="#function-buildlinebatchfromgatherresult" id="toc-function-buildlinebatchfromgatherresult" class="nav-link" data-scroll-target="#function-buildlinebatchfromgatherresult">function buildLineBatchFromGatherResult</a></li>
+  <li><a href="#function-buildlinebatchfromgatherresult-1" id="toc-function-buildlinebatchfromgatherresult-1" class="nav-link" data-scroll-target="#function-buildlinebatchfromgatherresult-1">function buildLineBatchFromGatherResult</a></li>
   <li><a href="#function-decimatepolylinebatchminmax" id="toc-function-decimatepolylinebatchminmax" class="nav-link" data-scroll-target="#function-decimatepolylinebatchminmax">function decimatePolyLineBatchMinMax</a></li>
   <li><a href="#function-makelineview" id="toc-function-makelineview" class="nav-link" data-scroll-target="#function-makelineview">function makeLineView</a></li>
   <li><a href="#function-maketimeserieslineview" id="toc-function-maketimeserieslineview" class="nav-link" data-scroll-target="#function-maketimeserieslineview">function makeTimeSeriesLineView</a></li>
@@ -1114,17 +1115,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Classes/structCorePlotting_1_1LineBatchData.html">LineBatchData</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-buildlinebatchfromgatherresult">buildLineBatchFromGatherResult</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> &gt; const &amp; gathered, std::vector&lt; std::int64_t &gt; const &amp; alignment_times)<br>Build a <a href="">LineBatchData</a> from GatherResult<analogtimeseries> (<a href="../../api_generated/Classes/classLinePlotWidget.html">LinePlotWidget</a> use case).</analogtimeseries></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-buildlinebatchfromgatherresult">buildLineBatchFromGatherResult</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> &gt; const &amp; gathered)<br>Build a <a href="">LineBatchData</a> from GatherResult<analogtimeseries> (<a href="../../api_generated/Classes/classLinePlotWidget.html">LinePlotWidget</a> use case).</analogtimeseries></td>
 </tr>
 <tr class="odd">
+<td><a href="../../api_generated/Classes/structCorePlotting_1_1LineBatchData.html">LineBatchData</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-buildlinebatchfromgatherresult">buildLineBatchFromGatherResult</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> &gt; const &amp; gathered, std::vector&lt; std::int64_t &gt; const &amp; alignment_times)<br>Build a <a href="">LineBatchData</a> from GatherResult<analogtimeseries> with explicit alignment overrides.</analogtimeseries></td>
+</tr>
+<tr class="even">
 <td><a href="../../api_generated/Classes/structCorePlotting_1_1RenderablePolyLineBatch.html">RenderablePolyLineBatch</a></td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-decimatepolylinebatchminmax">decimatePolyLineBatchMinMax</a></strong>(<a href="../../api_generated/Classes/structCorePlotting_1_1RenderablePolyLineBatch.html">RenderablePolyLineBatch</a> const &amp; in, <a href="../../api_generated/Classes/structCorePlotting_1_1MinMaxDecimationParams.html">MinMaxDecimationParams</a> params)<br>Apply min–max decimation to each line strip in <code>in</code>.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>template &lt;std::ranges::input_range R&gt; <br>auto</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-makelineview">makeLineView</a></strong>(<a href="../../api_generated/Classes/structEntityId.html">EntityId</a> id, R const &amp; points, float x_scale =1.0f, float y_scale =1.0f, float x_offset =0.0f, float y_offset =0.0f)<br>Create a line view from a contiguous range of <a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>template &lt;std::ranges::input_range R&gt; <br>auto</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-maketimeserieslineview">makeTimeSeriesLineView</a></strong>(<a href="../../api_generated/Classes/structEntityId.html">EntityId</a> id, R const &amp; time_value_pairs, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const &amp; time_frame, float y_scale =1.0f, float y_offset =0.0f)<br>Create a line view with time-to-X mapping for analog series.</td>
 </tr>
@@ -2396,25 +2401,40 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-buildlinebatchfromgatherresult" class="level3">
 <h3 class="anchored" data-anchor-id="function-buildlinebatchfromgatherresult">function buildLineBatchFromGatherResult</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb77"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>LineBatchData buildLineBatchFromGatherResult<span class="op">(</span></span>
-<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>    GatherResult<span class="op">&lt;</span> AnalogTimeSeries <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> gathered<span class="op">,</span></span>
-<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>int64_t <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> alignment_times</span>
-<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>    GatherResult<span class="op">&lt;</span> AnalogTimeSeries <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> gathered</span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Build a <a href="">LineBatchData</a> from GatherResult<analogtimeseries> (<a href="../../api_generated/Classes/classLinePlotWidget.html">LinePlotWidget</a> use case).</analogtimeseries></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>gathered</strong> The gathered analog time series (one per trial).</li>
-<li><strong>alignment_times</strong> Per-trial alignment times. X = timeFrameIndex - alignment_times[trial]. Must have the same size as <code>gathered</code>.</li>
 </ul>
 <p><strong>Return</strong>: Populated <a href="../../api_generated/Classes/structCorePlotting_1_1LineBatchData.html">LineBatchData</a> with all lines visible and none selected.</p>
+<p><strong>Precondition</strong>: gathered must provide alignment metadata through alignmentTimeAt().</p>
+<p><strong>Postcondition</strong>: X = timeFrameIndex - gathered.alignmentTimeAt(trial).</p>
 <p>Each trial in the <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> becomes a logical line in the batch. Trial indices are stored in LineInfo::trial_index.</p>
 <p>The x-coordinates are the <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> values (relative to the alignment time for that trial), and y-coordinates are the analog sample values.</p>
 </section>
+<section id="function-buildlinebatchfromgatherresult-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-buildlinebatchfromgatherresult-1">function buildLineBatchFromGatherResult</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb78"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>LineBatchData buildLineBatchFromGatherResult<span class="op">(</span></span>
+<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>    GatherResult<span class="op">&lt;</span> AnalogTimeSeries <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> gathered<span class="op">,</span></span>
+<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>int64_t <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> alignment_times</span>
+<span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Build a <a href="">LineBatchData</a> from GatherResult<analogtimeseries> with explicit alignment overrides.</analogtimeseries></p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>gathered</strong> The gathered analog time series (one per trial).</li>
+<li><strong>alignment_times</strong> Per-trial alignment times. Must have the same size as <code>gathered</code> for every trial to use an override.</li>
+</ul>
+<p><strong>Return</strong>: Populated <a href="../../api_generated/Classes/structCorePlotting_1_1LineBatchData.html">LineBatchData</a> with all lines visible and none selected.</p>
+<p><strong>Postcondition</strong>: X = timeFrameIndex - alignment_times[trial] when available, otherwise raw time.</p>
+</section>
 <section id="function-decimatepolylinebatchminmax" class="level3">
 <h3 class="anchored" data-anchor-id="function-decimatepolylinebatchminmax">function decimatePolyLineBatchMinMax</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb78"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>RenderablePolyLineBatch decimatePolyLineBatchMinMax<span class="op">(</span></span>
-<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>    RenderablePolyLineBatch <span class="at">const</span> <span class="op">&amp;</span> in<span class="op">,</span></span>
-<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a>    MinMaxDecimationParams params</span>
-<span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb79"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>RenderablePolyLineBatch decimatePolyLineBatchMinMax<span class="op">(</span></span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>    RenderablePolyLineBatch <span class="at">const</span> <span class="op">&amp;</span> in<span class="op">,</span></span>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>    MinMaxDecimationParams params</span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply min–max decimation to each line strip in <code>in</code>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -2428,15 +2448,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-makelineview" class="level3">
 <h3 class="anchored" data-anchor-id="function-makelineview">function makeLineView</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb79"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
-<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> makeLineView<span class="op">(</span></span>
-<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>    EntityId id<span class="op">,</span></span>
-<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a>    R <span class="at">const</span> <span class="op">&amp;</span> points<span class="op">,</span></span>
-<span id="cb79-5"><a href="#cb79-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_scale <span class="op">=</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span></span>
-<span id="cb79-6"><a href="#cb79-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_scale <span class="op">=</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span></span>
-<span id="cb79-7"><a href="#cb79-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_offset <span class="op">=</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span></span>
-<span id="cb79-8"><a href="#cb79-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_offset <span class="op">=</span><span class="fl">0.0</span><span class="bu">f</span></span>
-<span id="cb79-9"><a href="#cb79-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb80"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> makeLineView<span class="op">(</span></span>
+<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>    EntityId id<span class="op">,</span></span>
+<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a>    R <span class="at">const</span> <span class="op">&amp;</span> points<span class="op">,</span></span>
+<span id="cb80-5"><a href="#cb80-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_scale <span class="op">=</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span></span>
+<span id="cb80-6"><a href="#cb80-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_scale <span class="op">=</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span></span>
+<span id="cb80-7"><a href="#cb80-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_offset <span class="op">=</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span></span>
+<span id="cb80-8"><a href="#cb80-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_offset <span class="op">=</span><span class="fl">0.0</span><span class="bu">f</span></span>
+<span id="cb80-9"><a href="#cb80-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create a line view from a contiguous range of <a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -2451,14 +2471,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-maketimeserieslineview" class="level3">
 <h3 class="anchored" data-anchor-id="function-maketimeserieslineview">function makeTimeSeriesLineView</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb80"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
-<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> makeTimeSeriesLineView<span class="op">(</span></span>
-<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>    EntityId id<span class="op">,</span></span>
-<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a>    R <span class="at">const</span> <span class="op">&amp;</span> time_value_pairs<span class="op">,</span></span>
-<span id="cb80-5"><a href="#cb80-5" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">&amp;</span> time_frame<span class="op">,</span></span>
-<span id="cb80-6"><a href="#cb80-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_scale <span class="op">=</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span></span>
-<span id="cb80-7"><a href="#cb80-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_offset <span class="op">=</span><span class="fl">0.0</span><span class="bu">f</span></span>
-<span id="cb80-8"><a href="#cb80-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb81"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> makeTimeSeriesLineView<span class="op">(</span></span>
+<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a>    EntityId id<span class="op">,</span></span>
+<span id="cb81-4"><a href="#cb81-4" aria-hidden="true" tabindex="-1"></a>    R <span class="at">const</span> <span class="op">&amp;</span> time_value_pairs<span class="op">,</span></span>
+<span id="cb81-5"><a href="#cb81-5" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">&amp;</span> time_frame<span class="op">,</span></span>
+<span id="cb81-6"><a href="#cb81-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_scale <span class="op">=</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span></span>
+<span id="cb81-7"><a href="#cb81-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_offset <span class="op">=</span><span class="fl">0.0</span><span class="bu">f</span></span>
+<span id="cb81-8"><a href="#cb81-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create a line view with time-to-X mapping for analog series.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -2474,35 +2494,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="attributes-documentation">Attributes Documentation</h2>
 <section id="variable-is_mapped_element_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_mapped_element_v">variable is_mapped_element_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb81"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_mapped_element_v <span class="op">=</span> MappedElementLike<span class="op">&lt;</span>T<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb82"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_mapped_element_v <span class="op">=</span> MappedElementLike<span class="op">&lt;</span>T<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Check if a type is a valid mapper output type.</p>
 </section>
 <section id="variable-is_mapped_rect_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_mapped_rect_v">variable is_mapped_rect_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb82"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_mapped_rect_v <span class="op">=</span> MappedRectLike<span class="op">&lt;</span>T<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb83"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_mapped_rect_v <span class="op">=</span> MappedRectLike<span class="op">&lt;</span>T<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-is_mapped_vertex_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_mapped_vertex_v">variable is_mapped_vertex_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb83"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_mapped_vertex_v <span class="op">=</span> MappedVertexLike<span class="op">&lt;</span>T<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb84"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_mapped_vertex_v <span class="op">=</span> MappedVertexLike<span class="op">&lt;</span>T<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-is_element_range_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_element_range_v">variable is_element_range_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb84"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_element_range_v <span class="op">=</span> MappedElementRange<span class="op">&lt;</span>R<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb85"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_element_range_v <span class="op">=</span> MappedElementRange<span class="op">&lt;</span>R<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Check if a range yields mappable elements.</p>
 </section>
 <section id="variable-is_rect_range_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_rect_range_v">variable is_rect_range_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb85"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_rect_range_v <span class="op">=</span> MappedRectRange<span class="op">&lt;</span>R<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb86"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_rect_range_v <span class="op">=</span> MappedRectRange<span class="op">&lt;</span>R<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-is_vertex_range_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_vertex_range_v">variable is_vertex_range_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb86"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_vertex_range_v <span class="op">=</span> MappedVertexRange<span class="op">&lt;</span>R<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb87"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_vertex_range_v <span class="op">=</span> MappedVertexRange<span class="op">&lt;</span>R<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-is_line_range_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_line_range_v">variable is_line_range_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb87"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_line_range_v <span class="op">=</span> MappedLineRange<span class="op">&lt;</span>R<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb88"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_line_range_v <span class="op">=</span> MappedLineRange<span class="op">&lt;</span>R<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-25 at 13:30:58 +0000</p>
+<p>Updated on 2026-07-27 at 20:05:53 +0000</p>
 
 
 </section>

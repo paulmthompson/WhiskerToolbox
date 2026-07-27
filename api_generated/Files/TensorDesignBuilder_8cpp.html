@@ -419,7 +419,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> &gt;</td>
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt;</td>
 <td><strong><a href="../../api_generated/Files/TensorDesignBuilder_8cpp.html#variable-intervals">intervals</a></strong></td>
 </tr>
 <tr class="even">
@@ -441,7 +441,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="attributes-documentation">Attributes Documentation</h2>
 <section id="variable-intervals" class="level3">
 <h3 class="anchored" data-anchor-id="variable-intervals">variable intervals</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="op">&gt;</span> intervals<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span>  <span class="op">&gt;</span> intervals<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-row_times" class="level3">
 <h3 class="anchored" data-anchor-id="variable-row_times">variable row_times</h3>
@@ -572,7 +572,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-112"><a href="#cb5-112" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb5-113"><a href="#cb5-113" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-114"><a href="#cb5-114" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> RowBuildContext <span class="op">{</span></span>
-<span id="cb5-115"><a href="#cb5-115" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;</span> intervals<span class="op">;</span></span>
+<span id="cb5-115"><a href="#cb5-115" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries <span class="at">const</span><span class="op">&gt;</span> intervals<span class="op">;</span></span>
 <span id="cb5-116"><a href="#cb5-116" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameIndex<span class="op">&gt;</span> row_times<span class="op">;</span></span>
 <span id="cb5-117"><a href="#cb5-117" aria-hidden="true" tabindex="-1"></a>    RowDescriptor row_desc <span class="op">=</span> RowDescriptor<span class="op">::</span>ordinal<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
 <span id="cb5-118"><a href="#cb5-118" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t num_rows <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
@@ -665,7 +665,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-205"><a href="#cb5-205" aria-hidden="true" tabindex="-1"></a>        DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
 <span id="cb5-206"><a href="#cb5-206" aria-hidden="true" tabindex="-1"></a>        ColumnRecipe <span class="at">const</span> <span class="op">&amp;</span> recipe<span class="op">,</span></span>
 <span id="cb5-207"><a href="#cb5-207" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameIndex<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> row_times<span class="op">,</span></span>
-<span id="cb5-208"><a href="#cb5-208" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> intervals<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-208"><a href="#cb5-208" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries <span class="at">const</span><span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> intervals<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb5-209"><a href="#cb5-209" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>recipe<span class="op">.</span>interval_property<span class="op">.</span>has_value<span class="op">())</span> <span class="op">{</span></span>
 <span id="cb5-210"><a href="#cb5-210" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> buildIntervalPropertyProvider<span class="op">(</span>intervals<span class="op">,</span> recipe<span class="op">.</span>interval_property<span class="op">.</span>value<span class="op">());</span></span>
 <span id="cb5-211"><a href="#cb5-211" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
@@ -827,7 +827,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-367"><a href="#cb5-367" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-368"><a href="#cb5-368" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace Neuralyzer::TensorDesign</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-25 at 13:31:00 +0000</p>
+<p>Updated on 2026-07-27 at 20:05:55 +0000</p>
 
 
 </section>

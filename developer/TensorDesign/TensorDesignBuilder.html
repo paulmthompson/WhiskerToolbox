@@ -480,6 +480,8 @@ DataManager  ←─────────────────┘</code></p
 </tbody>
 </table>
 <p>Each <code>pipeline_json</code> string is a <a href="../transforms_v2/pipeline_loader.qmd"><code>PipelineDescriptor</code></a> fragment. Interval-row columns require a terminal <code>range_reduction</code>.</p>
+<p>Current interval-row tensor columns gather over the full row interval. Per-column gather geometry through <code>row_pipeline_json</code> is planned but not implemented. The planned design is to run a TransformPipeline on the row source to produce prepared <code>DigitalIntervalSeries</code> windows or <code>DigitalEventSeries</code> sample times, then gather or sample source data for each row. Per-row normalization markers should be bound into the column TransformPipeline through TransformsV2 <code>PipelineValueStore</code> parameter bindings rather than through <code>row_pipeline_json</code>; <code>GatherResult</code> remains only the row container and direct gather executor.</p>
+<p>There is still a temporary compatibility path in <code>TensorDesignBuilder::buildColumnProvider()</code> that detects a top-level <code>"offset"</code> field inside <code>pipeline_json</code> for analog sample-at-offset columns. This should be removed once point sampling is expressible through the row-pipeline design.</p>
 </section>
 <section id="build-api-lazy-column-tensors" class="level2">
 <h2 class="anchored" data-anchor-id="build-api-lazy-column-tensors">Build API (lazy-column tensors)</h2>
@@ -592,6 +594,8 @@ DataManager  ←─────────────────┘</code></p
 <h2 class="anchored" data-anchor-id="related-documentation">Related documentation</h2>
 <ul>
 <li><a href="../../developer/tensor_stack.html">Tensor stack overview</a></li>
+<li><a href="../../developer/TensorDesign/column_row_pipeline.html">Column row pipeline design</a> — planned per-column gather geometry through row TransformPipelines</li>
+<li><a href="../../developer/TensorDesign/column_row_pipeline_roadmap.html">Column row pipeline roadmap</a> — implementation sequence for <code>row_pipeline_json</code></li>
 <li><a href="../../developer/ui/data_inspectors/tensor_inspector.html">Tensor Inspector (Dev)</a> — UI delegates to this library</li>
 <li><a href="../../developer/transforms_v2/TensorColumnBuilders.html">TensorColumnBuilders</a> — per-column builder layer</li>
 <li><a href="../../developer/testing/test_scenarios.html">Integration test scenarios</a></li>

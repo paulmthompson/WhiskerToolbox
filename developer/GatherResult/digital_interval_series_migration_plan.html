@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>GatherResult DigitalIntervalSeries Migration Plan – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-b953592e4a23838a304e2d6f1e057d89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-b194be8c6145450876393aceb1e5b7bc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-b953592e4a23838a304e2d6f1e057d89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#purpose" id="toc-purpose" class="nav-link active" data-scroll-target="#purpose">Purpose</a></li>
+  <li><a href="#desired-end-state" id="toc-desired-end-state" class="nav-link" data-scroll-target="#desired-end-state">Desired End State</a></li>
+  <li><a href="#phase-0-baseline-and-test-inventory" id="toc-phase-0-baseline-and-test-inventory" class="nav-link" data-scroll-target="#phase-0-baseline-and-test-inventory">Phase 0: Baseline And Test Inventory</a>
+  <ul class="collapse">
+  <li><a href="#goals" id="toc-goals" class="nav-link" data-scroll-target="#goals">Goals</a></li>
+  <li><a href="#tasks" id="toc-tasks" class="nav-link" data-scroll-target="#tasks">Tasks</a></li>
+  <li><a href="#suggested-tests" id="toc-suggested-tests" class="nav-link" data-scroll-target="#suggested-tests">Suggested Tests</a></li>
+  <li><a href="#exit-criteria" id="toc-exit-criteria" class="nav-link" data-scroll-target="#exit-criteria">Exit Criteria</a></li>
+  </ul></li>
+  <li><a href="#phase-1-add-window-producing-transformsv2-algorithms" id="toc-phase-1-add-window-producing-transformsv2-algorithms" class="nav-link" data-scroll-target="#phase-1-add-window-producing-transformsv2-algorithms">Phase 1: Add Window-Producing TransformsV2 Algorithms</a>
+  <ul class="collapse">
+  <li><a href="#goals-1" id="toc-goals-1" class="nav-link" data-scroll-target="#goals-1">Goals</a></li>
+  <li><a href="#status" id="toc-status" class="nav-link" data-scroll-target="#status">Status</a></li>
+  <li><a href="#tasks-1" id="toc-tasks-1" class="nav-link" data-scroll-target="#tasks-1">Tasks</a></li>
+  <li><a href="#event-window-cases-eventtointerval" id="toc-event-window-cases-eventtointerval" class="nav-link" data-scroll-target="#event-window-cases-eventtointerval">Event Window Cases (<code>EventToInterval</code>)</a></li>
+  <li><a href="#interval-to-event-cases-intervaltoevent" id="toc-interval-to-event-cases-intervaltoevent" class="nav-link" data-scroll-target="#interval-to-event-cases-intervaltoevent">Interval To Event Cases (<code>IntervalToEvent</code>)</a></li>
+  <li><a href="#overlap-pruning-cases-pruneoverlappingintervals" id="toc-overlap-pruning-cases-pruneoverlappingintervals" class="nav-link" data-scroll-target="#overlap-pruning-cases-pruneoverlappingintervals">Overlap Pruning Cases (<code>PruneOverlappingIntervals</code>)</a></li>
+  <li><a href="#exit-criteria-1" id="toc-exit-criteria-1" class="nav-link" data-scroll-target="#exit-criteria-1">Exit Criteria</a></li>
+  </ul></li>
+  <li><a href="#phase-2-centralize-use-of-timeframe-conversion-primitives" id="toc-phase-2-centralize-use-of-timeframe-conversion-primitives" class="nav-link" data-scroll-target="#phase-2-centralize-use-of-timeframe-conversion-primitives">Phase 2: Centralize Use Of TimeFrame Conversion Primitives</a>
+  <ul class="collapse">
+  <li><a href="#goals-2" id="toc-goals-2" class="nav-link" data-scroll-target="#goals-2">Goals</a></li>
+  <li><a href="#status-1" id="toc-status-1" class="nav-link" data-scroll-target="#status-1">Status</a></li>
+  <li><a href="#tasks-2" id="toc-tasks-2" class="nav-link" data-scroll-target="#tasks-2">Tasks</a></li>
+  <li><a href="#gather-time-conversion-shape" id="toc-gather-time-conversion-shape" class="nav-link" data-scroll-target="#gather-time-conversion-shape">Gather-Time Conversion Shape</a></li>
+  <li><a href="#exit-criteria-2" id="toc-exit-criteria-2" class="nav-link" data-scroll-target="#exit-criteria-2">Exit Criteria</a></li>
+  </ul></li>
+  <li><a href="#phase-3-refactor-gatherresult-around-digitalintervalseries" id="toc-phase-3-refactor-gatherresult-around-digitalintervalseries" class="nav-link" data-scroll-target="#phase-3-refactor-gatherresult-around-digitalintervalseries">Phase 3: Refactor GatherResult Around DigitalIntervalSeries</a>
+  <ul class="collapse">
+  <li><a href="#goals-3" id="toc-goals-3" class="nav-link" data-scroll-target="#goals-3">Goals</a></li>
+  <li><a href="#status-2" id="toc-status-2" class="nav-link" data-scroll-target="#status-2">Status</a></li>
+  <li><a href="#tasks-3" id="toc-tasks-3" class="nav-link" data-scroll-target="#tasks-3">Tasks</a></li>
+  <li><a href="#exit-criteria-3" id="toc-exit-criteria-3" class="nav-link" data-scroll-target="#exit-criteria-3">Exit Criteria</a></li>
+  <li><a href="#deferred-follow-up" id="toc-deferred-follow-up" class="nav-link" data-scroll-target="#deferred-follow-up">Deferred Follow-Up</a></li>
+  </ul></li>
+  <li><a href="#phase-4-replace-adapter-based-plot-alignment-paths" id="toc-phase-4-replace-adapter-based-plot-alignment-paths" class="nav-link" data-scroll-target="#phase-4-replace-adapter-based-plot-alignment-paths">Phase 4: Replace Adapter-Based Plot Alignment Paths</a>
+  <ul class="collapse">
+  <li><a href="#goals-4" id="toc-goals-4" class="nav-link" data-scroll-target="#goals-4">Goals</a></li>
+  <li><a href="#status-3" id="toc-status-3" class="nav-link" data-scroll-target="#status-3">Status</a></li>
+  <li><a href="#tasks-4" id="toc-tasks-4" class="nav-link" data-scroll-target="#tasks-4">Tasks</a></li>
+  <li><a href="#affected-files" id="toc-affected-files" class="nav-link" data-scroll-target="#affected-files">Affected Files</a></li>
+  <li><a href="#exit-criteria-4" id="toc-exit-criteria-4" class="nav-link" data-scroll-target="#exit-criteria-4">Exit Criteria</a></li>
+  </ul></li>
+  <li><a href="#phase-5-update-transform-and-export-consumers" id="toc-phase-5-update-transform-and-export-consumers" class="nav-link" data-scroll-target="#phase-5-update-transform-and-export-consumers">Phase 5: Update Transform And Export Consumers</a>
+  <ul class="collapse">
+  <li><a href="#goals-5" id="toc-goals-5" class="nav-link" data-scroll-target="#goals-5">Goals</a></li>
+  <li><a href="#status-4" id="toc-status-4" class="nav-link" data-scroll-target="#status-4">Status</a></li>
+  <li><a href="#tasks-5" id="toc-tasks-5" class="nav-link" data-scroll-target="#tasks-5">Tasks</a></li>
+  <li><a href="#exit-criteria-5" id="toc-exit-criteria-5" class="nav-link" data-scroll-target="#exit-criteria-5">Exit Criteria</a></li>
+  </ul></li>
+  <li><a href="#phase-5.5-decouple-transformsv2-row-processing-from-core-gatherresult" id="toc-phase-5.5-decouple-transformsv2-row-processing-from-core-gatherresult" class="nav-link" data-scroll-target="#phase-5.5-decouple-transformsv2-row-processing-from-core-gatherresult">Phase 5.5: Decouple TransformsV2 Row Processing From Core GatherResult</a>
+  <ul class="collapse">
+  <li><a href="#goals-6" id="toc-goals-6" class="nav-link" data-scroll-target="#goals-6">Goals</a></li>
+  <li><a href="#status-5" id="toc-status-5" class="nav-link" data-scroll-target="#status-5">Status</a></li>
+  <li><a href="#tasks-6" id="toc-tasks-6" class="nav-link" data-scroll-target="#tasks-6">Tasks</a></li>
+  <li><a href="#exit-criteria-6" id="toc-exit-criteria-6" class="nav-link" data-scroll-target="#exit-criteria-6">Exit Criteria</a></li>
+  </ul></li>
+  <li><a href="#phase-6-deprecate-and-remove-intervaladapters" id="toc-phase-6-deprecate-and-remove-intervaladapters" class="nav-link" data-scroll-target="#phase-6-deprecate-and-remove-intervaladapters">Phase 6: Deprecate And Remove IntervalAdapters</a>
+  <ul class="collapse">
+  <li><a href="#goals-7" id="toc-goals-7" class="nav-link" data-scroll-target="#goals-7">Goals</a></li>
+  <li><a href="#status-6" id="toc-status-6" class="nav-link" data-scroll-target="#status-6">Status</a></li>
+  <li><a href="#tasks-7" id="toc-tasks-7" class="nav-link" data-scroll-target="#tasks-7">Tasks</a></li>
+  <li><a href="#exit-criteria-7" id="toc-exit-criteria-7" class="nav-link" data-scroll-target="#exit-criteria-7">Exit Criteria</a></li>
+  </ul></li>
+  <li><a href="#phase-7-documentation-and-cleanup" id="toc-phase-7-documentation-and-cleanup" class="nav-link" data-scroll-target="#phase-7-documentation-and-cleanup">Phase 7: Documentation And Cleanup</a>
+  <ul class="collapse">
+  <li><a href="#goals-8" id="toc-goals-8" class="nav-link" data-scroll-target="#goals-8">Goals</a></li>
+  <li><a href="#tasks-8" id="toc-tasks-8" class="nav-link" data-scroll-target="#tasks-8">Tasks</a></li>
+  <li><a href="#exit-criteria-8" id="toc-exit-criteria-8" class="nav-link" data-scroll-target="#exit-criteria-8">Exit Criteria</a></li>
+  </ul></li>
+  <li><a href="#verification-checklist" id="toc-verification-checklist" class="nav-link" data-scroll-target="#verification-checklist">Verification Checklist</a></li>
+  <li><a href="#suggested-implementation-order" id="toc-suggested-implementation-order" class="nav-link" data-scroll-target="#suggested-implementation-order">Suggested Implementation Order</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">GatherResult DigitalIntervalSeries Migration Plan</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="purpose" class="level2">
+<h2 class="anchored" data-anchor-id="purpose">Purpose</h2>
+<p>This document provides a phased implementation plan for migrating gather-window generation from gather-specific interval adapters to <code>DigitalIntervalSeries</code>-based TransformsV2 algorithms.</p>
+<p>The companion design document is <code>digital_interval_series_migration_design.qmd</code>. Read that first for the rationale, affected libraries, and open design decisions.</p>
+</section>
+<section id="desired-end-state" class="level2">
+<h2 class="anchored" data-anchor-id="desired-end-state">Desired End State</h2>
+<p>The migration is complete when:</p>
+<ul>
+<li>Event and interval alignment windows are produced as <code>DigitalIntervalSeries</code> objects with <code>IntervalLayout::Overlapping</code>.</li>
+<li>Alignment points are represented as companion <code>DigitalEventSeries</code> objects, not raw vectors.</li>
+<li><code>GatherResult</code> primarily accepts prepared <code>DigitalIntervalSeries</code> windows for direct gather creation.</li>
+<li><code>GatherResult&lt;T&gt;</code> is positioned as a row-aligned collection of supported DataObject instances plus row metadata; it should not care whether each row DataObject is view-backed, owning, lazy, or transform-produced.</li>
+<li>PSTH, event plot, event-rate estimation, interval reduction, and export paths no longer depend on <code>EventExpanderAdapter</code> or <code>IntervalWithAlignmentAdapter</code>.</li>
+<li>Trial alignment metadata remains available through <code>alignmentTimeAt()</code> and TransformsV2 gather-extension row stores.</li>
+<li>Cross-timeframe gather uses the existing <code>TimeFrame</code> conversion primitives (<code>convertTimeFrameRange()</code> for interval edges and <code>convert_time_index()</code> for single alignment/event indices) in one gather/query path.</li>
+<li>Future DataObject-producing per-row transforms can return another <code>GatherResult&lt;OutputDataObject&gt;</code> through external TransformsV2 helpers rather than introducing a parallel row-collection container.</li>
+<li>Tests cover overlapping windows, cross-timeframe alignment, overlap pruning (via <code>PruneOverlappingIntervals</code>), reordering, and plot-facing gather behavior.</li>
+</ul>
+</section>
+<section id="phase-0-baseline-and-test-inventory" class="level2">
+<h2 class="anchored" data-anchor-id="phase-0-baseline-and-test-inventory">Phase 0: Baseline And Test Inventory</h2>
+<section id="goals" class="level3">
+<h3 class="anchored" data-anchor-id="goals">Goals</h3>
+<p>Establish current behavior before changing APIs.</p>
+</section>
+<section id="tasks" class="level3">
+<h3 class="anchored" data-anchor-id="tasks">Tasks</h3>
+<ol type="1">
+<li>Identify existing tests that cover <code>GatherResult</code>, PSTH/event plot alignment, interval reduction, and range reductions.</li>
+<li>Add characterization tests for current behavior if coverage is missing.</li>
+<li>Record expected behavior for event alignment, interval alignment, overlap prevention, and reordering.</li>
+</ol>
+</section>
+<section id="suggested-tests" class="level3">
+<h3 class="anchored" data-anchor-id="suggested-tests">Suggested Tests</h3>
+<ul>
+<li>Gathering event data around event alignment points with overlapping windows preserves one gathered view per event.</li>
+<li>Gathering around interval starts and interval ends produces expected alignment times.</li>
+<li>Centered event windows report alignment time equal to the original event time, not the window start.</li>
+<li><code>prevent_overlap</code> keeps the first candidate under the existing greedy behavior.</li>
+<li><code>GatherResult::reorder()</code> preserves <code>originalIndex()</code>, <code>intervalAtReordered()</code>, and <code>alignmentTimeAt()</code>.</li>
+<li>Cross-timeframe gather converts alignment windows into source coordinates correctly.</li>
+</ul>
+</section>
+<section id="exit-criteria" class="level3">
+<h3 class="anchored" data-anchor-id="exit-criteria">Exit Criteria</h3>
+<ul>
+<li>Current behavior is covered by tests or documented with explicit manual checks.</li>
+<li>The tests can be run through the appropriate CMake preset and <code>ctest</code> filters.</li>
+</ul>
+</section>
+</section>
+<section id="phase-1-add-window-producing-transformsv2-algorithms" class="level2">
+<h2 class="anchored" data-anchor-id="phase-1-add-window-producing-transformsv2-algorithms">Phase 1: Add Window-Producing TransformsV2 Algorithms</h2>
+<section id="goals-1" class="level3">
+<h3 class="anchored" data-anchor-id="goals-1">Goals</h3>
+<p>Introduce reusable TransformsV2 algorithms that materialize gather windows and alignment points as <code>DigitalIntervalSeries</code> and <code>DigitalEventSeries</code> objects.</p>
+</section>
+<section id="status" class="level3">
+<h3 class="anchored" data-anchor-id="status">Status</h3>
+<p><strong>Largely complete.</strong> Event window expansion, interval alignment-point extraction, and overlap pruning are implemented. Remaining migration work is to use the existing <code>TimeFrame</code> conversion primitives consistently at gather/query and projection boundaries.</p>
+<p><strong>Done (partial):</strong> <a href="../../developer/transforms_v2/event_to_interval.html"><code>EventToInterval</code></a> is implemented and registered. It expands <code>DigitalEventSeries</code> events into overlapping <code>DigitalIntervalSeries</code> windows using <code>EventToIntervalParams</code> (<code>pre_expansion</code>, <code>post_expansion</code> as <code>TimeFrameIndex</code>). See <code>src/TransformsV2/algorithms/EventToInterval/</code> for the source and tests.</p>
+<p><strong>Done (partial):</strong> <a href="../../developer/transforms_v2/interval_to_event.html"><code>IntervalToEvent</code></a> is implemented and registered. It extracts one <code>DigitalEventSeries</code> event per interval at start, end, or center using <code>IntervalToEventParams</code> (<code>point</code> as <code>IntervalEventPoint</code>). See <code>src/TransformsV2/algorithms/IntervalToEvent/</code> for the source and tests.</p>
+<p><strong>Done (partial):</strong> <a href="../../developer/transforms_v2/prune_overlapping_intervals.html"><code>PruneOverlappingIntervals</code></a> is implemented and registered. It applies greedy keep-first overlap pruning to a <code>DigitalIntervalSeries</code>, producing a disjoint output series. See <code>src/TransformsV2/algorithms/PruneOverlappingIntervals/</code> for the source and tests.</p>
+<p><strong>Remaining:</strong> optional companion alignment-point filtering helper for paired window/event pruning at gather call sites, and consistent use of <code>convertTimeFrameRange()</code> / <code>convert_time_index()</code> where windows or alignment points cross <code>TimeFrame</code> boundaries.</p>
+</section>
+<section id="tasks-1" class="level3">
+<h3 class="anchored" data-anchor-id="tasks-1">Tasks</h3>
+<ol type="1">
+<li><del>Add event window algorithm under <code>src/TransformsV2/algorithms/</code>.</del> <strong>Done:</strong> <code>EventToInterval/</code>.</li>
+<li><del>Define parameter struct for event windows.</del> <strong>Done:</strong> <code>EventToIntervalParams</code>.</li>
+<li><del>Add interval-to-event extraction for interval start/end/center alignment points.</del> <strong>Done:</strong> <code>IntervalToEvent/</code>.</li>
+<li><del>Implement event-to-interval expansion.</del> <strong>Done:</strong> <code>eventToInterval()</code> via <code>EventToInterval</code>.</li>
+<li>Use composition for fixed windows around interval-derived points: <code>intervalToEvent()</code> followed by <code>EventToInterval</code>.</li>
+<li>Ensure window algorithms return output created with <code>DigitalIntervalSeries::createOverlapping(...)</code>. <strong>Done for <code>EventToInterval</code>.</strong></li>
+<li>Use normal data-object composition for alignment points: existing event series for event alignment, and <code>IntervalToEvent</code> output for interval alignment.</li>
+<li><del>Add overlap pruning as a TransformsV2 container transform.</del> <strong>Done:</strong> <code>PruneOverlappingIntervals/</code>.</li>
+<li>Use the existing <code>TimeFrame</code> conversion primitives when source/output <code>TimeFrame</code> conversion is required.</li>
+<li><del>Register pipeline-addressable transforms.</del> <strong>Done for <code>EventToInterval</code>, <code>IntervalToEvent</code>, and <code>PruneOverlappingIntervals</code>.</strong></li>
+<li><del>Add unit tests for event window edge cases.</del> <strong>Done:</strong> <code>EventToInterval.test.cpp</code>.</li>
+<li><del>Add unit tests for interval-to-event edge cases.</del> <strong>Done:</strong> <code>IntervalToEvent.test.cpp</code>.</li>
+<li><del>Add unit tests for overlap pruning edge cases.</del> <strong>Done:</strong> <code>PruneOverlappingIntervals.test.cpp</code>.</li>
+</ol>
+</section>
+<section id="event-window-cases-eventtointerval" class="level3">
+<h3 class="anchored" data-anchor-id="event-window-cases-eventtointerval">Event Window Cases (<code>EventToInterval</code>)</h3>
+<p>These cases are covered by <code>EventToInterval.test.cpp</code> unless noted:</p>
+<ul>
+<li>Empty event series returns an empty overlapping interval series.</li>
+<li>Zero pre/post expansion creates point interval <code>[T, T]</code>.</li>
+<li>Negative expansion values are rejected via debug <code>assert()</code> on <code>pre_expansion</code> and <code>post_expansion</code>.</li>
+<li>Input <code>TimeFrame</code> is propagated to the output (no cross-timeframe conversion yet).</li>
+<li>Overlapping windows remain separate.</li>
+<li><strong>Not yet covered by <code>EventToInterval</code>:</strong> cross-timeframe output. Companion alignment points are supplied by the original event series for event alignment.</li>
+</ul>
+</section>
+<section id="interval-to-event-cases-intervaltoevent" class="level3">
+<h3 class="anchored" data-anchor-id="interval-to-event-cases-intervaltoevent">Interval To Event Cases (<code>IntervalToEvent</code>)</h3>
+<p>These cases are covered by <code>IntervalToEvent.test.cpp</code> unless noted:</p>
+<ul>
+<li>Empty interval series returns an empty event series with preserved <code>TimeFrame</code>.</li>
+<li><code>IntervalEventPoint::start</code> uses interval start.</li>
+<li><code>IntervalEventPoint::end</code> uses interval end.</li>
+<li><code>IntervalEventPoint::center</code> uses integer midpoint behavior matching the current adapter.</li>
+<li>The output <code>DigitalEventSeries</code> preserves the input interval series <code>TimeFrame</code>.</li>
+<li>The output does not inherit interval entity IDs; provenance should use lineage tracing if needed later.</li>
+<li>Overlapping input intervals produce one event per row (not merged).</li>
+<li>Round-trip with <code>EventToInterval</code> at zero expansion recovers original event times.</li>
+<li>If callers need fixed windows around these points, they compose the result with <code>EventToInterval</code>.</li>
+<li><strong>Not yet covered by <code>IntervalToEvent</code>:</strong> cross-timeframe output.</li>
+</ul>
+</section>
+<section id="overlap-pruning-cases-pruneoverlappingintervals" class="level3">
+<h3 class="anchored" data-anchor-id="overlap-pruning-cases-pruneoverlappingintervals">Overlap Pruning Cases (<code>PruneOverlappingIntervals</code>)</h3>
+<p>These cases are covered by <code>PruneOverlappingIntervals.test.cpp</code> unless noted:</p>
+<ul>
+<li>Empty interval series returns an empty disjoint interval series.</li>
+<li>Single interval is kept unchanged.</li>
+<li>Well-separated intervals are all kept.</li>
+<li>Overlapping intervals are pruned with greedy keep-first behavior.</li>
+<li>Touching intervals (<code>start == last_kept.end</code>) are treated as overlapping and pruned.</li>
+<li>Chain pruning keeps non-overlapping survivors after earlier rows are dropped.</li>
+<li>Input <code>TimeFrame</code> is propagated to the output.</li>
+<li>Overlapping input layout (<code>IntervalLayout::Overlapping</code>) produces disjoint output.</li>
+<li><strong>Not yet covered by <code>PruneOverlappingIntervals</code>:</strong> paired filtering of a companion <code>DigitalEventSeries</code> alignment-point series to the same kept row indices. Plot code still uses local helpers for alignment-point + window pruning until Phase 4.</li>
+</ul>
+</section>
+<section id="exit-criteria-1" class="level3">
+<h3 class="anchored" data-anchor-id="exit-criteria-1">Exit Criteria</h3>
+<ul>
+<li><del>Event window algorithm compiles and passes focused unit tests.</del> <strong>Done:</strong> <code>EventToInterval</code>.</li>
+<li><del>Interval-to-event algorithm compiles and passes focused unit tests.</del> <strong>Done:</strong> <code>IntervalToEvent</code>.</li>
+<li><del>Overlap pruning algorithm compiles and passes focused unit tests.</del> <strong>Done:</strong> <code>PruneOverlappingIntervals</code>.</li>
+<li>Output windows are represented as <code>DigitalIntervalSeries</code>, not <code>std::vector&lt;Interval&gt;</code>.</li>
+<li>Output alignment points are represented as <code>DigitalEventSeries</code> where required by the migration design.</li>
+<li>The algorithms can be used without checking the result into <code>DataManager</code>.</li>
+</ul>
+</section>
+</section>
+<section id="phase-2-centralize-use-of-timeframe-conversion-primitives" class="level2">
+<h2 class="anchored" data-anchor-id="phase-2-centralize-use-of-timeframe-conversion-primitives">Phase 2: Centralize Use Of TimeFrame Conversion Primitives</h2>
+<section id="goals-2" class="level3">
+<h3 class="anchored" data-anchor-id="goals-2">Goals</h3>
+<p>Centralize interval conversion between alignment/window timeframe and source-data timeframe by reusing the existing primitives in <code>src/TimeFrame/TimeFrame.hpp</code>:</p>
+<ul>
+<li><code>convertTimeFrameRange(start, stop, from_time_frame, to_time_frame)</code> for one interval’s edges.</li>
+<li><code>convert_time_index(time, source_timeframe, target_timeframe)</code> for one event or alignment index.</li>
+</ul>
+</section>
+<section id="status-1" class="level3">
+<h3 class="anchored" data-anchor-id="status-1">Status</h3>
+<p><strong>Complete for gather-window query bounds.</strong> <code>GatherResult</code> now converts prepared <code>DigitalIntervalSeries</code> windows to the source data <code>TimeFrame</code> at view-creation time with <code>convertTimeFrameRange()</code>. The duplicate <code>prepareIntervalsForGather()</code> materialization helpers in <code>IntervalReduction.cpp</code> and <code>GatherPipelineExecutor.cpp</code> have been removed.</p>
+<p>Prepared <code>DigitalIntervalSeries</code> windows are expected to carry a non-null <code>TimeFrame</code>; missing window/source <code>TimeFrame</code> values are treated as invalid input for the prepared-window path. Legacy adapter null-<code>TimeFrame</code> behavior is isolated in the deprecated adapter compatibility path until Phase 3/4 removes the adapters.</p>
+</section>
+<section id="tasks-2" class="level3">
+<h3 class="anchored" data-anchor-id="tasks-2">Tasks</h3>
+<ol type="1">
+<li><del>Update the refactored gather path so source view creation converts each window interval with <code>convertTimeFrameRange()</code> when querying source data.</del> <strong>Done.</strong></li>
+<li>Update trial-relative projection code to use <code>convert_time_index()</code> or physical time values from the relevant <code>TimeFrame</code> objects when gathered events and alignment points have different <code>TimeFrame</code> objects.</li>
+<li>Keep <code>EventToInterval</code>, <code>IntervalToEvent</code>, and <code>PruneOverlappingIntervals</code> in their input <code>TimeFrame</code>; do not add a transform parameter solely to target the gathered source timeframe.</li>
+<li>Preserve interval and event order during gather and projection.</li>
+<li>If a call site still needs a materialized converted <code>DigitalIntervalSeries</code> or <code>DigitalEventSeries</code>, implement that materialization as a thin wrapper around <code>convertTimeFrameRange()</code> or <code>convert_time_index()</code>.</li>
+<li>Do not inherit entity IDs for generated or converted temporary windows/alignment points. If provenance is required later, use lineage tracing rather than entity ID copying.</li>
+<li><del>Replace or remove the private <code>prepareIntervalsForGather()</code> implementation in <code>IntervalReduction.cpp</code>; if materialization remains necessary, it should delegate to <code>convertTimeFrameRange()</code>.</del> <strong>Done:</strong> the helper is removed and <code>IntervalReduction</code> passes original row intervals directly to <code>GatherResult</code>.</li>
+<li>Add tests for same-timeframe, different-timeframe, and invalid missing-<code>TimeFrame</code> prepared-window cases.</li>
+</ol>
+</section>
+<section id="gather-time-conversion-shape" class="level3">
+<h3 class="anchored" data-anchor-id="gather-time-conversion-shape">Gather-Time Conversion Shape</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> <span class="op">[</span>query_start<span class="op">,</span> query_stop<span class="op">]</span> <span class="op">=</span> convertTimeFrameRange<span class="op">(</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>        window<span class="op">.</span>start<span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        window<span class="op">.</span>end<span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span>window_time_frame<span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">*</span>source_time_frame<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Prepared <code>DigitalIntervalSeries</code> windows should carry a non-null <code>TimeFrame</code>. Null-<code>TimeFrame</code> behavior is legacy adapter compatibility only and should not be documented as a supported prepared-window convention.</p>
+</section>
+<section id="exit-criteria-2" class="level3">
+<h3 class="anchored" data-anchor-id="exit-criteria-2">Exit Criteria</h3>
+<ul>
+<li>Gather-window interval conversion uses <code>convertTimeFrameRange()</code> rather than duplicate edge-conversion logic.</li>
+<li>Gather alignment/projection conversion uses <code>convert_time_index()</code> or direct physical-time lookup through <code>TimeFrame</code> rather than duplicate index-conversion logic.</li>
+<li><code>IntervalReduction.cpp</code> and <code>GatherPipelineExecutor.cpp</code> no longer carry independent interval conversion implementations.</li>
+</ul>
+</section>
+</section>
+<section id="phase-3-refactor-gatherresult-around-digitalintervalseries" class="level2">
+<h2 class="anchored" data-anchor-id="phase-3-refactor-gatherresult-around-digitalintervalseries">Phase 3: Refactor GatherResult Around DigitalIntervalSeries</h2>
+<section id="goals-3" class="level3">
+<h3 class="anchored" data-anchor-id="goals-3">Goals</h3>
+<p>Make <code>DigitalIntervalSeries</code> the internal window representation for direct gather results while keeping <code>GatherResult&lt;T&gt;</code> compatible with the broader row-aligned DataObject model.</p>
+<p><code>GatherResult</code> should store row DataObjects and row metadata. It should not distinguish whether a row <code>T</code> is a view, owning copy, lazy object, or transform output; those storage details belong to the DataObject implementation.</p>
+</section>
+<section id="status-2" class="level3">
+<h3 class="anchored" data-anchor-id="status-2">Status</h3>
+<p><strong>Complete.</strong> <code>GatherResult&lt;T&gt;</code> now accepts prepared <code>std::shared_ptr&lt;DigitalIntervalSeries const&gt;</code> windows with optional companion <code>std::shared_ptr&lt;DigitalEventSeries const&gt;</code> alignment points. Prepared windows and alignment points are retained as row metadata while <code>intervalAt()</code> continues to expose source-coordinate query intervals for existing plot/export consumers.</p>
+<p>The adapter overloads and <code>IntervalAdapters.hpp</code> have been removed. Window and alignment construction now belongs to TransformsV2 algorithms or call-site preparation helpers, not to <code>GatherResult</code>.</p>
+</section>
+<section id="tasks-3" class="level3">
+<h3 class="anchored" data-anchor-id="tasks-3">Tasks</h3>
+<ol type="1">
+<li><del>Add an overload that accepts <code>std::shared_ptr&lt;DigitalIntervalSeries const&gt;</code>.</del> <strong>Done.</strong></li>
+<li><del>Add the companion parameter <code>std::shared_ptr&lt;DigitalEventSeries const&gt; alignment_points</code>.</del> <strong>Done.</strong></li>
+<li><del>Store the window series in <code>GatherResult</code> as <code>_windows</code>.</del> <strong>Done.</strong></li>
+<li><del>Store the companion event series in <code>GatherResult</code> as <code>_alignment_points</code>.</del> <strong>Done.</strong></li>
+<li><del>Assert in debug builds that <code>_windows-&gt;size() == _alignment_points-&gt;size()</code>.</del> <strong>Done.</strong></li>
+<li><del>Keep row storage as a vector of <code>std::shared_ptr&lt;T&gt;</code>; optionally rename <code>_views</code> to <code>_rows</code> if it can be done without obscuring the interval-storage refactor.</del> <strong>Done:</strong> <code>_views</code> was kept to limit churn.</li>
+<li><del>Treat <code>_source</code> as direct-gather provenance. Do not make future row-transformed results depend on having a single non-null source object of type <code>T</code>.</del> <strong>Done for current storage; <code>fromRows()</code> remains deferred.</strong></li>
+<li><del>Replace <code>_intervals</code> reads with iteration over <code>_windows-&gt;view()</code> where practical, or keep a clearly named compatibility cache if callers still need source-query intervals.</del> <strong>Done:</strong> <code>_query_intervals</code> is the compatibility cache.</li>
+<li><del>Keep <code>intervalAt()</code> and <code>intervalAtReordered()</code> behavior stable. If new accessors are added, distinguish prepared window intervals from source-query intervals by name.</del> <strong>Done:</strong> <code>windows()</code> exposes prepared windows.</li>
+<li><del>Implement <code>alignmentTimeAt()</code> from <code>_alignment_points</code> and row ordering.</del> <strong>Done for prepared-window gathers.</strong></li>
+<li><del>Collapse the duplicated row DataObject creation logic into one helper path. The helper may call <code>createView()</code> or <code>createTimeRangeCopy()</code>, but after construction the row is just a <code>T</code>.</del> <strong>Done.</strong></li>
+<li><del>Update <code>materialize()</code> and <code>reorder()</code> to copy or share <code>_windows</code>, <code>_alignment_points</code>, row objects, and order metadata.</del> <strong>Done.</strong></li>
+<li><del>Consider adding <code>fromRows()</code> and <code>fromRowsLike(parent, rows)</code> if it is low-risk. These are optional for adapter migration but are the preferred future API for DataObject-producing per-row transforms.</del> <strong>Done in Phase 5.5.</strong></li>
+<li><del>Do not expand the TransformsV2 responsibility inside <code>GatherResult</code> during this phase. Preserve existing methods if needed for compatibility, but design the storage/accessors so they can move to extension helpers later.</del> <strong>Done.</strong></li>
+</ol>
+</section>
+<section id="exit-criteria-3" class="level3">
+<h3 class="anchored" data-anchor-id="exit-criteria-3">Exit Criteria</h3>
+<ul>
+<li>The primary gather path is <code>GatherResult&lt;T&gt;::create(source, windows, alignment_points)</code>.</li>
+<li>Internally, gather windows are stored as <code>DigitalIntervalSeries</code>.</li>
+<li>Internally, alignment points are stored as <code>DigitalEventSeries</code>.</li>
+<li>Row storage is independent of whether each row DataObject is view-backed, owning, lazy, or transform-produced.</li>
+<li><code>source()</code> is not required to be meaningful for every future <code>GatherResult&lt;T&gt;</code> construction path; only direct gather results must have direct source provenance.</li>
+<li>Existing public accessors used by plot/export code still work.</li>
+<li>Tests from Phase 0 still pass.</li>
+</ul>
+</section>
+<section id="deferred-follow-up" class="level3">
+<h3 class="anchored" data-anchor-id="deferred-follow-up">Deferred Follow-Up</h3>
+<p>After the interval storage refactor is stable, move TransformsV2-specific row processing toward extension helpers:</p>
+<ul>
+<li>DataObject-producing per-row pipelines should consume <code>GatherResult&lt;InputT&gt;</code> and return <code>GatherResult&lt;OutputT&gt;</code>.</li>
+<li>Scalar reductions should return ordinary vectors such as <code>std::vector&lt;int&gt;</code> or <code>std::vector&lt;float&gt;</code>.</li>
+<li><code>PipelineValueStore</code> construction should be externalized from core <code>GatherResult</code> once callers are migrated.</li>
+</ul>
+<p>See <code>row_aligned_dataobject_container_design.qmd</code> for the follow-on design.</p>
+</section>
+</section>
+<section id="phase-4-replace-adapter-based-plot-alignment-paths" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4-replace-adapter-based-plot-alignment-paths">Phase 4: Replace Adapter-Based Plot Alignment Paths</h2>
+<section id="goals-4" class="level3">
+<h3 class="anchored" data-anchor-id="goals-4">Goals</h3>
+<p>Move PSTH, event plot, and event-rate code from adapter-based window generation to TransformsV2 window generation.</p>
+</section>
+<section id="status-3" class="level3">
+<h3 class="anchored" data-anchor-id="status-3">Status</h3>
+<p><strong>Complete for plot-facing alignment preparation.</strong> <code>PlotAlignmentGather.hpp</code> now prepares <code>DigitalIntervalSeries</code> windows and companion <code>DigitalEventSeries</code> alignment points before calling the prepared <code>GatherResult</code> path. <code>EventRateEstimation.cpp</code> uses the same Qt-free preparation helper instead of keeping a local adapter/pruning copy. <code>LineBatchBuilder</code> has a preferred overload that reads alignment metadata directly from <code>GatherResult&lt;AnalogTimeSeries&gt;</code>.</p>
+<p>The implementation preserves the legacy plot contract that UI window sizes are physical display-time widths. The new <code>PlotAlignmentWindowPreparation.hpp</code> helper materializes display windows in the gathered source <code>TimeFrame</code> so cross-timeframe plot behavior remains stable while <code>alignmentTimeAt()</code> continues to expose physical alignment time for trial-relative rendering.</p>
+</section>
+<section id="tasks-4" class="level3">
+<h3 class="anchored" data-anchor-id="tasks-4">Tasks</h3>
+<ol type="1">
+<li><del>Update <code>PlotAlignmentGather.hpp</code> to build windows through TransformsV2 algorithms.</del> <strong>Done:</strong> plot alignment now uses prepared <code>DigitalIntervalSeries</code> windows plus companion <code>DigitalEventSeries</code> alignment points.</li>
+<li><del>Update event alignment to call <code>EventToInterval</code> (registry name <code>"EventToInterval"</code>) instead of <code>expandEvents()</code>.</del> <strong>Adapted:</strong> plot event windows preserve physical display-time semantics through <code>PlotAlignmentWindowPreparation.hpp</code>; index-space <code>EventToInterval</code> remains available for transform pipelines where its parameter contract matches the requested operation.</li>
+<li><del>Update interval alignment to call <code>IntervalToEvent</code> (registry name <code>"IntervalToEvent"</code>) instead of <code>withAlignment()</code>.</del> <strong>Done.</strong></li>
+<li><del>Replace local <code>pruneOverlappingAlignmentTimes</code> / <code>createFilteredIntervalSeries</code> usage with <code>PruneOverlappingIntervals</code> (registry name <code>"PruneOverlappingIntervals"</code>) when pruning interval bounds directly, or compose window expansion + pruning as appropriate for event/interval alignment paths.</del> <strong>Done for prepared windows:</strong> paired pruning uses the shared helper and <code>PruneOverlappingIntervals</code> for the window series.</li>
+<li><del>Apply the same kept-row selection to the companion alignment-point event series (may require a small shared helper until a paired transform exists).</del> <strong>Done.</strong></li>
+<li><del>Call <code>gather(source, windows, alignment_points)</code> after window preparation.</del> <strong>Done.</strong></li>
+<li><del>Update <code>EventRateEstimation.cpp</code> to reuse the same window-preparation path instead of duplicating filtering and adapter logic.</del> <strong>Done.</strong></li>
+<li><del>Update plot-facing consumers to prefer <code>GatherResult::alignmentTimeAt()</code> over caller-managed raw alignment-time vectors when constructing relative display coordinates.</del> <strong>Done for the standard line batch path.</strong></li>
+<li><del>Update <code>CorePlotting::buildLineBatchFromGatherResult()</code> so the preferred overload reads alignment metadata from <code>GatherResult&lt;AnalogTimeSeries&gt;</code> directly. Keep a two-argument alignment-vector overload only if an explicit override is still needed.</del> <strong>Done.</strong></li>
+<li><del>Update <code>LinePlotOpenGLWidget.cpp</code> to call the preferred <code>LineBatchBuilder</code> overload. It may still cache alignment times for double-click relative-to-absolute conversion and group-color behavior.</del> <strong>Done.</strong></li>
+<li>Verify PSTH, event plot, line plot, and event-rate rendering behavior manually or with available widget tests. <strong>Automated focused tests cover the gather and line-batch paths; manual rendering remains recommended.</strong></li>
+</ol>
+</section>
+<section id="affected-files" class="level3">
+<h3 class="anchored" data-anchor-id="affected-files">Affected Files</h3>
+<ul>
+<li><code>src/WhiskerToolbox/Plots/Common/PlotAlignmentGather.hpp</code></li>
+<li><code>src/WhiskerToolbox/Plots/Common/EventRateEstimation/EventRateEstimation.cpp</code></li>
+<li><code>src/WhiskerToolbox/Plots/PSTHWidget/Rendering/PSTHPlotOpenGLWidget.cpp</code></li>
+<li><code>src/WhiskerToolbox/Plots/EventPlotWidget/Rendering/EventPlotOpenGLWidget.cpp</code></li>
+<li><code>src/WhiskerToolbox/Plots/LinePlotWidget/Rendering/LinePlotOpenGLWidget.cpp</code></li>
+<li><code>src/CorePlotting/LineBatch/LineBatchBuilder.hpp</code></li>
+<li><code>src/CorePlotting/LineBatch/LineBatchBuilder.cpp</code></li>
+</ul>
+</section>
+<section id="exit-criteria-4" class="level3">
+<h3 class="anchored" data-anchor-id="exit-criteria-4">Exit Criteria</h3>
+<ul>
+<li>Plot alignment helpers do not call <code>expandEvents()</code> or <code>withAlignment()</code>.</li>
+<li>Overlap prevention uses <code>PruneOverlappingIntervals</code> or an equivalent shared composition path rather than local <code>pruneOverlappingAlignmentTimes</code> copies where interval bounds are pruned directly.</li>
+<li>PSTH/event plot code continues to receive valid <code>GatherResult&lt;DigitalEventSeries&gt;</code> objects.</li>
+<li>Line plot code continues to receive valid <code>GatherResult&lt;AnalogTimeSeries&gt;</code> objects with alignment metadata suitable for relative x-coordinate construction.</li>
+<li><code>LineBatchBuilder</code> no longer requires a separately maintained alignment-time vector for the standard line plot path.</li>
+<li>Trial-relative time projections remain unchanged.</li>
+<li>Start/end/center selection is not part of the <code>GatherResult</code> API.</li>
+</ul>
+</section>
+</section>
+<section id="phase-5-update-transform-and-export-consumers" class="level2">
+<h2 class="anchored" data-anchor-id="phase-5-update-transform-and-export-consumers">Phase 5: Update Transform And Export Consumers</h2>
+<section id="goals-5" class="level3">
+<h3 class="anchored" data-anchor-id="goals-5">Goals</h3>
+<p>Move remaining non-UI consumers to the new prepared-window and companion-alignment-event model.</p>
+</section>
+<section id="status-4" class="level3">
+<h3 class="anchored" data-anchor-id="status-4">Status</h3>
+<p><strong>Complete for transform/export consumers.</strong> <code>GatherPipelineExecutor</code>, <code>TensorColumnBuilders</code>, and <code>TensorDesignBuilder</code> now pass prepared row windows as <code>std::shared_ptr&lt;DigitalIntervalSeries const&gt;</code>. <code>IntervalReduction</code> uses a const non-owning alias for row-defining windows before delegating to <code>GatherResult</code>, while source aliases remain constrained by the current non-const DataObject view APIs.</p>
+<p>Export and line-batch consumers were verified to depend only on stable public <code>GatherResult</code> accessors such as <code>alignmentTimeAt()</code> and row access. Remaining adapter APIs are isolated to the legacy <code>GatherResult</code> compatibility path until Phase 6.</p>
+</section>
+<section id="tasks-5" class="level3">
+<h3 class="anchored" data-anchor-id="tasks-5">Tasks</h3>
+<ol type="1">
+<li><del>Update <code>IntervalReduction.cpp</code> to use the refactored <code>GatherResult</code> and the existing <code>TimeFrame</code> conversion primitives.</del> <strong>Done.</strong></li>
+<li><del>Update <code>IntervalReduction.cpp</code> to pass row intervals as <code>std::shared_ptr&lt;DigitalIntervalSeries const&gt;</code> where possible. Avoid mutable aliasing for prepared windows; source aliases may remain constrained by current DataObject view APIs.</del> <strong>Done.</strong></li>
+<li><del>Update <code>GatherPipelineExecutor.hpp</code> and <code>GatherPipelineExecutor.cpp</code> to accept <code>std::shared_ptr&lt;DigitalIntervalSeries const&gt;</code> for prepared row windows.</del> <strong>Done.</strong></li>
+<li><del>Verify TransformsV2 tensor-column and interval-row consumers can operate on row DataObjects and stable row metadata without depending on <code>_intervals</code> internals.</del> <strong>Done.</strong></li>
+<li><del>Verify <code>RasterCSVExport.hpp</code> only depends on stable public accessors. Confirm callers pass a <code>TimeFrame</code> compatible with the gathered event rows/source series when computing exported relative times.</del> <strong>Done.</strong></li>
+<li><del>Verify <code>LineBatchBuilder</code> only depends on stable public accessors after the Phase 4 alignment-metadata update.</del> <strong>Done.</strong></li>
+<li><del>Remove any temporary call-site conversions to <code>std::vector&lt;Interval&gt;</code>.</del> <strong>Done:</strong> no Phase 5 production call site materializes row windows as <code>std::vector&lt;Interval&gt;</code>.</li>
+</ol>
+</section>
+<section id="exit-criteria-5" class="level3">
+<h3 class="anchored" data-anchor-id="exit-criteria-5">Exit Criteria</h3>
+<ul>
+<li><del>Transform and export paths compile against the new <code>GatherResult</code> API.</del> <strong>Done.</strong></li>
+<li><del><code>GatherPipelineExecutor</code> exposes prepared row windows as <code>std::shared_ptr&lt;DigitalIntervalSeries const&gt;</code>.</del> <strong>Done.</strong></li>
+<li><del><code>IntervalReduction</code> does not materialize converted row intervals or mutate row-defining windows.</del> <strong>Done.</strong></li>
+<li><del>Raster export continues to compute relative event times from <code>alignmentTimeAt()</code> and a compatible event/source <code>TimeFrame</code>.</del> <strong>Verified.</strong></li>
+<li><del>No production call site needs <code>IntervalAdapters.hpp</code>.</del> <strong>Done outside the legacy <code>GatherResult</code> compatibility API.</strong></li>
+<li><del>No production call site needs to know whether a <code>GatherResult</code> row DataObject is view-backed or owning.</del> <strong>Done.</strong></li>
+</ul>
+</section>
+</section>
+<section id="phase-5.5-decouple-transformsv2-row-processing-from-core-gatherresult" class="level2">
+<h2 class="anchored" data-anchor-id="phase-5.5-decouple-transformsv2-row-processing-from-core-gatherresult">Phase 5.5: Decouple TransformsV2 Row Processing From Core GatherResult</h2>
+<section id="goals-6" class="level3">
+<h3 class="anchored" data-anchor-id="goals-6">Goals</h3>
+<p>Move TransformsV2-specific per-row projection/reduction concerns out of the core gather container while preserving the ability to return <code>GatherResult&lt;OutputDataObject&gt;</code> for DataObject-producing row transforms.</p>
+<p>This phase can occur after adapter migration if moving the methods earlier would create unnecessary churn.</p>
+</section>
+<section id="status-5" class="level3">
+<h3 class="anchored" data-anchor-id="status-5">Status</h3>
+<p><strong>Complete.</strong> Core <code>GatherResult</code> now provides <code>fromRows()</code> and <code>fromRowsLike(parent, rows)</code> for synthesized row DataObjects without requiring a direct source pointer. TransformsV2 row stores, projection helpers, reduction helpers, sort helpers, and DataObject-producing row pipeline execution live in <code>src/TransformsV2/extension/gatherResult/GatherResultRowContext.hpp</code>. <code>GatherResult</code> no longer exposes <code>PipelineValueStore</code> or value-projection APIs and no longer links to <code>TransformsV2</code>.</p>
+</section>
+<section id="tasks-6" class="level3">
+<h3 class="anchored" data-anchor-id="tasks-6">Tasks</h3>
+<ol type="1">
+<li><del>Add or finalize <code>GatherResult::fromRows()</code> for row-aligned DataObjects and <code>fromRowsLike(parent, rows)</code> for preserving parent row metadata.</del> <strong>Done.</strong></li>
+<li><del>Add TransformsV2 extension helpers that consume <code>GatherResult&lt;InputT&gt;</code> and run a pipeline per row.</del> <strong>Done.</strong></li>
+<li><del>Return <code>GatherResult&lt;OutputT&gt;</code> when the per-row pipeline output is a supported DataObject type.</del> <strong>Done.</strong></li>
+<li><del>Return <code>std::vector&lt;Scalar&gt;</code> for scalar reductions such as spike counts.</del> <strong>Done.</strong></li>
+<li><del>Move <code>PipelineValueStore</code> construction for trial-specific parameters into the TransformsV2 extension helper or caller-provided row-context function.</del> <strong>Done.</strong></li>
+<li><del>Deprecate or remove core <code>GatherResult</code> methods that directly expose TransformsV2 types, such as <code>buildTrialStore()</code>, <code>project()</code>, <code>reduce()</code>, and <code>sortIndicesBy()</code>, once callers have migrated.</del> <strong>Done.</strong></li>
+<li><del>Drop TransformsV2 includes from <code>GatherResult.hpp</code> when no core API uses them.</del> <strong>Done.</strong></li>
+</ol>
+</section>
+<section id="exit-criteria-6" class="level3">
+<h3 class="anchored" data-anchor-id="exit-criteria-6">Exit Criteria</h3>
+<ul>
+<li>Core <code>GatherResult</code> depends on DataObject and <code>TimeFrame</code> concepts, not TransformsV2 pipeline types.</li>
+<li>TransformsV2 extension code depends on <code>GatherResult</code>, not the other way around.</li>
+<li>DataObject-producing per-row transforms can synthesize new <code>GatherResult&lt;OutputT&gt;</code> values.</li>
+<li>Scalar row reductions return plain vectors.</li>
+</ul>
+</section>
+</section>
+<section id="phase-6-deprecate-and-remove-intervaladapters" class="level2">
+<h2 class="anchored" data-anchor-id="phase-6-deprecate-and-remove-intervaladapters">Phase 6: Deprecate And Remove IntervalAdapters</h2>
+<section id="goals-7" class="level3">
+<h3 class="anchored" data-anchor-id="goals-7">Goals</h3>
+<p>Remove the gather-specific interval source abstraction after all call sites migrate.</p>
+</section>
+<section id="status-6" class="level3">
+<h3 class="anchored" data-anchor-id="status-6">Status</h3>
+<p><strong>Complete.</strong> <code>IntervalAdapters.hpp</code> has been removed, <code>GatherResult.hpp</code> no longer includes it, and the adapter-backed <code>GatherResult::create()</code> / <code>gather()</code> overloads have been deleted. Former adapter tests now use prepared <code>DigitalIntervalSeries</code> windows plus companion <code>DigitalEventSeries</code> alignment points.</p>
+<p>Searches for <code>expandEvents</code>, <code>withAlignment</code>, <code>EventExpanderAdapter</code>, <code>IntervalWithAlignmentAdapter</code>, <code>AlignedInterval</code>, and <code>IntervalSource</code> no longer find production or test call sites. Remaining <code>IntervalSourceIndex</code> / <code>IIntervalSource</code> matches refer to unrelated range-reduction and table-view terminology.</p>
+</section>
+<section id="tasks-7" class="level3">
+<h3 class="anchored" data-anchor-id="tasks-7">Tasks</h3>
+<ol type="1">
+<li><del>Grep for <code>expandEvents</code>, <code>withAlignment</code>, <code>EventExpanderAdapter</code>, <code>IntervalWithAlignmentAdapter</code>, <code>AlignedInterval</code>, and <code>IntervalSource</code>.</del> <strong>Done.</strong></li>
+<li><del>If no production call sites remain, remove adapter overloads from <code>GatherResult</code>.</del> <strong>Done.</strong></li>
+<li><del>Delete <code>IntervalAdapters.hpp</code> or leave a short-lived compatibility header only if tests or external consumers require it.</del> <strong>Done:</strong> deleted.</li>
+<li><del>Update <code>GatherResult</code> documentation and examples.</del> <strong>Done.</strong></li>
+<li><del>Update developer docs if final API differs from the design document.</del> <strong>Done.</strong></li>
+</ol>
+</section>
+<section id="exit-criteria-7" class="level3">
+<h3 class="anchored" data-anchor-id="exit-criteria-7">Exit Criteria</h3>
+<ul>
+<li><del><code>GatherResult</code> no longer exposes adapter-based gather APIs.</del> <strong>Done.</strong></li>
+<li><del>The build succeeds without <code>IntervalAdapters.hpp</code> included by <code>GatherResult.hpp</code>.</del> <strong>Done.</strong></li>
+</ul>
+</section>
+</section>
+<section id="phase-7-documentation-and-cleanup" class="level2">
+<h2 class="anchored" data-anchor-id="phase-7-documentation-and-cleanup">Phase 7: Documentation And Cleanup</h2>
+<section id="goals-8" class="level3">
+<h3 class="anchored" data-anchor-id="goals-8">Goals</h3>
+<p>Document the final architecture and remove migration-only language from user-facing references.</p>
+</section>
+<section id="tasks-8" class="level3">
+<h3 class="anchored" data-anchor-id="tasks-8">Tasks</h3>
+<ol type="1">
+<li>Update <code>docs/developer/GatherResult/</code> with the final API details.</li>
+<li>Keep <a href="../../developer/transforms_v2/event_to_interval.html"><code>event_to_interval.qmd</code></a>, <a href="../../developer/transforms_v2/interval_to_event.html"><code>interval_to_event.qmd</code></a>, and <a href="../../developer/transforms_v2/prune_overlapping_intervals.html"><code>prune_overlapping_intervals.qmd</code></a> current.</li>
+<li>Update any plot developer docs that mention adapter-based alignment.</li>
+<li>Add examples showing non-registered window series passed to <code>GatherResult</code>.</li>
+<li>Run formatting and static analysis on changed C++ files.</li>
+<li>Run focused tests, then a broader relevant test suite.</li>
+</ol>
+</section>
+<section id="exit-criteria-8" class="level3">
+<h3 class="anchored" data-anchor-id="exit-criteria-8">Exit Criteria</h3>
+<ul>
+<li>Developer docs match the implemented API.</li>
+<li>No stale examples mention adapter-based gather as the preferred path.</li>
+</ul>
+</section>
+</section>
+<section id="verification-checklist" class="level2">
+<h2 class="anchored" data-anchor-id="verification-checklist">Verification Checklist</h2>
+<p>Use this checklist before considering the migration complete:</p>
+<ul>
+<li><code>DigitalIntervalSeries::createOverlapping()</code> is used for generated gather windows (<code>EventToInterval</code> already does this).</li>
+<li><code>PruneOverlappingIntervals</code> is available for greedy keep-first pruning of interval bounds when overlap prevention is required.</li>
+<li><code>DigitalEventSeries</code> is used for generated alignment points.</li>
+<li>Overlapping event-aligned windows are preserved as separate rows.</li>
+<li><code>GatherResult::size()</code> matches the number of generated windows.</li>
+<li><code>GatherResult::intervalAt(i)</code> preserves its documented compatibility semantics. If both prepared-window and source-query interval accessors exist, each is named clearly.</li>
+<li><code>GatherResult::alignmentTimeAt(i)</code> returns the original event time or selected interval alignment point.</li>
+<li><code>buildGatherRowStore(result, i)</code> sets <code>alignment_time</code>, <code>trial_index</code>, <code>trial_duration</code>, and <code>end_time</code> correctly.</li>
+<li><code>GatherResult::reorder()</code> preserves original-index semantics.</li>
+<li><code>GatherResult</code> rows are normal DataObjects; callers do not branch on view-backed versus owning row storage.</li>
+<li>A future <code>fromRowsLike()</code> path can preserve row metadata when a per-row transform produces another DataObject type.</li>
+<li>Cross-timeframe gathers match expected absolute-time windows.</li>
+<li>PSTH and event plot widgets render the same trial rows as before the migration.</li>
+<li><code>IntervalReduction</code> still produces interval-row <code>TensorData</code> with expected row descriptors.</li>
+<li><code>RasterCSVExport</code> output remains stable for existing raster export tests.</li>
+<li>Generated temporary windows and alignment points do not copy source entity IDs; provenance should use lineage tracing if needed later.</li>
+</ul>
+</section>
+<section id="suggested-implementation-order" class="level2">
+<h2 class="anchored" data-anchor-id="suggested-implementation-order">Suggested Implementation Order</h2>
+<p>If doing this incrementally across several pull requests, use this order:</p>
+<ol type="1">
+<li>Add tests and TransformsV2 alignment/window algorithms. <strong>Done:</strong> <code>EventToInterval</code>, <code>IntervalToEvent</code>, and <code>PruneOverlappingIntervals</code>.</li>
+<li>Centralize use of the existing <code>TimeFrame</code> conversion primitives in gather/query and projection code.</li>
+<li>Refactor <code>GatherResult</code> internals while keeping old adapter entry points temporarily.</li>
+<li>Migrate plot alignment helpers.</li>
+<li>Migrate transform/export consumers.</li>
+<li>Remove adapter APIs.</li>
+<li>Decouple TransformsV2 row processing from core <code>GatherResult</code> if not already done.</li>
+<li>Finalize docs and examples.</li>
+</ol>
+<p>This sequence keeps behavior testable at each step and avoids a large all-at-once replacement of plotting, transforms, and gather internals.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

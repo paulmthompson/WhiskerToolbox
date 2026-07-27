@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Column Row Pipeline Roadmap – Neuralyzer</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-b953592e4a23838a304e2d6f1e057d89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-b194be8c6145450876393aceb1e5b7bc.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-b953592e4a23838a304e2d6f1e057d89.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+    const toggleBodyColorMode = (bsSheetEl) => {
+      const mode = bsSheetEl.getAttribute("data-mode");
+      const bodyEl = window.document.querySelector("body");
+      if (mode === "dark") {
+        bodyEl.classList.add("quarto-dark");
+        bodyEl.classList.remove("quarto-light");
+      } else {
+        bodyEl.classList.add("quarto-light");
+        bodyEl.classList.remove("quarto-dark");
+      }
+    }
+    const toggleBodyColorPrimary = () => {
+      const bsSheetEl = window.document.querySelector("link#quarto-bootstrap:not([rel=disabled-stylesheet])");
+      if (bsSheetEl) {
+        toggleBodyColorMode(bsSheetEl);
+      }
+    }
+    const setColorSchemeToggle = (alternate) => {
+      const toggles = window.document.querySelectorAll('.quarto-color-scheme-toggle');
+      for (let i=0; i < toggles.length; i++) {
+        const toggle = toggles[i];
+        if (toggle) {
+          if (alternate) {
+            toggle.classList.add("alternate");
+          } else {
+            toggle.classList.remove("alternate");
+          }
+        }
+      }
+    };
+    const toggleColorMode = (alternate) => {
+      // Switch the stylesheets
+      const primaryStylesheets = window.document.querySelectorAll('link.quarto-color-scheme:not(.quarto-color-alternate)');
+      const alternateStylesheets = window.document.querySelectorAll('link.quarto-color-scheme.quarto-color-alternate');
+      manageTransitions('#quarto-margin-sidebar .nav-link', false);
+      if (alternate) {
+        // note: dark is layered on light, we don't disable primary!
+        enableStylesheet(alternateStylesheets);
+        for (const sheetNode of alternateStylesheets) {
+          if (sheetNode.id === "quarto-bootstrap") {
+            toggleBodyColorMode(sheetNode);
+          }
+        }
+      } else {
+        disableStylesheet(alternateStylesheets);
+        enableStylesheet(primaryStylesheets)
+        toggleBodyColorPrimary();
+      }
+      manageTransitions('#quarto-margin-sidebar .nav-link', true);
+      // Switch the toggles
+      setColorSchemeToggle(alternate)
+      // Hack to workaround the fact that safari doesn't
+      // properly recolor the scrollbar when toggling (#1455)
+      if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
+        manageTransitions("body", false);
+        window.scrollTo(0, 1);
+        setTimeout(() => {
+          window.scrollTo(0, 0);
+          manageTransitions("body", true);
+        }, 40);
+      }
+    }
+    const disableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        stylesheet.rel = 'disabled-stylesheet';
+      }
+    }
+    const enableStylesheet = (stylesheets) => {
+      for (let i=0; i < stylesheets.length; i++) {
+        const stylesheet = stylesheets[i];
+        if(stylesheet.rel !== 'stylesheet') { // for Chrome, which will still FOUC without this check
+          stylesheet.rel = 'stylesheet';
+        }
+      }
+    }
+    const manageTransitions = (selector, allowTransitions) => {
+      const els = window.document.querySelectorAll(selector);
+      for (let i=0; i < els.length; i++) {
+        const el = els[i];
+        if (allowTransitions) {
+          el.classList.remove('notransition');
+        } else {
+          el.classList.add('notransition');
+        }
+      }
+    }
+    const isFileUrl = () => {
+      return window.location.protocol === 'file:';
+    }
+    const hasAlternateSentinel = () => {
+      let styleSentinel = getColorSchemeSentinel();
+      if (styleSentinel !== null) {
+        return styleSentinel === "alternate";
+      } else {
+        return false;
+      }
+    }
+    const setStyleSentinel = (alternate) => {
+      const value = alternate ? "alternate" : "default";
+      if (!isFileUrl()) {
+        window.localStorage.setItem("quarto-color-scheme", value);
+      } else {
+        localAlternateSentinel = value;
+      }
+    }
+    const getColorSchemeSentinel = () => {
+      if (!isFileUrl()) {
+        const storageValue = window.localStorage.getItem("quarto-color-scheme");
+        return storageValue != null ? storageValue : localAlternateSentinel;
+      } else {
+        return localAlternateSentinel;
+      }
+    }
+    const toggleGiscusIfUsed = (isAlternate, darkModeDefault) => {
+      const baseTheme = document.querySelector('#giscus-base-theme')?.value ?? 'light';
+      const alternateTheme = document.querySelector('#giscus-alt-theme')?.value ?? 'dark';
+      let newTheme = '';
+      if(authorPrefersDark) {
+        newTheme = isAlternate ? baseTheme : alternateTheme;
+      } else {
+        newTheme = isAlternate ? alternateTheme : baseTheme;
+      }
+      const changeGiscusTheme = () => {
+        // From: https://github.com/giscus/giscus/issues/336
+        const sendMessage = (message) => {
+          const iframe = document.querySelector('iframe.giscus-frame');
+          if (!iframe) return;
+          iframe.contentWindow.postMessage({ giscus: message }, 'https://giscus.app');
+        }
+        sendMessage({
+          setConfig: {
+            theme: newTheme
+          }
+        });
+      }
+      const isGiscussLoaded = window.document.querySelector('iframe.giscus-frame') !== null;
+      if (isGiscussLoaded) {
+        changeGiscusTheme();
+      }
+    };
+    const authorPrefersDark = false;
+    const darkModeDefault = authorPrefersDark;
+      document.querySelector('link#quarto-text-highlighting-styles.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+      document.querySelector('link#quarto-bootstrap.quarto-color-scheme-extra').rel = 'disabled-stylesheet';
+    let localAlternateSentinel = darkModeDefault ? 'alternate' : 'default';
+    // Dark / light mode switch
+    window.quartoToggleColorScheme = () => {
+      // Read the current dark / light value
+      let toAlternate = !hasAlternateSentinel();
+      toggleColorMode(toAlternate);
+      setStyleSentinel(toAlternate);
+      toggleGiscusIfUsed(toAlternate, darkModeDefault);
+      window.dispatchEvent(new Event('resize'));
+    };
+    // Switch to dark mode if need be
+    if (hasAlternateSentinel()) {
+      toggleColorMode(true);
+    } else {
+      toggleColorMode(false);
+    }
+  </script>
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Neuralyzer</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../introduction.html"> 
+<span class="menu-text">Introduction</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../getting-started.html"> 
+<span class="menu-text">Getting Started</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../learning-resources/index.html"> 
+<span class="menu-text">Learning Resources</span></a>
+  </li>  
+  <li class="nav-item dropdown ">
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-reference-guides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Reference Guides</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="nav-menu-reference-guides">    
+        <li>
+    <a class="dropdown-item" href="../../user_guide/index.html">
+ <span class="dropdown-text">User Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../developer/index.html">
+ <span class="dropdown-text">Developer Guide</span></a>
+  </li>  
+        <li>
+    <a class="dropdown-item" href="../../api_generated/index_classes.html">
+ <span class="dropdown-text">API Reference</span></a>
+  </li>  
+    </ul>
+  </li>
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/paulmthompson/WhiskerToolbox"> <i class="bi bi-github" role="img" aria-label="GitHub">
+</i> 
+<span class="menu-text"></span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#end-state" id="toc-end-state" class="nav-link active" data-scroll-target="#end-state">End State</a></li>
+  <li><a href="#current-inventory" id="toc-current-inventory" class="nav-link" data-scroll-target="#current-inventory">Current Inventory</a></li>
+  <li><a href="#phase-1-baseline-tests" id="toc-phase-1-baseline-tests" class="nav-link" data-scroll-target="#phase-1-baseline-tests">Phase 1: Baseline Tests</a></li>
+  <li><a href="#phase-2-add-recipe-field-and-json-round-trip" id="toc-phase-2-add-recipe-field-and-json-round-trip" class="nav-link" data-scroll-target="#phase-2-add-recipe-field-and-json-round-trip">Phase 2: Add Recipe Field And JSON Round Trip</a></li>
+  <li><a href="#phase-3-row-pipeline-execution-skeleton" id="toc-phase-3-row-pipeline-execution-skeleton" class="nav-link" data-scroll-target="#phase-3-row-pipeline-execution-skeleton">Phase 3: Row Pipeline Execution Skeleton</a></li>
+  <li><a href="#phase-4-digitalintervalseries-output-dispatch" id="toc-phase-4-digitalintervalseries-output-dispatch" class="nav-link" data-scroll-target="#phase-4-digitalintervalseries-output-dispatch">Phase 4: DigitalIntervalSeries Output Dispatch</a></li>
+  <li><a href="#phase-5-iterable-pipelinevaluestore-bindings" id="toc-phase-5-iterable-pipelinevaluestore-bindings" class="nav-link" data-scroll-target="#phase-5-iterable-pipelinevaluestore-bindings">Phase 5: Iterable PipelineValueStore Bindings</a></li>
+  <li><a href="#phase-6-timestamp-and-point-sampling" id="toc-phase-6-timestamp-and-point-sampling" class="nav-link" data-scroll-target="#phase-6-timestamp-and-point-sampling">Phase 6: Timestamp And Point Sampling</a></li>
+  <li><a href="#phase-7-optional-additional-row-transforms" id="toc-phase-7-optional-additional-row-transforms" class="nav-link" data-scroll-target="#phase-7-optional-additional-row-transforms">Phase 7: Optional Additional Row Transforms</a></li>
+  <li><a href="#phase-8-whisker-contact-integration" id="toc-phase-8-whisker-contact-integration" class="nav-link" data-scroll-target="#phase-8-whisker-contact-integration">Phase 8: Whisker-Contact Integration</a></li>
+  <li><a href="#phase-9-preset-registry-and-expansion" id="toc-phase-9-preset-registry-and-expansion" class="nav-link" data-scroll-target="#phase-9-preset-registry-and-expansion">Phase 9: Preset Registry And Expansion</a></li>
+  <li><a href="#phase-10-preset-library-files" id="toc-phase-10-preset-library-files" class="nav-link" data-scroll-target="#phase-10-preset-library-files">Phase 10: Preset Library Files</a></li>
+  <li><a href="#phase-11-documentation-and-ui-follow-up" id="toc-phase-11-documentation-and-ui-follow-up" class="nav-link" data-scroll-target="#phase-11-documentation-and-ui-follow-up">Phase 11: Documentation And UI Follow-Up</a></li>
+  <li><a href="#verification-checklist" id="toc-verification-checklist" class="nav-link" data-scroll-target="#verification-checklist">Verification Checklist</a></li>
+  <li><a href="#suggested-build-and-test-commands" id="toc-suggested-build-and-test-commands" class="nav-link" data-scroll-target="#suggested-build-and-test-commands">Suggested Build And Test Commands</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Column Row Pipeline Roadmap</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p><strong>Status:</strong> Implementation roadmap for <a href="../../developer/TensorDesign/column_row_pipeline.html">Column Row Pipeline Design</a>.</p>
+<p>This roadmap breaks the per-column row-pipeline refactor into small, testable steps. The design goal is to let each tensor column derive its own row-aligned gather inputs through TransformPipelines while keeping <code>GatherResult</code> a container/direct-gather executor rather than a pipeline runner.</p>
+<section id="end-state" class="level2">
+<h2 class="anchored" data-anchor-id="end-state">End State</h2>
+<p>The refactor is complete when:</p>
+<ul>
+<li><code>ColumnRecipe</code> has an optional <code>row_pipeline_json</code> field.</li>
+<li>TensorDesign JSON parse/serialize round-trips <code>row_pipeline_json</code>.</li>
+<li>Empty <code>row_pipeline_json</code> preserves the current full-interval behavior.</li>
+<li>A row pipeline can produce <code>DigitalIntervalSeries</code> windows that are passed to <code>GatherResult</code> as prepared windows.</li>
+<li>A column pipeline can receive row-specific values through <code>PipelineValueStore</code>, such as one normalization event per row.</li>
+<li>Per-column gather geometry can differ across columns while row identity and <code>RowDescriptor</code> remain tied to the original row source.</li>
+<li>Onset-window spike presence and onset-sampled analog covariates are expressible in JSON.</li>
+<li>Common workflows are available through discoverable presets so users do not need to remember raw transform or binding keywords.</li>
+<li>The temporary <code>pipeline_json</code> <code>"offset"</code> sample-at-offset path is removed or replaced by row-pipeline behavior.</li>
+<li>Tests cover identity behavior, onset windows, point sampling, overlapping windows, cross-timeframe gather, and invalid row-count changes.</li>
+</ul>
+</section>
+<section id="current-inventory" class="level2">
+<h2 class="anchored" data-anchor-id="current-inventory">Current Inventory</h2>
+<p>Implemented foundations:</p>
+<ul>
+<li><code>GatherResult::create(source, windows, alignment_points)</code> accepts prepared windows and optional alignment events for existing direct-gather consumers.</li>
+<li><code>GatherResult::fromRows()</code> and <code>fromRowsLike()</code> support row-aligned DataObject results from external pipeline helpers.</li>
+<li><code>DigitalIntervalSeries::createOverlapping()</code> preserves overlapping gather windows.</li>
+<li><code>IntervalToEvent</code> converts interval rows to events.</li>
+<li><code>EventToInterval</code> converts events to overlapping windows.</li>
+<li><code>PruneOverlappingIntervals</code> provides explicit keep-first overlap pruning.</li>
+<li><code>buildIntervalPipelineProvider()</code> gathers over interval rows and applies range reductions.</li>
+<li><code>buildPipelineColumnProvider()</code> handles timestamp-row columns.</li>
+<li><code>TensorDesignBuilder</code> builds lazy-column tensors from JSON.</li>
+</ul>
+<p>Known gaps:</p>
+<ul>
+<li><code>ColumnRecipe</code> does not include <code>row_pipeline_json</code>.</li>
+<li>TensorDesign JSON does not parse or serialize <code>columns[].row_pipeline_json</code>.</li>
+<li>Tensor column builders do not execute row pipelines before source gather.</li>
+<li>Tensor column builders cannot yet bind iterable DataObject elements into <code>PipelineValueStore</code> for per-row column TransformPipeline execution.</li>
+<li>Point sampling still uses a temporary <code>pipeline_json</code> <code>"offset"</code> detection path in <code>TensorDesignBuilder::buildColumnProvider()</code>.</li>
+<li>There is no row-pipeline caching.</li>
+<li>UI does not expose row-pipeline configuration.</li>
+<li>There is no column recipe preset registry, preset expansion layer, or bundled preset catalog.</li>
+</ul>
+</section>
+<section id="phase-1-baseline-tests" class="level2">
+<h2 class="anchored" data-anchor-id="phase-1-baseline-tests">Phase 1: Baseline Tests</h2>
+<p>Goal: lock down current behavior before adding row-pipeline dispatch.</p>
+<p>Tasks:</p>
+<ol type="1">
+<li>Add or verify tests for interval-row tensors gathering over the full row interval.</li>
+<li>Add or verify tests for <code>interval_property</code> columns.</li>
+<li>Add or verify tests for timestamp row columns.</li>
+<li>Add a characterization test for the current <code>pipeline_json</code> <code>"offset"</code> behavior if it must remain during the transition.</li>
+<li>Confirm cross-timeframe interval-row gather behavior through <code>GatherResult</code> query conversion.</li>
+</ol>
+<p>Exit criteria:</p>
+<ul>
+<li>Existing JSON without <code>row_pipeline_json</code> is covered.</li>
+<li>Current behavior can be compared against the post-refactor identity path.</li>
+</ul>
+<p>Suggested test areas:</p>
+<ul>
+<li><code>tests/TensorDesign/</code></li>
+<li><code>tests/TransformsV2/</code> TensorColumnBuilders tests</li>
+<li>Whisker-contact scenario tests</li>
+</ul>
+</section>
+<section id="phase-2-add-recipe-field-and-json-round-trip" class="level2">
+<h2 class="anchored" data-anchor-id="phase-2-add-recipe-field-and-json-round-trip">Phase 2: Add Recipe Field And JSON Round Trip</h2>
+<p>Goal: make <code>row_pipeline_json</code> part of the data model without changing provider behavior.</p>
+<p>Tasks:</p>
+<ol type="1">
+<li>Add <code>std::string row_pipeline_json</code> to <code>ColumnRecipe</code>.</li>
+<li>Parse <code>columns[].row_pipeline_json</code> in <code>TensorDesignBuilder</code>.</li>
+<li>Serialize <code>row_pipeline_json</code> only when non-empty, unless existing conventions prefer explicit empty fields.</li>
+<li>Update docs for <code>TensorDesignBuilder.qmd</code> and <code>TensorColumnBuilders.qmd</code>.</li>
+<li>Add JSON parse/serialize tests.</li>
+</ol>
+<p>Exit criteria:</p>
+<ul>
+<li>Existing JSON remains valid.</li>
+<li>New JSON round-trips <code>row_pipeline_json</code>.</li>
+<li>No provider behavior changes yet.</li>
+</ul>
+</section>
+<section id="phase-3-row-pipeline-execution-skeleton" class="level2">
+<h2 class="anchored" data-anchor-id="phase-3-row-pipeline-execution-skeleton">Phase 3: Row Pipeline Execution Skeleton</h2>
+<p>Goal: execute an empty or identity row pipeline and route through existing providers.</p>
+<p>Tasks:</p>
+<ol type="1">
+<li>Define the row-pipeline execution boundary in TensorColumnBuilders or a small helper.</li>
+<li>Treat empty <code>row_pipeline_json</code> as identity.</li>
+<li>For interval row sources, identity returns the original <code>DigitalIntervalSeries</code> as prepared windows.</li>
+<li>Verify row count matches the original row source.</li>
+<li>Keep <code>interval_property</code> columns on their current no-gather path.</li>
+</ol>
+<p>Exit criteria:</p>
+<ul>
+<li>Identity row-pipeline output produces exactly the same values as current full-interval gather.</li>
+<li>No new transform requirements are introduced.</li>
+</ul>
+</section>
+<section id="phase-4-digitalintervalseries-output-dispatch" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4-digitalintervalseries-output-dispatch">Phase 4: DigitalIntervalSeries Output Dispatch</h2>
+<p>Goal: support row pipelines that output prepared <code>DigitalIntervalSeries</code> windows.</p>
+<p>Tasks:</p>
+<ol type="1">
+<li>Execute row pipelines that return <code>DigitalIntervalSeries</code>.</li>
+<li>Require output size to match original row count.</li>
+<li>Pass the output as prepared windows to the existing interval gather provider path.</li>
+<li>Preserve the original <code>RowDescriptor</code> from the row source.</li>
+<li>Ensure overlapping output windows are not merged.</li>
+<li>Add tests using <code>EventToInterval</code> over event row sources or <code>IntervalToEvent</code> followed by <code>EventToInterval</code> where possible.</li>
+</ol>
+<p>Exit criteria:</p>
+<ul>
+<li>A column can gather over row-pipeline-produced windows.</li>
+<li>Overlapping windows produce one tensor row per original row.</li>
+<li>Cross-timeframe gather still passes through <code>GatherResult</code> conversion.</li>
+</ul>
+</section>
+<section id="phase-5-iterable-pipelinevaluestore-bindings" class="level2">
+<h2 class="anchored" data-anchor-id="phase-5-iterable-pipelinevaluestore-bindings">Phase 5: Iterable PipelineValueStore Bindings</h2>
+<p>Goal: supply per-row values to <code>pipeline_json</code> transforms through the existing TransformsV2 <code>PipelineValueStore</code> mechanism without making <code>row_pipeline_json</code> responsible for normalization markers.</p>
+<p>Tasks:</p>
+<ol type="1">
+<li>Define a JSON schema for iterable bindings from DataObjects into <code>PipelineValueStore</code> keys.</li>
+<li>Support iterable sources that are DataObjects in <code>DataManager</code> or outputs of a row TransformPipeline.</li>
+<li>Build one store value per tensor row from a row-aligned <code>DigitalEventSeries</code> or other supported iterable DataObject.</li>
+<li>Inject the current row’s values into <code>PipelineValueStore</code> before applying <code>pipeline_json</code> parameter bindings.</li>
+<li>Verify a normalize-time transform uses the bound store value, not the gather window start.</li>
+<li>Add raster/PSTH-style tests where spikes are gathered in trial windows and normalized to a separate event per row.</li>
+</ol>
+<p>Exit criteria:</p>
+<ul>
+<li>Per-row transforms can consume a marker that is outside the gathered DataObject through parameter bindings.</li>
+<li>Trial-relative transforms can consume correct marker times.</li>
+<li>Iterable binding sources are explicit and row-count checked.</li>
+</ul>
+<p>Open implementation choices:</p>
+<ul>
+<li><code>pipeline_json</code> includes iterable binding declarations next to <code>steps</code>.</li>
+<li>TensorDesign column recipes declare context input keys separately from source and row pipeline keys.</li>
+<li>Existing <code>PipelineValueStore</code>, parameter bindings, and gather extension helpers are reused or generalized to bind iterable values per row.</li>
+</ul>
+</section>
+<section id="phase-6-timestamp-and-point-sampling" class="level2">
+<h2 class="anchored" data-anchor-id="phase-6-timestamp-and-point-sampling">Phase 6: Timestamp And Point Sampling</h2>
+<p>Goal: replace the temporary <code>"offset"</code> sample-at-offset path with row-pipeline-driven point sampling.</p>
+<p>Tasks:</p>
+<ol type="1">
+<li>Support row pipelines that produce <code>DigitalEventSeries</code> sample times without interval windows.</li>
+<li>Route event output to timestamp/sample provider behavior.</li>
+<li>Define how optional offsets are expressed as transforms rather than top-level ad hoc JSON.</li>
+<li>Remove the <code>pipeline_json.find("\"offset\"")</code> compatibility path from <code>TensorDesignBuilder::buildColumnProvider()</code> once tests cover the replacement.</li>
+<li>Add angle-at-onset tests for the whisker-contact scenario.</li>
+</ol>
+<p>Exit criteria:</p>
+<ul>
+<li>Point sampling is expressible through row-pipeline JSON.</li>
+<li>The offset string-search path is gone.</li>
+<li>Existing sample-at-offset behavior is preserved where intended.</li>
+</ul>
+</section>
+<section id="phase-7-optional-additional-row-transforms" class="level2">
+<h2 class="anchored" data-anchor-id="phase-7-optional-additional-row-transforms">Phase 7: Optional Additional Row Transforms</h2>
+<p>Goal: add only the transforms needed by concrete analyses.</p>
+<p>Candidate transforms:</p>
+<ul>
+<li><code>IntervalShift</code> for lag/lead interval windows.</li>
+<li>Data-derived event transforms that produce one event per row from a row interval plus another source object.</li>
+<li>Optional fused convenience transforms if repeated JSON patterns become too verbose.</li>
+</ul>
+<p>Tasks:</p>
+<ol type="1">
+<li>Add one transform at a time under <code>src/TransformsV2/algorithms/</code>.</li>
+<li>Ensure output DataObjects preserve or intentionally set <code>TimeFrame</code>.</li>
+<li>Use <code>DigitalIntervalSeries::createOverlapping()</code> for window-like interval outputs.</li>
+<li>Add focused transform tests.</li>
+<li>Add one TensorDesign integration test per new analysis pattern.</li>
+</ol>
+<p>Exit criteria:</p>
+<ul>
+<li>New transforms are generally useful outside TensorDesign.</li>
+<li>TensorDesign does not gain tensor-specific geometry enums.</li>
+</ul>
+</section>
+<section id="phase-8-whisker-contact-integration" class="level2">
+<h2 class="anchored" data-anchor-id="phase-8-whisker-contact-integration">Phase 8: Whisker-Contact Integration</h2>
+<p>Goal: prove the design on the motivating analysis table.</p>
+<p>Tasks:</p>
+<ol type="1">
+<li>Extend the whisker-contact scenario with contact onset features.</li>
+<li>Add a full-contact curvature column.</li>
+<li>Add a spike-in-onset-window column.</li>
+<li>Add an angle-at-onset column.</li>
+<li>Verify row count, row descriptors, and expected values.</li>
+<li>Update scenario documentation with valid JSON.</li>
+</ol>
+<p>Exit criteria:</p>
+<ul>
+<li>The motivating tuning-table inputs are built through production TensorDesign code.</li>
+<li>The JSON example in the design document can be promoted from target shape to working example.</li>
+</ul>
+</section>
+<section id="phase-9-preset-registry-and-expansion" class="level2">
+<h2 class="anchored" data-anchor-id="phase-9-preset-registry-and-expansion">Phase 9: Preset Registry And Expansion</h2>
+<p>Goal: make common row-pipeline workflows discoverable without requiring users to write raw TransformPipeline JSON.</p>
+<p>Tasks:</p>
+<ol type="1">
+<li>Add a <code>ColumnRecipePresetRegistry</code> or equivalent registry in the TensorDesign/TransformsV2 boundary.</li>
+<li>Define preset descriptors with name, display name, description, parameter schema, source (<code>Built-in</code> or <code>User</code>), and expansion function/template.</li>
+<li>Add presets for the initial common workflows:
+<ul>
+<li>mean over interval</li>
+<li>event count over interval</li>
+<li>event presence around interval start</li>
+<li>analog sample at interval start</li>
+<li>raster events relative to interval start</li>
+</ul></li>
+<li>Expand preset JSON into raw <code>ColumnRecipe</code> fields before provider construction.</li>
+<li>Add tests that preset expansion produces the same tensor values as equivalent raw recipes.</li>
+<li>Decide whether saved designs store raw expansion only or preset plus expanded raw JSON.</li>
+<li>Decide whether user presets can override bundled preset IDs or whether duplicate IDs are rejected.</li>
+</ol>
+<p>Exit criteria:</p>
+<ul>
+<li>Users can express the whisker-contact examples without raw transform names.</li>
+<li>Presets are discoverable from a registry that can be reused by documentation and UI.</li>
+<li>Raw JSON remains available for advanced workflows.</li>
+</ul>
+</section>
+<section id="phase-10-preset-library-files" class="level2">
+<h2 class="anchored" data-anchor-id="phase-10-preset-library-files">Phase 10: Preset Library Files</h2>
+<p>Goal: distribute Neuralyzer with useful built-in column presets and let users save/import their own presets using a library pattern similar to TransformsV2 <code>PipelineLibrary</code>.</p>
+<p>Tasks:</p>
+<ol type="1">
+<li>Add Qt-free helpers for tensor column preset files, modeled after <code>src/TransformsV2/io/PipelineLibrary.hpp</code>.</li>
+<li>Define default user preset directory, for example <code>{config_dir}/presets/tensor_design/columns/</code>.</li>
+<li>Define bundled preset lookup, for example <code>resources/presets/tensor_design/columns/</code> or another installed resource directory.</li>
+<li>Implement catalog listing that merges bundled and user presets with source metadata.</li>
+<li>Implement load/save/delete for user preset JSON files.</li>
+<li>Add bundled JSON presets for the initial registry entries.</li>
+<li>Add tests for path helpers, catalog merge behavior, load/save/delete, duplicate ID policy, and expansion.</li>
+</ol>
+<p>Exit criteria:</p>
+<ul>
+<li>A fresh Neuralyzer install has useful TensorDesign column presets without user setup.</li>
+<li>Users can save and import lab-specific presets.</li>
+<li>The preset library uses a schema distinct from raw <code>PipelineDescriptor</code> JSON but follows the existing PipelineLibrary mechanics where practical.</li>
+</ul>
+</section>
+<section id="phase-11-documentation-and-ui-follow-up" class="level2">
+<h2 class="anchored" data-anchor-id="phase-11-documentation-and-ui-follow-up">Phase 11: Documentation And UI Follow-Up</h2>
+<p>Goal: update public developer docs and decide how users configure row pipelines.</p>
+<p>Tasks:</p>
+<ol type="1">
+<li>Update <code>TensorDesignBuilder.qmd</code> with the implemented <code>row_pipeline_json</code> contract.</li>
+<li>Update <code>TensorColumnBuilders.qmd</code> with provider dispatch behavior.</li>
+<li>Update <code>tensor_stack.qmd</code> status language.</li>
+<li>Update test scenario docs.</li>
+<li>Add UI support for browsing bundled and user column presets in TensorDesigner, with raw JSON available as an advanced option.</li>
+</ol>
+<p>Exit criteria:</p>
+<ul>
+<li>Docs clearly distinguish implemented behavior from future work.</li>
+<li>UI work can proceed without changing the core data model.</li>
+</ul>
+</section>
+<section id="verification-checklist" class="level2">
+<h2 class="anchored" data-anchor-id="verification-checklist">Verification Checklist</h2>
+<ul>
+<li>Existing JSON without <code>row_pipeline_json</code> produces unchanged tensors.</li>
+<li>Empty <code>row_pipeline_json</code> is identity.</li>
+<li><code>row_pipeline_json</code> round-trips through parse and serialize.</li>
+<li>DIS row-pipeline output must match source row count.</li>
+<li>DES sample-time output must match source row count.</li>
+<li>Iterable binding sources must match source row count.</li>
+<li>Overlapping windows remain separate rows.</li>
+<li>Generated gather windows use <code>IntervalLayout::Overlapping</code> where needed.</li>
+<li>PipelineValueStore-backed normalization uses the marker for the current row, not the gather window start.</li>
+<li>Cross-timeframe gathers match expected source query bounds.</li>
+<li><code>interval_property</code> columns remain source-gather-free.</li>
+<li>The offset string-search compatibility path is removed after replacement.</li>
+<li>Preset expansion and equivalent raw recipes produce the same values.</li>
+<li>Bundled and user preset library entries load and expand correctly.</li>
+</ul>
+</section>
+<section id="suggested-build-and-test-commands" class="level2">
+<h2 class="anchored" data-anchor-id="suggested-build-and-test-commands">Suggested Build And Test Commands</h2>
+<p>Determine the configured CMake preset from <code>out/build/</code> before running these commands.</p>
+<p>List candidate tests:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ctest</span> <span class="at">--preset</span> linux-clang-release <span class="at">-N</span> <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-i</span> <span class="st">"tensor"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Run focused TensorDesign tests:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ctest</span> <span class="at">--preset</span> linux-clang-release <span class="at">--output-on-failure</span> <span class="at">-R</span> <span class="st">"TensorDesign|TensorColumnBuilders|whisker_contact"</span> <span class="op">&gt;</span> test_log.txt <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>After C++ changes, run clang-format and clang-tidy on touched C++ files following the repository development workflow.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    // Ensure there is a toggle, if there isn't float one in the top right
+    if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
+      const a = window.document.createElement('a');
+      a.classList.add('top-right');
+      a.classList.add('quarto-color-scheme-toggle');
+      a.href = "";
+      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const i = window.document.createElement("i");
+      i.classList.add('bi');
+      a.appendChild(i);
+      window.document.body.appendChild(a);
+    }
+    setColorSchemeToggle(hasAlternateSentinel())
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

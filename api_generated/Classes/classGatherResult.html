@@ -375,20 +375,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-back" id="toc-function-back" class="nav-link" data-scroll-target="#function-back">function back</a></li>
   <li><a href="#function-source" id="toc-function-source" class="nav-link" data-scroll-target="#function-source">function source</a></li>
   <li><a href="#function-intervals" id="toc-function-intervals" class="nav-link" data-scroll-target="#function-intervals">function intervals</a></li>
+  <li><a href="#function-windows" id="toc-function-windows" class="nav-link" data-scroll-target="#function-windows">function windows</a></li>
+  <li><a href="#function-alignmentpoints" id="toc-function-alignmentpoints" class="nav-link" data-scroll-target="#function-alignmentpoints">function alignmentPoints</a></li>
   <li><a href="#function-intervalat" id="toc-function-intervalat" class="nav-link" data-scroll-target="#function-intervalat">function intervalAt</a></li>
   <li><a href="#function-alignmenttimeat" id="toc-function-alignmenttimeat" class="nav-link" data-scroll-target="#function-alignmenttimeat">function alignmentTimeAt</a></li>
   <li><a href="#function-views" id="toc-function-views" class="nav-link" data-scroll-target="#function-views">function views</a></li>
   <li><a href="#function-transform" id="toc-function-transform" class="nav-link" data-scroll-target="#function-transform">function transform</a></li>
   <li><a href="#function-transformwithinterval" id="toc-function-transformwithinterval" class="nav-link" data-scroll-target="#function-transformwithinterval">function transformWithInterval</a></li>
   <li><a href="#function-materialize" id="toc-function-materialize" class="nav-link" data-scroll-target="#function-materialize">function materialize</a></li>
-  <li><a href="#function-buildtrialstore" id="toc-function-buildtrialstore" class="nav-link" data-scroll-target="#function-buildtrialstore">function buildTrialStore</a></li>
-  </ul></li>
-  <li><a href="#store-keys" id="toc-store-keys" class="nav-link" data-scroll-target="#store-keys">Store Keys</a></li>
-  <li><a href="#usage-with-pipeline-bindings" id="toc-usage-with-pipeline-bindings" class="nav-link" data-scroll-target="#usage-with-pipeline-bindings">Usage with Pipeline Bindings</a>
-  <ul class="collapse">
-  <li><a href="#function-project" id="toc-function-project" class="nav-link" data-scroll-target="#function-project">function project</a></li>
-  <li><a href="#function-reduce" id="toc-function-reduce" class="nav-link" data-scroll-target="#function-reduce">function reduce</a></li>
-  <li><a href="#function-sortindicesby" id="toc-function-sortindicesby" class="nav-link" data-scroll-target="#function-sortindicesby">function sortIndicesBy</a></li>
   <li><a href="#function-reorder" id="toc-function-reorder" class="nav-link" data-scroll-target="#function-reorder">function reorder</a></li>
   <li><a href="#function-originalindex" id="toc-function-originalindex" class="nav-link" data-scroll-target="#function-originalindex">function originalIndex</a></li>
   <li><a href="#function-isreordered" id="toc-function-isreordered" class="nav-link" data-scroll-target="#function-isreordered">function isReordered</a></li>
@@ -396,9 +390,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-create" id="toc-function-create" class="nav-link" data-scroll-target="#function-create">function create</a></li>
   <li><a href="#function-create-1" id="toc-function-create-1" class="nav-link" data-scroll-target="#function-create-1">function create</a></li>
   <li><a href="#function-create-2" id="toc-function-create-2" class="nav-link" data-scroll-target="#function-create-2">function create</a></li>
-  <li><a href="#function-create-3" id="toc-function-create-3" class="nav-link" data-scroll-target="#function-create-3">function create</a></li>
-  <li><a href="#function-create-4" id="toc-function-create-4" class="nav-link" data-scroll-target="#function-create-4">function create</a></li>
-  <li><a href="#function-create-5" id="toc-function-create-5" class="nav-link" data-scroll-target="#function-create-5">function create</a></li>
+  <li><a href="#function-fromrows" id="toc-function-fromrows" class="nav-link" data-scroll-target="#function-fromrows">function fromRows</a></li>
+  <li><a href="#function-fromrowslike" id="toc-function-fromrowslike" class="nav-link" data-scroll-target="#function-fromrowslike">function fromRowsLike</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -523,6 +516,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-intervals">intervals</a></strong>() const<br>Get the alignment intervals used to create views.</td>
 </tr>
 <tr class="even">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-windows">windows</a></strong>() const<br>Get the prepared gather-window series used to define rows.</td>
+</tr>
+<tr class="odd">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-alignmentpoints">alignmentPoints</a></strong>() const<br>Get the companion alignment-point event series.</td>
+</tr>
+<tr class="even">
 <td><a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a></td>
 <td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-intervalat">intervalAt</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html#using-size-type">size_type</a> i) const<br>Get the interval at a specific index (O(1) access)</td>
 </tr>
@@ -547,22 +548,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-materialize">materialize</a></strong>() const<br>Materialize all views into owning storage.</td>
 </tr>
 <tr class="even">
-<td><a href="../../api_generated/Classes/classNeuralyzer_1_1Transforms_1_1V2_1_1PipelineValueStore.html">Neuralyzer::Transforms::V2::PipelineValueStore</a></td>
-<td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-buildtrialstore">buildTrialStore</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html#using-size-type">size_type</a> trial_idx) const<br>Build value store for a specific trial (V2 pattern)</td>
-</tr>
-<tr class="odd">
-<td>template &lt;typename Value &gt; <br>auto</td>
-<td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-project">project</a></strong>(<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2.html#using-valueprojectionfactoryv2">Neuralyzer::Transforms::V2::ValueProjectionFactoryV2</a>&lt; <a href="../../api_generated/Classes/classGatherResult.html#using-element-type">element_type</a>, Value &gt; const &amp; factory) const</td>
-</tr>
-<tr class="even">
-<td>template &lt;typename Scalar &gt; <br>std::vector&lt; Scalar &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-reduce">reduce</a></strong>(<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#using-reducerfactoryv2">Neuralyzer::Gather::ReducerFactoryV2</a>&lt; <a href="../../api_generated/Classes/classGatherResult.html#using-element-type">element_type</a>, Scalar &gt; const &amp; reducer_factory) const</td>
-</tr>
-<tr class="odd">
-<td>template &lt;typename Scalar &gt; <br>std::vector&lt; <a href="../../api_generated/Classes/classGatherResult.html#using-size-type">size_type</a> &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-sortindicesby">sortIndicesBy</a></strong>(<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#using-reducerfactoryv2">Neuralyzer::Gather::ReducerFactoryV2</a>&lt; <a href="../../api_generated/Classes/classGatherResult.html#using-element-type">element_type</a>, Scalar &gt; const &amp; reducer_factory, bool ascending =true) const</td>
-</tr>
-<tr class="even">
 <td><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a></td>
 <td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-reorder">reorder</a></strong>(std::vector&lt; <a href="../../api_generated/Classes/classGatherResult.html#using-size-type">size_type</a> &gt; const &amp; indices) const</td>
 </tr>
@@ -580,27 +565,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>template <typename u="T\"> <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a></typename></td>
-<td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-create">create</a></strong>(std::shared_ptr&lt; U &gt; source, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> &gt; intervals)<br>Create <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> from source and alignment intervals (<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> version)</td>
+<td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-create">create</a></strong>(std::shared_ptr&lt; U &gt; source, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; windows, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &gt; alignment_points =nullptr)<br>Create <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> from source and alignment intervals (<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> version)</td>
 </tr>
 <tr class="odd">
 <td>template <typename u="T\"> <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a></typename></td>
-<td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-create">create</a></strong>(std::shared_ptr&lt; U &gt; source, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> &gt; intervals)<br>Create <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> from source and alignment intervals (int64_t version)</td>
+<td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-create">create</a></strong>(std::shared_ptr&lt; U &gt; source, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; windows, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &gt; alignment_points =nullptr)<br>Create <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> from source and alignment intervals (int64_t version)</td>
 </tr>
 <tr class="even">
 <td>template <typename u="T\"> <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a></typename></td>
-<td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-create">create</a></strong>(std::shared_ptr&lt; U &gt; source, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> &gt; intervals)<br>Create <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> using time range copies (for <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> types)</td>
+<td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-create">create</a></strong>(std::shared_ptr&lt; U &gt; source, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; windows, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &gt; alignment_points =nullptr)<br>Create <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> using time range copies (for <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> types)</td>
 </tr>
 <tr class="odd">
-<td>template &lt;typename U =T,typename IntervalSourceT &gt; <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a></td>
-<td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-create">create</a></strong>(std::shared_ptr&lt; U &gt; source, IntervalSourceT const &amp; interval_source)</td>
+<td><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a></td>
+<td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-fromrows">fromRows</a></strong>(std::vector&lt; <a href="../../api_generated/Classes/classGatherResult.html#using-value-type">value_type</a> &gt; rows, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; windows =nullptr, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &gt; alignment_points =nullptr)<br>Create a <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> from already-created row DataObjects.</td>
 </tr>
 <tr class="even">
-<td>template &lt;typename U =T,typename IntervalSourceT &gt; <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a></td>
-<td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-create">create</a></strong>(std::shared_ptr&lt; U &gt; source, IntervalSourceT const &amp; interval_source)<br>Create <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> from source and IntervalSource (int64_t version)</td>
-</tr>
-<tr class="odd">
-<td>template &lt;typename U =T,typename IntervalSourceT &gt; <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a></td>
-<td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-create">create</a></strong>(std::shared_ptr&lt; U &gt; source, IntervalSourceT const &amp; interval_source)<br>Create <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> from source and IntervalSource (copy version)</td>
+<td>template &lt;typename ParentT &gt; <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a></td>
+<td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-fromrowslike">fromRowsLike</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; ParentT &gt; const &amp; parent, std::vector&lt; <a href="../../api_generated/Classes/classGatherResult.html#using-value-type">value_type</a> &gt; rows)<br>Create transformed rows while preserving metadata from another <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>.</td>
 </tr>
 </tbody>
 </table>
@@ -721,11 +702,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> Interval <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> intervals<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the alignment intervals used to create views.</p>
 </section>
+<section id="function-windows" class="level3">
+<h3 class="anchored" data-anchor-id="function-windows">function windows</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> windows<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the prepared gather-window series used to define rows.</p>
+<p><strong>Return</strong>: Shared pointer to the original prepared windows, or nullptr for empty/default and legacy adapter-only results.</p>
+<p><strong>Postcondition</strong>: Return value is shared with the <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> and is never modified by it.</p>
+</section>
+<section id="function-alignmentpoints" class="level3">
+<h3 class="anchored" data-anchor-id="function-alignmentpoints">function alignmentPoints</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="at">const</span> <span class="op">&gt;</span> alignmentPoints<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the companion alignment-point event series.</p>
+<p><strong>Return</strong>: Shared pointer to row-aligned alignment events, or nullptr when the gather has no companion alignment metadata.</p>
+<p><strong>Postcondition</strong>: If non-null, the series has the same row count as <code>[windows()](/api_generated/Classes/classGatherResult.md#function-windows)</code>.</p>
+</section>
 <section id="function-intervalat" class="level3">
 <h3 class="anchored" data-anchor-id="function-intervalat">function intervalAt</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Interval intervalAt<span class="op">(</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_type</span> i</span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Interval intervalAt<span class="op">(</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_type</span> i</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the interval at a specific index (O(1) access)</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -739,9 +734,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-alignmenttimeat" class="level3">
 <h3 class="anchored" data-anchor-id="function-alignmenttimeat">function alignmentTimeAt</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">int64_t</span> alignmentTimeAt<span class="op">(</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_type</span> i</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">int64_t</span> alignmentTimeAt<span class="op">(</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_type</span> i</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the alignment time for a specific trial (O(1) access)</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -753,106 +748,45 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Return</strong>: Alignment time for trial i</p>
 <p>Returns the time point used for alignment (t=0 reference) for the specified trial. This is the value that should be subtracted from event times to get trial-relative times.</p>
-<p>For GatherResults created with:</p>
-<ul>
-<li>IntervalWithAlignmentAdapter: Returns start, end, or center based on alignment setting</li>
-<li>EventExpanderAdapter: Returns the event time (center of the expanded window)</li>
-<li>Basic <a href="../../api_generated/Files/GatherResult_8hpp.html#function-gather">gather()</a>: Returns interval.start as fallback</li>
-</ul>
+<p>Prepared-window gathers with companion alignment points return the companion event time. Gathers without companion alignment metadata return the source-query interval start as a fallback.</p>
 </section>
 <section id="function-views" class="level3">
 <h3 class="anchored" data-anchor-id="function-views">function views</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> views<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> views<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get all views as a ranges-compatible view.</p>
 </section>
 <section id="function-transform" class="level3">
 <h3 class="anchored" data-anchor-id="function-transform">function transform</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> F <span class="op">&gt;</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> transform<span class="op">(</span></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    F <span class="op">&amp;&amp;</span> func</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> F <span class="op">&gt;</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> transform<span class="op">(</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    F <span class="op">&amp;&amp;</span> func</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-transformwithinterval" class="level3">
 <h3 class="anchored" data-anchor-id="function-transformwithinterval">function transformWithInterval</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> F <span class="op">&gt;</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> transformWithInterval<span class="op">(</span></span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    F <span class="op">&amp;&amp;</span> func</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> F <span class="op">&gt;</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> transformWithInterval<span class="op">(</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    F <span class="op">&amp;&amp;</span> func</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-materialize" class="level3">
 <h3 class="anchored" data-anchor-id="function-materialize">function materialize</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> GatherResult materialize<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> GatherResult materialize<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Materialize all views into owning storage.</p>
-<p><strong>Return</strong>: New <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> with materialized views</p>
+<p><strong>Return</strong>: New <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> with materialized views and preserved trial metadata</p>
 <p>If views are backed by view storage, this creates a new <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> where each element has owning storage (copies the data).</p>
-</section>
-<section id="function-buildtrialstore" class="level3">
-<h3 class="anchored" data-anchor-id="function-buildtrialstore">function buildTrialStore</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>PipelineValueStore buildTrialStore<span class="op">(</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_type</span> trial_idx</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Build value store for a specific trial (V2 pattern)</p>
-<p>Creates a PipelineValueStore populated with standard trial values that can be bound to transform parameters. This enables generic parameter binding without specialized context structs.</p>
-</section>
-</section>
-<section id="store-keys" class="level2">
-<h2 class="anchored" data-anchor-id="store-keys">Store Keys</h2>
-<ul>
-<li>“alignment_time”: int64_t - Trial start time (used as t=0 reference)</li>
-<li>“trial_index”: int64_t - Original trial index (0-based)</li>
-<li>“trial_duration”: int64_t - Duration (end - start)</li>
-<li>“end_time”: int64_t - Trial end time</li>
-</ul>
-</section>
-<section id="usage-with-pipeline-bindings" class="level2">
-<h2 class="anchored" data-anchor-id="usage-with-pipeline-bindings">Usage with Pipeline Bindings</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Pipeline with bindings</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="co">// {"transform": "NormalizeTimeV2", "bindings": {"alignment_time": "alignment_time"}}</span></span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> factory <span class="op">=</span> bindValueProjectionV2<span class="op">&lt;</span>EventWithId<span class="op">,</span> <span class="dt">float</span><span class="op">&gt;(</span>pipeline<span class="op">);</span></span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> result<span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> store <span class="op">=</span> result<span class="op">.</span>buildTrialStore<span class="op">(</span>i<span class="op">);</span></span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> projection <span class="op">=</span> factory<span class="op">(</span>store<span class="op">);</span></span>
-<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Use projection on trial events...</span></span>
-<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>trial_idxIndex of the trial (0-based, respects reordering)</p>
-<p>PipelineValueStore populated with trial values</p>
-<p>std::out_of_rangeif trial_idx &gt;= <a href="../../api_generated/Classes/classGatherResult.html#function-size">size()</a></p>
-<p>PipelineValueStore for store documentation</p>
-<p><a href="../../api_generated/Classes/classGatherResult.html#function-project">project()</a> for applying store-based projections to all trials</p>
-<section id="function-project" class="level3">
-<h3 class="anchored" data-anchor-id="function-project">function project</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Value <span class="op">&gt;</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> project<span class="op">(</span></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>ValueProjectionFactoryV2<span class="op">&lt;</span> <span class="dt">element_type</span><span class="op">,</span> Value <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> factory</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="function-reduce" class="level3">
-<h3 class="anchored" data-anchor-id="function-reduce">function reduce</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Scalar <span class="op">&gt;</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> Scalar <span class="op">&gt;</span> reduce<span class="op">(</span></span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Gather<span class="op">::</span>ReducerFactoryV2<span class="op">&lt;</span> <span class="dt">element_type</span><span class="op">,</span> Scalar <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> reducer_factory</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="function-sortindicesby" class="level3">
-<h3 class="anchored" data-anchor-id="function-sortindicesby">function sortIndicesBy</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Scalar <span class="op">&gt;</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">size_type</span> <span class="op">&gt;</span> sortIndicesBy<span class="op">(</span></span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Gather<span class="op">::</span>ReducerFactoryV2<span class="op">&lt;</span> <span class="dt">element_type</span><span class="op">,</span> Scalar <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> reducer_factory<span class="op">,</span></span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> ascending <span class="op">=</span><span class="kw">true</span></span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-reorder" class="level3">
 <h3 class="anchored" data-anchor-id="function-reorder">function reorder</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> GatherResult reorder<span class="op">(</span></span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">size_type</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> indices</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> GatherResult reorder<span class="op">(</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">size_type</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> indices</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-originalindex" class="level3">
 <h3 class="anchored" data-anchor-id="function-originalindex">function originalIndex</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">size_type</span> originalIndex<span class="op">(</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_type</span> reordered_idx</span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">size_type</span> originalIndex<span class="op">(</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_type</span> reordered_idx</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the original trial index for a position in a reordered result.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -863,14 +797,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-isreordered" class="level3">
 <h3 class="anchored" data-anchor-id="function-isreordered">function isReordered</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> isReordered<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> isReordered<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Check if this result has been reordered.</p>
 </section>
 <section id="function-intervalatreordered" class="level3">
 <h3 class="anchored" data-anchor-id="function-intervalatreordered">function intervalAtReordered</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Interval intervalAtReordered<span class="op">(</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_type</span> reordered_idx</span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Interval intervalAtReordered<span class="op">(</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_type</span> reordered_idx</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the interval for a position in a reordered result.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -881,11 +815,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-create" class="level3">
 <h3 class="anchored" data-anchor-id="function-create">function create</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> U  <span class="op">=</span>T<span class="op">&gt;</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">inline</span> GatherResult create<span class="op">(</span></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> U <span class="op">&gt;</span> source<span class="op">,</span></span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="op">&gt;</span> intervals</span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> U  <span class="op">=</span>T<span class="op">&gt;</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">inline</span> GatherResult create<span class="op">(</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> U <span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> windows<span class="op">,</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="at">const</span> <span class="op">&gt;</span> alignment_points <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> from source and alignment intervals (<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> version)</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -898,11 +833,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-create-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-create-1">function create</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> U  <span class="op">=</span>T<span class="op">&gt;</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">inline</span> GatherResult create<span class="op">(</span></span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> U <span class="op">&gt;</span> source<span class="op">,</span></span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="op">&gt;</span> intervals</span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> U  <span class="op">=</span>T<span class="op">&gt;</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">inline</span> GatherResult create<span class="op">(</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> U <span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> windows<span class="op">,</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="at">const</span> <span class="op">&gt;</span> alignment_points <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> from source and alignment intervals (int64_t version)</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -914,11 +850,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-create-2" class="level3">
 <h3 class="anchored" data-anchor-id="function-create-2">function create</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> U  <span class="op">=</span>T<span class="op">&gt;</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">inline</span> GatherResult create<span class="op">(</span></span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> U <span class="op">&gt;</span> source<span class="op">,</span></span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="op">&gt;</span> intervals</span>
-<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> U  <span class="op">=</span>T<span class="op">&gt;</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">inline</span> GatherResult create<span class="op">(</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> U <span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> windows<span class="op">,</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="at">const</span> <span class="op">&gt;</span> alignment_points <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> using time range copies (for <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> types)</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -928,36 +865,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Return</strong>: <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> containing copies for each interval</p>
 <p>For types that don’t support zero-copy views, this creates owning copies of data within each interval range.</p>
 </section>
-<section id="function-create-3" class="level3">
-<h3 class="anchored" data-anchor-id="function-create-3">function create</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> U  <span class="op">=</span>T<span class="op">,</span></span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> IntervalSourceT <span class="op">&gt;</span></span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">inline</span> GatherResult create<span class="op">(</span></span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> U <span class="op">&gt;</span> source<span class="op">,</span></span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>    IntervalSourceT <span class="at">const</span> <span class="op">&amp;</span> interval_source</span>
-<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="function-fromrows" class="level3">
+<h3 class="anchored" data-anchor-id="function-fromrows">function fromRows</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">inline</span> GatherResult fromRows<span class="op">(</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">value_type</span> <span class="op">&gt;</span> rows<span class="op">,</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> windows <span class="op">=</span><span class="kw">nullptr</span><span class="op">,</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="at">const</span> <span class="op">&gt;</span> alignment_points <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> from already-created row DataObjects.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>rows</strong> Row-aligned DataObjects in display order</li>
+<li><strong>windows</strong> Optional row-window metadata with the same row count</li>
+<li><strong>alignment_points</strong> Optional row-aligned alignment events with the same row count</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> that owns row pointers and optional metadata</p>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>Every row pointer must be non-null.</li>
+<li>If supplied, <code>windows</code> and <code>alignment_points</code> must match <code>rows</code> size.</li>
+</ul>
+<p><strong>Postcondition</strong>: The returned result has no direct-gather source provenance.</p>
 </section>
-<section id="function-create-4" class="level3">
-<h3 class="anchored" data-anchor-id="function-create-4">function create</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> U  <span class="op">=</span>T<span class="op">,</span></span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> IntervalSourceT <span class="op">&gt;</span></span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">inline</span> GatherResult create<span class="op">(</span></span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> U <span class="op">&gt;</span> source<span class="op">,</span></span>
-<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>    IntervalSourceT <span class="at">const</span> <span class="op">&amp;</span> interval_source</span>
-<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Create <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> from source and IntervalSource (int64_t version)</p>
-</section>
-<section id="function-create-5" class="level3">
-<h3 class="anchored" data-anchor-id="function-create-5">function create</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> U  <span class="op">=</span>T<span class="op">,</span></span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> IntervalSourceT <span class="op">&gt;</span></span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">inline</span> GatherResult create<span class="op">(</span></span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> U <span class="op">&gt;</span> source<span class="op">,</span></span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>    IntervalSourceT <span class="at">const</span> <span class="op">&amp;</span> interval_source</span>
-<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Create <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> from source and IntervalSource (copy version)</p>
+<section id="function-fromrowslike" class="level3">
+<h3 class="anchored" data-anchor-id="function-fromrowslike">function fromRowsLike</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> ParentT <span class="op">&gt;</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">inline</span> GatherResult fromRowsLike<span class="op">(</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    GatherResult<span class="op">&lt;</span> ParentT <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> parent<span class="op">,</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">value_type</span> <span class="op">&gt;</span> rows</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create transformed rows while preserving metadata from another <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>parent</strong> <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> that supplies row metadata and ordering</li>
+<li><strong>rows</strong> Row DataObjects aligned to the visible order of <code>parent</code></li>
+</ul>
+<p><strong>Template Parameters</strong>:</p>
+<ul>
+<li><strong>ParentT</strong> Parent row DataObject type</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> with <code>rows</code> and parent row metadata</p>
+<p><strong>Precondition</strong>:</p>
+<ul>
+<li>Every row pointer must be non-null.</li>
+<li><code>rows</code> must have the same row count as <code>parent</code>.</li>
+</ul>
+<p><strong>Postcondition</strong>: The returned result has no direct-gather source provenance.</p>
 <hr>
-<p>Updated on 2026-07-25 at 13:30:56 +0000</p>
+<p>Updated on 2026-07-27 at 20:05:52 +0000</p>
 
 
 </section>

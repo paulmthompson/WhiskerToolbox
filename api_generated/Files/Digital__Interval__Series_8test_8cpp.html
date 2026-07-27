@@ -357,6 +357,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-test_case-1" id="toc-function-test_case-1" class="nav-link" data-scroll-target="#function-test_case-1">function TEST_CASE</a></li>
   <li><a href="#function-test_case-2" id="toc-function-test_case-2" class="nav-link" data-scroll-target="#function-test_case-2">function TEST_CASE</a></li>
   <li><a href="#function-test_case-3" id="toc-function-test_case-3" class="nav-link" data-scroll-target="#function-test_case-3">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-4" id="toc-function-test_case-4" class="nav-link" data-scroll-target="#function-test_case-4">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-5" id="toc-function-test_case-5" class="nav-link" data-scroll-target="#function-test_case-5">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-6" id="toc-function-test_case-6" class="nav-link" data-scroll-target="#function-test_case-6">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-7" id="toc-function-test_case-7" class="nav-link" data-scroll-target="#function-test_case-7">function TEST_CASE</a></li>
   </ul></li>
   <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
   </ul></li>
@@ -400,19 +404,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><strong><a href="../../api_generated/Files/Digital__Interval__Series_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“Digital <a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> Overlap Left” , “” [DataManager])</td>
+<td><strong><a href="../../api_generated/Files/Digital__Interval__Series_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“DigitalIntervalSeries - interval entity <a href="../../api_generated/Files/LayoutRequestBuilder_8cpp.html#variable-identity">identity</a> uses start and end” , “” [DataManager][interval][entity])</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><strong><a href="../../api_generated/Files/Digital__Interval__Series_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“DigitalIntervalSeries - Range-based access” , “” [DataManager])</td>
+<td><strong><a href="../../api_generated/Files/Digital__Interval__Series_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“DigitalIntervalSeries - extend preserves EntityId” , “” [DataManager][interval][entity])</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><strong><a href="../../api_generated/Files/Digital__Interval__Series_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“DigitalIntervalSeries - view() method” , “” [DataManager][view])</td>
+<td><strong><a href="../../api_generated/Files/Digital__Interval__Series_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“DigitalIntervalSeries - merge inherits earliest-start EntityId” , “” [DataManager][interval][entity])</td>
 </tr>
 <tr class="even">
 <td></td>
+<td><strong><a href="../../api_generated/Files/Digital__Interval__Series_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“Digital <a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> Overlap Left” , “” [DataManager])</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/Digital__Interval__Series_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“DigitalIntervalSeries - Range-based access” , “” [DataManager])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/Digital__Interval__Series_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“DigitalIntervalSeries - view() method” , “” [DataManager][view])</td>
+</tr>
+<tr class="odd">
+<td></td>
 <td><strong><a href="../../api_generated/Files/Digital__Interval__Series_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“DigitalIntervalSeries - view() concept-compliant iteration” , “” [DataManager][view])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/Digital__Interval__Series_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“DigitalIntervalSeries - IntervalLayout” , “” [DataManager][interval][layout])</td>
 </tr>
 </tbody>
 </table>
@@ -422,179 +442,370 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-test_case" class="level3">
 <h3 class="anchored" data-anchor-id="function-test_case">function TEST_CASE</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Digital Interval Overlap Left"</span> <span class="op">,</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>DataManager<span class="op">]</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"DigitalIntervalSeries - interval entity identity uses start and end"</span> <span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>DataManager<span class="op">][</span>interval<span class="op">][</span>entity<span class="op">]</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-test_case-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-test_case-1">function TEST_CASE</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"DigitalIntervalSeries - Range-based access"</span> <span class="op">,</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>DataManager<span class="op">]</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"DigitalIntervalSeries - extend preserves EntityId"</span> <span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>DataManager<span class="op">][</span>interval<span class="op">][</span>entity<span class="op">]</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-test_case-2" class="level3">
 <h3 class="anchored" data-anchor-id="function-test_case-2">function TEST_CASE</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"DigitalIntervalSeries - view() method"</span> <span class="op">,</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>DataManager<span class="op">][</span>view<span class="op">]</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"DigitalIntervalSeries - merge inherits earliest-start EntityId"</span> <span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>DataManager<span class="op">][</span>interval<span class="op">][</span>entity<span class="op">]</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-test_case-3" class="level3">
 <h3 class="anchored" data-anchor-id="function-test_case-3">function TEST_CASE</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"DigitalIntervalSeries - view() concept-compliant iteration"</span> <span class="op">,</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>DataManager<span class="op">][</span>view<span class="op">]</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Digital Interval Overlap Left"</span> <span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>DataManager<span class="op">]</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-4" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-4">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"DigitalIntervalSeries - Range-based access"</span> <span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>DataManager<span class="op">]</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-5" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-5">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"DigitalIntervalSeries - view() method"</span> <span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>DataManager<span class="op">][</span>view<span class="op">]</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-6" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-6">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"DigitalIntervalSeries - view() concept-compliant iteration"</span> <span class="op">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>DataManager<span class="op">][</span>view<span class="op">]</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-7" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-7">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"DigitalIntervalSeries - IntervalLayout"</span> <span class="op">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>DataManager<span class="op">][</span>interval<span class="op">][</span>layout<span class="op">]</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </section>
 <section id="source-code" class="level2">
 <h2 class="anchored" data-anchor-id="source-code">Source code</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/catch_test_macros.hpp&gt;</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DigitalTimeSeries/Digital_Interval_Series.hpp"</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"Digital Interval Overlap Left"</span><span class="op">,</span> <span class="st">"[DataManager]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeries dis<span class="op">;</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>addEvent<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">0</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">10</span><span class="op">));</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>addEvent<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">5</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">15</span><span class="op">));</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> data <span class="op">=</span> dis<span class="op">.</span>view<span class="op">();</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>dis<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>data<span class="op">[</span><span class="dv">0</span><span class="op">].</span>value<span class="op">().</span>start <span class="op">==</span> <span class="dv">0</span><span class="op">);</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>data<span class="op">[</span><span class="dv">0</span><span class="op">].</span>value<span class="op">().</span>end <span class="op">==</span> <span class="dv">15</span><span class="op">);</span></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"DigitalIntervalSeries - Range-based access"</span><span class="op">,</span> <span class="st">"[DataManager]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeries dis<span class="op">;</span></span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> times<span class="op">;</span></span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i<span class="op">:</span> <span class="bu">std::</span>views::iota<span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="dv">100</span><span class="op">))</span> <span class="op">{</span></span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>        times<span class="op">.</span>push_back<span class="op">(</span>i<span class="op">);</span></span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> timeframe <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TimeFrame<span class="op">&gt;(</span>times<span class="op">);</span></span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>setTimeFrame<span class="op">(</span>timeframe<span class="op">);</span></span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>addEvent<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">0</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">10</span><span class="op">));</span> <span class="co">// Interval from 0 to 10</span></span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>addEvent<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">15</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">25</span><span class="op">));</span><span class="co">// Interval from 15 to 25</span></span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>addEvent<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">30</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">40</span><span class="op">));</span><span class="co">// Interval from 30 to 40</span></span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"View-based iteration"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test using the range view directly</span></span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> range <span class="op">=</span> dis<span class="op">.</span>getIntervalsInRange<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">::</span>RangeMode<span class="op">::</span>OVERLAPPING<span class="op">&gt;(</span>TimeFrameIndex<span class="op">(</span><span class="dv">5</span><span class="op">),</span></span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>                                                                                            TimeFrameIndex<span class="op">(</span><span class="dv">35</span><span class="op">),</span> </span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>                                                                                            <span class="op">*</span>timeframe<span class="op">);</span></span>
-<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> collected<span class="op">;</span></span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">:</span> range<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>            collected<span class="op">.</span>push_back<span class="op">(</span>interval<span class="op">);</span></span>
-<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
-<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected<span class="op">[</span><span class="dv">0</span><span class="op">].</span>start <span class="op">==</span> <span class="dv">0</span><span class="op">);</span></span>
-<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected<span class="op">[</span><span class="dv">0</span><span class="op">].</span>end <span class="op">==</span> <span class="dv">10</span><span class="op">);</span></span>
-<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected<span class="op">[</span><span class="dv">1</span><span class="op">].</span>start <span class="op">==</span> <span class="dv">15</span><span class="op">);</span></span>
-<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected<span class="op">[</span><span class="dv">1</span><span class="op">].</span>end <span class="op">==</span> <span class="dv">25</span><span class="op">);</span></span>
-<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected<span class="op">[</span><span class="dv">2</span><span class="op">].</span>start <span class="op">==</span> <span class="dv">30</span><span class="op">);</span></span>
-<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected<span class="op">[</span><span class="dv">2</span><span class="op">].</span>end <span class="op">==</span> <span class="dv">40</span><span class="op">);</span></span>
-<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
-<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a><span class="co">// Test view() method - primary iteration interface</span></span>
-<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
-<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"DigitalIntervalSeries - view() method"</span><span class="op">,</span> <span class="st">"[DataManager][view]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeries dis<span class="op">;</span></span>
-<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>addEvent<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">0</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">10</span><span class="op">));</span></span>
-<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>addEvent<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">20</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">30</span><span class="op">));</span></span>
-<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>addEvent<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">40</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">50</span><span class="op">));</span></span>
-<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Basic iteration with IntervalWithId accessors"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameIndex<span class="op">&gt;</span> collected_times<span class="op">;</span></span>
-<span id="cb5-64"><a href="#cb5-64" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> collected_intervals<span class="op">;</span></span>
-<span id="cb5-65"><a href="#cb5-65" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> collected_ids<span class="op">;</span></span>
-<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-67"><a href="#cb5-67" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> interval_with_id<span class="op">:</span> dis<span class="op">.</span>view<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb5-68"><a href="#cb5-68" aria-hidden="true" tabindex="-1"></a>            collected_times<span class="op">.</span>push_back<span class="op">(</span>interval_with_id<span class="op">.</span>time<span class="op">());</span></span>
-<span id="cb5-69"><a href="#cb5-69" aria-hidden="true" tabindex="-1"></a>            collected_intervals<span class="op">.</span>push_back<span class="op">(</span>interval_with_id<span class="op">.</span>interval<span class="op">);</span></span>
-<span id="cb5-70"><a href="#cb5-70" aria-hidden="true" tabindex="-1"></a>            collected_ids<span class="op">.</span>push_back<span class="op">(</span>interval_with_id<span class="op">.</span>id<span class="op">());</span></span>
-<span id="cb5-71"><a href="#cb5-71" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb5-72"><a href="#cb5-72" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-73"><a href="#cb5-73" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_times<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
-<span id="cb5-74"><a href="#cb5-74" aria-hidden="true" tabindex="-1"></a>        <span class="co">// time() should be the start of each interval</span></span>
-<span id="cb5-75"><a href="#cb5-75" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_times<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">==</span> TimeFrameIndex<span class="op">(</span><span class="dv">0</span><span class="op">));</span></span>
-<span id="cb5-76"><a href="#cb5-76" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_times<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">==</span> TimeFrameIndex<span class="op">(</span><span class="dv">20</span><span class="op">));</span></span>
-<span id="cb5-77"><a href="#cb5-77" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_times<span class="op">[</span><span class="dv">2</span><span class="op">]</span> <span class="op">==</span> TimeFrameIndex<span class="op">(</span><span class="dv">40</span><span class="op">));</span></span>
-<span id="cb5-78"><a href="#cb5-78" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-79"><a href="#cb5-79" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Verify intervals</span></span>
-<span id="cb5-80"><a href="#cb5-80" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_intervals<span class="op">[</span><span class="dv">0</span><span class="op">].</span>start <span class="op">==</span> <span class="dv">0</span><span class="op">);</span></span>
-<span id="cb5-81"><a href="#cb5-81" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_intervals<span class="op">[</span><span class="dv">0</span><span class="op">].</span>end <span class="op">==</span> <span class="dv">10</span><span class="op">);</span></span>
-<span id="cb5-82"><a href="#cb5-82" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_intervals<span class="op">[</span><span class="dv">1</span><span class="op">].</span>start <span class="op">==</span> <span class="dv">20</span><span class="op">);</span></span>
-<span id="cb5-83"><a href="#cb5-83" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_intervals<span class="op">[</span><span class="dv">1</span><span class="op">].</span>end <span class="op">==</span> <span class="dv">30</span><span class="op">);</span></span>
-<span id="cb5-84"><a href="#cb5-84" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_intervals<span class="op">[</span><span class="dv">2</span><span class="op">].</span>start <span class="op">==</span> <span class="dv">40</span><span class="op">);</span></span>
-<span id="cb5-85"><a href="#cb5-85" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_intervals<span class="op">[</span><span class="dv">2</span><span class="op">].</span>end <span class="op">==</span> <span class="dv">50</span><span class="op">);</span></span>
-<span id="cb5-86"><a href="#cb5-86" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-87"><a href="#cb5-87" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-88"><a href="#cb5-88" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Empty series"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-89"><a href="#cb5-89" aria-hidden="true" tabindex="-1"></a>        DigitalIntervalSeries empty_dis<span class="op">;</span></span>
-<span id="cb5-90"><a href="#cb5-90" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-91"><a href="#cb5-91" aria-hidden="true" tabindex="-1"></a>        <span class="dt">size_t</span> count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb5-92"><a href="#cb5-92" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">([[</span><span class="at">maybe_unused</span><span class="op">]]</span> <span class="kw">auto</span> <span class="at">const</span> interval<span class="op">:</span> empty_dis<span class="op">.</span>view<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb5-93"><a href="#cb5-93" aria-hidden="true" tabindex="-1"></a>            count<span class="op">++;</span></span>
-<span id="cb5-94"><a href="#cb5-94" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb5-95"><a href="#cb5-95" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>count <span class="op">==</span> <span class="dv">0</span><span class="op">);</span></span>
-<span id="cb5-96"><a href="#cb5-96" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-97"><a href="#cb5-97" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-98"><a href="#cb5-98" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Direct member access via interval and entity_id"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-99"><a href="#cb5-99" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> v <span class="op">=</span> dis<span class="op">.</span>view<span class="op">();</span></span>
-<span id="cb5-100"><a href="#cb5-100" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> it <span class="op">=</span> <span class="bu">std::</span>ranges::begin<span class="op">(</span>v<span class="op">);</span></span>
-<span id="cb5-101"><a href="#cb5-101" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> first_element <span class="op">=</span> <span class="op">*</span>it<span class="op">;</span></span>
-<span id="cb5-102"><a href="#cb5-102" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-103"><a href="#cb5-103" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test direct member access</span></span>
-<span id="cb5-104"><a href="#cb5-104" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>first_element<span class="op">.</span>interval<span class="op">.</span>start <span class="op">==</span> <span class="dv">0</span><span class="op">);</span></span>
-<span id="cb5-105"><a href="#cb5-105" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>first_element<span class="op">.</span>interval<span class="op">.</span>end <span class="op">==</span> <span class="dv">10</span><span class="op">);</span></span>
-<span id="cb5-106"><a href="#cb5-106" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>first_element<span class="op">.</span>time<span class="op">()</span> <span class="op">==</span> TimeFrameIndex<span class="op">(</span><span class="dv">0</span><span class="op">));</span></span>
-<span id="cb5-107"><a href="#cb5-107" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-108"><a href="#cb5-108" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-109"><a href="#cb5-109" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Works with range algorithms"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-110"><a href="#cb5-110" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Count elements in range</span></span>
-<span id="cb5-111"><a href="#cb5-111" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> count <span class="op">=</span> <span class="bu">std::</span>ranges::distance<span class="op">(</span>dis<span class="op">.</span>view<span class="op">());</span></span>
-<span id="cb5-112"><a href="#cb5-112" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>count <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
-<span id="cb5-113"><a href="#cb5-113" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-114"><a href="#cb5-114" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb5-115"><a href="#cb5-115" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-116"><a href="#cb5-116" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"DigitalIntervalSeries - view() concept-compliant iteration"</span><span class="op">,</span> <span class="st">"[DataManager][view]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-117"><a href="#cb5-117" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeries dis<span class="op">;</span></span>
-<span id="cb5-118"><a href="#cb5-118" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>addEvent<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">200</span><span class="op">));</span></span>
-<span id="cb5-119"><a href="#cb5-119" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>addEvent<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">300</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">400</span><span class="op">));</span></span>
-<span id="cb5-120"><a href="#cb5-120" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-121"><a href="#cb5-121" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"IntervalWithId satisfies concept requirements"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-122"><a href="#cb5-122" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameIndex<span class="op">&gt;</span> collected_times<span class="op">;</span></span>
-<span id="cb5-123"><a href="#cb5-123" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> collected_ids<span class="op">;</span></span>
-<span id="cb5-124"><a href="#cb5-124" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> collected_values<span class="op">;</span></span>
-<span id="cb5-125"><a href="#cb5-125" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-126"><a href="#cb5-126" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> interval<span class="op">:</span> dis<span class="op">.</span>view<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb5-127"><a href="#cb5-127" aria-hidden="true" tabindex="-1"></a>            collected_times<span class="op">.</span>push_back<span class="op">(</span>interval<span class="op">.</span>time<span class="op">());</span></span>
-<span id="cb5-128"><a href="#cb5-128" aria-hidden="true" tabindex="-1"></a>            collected_ids<span class="op">.</span>push_back<span class="op">(</span>interval<span class="op">.</span>id<span class="op">());</span></span>
-<span id="cb5-129"><a href="#cb5-129" aria-hidden="true" tabindex="-1"></a>            collected_values<span class="op">.</span>push_back<span class="op">(</span>interval<span class="op">.</span>value<span class="op">());</span></span>
-<span id="cb5-130"><a href="#cb5-130" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb5-131"><a href="#cb5-131" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-132"><a href="#cb5-132" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_times<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
-<span id="cb5-133"><a href="#cb5-133" aria-hidden="true" tabindex="-1"></a>        <span class="co">// time() returns start of interval</span></span>
-<span id="cb5-134"><a href="#cb5-134" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_times<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">==</span> TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
-<span id="cb5-135"><a href="#cb5-135" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_times<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">==</span> TimeFrameIndex<span class="op">(</span><span class="dv">300</span><span class="op">));</span></span>
-<span id="cb5-136"><a href="#cb5-136" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-137"><a href="#cb5-137" aria-hidden="true" tabindex="-1"></a>        <span class="co">// value() returns the full interval</span></span>
-<span id="cb5-138"><a href="#cb5-138" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_values<span class="op">[</span><span class="dv">0</span><span class="op">].</span>start <span class="op">==</span> <span class="dv">100</span><span class="op">);</span></span>
-<span id="cb5-139"><a href="#cb5-139" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_values<span class="op">[</span><span class="dv">0</span><span class="op">].</span>end <span class="op">==</span> <span class="dv">200</span><span class="op">);</span></span>
-<span id="cb5-140"><a href="#cb5-140" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_values<span class="op">[</span><span class="dv">1</span><span class="op">].</span>start <span class="op">==</span> <span class="dv">300</span><span class="op">);</span></span>
-<span id="cb5-141"><a href="#cb5-141" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_values<span class="op">[</span><span class="dv">1</span><span class="op">].</span>end <span class="op">==</span> <span class="dv">400</span><span class="op">);</span></span>
-<span id="cb5-142"><a href="#cb5-142" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-143"><a href="#cb5-143" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/catch_test_macros.hpp&gt;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DigitalTimeSeries/Digital_Interval_Series.hpp"</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Entity/EntityRegistry.hpp"</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"DigitalIntervalSeries - interval entity identity uses start and end"</span><span class="op">,</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[DataManager][interval][entity]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    EntityRegistry registry<span class="op">;</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeries series<span class="op">;</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>    series<span class="op">.</span>setIdentityContext<span class="op">(</span><span class="st">"test_intervals"</span><span class="op">,</span> <span class="op">&amp;</span>registry<span class="op">);</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>    series<span class="op">.</span>addEvent<span class="op">(</span>Interval<span class="op">{</span><span class="dv">100</span><span class="op">,</span> <span class="dv">200</span><span class="op">});</span></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    series<span class="op">.</span>rebuildAllEntityIds<span class="op">();</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> view <span class="op">=</span> series<span class="op">.</span>view<span class="op">();</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>series<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    EntityId <span class="at">const</span> original_id <span class="op">=</span> view<span class="op">[</span><span class="dv">0</span><span class="op">].</span>id<span class="op">();</span></span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>original_id <span class="op">!=</span> EntityId<span class="op">{</span><span class="dv">0</span><span class="op">});</span></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"rebuildAllEntityIds is stable for unchanged intervals"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>        series<span class="op">.</span>rebuildAllEntityIds<span class="op">();</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>series<span class="op">.</span>view<span class="op">()[</span><span class="dv">0</span><span class="op">].</span>id<span class="op">()</span> <span class="op">==</span> original_id<span class="op">);</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"identity survives unrelated interval removal"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>        series<span class="op">.</span>addEvent<span class="op">(</span>Interval<span class="op">{</span><span class="dv">500</span><span class="op">,</span> <span class="dv">600</span><span class="op">});</span></span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>        series<span class="op">.</span>rebuildAllEntityIds<span class="op">();</span></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>        series<span class="op">.</span>removeInterval<span class="op">(</span>Interval<span class="op">{</span><span class="dv">500</span><span class="op">,</span> <span class="dv">600</span><span class="op">});</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>        series<span class="op">.</span>rebuildAllEntityIds<span class="op">();</span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>series<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>series<span class="op">.</span>view<span class="op">()[</span><span class="dv">0</span><span class="op">].</span>id<span class="op">()</span> <span class="op">==</span> original_id<span class="op">);</span></span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>series<span class="op">.</span>getIntervalByEntityId<span class="op">(</span>original_id<span class="op">)-&gt;</span>start <span class="op">==</span> <span class="dv">100</span><span class="op">);</span></span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>series<span class="op">.</span>getIntervalByEntityId<span class="op">(</span>original_id<span class="op">)-&gt;</span>end <span class="op">==</span> <span class="dv">200</span><span class="op">);</span></span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"registry descriptor stores interval end in local_index"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> desc <span class="op">=</span> registry<span class="op">.</span>get<span class="op">(</span>original_id<span class="op">);</span></span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>desc<span class="op">.</span>has_value<span class="op">());</span></span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>desc<span class="op">-&gt;</span>kind <span class="op">==</span> EntityKind<span class="op">::</span>IntervalEntity<span class="op">);</span></span>
+<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>desc<span class="op">-&gt;</span>time_value <span class="op">==</span> <span class="dv">100</span><span class="op">);</span></span>
+<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>desc<span class="op">-&gt;</span>local_index <span class="op">==</span> <span class="dv">200</span><span class="op">);</span></span>
+<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"DigitalIntervalSeries - extend preserves EntityId"</span><span class="op">,</span></span>
+<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[DataManager][interval][entity]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-49"><a href="#cb9-49" aria-hidden="true" tabindex="-1"></a>    EntityRegistry registry<span class="op">;</span></span>
+<span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeries series<span class="op">;</span></span>
+<span id="cb9-51"><a href="#cb9-51" aria-hidden="true" tabindex="-1"></a>    series<span class="op">.</span>setIdentityContext<span class="op">(</span><span class="st">"test_intervals"</span><span class="op">,</span> <span class="op">&amp;</span>registry<span class="op">);</span></span>
+<span id="cb9-52"><a href="#cb9-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-53"><a href="#cb9-53" aria-hidden="true" tabindex="-1"></a>    series<span class="op">.</span>addEvent<span class="op">(</span>Interval<span class="op">{</span><span class="dv">100</span><span class="op">,</span> <span class="dv">200</span><span class="op">});</span></span>
+<span id="cb9-54"><a href="#cb9-54" aria-hidden="true" tabindex="-1"></a>    series<span class="op">.</span>rebuildAllEntityIds<span class="op">();</span></span>
+<span id="cb9-55"><a href="#cb9-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-56"><a href="#cb9-56" aria-hidden="true" tabindex="-1"></a>    EntityId <span class="at">const</span> original_id <span class="op">=</span> series<span class="op">.</span>view<span class="op">()[</span><span class="dv">0</span><span class="op">].</span>id<span class="op">();</span></span>
+<span id="cb9-57"><a href="#cb9-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-58"><a href="#cb9-58" aria-hidden="true" tabindex="-1"></a>    series<span class="op">.</span>addEvent<span class="op">(</span>Interval<span class="op">{</span><span class="dv">100</span><span class="op">,</span> <span class="dv">250</span><span class="op">});</span></span>
+<span id="cb9-59"><a href="#cb9-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-60"><a href="#cb9-60" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>series<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb9-61"><a href="#cb9-61" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>series<span class="op">.</span>view<span class="op">()[</span><span class="dv">0</span><span class="op">].</span>id<span class="op">()</span> <span class="op">==</span> original_id<span class="op">);</span></span>
+<span id="cb9-62"><a href="#cb9-62" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>series<span class="op">.</span>view<span class="op">()[</span><span class="dv">0</span><span class="op">].</span>value<span class="op">().</span>start <span class="op">==</span> <span class="dv">100</span><span class="op">);</span></span>
+<span id="cb9-63"><a href="#cb9-63" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>series<span class="op">.</span>view<span class="op">()[</span><span class="dv">0</span><span class="op">].</span>value<span class="op">().</span>end <span class="op">==</span> <span class="dv">250</span><span class="op">);</span></span>
+<span id="cb9-64"><a href="#cb9-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-65"><a href="#cb9-65" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> desc <span class="op">=</span> registry<span class="op">.</span>get<span class="op">(</span>original_id<span class="op">);</span></span>
+<span id="cb9-66"><a href="#cb9-66" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>desc<span class="op">.</span>has_value<span class="op">());</span></span>
+<span id="cb9-67"><a href="#cb9-67" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>desc<span class="op">-&gt;</span>time_value <span class="op">==</span> <span class="dv">100</span><span class="op">);</span></span>
+<span id="cb9-68"><a href="#cb9-68" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>desc<span class="op">-&gt;</span>local_index <span class="op">==</span> <span class="dv">250</span><span class="op">);</span></span>
+<span id="cb9-69"><a href="#cb9-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-70"><a href="#cb9-70" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> interval <span class="op">=</span> series<span class="op">.</span>getIntervalByEntityId<span class="op">(</span>original_id<span class="op">);</span></span>
+<span id="cb9-71"><a href="#cb9-71" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>interval<span class="op">.</span>has_value<span class="op">());</span></span>
+<span id="cb9-72"><a href="#cb9-72" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>interval<span class="op">-&gt;</span>start <span class="op">==</span> <span class="dv">100</span><span class="op">);</span></span>
+<span id="cb9-73"><a href="#cb9-73" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>interval<span class="op">-&gt;</span>end <span class="op">==</span> <span class="dv">250</span><span class="op">);</span></span>
+<span id="cb9-74"><a href="#cb9-74" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-75"><a href="#cb9-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-76"><a href="#cb9-76" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"DigitalIntervalSeries - merge inherits earliest-start EntityId"</span><span class="op">,</span></span>
+<span id="cb9-77"><a href="#cb9-77" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[DataManager][interval][entity]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-78"><a href="#cb9-78" aria-hidden="true" tabindex="-1"></a>    EntityRegistry registry<span class="op">;</span></span>
+<span id="cb9-79"><a href="#cb9-79" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeries series<span class="op">;</span></span>
+<span id="cb9-80"><a href="#cb9-80" aria-hidden="true" tabindex="-1"></a>    series<span class="op">.</span>setIdentityContext<span class="op">(</span><span class="st">"test_intervals"</span><span class="op">,</span> <span class="op">&amp;</span>registry<span class="op">);</span></span>
+<span id="cb9-81"><a href="#cb9-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-82"><a href="#cb9-82" aria-hidden="true" tabindex="-1"></a>    series<span class="op">.</span>addEvent<span class="op">(</span>Interval<span class="op">{</span><span class="dv">100</span><span class="op">,</span> <span class="dv">150</span><span class="op">});</span></span>
+<span id="cb9-83"><a href="#cb9-83" aria-hidden="true" tabindex="-1"></a>    series<span class="op">.</span>addEvent<span class="op">(</span>Interval<span class="op">{</span><span class="dv">200</span><span class="op">,</span> <span class="dv">250</span><span class="op">});</span></span>
+<span id="cb9-84"><a href="#cb9-84" aria-hidden="true" tabindex="-1"></a>    series<span class="op">.</span>rebuildAllEntityIds<span class="op">();</span></span>
+<span id="cb9-85"><a href="#cb9-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-86"><a href="#cb9-86" aria-hidden="true" tabindex="-1"></a>    EntityId <span class="at">const</span> first_id <span class="op">=</span> series<span class="op">.</span>view<span class="op">()[</span><span class="dv">0</span><span class="op">].</span>id<span class="op">();</span></span>
+<span id="cb9-87"><a href="#cb9-87" aria-hidden="true" tabindex="-1"></a>    EntityId <span class="at">const</span> second_id <span class="op">=</span> series<span class="op">.</span>view<span class="op">()[</span><span class="dv">1</span><span class="op">].</span>id<span class="op">();</span></span>
+<span id="cb9-88"><a href="#cb9-88" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>first_id <span class="op">!=</span> second_id<span class="op">);</span></span>
+<span id="cb9-89"><a href="#cb9-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-90"><a href="#cb9-90" aria-hidden="true" tabindex="-1"></a>    series<span class="op">.</span>addEvent<span class="op">(</span>Interval<span class="op">{</span><span class="dv">100</span><span class="op">,</span> <span class="dv">250</span><span class="op">});</span></span>
+<span id="cb9-91"><a href="#cb9-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-92"><a href="#cb9-92" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>series<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb9-93"><a href="#cb9-93" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>series<span class="op">.</span>view<span class="op">()[</span><span class="dv">0</span><span class="op">].</span>id<span class="op">()</span> <span class="op">==</span> first_id<span class="op">);</span></span>
+<span id="cb9-94"><a href="#cb9-94" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>series<span class="op">.</span>view<span class="op">()[</span><span class="dv">0</span><span class="op">].</span>value<span class="op">().</span>start <span class="op">==</span> <span class="dv">100</span><span class="op">);</span></span>
+<span id="cb9-95"><a href="#cb9-95" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>series<span class="op">.</span>view<span class="op">()[</span><span class="dv">0</span><span class="op">].</span>value<span class="op">().</span>end <span class="op">==</span> <span class="dv">250</span><span class="op">);</span></span>
+<span id="cb9-96"><a href="#cb9-96" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-97"><a href="#cb9-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-98"><a href="#cb9-98" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"Digital Interval Overlap Left"</span><span class="op">,</span> <span class="st">"[DataManager]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-99"><a href="#cb9-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-100"><a href="#cb9-100" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeries dis<span class="op">;</span></span>
+<span id="cb9-101"><a href="#cb9-101" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>addEvent<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">0</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">10</span><span class="op">));</span></span>
+<span id="cb9-102"><a href="#cb9-102" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>addEvent<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">5</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">15</span><span class="op">));</span></span>
+<span id="cb9-103"><a href="#cb9-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-104"><a href="#cb9-104" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> data <span class="op">=</span> dis<span class="op">.</span>view<span class="op">();</span></span>
+<span id="cb9-105"><a href="#cb9-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-106"><a href="#cb9-106" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>dis<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb9-107"><a href="#cb9-107" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>data<span class="op">[</span><span class="dv">0</span><span class="op">].</span>value<span class="op">().</span>start <span class="op">==</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb9-108"><a href="#cb9-108" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>data<span class="op">[</span><span class="dv">0</span><span class="op">].</span>value<span class="op">().</span>end <span class="op">==</span> <span class="dv">15</span><span class="op">);</span></span>
+<span id="cb9-109"><a href="#cb9-109" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-110"><a href="#cb9-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-111"><a href="#cb9-111" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"DigitalIntervalSeries - Range-based access"</span><span class="op">,</span> <span class="st">"[DataManager]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-112"><a href="#cb9-112" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeries dis<span class="op">;</span></span>
+<span id="cb9-113"><a href="#cb9-113" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> times<span class="op">;</span></span>
+<span id="cb9-114"><a href="#cb9-114" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i<span class="op">:</span> <span class="bu">std::</span>views::iota<span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="dv">100</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb9-115"><a href="#cb9-115" aria-hidden="true" tabindex="-1"></a>        times<span class="op">.</span>push_back<span class="op">(</span>i<span class="op">);</span></span>
+<span id="cb9-116"><a href="#cb9-116" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-117"><a href="#cb9-117" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> timeframe <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TimeFrame<span class="op">&gt;(</span>times<span class="op">);</span></span>
+<span id="cb9-118"><a href="#cb9-118" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>setTimeFrame<span class="op">(</span>timeframe<span class="op">);</span></span>
+<span id="cb9-119"><a href="#cb9-119" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>addEvent<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">0</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">10</span><span class="op">));</span> <span class="co">// Interval from 0 to 10</span></span>
+<span id="cb9-120"><a href="#cb9-120" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>addEvent<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">15</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">25</span><span class="op">));</span><span class="co">// Interval from 15 to 25</span></span>
+<span id="cb9-121"><a href="#cb9-121" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>addEvent<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">30</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">40</span><span class="op">));</span><span class="co">// Interval from 30 to 40</span></span>
+<span id="cb9-122"><a href="#cb9-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-123"><a href="#cb9-123" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"View-based iteration"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-124"><a href="#cb9-124" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test using the range view directly</span></span>
+<span id="cb9-125"><a href="#cb9-125" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> range <span class="op">=</span> dis<span class="op">.</span>getIntervalsInRange<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">::</span>RangeMode<span class="op">::</span>OVERLAPPING<span class="op">&gt;(</span>TimeFrameIndex<span class="op">(</span><span class="dv">5</span><span class="op">),</span></span>
+<span id="cb9-126"><a href="#cb9-126" aria-hidden="true" tabindex="-1"></a>                                                                                            TimeFrameIndex<span class="op">(</span><span class="dv">35</span><span class="op">),</span></span>
+<span id="cb9-127"><a href="#cb9-127" aria-hidden="true" tabindex="-1"></a>                                                                                            <span class="op">*</span>timeframe<span class="op">);</span></span>
+<span id="cb9-128"><a href="#cb9-128" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-129"><a href="#cb9-129" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> collected<span class="op">;</span></span>
+<span id="cb9-130"><a href="#cb9-130" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">:</span> range<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-131"><a href="#cb9-131" aria-hidden="true" tabindex="-1"></a>            collected<span class="op">.</span>push_back<span class="op">(</span>interval<span class="op">);</span></span>
+<span id="cb9-132"><a href="#cb9-132" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb9-133"><a href="#cb9-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-134"><a href="#cb9-134" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb9-135"><a href="#cb9-135" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected<span class="op">[</span><span class="dv">0</span><span class="op">].</span>start <span class="op">==</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb9-136"><a href="#cb9-136" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected<span class="op">[</span><span class="dv">0</span><span class="op">].</span>end <span class="op">==</span> <span class="dv">10</span><span class="op">);</span></span>
+<span id="cb9-137"><a href="#cb9-137" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected<span class="op">[</span><span class="dv">1</span><span class="op">].</span>start <span class="op">==</span> <span class="dv">15</span><span class="op">);</span></span>
+<span id="cb9-138"><a href="#cb9-138" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected<span class="op">[</span><span class="dv">1</span><span class="op">].</span>end <span class="op">==</span> <span class="dv">25</span><span class="op">);</span></span>
+<span id="cb9-139"><a href="#cb9-139" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected<span class="op">[</span><span class="dv">2</span><span class="op">].</span>start <span class="op">==</span> <span class="dv">30</span><span class="op">);</span></span>
+<span id="cb9-140"><a href="#cb9-140" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected<span class="op">[</span><span class="dv">2</span><span class="op">].</span>end <span class="op">==</span> <span class="dv">40</span><span class="op">);</span></span>
+<span id="cb9-141"><a href="#cb9-141" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-142"><a href="#cb9-142" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-143"><a href="#cb9-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-144"><a href="#cb9-144" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb9-145"><a href="#cb9-145" aria-hidden="true" tabindex="-1"></a><span class="co">// Test view() method - primary iteration interface</span></span>
+<span id="cb9-146"><a href="#cb9-146" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb9-147"><a href="#cb9-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-148"><a href="#cb9-148" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"DigitalIntervalSeries - view() method"</span><span class="op">,</span> <span class="st">"[DataManager][view]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-149"><a href="#cb9-149" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeries dis<span class="op">;</span></span>
+<span id="cb9-150"><a href="#cb9-150" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>addEvent<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">0</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">10</span><span class="op">));</span></span>
+<span id="cb9-151"><a href="#cb9-151" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>addEvent<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">20</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">30</span><span class="op">));</span></span>
+<span id="cb9-152"><a href="#cb9-152" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>addEvent<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">40</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">50</span><span class="op">));</span></span>
+<span id="cb9-153"><a href="#cb9-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-154"><a href="#cb9-154" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Basic iteration with IntervalWithId accessors"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-155"><a href="#cb9-155" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameIndex<span class="op">&gt;</span> collected_times<span class="op">;</span></span>
+<span id="cb9-156"><a href="#cb9-156" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> collected_intervals<span class="op">;</span></span>
+<span id="cb9-157"><a href="#cb9-157" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> collected_ids<span class="op">;</span></span>
+<span id="cb9-158"><a href="#cb9-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-159"><a href="#cb9-159" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> interval_with_id<span class="op">:</span> dis<span class="op">.</span>view<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb9-160"><a href="#cb9-160" aria-hidden="true" tabindex="-1"></a>            collected_times<span class="op">.</span>push_back<span class="op">(</span>interval_with_id<span class="op">.</span>time<span class="op">());</span></span>
+<span id="cb9-161"><a href="#cb9-161" aria-hidden="true" tabindex="-1"></a>            collected_intervals<span class="op">.</span>push_back<span class="op">(</span>interval_with_id<span class="op">.</span>interval<span class="op">);</span></span>
+<span id="cb9-162"><a href="#cb9-162" aria-hidden="true" tabindex="-1"></a>            collected_ids<span class="op">.</span>push_back<span class="op">(</span>interval_with_id<span class="op">.</span>id<span class="op">());</span></span>
+<span id="cb9-163"><a href="#cb9-163" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb9-164"><a href="#cb9-164" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-165"><a href="#cb9-165" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_times<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb9-166"><a href="#cb9-166" aria-hidden="true" tabindex="-1"></a>        <span class="co">// time() should be the start of each interval</span></span>
+<span id="cb9-167"><a href="#cb9-167" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_times<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">==</span> TimeFrameIndex<span class="op">(</span><span class="dv">0</span><span class="op">));</span></span>
+<span id="cb9-168"><a href="#cb9-168" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_times<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">==</span> TimeFrameIndex<span class="op">(</span><span class="dv">20</span><span class="op">));</span></span>
+<span id="cb9-169"><a href="#cb9-169" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_times<span class="op">[</span><span class="dv">2</span><span class="op">]</span> <span class="op">==</span> TimeFrameIndex<span class="op">(</span><span class="dv">40</span><span class="op">));</span></span>
+<span id="cb9-170"><a href="#cb9-170" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-171"><a href="#cb9-171" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Verify intervals</span></span>
+<span id="cb9-172"><a href="#cb9-172" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_intervals<span class="op">[</span><span class="dv">0</span><span class="op">].</span>start <span class="op">==</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb9-173"><a href="#cb9-173" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_intervals<span class="op">[</span><span class="dv">0</span><span class="op">].</span>end <span class="op">==</span> <span class="dv">10</span><span class="op">);</span></span>
+<span id="cb9-174"><a href="#cb9-174" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_intervals<span class="op">[</span><span class="dv">1</span><span class="op">].</span>start <span class="op">==</span> <span class="dv">20</span><span class="op">);</span></span>
+<span id="cb9-175"><a href="#cb9-175" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_intervals<span class="op">[</span><span class="dv">1</span><span class="op">].</span>end <span class="op">==</span> <span class="dv">30</span><span class="op">);</span></span>
+<span id="cb9-176"><a href="#cb9-176" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_intervals<span class="op">[</span><span class="dv">2</span><span class="op">].</span>start <span class="op">==</span> <span class="dv">40</span><span class="op">);</span></span>
+<span id="cb9-177"><a href="#cb9-177" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_intervals<span class="op">[</span><span class="dv">2</span><span class="op">].</span>end <span class="op">==</span> <span class="dv">50</span><span class="op">);</span></span>
+<span id="cb9-178"><a href="#cb9-178" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-179"><a href="#cb9-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-180"><a href="#cb9-180" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Empty series"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-181"><a href="#cb9-181" aria-hidden="true" tabindex="-1"></a>        DigitalIntervalSeries empty_dis<span class="op">;</span></span>
+<span id="cb9-182"><a href="#cb9-182" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-183"><a href="#cb9-183" aria-hidden="true" tabindex="-1"></a>        <span class="dt">size_t</span> count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb9-184"><a href="#cb9-184" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">([[</span><span class="at">maybe_unused</span><span class="op">]]</span> <span class="kw">auto</span> <span class="at">const</span> interval<span class="op">:</span> empty_dis<span class="op">.</span>view<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb9-185"><a href="#cb9-185" aria-hidden="true" tabindex="-1"></a>            count<span class="op">++;</span></span>
+<span id="cb9-186"><a href="#cb9-186" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb9-187"><a href="#cb9-187" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>count <span class="op">==</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb9-188"><a href="#cb9-188" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-189"><a href="#cb9-189" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-190"><a href="#cb9-190" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Direct member access via interval and entity_id"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-191"><a href="#cb9-191" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> v <span class="op">=</span> dis<span class="op">.</span>view<span class="op">();</span></span>
+<span id="cb9-192"><a href="#cb9-192" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> it <span class="op">=</span> <span class="bu">std::</span>ranges::begin<span class="op">(</span>v<span class="op">);</span></span>
+<span id="cb9-193"><a href="#cb9-193" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> first_element <span class="op">=</span> <span class="op">*</span>it<span class="op">;</span></span>
+<span id="cb9-194"><a href="#cb9-194" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-195"><a href="#cb9-195" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test direct member access</span></span>
+<span id="cb9-196"><a href="#cb9-196" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>first_element<span class="op">.</span>interval<span class="op">.</span>start <span class="op">==</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb9-197"><a href="#cb9-197" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>first_element<span class="op">.</span>interval<span class="op">.</span>end <span class="op">==</span> <span class="dv">10</span><span class="op">);</span></span>
+<span id="cb9-198"><a href="#cb9-198" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>first_element<span class="op">.</span>time<span class="op">()</span> <span class="op">==</span> TimeFrameIndex<span class="op">(</span><span class="dv">0</span><span class="op">));</span></span>
+<span id="cb9-199"><a href="#cb9-199" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-200"><a href="#cb9-200" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-201"><a href="#cb9-201" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Works with range algorithms"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-202"><a href="#cb9-202" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Count elements in range</span></span>
+<span id="cb9-203"><a href="#cb9-203" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> count <span class="op">=</span> <span class="bu">std::</span>ranges::distance<span class="op">(</span>dis<span class="op">.</span>view<span class="op">());</span></span>
+<span id="cb9-204"><a href="#cb9-204" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>count <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb9-205"><a href="#cb9-205" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-206"><a href="#cb9-206" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-207"><a href="#cb9-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-208"><a href="#cb9-208" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"DigitalIntervalSeries - view() concept-compliant iteration"</span><span class="op">,</span> <span class="st">"[DataManager][view]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-209"><a href="#cb9-209" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeries dis<span class="op">;</span></span>
+<span id="cb9-210"><a href="#cb9-210" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>addEvent<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">200</span><span class="op">));</span></span>
+<span id="cb9-211"><a href="#cb9-211" aria-hidden="true" tabindex="-1"></a>    dis<span class="op">.</span>addEvent<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">300</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">400</span><span class="op">));</span></span>
+<span id="cb9-212"><a href="#cb9-212" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-213"><a href="#cb9-213" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"IntervalWithId satisfies concept requirements"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-214"><a href="#cb9-214" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameIndex<span class="op">&gt;</span> collected_times<span class="op">;</span></span>
+<span id="cb9-215"><a href="#cb9-215" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> collected_ids<span class="op">;</span></span>
+<span id="cb9-216"><a href="#cb9-216" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> collected_values<span class="op">;</span></span>
+<span id="cb9-217"><a href="#cb9-217" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-218"><a href="#cb9-218" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> interval<span class="op">:</span> dis<span class="op">.</span>view<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb9-219"><a href="#cb9-219" aria-hidden="true" tabindex="-1"></a>            collected_times<span class="op">.</span>push_back<span class="op">(</span>interval<span class="op">.</span>time<span class="op">());</span></span>
+<span id="cb9-220"><a href="#cb9-220" aria-hidden="true" tabindex="-1"></a>            collected_ids<span class="op">.</span>push_back<span class="op">(</span>interval<span class="op">.</span>id<span class="op">());</span></span>
+<span id="cb9-221"><a href="#cb9-221" aria-hidden="true" tabindex="-1"></a>            collected_values<span class="op">.</span>push_back<span class="op">(</span>interval<span class="op">.</span>value<span class="op">());</span></span>
+<span id="cb9-222"><a href="#cb9-222" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb9-223"><a href="#cb9-223" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-224"><a href="#cb9-224" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_times<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb9-225"><a href="#cb9-225" aria-hidden="true" tabindex="-1"></a>        <span class="co">// time() returns start of interval</span></span>
+<span id="cb9-226"><a href="#cb9-226" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_times<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">==</span> TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
+<span id="cb9-227"><a href="#cb9-227" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_times<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">==</span> TimeFrameIndex<span class="op">(</span><span class="dv">300</span><span class="op">));</span></span>
+<span id="cb9-228"><a href="#cb9-228" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-229"><a href="#cb9-229" aria-hidden="true" tabindex="-1"></a>        <span class="co">// value() returns the full interval</span></span>
+<span id="cb9-230"><a href="#cb9-230" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_values<span class="op">[</span><span class="dv">0</span><span class="op">].</span>start <span class="op">==</span> <span class="dv">100</span><span class="op">);</span></span>
+<span id="cb9-231"><a href="#cb9-231" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_values<span class="op">[</span><span class="dv">0</span><span class="op">].</span>end <span class="op">==</span> <span class="dv">200</span><span class="op">);</span></span>
+<span id="cb9-232"><a href="#cb9-232" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_values<span class="op">[</span><span class="dv">1</span><span class="op">].</span>start <span class="op">==</span> <span class="dv">300</span><span class="op">);</span></span>
+<span id="cb9-233"><a href="#cb9-233" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>collected_values<span class="op">[</span><span class="dv">1</span><span class="op">].</span>end <span class="op">==</span> <span class="dv">400</span><span class="op">);</span></span>
+<span id="cb9-234"><a href="#cb9-234" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-235"><a href="#cb9-235" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb9-236"><a href="#cb9-236" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-237"><a href="#cb9-237" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"DigitalIntervalSeries - IntervalLayout"</span><span class="op">,</span> <span class="st">"[DataManager][interval][layout]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-238"><a href="#cb9-238" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Default layout is Disjoint"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-239"><a href="#cb9-239" aria-hidden="true" tabindex="-1"></a>        DigitalIntervalSeries series<span class="op">;</span></span>
+<span id="cb9-240"><a href="#cb9-240" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>series<span class="op">.</span>layout<span class="op">()</span> <span class="op">==</span> IntervalLayout<span class="op">::</span>Disjoint<span class="op">);</span></span>
+<span id="cb9-241"><a href="#cb9-241" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-242"><a href="#cb9-242" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-243"><a href="#cb9-243" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Disjoint layout merges overlapping addEvent calls"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-244"><a href="#cb9-244" aria-hidden="true" tabindex="-1"></a>        DigitalIntervalSeries series<span class="op">;</span></span>
+<span id="cb9-245"><a href="#cb9-245" aria-hidden="true" tabindex="-1"></a>        series<span class="op">.</span>addEvent<span class="op">(</span>Interval<span class="op">{</span><span class="dv">0</span><span class="op">,</span> <span class="dv">10</span><span class="op">});</span></span>
+<span id="cb9-246"><a href="#cb9-246" aria-hidden="true" tabindex="-1"></a>        series<span class="op">.</span>addEvent<span class="op">(</span>Interval<span class="op">{</span><span class="dv">5</span><span class="op">,</span> <span class="dv">15</span><span class="op">});</span></span>
+<span id="cb9-247"><a href="#cb9-247" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>series<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb9-248"><a href="#cb9-248" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>series<span class="op">.</span>view<span class="op">()[</span><span class="dv">0</span><span class="op">].</span>value<span class="op">().</span>start <span class="op">==</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb9-249"><a href="#cb9-249" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>series<span class="op">.</span>view<span class="op">()[</span><span class="dv">0</span><span class="op">].</span>value<span class="op">().</span>end <span class="op">==</span> <span class="dv">15</span><span class="op">);</span></span>
+<span id="cb9-250"><a href="#cb9-250" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-251"><a href="#cb9-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-252"><a href="#cb9-252" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Overlapping layout preserves intervals on addEvent"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-253"><a href="#cb9-253" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> series <span class="op">=</span> DigitalIntervalSeries<span class="op">::</span>createOverlapping<span class="op">({});</span></span>
+<span id="cb9-254"><a href="#cb9-254" aria-hidden="true" tabindex="-1"></a>        series<span class="op">-&gt;</span>addEvent<span class="op">(</span>Interval<span class="op">{</span><span class="dv">0</span><span class="op">,</span> <span class="dv">10</span><span class="op">});</span></span>
+<span id="cb9-255"><a href="#cb9-255" aria-hidden="true" tabindex="-1"></a>        series<span class="op">-&gt;</span>addEvent<span class="op">(</span>Interval<span class="op">{</span><span class="dv">5</span><span class="op">,</span> <span class="dv">15</span><span class="op">});</span></span>
+<span id="cb9-256"><a href="#cb9-256" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>series<span class="op">-&gt;</span>layout<span class="op">()</span> <span class="op">==</span> IntervalLayout<span class="op">::</span>Overlapping<span class="op">);</span></span>
+<span id="cb9-257"><a href="#cb9-257" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>series<span class="op">-&gt;</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb9-258"><a href="#cb9-258" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-259"><a href="#cb9-259" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-260"><a href="#cb9-260" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Overlapping layout does not suppress contained intervals"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-261"><a href="#cb9-261" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> series <span class="op">=</span> DigitalIntervalSeries<span class="op">::</span>createOverlapping<span class="op">({});</span></span>
+<span id="cb9-262"><a href="#cb9-262" aria-hidden="true" tabindex="-1"></a>        series<span class="op">-&gt;</span>addEvent<span class="op">(</span>Interval<span class="op">{</span><span class="dv">100</span><span class="op">,</span> <span class="dv">200</span><span class="op">});</span></span>
+<span id="cb9-263"><a href="#cb9-263" aria-hidden="true" tabindex="-1"></a>        series<span class="op">-&gt;</span>addEvent<span class="op">(</span>Interval<span class="op">{</span><span class="dv">120</span><span class="op">,</span> <span class="dv">150</span><span class="op">});</span></span>
+<span id="cb9-264"><a href="#cb9-264" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>series<span class="op">-&gt;</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb9-265"><a href="#cb9-265" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-266"><a href="#cb9-266" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-267"><a href="#cb9-267" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Overlapping layout rejects exact duplicate addEvent"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-268"><a href="#cb9-268" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> series <span class="op">=</span> DigitalIntervalSeries<span class="op">::</span>createOverlapping<span class="op">({});</span></span>
+<span id="cb9-269"><a href="#cb9-269" aria-hidden="true" tabindex="-1"></a>        series<span class="op">-&gt;</span>addEvent<span class="op">(</span>Interval<span class="op">{</span><span class="dv">10</span><span class="op">,</span> <span class="dv">20</span><span class="op">});</span></span>
+<span id="cb9-270"><a href="#cb9-270" aria-hidden="true" tabindex="-1"></a>        series<span class="op">-&gt;</span>addEvent<span class="op">(</span>Interval<span class="op">{</span><span class="dv">10</span><span class="op">,</span> <span class="dv">20</span><span class="op">});</span></span>
+<span id="cb9-271"><a href="#cb9-271" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>series<span class="op">-&gt;</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb9-272"><a href="#cb9-272" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-273"><a href="#cb9-273" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-274"><a href="#cb9-274" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"layout propagates through materialize and createView"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-275"><a href="#cb9-275" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> overlapping <span class="op">=</span> DigitalIntervalSeries<span class="op">::</span>createOverlapping<span class="op">(</span></span>
+<span id="cb9-276"><a href="#cb9-276" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span>Interval<span class="op">{</span><span class="dv">0</span><span class="op">,</span> <span class="dv">10</span><span class="op">},</span> Interval<span class="op">{</span><span class="dv">20</span><span class="op">,</span> <span class="dv">30</span><span class="op">}});</span></span>
+<span id="cb9-277"><a href="#cb9-277" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> materialized <span class="op">=</span> overlapping<span class="op">-&gt;</span>materialize<span class="op">();</span></span>
+<span id="cb9-278"><a href="#cb9-278" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>materialized<span class="op">-&gt;</span>layout<span class="op">()</span> <span class="op">==</span> IntervalLayout<span class="op">::</span>Overlapping<span class="op">);</span></span>
+<span id="cb9-279"><a href="#cb9-279" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-280"><a href="#cb9-280" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> shared <span class="op">=</span> <span class="bu">std::</span>const_pointer_cast<span class="op">&lt;</span>DigitalIntervalSeries <span class="at">const</span><span class="op">&gt;(</span>overlapping<span class="op">);</span></span>
+<span id="cb9-281"><a href="#cb9-281" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> view <span class="op">=</span> DigitalIntervalSeries<span class="op">::</span>createView<span class="op">(</span>shared<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">100</span><span class="op">);</span></span>
+<span id="cb9-282"><a href="#cb9-282" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>view<span class="op">-&gt;</span>layout<span class="op">()</span> <span class="op">==</span> IntervalLayout<span class="op">::</span>Overlapping<span class="op">);</span></span>
+<span id="cb9-283"><a href="#cb9-283" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-284"><a href="#cb9-284" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-285"><a href="#cb9-285" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"createFromView defaults to Overlapping layout"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-286"><a href="#cb9-286" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>pair<span class="op">&lt;</span>Interval<span class="op">,</span> EntityId<span class="op">&gt;&gt;</span> data<span class="op">{</span></span>
+<span id="cb9-287"><a href="#cb9-287" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span>Interval<span class="op">{</span><span class="dv">0</span><span class="op">,</span> <span class="dv">10</span><span class="op">},</span> EntityId<span class="op">{</span><span class="dv">1</span><span class="op">}},</span></span>
+<span id="cb9-288"><a href="#cb9-288" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span>Interval<span class="op">{</span><span class="dv">20</span><span class="op">,</span> <span class="dv">30</span><span class="op">},</span> EntityId<span class="op">{</span><span class="dv">2</span><span class="op">}},</span></span>
+<span id="cb9-289"><a href="#cb9-289" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
+<span id="cb9-290"><a href="#cb9-290" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> range_view <span class="op">=</span> data <span class="op">|</span> <span class="bu">std::</span>views::transform<span class="op">([](</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> p<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-291"><a href="#cb9-291" aria-hidden="true" tabindex="-1"></a>                              <span class="cf">return</span> IntervalWithId<span class="op">{</span>p<span class="op">.</span>first<span class="op">,</span> p<span class="op">.</span>second<span class="op">};</span></span>
+<span id="cb9-292"><a href="#cb9-292" aria-hidden="true" tabindex="-1"></a>                          <span class="op">});</span></span>
+<span id="cb9-293"><a href="#cb9-293" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> lazy <span class="op">=</span> DigitalIntervalSeries<span class="op">::</span>createFromView<span class="op">(</span>range_view<span class="op">,</span> data<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb9-294"><a href="#cb9-294" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>lazy<span class="op">-&gt;</span>layout<span class="op">()</span> <span class="op">==</span> IntervalLayout<span class="op">::</span>Overlapping<span class="op">);</span></span>
+<span id="cb9-295"><a href="#cb9-295" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-296"><a href="#cb9-296" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-297"><a href="#cb9-297" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"createView time filter includes all overlapping intervals"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb9-298"><a href="#cb9-298" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> overlapping <span class="op">=</span> DigitalIntervalSeries<span class="op">::</span>createOverlapping<span class="op">(</span></span>
+<span id="cb9-299"><a href="#cb9-299" aria-hidden="true" tabindex="-1"></a>                <span class="op">{</span>Interval<span class="op">{</span><span class="dv">0</span><span class="op">,</span> <span class="dv">100</span><span class="op">},</span> Interval<span class="op">{</span><span class="dv">50</span><span class="op">,</span> <span class="dv">60</span><span class="op">}});</span></span>
+<span id="cb9-300"><a href="#cb9-300" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> shared <span class="op">=</span> <span class="bu">std::</span>const_pointer_cast<span class="op">&lt;</span>DigitalIntervalSeries <span class="at">const</span><span class="op">&gt;(</span>overlapping<span class="op">);</span></span>
+<span id="cb9-301"><a href="#cb9-301" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> filtered <span class="op">=</span> DigitalIntervalSeries<span class="op">::</span>createView<span class="op">(</span>shared<span class="op">,</span> <span class="dv">62</span><span class="op">,</span> <span class="dv">65</span><span class="op">);</span></span>
+<span id="cb9-302"><a href="#cb9-302" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">-&gt;</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb9-303"><a href="#cb9-303" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">-&gt;</span>view<span class="op">()[</span><span class="dv">0</span><span class="op">].</span>value<span class="op">().</span>start <span class="op">==</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb9-304"><a href="#cb9-304" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>filtered<span class="op">-&gt;</span>view<span class="op">()[</span><span class="dv">0</span><span class="op">].</span>value<span class="op">().</span>end <span class="op">==</span> <span class="dv">100</span><span class="op">);</span></span>
+<span id="cb9-305"><a href="#cb9-305" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb9-306"><a href="#cb9-306" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-25 at 13:30:59 +0000</p>
+<p>Updated on 2026-07-27 at 20:05:54 +0000</p>
 
 
 </section>

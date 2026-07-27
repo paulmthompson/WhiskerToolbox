@@ -438,8 +438,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="production-patterns" class="level2">
 <h2 class="anchored" data-anchor-id="production-patterns">Production patterns</h2>
 <p><strong>Per-trial scalar features (interval rows):</strong><code>gatherAndExecutePipeline()</code> and <code>TensorColumnBuilders</code> run <code>executePipeline()</code> on each gathered slice, then apply the pipeline’s terminal range reduction via <code>RangeReductionRegistry::executeErased()</code>.</p>
-<p><strong>Per-element projection (raster plots):</strong><code>bindValueProjectionV2()</code> + <code>[GatherResult::project()](/api_generated/Classes/classGatherResult.md#function-project)</code> with <code>PipelineValueStore</code> from <code>buildTrialStore()</code>.</p>
-<p><strong>Trial sorting / batch reduce:</strong> Build a <code>ReducerFactoryV2</code> lambda and pass it to <code>[GatherResult::reduce()](/api_generated/Classes/classGatherResult.md#function-reduce)</code>.</p>
+<p><strong>Per-element projection (raster plots):</strong><code>bindValueProjectionV2()</code> + <code>projectGatherRows()</code> with row stores from <code>buildGatherRowStore()</code>.</p>
+<p><strong>Trial sorting / batch reduce:</strong> Build a <code>ReducerFactoryV2</code> lambda and pass it to <code>reduceGatherRows()</code>.</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>ReducerFactoryV2<span class="op">&lt;</span>EventWithId<span class="op">,</span> <span class="dt">float</span><span class="op">&gt;</span> factory <span class="op">=</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">[&amp;](</span>PipelineValueStore <span class="at">const</span><span class="op">&amp;)</span> <span class="op">-&gt;</span> ReducerFn<span class="op">&lt;</span>EventWithId<span class="op">,</span> <span class="dt">float</span><span class="op">&gt;</span> <span class="op">{</span></span>
@@ -450,7 +450,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>                <span class="st">"FirstPositiveLatency"</span><span class="op">,</span> <span class="kw">typeid</span><span class="op">(</span>EventWithId<span class="op">),</span> input_any<span class="op">,</span> <span class="op">{}));</span></span>
 <span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> latencies <span class="op">=</span> gather<span class="op">.</span>reduce<span class="op">(</span>factory<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> latencies <span class="op">=</span> reduceGatherRows<span class="op">(</span>gather<span class="op">,</span> factory<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>TransformPipeline::bindValueProjectionV2()</p>
 <p><a href="../../api_generated/Files/GatherPipelineExecutor_8hpp.html#file-gatherpipelineexecutor.hpp">GatherPipelineExecutor.hpp</a> gatherAndExecutePipeline()</p>
 <p><a href="../../api_generated/Files/TensorColumnBuilders_8hpp.html#file-tensorcolumnbuilders.hpp">TensorColumnBuilders.hpp</a> buildIntervalReductionProvider()</p>
@@ -554,7 +554,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-92"><a href="#cb2-92" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-93"><a href="#cb2-93" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// NEURALYZER_V2_VIEW_ADAPTOR_TYPES_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-25 at 13:31:00 +0000</p>
+<p>Updated on 2026-07-27 at 20:05:55 +0000</p>
 
 
 </section>

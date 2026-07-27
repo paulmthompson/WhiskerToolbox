@@ -448,6 +448,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tbody>
 </table>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensor <span class="op">=</span> Neuralyzer<span class="op">::</span>TensorDesign<span class="op">::</span>buildTensorFromDesignJson<span class="op">(</span>dm<span class="op">,</span> json<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Current interval-row builds gather each column over the full row interval. The planned row-pipeline refactor will let each column run a TransformPipeline over the row source to produce prepared gather windows and optional alignment anchors, then use <code>GatherResult</code> as the row-aligned DataObject container for the resulting gathered rows. This keeps TimeFrame conversion and entity identity in DataObjects and TransformPipelines rather than introducing a tensor-specific interval system.</p>
 </section>
 <section id="pack-analog-channels-into-dense-tensor" class="level3">
 <h3 class="anchored" data-anchor-id="pack-analog-channels-into-dense-tensor">2. Pack — analog channels into dense tensor</h3>
@@ -551,6 +552,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="related-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="related-documentation">Related documentation</h2>
 <ul>
+<li><a href="../developer/TensorDesign/column_row_pipeline.html">Column row pipeline design</a> — planned per-column gather geometry via row TransformPipelines</li>
+<li><a href="../developer/TensorDesign/column_row_pipeline_roadmap.html">Column row pipeline roadmap</a> — implementation sequence for <code>row_pipeline_json</code></li>
 <li><a href="../developer/DataObjects/multi_channel_storage_and_transforms.html">Multi-channel storage &amp; transforms</a></li>
 <li><a href="../developer/DataObjects/AnalogTimeSeries/tensor_column_analog_storage.html">TensorColumnAnalogStorage</a></li>
 <li><a href="../developer/ui/data_inspectors/tensor_inspector.html">Tensor Inspector (UI)</a></li>

@@ -1508,7 +1508,6 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>dir <a href="../api_generated/Files/dir_3ce825f0e95678b7aefe55b1b1b91d65.html#dir-src/gatherresult">src/GatherResult</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/GatherResult_8hpp.html#file-gatherresult.hpp">hpp</a></strong> <br>Container for collected views created by gather operations.</li>
-<li><strong>file <a href="../api_generated/Files/IntervalAdapters_8hpp.html#file-intervaladapters.hpp">hpp</a></strong> <br>Lazy interval adapters for flexible interval sources in <a href="../api_generated/Classes/classGatherResult.html">GatherResult</a>.</li>
 <li><strong>file <a href="../api_generated/Files/ViewAdaptorTypes_8hpp.html#file-viewadaptortypes.hpp">hpp</a></strong> <br>Function-object types for gather-slice transforms and reductions.</li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_fae119eb913a40fe8ed97cde8b98911e.html#dir-src/io">src/IO</a></strong>
@@ -2060,11 +2059,23 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/DigitalIntervalBoolean_8hpp.html#file-digitalintervalboolean.hpp">hpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/DigitalIntervalBoolean_8test_8cpp.html#file-digitalintervalboolean.test.cpp">cpp</a></strong></li>
 </ul></li>
+<li><strong>dir <a href="../api_generated/Files/dir_8b205c26821d1033992dcce86237329f.html#dir-src/transformsv2/algorithms/eventtointerval">src/TransformsV2/algorithms/EventToInterval</a></strong>
+<ul>
+<li><strong>file <a href="../api_generated/Files/EventToInterval_8cpp.html#file-eventtointerval.cpp">cpp</a></strong> <br>Expand <a href="../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> events into overlapping window intervals.</li>
+<li><strong>file <a href="../api_generated/Files/EventToInterval_8hpp.html#file-eventtointerval.hpp">hpp</a></strong></li>
+<li><strong>file <a href="../api_generated/Files/EventToInterval_8test_8cpp.html#file-eventtointerval.test.cpp">cpp</a></strong></li>
+</ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_a7111ee92dd258c977fa27f08030a834.html#dir-src/transformsv2/algorithms/intervalreduction">src/TransformsV2/algorithms/IntervalReduction</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/IntervalReduction_8cpp.html#file-intervalreduction.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/IntervalReduction_8hpp.html#file-intervalreduction.hpp">hpp</a></strong> <br>Binary container transforms that produce <a href="../api_generated/Classes/classTensorData.html">TensorData</a> from interval + source pairs.</li>
 <li><strong>file <a href="../api_generated/Files/IntervalReduction_8test_8cpp.html#file-intervalreduction.test.cpp">cpp</a></strong></li>
+</ul></li>
+<li><strong>dir <a href="../api_generated/Files/dir_86c2b149b5904ef931ec91941b1c2453.html#dir-src/transformsv2/algorithms/intervaltoevent">src/TransformsV2/algorithms/IntervalToEvent</a></strong>
+<ul>
+<li><strong>file <a href="../api_generated/Files/IntervalToEvent_8cpp.html#file-intervaltoevent.cpp">cpp</a></strong> <br>Extract <a href="../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> events from <a href="../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> alignment points.</li>
+<li><strong>file <a href="../api_generated/Files/IntervalToEvent_8hpp.html#file-intervaltoevent.hpp">hpp</a></strong></li>
+<li><strong>file <a href="../api_generated/Files/IntervalToEvent_8test_8cpp.html#file-intervaltoevent.test.cpp">cpp</a></strong></li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_44b35560a10d37ca35dbcfcb08a58ba8.html#dir-src/transformsv2/algorithms/lineangle">src/TransformsV2/algorithms/LineAngle</a></strong>
 <ul>
@@ -2148,6 +2159,12 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/MaskToLine_8cpp.html#file-masktoline.cpp">cpp</a></strong> <br>Implementation of element-level mask-to-line transform (<a href="../api_generated/Classes/classMask2D.html">Mask2D</a> → <a href="../api_generated/Classes/classLine2D.html">Line2D</a>).</li>
 <li><strong>file <a href="../api_generated/Files/MaskToLine_8hpp.html#file-masktoline.hpp">hpp</a></strong> <br>Element-level mask-to-line transform (<a href="../api_generated/Classes/classMask2D.html">Mask2D</a> → <a href="../api_generated/Classes/classLine2D.html">Line2D</a>).</li>
 <li><strong>file <a href="../api_generated/Files/MaskToLine_8test_8cpp.html#file-masktoline.test.cpp">cpp</a></strong> <br>Tests for V2 element-level mask-to-line transform.</li>
+</ul></li>
+<li><strong>dir <a href="../api_generated/Files/dir_5c36766b18369aae3e18914f92688373.html#dir-src/transformsv2/algorithms/pruneoverlappingintervals">src/TransformsV2/algorithms/PruneOverlappingIntervals</a></strong>
+<ul>
+<li><strong>file <a href="../api_generated/Files/PruneOverlappingIntervals_8cpp.html#file-pruneoverlappingintervals.cpp">cpp</a></strong> <br>Greedy keep-first pruning of overlapping intervals in a <a href="../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</li>
+<li><strong>file <a href="../api_generated/Files/PruneOverlappingIntervals_8hpp.html#file-pruneoverlappingintervals.hpp">hpp</a></strong></li>
+<li><strong>file <a href="../api_generated/Files/PruneOverlappingIntervals_8test_8cpp.html#file-pruneoverlappingintervals.test.cpp">cpp</a></strong></li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_c7ff3b59bdedba99140a4489f6324cc1.html#dir-src/transformsv2/algorithms/rangereductions">src/TransformsV2/algorithms/RangeReductions</a></strong>
 <ul>
@@ -2283,6 +2300,7 @@ ul.task-list li input[type="checkbox"] {
 <ul>
 <li><strong>file <a href="../api_generated/Files/GatherPipelineExecutor_8cpp.html#file-gatherpipelineexecutor.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/GatherPipelineExecutor_8hpp.html#file-gatherpipelineexecutor.hpp">hpp</a></strong> <br>Gather-and-execute helpers for interval-row tensor columns (Phase 3, Pattern B).</li>
+<li><strong>file <a href="../api_generated/Files/GatherResultRowContext_8hpp.html#file-gatherresultrowcontext.hpp">hpp</a></strong> <br>TransformsV2 helpers for row-wise <a href="../api_generated/Classes/classGatherResult.html">GatherResult</a> processing.</li>
 </ul></li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_2248445d47055af474ae6c424abc1e7c.html#dir-src/transformsv2/io">src/TransformsV2/io</a></strong>
@@ -3446,6 +3464,7 @@ ul.task-list li input[type="checkbox"] {
 <ul>
 <li><strong>file <a href="../api_generated/Files/LineSelectionHelpers_8hpp.html#file-lineselectionhelpers.hpp">hpp</a></strong> <br>Shared helpers for line-drag selection of batch lines.</li>
 <li><strong>file <a href="../api_generated/Files/PlotAlignmentGather_8hpp.html#file-plotalignmentgather.hpp">hpp</a></strong> <br>Free functions for creating aligned GatherResults from plot alignment settings.</li>
+<li><strong>file <a href="../api_generated/Files/PlotAlignmentWindowPreparation_8hpp.html#file-plotalignmentwindowpreparation.hpp">hpp</a></strong> <br>Qt-free helpers for preparing plot alignment windows for <a href="../api_generated/Classes/classGatherResult.html">GatherResult</a>.</li>
 <li><strong>file <a href="../api_generated/Files/PlotInteractionHelpers_8hpp.html#file-plotinteractionhelpers.hpp">hpp</a></strong> <br>Shared free functions for common plot interaction math.</li>
 <li><strong>file <a href="../api_generated/Files/SelectionInstructions_8hpp.html#file-selectioninstructions.hpp">hpp</a></strong> <br>Shared selection mode instruction text for plot widgets.</li>
 <li><strong>dir <a href="../api_generated/Files/dir_0dd0ed20e17edd353b1072299f85bc54.html#dir-src/whiskertoolbox/plots/common/coloralphacontrols">src/WhiskerToolbox/Plots/Common/ColorAlphaControls</a></strong>
@@ -4001,7 +4020,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/tableview__design__doc_8md.html#file-tableview-design-doc.md">tableview_design_doc.md</a></strong></li>
 </ul>
 <hr>
-<p>Updated on 2026-07-25 at 13:31:02 +0000</p>
+<p>Updated on 2026-07-27 at 20:05:58 +0000</p>
 
 
 </section>

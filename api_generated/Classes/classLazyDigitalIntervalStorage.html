@@ -353,6 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
   <li><a href="#additional-inherited-members" id="toc-additional-inherited-members" class="nav-link" data-scroll-target="#additional-inherited-members">Additional inherited members</a></li>
   <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
+  <li><a href="#range-query-limitation" id="toc-range-query-limitation" class="nav-link" data-scroll-target="#range-query-limitation">Range-query limitation</a></li>
   <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
   <ul class="collapse">
   <li><a href="#function-lazydigitalintervalstorage" id="toc-function-lazydigitalintervalstorage" class="nav-link" data-scroll-target="#function-lazydigitalintervalstorage">function LazyDigitalIntervalStorage</a></li>
@@ -445,7 +446,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>std::pair&lt; size_t, size_t &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classLazyDigitalIntervalStorage.html#function-getoverlappingrangeimpl">getOverlappingRangeImpl</a></strong>(int64_t start, int64_t end) const</td>
+<td><strong><a href="../../api_generated/Classes/classLazyDigitalIntervalStorage.html#function-getoverlappingrangeimpl">getOverlappingRangeImpl</a></strong>(int64_t start, int64_t end) const<br>Get index range of intervals overlapping [start, end].</td>
 </tr>
 <tr class="even">
 <td>std::pair&lt; size_t, size_t &gt;</td>
@@ -552,12 +553,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> ViewType <span class="op">&gt;</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LazyDigitalIntervalStorage<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Lazy digital interval storage that computes intervals on-demand from a view.</p>
-<p><strong>Template Parameters</strong>:</p>
-<ul>
-<li><strong>ViewType</strong> Type of the random-access range view</li>
-</ul>
 <p>Stores a computation pipeline as a random-access view that transforms data on-demand. Enables efficient composition of transforms without materializing intermediate results.</p>
 <p>The view must yield objects with .interval and .entity_id members (or convertible to Interval/EntityId pair).</p>
+</section>
+<section id="range-query-limitation" class="level2">
+<h2 class="anchored" data-anchor-id="range-query-limitation">Range-query limitation</h2>
+<p><a href="../../api_generated/Classes/classLazyDigitalIntervalStorage.html#function-getoverlappingrangeimpl">getOverlappingRangeImpl()</a> always uses an O(n) linear scan. Unlike <a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html">OwningDigitalIntervalStorage</a> and <a href="../../api_generated/Classes/classViewDigitalIntervalStorage.html">ViewDigitalIntervalStorage</a>, lazy storage does not expose <code>assumeDisjointIntervals()</code> and therefore does not use the O(log n) binary-search fast path, even when the underlying view yields disjoint intervals. This is intentional for transform intermediates (<code>[IntervalLayout::Overlapping](/api_generated/Files/Digital__Interval__Series_8hpp.md#enumvalue-overlapping)</code>) where overlaps are possible; a disjoint fast path may be added later if needed.</p>
+<p>ViewTypeType of the random-access range view</p>
 </section>
 <section id="public-functions-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
@@ -618,6 +620,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> start<span class="op">,</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> end</span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get index range of intervals overlapping [start, end].</p>
+<p><strong>See</strong>:</p>
+<ul>
+<li><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-getoverlappingrangeimpl">OwningDigitalIntervalStorage::getOverlappingRangeImpl()</a></li>
+<li><a href="../../api_generated/Classes/classViewDigitalIntervalStorage.html#function-getoverlappingrangeimpl">ViewDigitalIntervalStorage::getOverlappingRangeImpl()</a></li>
+</ul>
+<p><strong>Note</strong>: Lazy storage has no <code>assumeDisjointIntervals()</code> hook; disjoint transform views still pay linear cost for this query.</p>
+<p><strong>Always O(n) linear scan</strong> over computed elements. Correct for overlapping intervals. Does not use the disjoint binary-search optimization available on <a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-getoverlappingrangeimpl">OwningDigitalIntervalStorage::getOverlappingRangeImpl()</a> and <a href="../../api_generated/Classes/classViewDigitalIntervalStorage.html#function-getoverlappingrangeimpl">ViewDigitalIntervalStorage::getOverlappingRangeImpl()</a>.</p>
 </section>
 <section id="function-getcontainedrangeimpl" class="level3">
 <h3 class="anchored" data-anchor-id="function-getcontainedrangeimpl">function getContainedRangeImpl</h3>
@@ -641,7 +651,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> ViewType <span class="at">const</span> <span class="op">&amp;</span> getView<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get reference to underlying view.</p>
 <hr>
-<p>Updated on 2026-07-25 at 13:30:56 +0000</p>
+<p>Updated on 2026-07-27 at 20:05:51 +0000</p>
 
 
 </section>

@@ -971,7 +971,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-587"><a href="#cb1-587" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb1-588"><a href="#cb1-588" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-589"><a href="#cb1-589" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-590"><a href="#cb1-590" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> batch <span class="op">=</span> CorePlotting<span class="op">::</span>buildLineBatchFromGatherResult<span class="op">(</span>gathered<span class="op">,</span> alignment_times<span class="op">);</span></span>
+<span id="cb1-590"><a href="#cb1-590" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> batch <span class="op">=</span> CorePlotting<span class="op">::</span>buildLineBatchFromGatherResult<span class="op">(</span>gathered<span class="op">);</span></span>
 <span id="cb1-591"><a href="#cb1-591" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-592"><a href="#cb1-592" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Restore selection mask from previous selection (if trials still match)</span></span>
 <span id="cb1-593"><a href="#cb1-593" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_selected_trial_indices<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
@@ -1077,7 +1077,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-693"><a href="#cb1-693" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-694"><a href="#cb1-694" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>vec2 LinePlotOpenGLWidget<span class="op">::</span>screenToNDC<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
 <span id="cb1-695"><a href="#cb1-695" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>screenToNDC<span class="op">(</span>screen_pos<span class="op">,</span> _widget_width<span class="op">,</span></span>
-<span id="cb1-696"><a href="#cb1-696" aria-hidden="true" tabindex="-1"></a>                                              _widget_height<span class="op">);</span></span>
+<span id="cb1-696"><a href="#cb1-696" aria-hidden="true" tabindex="-1"></a>                                          _widget_height<span class="op">);</span></span>
 <span id="cb1-697"><a href="#cb1-697" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-698"><a href="#cb1-698" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-699"><a href="#cb1-699" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>startSelection<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">,</span> <span class="dt">bool</span> remove_mode<span class="op">)</span> <span class="op">{</span></span>
@@ -1281,7 +1281,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-897"><a href="#cb1-897" aria-hidden="true" tabindex="-1"></a>    _line_renderer<span class="op">.</span>updateLineColorOverrides<span class="op">(</span>per_line_colors<span class="op">);</span></span>
 <span id="cb1-898"><a href="#cb1-898" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-25 at 13:31:02 +0000</p>
+<p>Updated on 2026-07-27 at 20:05:57 +0000</p>
 
 
 </section>

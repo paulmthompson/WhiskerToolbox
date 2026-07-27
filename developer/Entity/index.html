@@ -1682,6 +1682,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co">// Clear all entities (session reset)</span></span>
 <span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>registry<span class="op">.</span>clear<span class="op">();</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Thread Safety</strong>: <code>EntityRegistry</code> uses <code>std::mutex</code> internally and is safe to use from multiple threads.</p>
+<section id="interval-entities" class="level4">
+<h4 class="anchored" data-anchor-id="interval-entities">Interval entities</h4>
+<p>For <code>EntityKind::IntervalEntity</code>, the registry tuple is <code>(data_key, start, end)</code>:</p>
+<ul>
+<li><code>time</code> / <code>time_value</code> — interval start (<code>TimeFrameIndex</code>)</li>
+<li><code>local_index</code> — interval end (not a storage index)</li>
+</ul>
+<p><code>DigitalIntervalSeries</code> keys new intervals this way via <code>ensureId</code>. When intervals merge (for example, extending an interval end in the DataInspector), the <code>EntityId</code> from the earliest-start merged interval is preserved and the registry entry is rebound to the new bounds via <code>rebindKey</code>. Reverse lookup uses the <code>EntityId</code> stored on the interval (<code>findByEntityId</code>), not the registry index.</p>
+</section>
 </section>
 <section id="entitygroupmanager" class="level3">
 <h3 class="anchored" data-anchor-id="entitygroupmanager">EntityGroupManager</h3>
