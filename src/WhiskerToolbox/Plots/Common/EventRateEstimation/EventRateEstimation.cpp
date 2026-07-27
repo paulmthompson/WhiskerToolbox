@@ -1,179 +1,16 @@
 #include "EventRateEstimation.hpp"
 
-// We do NOT include PlotAlignmentGather.hpp here because it transitively
-// includes PlotAlignmentState.hpp (a QObject subclass), which would introduce
-// a Qt dependency into this otherwise Qt-free library.  Instead we replicate
-// only the gather logic that depends on PlotAlignmentData (a plain POD struct).
-
 #include "GatherResult/GatherResult.hpp"
-#include "GatherResult/IntervalAdapters.hpp"
+#include "Plots/Common/PlotAlignmentWindowPreparation.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <algorithm>
 #include <cmath>
-#include <cstdint>
-#include <numeric>
 #include <vector>
 
 namespace Neuralyzer::Plots {
 
-// =============================================================================
-// Internal gather helpers (subset of PlotAlignmentGather.hpp — no Qt needed)
-// =============================================================================
-
 namespace {
-
-using Neuralyzer::Gather::AlignmentPoint;
-using Neuralyzer::Gather::expandEvents;
-using Neuralyzer::Gather::withAlignment;
-
-[[nodiscard]] AlignmentPoint toAlignmentPointLocal(IntervalAlignmentType type) noexcept {
-    return (type == IntervalAlignmentType::End)
-                   ? AlignmentPoint::End
-                   : AlignmentPoint::Start;
-}
-
-/**
- * @brief Prune alignment times whose expanded windows would overlap (local copy)
- *
- * This is a local copy of Neuralyzer::Plots::pruneOverlappingAlignmentTimes
- * to avoid a transitive Qt dependency from PlotAlignmentGather.hpp.
- */
-[[nodiscard]] std::vector<size_t> pruneOverlappingAlignmentTimesLocal(
-        std::vector<int64_t> const & alignment_times,
-        int64_t pre_window,
-        int64_t post_window) {
-    std::vector<size_t> kept_indices;
-    if (alignment_times.empty()) {
-        return kept_indices;
-    }
-    kept_indices.reserve(alignment_times.size());
-    kept_indices.push_back(0);
-    int64_t last_kept_end = alignment_times[0] + post_window;
-    for (size_t i = 1; i < alignment_times.size(); ++i) {
-        int64_t const current_start = alignment_times[i] - pre_window;
-        if (current_start > last_kept_end) {
-            kept_indices.push_back(i);
-            last_kept_end = alignment_times[i] + post_window;
-        }
-    }
-    return kept_indices;
-}
-
-/**
- * @brief Filter a DigitalEventSeries to keep only non-overlapping events
- */
-[[nodiscard]] std::shared_ptr<DigitalEventSeries> filterOverlappingEvents(
-        std::shared_ptr<DigitalEventSeries> const & events,
-        int64_t pre_window,
-        int64_t post_window) {
-    std::vector<int64_t> times;
-    times.reserve(events->size());
-    auto tf = events->getTimeFrame();
-    for (auto const & ev: events->view()) {
-        times.push_back(tf ? tf->getTimeAtIndex(ev.time()) : ev.time().getValue());
-    }
-    auto kept = pruneOverlappingAlignmentTimesLocal(times, pre_window, post_window);
-    if (kept.size() == events->size()) {
-        return events;
-    }
-    std::vector<TimeFrameIndex> kept_events;
-    kept_events.reserve(kept.size());
-    size_t idx = 0;
-    size_t kept_pos = 0;
-    for (auto const & ev: events->view()) {
-        if (kept_pos < kept.size() && idx == kept[kept_pos]) {
-            kept_events.push_back(ev.time());
-            ++kept_pos;
-        }
-        ++idx;
-    }
-    auto filtered = std::make_shared<DigitalEventSeries>(std::move(kept_events));
-    filtered->setTimeFrame(events->getTimeFrame());
-    return filtered;
-}
-
-/**
- * @brief Filter a DigitalIntervalSeries to keep only non-overlapping intervals
- */
-[[nodiscard]] std::shared_ptr<DigitalIntervalSeries> filterOverlappingIntervals(
-        std::shared_ptr<DigitalIntervalSeries> const & intervals,
-        AlignmentPoint align,
-        int64_t pre_window,
-        int64_t post_window) {
-    std::vector<int64_t> times;
-    times.reserve(intervals->size());
-    auto tf = intervals->getTimeFrame();
-    for (auto const & iv: intervals->view()) {
-        int64_t index{};
-        switch (align) {
-            case AlignmentPoint::Start:
-                index = iv.interval.start;
-                break;
-            case AlignmentPoint::End:
-                index = iv.interval.end;
-                break;
-            case AlignmentPoint::Center:
-                index = (iv.interval.start + iv.interval.end) / 2;
-                break;
-        }
-        times.push_back(tf ? tf->getTimeAtIndex(TimeFrameIndex(index)) : index);
-    }
-    auto kept = pruneOverlappingAlignmentTimesLocal(times, pre_window, post_window);
-    if (kept.size() == intervals->size()) {
-        return intervals;
-    }
-    std::vector<Interval> kept_intervals;
-    kept_intervals.reserve(kept.size());
-    size_t idx = 0;
-    size_t kept_pos = 0;
-    for (auto const & iv: intervals->view()) {
-        if (kept_pos < kept.size() && idx == kept[kept_pos]) {
-            kept_intervals.push_back(iv.interval);
-            ++kept_pos;
-        }
-        ++idx;
-    }
-    auto filtered = std::make_shared<DigitalIntervalSeries>(std::move(kept_intervals));
-    filtered->setTimeFrame(intervals->getTimeFrame());
-    return filtered;
-}
-
-/**
- * @brief Create a GatherResult aligned to a DigitalEventSeries with window expansion
- */
-[[nodiscard]] GatherResult<DigitalEventSeries> gatherWithEventSeries(
-        std::shared_ptr<DigitalEventSeries> const & source,
-        std::shared_ptr<DigitalEventSeries> const & alignment_events,
-        double half_window) {
-    if (!source || !alignment_events) {
-        return GatherResult<DigitalEventSeries>{};
-    }
-    auto adapter = expandEvents(
-            alignment_events,
-            static_cast<int64_t>(half_window),
-            static_cast<int64_t>(half_window));
-    return gather(source, adapter);
-}
-
-/**
- * @brief Create a GatherResult aligned to a DigitalIntervalSeries with window expansion
- */
-[[nodiscard]] GatherResult<DigitalEventSeries> gatherWithIntervalSeries(
-        std::shared_ptr<DigitalEventSeries> const & source,
-        std::shared_ptr<DigitalIntervalSeries> const & alignment_intervals,
-        AlignmentPoint align,
-        double half_window) {
-    if (!source || !alignment_intervals) {
-        return GatherResult<DigitalEventSeries>{};
-    }
-    auto adapter = withAlignment(
-            alignment_intervals,
-            align,
-            static_cast<int64_t>(half_window),
-            static_cast<int64_t>(half_window));
-    return gather(source, adapter);
-}
 
 /**
  * @brief Core gather dispatch using PlotAlignmentData (no Qt dependency)
@@ -186,41 +23,15 @@ using Neuralyzer::Gather::withAlignment;
         return GatherResult<DigitalEventSeries>{};
     }
 
-    double const half_window = alignment_data.window_size / 2.0;
-    auto const hw = static_cast<int64_t>(half_window);
-    DM_DataType const type =
-            data_manager->getType(alignment_data.alignment_event_key);
-
-    if (type == DM_DataType::DigitalEvent) {
-        auto alignment_events =
-                data_manager->getData<DigitalEventSeries>(
-                        alignment_data.alignment_event_key);
-        if (!alignment_events) {
-            return GatherResult<DigitalEventSeries>{};
-        }
-        if (alignment_data.prevent_overlap) {
-            alignment_events = filterOverlappingEvents(alignment_events, hw, hw);
-        }
-        return gatherWithEventSeries(source, alignment_events, half_window);
-
-    } else if (type == DM_DataType::DigitalInterval) {
-        auto alignment_intervals =
-                data_manager->getData<DigitalIntervalSeries>(
-                        alignment_data.alignment_event_key);
-        if (!alignment_intervals) {
-            return GatherResult<DigitalEventSeries>{};
-        }
-        AlignmentPoint const align =
-                toAlignmentPointLocal(alignment_data.interval_alignment_type);
-        if (alignment_data.prevent_overlap) {
-            alignment_intervals = filterOverlappingIntervals(
-                    alignment_intervals, align, hw, hw);
-        }
-        return gatherWithIntervalSeries(
-                source, alignment_intervals, align, half_window);
+    auto prepared = prepareAlignmentWindows(
+            data_manager,
+            alignment_data,
+            source->getTimeFrame());
+    if (!prepared.isValid()) {
+        return GatherResult<DigitalEventSeries>{};
     }
 
-    return GatherResult<DigitalEventSeries>{};
+    return gather(source, prepared.windows, prepared.alignment_points);
 }
 
 }// anonymous namespace

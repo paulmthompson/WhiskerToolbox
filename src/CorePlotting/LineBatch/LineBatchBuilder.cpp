@@ -4,8 +4,8 @@
  */
 #include "LineBatchBuilder.hpp"
 
-#include "GatherResult/GatherResult.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "GatherResult/GatherResult.hpp"
 #include "Lines/Line_Data.hpp"
 
 #include <algorithm>
@@ -16,22 +16,21 @@ namespace CorePlotting {
 // ── buildLineBatchFromLineData ─────────────────────────────────────────
 
 LineBatchData buildLineBatchFromLineData(
-    LineData const & line_data,
-    float canvas_width,
-    float canvas_height)
-{
+        LineData const & line_data,
+        float canvas_width,
+        float canvas_height) {
     LineBatchData batch;
     batch.canvas_width = canvas_width;
     batch.canvas_height = canvas_height;
 
-    std::uint32_t line_id = 0; // 1-based after increment
+    std::uint32_t line_id = 0;// 1-based after increment
 
-    for (auto elem : line_data.elementsView()) {
+    for (auto elem: line_data.elementsView()) {
         Line2D const & line = elem.data();
         EntityId const eid = elem.id();
 
         if (line.size() < 2) {
-            continue; // Need at least 2 points to form a segment
+            continue;// Need at least 2 points to form a segment
         }
 
         ++line_id;
@@ -68,10 +67,19 @@ LineBatchData buildLineBatchFromLineData(
 
 // ── buildLineBatchFromGatherResult ─────────────────────────────────────
 
+LineBatchData buildLineBatchFromGatherResult(GatherResult<AnalogTimeSeries> const & gathered) {
+    std::vector<std::int64_t> alignment_times;
+    alignment_times.reserve(gathered.size());
+    for (std::size_t trial = 0; trial < gathered.size(); ++trial) {
+        alignment_times.push_back(gathered.alignmentTimeAt(trial));
+    }
+
+    return buildLineBatchFromGatherResult(gathered, alignment_times);
+}
+
 LineBatchData buildLineBatchFromGatherResult(
-    GatherResult<AnalogTimeSeries> const & gathered,
-    std::vector<std::int64_t> const & alignment_times)
-{
+        GatherResult<AnalogTimeSeries> const & gathered,
+        std::vector<std::int64_t> const & alignment_times) {
     LineBatchData batch;
     batch.canvas_width = 1.0f;
     batch.canvas_height = 1.0f;
@@ -89,7 +97,7 @@ LineBatchData buildLineBatchFromGatherResult(
         std::uint32_t seg_count = 0;
 
         std::int64_t const align =
-            trial < alignment_times.size() ? alignment_times[trial] : 0;
+                trial < alignment_times.size() ? alignment_times[trial] : 0;
 
         // Iterate time-value pairs via the lazy view
         auto trial_view = series->view();
@@ -97,15 +105,18 @@ LineBatchData buildLineBatchFromGatherResult(
 
         // We need to read pairs of consecutive points.
         // Materialise a lightweight buffer of (x,y) for this trial.
-        struct XY { float x; float y; };
+        struct XY {
+            float x;
+            float y;
+        };
         std::vector<XY> pts;
         pts.reserve(series->getNumSamples());
 
-        for (auto tvp : trial_view) {
-            int64_t time_abs = trial_tf
-                ? trial_tf->getTimeAtIndex(tvp.time())
-                : tvp.time().getValue();
-            float const x = static_cast<float>(time_abs - align);
+        for (auto tvp: trial_view) {
+            int64_t const time_abs = trial_tf
+                                       ? trial_tf->getTimeAtIndex(tvp.time())
+                                       : tvp.time().getValue();
+            auto const x = static_cast<float>(time_abs - align);
             float const y = tvp.value();
             pts.push_back({x, y});
         }
@@ -134,4 +145,4 @@ LineBatchData buildLineBatchFromGatherResult(
     return batch;
 }
 
-} // namespace CorePlotting
+}// namespace CorePlotting

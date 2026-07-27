@@ -19,7 +19,6 @@
 #include <vector>
 
 using namespace Neuralyzer::Plots;
-using Neuralyzer::Gather::AlignmentPoint;
 using Neuralyzer::Test::GatherFixtures::createEventSeries;
 using Neuralyzer::Test::GatherFixtures::createIdentityTimeFrame;
 using Neuralyzer::Test::GatherFixtures::createIntervalSeries;
@@ -79,6 +78,8 @@ TEST_CASE("gatherWithEventAlignment - basic functionality", "[PlotAlignmentGathe
     auto result = gatherWithEventAlignment(spikes, alignment_events, 50.0, 50.0);
 
     REQUIRE(result.size() == 2);
+    REQUIRE(result.windows() != nullptr);
+    REQUIRE(result.alignmentPoints() != nullptr);
 
     SECTION("First window [50, 150] contains correct spikes") {
         // Spikes at 50, 100, 150 are in [50, 150] (inclusive boundaries)
@@ -105,6 +106,8 @@ TEST_CASE("gatherWithEventAlignment - asymmetric window", "[PlotAlignmentGather]
     auto result = gatherWithEventAlignment(spikes, alignment_events, 25.0, 75.0);
 
     REQUIRE(result.size() == 2);
+    REQUIRE(result.windows() != nullptr);
+    REQUIRE(result.alignmentPoints() != nullptr);
 
     // First window [75, 175]: contains 80, 100, 120 (3 spikes)
     CHECK(result[0]->size() == 3);
@@ -140,6 +143,8 @@ TEST_CASE("gatherWithIntervalAlignment - start alignment", "[PlotAlignmentGather
     auto result = gatherWithIntervalAlignment(spikes, intervals, AlignmentPoint::Start);
 
     REQUIRE(result.size() == 2);
+    REQUIRE(result.windows() != nullptr);
+    REQUIRE(result.alignmentPoints() != nullptr);
 
     SECTION("Alignment times are interval starts") {
         CHECK(result.alignmentTimeAt(0) == 0);
@@ -253,6 +258,8 @@ TEST_CASE("createAlignedGatherResult - with interval alignment", "[PlotAlignment
     auto result = createAlignedGatherResult<DigitalEventSeries>(dm, "spikes", align_data);
 
     REQUIRE(result.size() == 3);// 3 trials
+    REQUIRE(result.windows() != nullptr);
+    REQUIRE(result.alignmentPoints() != nullptr);
 
     SECTION("Uses window around alignment point for data gathering") {
         // Spikes: {10, 50, 100, 150, 200, 250, 300, 350}
@@ -281,6 +288,8 @@ TEST_CASE("createAlignedGatherResult - with event alignment", "[PlotAlignmentGat
     auto result = createAlignedGatherResult<DigitalEventSeries>(dm, "spikes", align_data);
 
     REQUIRE(result.size() == 3);// 3 stimulus events
+    REQUIRE(result.windows() != nullptr);
+    REQUIRE(result.alignmentPoints() != nullptr);
 
     SECTION("Alignment times are event times, not window starts") {
         CHECK(result.alignmentTimeAt(0) == 50);
@@ -359,7 +368,7 @@ TEST_CASE("GatherResult::alignmentTimeAt - basic usage", "[GatherResult][PlotAli
     }
 }
 
-TEST_CASE("GatherResult::alignmentTimeAt - with adapters", "[GatherResult][PlotAlignmentGather]") {
+TEST_CASE("GatherResult::alignmentTimeAt - with prepared alignment windows", "[GatherResult][PlotAlignmentGather]") {
     auto spikes = createEventSeries({80, 100, 120, 180, 200, 220});
     auto alignment_events = createEventSeries({100, 200});
 

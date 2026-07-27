@@ -22,6 +22,7 @@ set_target_properties(EventRateEstimation PROPERTIES
 target_link_libraries(EventRateEstimation PUBLIC DataManager)
 target_link_libraries(EventRateEstimation PUBLIC GatherResult)
 target_link_libraries(EventRateEstimation PUBLIC PlotAlignmentWidget)
+target_link_libraries(EventRateEstimation PUBLIC TransformsV2)
 
 target_include_directories(EventRateEstimation PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"         # This directory

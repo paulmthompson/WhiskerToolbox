@@ -1223,7 +1223,7 @@ private:
      * @brief Resolve a companion alignment event for an original row index.
      *
      * @pre `_alignment_points` must be non-null and `original_idx` must be in range.
-     * @post Returned time is converted into source coordinates when both TimeFrames are available.
+     * @post Returned time is expressed in physical time units when the alignment series has a TimeFrame.
      */
     [[nodiscard]] int64_t _alignmentTimeFromCompanionEvent(size_type original_idx) const {
         assert(_alignment_points && "GatherResult::alignmentTimeAt: alignment points must exist");
@@ -1233,9 +1233,8 @@ private:
         auto const alignment_view = _alignment_points->view();
         auto const alignment_time = alignment_view[original_idx].time();
         auto const alignment_tf = _alignment_points->getTimeFrame();
-        auto const source_tf = _source ? _source->getTimeFrame() : nullptr;
 
-        return convert_time_index(alignment_time, alignment_tf.get(), source_tf.get()).getValue();
+        return alignment_tf ? alignment_tf->getTimeAtIndex(alignment_time) : alignment_time.getValue();
     }
 
     std::shared_ptr<T> _source;

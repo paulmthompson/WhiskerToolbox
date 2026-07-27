@@ -27,7 +27,7 @@ target_link_libraries(PlotAlignmentWidget PUBLIC
 )
 
 target_link_libraries(PlotAlignmentWidget PUBLIC DataTypeEnum)
-target_link_libraries(PlotAlignmentWidget PRIVATE DataManager GatherResult)
+target_link_libraries(PlotAlignmentWidget PRIVATE DataManager GatherResult TransformsV2)
 
 target_include_directories(PlotAlignmentWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

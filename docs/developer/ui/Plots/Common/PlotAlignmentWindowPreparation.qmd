@@ -1,0 +1,35 @@
+---
+title: "Plot Alignment Window Preparation"
+---
+
+## Purpose
+
+`PlotAlignmentWindowPreparation.hpp` is the Qt-free bridge between plot alignment state and the prepared-window `GatherResult` API.
+
+It replaces plot-side use of `EventExpanderAdapter` and `IntervalWithAlignmentAdapter` with normal row metadata:
+
+- `DigitalIntervalSeries` windows define the gathered rows.
+- `DigitalEventSeries` alignment points define each row's trial-relative zero time.
+- Optional overlap prevention prunes the window series and filters companion alignment points with the same kept row indices.
+
+## Window Semantics
+
+Plot window sizes are interpreted in physical display time units, matching the legacy plot adapter behavior. The helper materializes generated display windows in the gathered source `TimeFrame`, then passes those prepared windows to `GatherResult`.
+
+This keeps cross-timeframe plots stable:
+
+```text
+alignment event or interval point
+    -> physical alignment time
+    -> physical display window
+    -> source-TimeFrame DigitalIntervalSeries windows
+    -> GatherResult(source, windows, alignment_points)
+```
+
+`alignmentTimeAt()` remains a physical time value for companion alignment events, so PSTH, event-rate, event plot, and line plot code can subtract it from physical event/sample times.
+
+## Consumers
+
+`PlotAlignmentGather.hpp` is now a compatibility layer around these helpers. It keeps the existing widget-facing functions while routing all aligned gathers through prepared windows.
+
+`EventRateEstimation.cpp` includes this helper directly instead of including `PlotAlignmentGather.hpp`, preserving its no-QObject dependency boundary.

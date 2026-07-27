@@ -53,6 +53,7 @@ target_link_libraries(PSTHWidget PRIVATE PlottingSVG)
 target_link_libraries(PSTHWidget PRIVATE glm::glm)
 target_link_libraries(PSTHWidget PRIVATE GatherResult)
 target_link_libraries(PSTHWidget PRIVATE WhiskerToolbox::StateManagement)
+target_link_libraries(PSTHWidget PRIVATE TransformsV2)
 
 target_include_directories(PSTHWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory

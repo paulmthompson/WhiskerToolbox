@@ -587,7 +587,7 @@ void LinePlotOpenGLWidget::rebuildScene() {
         }
     }
 
-    auto batch = CorePlotting::buildLineBatchFromGatherResult(gathered, alignment_times);
+    auto batch = CorePlotting::buildLineBatchFromGatherResult(gathered);
 
     // Restore selection mask from previous selection (if trials still match)
     if (!_selected_trial_indices.empty()) {
@@ -693,7 +693,7 @@ void LinePlotOpenGLWidget::clearSelection() {
 
 glm::vec2 LinePlotOpenGLWidget::screenToNDC(QPoint const & screen_pos) const {
     return Neuralyzer::Plots::screenToNDC(screen_pos, _widget_width,
-                                              _widget_height);
+                                          _widget_height);
 }
 
 void LinePlotOpenGLWidget::startSelection(QPoint const & screen_pos, bool remove_mode) {

@@ -24,6 +24,7 @@ target_link_libraries(test_plot_alignment_gather PRIVATE
     PlotAlignmentWidget
     Qt6::Core
     GatherResult
+    TransformsV2
 )
 
 target_include_directories(test_plot_alignment_gather PRIVATE
@@ -97,6 +98,7 @@ target_include_directories(test_event_rate_estimation PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Plots/Common>"
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DataManager>"
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/tests>"
 )
 
 if(ENABLE_DETAILED_TEST_DISCOVERY)

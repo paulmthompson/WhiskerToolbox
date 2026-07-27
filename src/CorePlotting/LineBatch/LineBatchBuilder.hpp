@@ -11,12 +11,12 @@
 #ifndef COREPLOTTING_LINEBATCH_LINEBATCHBUILDER_HPP
 #define COREPLOTTING_LINEBATCH_LINEBATCHBUILDER_HPP
 
-#include "LineBatchData.hpp" // LineBatchData
+#include "LineBatchData.hpp"// LineBatchData
 
-#include <cstdint> // int64_t
-#include <vector>  // std::vector
+#include <cstdint>// int64_t
+#include <vector> // std::vector
 
-template <typename T>
+template<typename T>
 class GatherResult;
 
 class AnalogTimeSeries;
@@ -37,9 +37,9 @@ namespace CorePlotting {
  * @return Populated LineBatchData with all lines visible and none selected.
  */
 [[nodiscard]] LineBatchData buildLineBatchFromLineData(
-    LineData const & line_data,
-    float canvas_width,
-    float canvas_height);
+        LineData const & line_data,
+        float canvas_width,
+        float canvas_height);
 
 /**
  * @brief Build a LineBatchData from GatherResult<AnalogTimeSeries> (LinePlotWidget use case).
@@ -50,15 +50,29 @@ namespace CorePlotting {
  * The x-coordinates are the TimeFrameIndex values (relative to the alignment
  * time for that trial), and y-coordinates are the analog sample values.
  *
- * @param gathered        The gathered analog time series (one per trial).
- * @param alignment_times Per-trial alignment times.  X = timeFrameIndex - alignment_times[trial].
- *                        Must have the same size as @p gathered.
+ * @param gathered The gathered analog time series (one per trial).
  * @return Populated LineBatchData with all lines visible and none selected.
+ *
+ * @pre gathered must provide alignment metadata through alignmentTimeAt().
+ * @post X = timeFrameIndex - gathered.alignmentTimeAt(trial).
  */
 [[nodiscard]] LineBatchData buildLineBatchFromGatherResult(
-    GatherResult<AnalogTimeSeries> const & gathered,
-    std::vector<std::int64_t> const & alignment_times);
+        GatherResult<AnalogTimeSeries> const & gathered);
 
-} // namespace CorePlotting
+/**
+ * @brief Build a LineBatchData from GatherResult<AnalogTimeSeries> with explicit alignment overrides.
+ *
+ * @param gathered The gathered analog time series (one per trial).
+ * @param alignment_times Per-trial alignment times. Must have the same size as @p gathered
+ *                        for every trial to use an override.
+ * @return Populated LineBatchData with all lines visible and none selected.
+ *
+ * @post X = timeFrameIndex - alignment_times[trial] when available, otherwise raw time.
+ */
+[[nodiscard]] LineBatchData buildLineBatchFromGatherResult(
+        GatherResult<AnalogTimeSeries> const & gathered,
+        std::vector<std::int64_t> const & alignment_times);
 
-#endif // COREPLOTTING_LINEBATCH_LINEBATCHBUILDER_HPP
+}// namespace CorePlotting
+
+#endif// COREPLOTTING_LINEBATCH_LINEBATCHBUILDER_HPP

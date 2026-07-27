@@ -52,6 +52,7 @@ target_link_libraries(LinePlotWidget PRIVATE GroupContextMenu)
 target_link_libraries(LinePlotWidget PRIVATE GroupManagementWidget)
 target_link_libraries(LinePlotWidget PRIVATE glm::glm)
 target_link_libraries(LinePlotWidget PRIVATE GatherResult)
+target_link_libraries(LinePlotWidget PRIVATE TransformsV2)
 
 target_include_directories(LinePlotWidget PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>" #This directory
