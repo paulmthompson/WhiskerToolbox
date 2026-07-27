@@ -1,0 +1,91 @@
+---
+title: "Interval To Event Transform"
+---
+
+## Overview
+
+The `IntervalToEvent` transform extracts one event per interval from a `DigitalIntervalSeries`, producing a `DigitalEventSeries` with a 1:1 row mapping. This is the materialized counterpart to the alignment-point extraction in `IntervalWithAlignmentAdapter` used by `GatherResult`, and is the inverse of `EventToInterval` for point intervals.
+
+Each interval produces one event at the selected alignment point:
+
+```text
+Start  -> interval.start
+End    -> interval.end
+Center -> (interval.start + interval.end) / 2
+```
+
+Extraction is performed in **TimeFrameIndex space** (not absolute clock time). The output preserves the input `TimeFrame`.
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `src/TransformsV2/algorithms/IntervalToEvent/IntervalToEvent.hpp` | Parameter struct, enum, and function declaration |
+| `src/TransformsV2/algorithms/IntervalToEvent/IntervalToEvent.cpp` | Algorithm implementation and JSON enum converter |
+| `src/TransformsV2/algorithms/IntervalToEvent/IntervalToEvent.test.cpp` | Unit tests |
+
+## Parameters
+
+```cpp
+enum class IntervalEventPoint { start, end, center };
+
+struct IntervalToEventParams {
+    IntervalEventPoint point{IntervalEventPoint::start};
+};
+```
+
+The `point` field serializes as `"start"`, `"end"`, or `"center"` in JSON pipeline loading.
+
+## Algorithm
+
+1. For each interval, compute the event time from `params.point`.
+2. Collect all event times into a vector (preserving input order).
+3. Return `DigitalEventSeries` with `setTimeFrame(input.getTimeFrame())`.
+
+Source entity IDs are not copied to the output events.
+
+## Registration
+
+Registered in `RegisteredTransforms.cpp` as:
+
+```cpp
+RegisterContainerTransform<DigitalIntervalSeries, DigitalEventSeries, IntervalToEventParams>(
+    "IntervalToEvent", intervalToEvent, ...);
+```
+
+## Pipeline Usage
+
+```json
+{
+  "steps": [{
+    "step_id": "extract_alignment",
+    "transform_name": "IntervalToEvent",
+    "input_key": "trial_intervals",
+    "output_key": "alignment_events",
+    "parameters": {
+      "point": "center"
+    }
+  }]
+}
+```
+
+## Relationship to GatherResult Migration
+
+This transform implements the interval-to-alignment-point portion described in `digital_interval_series_migration_design.qmd`. For display windows around interval-derived points, compose with `EventToInterval`:
+
+```text
+DigitalIntervalSeries -> IntervalToEvent -> DigitalEventSeries -> EventToInterval -> DigitalIntervalSeries
+```
+
+## Edge Cases
+
+| Input | Behavior |
+|-------|----------|
+| Empty interval series | Returns empty `DigitalEventSeries` with preserved TimeFrame |
+| Point interval `[T, T]` | Start, end, and center all map to `T` |
+| Overlapping intervals | One event per interval row (not merged) |
+| Cancellation | Returns empty event series with preserved TimeFrame |
+
+## Tests
+
+Colocated tests cover empty input, start/end/center extraction, order preservation, odd-length center (integer division), TimeFrame propagation, registry execution, JSON parameter loading, and round-trip with `EventToInterval` at zero expansion.

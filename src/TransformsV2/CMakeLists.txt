@@ -59,6 +59,8 @@ set(TRANSFORM_V2_SOURCES
         algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.cpp
         algorithms/EventToInterval/EventToInterval.hpp
         algorithms/EventToInterval/EventToInterval.cpp
+        algorithms/IntervalToEvent/IntervalToEvent.hpp
+        algorithms/IntervalToEvent/IntervalToEvent.cpp
         algorithms/IntervalReduction/IntervalReduction.hpp
         algorithms/IntervalReduction/IntervalReduction.cpp
         algorithms/LineAngle/LineAngle.hpp

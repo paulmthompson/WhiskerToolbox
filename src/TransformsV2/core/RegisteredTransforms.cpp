@@ -8,6 +8,7 @@
 #include "algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp"
 #include "algorithms/EventToInterval/EventToInterval.hpp"
 #include "algorithms/IntervalReduction/IntervalReduction.hpp"
+#include "algorithms/IntervalToEvent/IntervalToEvent.hpp"
 #include "algorithms/LineAngle/LineAngle.hpp"
 #include "algorithms/LineBaseFlip/LineBaseFlip.hpp"
 #include "algorithms/LineClip/LineClip.hpp"
@@ -85,6 +86,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<AnalogIntervalThresholdParams>();
     registerPipelineStepFactoryFor<DigitalIntervalBooleanParams>();
     registerPipelineStepFactoryFor<EventToIntervalParams>();
+    registerPipelineStepFactoryFor<IntervalToEventParams>();
     registerPipelineStepFactoryFor<IntervalReductionParams>();
     registerPipelineStepFactoryFor<ZScoreNormalizationParamsV2>();
     registerPipelineStepFactoryFor<AnalogDifferenceParams>();
@@ -978,6 +980,20 @@ auto const register_event_to_interval = RegisterContainerTransform<
                 .input_type_name = "DigitalEventSeries",
                 .output_type_name = "DigitalIntervalSeries",
                 .params_type_name = "EventToIntervalParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+auto const register_interval_to_event = RegisterContainerTransform<
+        DigitalIntervalSeries, DigitalEventSeries, IntervalToEventParams>(
+        "IntervalToEvent",
+        intervalToEvent,
+        ContainerTransformMetadata{
+                .description = "Extract one event per interval at start, end, or center",
+                .category = "Signal Processing",
+                .input_type_name = "DigitalIntervalSeries",
+                .output_type_name = "DigitalEventSeries",
+                .params_type_name = "IntervalToEventParams",
                 .is_expensive = false,
                 .is_deterministic = true,
                 .supports_cancellation = true});
