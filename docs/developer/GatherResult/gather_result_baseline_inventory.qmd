@@ -1,0 +1,177 @@
+---
+title: "GatherResult Baseline Test Inventory"
+---
+
+## Purpose
+
+This document records the Phase 0 baseline for the `GatherResult` / `DigitalIntervalSeries` migration. It inventories existing test coverage, lists gaps filled by Phase 0 characterization tests, documents the behavioral contract that later phases must preserve, and provides verification commands.
+
+See also:
+
+- `digital_interval_series_migration_design.qmd` — target architecture
+- `digital_interval_series_migration_plan.qmd` — phased implementation plan
+
+## Verification Commands
+
+Use the `my-clang-release` preset:
+
+```bash
+# List relevant tests
+ctest --preset my-clang-release -N | rg -i "gather|alignment|interval_reduction|plot_alignment|tensor_design|tensor_column|multistep|phase1_3_4"
+
+# Run Phase 0 characterization tests only
+ctest --preset my-clang-release --output-on-failure -R "\[migration\]\[phase0\]" > test_log.txt 2>&1
+
+# Run full GatherResult / plot-alignment / interval-reduction / tensor builder suite
+ctest --preset my-clang-release --output-on-failure -R "GatherResult|PlotAlignmentGather|interval_reduction|tensor_design|tensor_column|multistep|phase1_3_4" > test_log.txt 2>&1
+```
+
+## Test Matrix
+
+### Phase 0 Suggested Behaviors
+
+| Behavior | Status | TEST_CASE / location | Tags |
+|---|---|---|---|
+| Overlapping event windows preserve one row per event | **Phase 0** | `GatherResult - overlapping event windows preserve one row per event` | `[GatherResult][migration][phase0]` |
+| Interval start alignment times | Existing | `gatherWithIntervalAlignment - start alignment` | `[PlotAlignmentGather]` |
+| Interval end alignment times | Existing | `gatherWithIntervalAlignment - end alignment` | `[PlotAlignmentGather]` |
+| Centered event windows: alignment time = event time | Existing + **Phase 0** | `gatherWithEventAlignment - basic functionality`; `GatherResult - centered event window alignment differs from window start` | `[PlotAlignmentGather]`; `[GatherResult][migration][phase0]` |
+| `prevent_overlap` greedy keep-first | Existing | `pruneOverlappingAlignmentTimes - *` (8 cases) | `[PlotAlignmentGather][overlap]` |
+| `reorder()` preserves `originalIndex`, `intervalAtReordered`, `alignmentTimeAt` | **Phase 0** | `GatherResult - reorder preserves originalIndex and intervalAtReordered` | `[GatherResult][migration][phase0]` |
+| Cross-timeframe gather (adapter path) | Existing | `GatherResult - Automatic cross-timeframe conversion (30kHz spikes, 500Hz events)` | `[GatherResult][alignment][timeframe]` |
+| Cross-timeframe gather (plot helper path) | **Phase 0** | `gatherWithEventAlignment - cross-timeframe spikes and alignment events`; `gatherWithIntervalAlignment - cross-timeframe interval and source`; `createAlignedGatherResult - cross-timeframe event alignment` | `[PlotAlignmentGather][migration][phase0]` |
+| `GatherResult::materialize()` preserves metadata | **Phase 0** | `GatherResult - materialize preserves intervals and alignment times` | `[GatherResult][migration][phase0]` |
+
+### Core GatherResult (`tests/GatherResult/GatherResult.test.cpp`)
+
+| TEST_CASE | Covers |
+|---|---|
+| `GatherResult - Default construction` | Empty result |
+| `GatherResult - Gather DigitalEventSeries by intervals` | Basic interval gather |
+| `GatherResult - Range-based for loop` | Iteration |
+| `GatherResult - transform() applies function to all views` | `transform()` |
+| `GatherResult - transformWithInterval() provides interval access` | `transformWithInterval()` |
+| `GatherResult - intervalAt() returns correct intervals` | `intervalAt()` |
+| `GatherResult - Gather AnalogTimeSeries by intervals` | Analog gather |
+| `GatherResult - Empty intervals produces empty result` | Empty input |
+| `GatherResult - views() returns range-compatible view` | `views()` |
+| `GatherResult - front() and back() accessors` | Container accessors |
+| `GatherResult - at() with bounds checking` | Bounds checking |
+| `GatherResult - Raster plot simulation` | Integration |
+| `GatherResult - Normalize spike times with event alignment` | Event adapter alignment |
+| `GatherResult - Normalize spike times with interval start alignment` | Interval start |
+| `GatherResult - Normalize spike times with interval end alignment` | Interval end |
+| `GatherResult - Normalize spike times with interval center alignment` | Interval center |
+| `GatherResult - Multiple trials with alignment normalization` | Multi-trial |
+| `GatherResult - Automatic cross-timeframe conversion (30kHz spikes, 500Hz events)` | Cross-TF |
+| `GatherResult - Automatic cross-timeframe with multiple trials` | Cross-TF multi-trial |
+| `GatherResult - Same TimeFrame does no conversion` | Same-TF no-op |
+| `GatherResult - No TimeFrame does no conversion` | No-TF no-op |
+| `GatherResult - Asymmetric window with automatic cross-timeframe` | Asymmetric cross-TF |
+| `GatherResult - Events before alignment produce negative relative times` | Negative relative times |
+| `GatherResult - Mixed pre-and-post alignment events` | Mixed relative times |
+| `GatherResult - All events before alignment event` | All-negative relative times |
+| `GatherResult reorder preserves alignment times` | `alignmentTimeAt` after reorder |
+
+### Value Store and Adapters (`tests/GatherResult/GatherResult_ValueStore.test.cpp`)
+
+| TEST_CASE | Covers |
+|---|---|
+| `GatherResult - buildTrialStore` | Trial metadata |
+| `GatherResult - buildTrialStore with reordering` | `trial_index` after reorder |
+| `Prepared event windows - basic functionality` | Prepared event-aligned windows and companion alignment events |
+| `Prepared interval alignment events - alignment options` | Start/end/center companion alignment events |
+| `Prepared event windows with time normalization` | Prepared windows + normalization pipeline |
+
+### Plot Alignment (`tests/WhiskerToolbox/Plots/Common/PlotAlignmentGather.test.cpp`)
+
+| TEST_CASE | Covers |
+|---|---|
+| `gatherWithEventAlignment - basic functionality` | Event alignment + alignment time invariant |
+| `gatherWithEventAlignment - asymmetric window` | Asymmetric windows |
+| `gatherWithIntervalAlignment - start/end/center alignment` | Interval alignment points |
+| `createAlignedGatherResult - with interval/event alignment` | End-to-end via DataManager |
+| `pruneOverlappingAlignmentTimes - *` | Greedy overlap pruning |
+| `getFilteredAlignmentSource - prevent_overlap *` | Overlap filtering integration |
+| `createAlignedGatherResult - prevent_overlap *` | Trial count after pruning |
+
+### Downstream Consumers
+
+| Location | Covers |
+|---|---|
+| `tests/WhiskerToolbox/Plots/EventPlotWidget/EventPlotDataGatherer.test.cpp` | Event plot gather path |
+| `tests/CorePlotting/Mappers.test.cpp` | RasterMapper + GatherResult |
+| `tests/PlotDataExport/test_RasterCSVExport.cpp` | CSV export |
+| `src/TransformsV2/algorithms/IntervalReduction/IntervalReduction.test.cpp` | Interval reduction + cross-TF gather |
+| `tests/TransformsV2/test_tensor_column_builders.test.cpp` | `buildIntervalPipelineProvider` and lazy tensor interval-row reductions through `GatherResult` |
+| `tests/TransformsV2/test_phase1_3_4_reductions_transforms.test.cpp` | Builder scenarios for interval/event reductions through `TensorColumnBuilders` |
+| `tests/TransformsV2/test_multistep_column_builders.test.cpp` | Multi-step interval-row pipelines through `buildIntervalPipelineProvider` |
+| `tests/TensorDesign/test_tensor_design_builder.cpp` | Interval-row tensor columns using `GatherPipelineExecutor` + `GatherResult` query conversion |
+
+### Out of Scope (Phase 4 / manual)
+
+| Area | Notes |
+|---|---|
+| PSTH widget rendering | `PSTHPropertiesWidget.test.cpp` is UI-only |
+| EventRateEstimation gather path | `EventRateEstimation.test.cpp` tests scaling only |
+| GatherPipelineExecutor | Covered by IntervalReduction pipeline tests and TensorDesign interval-row tensor tests |
+
+## Baseline Behavior Contract
+
+Original data flow before migration:
+
+::: {.callout-note}
+Phase 6 has removed the adapter API. The diagram and bullets below remain the historical Phase 0 baseline contract that the migration was designed to preserve or intentionally replace.
+:::
+
+```mermaid
+flowchart LR
+    alignData["DigitalEventSeries or DigitalIntervalSeries"]
+    adapters["EventExpanderAdapter / IntervalWithAlignmentAdapter"]
+    gather["GatherResult::create"]
+    consumers["Plots / IntervalReduction / Export"]
+
+    alignData --> adapters
+    adapters --> gather
+    gather --> consumers
+```
+
+### Event Alignment
+
+- Each alignment event produces exactly one trial row.
+- Window bounds: `[event_time - pre_window, event_time + post_window]` in absolute time when the adapter reports `nullptr` TimeFrame.
+- `alignmentTimeAt(i)` equals the original event time, **not** the window start, even for symmetric (centered) windows.
+- Overlapping windows are preserved unless `prevent_overlap` filters alignment events before gather.
+
+### Interval Alignment
+
+- **Start**: `alignmentTimeAt = interval.start`
+- **End**: `alignmentTimeAt = interval.end`
+- **Center**: `alignmentTimeAt = (start + end) / 2` (integer division)
+- **No-window mode**: gathered view spans full interval bounds; adapter exposes interval TimeFrame.
+- **Window mode**: `[align_abs - pre, align_abs + post]` in absolute time; adapter reports `nullptr` TimeFrame.
+
+### Overlap Prevention (`prevent_overlap`)
+
+Implemented in `PlotAlignmentGather.hpp`, not in `GatherResult` itself.
+
+- Greedy keep-first scan over **sorted** alignment times.
+- Overlap window: `[time - window_size/2, time + window_size/2]`.
+- Keep candidate iff `current_start > last_kept_end` (touching counts as overlapping).
+- Applied before gather by filtering the alignment series copy.
+
+### Reorder
+
+- `reorder(indices)` permutes `_views` only; `_intervals` and `_alignment_times` remain in original order.
+- `_reorder_indices[display_pos]` maps display position to original trial index.
+- `originalIndex(i)` returns the original trial index for display position `i`.
+- `intervalAtReordered(i) == intervalAt(originalIndex(i))`.
+- `alignmentTimeAt(i)` looks up alignment time via `originalIndex(i)`.
+- `isReordered()` is `true` whenever `_reorder_indices` is non-empty (including identity permutations).
+
+### Cross-Timeframe
+
+- **Adapter path** (`GatherResult::create` with `IntervalSource`): convert adapter indices → absolute time → source indices for view bounds; store absolute alignment time in `_alignment_times`.
+- **Plain interval path** (`GatherResult::create` with `DigitalIntervalSeries`): no conversion; interval indices used directly as view bounds.
+- **IntervalReduction**: `prepareIntervalsForGather()` converts interval TimeFrame → source TimeFrame before gather.
+- **Plot helpers** (`gatherWithEventAlignment`, `createAlignedGatherResult`): delegate to adapter path; cross-timeframe behavior matches low-level adapter tests when source and alignment series carry different TimeFrames.

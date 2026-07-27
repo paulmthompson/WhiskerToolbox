@@ -296,7 +296,8 @@ std::shared_ptr<TensorData> eventIntervalReduction(
 
 // The two interval-series parameters intentionally distinguish row windows from
 // the source interval series gathered inside each row.
-std::shared_ptr<TensorData> intervalOverlapReduction(// NOLINT(bugprone-easily-swappable-parameters)
+// NOLINTBEGIN(bugprone-easily-swappable-parameters)
+std::shared_ptr<TensorData> intervalOverlapReduction(
         DigitalIntervalSeries const & intervals,
         DigitalIntervalSeries const & source,
         IntervalReductionParams const & params,
@@ -369,5 +370,6 @@ std::shared_ptr<TensorData> intervalOverlapReduction(// NOLINT(bugprone-easily-s
     ctx.reportProgress(100);
     return result;
 }
+// NOLINTEND(bugprone-easily-swappable-parameters)
 
 }// namespace Neuralyzer::Transforms::V2

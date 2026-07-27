@@ -90,7 +90,7 @@ Instead of new tensor enums, encode behavior as **composed transforms**:
 |-----------|-------|-------------------|
 | [`buildIntervalPipelineProvider`](../../src/TransformsV2/core/TensorColumnBuilders.hpp) | Gather over row DIS as-is | Used when `row_pipeline` output is DIS (1:1 with rows) |
 | [`buildPipelineColumnProvider`](../../src/TransformsV2/core/TensorColumnBuilders.hpp) | Timestamp-row columns | Used when `row_pipeline` output is DES (sample at event times) |
-| [`IntervalWithAlignmentAdapter`](../../src/GatherResult/IntervalAdapters.hpp) | Plotting / GatherResult | **Implementation detail inside** interval geometry transforms |
+| Prepared windows + alignment events | Plotting / GatherResult | `DigitalIntervalSeries` bounds plus companion `DigitalEventSeries` anchors |
 | [`PlotAlignmentGather`](../../src/WhiskerToolbox/Plots/Common/PlotAlignmentGather.hpp) | Qt plot widgets (PSTH, raster, line) | Same geometry as row pipeline; see [audit below](#plotalignmentgather-audit) |
 | [`EventIntervalReduction`](../../src/TransformsV2/algorithms/IntervalReduction/IntervalReduction.hpp) | Fused identity + gather+reduce | Stays for one-shot pipelines; tensor columns stay **split** for composability |
 | [`interval_property`](../../src/TransformsV2/core/TensorColumnBuilders.hpp) on `ColumnRecipe` | Row metadata only | Unchanged (no source gather) |
@@ -98,7 +98,7 @@ Instead of new tensor enums, encode behavior as **composed transforms**:
 
 ## PlotAlignmentGather audit
 
-[`PlotAlignmentGather.hpp`](../../src/WhiskerToolbox/Plots/Common/PlotAlignmentGather.hpp) is the plotting stack’s entry point for “take an alignment series, pick onset/offset (or event time), expand a window, gather source data.” It is a thin wrapper over [`IntervalAdapters.hpp`](../../src/GatherResult/IntervalAdapters.hpp) and [`GatherResult::gather`](../../src/GatherResult/GatherResult.hpp).
+[`PlotAlignmentGather.hpp`](../../src/WhiskerToolbox/Plots/Common/PlotAlignmentGather.hpp) is the plotting stack’s entry point for “take an alignment series, pick onset/offset (or event time), expand a window, gather source data.” It prepares `DigitalIntervalSeries` windows and companion `DigitalEventSeries` alignment events before calling [`GatherResult::gather`](../../src/GatherResult/GatherResult.hpp).
 
 ### Data flow (today)
 
@@ -107,9 +107,9 @@ flowchart TD
     DM["DataManager keys"]
     PAS["getFilteredAlignmentSource\n(optional overlap prune)"]
     Branch{"Alignment type?"}
-    EEA["gatherWithEventAlignment\nexpandEvents(DES, pre, post)"]
-    IWA["gatherWithIntervalAlignment\nwithAlignment(DIS, anchor [, pre, post])"]
-    GR["GatherResult::create(source, adapter)"]
+    EEA["gatherWithEventAlignment\nprepare DES windows"]
+    IWA["gatherWithIntervalAlignment\nprepare DIS anchor events and windows"]
+    GR["GatherResult::create(source, windows, alignment_events)"]
     PSTH["PSTH / raster / line plot"]
 
     DM --> PAS --> Branch
@@ -118,14 +118,14 @@ flowchart TD
     GR --> PSTH
 ```
 
-| Plot API | Adapter | Gather bounds | Alignment time |
+| Plot API | Prepared metadata | Gather bounds | Alignment time |
 |----------|---------|---------------|----------------|
-| `gatherWithEventAlignment` | `EventExpanderAdapter` | `[T−pre, T+post]` per event | event time `T` |
-| `gatherWithIntervalAlignment` (no window) | `IntervalWithAlignmentAdapter` | raw interval `[start, end]` | start / end / center index |
-| `gatherWithIntervalAlignment` (+ window) | `IntervalWithAlignmentAdapter` (window mode) | `[align_abs−pre, align_abs+post]` | anchor converted to absolute time |
+| `gatherWithEventAlignment` | prepared windows + original DES anchors | `[T−pre, T+post]` per event | event time `T` |
+| `gatherWithIntervalAlignment` (no window) | original DIS + extracted DES anchors | raw interval `[start, end]` | start / end / center index |
+| `gatherWithIntervalAlignment` (+ window) | prepared windows + extracted DES anchors | `[align_abs−pre, align_abs+post]` | anchor converted to absolute time |
 | `createAlignedGatherResult` | dispatches above | `window_size/2` symmetric pre/post | from `PlotAlignmentData` |
 
-**Important:** adapters are **lazy**. They compute windows without materializing a `DigitalIntervalSeries`; the equivalent materialized form is [`createOverlapping()`](../../src/DataObjects/DigitalTimeSeries/Digital_Interval_Series.hpp). Each row `i` still maps to one `AlignedInterval`, even when those windows overlap in absolute time.
+**Important:** event/interval windows are materialized as `DigitalIntervalSeries` values. Use [`createOverlapping()`](../../src/DataObjects/DigitalTimeSeries/Digital_Interval_Series.hpp) for gather geometry so each row `i` maps to one window even when windows overlap in absolute time.
 
 ### Overlap pruning (plot-only, optional)
 
@@ -141,12 +141,12 @@ This **drops trials** (reduces row count). It is a UI/analysis choice for PSTH-s
 
 | | Plot (`PlotAlignmentGather`) | Tensor (today) | Tensor (after row pipeline) |
 |--|------------------------------|----------------|------------------------------|
-| Geometry | Lazy `IntervalSource` adapters | Materialized `Disjoint` DIS | Materialized **`Overlapping`** DIS or adapters |
-| Onset window around DIS | `withAlignment(DIS, Start, pre, post)` | **Not yet** — needs `row_pipeline_json` | Transform outputs bounds DIS + anchor DES, or adapter internally |
-| Overlapping windows | Supported via lazy adapter | Was risky on `Disjoint` DIS | **Supported** via [`createOverlapping()`](../../src/DataObjects/DigitalTimeSeries/Digital_Interval_Series.hpp) |
-| Cross-timeframe | `GatherResult::create` converts adapter TF → source TF | `prepareIntervalsForGather` converts DIS bounds | Same; preserve `IntervalLayout` on convert |
+| Geometry | Prepared `Overlapping` DIS + optional anchor DES | Materialized `Disjoint` DIS | Materialized **`Overlapping`** DIS + anchor DES |
+| Onset window around DIS | Interval anchor extraction + event-window preparation | **Not yet** — needs `row_pipeline_json` | Transform outputs bounds DIS + anchor DES |
+| Overlapping windows | Supported via [`createOverlapping()`](../../src/DataObjects/DigitalTimeSeries/Digital_Interval_Series.hpp) | Was risky on `Disjoint` DIS | **Supported** via [`createOverlapping()`](../../src/DataObjects/DigitalTimeSeries/Digital_Interval_Series.hpp) |
+| Cross-timeframe | `GatherResult::create` converts prepared window TF → source TF | `GatherResult` converts DIS query bounds with `convertTimeFrameRange()` | Same; row interval metadata stays in original coordinates |
 
-PR 3 should materialize row-pipeline DIS output as **`Overlapping`** when windows may overlap; use adapters when transforms need lazy evaluation or fused alignment metadata.
+PR 3 should materialize row-pipeline DIS output as **`Overlapping`** when windows may overlap and pass a companion anchor DES when alignment metadata is needed.
 
 ## Proposed API change (minimal)
 
@@ -225,13 +225,13 @@ New behavior should land as **small registered transforms**, not tensor-layer en
 
 | Transform | Signature | Purpose |
 |-----------|-----------|---------|
-| `IntervalWindowAtAlignment` | DIS → gather geometry | Fused `IntervalToEventAtAnchor` + `EventWindowExpand`; may output `Overlapping` DIS or lazy `AlignedInterval` sequence |
+| `IntervalWindowAtAlignment` | DIS → gather geometry | Fused `IntervalToEventAtAnchor` + `EventWindowExpand`; outputs `Overlapping` DIS |
 | `IntervalToEventAtAnchor` | DIS → DES | One event per row at start / end / center |
 | `EventWindowExpand` | DES → gather geometry | ±pre/post per event; may output `Overlapping` DIS |
 | `IntervalShift` | DIS → DIS | Lag/lead; output `Overlapping` unless input geometry is disjoint |
 | `PruneOverlappingAlignmentWindows` | geometry → geometry | Optional; mirrors `prevent_overlap` in plots |
 
-`IntervalWindowAtAlignment` may use [`IntervalWithAlignmentAdapter`](../../src/GatherResult/IntervalAdapters.hpp) internally for lazy evaluation, or materialize an **`Overlapping`** `DigitalIntervalSeries` of gather bounds. When alignment time differs from window start (onset ±W), reductions that need `alignment_time` may require a companion `DigitalEventSeries` of anchors, an adapter, or a gather-executor extension — see [Alignment metadata gap](#alignment-metadata-gap) below.
+`IntervalWindowAtAlignment` should materialize an **`Overlapping`** `DigitalIntervalSeries` of gather bounds. When alignment time differs from window start (onset ±W), reductions that need `alignment_time` should receive a companion `DigitalEventSeries` of anchors or a gather-executor extension — see [Alignment metadata gap](#alignment-metadata-gap) below.
 
 ### Composing transforms (interval → event → interval)
 
@@ -239,13 +239,13 @@ Plot alignment is already expressible as a **two-step row pipeline** without new
 
 | Plot pattern | Row pipeline (composed) | Notes |
 |--------------|-------------------------|-------|
-| Onset ±W around contact | `IntervalToEventAtAnchor(start)` → `EventWindowExpand(pre, post)` | Same as `withAlignment(DIS, Start, pre, post)` |
+| Onset ±W around contact | `IntervalToEventAtAnchor(start)` → `EventWindowExpand(pre, post)` | Same prepared geometry as plot interval-start alignment |
 | Offset ±W | `IntervalToEventAtAnchor(end)` → `EventWindowExpand` | |
 | Center ±W | `IntervalToEventAtAnchor(center)` → `EventWindowExpand` | |
-| Align to DES, ±W | `EventWindowExpand` only (identity on row if row is already DES) | Same as `expandEvents` |
+| Align to DES, ±W | `EventWindowExpand` only (identity on row if row is already DES) | Same prepared geometry as plot event alignment |
 | Lagged contact window | `IntervalShift(δ)` → optional window expand | Shift before or after anchor extraction; `IntervalShift` output is `Overlapping` when source windows can overlap |
 
-`EventWindowExpand` is the DES-side analogue of `EventExpanderAdapter`: it produces gather geometry (one window per event) without merging. It may output an **`Overlapping`** `DigitalIntervalSeries` when materialized.
+`EventWindowExpand` is the DES-side event-window transform: it produces gather geometry (one window per event) without merging. It should output an **`Overlapping`** `DigitalIntervalSeries` when materialized.
 
 **Simplification opportunity:** `PlotAlignmentGather`’s four gather overloads + `createAlignedGatherResult` could eventually delegate to the same row-pipeline descriptors the tensor uses, with `prevent_overlap` modeled as an optional trailing transform (`PruneOverlappingAlignmentWindows`) instead of bespoke C++ in the plot header. That keeps one geometry vocabulary for plots and tensors.
 
@@ -262,7 +262,7 @@ Plot alignment is already expressible as a **two-step row pipeline** without new
 
 Row source stays `Disjoint`. Row-pipeline output that may overlap should use **`DigitalIntervalSeries::createOverlapping()`** (or `createFromView()`, which defaults to `Overlapping`).
 
-[`GatherResult`](../../src/GatherResult/GatherResult.hpp) also supports lazy geometry via [`AlignedInterval`](../../src/GatherResult/IntervalAdapters.hpp) and `IntervalSource` adapters — useful for plot parity and zero-copy evaluation.
+[`GatherResult`](../../src/GatherResult/GatherResult.hpp) consumes prepared `DigitalIntervalSeries` windows directly and can store companion `DigitalEventSeries` alignment events for trial-relative metadata.
 
 ### Materializing gather windows into DIS
 
@@ -293,16 +293,15 @@ Row source stays `Disjoint`. Row-pipeline output that may overlap should use **`
 
 Options for row pipeline / tensor when anchor ≠ window start:
 
-1. Keep [`IntervalWithAlignmentAdapter`](../../src/GatherResult/IntervalAdapters.hpp) internally (lazy path)
-2. Output a `DigitalEventSeries` of anchors + `EventWindowExpand` (composed row pipeline)
-3. Extend the gather executor with per-row `alignment_times` alongside an `Overlapping` DIS
+1. Output a `DigitalEventSeries` of anchors + `EventWindowExpand` (composed row pipeline)
+2. Extend the gather executor with per-row alignment events alongside an `Overlapping` DIS
 
 ### Alternatives considered
 
 | Option | Verdict |
 |--------|---------|
 | `IntervalLayout::Overlapping` | **Implemented** — use for gather geometry and transform intermediates |
-| Lazy `IntervalSource` only | **Still valid** — plot path, zero-copy; not required for overlap safety |
+| Lazy `IntervalSource` only | **Removed** — prepared DIS windows are the standard gather geometry |
 | New DataManager type (e.g. `TrialWindowSeries`) | **Defer** — only if we need to persist overlapping windows |
 | Always prune overlaps in tensor builder | **Reject** — silently drops contacts; wrong for tuning-curve tables |
 | Store windows only in plot code | **Reject** — duplicates logic; row pipeline unifies plot + tensor |
@@ -333,7 +332,7 @@ Work is intentionally split so each PR is reviewable and shippable independently
 
 - Add `row_pipeline_json` to `ColumnRecipe`; parse/serialize in `TensorDesign`.
 - Implement dispatch in `buildProviderFromRecipe` (identity, `Overlapping` DIS out, DES out).
-- Wire `Overlapping` DIS into existing `buildIntervalPipelineProvider` + `prepareIntervalsForGather` (preserve `IntervalLayout` on TF convert). `IntervalSource` path optional for plot parity / lazy eval.
+- Wire `Overlapping` DIS into existing `buildIntervalPipelineProvider`; `GatherResult` handles source-TimeFrame query conversion.
 - Remove `"offset"` hack in `TensorDesignBuilder::buildColumnProvider`.
 - Tests in `test_tensor_column_builders` / `test_tensor_design`.
 
@@ -352,12 +351,12 @@ Work is intentionally split so each PR is reviewable and shippable independently
 |------------|--------|
 | Row = interval / event / derived timestamps | Implemented |
 | Full-interval gather + reduction per column | Implemented |
-| Cross-timeframe gather (`prepareIntervalsForGather`) | Implemented |
+| Cross-timeframe gather (`GatherResult` query-bound conversion) | Implemented |
 | `IntervalLayout` (`Disjoint` / `Overlapping`) on DIS | **Implemented** |
 | Overlap-safe materialized gather geometry (`createOverlapping`) | **Implemented** (DIS); tensor wiring **Planned** |
 | Per-column `row_pipeline_json` | **Planned** |
 | Interval geometry transforms | **Planned** |
-| Lazy gather geometry via `IntervalSource` adapters | **Optional** (plots today); not required for overlap safety |
+| Lazy gather geometry via `IntervalSource` adapters | **Removed**; prepared DIS windows are the standard gather geometry |
 | Onset-window + tuning-curve tensor via JSON | **Planned** (PR 3–4) |
 
 ## Open questions (for future PRs)
@@ -366,5 +365,5 @@ Work is intentionally split so each PR is reviewable and shippable independently
 - Shared row-pipeline presets at tensor level (all columns inherit unless overridden) — defer unless a concrete use case appears.
 - Caching: if many columns share the same `row_pipeline_json`, memoize transformed geometry per materialization pass.
 - When row pipeline outputs window bounds as `Overlapping` DIS, where is `alignment_time` stored for `NormalizeEventTimeValueV2` — companion DES column, pipeline params, or gather executor extension?
-- Should `prepareIntervalsForGather` propagate `IntervalLayout::Overlapping` on converted copies?
+- If materialized converted row geometry is needed later, should it preserve `IntervalLayout::Overlapping` explicitly or remain a query-only `GatherResult` concern?
 - Plot refactor: when to migrate `PlotAlignmentGather` to shared row-pipeline descriptors (PR 5+).

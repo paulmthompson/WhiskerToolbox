@@ -82,7 +82,7 @@ bool pipelineProducesFloat(
             return false;
         }
 
-        if (auto const range_reduction = pipeline.getRangeReduction();
+        if (auto const & range_reduction = pipeline.getRangeReduction();
             range_reduction.has_value()) {
             // Range reduction follows the element chain —
             // check the reduction's declared output type.
@@ -94,7 +94,7 @@ bool pipelineProducesFloat(
         return chain.output_element_type == typeid(float);
     }
 
-    if (auto const range_reduction = pipeline.getRangeReduction();
+    if (auto const & range_reduction = pipeline.getRangeReduction();
         range_reduction.has_value()) {
         // Range-reduction-only (no element steps).
         auto const & red = *range_reduction;

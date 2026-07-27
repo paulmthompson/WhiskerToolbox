@@ -86,6 +86,15 @@ registry.clear();
 
 **Thread Safety**: `EntityRegistry` uses `std::mutex` internally and is safe to use from multiple threads.
 
+#### Interval entities
+
+For `EntityKind::IntervalEntity`, the registry tuple is `(data_key, start, end)`:
+
+- `time` / `time_value` — interval start (`TimeFrameIndex`)
+- `local_index` — interval end (not a storage index)
+
+`DigitalIntervalSeries` keys new intervals this way via `ensureId`. When intervals merge (for example, extending an interval end in the DataInspector), the `EntityId` from the earliest-start merged interval is preserved and the registry entry is rebound to the new bounds via `rebindKey`. Reverse lookup uses the `EntityId` stored on the interval (`findByEntityId`), not the registry index.
+
 ### EntityGroupManager
 
 Manages user-defined groups of entities with observer notification support:

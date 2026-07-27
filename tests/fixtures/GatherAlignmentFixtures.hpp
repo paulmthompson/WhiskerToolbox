@@ -94,6 +94,93 @@ createIntervalSeries(std::vector<std::pair<int64_t, int64_t>> const & intervals)
  */
 inline constexpr int kSpikeSamplesPerEventIndex = 60;
 
+/**
+ * @brief Create overlapping gather windows around each event.
+ *
+ * @pre @p events must not be null.
+ * @post The returned windows preserve one row per input event and carry a
+ *       TimeFrame whose interval indices resolve to absolute window bounds.
+ */
+[[nodiscard]] inline std::shared_ptr<DigitalIntervalSeries> createWindowsAroundEvents(
+        std::shared_ptr<DigitalEventSeries> const & events,
+        int64_t pre_window,
+        int64_t post_window) {
+    auto const time_frame = events->getTimeFrame();
+    std::vector<Interval> absolute_windows;
+    absolute_windows.reserve(events->size());
+
+    for (auto const & event: events->view()) {
+        auto const event_index = event.time();
+        auto const event_time = time_frame ? static_cast<int64_t>(time_frame->getTimeAtIndex(event_index))
+                                           : event_index.getValue();
+        absolute_windows.push_back(Interval{
+                event_time - pre_window,
+                event_time + post_window});
+    }
+
+    std::vector<int> boundary_times;
+    boundary_times.reserve(absolute_windows.size() * 2);
+    for (auto const & window: absolute_windows) {
+        boundary_times.push_back(static_cast<int>(window.start));
+        boundary_times.push_back(static_cast<int>(window.end));
+    }
+
+    std::ranges::sort(boundary_times);
+    auto const last_unique = std::ranges::unique(boundary_times);
+    boundary_times.erase(last_unique.begin(), last_unique.end());
+
+    std::vector<Interval> windows;
+    windows.reserve(absolute_windows.size());
+    for (auto const & window: absolute_windows) {
+        auto const start = std::ranges::lower_bound(boundary_times, static_cast<int>(window.start));
+        auto const end = std::ranges::lower_bound(boundary_times, static_cast<int>(window.end));
+        windows.push_back(Interval{
+                std::distance(boundary_times.begin(), start),
+                std::distance(boundary_times.begin(), end)});
+    }
+
+    return DigitalIntervalSeries::createOverlapping(
+            std::move(windows),
+            std::make_shared<TimeFrame>(boundary_times));
+}
+
+enum class TestIntervalAlignmentPoint {
+    Start,
+    End,
+    Center,
+};
+
+/**
+ * @brief Create one alignment event per interval at the requested point.
+ *
+ * @pre @p intervals must not be null.
+ * @post The returned event series uses the interval series TimeFrame.
+ */
+[[nodiscard]] inline std::shared_ptr<DigitalEventSeries> createAlignmentEventsForIntervals(
+        std::shared_ptr<DigitalIntervalSeries> const & intervals,
+        TestIntervalAlignmentPoint point) {
+    auto events = std::make_shared<DigitalEventSeries>();
+    events->setTimeFrame(intervals->getTimeFrame());
+
+    for (auto const & interval: intervals->view()) {
+        int64_t alignment_time = interval.interval.start;
+        switch (point) {
+            case TestIntervalAlignmentPoint::Start:
+                alignment_time = interval.interval.start;
+                break;
+            case TestIntervalAlignmentPoint::End:
+                alignment_time = interval.interval.end;
+                break;
+            case TestIntervalAlignmentPoint::Center:
+                alignment_time = (interval.interval.start + interval.interval.end) / 2;
+                break;
+        }
+        events->addEvent(TimeFrameIndex(alignment_time));
+    }
+
+    return events;
+}
+
 }// namespace Neuralyzer::Test::GatherFixtures
 
 #endif// GATHER_ALIGNMENT_FIXTURES_HPP

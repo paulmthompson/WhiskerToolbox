@@ -4,12 +4,13 @@
  */
 
 #include "GatherResult/GatherResult.hpp"
-#include "GatherResult/IntervalAdapters.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+
+#include "fixtures/GatherAlignmentFixtures.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -20,9 +21,9 @@
 #include <stdexcept>
 #include <vector>
 
-using Neuralyzer::Gather::AlignmentPoint;
-using Neuralyzer::Gather::expandEvents;
-using Neuralyzer::Gather::withAlignment;
+using Neuralyzer::Test::GatherFixtures::createAlignmentEventsForIntervals;
+using Neuralyzer::Test::GatherFixtures::createWindowsAroundEvents;
+using Neuralyzer::Test::GatherFixtures::TestIntervalAlignmentPoint;
 
 // =============================================================================
 // Test Fixtures
@@ -340,10 +341,9 @@ TEST_CASE("GatherResult - Normalize spike times with event alignment", "[GatherR
     // Alignment event at time 15
     auto alignment_events = createEventSeries({15});
 
-    // Create adapter that expands event at 15 to interval [0, 30] with alignment at 15
-    auto adapter = expandEvents(alignment_events, 15, 15);// 15 before, 15 after
-
-    auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+    // Create prepared windows around event 15: [0, 30], aligned at 15.
+    auto windows = createWindowsAroundEvents(alignment_events, 15, 15);
+    auto result = gather(spikes, windows, alignment_events);
 
     REQUIRE(result.size() == 1);
     REQUIRE(result[0]->size() == 3);
@@ -374,8 +374,10 @@ TEST_CASE("GatherResult - Normalize spike times with interval start alignment", 
     auto spikes = createEventSeries({10, 20, 30});
     auto intervals = createIntervalSeries({{0, 40}});
 
-    auto adapter = withAlignment(intervals, AlignmentPoint::Start);
-    auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+    auto alignment_events = createAlignmentEventsForIntervals(
+            intervals,
+            TestIntervalAlignmentPoint::Start);
+    auto result = gather(spikes, intervals, alignment_events);
 
     REQUIRE(result.size() == 1);
     REQUIRE(result[0]->size() == 3);
@@ -405,8 +407,10 @@ TEST_CASE("GatherResult - Normalize spike times with interval end alignment", "[
     auto spikes = createEventSeries({10, 20, 30});
     auto intervals = createIntervalSeries({{0, 40}});
 
-    auto adapter = withAlignment(intervals, AlignmentPoint::End);
-    auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+    auto alignment_events = createAlignmentEventsForIntervals(
+            intervals,
+            TestIntervalAlignmentPoint::End);
+    auto result = gather(spikes, intervals, alignment_events);
 
     REQUIRE(result.size() == 1);
 
@@ -435,8 +439,10 @@ TEST_CASE("GatherResult - Normalize spike times with interval center alignment",
     auto spikes = createEventSeries({10, 20, 30});
     auto intervals = createIntervalSeries({{0, 40}});
 
-    auto adapter = withAlignment(intervals, AlignmentPoint::Center);
-    auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+    auto alignment_events = createAlignmentEventsForIntervals(
+            intervals,
+            TestIntervalAlignmentPoint::Center);
+    auto result = gather(spikes, intervals, alignment_events);
 
     REQUIRE(result.size() == 1);
 
@@ -468,9 +474,9 @@ TEST_CASE("GatherResult - Multiple trials with alignment normalization", "[Gathe
     // Two alignment events
     auto alignment_events = createEventSeries({10, 110});
 
-    // Expand each event to ±10 window
-    auto adapter = expandEvents(alignment_events, 10, 10);
-    auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+    // Expand each event to a prepared ±10 window.
+    auto windows = createWindowsAroundEvents(alignment_events, 10, 10);
+    auto result = gather(spikes, windows, alignment_events);
 
     REQUIRE(result.size() == 2);
 
@@ -568,8 +574,8 @@ TEST_CASE("GatherResult - Automatic cross-timeframe conversion (30kHz spikes, 50
         // Expand: ±60 time units around alignment event
         // Event at 500Hz index 1 → absolute time 60
         // Window: ±60 time units → [0, 120] at 30kHz
-        auto adapter = expandEvents(alignment_events, 60, 60);
-        auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+        auto windows = createWindowsAroundEvents(alignment_events, 60, 60);
+        auto result = gather(spikes, windows, alignment_events);
 
         REQUIRE(result.size() == 1);
 
@@ -615,8 +621,8 @@ TEST_CASE("GatherResult - Automatic cross-timeframe with multiple trials", "[Gat
     alignment_events->setTimeFrame(event_timeframe);
 
     // Expand: ±60 time units around each alignment event
-    auto adapter = expandEvents(alignment_events, 60, 60);
-    auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+    auto windows = createWindowsAroundEvents(alignment_events, 60, 60);
+    auto result = gather(spikes, windows, alignment_events);
 
     REQUIRE(result.size() == 2);
 
@@ -670,8 +676,8 @@ TEST_CASE("GatherResult - Same TimeFrame does no conversion", "[GatherResult][al
     auto alignment_events = createEventSeries({15});
     alignment_events->setTimeFrame(shared_timeframe);// Same TimeFrame!
 
-    auto adapter = expandEvents(alignment_events, 10, 10);
-    auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+    auto windows = createWindowsAroundEvents(alignment_events, 10, 10);
+    auto result = gather(spikes, windows, alignment_events);
 
     REQUIRE(result.size() == 1);
 
@@ -721,27 +727,6 @@ TEST_CASE("GatherResult - DigitalIntervalSeries path rejects missing interval Ti
     CHECK_THROWS_AS(gather(spikes, intervals), std::invalid_argument);
 }
 
-TEST_CASE("GatherResult - No TimeFrame does no conversion", "[GatherResult][alignment][timeframe]") {
-    // When neither has a TimeFrame, use raw indices
-    auto spikes = createEventSeries({10, 15, 20});
-    spikes->setTimeFrame(nullptr);
-
-    auto alignment_events = createEventSeries({15});
-    alignment_events->setTimeFrame(nullptr);
-
-    auto adapter = expandEvents(alignment_events, 10, 10);
-    auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
-
-    REQUIRE(result.size() == 1);
-
-    // Interval should be unchanged: [5, 25]
-    CHECK(result.intervalAt(0).start == 5);
-    CHECK(result.intervalAt(0).end == 25);
-
-    // All 3 spikes should be included
-    REQUIRE(result[0]->size() == 3);
-}
-
 TEST_CASE("GatherResult - Asymmetric window with automatic cross-timeframe", "[GatherResult][alignment][timeframe]") {
     // Scenario: Behavioral events (e.g., lick) at 500Hz, neural spikes at 30kHz
     // Want to see spikes 30ms before and 100ms after each lick
@@ -759,8 +744,8 @@ TEST_CASE("GatherResult - Asymmetric window with automatic cross-timeframe", "[G
     alignment_events->setTimeFrame(event_timeframe);
 
     // Asymmetric window in time units: 900 before (30ms at 30kHz), 3000 after (100ms at 30kHz)
-    auto adapter = expandEvents(alignment_events, 900, 3000);
-    auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+    auto windows = createWindowsAroundEvents(alignment_events, 900, 3000);
+    auto result = gather(spikes, windows, alignment_events);
 
     REQUIRE(result.size() == 1);
     CHECK(result.alignmentTimeAt(0) == 6000);
@@ -821,8 +806,8 @@ TEST_CASE("GatherResult - Events before alignment produce negative relative time
     auto alignment_events = createEventSeries({11, 21, 31});
 
     // Window of ±5 around each alignment event
-    auto adapter = expandEvents(alignment_events, 5, 5);
-    auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+    auto windows = createWindowsAroundEvents(alignment_events, 5, 5);
+    auto result = gather(spikes, windows, alignment_events);
 
     REQUIRE(result.size() == 3);
 
@@ -878,8 +863,8 @@ TEST_CASE("GatherResult - Mixed pre-and-post alignment events",
     auto spikes = createEventSeries({8, 10, 12, 18, 20, 22});
     auto alignment_events = createEventSeries({10, 20});
 
-    auto adapter = expandEvents(alignment_events, 5, 5);
-    auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+    auto windows = createWindowsAroundEvents(alignment_events, 5, 5);
+    auto result = gather(spikes, windows, alignment_events);
 
     REQUIRE(result.size() == 2);
 
@@ -926,8 +911,8 @@ TEST_CASE("GatherResult - All events before alignment event",
     auto alignment_events = createEventSeries({100});
 
     // Window: [100-10, 100+10] = [90, 110]
-    auto adapter = expandEvents(alignment_events, 10, 10);
-    auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+    auto windows = createWindowsAroundEvents(alignment_events, 10, 10);
+    auto result = gather(spikes, windows, alignment_events);
 
     REQUIRE(result.size() == 1);
     REQUIRE(result[0]->size() == 5);
@@ -972,8 +957,8 @@ TEST_CASE("GatherResult reorder preserves alignment times",
     events->setTimeFrame(tf);
 
     // Expand each event into a ±5 window → 3 trials
-    auto adapter = expandEvents(events, 5, 5);
-    auto gathered = GatherResult<DigitalEventSeries>::create(events, adapter);
+    auto windows = createWindowsAroundEvents(events, 5, 5);
+    auto gathered = gather(events, windows, events);
 
     REQUIRE(gathered.size() == 3);
 

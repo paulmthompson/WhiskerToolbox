@@ -1,0 +1,410 @@
+---
+title: "GatherResult DigitalIntervalSeries Migration Plan"
+---
+
+## Purpose
+
+This document provides a phased implementation plan for migrating gather-window generation from gather-specific interval adapters to `DigitalIntervalSeries`-based TransformsV2 algorithms.
+
+The companion design document is `digital_interval_series_migration_design.qmd`. Read that first for the rationale, affected libraries, and open design decisions.
+
+## Desired End State
+
+The migration is complete when:
+
+- Event and interval alignment windows are produced as `DigitalIntervalSeries` objects with `IntervalLayout::Overlapping`.
+- Alignment points are represented as companion `DigitalEventSeries` objects, not raw vectors.
+- `GatherResult` primarily accepts prepared `DigitalIntervalSeries` windows for direct gather creation.
+- `GatherResult<T>` is positioned as a row-aligned collection of supported DataObject instances plus row metadata; it should not care whether each row DataObject is view-backed, owning, lazy, or transform-produced.
+- PSTH, event plot, event-rate estimation, interval reduction, and export paths no longer depend on `EventExpanderAdapter` or `IntervalWithAlignmentAdapter`.
+- Trial alignment metadata remains available through `alignmentTimeAt()` and, during migration, existing `buildTrialStore()` behavior.
+- Cross-timeframe gather uses the existing `TimeFrame` conversion primitives (`convertTimeFrameRange()` for interval edges and `convert_time_index()` for single alignment/event indices) in one gather/query path.
+- Future DataObject-producing per-row transforms can return another `GatherResult<OutputDataObject>` through external TransformsV2 helpers rather than introducing a parallel row-collection container.
+- Tests cover overlapping windows, cross-timeframe alignment, overlap pruning (via `PruneOverlappingIntervals`), reordering, and plot-facing gather behavior.
+
+## Phase 0: Baseline And Test Inventory
+
+### Goals
+
+Establish current behavior before changing APIs.
+
+### Tasks
+
+1. Identify existing tests that cover `GatherResult`, PSTH/event plot alignment, interval reduction, and range reductions.
+2. Add characterization tests for current behavior if coverage is missing.
+3. Record expected behavior for event alignment, interval alignment, overlap prevention, and reordering.
+
+### Suggested Tests
+
+- Gathering event data around event alignment points with overlapping windows preserves one gathered view per event.
+- Gathering around interval starts and interval ends produces expected alignment times.
+- Centered event windows report alignment time equal to the original event time, not the window start.
+- `prevent_overlap` keeps the first candidate under the existing greedy behavior.
+- `GatherResult::reorder()` preserves `originalIndex()`, `intervalAtReordered()`, and `alignmentTimeAt()`.
+- Cross-timeframe gather converts alignment windows into source coordinates correctly.
+
+### Exit Criteria
+
+- Current behavior is covered by tests or documented with explicit manual checks.
+- The tests can be run through the appropriate CMake preset and `ctest` filters.
+
+## Phase 1: Add Window-Producing TransformsV2 Algorithms
+
+### Goals
+
+Introduce reusable TransformsV2 algorithms that materialize gather windows and alignment points as `DigitalIntervalSeries` and `DigitalEventSeries` objects.
+
+### Status
+
+**Largely complete.** Event window expansion, interval alignment-point extraction, and overlap pruning are implemented. Remaining migration work is to use the existing `TimeFrame` conversion primitives consistently at gather/query and projection boundaries.
+
+**Done (partial):** [`EventToInterval`](../transforms_v2/event_to_interval.qmd) is implemented and registered. It expands `DigitalEventSeries` events into overlapping `DigitalIntervalSeries` windows using `EventToIntervalParams` (`pre_expansion`, `post_expansion` as `TimeFrameIndex`). See `src/TransformsV2/algorithms/EventToInterval/` for the source and tests.
+
+**Done (partial):** [`IntervalToEvent`](../transforms_v2/interval_to_event.qmd) is implemented and registered. It extracts one `DigitalEventSeries` event per interval at start, end, or center using `IntervalToEventParams` (`point` as `IntervalEventPoint`). See `src/TransformsV2/algorithms/IntervalToEvent/` for the source and tests.
+
+**Done (partial):** [`PruneOverlappingIntervals`](../transforms_v2/prune_overlapping_intervals.qmd) is implemented and registered. It applies greedy keep-first overlap pruning to a `DigitalIntervalSeries`, producing a disjoint output series. See `src/TransformsV2/algorithms/PruneOverlappingIntervals/` for the source and tests.
+
+**Remaining:** optional companion alignment-point filtering helper for paired window/event pruning at gather call sites, and consistent use of `convertTimeFrameRange()` / `convert_time_index()` where windows or alignment points cross `TimeFrame` boundaries.
+
+### Tasks
+
+1. ~~Add event window algorithm under `src/TransformsV2/algorithms/`.~~ **Done:** `EventToInterval/`.
+2. ~~Define parameter struct for event windows.~~ **Done:** `EventToIntervalParams`.
+3. ~~Add interval-to-event extraction for interval start/end/center alignment points.~~ **Done:** `IntervalToEvent/`.
+4. ~~Implement event-to-interval expansion.~~ **Done:** `eventToInterval()` via `EventToInterval`.
+5. Use composition for fixed windows around interval-derived points: `intervalToEvent()` followed by `EventToInterval`.
+6. Ensure window algorithms return output created with `DigitalIntervalSeries::createOverlapping(...)`. **Done for `EventToInterval`.**
+7. Use normal data-object composition for alignment points: existing event series for event alignment, and `IntervalToEvent` output for interval alignment.
+8. ~~Add overlap pruning as a TransformsV2 container transform.~~ **Done:** `PruneOverlappingIntervals/`.
+9. Use the existing `TimeFrame` conversion primitives when source/output `TimeFrame` conversion is required.
+10. ~~Register pipeline-addressable transforms.~~ **Done for `EventToInterval`, `IntervalToEvent`, and `PruneOverlappingIntervals`.**
+11. ~~Add unit tests for event window edge cases.~~ **Done:** `EventToInterval.test.cpp`.
+12. ~~Add unit tests for interval-to-event edge cases.~~ **Done:** `IntervalToEvent.test.cpp`.
+13. ~~Add unit tests for overlap pruning edge cases.~~ **Done:** `PruneOverlappingIntervals.test.cpp`.
+
+### Event Window Cases (`EventToInterval`)
+
+These cases are covered by `EventToInterval.test.cpp` unless noted:
+
+- Empty event series returns an empty overlapping interval series.
+- Zero pre/post expansion creates point interval `[T, T]`.
+- Negative expansion values are rejected via debug `assert()` on `pre_expansion` and `post_expansion`.
+- Input `TimeFrame` is propagated to the output (no cross-timeframe conversion yet).
+- Overlapping windows remain separate.
+- **Not yet covered by `EventToInterval`:** cross-timeframe output. Companion alignment points are supplied by the original event series for event alignment.
+
+### Interval To Event Cases (`IntervalToEvent`)
+
+These cases are covered by `IntervalToEvent.test.cpp` unless noted:
+
+- Empty interval series returns an empty event series with preserved `TimeFrame`.
+- `IntervalEventPoint::start` uses interval start.
+- `IntervalEventPoint::end` uses interval end.
+- `IntervalEventPoint::center` uses integer midpoint behavior matching the current adapter.
+- The output `DigitalEventSeries` preserves the input interval series `TimeFrame`.
+- The output does not inherit interval entity IDs; provenance should use lineage tracing if needed later.
+- Overlapping input intervals produce one event per row (not merged).
+- Round-trip with `EventToInterval` at zero expansion recovers original event times.
+- If callers need fixed windows around these points, they compose the result with `EventToInterval`.
+- **Not yet covered by `IntervalToEvent`:** cross-timeframe output.
+
+### Overlap Pruning Cases (`PruneOverlappingIntervals`)
+
+These cases are covered by `PruneOverlappingIntervals.test.cpp` unless noted:
+
+- Empty interval series returns an empty disjoint interval series.
+- Single interval is kept unchanged.
+- Well-separated intervals are all kept.
+- Overlapping intervals are pruned with greedy keep-first behavior.
+- Touching intervals (`start == last_kept.end`) are treated as overlapping and pruned.
+- Chain pruning keeps non-overlapping survivors after earlier rows are dropped.
+- Input `TimeFrame` is propagated to the output.
+- Overlapping input layout (`IntervalLayout::Overlapping`) produces disjoint output.
+- **Not yet covered by `PruneOverlappingIntervals`:** paired filtering of a companion `DigitalEventSeries` alignment-point series to the same kept row indices. Plot code still uses local helpers for alignment-point + window pruning until Phase 4.
+
+### Exit Criteria
+
+- ~~Event window algorithm compiles and passes focused unit tests.~~ **Done:** `EventToInterval`.
+- ~~Interval-to-event algorithm compiles and passes focused unit tests.~~ **Done:** `IntervalToEvent`.
+- ~~Overlap pruning algorithm compiles and passes focused unit tests.~~ **Done:** `PruneOverlappingIntervals`.
+- Output windows are represented as `DigitalIntervalSeries`, not `std::vector<Interval>`.
+- Output alignment points are represented as `DigitalEventSeries` where required by the migration design.
+- The algorithms can be used without checking the result into `DataManager`.
+
+## Phase 2: Centralize Use Of TimeFrame Conversion Primitives
+
+### Goals
+
+Centralize interval conversion between alignment/window timeframe and source-data timeframe by reusing the existing primitives in `src/TimeFrame/TimeFrame.hpp`:
+
+- `convertTimeFrameRange(start, stop, from_time_frame, to_time_frame)` for one interval's edges.
+- `convert_time_index(time, source_timeframe, target_timeframe)` for one event or alignment index.
+
+### Status
+
+**Complete for gather-window query bounds.** `GatherResult` now converts prepared `DigitalIntervalSeries` windows to the source data `TimeFrame` at view-creation time with `convertTimeFrameRange()`. The duplicate `prepareIntervalsForGather()` materialization helpers in `IntervalReduction.cpp` and `GatherPipelineExecutor.cpp` have been removed.
+
+Prepared `DigitalIntervalSeries` windows are expected to carry a non-null `TimeFrame`; missing window/source `TimeFrame` values are treated as invalid input for the prepared-window path. Legacy adapter null-`TimeFrame` behavior is isolated in the deprecated adapter compatibility path until Phase 3/4 removes the adapters.
+
+### Tasks
+
+1. ~~Update the refactored gather path so source view creation converts each window interval with `convertTimeFrameRange()` when querying source data.~~ **Done.**
+2. Update trial-relative projection code to use `convert_time_index()` or physical time values from the relevant `TimeFrame` objects when gathered events and alignment points have different `TimeFrame` objects.
+3. Keep `EventToInterval`, `IntervalToEvent`, and `PruneOverlappingIntervals` in their input `TimeFrame`; do not add a transform parameter solely to target the gathered source timeframe.
+4. Preserve interval and event order during gather and projection.
+5. If a call site still needs a materialized converted `DigitalIntervalSeries` or `DigitalEventSeries`, implement that materialization as a thin wrapper around `convertTimeFrameRange()` or `convert_time_index()`.
+6. Do not inherit entity IDs for generated or converted temporary windows/alignment points. If provenance is required later, use lineage tracing rather than entity ID copying.
+7. ~~Replace or remove the private `prepareIntervalsForGather()` implementation in `IntervalReduction.cpp`; if materialization remains necessary, it should delegate to `convertTimeFrameRange()`.~~ **Done:** the helper is removed and `IntervalReduction` passes original row intervals directly to `GatherResult`.
+8. Add tests for same-timeframe, different-timeframe, and invalid missing-`TimeFrame` prepared-window cases.
+
+### Gather-Time Conversion Shape
+
+```cpp
+auto [query_start, query_stop] = convertTimeFrameRange(
+        window.start,
+        window.end,
+        *window_time_frame,
+        *source_time_frame);
+```
+
+Prepared `DigitalIntervalSeries` windows should carry a non-null `TimeFrame`. Null-`TimeFrame` behavior is legacy adapter compatibility only and should not be documented as a supported prepared-window convention.
+
+### Exit Criteria
+
+- Gather-window interval conversion uses `convertTimeFrameRange()` rather than duplicate edge-conversion logic.
+- Gather alignment/projection conversion uses `convert_time_index()` or direct physical-time lookup through `TimeFrame` rather than duplicate index-conversion logic.
+- `IntervalReduction.cpp` and `GatherPipelineExecutor.cpp` no longer carry independent interval conversion implementations.
+
+## Phase 3: Refactor GatherResult Around DigitalIntervalSeries
+
+### Goals
+
+Make `DigitalIntervalSeries` the internal window representation for direct gather results while keeping `GatherResult<T>` compatible with the broader row-aligned DataObject model.
+
+`GatherResult` should store row DataObjects and row metadata. It should not distinguish whether a row `T` is a view, owning copy, lazy object, or transform output; those storage details belong to the DataObject implementation.
+
+### Status
+
+**Complete for the prepared-window path.** `GatherResult<T>` now accepts prepared `std::shared_ptr<DigitalIntervalSeries const>` windows with optional companion `std::shared_ptr<DigitalEventSeries const>` alignment points. Prepared windows and alignment points are retained as row metadata while `intervalAt()` continues to expose source-coordinate query intervals for existing plot/export consumers.
+
+Adapter overloads remain as legacy compatibility until phases 4 and 6 migrate call sites and remove `IntervalAdapters.hpp`.
+
+### Tasks
+
+1. ~~Add an overload that accepts `std::shared_ptr<DigitalIntervalSeries const>`.~~ **Done.**
+2. ~~Add the companion parameter `std::shared_ptr<DigitalEventSeries const> alignment_points`.~~ **Done.**
+3. ~~Store the window series in `GatherResult` as `_windows`.~~ **Done.**
+4. ~~Store the companion event series in `GatherResult` as `_alignment_points`.~~ **Done.**
+5. ~~Assert in debug builds that `_windows->size() == _alignment_points->size()`.~~ **Done.**
+6. ~~Keep row storage as a vector of `std::shared_ptr<T>`; optionally rename `_views` to `_rows` if it can be done without obscuring the interval-storage refactor.~~ **Done:** `_views` was kept to limit churn.
+7. ~~Treat `_source` as direct-gather provenance. Do not make future row-transformed results depend on having a single non-null source object of type `T`.~~ **Done for current storage; `fromRows()` remains deferred.**
+8. ~~Replace `_intervals` reads with iteration over `_windows->view()` where practical, or keep a clearly named compatibility cache if callers still need source-query intervals.~~ **Done:** `_query_intervals` is the compatibility cache.
+9. ~~Keep `intervalAt()` and `intervalAtReordered()` behavior stable. If new accessors are added, distinguish prepared window intervals from source-query intervals by name.~~ **Done:** `windows()` exposes prepared windows.
+10. ~~Implement `alignmentTimeAt()` from `_alignment_points` and row ordering.~~ **Done for prepared-window gathers.**
+11. ~~Collapse the duplicated row DataObject creation logic into one helper path. The helper may call `createView()` or `createTimeRangeCopy()`, but after construction the row is just a `T`.~~ **Done.**
+12. ~~Update `materialize()` and `reorder()` to copy or share `_windows`, `_alignment_points`, row objects, and order metadata.~~ **Done.**
+13. Consider adding `fromRows()` and `fromRowsLike(parent, rows)` if it is low-risk. These are optional for adapter migration but are the preferred future API for DataObject-producing per-row transforms. **Deferred to Phase 5.5.**
+14. ~~Do not expand the TransformsV2 responsibility inside `GatherResult` during this phase. Preserve existing methods if needed for compatibility, but design the storage/accessors so they can move to extension helpers later.~~ **Done.**
+
+### Exit Criteria
+
+- The primary gather path is `GatherResult<T>::create(source, windows, alignment_points)`.
+- Internally, gather windows are stored as `DigitalIntervalSeries`.
+- Internally, alignment points are stored as `DigitalEventSeries`.
+- Row storage is independent of whether each row DataObject is view-backed, owning, lazy, or transform-produced.
+- `source()` is not required to be meaningful for every future `GatherResult<T>` construction path; only direct gather results must have direct source provenance.
+- Existing public accessors used by plot/export code still work.
+- Tests from Phase 0 still pass.
+
+### Deferred Follow-Up
+
+After the interval storage refactor is stable, move TransformsV2-specific row processing toward extension helpers:
+
+- DataObject-producing per-row pipelines should consume `GatherResult<InputT>` and return `GatherResult<OutputT>`.
+- Scalar reductions should return ordinary vectors such as `std::vector<int>` or `std::vector<float>`.
+- `PipelineValueStore` construction should be externalized from core `GatherResult` once callers are migrated.
+
+See `row_aligned_dataobject_container_design.qmd` for the follow-on design.
+
+## Phase 4: Replace Adapter-Based Plot Alignment Paths
+
+### Goals
+
+Move PSTH, event plot, and event-rate code from adapter-based window generation to TransformsV2 window generation.
+
+### Status
+
+**Complete for plot-facing alignment preparation.** `PlotAlignmentGather.hpp` now prepares `DigitalIntervalSeries` windows and companion `DigitalEventSeries` alignment points before calling the prepared `GatherResult` path. `EventRateEstimation.cpp` uses the same Qt-free preparation helper instead of keeping a local adapter/pruning copy. `LineBatchBuilder` has a preferred overload that reads alignment metadata directly from `GatherResult<AnalogTimeSeries>`.
+
+The implementation preserves the legacy plot contract that UI window sizes are physical display-time widths. The new `PlotAlignmentWindowPreparation.hpp` helper materializes display windows in the gathered source `TimeFrame` so cross-timeframe plot behavior remains stable while `alignmentTimeAt()` continues to expose physical alignment time for trial-relative rendering.
+
+### Tasks
+
+1. ~~Update `PlotAlignmentGather.hpp` to build windows through TransformsV2 algorithms.~~ **Done:** plot alignment now uses prepared `DigitalIntervalSeries` windows plus companion `DigitalEventSeries` alignment points.
+2. ~~Update event alignment to call `EventToInterval` (registry name `"EventToInterval"`) instead of `expandEvents()`.~~ **Adapted:** plot event windows preserve physical display-time semantics through `PlotAlignmentWindowPreparation.hpp`; index-space `EventToInterval` remains available for transform pipelines where its parameter contract matches the requested operation.
+3. ~~Update interval alignment to call `IntervalToEvent` (registry name `"IntervalToEvent"`) instead of `withAlignment()`.~~ **Done.**
+4. ~~Replace local `pruneOverlappingAlignmentTimes` / `createFilteredIntervalSeries` usage with `PruneOverlappingIntervals` (registry name `"PruneOverlappingIntervals"`) when pruning interval bounds directly, or compose window expansion + pruning as appropriate for event/interval alignment paths.~~ **Done for prepared windows:** paired pruning uses the shared helper and `PruneOverlappingIntervals` for the window series.
+5. ~~Apply the same kept-row selection to the companion alignment-point event series (may require a small shared helper until a paired transform exists).~~ **Done.**
+6. ~~Call `gather(source, windows, alignment_points)` after window preparation.~~ **Done.**
+7. ~~Update `EventRateEstimation.cpp` to reuse the same window-preparation path instead of duplicating filtering and adapter logic.~~ **Done.**
+8. ~~Update plot-facing consumers to prefer `GatherResult::alignmentTimeAt()` over caller-managed raw alignment-time vectors when constructing relative display coordinates.~~ **Done for the standard line batch path.**
+9. ~~Update `CorePlotting::buildLineBatchFromGatherResult()` so the preferred overload reads alignment metadata from `GatherResult<AnalogTimeSeries>` directly. Keep a two-argument alignment-vector overload only if an explicit override is still needed.~~ **Done.**
+10. ~~Update `LinePlotOpenGLWidget.cpp` to call the preferred `LineBatchBuilder` overload. It may still cache alignment times for double-click relative-to-absolute conversion and group-color behavior.~~ **Done.**
+11. Verify PSTH, event plot, line plot, and event-rate rendering behavior manually or with available widget tests. **Automated focused tests cover the gather and line-batch paths; manual rendering remains recommended.**
+
+### Affected Files
+
+- `src/WhiskerToolbox/Plots/Common/PlotAlignmentGather.hpp`
+- `src/WhiskerToolbox/Plots/Common/EventRateEstimation/EventRateEstimation.cpp`
+- `src/WhiskerToolbox/Plots/PSTHWidget/Rendering/PSTHPlotOpenGLWidget.cpp`
+- `src/WhiskerToolbox/Plots/EventPlotWidget/Rendering/EventPlotOpenGLWidget.cpp`
+- `src/WhiskerToolbox/Plots/LinePlotWidget/Rendering/LinePlotOpenGLWidget.cpp`
+- `src/CorePlotting/LineBatch/LineBatchBuilder.hpp`
+- `src/CorePlotting/LineBatch/LineBatchBuilder.cpp`
+
+### Exit Criteria
+
+- Plot alignment helpers do not call `expandEvents()` or `withAlignment()`.
+- Overlap prevention uses `PruneOverlappingIntervals` or an equivalent shared composition path rather than local `pruneOverlappingAlignmentTimes` copies where interval bounds are pruned directly.
+- PSTH/event plot code continues to receive valid `GatherResult<DigitalEventSeries>` objects.
+- Line plot code continues to receive valid `GatherResult<AnalogTimeSeries>` objects with alignment metadata suitable for relative x-coordinate construction.
+- `LineBatchBuilder` no longer requires a separately maintained alignment-time vector for the standard line plot path.
+- Trial-relative time projections remain unchanged.
+- Start/end/center selection is not part of the `GatherResult` API.
+
+## Phase 5: Update Transform And Export Consumers
+
+### Goals
+
+Move remaining non-UI consumers to the new prepared-window and companion-alignment-event model.
+
+### Status
+
+**Complete for transform/export consumers.** `GatherPipelineExecutor`, `TensorColumnBuilders`, and `TensorDesignBuilder` now pass prepared row windows as `std::shared_ptr<DigitalIntervalSeries const>`. `IntervalReduction` uses a const non-owning alias for row-defining windows before delegating to `GatherResult`, while source aliases remain constrained by the current non-const DataObject view APIs.
+
+Export and line-batch consumers were verified to depend only on stable public `GatherResult` accessors such as `alignmentTimeAt()` and row access. Remaining adapter APIs are isolated to the legacy `GatherResult` compatibility path until Phase 6.
+
+### Tasks
+
+1. ~~Update `IntervalReduction.cpp` to use the refactored `GatherResult` and the existing `TimeFrame` conversion primitives.~~ **Done.**
+2. ~~Update `IntervalReduction.cpp` to pass row intervals as `std::shared_ptr<DigitalIntervalSeries const>` where possible. Avoid mutable aliasing for prepared windows; source aliases may remain constrained by current DataObject view APIs.~~ **Done.**
+3. ~~Update `GatherPipelineExecutor.hpp` and `GatherPipelineExecutor.cpp` to accept `std::shared_ptr<DigitalIntervalSeries const>` for prepared row windows.~~ **Done.**
+4. ~~Verify TransformsV2 tensor-column and interval-row consumers can operate on row DataObjects and stable row metadata without depending on `_intervals` internals.~~ **Done.**
+5. ~~Verify `RasterCSVExport.hpp` only depends on stable public accessors. Confirm callers pass a `TimeFrame` compatible with the gathered event rows/source series when computing exported relative times.~~ **Done.**
+6. ~~Verify `LineBatchBuilder` only depends on stable public accessors after the Phase 4 alignment-metadata update.~~ **Done.**
+7. ~~Remove any temporary call-site conversions to `std::vector<Interval>`.~~ **Done:** no Phase 5 production call site materializes row windows as `std::vector<Interval>`.
+
+### Exit Criteria
+
+- ~~Transform and export paths compile against the new `GatherResult` API.~~ **Done.**
+- ~~`GatherPipelineExecutor` exposes prepared row windows as `std::shared_ptr<DigitalIntervalSeries const>`.~~ **Done.**
+- ~~`IntervalReduction` does not materialize converted row intervals or mutate row-defining windows.~~ **Done.**
+- ~~Raster export continues to compute relative event times from `alignmentTimeAt()` and a compatible event/source `TimeFrame`.~~ **Verified.**
+- ~~No production call site needs `IntervalAdapters.hpp`.~~ **Done outside the legacy `GatherResult` compatibility API.**
+- ~~No production call site needs to know whether a `GatherResult` row DataObject is view-backed or owning.~~ **Done.**
+
+## Phase 5.5: Decouple TransformsV2 Row Processing From Core GatherResult
+
+### Goals
+
+Move TransformsV2-specific per-row projection/reduction concerns out of the core gather container while preserving the ability to return `GatherResult<OutputDataObject>` for DataObject-producing row transforms.
+
+This phase can occur after adapter migration if moving the methods earlier would create unnecessary churn.
+
+### Tasks
+
+1. Add or finalize `GatherResult::fromRows()` for row-aligned DataObjects and `fromRowsLike(parent, rows)` for preserving parent row metadata.
+2. Add TransformsV2 extension helpers that consume `GatherResult<InputT>` and run a pipeline per row.
+3. Return `GatherResult<OutputT>` when the per-row pipeline output is a supported DataObject type.
+4. Return `std::vector<Scalar>` for scalar reductions such as spike counts.
+5. Move `PipelineValueStore` construction for trial-specific parameters into the TransformsV2 extension helper or caller-provided row-context function.
+6. Deprecate or remove core `GatherResult` methods that directly expose TransformsV2 types, such as `buildTrialStore()`, `project()`, `reduce()`, and `sortIndicesBy()`, once callers have migrated.
+7. Drop TransformsV2 includes from `GatherResult.hpp` when no core API uses them.
+
+### Exit Criteria
+
+- Core `GatherResult` depends on DataObject and `TimeFrame` concepts, not TransformsV2 pipeline types.
+- TransformsV2 extension code depends on `GatherResult`, not the other way around.
+- DataObject-producing per-row transforms can synthesize new `GatherResult<OutputT>` values.
+- Scalar row reductions return plain vectors.
+
+## Phase 6: Deprecate And Remove IntervalAdapters
+
+### Goals
+
+Remove the gather-specific interval source abstraction after all call sites migrate.
+
+### Status
+
+**Complete.** `IntervalAdapters.hpp` has been removed, `GatherResult.hpp` no longer includes it, and the adapter-backed `GatherResult::create()` / `gather()` overloads have been deleted. Former adapter tests now use prepared `DigitalIntervalSeries` windows plus companion `DigitalEventSeries` alignment points.
+
+Searches for `expandEvents`, `withAlignment`, `EventExpanderAdapter`, `IntervalWithAlignmentAdapter`, `AlignedInterval`, and `IntervalSource` no longer find production or test call sites. Remaining `IntervalSourceIndex` / `IIntervalSource` matches refer to unrelated range-reduction and table-view terminology.
+
+### Tasks
+
+1. ~~Grep for `expandEvents`, `withAlignment`, `EventExpanderAdapter`, `IntervalWithAlignmentAdapter`, `AlignedInterval`, and `IntervalSource`.~~ **Done.**
+2. ~~If no production call sites remain, remove adapter overloads from `GatherResult`.~~ **Done.**
+3. ~~Delete `IntervalAdapters.hpp` or leave a short-lived compatibility header only if tests or external consumers require it.~~ **Done:** deleted.
+4. ~~Update `GatherResult` documentation and examples.~~ **Done.**
+5. ~~Update developer docs if final API differs from the design document.~~ **Done.**
+
+### Exit Criteria
+
+- ~~`GatherResult` no longer exposes adapter-based gather APIs.~~ **Done.**
+- ~~The build succeeds without `IntervalAdapters.hpp` included by `GatherResult.hpp`.~~ **Done.**
+
+## Phase 7: Documentation And Cleanup
+
+### Goals
+
+Document the final architecture and remove migration-only language from user-facing references.
+
+### Tasks
+
+1. Update `docs/developer/GatherResult/` with the final API details.
+2. Keep [`event_to_interval.qmd`](../transforms_v2/event_to_interval.qmd), [`interval_to_event.qmd`](../transforms_v2/interval_to_event.qmd), and [`prune_overlapping_intervals.qmd`](../transforms_v2/prune_overlapping_intervals.qmd) current.
+3. Update any plot developer docs that mention adapter-based alignment.
+4. Add examples showing non-registered window series passed to `GatherResult`.
+5. Run formatting and static analysis on changed C++ files.
+6. Run focused tests, then a broader relevant test suite.
+
+### Exit Criteria
+
+- Developer docs match the implemented API.
+- No stale examples mention adapter-based gather as the preferred path.
+
+## Verification Checklist
+
+Use this checklist before considering the migration complete:
+
+- `DigitalIntervalSeries::createOverlapping()` is used for generated gather windows (`EventToInterval` already does this).
+- `PruneOverlappingIntervals` is available for greedy keep-first pruning of interval bounds when overlap prevention is required.
+- `DigitalEventSeries` is used for generated alignment points.
+- Overlapping event-aligned windows are preserved as separate rows.
+- `GatherResult::size()` matches the number of generated windows.
+- `GatherResult::intervalAt(i)` preserves its documented compatibility semantics. If both prepared-window and source-query interval accessors exist, each is named clearly.
+- `GatherResult::alignmentTimeAt(i)` returns the original event time or selected interval alignment point.
+- Current `GatherResult::buildTrialStore(i)` behavior, if still present, sets `alignment_time`, `trial_index`, `trial_duration`, and `end_time` correctly.
+- `GatherResult::reorder()` preserves original-index semantics.
+- `GatherResult` rows are normal DataObjects; callers do not branch on view-backed versus owning row storage.
+- A future `fromRowsLike()` path can preserve row metadata when a per-row transform produces another DataObject type.
+- Cross-timeframe gathers match expected absolute-time windows.
+- PSTH and event plot widgets render the same trial rows as before the migration.
+- `IntervalReduction` still produces interval-row `TensorData` with expected row descriptors.
+- `RasterCSVExport` output remains stable for existing raster export tests.
+- Generated temporary windows and alignment points do not copy source entity IDs; provenance should use lineage tracing if needed later.
+
+## Suggested Implementation Order
+
+If doing this incrementally across several pull requests, use this order:
+
+1. Add tests and TransformsV2 alignment/window algorithms. **Done:** `EventToInterval`, `IntervalToEvent`, and `PruneOverlappingIntervals`.
+2. Centralize use of the existing `TimeFrame` conversion primitives in gather/query and projection code.
+3. Refactor `GatherResult` internals while keeping old adapter entry points temporarily.
+4. Migrate plot alignment helpers.
+5. Migrate transform/export consumers.
+6. Remove adapter APIs.
+7. Decouple TransformsV2 row processing from core `GatherResult` if not already done.
+8. Finalize docs and examples.
+
+This sequence keeps behavior testable at each step and avoids a large all-at-once replacement of plotting, transforms, and gather internals.

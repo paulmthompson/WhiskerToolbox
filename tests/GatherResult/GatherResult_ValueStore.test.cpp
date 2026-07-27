@@ -11,7 +11,6 @@
  */
 
 #include "GatherResult/GatherResult.hpp"
-#include "GatherResult/IntervalAdapters.hpp"
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
@@ -22,6 +21,8 @@
 #include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/extension/ParameterBinding.hpp"
 #include "TransformsV2/extension/ValueProjectionTypes.hpp"
+
+#include "fixtures/GatherAlignmentFixtures.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -36,6 +37,9 @@
 using namespace Neuralyzer::Gather;
 using namespace Neuralyzer::Transforms::V2;
 using Catch::Matchers::WithinAbs;
+using Neuralyzer::Test::GatherFixtures::createAlignmentEventsForIntervals;
+using Neuralyzer::Test::GatherFixtures::createWindowsAroundEvents;
+using Neuralyzer::Test::GatherFixtures::TestIntervalAlignmentPoint;
 
 // =============================================================================
 // Test Fixtures
@@ -510,10 +514,10 @@ TEST_CASE("GatherResult - V2 raster plot workflow", "[GatherResult][ValueStore][
 }
 
 // =============================================================================
-// Interval Adapter Tests
+// Prepared Window Metadata Tests
 // =============================================================================
 
-TEST_CASE("EventExpanderAdapter - basic functionality", "[GatherResult][IntervalAdapter][Phase4]") {
+TEST_CASE("Prepared event windows - basic functionality", "[GatherResult][Phase6]") {
     // Create alignment events (e.g., stimulus times)
     auto alignment_events = createEventSeries({100, 200, 300});
 
@@ -522,10 +526,8 @@ TEST_CASE("EventExpanderAdapter - basic functionality", "[GatherResult][Interval
 
     SECTION("Expand events to symmetric windows") {
         // Each alignment event becomes a ±50 window
-        auto adapter = expandEvents(alignment_events, 50, 50);
-
-        // Use gather with the adapter
-        auto result = gather(spikes, adapter);
+        auto windows = createWindowsAroundEvents(alignment_events, 50, 50);
+        auto result = gather(spikes, windows, alignment_events);
 
         REQUIRE(result.size() == 3);
 
@@ -543,8 +545,8 @@ TEST_CASE("EventExpanderAdapter - basic functionality", "[GatherResult][Interval
     }
 
     SECTION("Alignment time is event time, not interval start") {
-        auto adapter = expandEvents(alignment_events, 50, 50);
-        auto result = gather(spikes, adapter);
+        auto windows = createWindowsAroundEvents(alignment_events, 50, 50);
+        auto result = gather(spikes, windows, alignment_events);
 
         // Check that buildTrialStore uses the event time (alignment) not interval start
         auto store0 = result.buildTrialStore(0);
@@ -559,8 +561,8 @@ TEST_CASE("EventExpanderAdapter - basic functionality", "[GatherResult][Interval
 
     SECTION("Asymmetric windows") {
         // 25 before, 75 after
-        auto adapter = expandEvents(alignment_events, 25, 75);
-        auto result = gather(spikes, adapter);
+        auto windows = createWindowsAroundEvents(alignment_events, 25, 75);
+        auto result = gather(spikes, windows, alignment_events);
 
         REQUIRE(result.size() == 3);
 
@@ -570,7 +572,7 @@ TEST_CASE("EventExpanderAdapter - basic functionality", "[GatherResult][Interval
     }
 }
 
-TEST_CASE("IntervalWithAlignmentAdapter - alignment options", "[GatherResult][IntervalAdapter][Phase4]") {
+TEST_CASE("Prepared interval alignment events - alignment options", "[GatherResult][Phase6]") {
     auto intervals = createIntervalSeries({
             {0, 100},  // Duration 100
             {150, 250},// Duration 100
@@ -580,8 +582,10 @@ TEST_CASE("IntervalWithAlignmentAdapter - alignment options", "[GatherResult][In
     auto spikes = createEventSeries({10, 50, 90, 160, 200, 240, 350, 400, 450});
 
     SECTION("Default alignment is start") {
-        auto adapter = withAlignment(intervals);// Default: Start
-        auto result = gather(spikes, adapter);
+        auto alignment_events = createAlignmentEventsForIntervals(
+                intervals,
+                TestIntervalAlignmentPoint::Start);
+        auto result = gather(spikes, intervals, alignment_events);
 
         auto store0 = result.buildTrialStore(0);
         auto store1 = result.buildTrialStore(1);
@@ -593,8 +597,10 @@ TEST_CASE("IntervalWithAlignmentAdapter - alignment options", "[GatherResult][In
     }
 
     SECTION("End alignment") {
-        auto adapter = withAlignment(intervals, AlignmentPoint::End);
-        auto result = gather(spikes, adapter);
+        auto alignment_events = createAlignmentEventsForIntervals(
+                intervals,
+                TestIntervalAlignmentPoint::End);
+        auto result = gather(spikes, intervals, alignment_events);
 
         auto store0 = result.buildTrialStore(0);
         auto store1 = result.buildTrialStore(1);
@@ -606,8 +612,10 @@ TEST_CASE("IntervalWithAlignmentAdapter - alignment options", "[GatherResult][In
     }
 
     SECTION("Center alignment") {
-        auto adapter = withAlignment(intervals, AlignmentPoint::Center);
-        auto result = gather(spikes, adapter);
+        auto alignment_events = createAlignmentEventsForIntervals(
+                intervals,
+                TestIntervalAlignmentPoint::Center);
+        auto result = gather(spikes, intervals, alignment_events);
 
         auto store0 = result.buildTrialStore(0);
         auto store1 = result.buildTrialStore(1);
@@ -619,7 +627,7 @@ TEST_CASE("IntervalWithAlignmentAdapter - alignment options", "[GatherResult][In
     }
 }
 
-TEST_CASE("Interval adapters with time normalization", "[GatherResult][IntervalAdapter][ValueStore][Phase4]") {
+TEST_CASE("Prepared event windows with time normalization", "[GatherResult][ValueStore][Phase6]") {
     V2TestFixture const fixture;
 
     // Create alignment events at 100, 200, 300
@@ -632,9 +640,9 @@ TEST_CASE("Interval adapters with time normalization", "[GatherResult][IntervalA
             280, 300, 320 // Around event at 300
     });
 
-    // Create adapter with ±50 window
-    auto adapter = expandEvents(alignment_events, 50, 50);
-    auto raster = gather(spikes, adapter);
+    // Create prepared ±50 windows with companion alignment events
+    auto windows = createWindowsAroundEvents(alignment_events, 50, 50);
+    auto raster = gather(spikes, windows, alignment_events);
 
     REQUIRE(raster.size() == 3);
 

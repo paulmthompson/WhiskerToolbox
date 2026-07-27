@@ -1,0 +1,188 @@
+---
+title: "GatherResult Row-Aligned DataObject Container Design"
+---
+
+## Purpose
+
+This note captures the follow-on design direction for `GatherResult<T>` after the `DigitalIntervalSeries` window migration. The migration removes gather-specific interval adapters and makes prepared `DigitalIntervalSeries` windows the direct gather input. The broader design goal is that `GatherResult<T>` becomes the standard row-aligned container for supported DataObject instances.
+
+The direct gather operation is one way to produce those rows. Per-row TransformsV2 execution is another way. Both should use the same row container instead of introducing a parallel `TrialCollection<T>` or `PerTrialResult<T>` abstraction.
+
+## Core Model
+
+`GatherResult<T>` should mean:
+
+```text
+row-aligned DataObjects of type T + optional window/alignment metadata
+```
+
+It should not mean:
+
+```text
+only view-backed slices from one source object
+```
+
+The row DataObjects may be view-backed, owning, lazy, memory-mapped, or transform-produced. `GatherResult` should not inspect or branch on those storage strategies. Storage ownership, entity IDs, and `TimeFrame` semantics remain responsibilities of the DataObject type itself.
+
+Direct gather creation still uses DataObject APIs such as `createView()` or `createTimeRangeCopy()` to create rows. After creation, the row is just a `T` held by `GatherResult`.
+
+## Responsibility Split
+
+| Component | Responsibility |
+|---|---|
+| DataObject types | Storage strategy, entity identity, `TimeFrame`, materialization, and view/copy semantics. |
+| `GatherResult<T>` | Row alignment, row ordering, optional gather windows, optional alignment points, and row DataObject storage. |
+| TransformsV2 algorithms | Produce DataObjects or scalar values from DataObjects. |
+| TransformsV2 gather extensions | Run pipelines per gathered row, provide row-specific parameters, and return `GatherResult<OutputT>` or `std::vector<Scalar>`. |
+| Plot/export/tensor code | Choose the alignment/window strategy and consume row-aligned outputs. |
+
+This dependency direction keeps core `GatherResult` independent of TransformsV2 pipeline types. TransformsV2 extension code can depend on `GatherResult`, but `GatherResult.hpp` should not need `PipelineValueStore`, projection factory, or reducer factory includes in its long-term core API.
+
+## Row Transform Semantics
+
+If a per-row operation produces another supported DataObject type, the result should be another `GatherResult`:
+
+```text
+GatherResult<InputDataObject>
+    -> per-row TransformPipeline
+    -> GatherResult<OutputDataObject>
+```
+
+If a per-row operation produces a scalar, the result should be a plain vector:
+
+```text
+GatherResult<InputDataObject>
+    -> per-row reduction
+    -> std::vector<Scalar>
+```
+
+Examples:
+
+- Normalized spike events per trial: `GatherResult<DigitalEventSeries>`.
+- Binned event rate per trial: `GatherResult<AnalogTimeSeries>` or `TensorData`, depending on the transform output contract.
+- Spike count per trial: `std::vector<int>`.
+- First-spike latency per trial: `std::vector<float>`.
+
+This keeps DataObject-producing results inside the same row-aligned abstraction and avoids a new templated container with overlapping responsibilities.
+
+## Proposed Construction Paths
+
+Direct gather creation should remain available:
+
+```cpp
+static GatherResult<T> create(
+        std::shared_ptr<T> source,
+        std::shared_ptr<DigitalIntervalSeries const> windows);
+
+static GatherResult<T> create(
+        std::shared_ptr<T> source,
+        std::shared_ptr<DigitalIntervalSeries const> windows,
+        std::shared_ptr<DigitalEventSeries const> alignment_points);
+```
+
+Row-synthesis creation should be added when needed by per-row transforms:
+
+```cpp
+static GatherResult<T> fromRows(
+        std::vector<std::shared_ptr<T>> rows,
+        std::shared_ptr<DigitalIntervalSeries const> windows = nullptr,
+        std::shared_ptr<DigitalEventSeries const> alignment_points = nullptr);
+
+template<typename ParentT>
+static GatherResult<T> fromRowsLike(
+        GatherResult<ParentT> const& parent,
+        std::vector<std::shared_ptr<T>> rows);
+```
+
+`fromRowsLike()` should preserve row metadata from the parent result. This is the natural return path for a per-row transform pipeline that changes the DataObject type.
+
+## Source Provenance
+
+The current direct-gather implementation stores a source pointer. That remains useful for gather provenance and for keeping view-backed row objects alive.
+
+However, source provenance should not be treated as universal. A `GatherResult<T>` synthesized from per-row transform outputs may not have one source object of type `T`. In that case, `source()` may be null or should be documented as direct-gather-only provenance.
+
+Longer-term provenance should use lineage tracing rather than forcing every `GatherResult<T>` to invent a source object.
+
+## Windows And Alignment Points
+
+Prepared windows and alignment points are row metadata:
+
+```cpp
+std::shared_ptr<DigitalIntervalSeries const> _windows;
+std::shared_ptr<DigitalEventSeries const> _alignment_points;
+```
+
+Not every `GatherResult` requires alignment points. Direct interval gathers can exist with windows only. Plot/PSTH/raster paths that require trial-relative projection should supply alignment points or maintain them as a companion object with the same row ordering.
+
+If alignment points are stored, debug builds should assert that their row count matches the row count. Reordering must preserve the original-index mapping so callers can retrieve metadata for the visible row safely.
+
+## TimeFrame Boundaries
+
+TimeFrame conversion belongs at operation boundaries:
+
+- Direct gather converts prepared window interval edges into the source DataObject's `TimeFrame` with `convertTimeFrameRange()` before creating row objects.
+- Projection or normalization converts event/alignment positions using `convert_time_index()` or physical time values from the relevant `TimeFrame` objects.
+- Per-row transforms own the `TimeFrame` semantics of their output DataObjects.
+
+`GatherResult` should not reinterpret the `TimeFrame` of transformed row outputs. It should hold the resulting DataObjects as returned by the transform.
+
+## TransformsV2 Decoupling
+
+The current `GatherResult` API contains TransformsV2-facing helpers such as `buildTrialStore()`, `project()`, `reduce()`, and `sortIndicesBy()`. These are useful but do not require private state beyond row access and row metadata.
+
+The target dependency direction is:
+
+```text
+TransformsV2 gather extension -> GatherResult
+```
+
+not:
+
+```text
+GatherResult -> TransformsV2
+```
+
+A future extension helper can provide row-specific parameters and run pipelines:
+
+```cpp
+template<typename InputT, typename OutputT, typename RowContextFn>
+GatherResult<OutputT> transformRows(
+        GatherResult<InputT> const& input,
+        TransformPipeline const& pipeline,
+        RowContextFn make_context_for_row);
+```
+
+Scalar reductions can use a sibling helper:
+
+```cpp
+template<typename InputT, typename Scalar, typename RowContextFn>
+std::vector<Scalar> reduceRows(
+        GatherResult<InputT> const& input,
+        TransformPipeline const& pipeline,
+        RowContextFn make_context_for_row);
+```
+
+The context function can populate trial-specific values such as alignment time. That keeps NormalizeTime-style parameters explicit without requiring core `GatherResult` to depend on `PipelineValueStore`.
+
+## Constraints On `T`
+
+`GatherResult<T>` should eventually be constrained to supported DataObject types. The base container only needs `T` to be a supported row DataObject. Direct gather factories can impose narrower requirements:
+
+- `createView(source, TimeFrameIndex, TimeFrameIndex)` for viewable DataObjects.
+- `createView(source, int64_t, int64_t)` for legacy/int64 view APIs.
+- `createTimeRangeCopy()` for DataObjects that create owning row copies.
+
+This separation allows transformed row results to be stored even when that DataObject type is not directly gatherable by the same source-window factory.
+
+## Migration Guidance
+
+The `DigitalIntervalSeries` migration should not try to complete this full refactor at the same time. Phase 3 should primarily stabilize window storage and row metadata. It should, however, avoid decisions that make the row-aligned DataObject model difficult.
+
+Recommended order:
+
+1. Complete prepared-window storage and adapter removal.
+2. Preserve existing projection/reduction helpers until callers are stable.
+3. Add `fromRows()` / `fromRowsLike()` when a concrete per-row transform caller needs them.
+4. Move TransformsV2-specific helpers into extension code.
+5. Remove TransformsV2 includes from core `GatherResult.hpp` once the core API no longer exposes those types.

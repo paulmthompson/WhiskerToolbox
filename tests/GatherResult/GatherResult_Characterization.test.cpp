@@ -4,7 +4,6 @@
  */
 
 #include "GatherResult/GatherResult.hpp"
-#include "GatherResult/IntervalAdapters.hpp"
 
 #include "fixtures/GatherAlignmentFixtures.hpp"
 
@@ -18,8 +17,8 @@
 #include <stdexcept>
 #include <vector>
 
-using Neuralyzer::Gather::expandEvents;
 using Neuralyzer::Test::GatherFixtures::createEventSeries;
+using Neuralyzer::Test::GatherFixtures::createWindowsAroundEvents;
 
 namespace {
 
@@ -33,8 +32,8 @@ TEST_CASE("GatherResult - overlapping event windows preserve one row per event",
     auto spikes = createEventSeries({5, 10, 15, 20, 25, 30});
     auto alignment_events = createEventSeries({10, 15, 20});
 
-    auto adapter = expandEvents(alignment_events, 10, 10);
-    auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+    auto windows = createWindowsAroundEvents(alignment_events, 10, 10);
+    auto result = gather(spikes, windows, alignment_events);
 
     REQUIRE(result.size() == 3);
 
@@ -87,8 +86,8 @@ TEST_CASE("GatherResult - reorder preserves originalIndex and intervalAtReordere
     auto tf = createIdentityTimeFrame(40);
     events->setTimeFrame(tf);
 
-    auto adapter = expandEvents(events, 5, 5);
-    auto gathered = GatherResult<DigitalEventSeries>::create(events, adapter);
+    auto windows = createWindowsAroundEvents(events, 5, 5);
+    auto gathered = gather(events, windows, events);
 
     REQUIRE(gathered.size() == 3);
     CHECK_FALSE(gathered.isReordered());
@@ -126,8 +125,8 @@ TEST_CASE("GatherResult - materialize preserves intervals and alignment times",
     auto spikes = createEventSeries({10, 20, 30, 40});
     auto alignment_events = createEventSeries({20});
 
-    auto adapter = expandEvents(alignment_events, 10, 10);
-    auto gathered = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+    auto windows = createWindowsAroundEvents(alignment_events, 10, 10);
+    auto gathered = gather(spikes, windows, alignment_events);
 
     REQUIRE(gathered.size() == 1);
     auto const materialized = gathered.materialize();
@@ -158,8 +157,8 @@ TEST_CASE("GatherResult - centered event window alignment differs from window st
     auto spikes = createEventSeries({80, 100, 120});
     auto alignment_events = createEventSeries({100});
 
-    auto adapter = expandEvents(alignment_events, 50, 50);
-    auto result = GatherResult<DigitalEventSeries>::create(spikes, adapter);
+    auto windows = createWindowsAroundEvents(alignment_events, 50, 50);
+    auto result = gather(spikes, windows, alignment_events);
 
     REQUIRE(result.size() == 1);
     CHECK(result.intervalAt(0).start == 50);
