@@ -1,181 +1,187 @@
 ---
-title: "Column Row Pipeline (Design)"
+title: "Column Row Pipeline Design"
 format: html
 ---
 
-**Status:** Design / planned work (not yet implemented). Intended to be delivered in several small PRs.
+**Status:** Design target. The underlying GatherResult and interval-window primitives are implemented; TensorDesign `row_pipeline_json` wiring is planned.
 
-This document captures the agreed architecture for **per-column gather geometry** in lazy-column tensors: how to build trial tables where different columns aggregate over different time regions tied to the same row source (e.g. spike presence in an onset window vs mean curvature over the full contact).
+This document describes the target architecture for per-column gather geometry in lazy-column tensors. The implementation sequence is tracked separately in [Column Row Pipeline Roadmap](column_row_pipeline_roadmap.qmd).
 
 See also:
 
 - [Tensor stack overview](../tensor_stack.qmd)
-- [TensorColumnBuilders](../transforms_v2/TensorColumnBuilders.qmd)
 - [TensorDesign library](TensorDesignBuilder.qmd)
+- [TensorColumnBuilders](../transforms_v2/TensorColumnBuilders.qmd)
+- [GatherResult row-aligned container design](../GatherResult/row_aligned_dataobject_container_design.qmd)
 - [DigitalIntervalSeries interval layouts](../DataObjects/DigitalTimeSeries/Digital_Interval_Series.qmd)
-- [Whisker-contact scenario](../testing/scenarios/whisker_contact.qmd) (motivating integration test)
+- [Whisker-contact scenario](../testing/scenarios/whisker_contact.qmd)
+
+## Goal
+
+TensorDesign should support feature tables where every row comes from one row source, but each column can choose a different row-aligned temporal geometry before gathering its source data.
+
+The motivating table is:
+
+- One row per whisker `Contact` interval.
+- A curvature column reduced over the full contact interval.
+- A spike column reduced over a short window around contact onset.
+- An angle column sampled at contact onset.
+- Downstream analysis, such as binning angle and estimating `P(spike | bin)`, remains outside tensor building.
+
+The design should use existing project primitives instead of tensor-specific interval abstractions:
+
+- DataObjects carry `TimeFrame` and entity identity.
+- TransformPipelines mutate or derive DataObjects.
+- `GatherResult` stores gathered row DataObjects plus prepared window metadata when direct gathering is needed.
+- TensorDesign assembles the row source, column recipes, lazy providers, and output `TensorData`.
+
+## Current State
+
+Implemented today:
+
+- `TensorDesign` can build lazy-column tensors from interval, timestamp, and derived timestamp row sources.
+- Interval-row columns gather over the full row interval.
+- `ColumnRecipe::pipeline_json` describes source processing and interval range reductions.
+- `ColumnRecipe::interval_property` provides row metadata columns such as interval start, end, and duration.
+- `GatherResult` consumes prepared `DigitalIntervalSeries` windows and can hold companion alignment events, but TensorDesign should not rely on that metadata path for column transformations.
+- `GatherResult` converts prepared window bounds to the gathered source `TimeFrame` with `convertTimeFrameRange()`.
+- `DigitalIntervalSeries` supports `IntervalLayout::Overlapping` through `createOverlapping()`.
+- `IntervalToEvent`, `EventToInterval`, and `PruneOverlappingIntervals` are registered TransformsV2 algorithms.
+
+Not implemented yet:
+
+- `ColumnRecipe::row_pipeline_json`.
+- TensorDesign JSON parse/serialize support for `row_pipeline_json`.
+- Tensor column provider dispatch based on row-pipeline output type.
+- A way to bind row-specific iterable values, such as one normalization event per row, into the column TransformPipeline's `PipelineValueStore`.
+- Replacement of the temporary `pipeline_json` `"offset"` sample-at-offset compatibility path.
+- UI support for configuring row pipelines.
 
 ## Problem
 
-A common analysis pattern (often done in Python) is:
+Current interval-row tensor columns always gather source data over the full row interval. This makes these common per-row features hard or impossible to express in TensorDesign JSON:
 
-1. **One row per trial** (e.g. each whisker `Contact` interval).
-2. **Per-row features** that use *different* temporal windows:
-   - Boolean: did a spike occur within ±W of contact **onset**?
-   - Covariate: `Angle` sampled at contact **onset** (not mean over the whole contact).
-3. **Downstream**: bin the covariate and estimate P(spike | bin) — that aggregation is *not* part of tensor building.
+- Spike presence within `[-W, +W]` of contact onset.
+- Analog value sampled at contact onset.
+- Statistics over a lagged or shifted version of the row interval.
+- Statistics aligned to a data-derived point inside a row, such as a peak curvature time.
 
-Today, `ColumnRecipe` + `buildIntervalPipelineProvider` always gather source data over the **full row interval**. Onset windows, point samples, and lagged intervals are not expressible in JSON without custom C++ glue per column.
+Adding tensor-specific fields such as `lag`, `window_start`, or `gather_mode` would duplicate the TransformPipeline and DataObject systems. Those systems already handle TimeFrame conversion and entity identity, which are core requirements for correct scientific analysis.
 
-## Design principle: pipelines, not parallel abstractions
+## Core Model
 
-Avoid a parallel type system (`ColumnAnchorSpec`, gather-mode enums, etc.). The library already has the right primitive: **TransformV2 pipelines**.
-
-**Contract (per column):**
+The target per-column data flow is:
 
 ```mermaid
 flowchart LR
-    RowDIS["Row source\nDigitalIntervalSeries"]
-    RowPipe["row_pipeline_json\n(default: identity)"]
-    Geom["Gather geometry\nDIS / DES / …"]
-    SrcPipe["pipeline_json\non source_key"]
-    Scalar["One float per row"]
+    RowSource["row_source DataObject"]
+    RowDesc["RowDescriptor"]
+    RowPipeline["row_pipeline_json\nTransformPipeline"]
+    Metadata["row-aligned gather geometry\nDIS windows or DES sample times"]
+    Gather["GatherResult<SourceT>"]
+    Context["iterable bindings\noptional marker per row"]
+    SourcePipeline["pipeline_json\nper-row transform + reduction"]
+    Value["one value per row"]
 
-    RowDIS --> RowPipe --> Geom --> SrcPipe --> Scalar
+    RowSource --> RowDesc
+    RowSource --> RowPipeline --> Metadata --> Gather --> SourcePipeline --> Value
+    RowSource --> Context --> SourcePipeline
 ```
 
-| Stage | Role |
-|-------|------|
-| **Row source** | Defines *which trials exist* and `RowDescriptor` metadata (e.g. `Contact` intervals). |
-| **`row_pipeline_json`** | Optional TransformV2 pipeline on the row `DigitalIntervalSeries`. **Default: identity** (empty steps). Output is **gather geometry** for this column only. |
-| **`pipeline_json`** | Existing source pipeline: gather within that geometry + range reduction (or passthrough sample). |
+`row_source` defines row identity. `row_pipeline_json` defines where a column looks for data. `pipeline_json` defines how the gathered source data becomes a column value.
 
-**Row identity is unchanged:** row `i` always refers to contact `i`. The row pipeline only changes *where this column looks* when reading `source_key` — not the row count.
+The invariant is that row `i` remains row `i`. A row pipeline may change the gather bounds or sample time for row `i`, but it must not silently reorder rows, merge rows, or create extra rows unless the column builder explicitly supports that behavior.
 
-## Row identity vs gather geometry
+## Responsibilities
 
-| Concept | Source | Example |
-|---------|--------|---------|
-| Row identity | `row_source` in `TensorDesignSpec` | `Contact` interval `i` |
-| Gather geometry (per column) | `row_pipeline_json` output | Onset ±150 Master ticks around contact `i` |
-| Feature value | `pipeline_json` on `source_key` | `EventPresence`, `MeanValue`, passthrough sample |
+| Component | Responsibility |
+|---|---|
+| DataObjects | Store data, `TimeFrame`, entity IDs, view/copy semantics, and materialization behavior. |
+| TransformsV2 row pipeline | Derive row-aligned gather inputs from the row source, such as windows or sample times. |
+| `GatherResult` | Gather source rows from prepared windows. It does not execute TransformPipelines or own per-row column context. |
+| TransformsV2 iterable binding | Maps one element per row from a DataObject iterable into `PipelineValueStore` keys. |
+| `pipeline_json` | Processes gathered source rows with `PipelineValueStore` parameter bindings and produces a scalar column value or supported DataObject output. |
+| TensorDesign | Parse recipes, build row descriptors, connect row pipelines to column providers, and assemble `TensorData`. |
 
-Different columns on the same tensor can share one row source but use different `row_pipeline_json` values.
+This keeps the dependency direction aligned with the GatherResult refactor:
 
-## Mapping analysis patterns to transforms
-
-Instead of new tensor enums, encode behavior as **composed transforms**:
-
-| Intent | `row_pipeline_json` (conceptual) | `pipeline_json` |
-|--------|----------------------------------|-----------------|
-| Mean over full contact | identity (omit field) | `MeanValue` |
-| Spike in onset ±W | `IntervalWindowAtAlignment(start, pre, post, time_key)` → gather geometry | `EventPresence` |
-| Angle at onset | `IntervalToEventAtAnchor(start)` → DES | empty (passthrough sample at event times) |
-| Stats on lagged contact | `IntervalShift(δ)` → DIS (output `Overlapping` unless source disjoint) | any reduction |
-| Peak-aligned row times | `AnalogIntervalPeak` (existing, DIS+Analog→DES) | passthrough on another source |
-| Trial-relative spike count | identity or window transform | `NormalizeEventTimeValueV2` + `EventCountInWindow` |
-
-**Lag / lead** are not a separate abstraction:
-
-- Lead covariate by N → point/event at `anchor` with shift, or `IntervalShift(-N)`.
-- Post-onset-only window → asymmetric window params (`pre=0`, `post=W`).
-
-**Data-derived alignment** (e.g. first spike in contact, peak curvature) → existing or new **binary** row transforms that output `DigitalEventSeries` (one event per row), such as [`AnalogIntervalPeak`](../transforms_v2/architecture.qmd).
-
-**Optimal lag / time warping** → future TransformsV2 algorithms composed in `pipeline_json`; not part of the tensor gather contract.
-
-## Relationship to existing code
-
-| Component | Today | After row pipeline |
-|-----------|-------|-------------------|
-| [`buildIntervalPipelineProvider`](../../src/TransformsV2/core/TensorColumnBuilders.hpp) | Gather over row DIS as-is | Used when `row_pipeline` output is DIS (1:1 with rows) |
-| [`buildPipelineColumnProvider`](../../src/TransformsV2/core/TensorColumnBuilders.hpp) | Timestamp-row columns | Used when `row_pipeline` output is DES (sample at event times) |
-| Prepared windows + alignment events | Plotting / GatherResult | `DigitalIntervalSeries` bounds plus companion `DigitalEventSeries` anchors |
-| [`PlotAlignmentGather`](../../src/WhiskerToolbox/Plots/Common/PlotAlignmentGather.hpp) | Qt plot widgets (PSTH, raster, line) | Same geometry as row pipeline; see [audit below](#plotalignmentgather-audit) |
-| [`EventIntervalReduction`](../../src/TransformsV2/algorithms/IntervalReduction/IntervalReduction.hpp) | Fused identity + gather+reduce | Stays for one-shot pipelines; tensor columns stay **split** for composability |
-| [`interval_property`](../../src/TransformsV2/core/TensorColumnBuilders.hpp) on `ColumnRecipe` | Row metadata only | Unchanged (no source gather) |
-| `IntervalLayout::Overlapping` on [`DigitalIntervalSeries`](../../src/DataObjects/DigitalTimeSeries/Digital_Interval_Series.hpp) | Implemented | Row-pipeline gather geometry output type |
-
-## PlotAlignmentGather audit
-
-[`PlotAlignmentGather.hpp`](../../src/WhiskerToolbox/Plots/Common/PlotAlignmentGather.hpp) is the plotting stack’s entry point for “take an alignment series, pick onset/offset (or event time), expand a window, gather source data.” It prepares `DigitalIntervalSeries` windows and companion `DigitalEventSeries` alignment events before calling [`GatherResult::gather`](../../src/GatherResult/GatherResult.hpp).
-
-### Data flow (today)
-
-```mermaid
-flowchart TD
-    DM["DataManager keys"]
-    PAS["getFilteredAlignmentSource\n(optional overlap prune)"]
-    Branch{"Alignment type?"}
-    EEA["gatherWithEventAlignment\nprepare DES windows"]
-    IWA["gatherWithIntervalAlignment\nprepare DIS anchor events and windows"]
-    GR["GatherResult::create(source, windows, alignment_events)"]
-    PSTH["PSTH / raster / line plot"]
-
-    DM --> PAS --> Branch
-    Branch -->|DES| EEA --> GR
-    Branch -->|DIS| IWA --> GR
-    GR --> PSTH
+```text
+TensorDesign / TransformsV2 extensions -> GatherResult -> DataObjects
 ```
 
-| Plot API | Prepared metadata | Gather bounds | Alignment time |
-|----------|---------|---------------|----------------|
-| `gatherWithEventAlignment` | prepared windows + original DES anchors | `[T−pre, T+post]` per event | event time `T` |
-| `gatherWithIntervalAlignment` (no window) | original DIS + extracted DES anchors | raw interval `[start, end]` | start / end / center index |
-| `gatherWithIntervalAlignment` (+ window) | prepared windows + extracted DES anchors | `[align_abs−pre, align_abs+post]` | anchor converted to absolute time |
-| `createAlignedGatherResult` | dispatches above | `window_size/2` symmetric pre/post | from `PlotAlignmentData` |
+not:
 
-**Important:** event/interval windows are materialized as `DigitalIntervalSeries` values. Use [`createOverlapping()`](../../src/DataObjects/DigitalTimeSeries/Digital_Interval_Series.hpp) for gather geometry so each row `i` maps to one window even when windows overlap in absolute time.
+```text
+GatherResult -> TensorDesign or TransformPipeline execution
+```
 
-### Overlap pruning (plot-only, optional)
+## Row Identity And Gather Inputs
 
-When `PlotAlignmentData.prevent_overlap` is true, `getFilteredAlignmentSource` runs **before** gather:
+| Concept | Defined by | Example |
+|---|---|---|
+| Row identity | `TensorDesignSpec::row_source` | `Contact` interval `i` |
+| Row descriptor | Original row source | Contact start/end metadata |
+| Gather windows | `row_pipeline_json` output or identity row source | Trial window or onset window around contact `i` |
+| Sample times | `row_pipeline_json` output, when sampling | Contact onset event for row `i` |
+| Iterable binding values | DataManager object or row-pipeline output | Normalization event for raster/PSTH row `i` |
+| Feature value | `pipeline_json` over gathered source rows | Spike presence, mean curvature, angle sample |
 
-1. Extract absolute alignment times (`extractAlignmentTimes` from DES, or anchor times from DIS).
-2. Greedy left-to-right prune (`pruneOverlappingAlignmentTimes`) on expanded windows `[t−pre, t+post]`.
-3. Filter the alignment series to kept indices (`createFilteredEventSeries` / `createFilteredIntervalSeries`).
+Prepared windows should be represented as `DigitalIntervalSeries`. Per-row sample times should be represented as `DigitalEventSeries`. These are normal DataObjects, not tensor-specific side channels.
 
-This **drops trials** (reduces row count). It is a UI/analysis choice for PSTH-style displays, not a storage invariant. Default: `prevent_overlap = false` — overlapping windows are allowed and spikes in the overlap region appear in multiple trial views (correct for a raw per-trial raster).
+When a column needs to normalize gathered data relative to a marker that is not the gather window start, that marker should be supplied through `PipelineValueStore` parameter binding for `pipeline_json`, not encoded as a second output of `row_pipeline_json`.
 
-### Gap vs tensor path
+For example, a spike raster column may gather spikes inside each trial window, then run a normalize-time transform with the contact onset event for that row supplied through the value store.
 
-| | Plot (`PlotAlignmentGather`) | Tensor (today) | Tensor (after row pipeline) |
-|--|------------------------------|----------------|------------------------------|
-| Geometry | Prepared `Overlapping` DIS + optional anchor DES | Materialized `Disjoint` DIS | Materialized **`Overlapping`** DIS + anchor DES |
-| Onset window around DIS | Interval anchor extraction + event-window preparation | **Not yet** — needs `row_pipeline_json` | Transform outputs bounds DIS + anchor DES |
-| Overlapping windows | Supported via [`createOverlapping()`](../../src/DataObjects/DigitalTimeSeries/Digital_Interval_Series.hpp) | Was risky on `Disjoint` DIS | **Supported** via [`createOverlapping()`](../../src/DataObjects/DigitalTimeSeries/Digital_Interval_Series.hpp) |
-| Cross-timeframe | `GatherResult::create` converts prepared window TF → source TF | `GatherResult` converts DIS query bounds with `convertTimeFrameRange()` | Same; row interval metadata stays in original coordinates |
+## Transform Composition
 
-PR 3 should materialize row-pipeline DIS output as **`Overlapping`** when windows may overlap and pass a companion anchor DES when alignment metadata is needed.
+TensorDesign should express per-column geometry through composed registered transforms rather than new tensor enums.
 
-## Proposed API change (minimal)
+| Intent | Row pipeline output | Source pipeline |
+|---|---|---|
+| Mean over full contact | Identity row `DigitalIntervalSeries` | Range reduction such as `MeanValue` |
+| Spike near onset | `IntervalToEvent(start)` sample times followed by `EventToInterval(pre, post)` windows | Event presence or event count reduction |
+| Angle at onset | `IntervalToEvent(start)` sample times | Sample-at-event provider or equivalent source transform |
+| Raster/PSTH over trials | Trial windows from identity row source | Normalize event times with one marker per row, then count/bin/export |
+| Lagged contact statistic | `IntervalShift(delta)` windows | Any interval reduction |
+| Peak-centered feature | Data-derived row transform producing one event per row | Sample or windowed reduction around that event |
 
-Add **one** optional field to [`ColumnRecipe`](../../src/TransformsV2/core/TensorColumnBuilders.hpp):
+Implemented transforms that should be reused:
+
+| Transform | Status | Role |
+|---|---|---|
+| `IntervalToEvent` | Implemented | Extract start, end, or center events from interval rows. |
+| `EventToInterval` | Implemented | Expand events into overlapping gather windows. |
+| `PruneOverlappingIntervals` | Implemented | Optional keep-first pruning when a caller explicitly wants to drop overlapping windows. |
+
+Potential future transforms should be added only when there is a concrete use case:
+
+| Transform | Need |
+|---|---|
+| `IntervalShift` | Lag or lead a row interval while preserving row count. |
+| Data-derived event transforms | Produce one event per row from a row object plus another source object. |
+| Fused convenience transforms | Optional wrappers around common compositions; they should still return normal DataObjects. |
+
+## Proposed Recipe Shape
+
+The minimal API extension is one optional field on `ColumnRecipe`:
 
 ```cpp
 struct ColumnRecipe {
     std::string column_name;
     std::string source_key;
-    std::string pipeline_json;       // source gather + reduce (existing)
-    std::string row_pipeline_json;   // NEW: row DIS → geometry (default "")
+    std::string pipeline_json;
+    std::string row_pipeline_json;
     std::optional<IntervalProperty> interval_property;
 };
 ```
 
-`buildProviderFromRecipe` dispatch (sketch):
+An omitted or empty `row_pipeline_json` means identity: use the original row source as the gather geometry.
 
-1. If `interval_property` → existing path.
-2. Execute `row_pipeline_json` on shared row `DigitalIntervalSeries` (empty ⇒ identity).
-3. By output type:
-   - Gather geometry / `DigitalIntervalSeries` (same row count, `IntervalLayout::Overlapping` when windows may overlap) → `buildIntervalPipelineProvider`.
-   - `DigitalEventSeries` (one event per row) → extract times → `buildPipelineColumnProvider`.
-4. Binary row steps (e.g. `AnalogIntervalPeak`) use `additional_input_keys` in the pipeline descriptor JSON (same as other binary transforms).
+For interval row sources, identity means the existing full-interval behavior. This preserves current JSON designs.
 
-Remove the fragile `"offset"` substring hack in [`TensorDesignBuilder`](../../src/TensorDesign/TensorDesignBuilder.cpp) once point sampling is expressible via row pipeline.
+## Proposed JSON
 
-## Proposed JSON (whisker-contact tuning table)
-
-**Not valid until implemented.** Illustrates the target envelope:
+Raw row-pipeline JSON is the low-level target shape and is not valid until `row_pipeline_json` support is implemented:
 
 ```json
 {
@@ -193,177 +199,314 @@ Remove the fragile `"offset"` substring hack in [`TensorDesignBuilder`](../../sr
     {
       "name": "spike_in_window",
       "source_key": "Spikes",
-      "row_pipeline_json": "{\"steps\": [{\"transform_name\": \"IntervalWindowAtAlignment\", \"parameters\": {\"alignment\": \"start\", \"pre\": 150, \"post\": 150, \"time_key\": \"Master\"}}]}",
+      "row_pipeline_json": "{\"steps\": [{\"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}, {\"transform_name\": \"EventToInterval\", \"parameters\": {\"pre_expansion\": 150, \"post_expansion\": 150}}]}",
       "pipeline_json": "{\"steps\": [], \"range_reduction\": {\"reduction_name\": \"EventPresence\"}}"
     },
     {
       "name": "angle_at_onset",
       "source_key": "Angle",
-      "row_pipeline_json": "{\"steps\": [{\"transform_name\": \"IntervalToEventAtAnchor\", \"parameters\": {\"anchor\": \"start\"}}]}",
+      "row_pipeline_json": "{\"steps\": [{\"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}]}",
       "pipeline_json": "{\"steps\": []}"
     }
   ]
 }
 ```
 
-Omitted `row_pipeline_json` ⇒ identity (backward compatible with current designs).
+`row_pipeline_json` describes only the row-aligned gather or sample input. It should not also be responsible for carrying a separate normalization marker. If a column needs one marker per row for a transform such as normalize-time, that marker should be loaded into `PipelineValueStore` during per-row `pipeline_json` execution.
 
-### Window units
+## JSON Authoring Levels
 
-`time_key` on transform parameters names the clock for `pre` / `post` / `offset`:
+The raw schema is functional but not friendly: users should not need to remember transform names, parameter names, `PipelineValueStore` keys, or binding syntax for common analyses. TensorDesign should support multiple authoring levels that all expand to the same low-level column recipe model.
 
-| `time_key` | ±150 means (whisker scenario) |
-|------------|----------------------------------|
-| `"Master"` | 150 samples at 30 kHz |
-| `"Time"` | 150 camera frames → 9000 master ticks (60×) |
+### Level 1: Presets
 
-Empty or row-source default ⇒ use the row interval series' `TimeFrame`.
+Presets are the preferred user-facing format for common analysis patterns. They name the intent and expose only the parameters a user should edit.
 
-## Transforms to add (TransformsV2)
+Example: spike presence around interval onset:
 
-New behavior should land as **small registered transforms**, not tensor-layer enums:
+```json
+{
+  "name": "spike_in_onset_window",
+  "preset": "event_presence_around_interval_start",
+  "source_key": "Spikes",
+  "parameters": {
+    "pre": 150,
+    "post": 150
+  }
+}
+```
 
-| Transform | Signature | Purpose |
-|-----------|-----------|---------|
-| `IntervalWindowAtAlignment` | DIS → gather geometry | Fused `IntervalToEventAtAnchor` + `EventWindowExpand`; outputs `Overlapping` DIS |
-| `IntervalToEventAtAnchor` | DIS → DES | One event per row at start / end / center |
-| `EventWindowExpand` | DES → gather geometry | ±pre/post per event; may output `Overlapping` DIS |
-| `IntervalShift` | DIS → DIS | Lag/lead; output `Overlapping` unless input geometry is disjoint |
-| `PruneOverlappingAlignmentWindows` | geometry → geometry | Optional; mirrors `prevent_overlap` in plots |
+Example: raster/PSTH events normalized to interval onset:
 
-`IntervalWindowAtAlignment` should materialize an **`Overlapping`** `DigitalIntervalSeries` of gather bounds. When alignment time differs from window start (onset ±W), reductions that need `alignment_time` should receive a companion `DigitalEventSeries` of anchors or a gather-executor extension — see [Alignment metadata gap](#alignment-metadata-gap) below.
+```json
+{
+  "name": "trial_relative_spikes",
+  "preset": "raster_events_relative_to_interval_start",
+  "source_key": "Spikes",
+  "parameters": {
+    "window": "row_interval"
+  }
+}
+```
 
-### Composing transforms (interval → event → interval)
+Presets should be backed by a registry, not hard-coded in UI code. The registry should expose display names, descriptions, parameter schemas, and an expansion function that produces the low-level `ColumnRecipe` fields.
 
-Plot alignment is already expressible as a **two-step row pipeline** without new top-level tensor concepts:
+Conceptual registry descriptor:
 
-| Plot pattern | Row pipeline (composed) | Notes |
-|--------------|-------------------------|-------|
-| Onset ±W around contact | `IntervalToEventAtAnchor(start)` → `EventWindowExpand(pre, post)` | Same prepared geometry as plot interval-start alignment |
-| Offset ±W | `IntervalToEventAtAnchor(end)` → `EventWindowExpand` | |
-| Center ±W | `IntervalToEventAtAnchor(center)` → `EventWindowExpand` | |
-| Align to DES, ±W | `EventWindowExpand` only (identity on row if row is already DES) | Same prepared geometry as plot event alignment |
-| Lagged contact window | `IntervalShift(δ)` → optional window expand | Shift before or after anchor extraction; `IntervalShift` output is `Overlapping` when source windows can overlap |
+```cpp
+struct ColumnRecipePresetDescriptor {
+    std::string name;
+    std::string display_name;
+    std::string description;
+    ParameterSchema parameters;
+    std::function<ColumnRecipe(ColumnPresetArgs const &)> expand;
+};
+```
 
-`EventWindowExpand` is the DES-side event-window transform: it produces gather geometry (one window per event) without merging. It should output an **`Overlapping`** `DigitalIntervalSeries` when materialized.
+This matches existing project patterns: transforms and generators are registered, parameter schemas drive UI, and AutoParamWidget can render parameter forms.
 
-**Simplification opportunity:** `PlotAlignmentGather`’s four gather overloads + `createAlignedGatherResult` could eventually delegate to the same row-pipeline descriptors the tensor uses, with `prevent_overlap` modeled as an optional trailing transform (`PruneOverlappingAlignmentWindows`) instead of bespoke C++ in the plot header. That keeps one geometry vocabulary for plots and tensors.
+### Level 2: Assisted Domain JSON
 
-## Overlap: `DigitalIntervalSeries` contract vs gather geometry
+Assisted domain JSON is for advanced users who want readable JSON without writing full TransformPipeline descriptors. It uses domain terms such as row geometry, alignment point, and reduction, then expands to raw pipeline fields.
 
-[`DigitalIntervalSeries`](../../src/DataObjects/DigitalTimeSeries/Digital_Interval_Series.hpp) now distinguishes semantic row sources from gather geometry via construction-time **`IntervalLayout`** (see [interval layouts](../DataObjects/DigitalTimeSeries/Digital_Interval_Series.qmd)).
+Example:
 
-### Two roles, two layouts
+```json
+{
+  "name": "spike_in_onset_window",
+  "source_key": "Spikes",
+  "row_geometry": {
+    "from": "row_interval",
+    "point": "start",
+    "window": {
+      "pre": 150,
+      "post": 150
+    }
+  },
+  "reduction": {
+    "name": "EventPresence"
+  }
+}
+```
 
-| Role | `IntervalLayout` | Overlap in time? | Example |
-|------|------------------|------------------|---------|
-| **Row source** (semantic trials) | `Disjoint` | No — merged on `addEvent` | `Contact`, `Trial` in DataManager |
-| **Gather geometry** (per-column bounds) | `Overlapping` | Yes — row `i` → interval `i` | Onset ±W windows, transform pipeline output |
+This level is optional. It should be added only if presets are too restrictive but raw JSON remains too verbose for common scripted workflows.
 
-Row source stays `Disjoint`. Row-pipeline output that may overlap should use **`DigitalIntervalSeries::createOverlapping()`** (or `createFromView()`, which defaults to `Overlapping`).
+### Level 3: Raw Pipeline JSON
 
-[`GatherResult`](../../src/GatherResult/GatherResult.hpp) consumes prepared `DigitalIntervalSeries` windows directly and can store companion `DigitalEventSeries` alignment events for trial-relative metadata.
+Raw pipeline JSON is the developer and power-user format. It directly specifies `row_pipeline_json`, iterable `PipelineValueStore` bindings, and `pipeline_json`.
 
-### Materializing gather windows into DIS
+Example:
 
-**Safe** when:
+```json
+{
+  "name": "trial_relative_spikes",
+  "source_key": "Spikes",
+  "row_pipeline_json": "{\"steps\": []}",
+  "pipeline_value_bindings": [
+    {
+      "source_key": "ContactOnset",
+      "element": "physical_time",
+      "store_key": "row_alignment_time"
+    }
+  ],
+  "pipeline_json": "{\"steps\": [{\"transform_name\": \"NormalizeTime\", \"param_bindings\": {\"alignment_time\": \"row_alignment_time\"}}]}"
+}
+```
 
-- Series is `IntervalLayout::Overlapping`
-- Built via `createOverlapping()` or `addEvent` on an overlapping series
-- Row count verified: `geometry.size() == row_source.size()`
+The raw format should remain stable because it is the execution interchange format and the best target for focused tests.
 
-**Still unsafe / wrong:**
+### Saved Design Strategy
 
-- `addEvent` on a default `Disjoint` series (merges overlapping intervals)
-- Using `Overlapping` DIS for interactive `setEventAtTime` editing (`Disjoint` only)
-- Assuming O(log n) `getOverlappingRange` on overlapping series (uses O(n) linear scan)
+For user-facing saved designs, prefer storing both the user-authored preset and the expanded raw recipe:
 
-**Footguns:**
+```json
+{
+  "name": "spike_in_onset_window",
+  "preset": {
+    "name": "event_presence_around_interval_start",
+    "version": 1,
+    "parameters": {
+      "source_key": "Spikes",
+      "pre": 150,
+      "post": 150
+    }
+  },
+  "expanded": {
+    "source_key": "Spikes",
+    "row_pipeline_json": "...",
+    "pipeline_json": "..."
+  }
+}
+```
 
-- The vector constructor (`DigitalIntervalSeries(std::vector<Interval>)`) defaults to `Disjoint` layout but bulk-inserts without merging — prefer `createOverlapping()` for geometry.
-- `copyByEntityIds` into a `Disjoint` target still merges on `addEvent`.
-- [`DigitalIntervalBoolean`](../../src/TransformsV2/algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.cpp) merges internally regardless of layout.
+This preserves readability while keeping execution reproducible if a preset changes later. Early implementation may store only the expanded raw fields until preset versioning exists.
 
-### Alignment metadata gap {#alignment-metadata-gap}
+### Preset Library
 
-`Overlapping` DIS solves **bounds overlap**, not **alignment anchor** metadata:
+TransformsV2 already has a [`PipelineLibrary`](../transforms_v2/pipeline_library.qmd) for user-saved `PipelineDescriptor` JSON files under:
 
-- Window gather: bounds `[anchor − pre, anchor + post]`, alignment `anchor`
-- `GatherResult::alignmentTimeAt()` falls back to `interval.start` for direct DIS gather
+```text
+{config_dir}/pipelines/transforms_v2/*.json
+```
 
-Options for row pipeline / tensor when anchor ≠ window start:
+Column recipe presets should reuse the same library pattern where it helps, but they are not identical to raw TransformPipeline descriptors. A column preset may expand to several fields: `source_key`, `row_pipeline_json`, `pipeline_value_bindings`, and `pipeline_json`. It may also include UI-facing parameter metadata. Therefore the preferred design is a sibling library for TensorDesign column presets rather than overloading the existing transform pipeline file format.
 
-1. Output a `DigitalEventSeries` of anchors + `EventWindowExpand` (composed row pipeline)
-2. Extend the gather executor with per-row alignment events alongside an `Overlapping` DIS
+Proposed library layers:
 
-### Alternatives considered
+| Layer | Purpose | Example location |
+|---|---|---|
+| Bundled presets | Presets distributed with Neuralyzer | `resources/presets/tensor_design/columns/*.json` |
+| User presets | User-saved or imported column presets | `{config_dir}/presets/tensor_design/columns/*.json` |
+| Raw TransformPipelines | Existing saved transform pipelines | `{config_dir}/pipelines/transforms_v2/*.json` |
 
-| Option | Verdict |
-|--------|---------|
-| `IntervalLayout::Overlapping` | **Implemented** — use for gather geometry and transform intermediates |
-| Lazy `IntervalSource` only | **Removed** — prepared DIS windows are the standard gather geometry |
-| New DataManager type (e.g. `TrialWindowSeries`) | **Defer** — only if we need to persist overlapping windows |
-| Always prune overlaps in tensor builder | **Reject** — silently drops contacts; wrong for tuning-curve tables |
-| Store windows only in plot code | **Reject** — duplicates logic; row pipeline unifies plot + tensor |
+The bundled preset directory gives users useful defaults immediately after installation. The user preset directory lets users save lab-specific recipes without modifying the installation.
 
-## What stays out of scope
+A preset JSON file should be self-describing:
 
-- Binned P(spike | covariate) — downstream (export tensor, Python, future `GroupBy`).
-- Non-linear time warping — dedicated transforms or preprocessing.
-- UI (`ColumnConfigDialog`) — follow after library + tests stabilize.
+```json
+{
+  "schema": "neuralyzer.tensor_design.column_preset",
+  "version": 1,
+  "id": "event_presence_around_interval_start",
+  "display_name": "Event presence around interval start",
+  "description": "Gather events in a window around each row interval start and report whether any event occurred.",
+  "parameters": [
+    {"name": "source_key", "type": "data_key", "data_type": "DigitalEventSeries"},
+    {"name": "pre", "type": "int", "default": 150},
+    {"name": "post", "type": "int", "default": 150}
+  ],
+  "expansion": {
+    "source_key": "${source_key}",
+    "row_pipeline_json": "{\"steps\": [{\"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}, {\"transform_name\": \"EventToInterval\", \"parameters\": {\"pre_expansion\": ${pre}, \"post_expansion\": ${post}}}]}",
+    "pipeline_json": "{\"steps\": [], \"range_reduction\": {\"reduction_name\": \"EventPresence\"}}"
+  }
+}
+```
 
-## Incremental PR plan
+This can start as a simple JSON-template expansion system. If templates become too limited, the registry can later support compiled C++ expansion functions while preserving the same catalog metadata.
 
-Work is intentionally split so each PR is reviewable and shippable independently.
+The preset catalog should merge bundled and user entries by `id`:
 
-### PR 1 — Design doc only (this document)
+- Bundled presets provide defaults.
+- User presets with the same `id` can either override bundled entries or be rejected; choose one policy and document it before implementation.
+- Display should sort by `display_name`, with source badges such as `Built-in` and `User`.
 
-- Capture architecture and PR roadmap.
-- No code changes.
+This is intentionally similar to `PipelineLibrary`: list entries, load JSON, save user JSON, delete user JSON, import/export files. The difference is schema and expansion target, not the library mechanics.
 
-### PR 2 — Interval geometry transforms
+## PipelineValueStore Iterable Binding
 
-- Add `IntervalToEventAtAnchor`, `EventWindowExpand`, `IntervalWindowAtAlignment` (fused), `IntervalShift`, optional `PruneOverlappingAlignmentWindows` under `src/TransformsV2/algorithms/`.
-- Window transforms produce gather geometry; default to **`Overlapping`** DIS when materialized. Tests assert row count is preserved under overlapping windows.
-- Register container transforms; unit tests per transform.
-- No `ColumnRecipe` or tensor builder changes yet.
+TransformsV2 already has the mechanism needed to inject runtime values into a `TransformPipeline`: `PipelineValueStore` plus parameter bindings loaded from pipeline JSON. GatherResult previously used this mechanism through TransformsV2 gather extension helpers such as `buildGatherRowStore()`.
 
-### PR 3 — `row_pipeline_json` wiring
+The row-pipeline refactor should reuse that mechanism rather than adding TensorData-specific context plumbing. The missing piece is an iterable binding layer owned by TransformsV2 or the TensorColumnBuilders/TransformsV2 integration:
 
-- Add `row_pipeline_json` to `ColumnRecipe`; parse/serialize in `TensorDesign`.
-- Implement dispatch in `buildProviderFromRecipe` (identity, `Overlapping` DIS out, DES out).
-- Wire `Overlapping` DIS into existing `buildIntervalPipelineProvider`; `GatherResult` handles source-TimeFrame query conversion.
-- Remove `"offset"` hack in `TensorDesignBuilder::buildColumnProvider`.
-- Tests in `test_tensor_column_builders` / `test_tensor_design`.
+1. A column recipe or pipeline descriptor identifies an iterable context source.
+2. The source is a DataObject in `DataManager` or a DataObject produced by a row TransformPipeline.
+3. The source has one row-aligned element per tensor row.
+4. For row `i`, the iterable binding extracts element `i` and writes one or more values into `PipelineValueStore` under declared keys.
+5. `pipeline_json` parameter bindings map those store keys onto transform parameters.
 
-### PR 4 — Whisker-contact integration + docs
+Example binding shape, shown as design intent rather than final JSON:
 
-- Extend [whisker-contact scenario](../testing/scenarios/whisker_contact.qmd) with onset-window / angle-at-onset example.
-- Update [TensorColumnBuilders](../transforms_v2/TensorColumnBuilders.qmd) and [TensorDesignBuilder](TensorDesignBuilder.qmd) with `row_pipeline_json` once implemented.
+```json
+{
+  "pipeline_json": "{\"steps\": [{\"transform_name\": \"NormalizeTime\", \"param_bindings\": {\"alignment_time\": \"row_alignment_time\"}}]}",
+  "pipeline_value_bindings": [
+    {
+      "source_key": "ContactOnset",
+      "element": "time",
+      "store_key": "row_alignment_time"
+    }
+  ]
+}
+```
 
-### PR 5 (optional) — UI
+The exact schema can change, but the ownership should remain clear: TransformsV2 binds row-specific values into `PipelineValueStore`; TensorDesign selects the row source, gather/sample input, and column recipe; TensorData stores the resulting column values.
 
-- `ColumnConfigDialog` / `TensorDesigner` support for row pipeline JSON or preset transforms.
+## Raster/PSTH Example
 
-## Current state summary
+A raster or PSTH-like tensor column illustrates the separation between gather input and transform context:
 
-| Capability | Status |
-|------------|--------|
-| Row = interval / event / derived timestamps | Implemented |
-| Full-interval gather + reduction per column | Implemented |
-| Cross-timeframe gather (`GatherResult` query-bound conversion) | Implemented |
-| `IntervalLayout` (`Disjoint` / `Overlapping`) on DIS | **Implemented** |
-| Overlap-safe materialized gather geometry (`createOverlapping`) | **Implemented** (DIS); tensor wiring **Planned** |
-| Per-column `row_pipeline_json` | **Planned** |
-| Interval geometry transforms | **Planned** |
-| Lazy gather geometry via `IntervalSource` adapters | **Removed**; prepared DIS windows are the standard gather geometry |
-| Onset-window + tuning-curve tensor via JSON | **Planned** (PR 3–4) |
+1. The row source defines trials, such as one `DigitalIntervalSeries` interval per contact or behavioral trial.
+2. `row_pipeline_json` defines which spikes are gathered for each row. This can be identity for full-trial windows or a window-producing transform for a restricted interval.
+3. The gathered row DataObject is a `DigitalEventSeries` subset in source coordinates.
+4. `pipeline_json` runs per row and includes a normalize-time transform.
+5. The normalize-time transform needs one marker for the current row, such as contact onset or cue time.
+6. That marker is supplied through `PipelineValueStore` when executing `pipeline_json`, not through `GatherResult` row metadata and not as a paired output of `row_pipeline_json`.
 
-## Open questions (for future PRs)
+Conceptually:
 
-- Should `row_pipeline_json` allow binary transforms with `additional_input_keys` referencing arbitrary DM keys, or only keys declared on the column?
-- Shared row-pipeline presets at tensor level (all columns inherit unless overridden) — defer unless a concrete use case appears.
-- Caching: if many columns share the same `row_pipeline_json`, memoize transformed geometry per materialization pass.
-- When row pipeline outputs window bounds as `Overlapping` DIS, where is `alignment_time` stored for `NormalizeEventTimeValueV2` — companion DES column, pipeline params, or gather executor extension?
-- If materialized converted row geometry is needed later, should it preserve `IntervalLayout::Overlapping` explicitly or remain a query-only `GatherResult` concern?
-- Plot refactor: when to migrate `PlotAlignmentGather` to shared row-pipeline descriptors (PR 5+).
+```text
+row_pipeline_json: trial interval -> spike gather window
+gather:            Spikes + window_i -> spikes_i
+iterable binding:  ContactOnset[i] -> PipelineValueStore["row_alignment_time"]
+pipeline_json:     NormalizeTime(spikes_i, row_alignment_time) -> PSTH/bin/reduction output
+```
+
+This keeps `row_pipeline_json` focused on selecting rows of source data and keeps transformations such as normalization inside the column pipeline where they belong.
+
+## Provider Dispatch
+
+The target dispatch for interval-row columns is:
+
+1. If `interval_property` is present, use the existing row metadata provider and ignore source gather.
+2. Resolve `row_pipeline_json`.
+3. If `row_pipeline_json` is empty, use the current full-interval gather path.
+4. If the row pipeline produces `DigitalIntervalSeries` windows, verify row count and gather the column source through `GatherResult`.
+5. If the row pipeline produces `DigitalEventSeries` sample times without windows, use timestamp/sample provider behavior or expand to windows with `EventToInterval`, depending on the column recipe.
+6. Build any iterable `PipelineValueStore` bindings requested by `pipeline_json`, such as one normalization marker per row.
+7. Run `pipeline_json` over gathered rows or sampled timestamps with the row store to produce one value per tensor row.
+
+The dispatch should reject row-pipeline outputs that do not preserve row count unless the recipe explicitly opts into row filtering.
+
+## TimeFrame Semantics
+
+Window-producing transforms operate in their input DataObject's `TimeFrame`. They should not need a hidden tensor-specific output-timeframe parameter.
+
+`GatherResult` handles source query conversion at gather time:
+
+```text
+prepared window TimeFrame -> source DataObject TimeFrame
+```
+
+Projection and trial-relative transforms should use values supplied through `PipelineValueStore` and existing TimeFrame primitives such as `convert_time_index()` or physical-time lookups.
+
+The row descriptor should continue to describe the original row source, not the per-column gather window. Per-column geometry is column metadata used to produce a value; it does not redefine tensor row identity.
+
+## Overlapping Windows
+
+Gather geometry can overlap even when the semantic row source is disjoint.
+
+| Role | Layout | Example |
+|---|---|---|
+| Row source | Usually `Disjoint` | Contact intervals or trial epochs. |
+| Gather geometry | Usually `Overlapping` | Onset windows around nearby contacts. |
+
+Window-producing row pipelines should use `DigitalIntervalSeries::createOverlapping()` when overlap is possible. They should not rely on default disjoint insertion behavior because disjoint series merge overlapping intervals and destroy row identity.
+
+Overlap pruning is not a tensor default. It drops rows and changes the analysis question. Use `PruneOverlappingIntervals` only when a recipe or caller explicitly requests this behavior, and apply the same kept-row selection to any iterable context sources.
+
+## Relationship To Plot Alignment
+
+`PlotAlignmentGather` already follows the core prepared-window model for UI plotting:
+
+- Build `DigitalIntervalSeries` windows.
+- Build or reuse companion `DigitalEventSeries` alignment events.
+- Call `GatherResult::create(source, windows, alignment_events)`.
+
+Tensor row pipelines should use the same DataObject vocabulary for windows and events, but column normalization should be modeled as `PipelineValueStore` parameter binding rather than inherited from `GatherResult` alignment metadata. Plot code may later share descriptor-building helpers with TensorDesign, but the TensorDesign row-pipeline design does not require a plot refactor.
+
+## Out Of Scope
+
+- Binned or grouped downstream analysis such as `P(spike | angle bin)`.
+- Nonlinear time warping.
+- Persisting gather windows as a new DataManager object type.
+- UI affordances for editing row-pipeline JSON or presets.
+- Backward compatibility for removed GatherResult interval adapters.
+
+## Open Questions
+
+- What JSON schema should declare iterable bindings from DataObjects into `PipelineValueStore` keys?
+- Should row pipelines be allowed to use `additional_input_keys`, and if so should those keys be declared per column or at the tensor level?
+- Should identical row pipelines be cached across columns during one tensor build?
+- How should timestamp-only row-pipeline output choose between sampling, window expansion, or rejection?
+- Should row filtering ever be supported, or should row pipelines always be required to preserve row count?

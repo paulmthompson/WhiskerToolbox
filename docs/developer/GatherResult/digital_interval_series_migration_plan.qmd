@@ -185,9 +185,9 @@ Make `DigitalIntervalSeries` the internal window representation for direct gathe
 
 ### Status
 
-**Complete for the prepared-window path.** `GatherResult<T>` now accepts prepared `std::shared_ptr<DigitalIntervalSeries const>` windows with optional companion `std::shared_ptr<DigitalEventSeries const>` alignment points. Prepared windows and alignment points are retained as row metadata while `intervalAt()` continues to expose source-coordinate query intervals for existing plot/export consumers.
+**Complete.** `GatherResult<T>` now accepts prepared `std::shared_ptr<DigitalIntervalSeries const>` windows with optional companion `std::shared_ptr<DigitalEventSeries const>` alignment points. Prepared windows and alignment points are retained as row metadata while `intervalAt()` continues to expose source-coordinate query intervals for existing plot/export consumers.
 
-Adapter overloads remain as legacy compatibility until phases 4 and 6 migrate call sites and remove `IntervalAdapters.hpp`.
+The adapter overloads and `IntervalAdapters.hpp` have been removed. Window and alignment construction now belongs to TransformsV2 algorithms or call-site preparation helpers, not to `GatherResult`.
 
 ### Tasks
 

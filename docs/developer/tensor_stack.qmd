@@ -58,6 +58,8 @@ flowchart TB
 auto tensor = Neuralyzer::TensorDesign::buildTensorFromDesignJson(dm, json);
 ```
 
+Current interval-row builds gather each column over the full row interval. The planned row-pipeline refactor will let each column run a TransformPipeline over the row source to produce prepared gather windows and optional alignment anchors, then use `GatherResult` as the row-aligned DataObject container for the resulting gathered rows. This keeps TimeFrame conversion and entity identity in DataObjects and TransformPipelines rather than introducing a tensor-specific interval system.
+
 ### 2. Pack — analog channels into dense tensor
 
 **Use case:** Multi-channel acquisition (e.g. 32–384 ADC channels) stored as one `TensorData`.
@@ -102,7 +104,8 @@ Neuralyzer::TensorDesign::createTensorColumnViews(dm, "eeg", "eeg/views", {});
 
 ## Related documentation
 
-- [Column row pipeline (design)](TensorDesign/column_row_pipeline.qmd) — planned per-column gather geometry via `row_pipeline_json`
+- [Column row pipeline design](TensorDesign/column_row_pipeline.qmd) — planned per-column gather geometry via row TransformPipelines
+- [Column row pipeline roadmap](TensorDesign/column_row_pipeline_roadmap.qmd) — implementation sequence for `row_pipeline_json`
 - [Multi-channel storage & transforms](DataObjects/multi_channel_storage_and_transforms.qmd)
 - [TensorColumnAnalogStorage](DataObjects/AnalogTimeSeries/tensor_column_analog_storage.qmd)
 - [Tensor Inspector (UI)](ui/data_inspectors/tensor_inspector.qmd)

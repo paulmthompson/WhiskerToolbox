@@ -193,7 +193,7 @@ REQUIRE(tensor.has_value());
 
 Note that `pipeline_json` is an **embedded JSON string** (double-encoded in the outer file). Cross-timeframe spike counting works because interval gather resolves timebases automatically.
 
-For **onset-aligned windows** and **per-column gather geometry** (spike presence near onset, angle at onset, tuning-curve tables), see the planned [column row pipeline design](../../TensorDesign/column_row_pipeline.qmd). That work is not implemented yet; current JSON always gathers over the full contact interval.
+For **onset-aligned windows** and **per-column gather geometry** (spike presence near onset, angle at onset, tuning-curve tables), see the planned [column row pipeline design](../../TensorDesign/column_row_pipeline.qmd) and [roadmap](../../TensorDesign/column_row_pipeline_roadmap.qmd). That work is not implemented yet; current JSON always gathers over the full contact interval.
 
 ## Running tests
 

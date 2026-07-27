@@ -64,6 +64,10 @@ The format matches `TensorDesigner::toJson()` / `fromJson()`:
 
 Each `pipeline_json` string is a [`PipelineDescriptor`](../transforms_v2/pipeline_loader.qmd) fragment. Interval-row columns require a terminal `range_reduction`.
 
+Current interval-row tensor columns gather over the full row interval. Per-column gather geometry through `row_pipeline_json` is planned but not implemented. The planned design is to run a TransformPipeline on the row source to produce prepared `DigitalIntervalSeries` windows or `DigitalEventSeries` sample times, then gather or sample source data for each row. Per-row normalization markers should be bound into the column TransformPipeline through TransformsV2 `PipelineValueStore` parameter bindings rather than through `row_pipeline_json`; `GatherResult` remains only the row container and direct gather executor.
+
+There is still a temporary compatibility path in `TensorDesignBuilder::buildColumnProvider()` that detects a top-level `"offset"` field inside `pipeline_json` for analog sample-at-offset columns. This should be removed once point sampling is expressible through the row-pipeline design.
+
 ## Build API (lazy-column tensors)
 
 Header: `TensorDesign/TensorDesignBuilder.hpp`
@@ -140,7 +144,8 @@ REQUIRE(tensor.has_value());
 ## Related documentation
 
 - [Tensor stack overview](../tensor_stack.qmd)
-- [Column row pipeline (design)](column_row_pipeline.qmd) — planned per-column gather geometry
+- [Column row pipeline design](column_row_pipeline.qmd) — planned per-column gather geometry through row TransformPipelines
+- [Column row pipeline roadmap](column_row_pipeline_roadmap.qmd) — implementation sequence for `row_pipeline_json`
 - [Tensor Inspector (Dev)](../ui/data_inspectors/tensor_inspector.qmd) — UI delegates to this library
 - [TensorColumnBuilders](../transforms_v2/TensorColumnBuilders.qmd) — per-column builder layer
 - [Integration test scenarios](../testing/test_scenarios.qmd)
