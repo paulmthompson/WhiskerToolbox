@@ -31,6 +31,7 @@ target_include_directories(test_plot_alignment_gather PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Plots/Common>"
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/DataManager>"
     "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/tests>"
 )
 
 if(ENABLE_DETAILED_TEST_DISCOVERY)

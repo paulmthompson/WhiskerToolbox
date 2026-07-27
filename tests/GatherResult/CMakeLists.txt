@@ -15,10 +15,15 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 add_executable(test_gather_result
         GatherResult.test.cpp
         GatherResult_ValueStore.test.cpp
+        GatherResult_Characterization.test.cpp
 )
 
 target_link_libraries(test_gather_result PRIVATE Catch2::Catch2WithMain)
 target_link_libraries(test_gather_result PRIVATE GatherResult TransformsV2 DataManager)
+
+target_include_directories(test_gather_result PRIVATE
+        "${CMAKE_SOURCE_DIR}/tests"
+)
 
 if (ENABLE_DETAILED_TEST_DISCOVERY)
     if (WIN32)

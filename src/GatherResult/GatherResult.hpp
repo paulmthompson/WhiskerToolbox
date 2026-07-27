@@ -780,12 +780,14 @@ public:
      * If views are backed by view storage, this creates a new GatherResult
      * where each element has owning storage (copies the data).
      *
-     * @return New GatherResult with materialized views
+     * @return New GatherResult with materialized views and preserved trial metadata
      */
     [[nodiscard]] GatherResult materialize() const {
         GatherResult result;
         result._source = _source;
         result._intervals = _intervals;
+        result._alignment_times = _alignment_times;
+        result._reorder_indices = _reorder_indices;
         result._views.reserve(_views.size());
 
         for (auto const & view: _views) {

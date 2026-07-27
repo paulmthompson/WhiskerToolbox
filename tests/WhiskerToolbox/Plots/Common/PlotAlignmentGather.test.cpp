@@ -8,6 +8,8 @@
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "TimeFrame/TimeFrame.hpp"
+#include "fixtures/GatherAlignmentFixtures.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -18,36 +20,17 @@
 
 using namespace Neuralyzer::Plots;
 using Neuralyzer::Gather::AlignmentPoint;
+using Neuralyzer::Test::GatherFixtures::createEventSeries;
+using Neuralyzer::Test::GatherFixtures::createIdentityTimeFrame;
+using Neuralyzer::Test::GatherFixtures::createIntervalSeries;
+using Neuralyzer::Test::GatherFixtures::createTimeFrameForRate;
+using Neuralyzer::Test::GatherFixtures::kSpikeSamplesPerEventIndex;
 
 // =============================================================================
 // Test Fixtures
 // =============================================================================
 
 namespace {
-
-/**
- * @brief Create a DigitalEventSeries with events at specified times
- */
-std::shared_ptr<DigitalEventSeries> createEventSeries(std::vector<int64_t> const & times) {
-    auto series = std::make_shared<DigitalEventSeries>();
-    for (auto t: times) {
-        series->addEvent(TimeFrameIndex(t));
-    }
-    return series;
-}
-
-/**
- * @brief Create a DigitalIntervalSeries with specified intervals
- */
-std::shared_ptr<DigitalIntervalSeries> createIntervalSeries(
-        std::vector<std::pair<int64_t, int64_t>> const & intervals) {
-    std::vector<Interval> interval_vec;
-    interval_vec.reserve(intervals.size());
-    for (auto const & [start, end]: intervals) {
-        interval_vec.push_back(Interval{start, end});
-    }
-    return std::make_shared<DigitalIntervalSeries>(interval_vec);
-}
 
 /**
  * @brief Create a DataManager with test data
@@ -672,4 +655,102 @@ TEST_CASE("createAlignedGatherResult - prevent_overlap false keeps all trials", 
 
     auto result = createAlignedGatherResult<DigitalEventSeries>(dm, "spikes", align_data);
     CHECK(result.size() == 3);// All 3 kept
+}
+
+// =============================================================================
+// Phase 0 Cross-TimeFrame Characterization Tests
+// =============================================================================
+
+TEST_CASE("gatherWithEventAlignment - cross-timeframe spikes and alignment events",
+          "[PlotAlignmentGather][migration][phase0]") {
+    auto spike_timeframe = createIdentityTimeFrame(1000);
+    auto event_timeframe = createTimeFrameForRate(20, kSpikeSamplesPerEventIndex);
+
+    auto spikes = createEventSeries({54, 60, 66});
+    spikes->setTimeFrame(spike_timeframe);
+
+    auto alignment_events = createEventSeries({1});
+    alignment_events->setTimeFrame(event_timeframe);
+
+    auto result = gatherWithEventAlignment(spikes, alignment_events, 60.0, 60.0);
+
+    REQUIRE(result.size() == 1);
+    CHECK(result.intervalAt(0).start == 0);
+    CHECK(result.intervalAt(0).end == 120);
+    CHECK(result.alignmentTimeAt(0) == 60);
+
+    REQUIRE(result[0]->size() == 3);
+    std::vector<int64_t> normalized;
+    for (auto const & event: result[0]->view()) {
+        normalized.push_back(event.time().getValue() - result.alignmentTimeAt(0));
+    }
+    CHECK(normalized == std::vector<int64_t>{-6, 0, 6});
+}
+
+TEST_CASE("gatherWithIntervalAlignment - cross-timeframe interval and source",
+          "[PlotAlignmentGather][migration][phase0]") {
+    auto interval_timeframe = createTimeFrameForRate(20, 100);
+    auto source_timeframe = createTimeFrameForRate(200, 10);
+
+    auto spikes = createEventSeries({50, 60, 70, 170, 180, 190});
+    spikes->setTimeFrame(source_timeframe);
+
+    auto intervals = createIntervalSeries({{0, 9}, {10, 19}});
+    intervals->setTimeFrame(interval_timeframe);
+
+    auto result = gatherWithIntervalAlignment(spikes, intervals, AlignmentPoint::Start);
+
+    REQUIRE(result.size() == 2);
+
+    SECTION("Alignment times are absolute source-coordinate times") {
+        CHECK(result.alignmentTimeAt(0) == 0);
+        CHECK(result.alignmentTimeAt(1) == 1000);
+    }
+
+    SECTION("Each trial gathers spikes from the converted interval bounds") {
+        REQUIRE(result[0]->size() == 3);
+        REQUIRE(result[1]->size() == 3);
+
+        std::vector<int64_t> trial_0;
+        for (auto const & event: result[0]->view()) {
+            trial_0.push_back(event.time().getValue());
+        }
+        CHECK(trial_0 == std::vector<int64_t>{50, 60, 70});
+
+        std::vector<int64_t> trial_1;
+        for (auto const & event: result[1]->view()) {
+            trial_1.push_back(event.time().getValue());
+        }
+        CHECK(trial_1 == std::vector<int64_t>{170, 180, 190});
+    }
+}
+
+TEST_CASE("createAlignedGatherResult - cross-timeframe event alignment",
+          "[PlotAlignmentGather][migration][phase0]") {
+    auto dm = std::make_shared<DataManager>();
+
+    auto spike_timeframe = createIdentityTimeFrame(1000);
+    auto event_timeframe = createTimeFrameForRate(20, kSpikeSamplesPerEventIndex);
+    dm->setTime(TimeKey("spike_clock"), spike_timeframe);
+    dm->setTime(TimeKey("event_clock"), event_timeframe);
+
+    auto spikes = createEventSeries({54, 60, 66});
+    spikes->setTimeFrame(spike_timeframe);
+    dm->setData<DigitalEventSeries>("spikes", spikes, TimeKey("spike_clock"));
+
+    auto stimuli = createEventSeries({1});
+    stimuli->setTimeFrame(event_timeframe);
+    dm->setData<DigitalEventSeries>("stimuli", stimuli, TimeKey("event_clock"));
+
+    PlotAlignmentData align_data;
+    align_data.alignment_event_key = "stimuli";
+    align_data.window_size = 120.0;
+
+    auto result = createAlignedGatherResult<DigitalEventSeries>(dm, "spikes", align_data);
+
+    REQUIRE(result.size() == 1);
+    CHECK(result.intervalAt(0).start == 0);
+    CHECK(result.intervalAt(0).end == 120);
+    CHECK(result.alignmentTimeAt(0) == 60);
+    REQUIRE(result[0]->size() == 3);
 }
