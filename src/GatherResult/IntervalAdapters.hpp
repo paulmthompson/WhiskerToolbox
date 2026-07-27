@@ -91,6 +91,9 @@ concept IntervalSource = requires(T const & t) {
  * with alignment_time = T.
  *
  * This is a view adapter - it doesn't copy the underlying data.
+ *
+ * @deprecated Prefer materializing windows with the TransformsV2 EventToInterval
+ * algorithm and passing DigitalIntervalSeries windows to GatherResult.
  */
 class EventExpanderAdapter {
 public:
@@ -250,6 +253,9 @@ private:
  *    alignment_abs_time + post_window] in absolute time units. The adapter returns
  *    nullptr from getTimeFrame() so GatherResult::create treats them as already
  *    absolute (matching EventExpanderAdapter's contract).
+ *
+ * @deprecated Prefer composing IntervalToEvent and EventToInterval, then passing
+ * materialized DigitalIntervalSeries windows to GatherResult.
  */
 class IntervalWithAlignmentAdapter {
 public:
@@ -443,6 +449,8 @@ private:
  * @param events Event series to expand
  * @param pre_window Time before each event
  * @param post_window Time after each event
+ *
+ * @deprecated Prefer TransformsV2 EventToInterval for new gather-window code.
  */
 inline EventExpanderAdapter expandEvents(
         std::shared_ptr<DigitalEventSeries const> events,
@@ -453,6 +461,8 @@ inline EventExpanderAdapter expandEvents(
 
 /**
  * @brief Create an EventExpanderAdapter with symmetric window
+ *
+ * @deprecated Prefer TransformsV2 EventToInterval for new gather-window code.
  */
 inline EventExpanderAdapter expandEvents(
         std::shared_ptr<DigitalEventSeries const> events,
@@ -465,6 +475,8 @@ inline EventExpanderAdapter expandEvents(
  *
  * @param intervals Interval series
  * @param align Alignment point (default: Start)
+ *
+ * @deprecated Prefer TransformsV2 IntervalToEvent for alignment-point extraction.
  */
 inline IntervalWithAlignmentAdapter withAlignment(
         std::shared_ptr<DigitalIntervalSeries const> intervals,
@@ -482,6 +494,8 @@ inline IntervalWithAlignmentAdapter withAlignment(
  * @param align Alignment point (Start, End, Center)
  * @param pre_window Absolute time units before alignment point
  * @param post_window Absolute time units after alignment point
+ *
+ * @deprecated Prefer composing TransformsV2 IntervalToEvent and EventToInterval.
  */
 inline IntervalWithAlignmentAdapter withAlignment(
         std::shared_ptr<DigitalIntervalSeries const> intervals,

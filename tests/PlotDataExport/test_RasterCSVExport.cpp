@@ -15,6 +15,7 @@
 
 #include "PlotDataExport/RasterCSVExport.hpp"
 
+#include "../fixtures/GatherAlignmentFixtures.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "GatherResult/GatherResult.hpp"
@@ -29,34 +30,17 @@
 
 namespace {
 
+using Neuralyzer::Test::GatherFixtures::createEventSeries;
+using Neuralyzer::Test::GatherFixtures::createIdentityTimeFrame;
+using Neuralyzer::Test::GatherFixtures::createIntervalSeries;
+
 std::shared_ptr<DigitalEventSeries> makeEvents(std::vector<int64_t> const & times) {
-    auto series = std::make_shared<DigitalEventSeries>();
-    for (auto t: times) {
-        series->addEvent(TimeFrameIndex(t));
-    }
-    return series;
+    return createEventSeries(times);
 }
 
 std::shared_ptr<DigitalIntervalSeries> makeIntervals(
         std::vector<std::pair<int64_t, int64_t>> const & ivs) {
-    std::vector<Interval> iv;
-    iv.reserve(ivs.size());
-    for (auto const & [s, e]: ivs) {
-        iv.push_back(Interval{s, e});
-    }
-    return std::make_shared<DigitalIntervalSeries>(iv);
-}
-
-/**
- * @brief Create a TimeFrame with identity mapping: index i → time i
- * @pre size must exceed the maximum event time used in the test
- */
-std::shared_ptr<TimeFrame> makeIdentityTimeFrame(int size) {
-    std::vector<int> times(static_cast<size_t>(size));
-    for (int i = 0; i < size; ++i) {
-        times[static_cast<size_t>(i)] = i;
-    }
-    return std::make_shared<TimeFrame>(times);
+    return createIntervalSeries(ivs);
 }
 
 }// namespace
@@ -85,7 +69,7 @@ TEST_CASE("exportRasterToCSV - empty series vector produces headers only",
 TEST_CASE("exportRasterToCSV - empty GatherResult produces headers only",
           "[PlotDataExport][RasterCSVExport]") {
     GatherResult<DigitalEventSeries> const empty_gathered;
-    auto tf = makeIdentityTimeFrame(10);
+    auto tf = createIdentityTimeFrame(10);
 
     PlotDataExport::RasterSeriesInput const input{"spikes", &empty_gathered, tf.get()};
     std::string const csv = PlotDataExport::exportRasterToCSV({input});
@@ -110,7 +94,7 @@ TEST_CASE("exportRasterToCSV - single series, single trial, single event",
     // event at time 15, trial [10, 20]: relative = 15 - 10 = 5
     auto events = makeEvents({15});
     auto intervals = makeIntervals({{10, 20}});
-    auto tf = makeIdentityTimeFrame(30);
+    auto tf = createIdentityTimeFrame(30);
 
     auto gathered = gather(events, intervals);
     PlotDataExport::RasterSeriesInput const input{"spikes", &gathered, tf.get()};
@@ -127,7 +111,7 @@ TEST_CASE("exportRasterToCSV - single series, single trial, multiple events",
     // events at 11, 15, 18 in [10, 20]; alignment = 10 → relative: 1, 5, 8
     auto events = makeEvents({11, 15, 18});
     auto intervals = makeIntervals({{10, 20}});
-    auto tf = makeIdentityTimeFrame(30);
+    auto tf = createIdentityTimeFrame(30);
 
     auto gathered = gather(events, intervals);
     PlotDataExport::RasterSeriesInput const input{"spikes", &gathered, tf.get()};
@@ -145,7 +129,7 @@ TEST_CASE("exportRasterToCSV - single series, multiple trials",
     // trial 1: event 35 in [30,40], relative = 5
     auto events = makeEvents({15, 35});
     auto intervals = makeIntervals({{10, 20}, {30, 40}});
-    auto tf = makeIdentityTimeFrame(50);
+    auto tf = createIdentityTimeFrame(50);
 
     auto gathered = gather(events, intervals);
     PlotDataExport::RasterSeriesInput const input{"spikes", &gathered, tf.get()};
@@ -161,7 +145,7 @@ TEST_CASE("exportRasterToCSV - trial with no events produces no data row",
     // event at 15 is only in trial [10,20]; trial [30,40] is empty
     auto events = makeEvents({15});
     auto intervals = makeIntervals({{10, 20}, {30, 40}});
-    auto tf = makeIdentityTimeFrame(50);
+    auto tf = createIdentityTimeFrame(50);
 
     auto gathered = gather(events, intervals);
     PlotDataExport::RasterSeriesInput const input{"spikes", &gathered, tf.get()};
@@ -181,7 +165,7 @@ TEST_CASE("exportRasterToCSV - multiple series, correct event_key per row",
     auto spikes = makeEvents({15});
     auto licks = makeEvents({12});
     auto intervals = makeIntervals({{10, 20}});
-    auto tf = makeIdentityTimeFrame(30);
+    auto tf = createIdentityTimeFrame(30);
 
     auto gathered_spikes = gather(spikes, intervals);
     auto gathered_licks = gather(licks, intervals);
@@ -205,7 +189,7 @@ TEST_CASE("exportRasterToCSV - custom tab delimiter",
           "[PlotDataExport][RasterCSVExport]") {
     auto events = makeEvents({15});
     auto intervals = makeIntervals({{10, 20}});
-    auto tf = makeIdentityTimeFrame(30);
+    auto tf = createIdentityTimeFrame(30);
 
     auto gathered = gather(events, intervals);
     PlotDataExport::RasterSeriesInput const input{"spikes", &gathered, tf.get()};
@@ -214,8 +198,8 @@ TEST_CASE("exportRasterToCSV - custom tab delimiter",
             PlotDataExport::exportRasterToCSV({input}, {}, "\t");
 
     REQUIRE_THAT(csv,
-               Catch::Matchers::ContainsSubstring(
-                       "trial_index\tevent_key\trelative_time"));
+                 Catch::Matchers::ContainsSubstring(
+                         "trial_index\tevent_key\trelative_time"));
     REQUIRE_THAT(csv, Catch::Matchers::ContainsSubstring("0\tspikes\t5\n"));
 }
 

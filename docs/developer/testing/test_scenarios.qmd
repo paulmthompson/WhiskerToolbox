@@ -73,6 +73,8 @@ After a scenario (or any data load) populates `DataManager`, lazy-column tensors
 
 See [Whisker contact — JSON example](scenarios/whisker_contact.qmd#json-design-specification) for a full cross-timeframe tensor spec.
 
+Planned per-column gather geometry (onset windows, point samples) is described in [Column row pipeline (design)](../TensorDesign/column_row_pipeline.qmd).
+
 ## Running scenario tests
 
 Build and run with the `my-clang-release` preset:

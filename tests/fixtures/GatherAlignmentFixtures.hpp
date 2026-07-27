@@ -11,8 +11,10 @@
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
 
+#include <algorithm>
 #include <cstdint>
 #include <memory>
+#include <numeric>
 #include <utility>
 #include <vector>
 
@@ -47,11 +49,23 @@ namespace Neuralyzer::Test::GatherFixtures {
 }
 
 /**
+ * @brief Create an identity TimeFrame large enough for the supplied maximum time.
+ */
+[[nodiscard]] inline std::shared_ptr<TimeFrame> createIdentityTimeFrameForMax(int64_t max_time) {
+    auto const size = static_cast<int>(std::max<int64_t>(max_time + 10'000, 10'000));
+    std::vector<int> times(static_cast<std::size_t>(size));
+    std::iota(times.begin(), times.end(), 0);
+    return std::make_shared<TimeFrame>(times);
+}
+
+/**
  * @brief Create a DigitalEventSeries with events at specified index times
  */
 [[nodiscard]] inline std::shared_ptr<DigitalEventSeries>
 createEventSeries(std::vector<int64_t> const & times) {
     auto series = std::make_shared<DigitalEventSeries>();
+    auto const max_time = times.empty() ? int64_t{0} : *std::max_element(times.begin(), times.end());
+    series->setTimeFrame(createIdentityTimeFrameForMax(max_time));
     for (auto t: times) {
         series->addEvent(TimeFrameIndex(t));
     }
@@ -65,10 +79,14 @@ createEventSeries(std::vector<int64_t> const & times) {
 createIntervalSeries(std::vector<std::pair<int64_t, int64_t>> const & intervals) {
     std::vector<Interval> interval_vec;
     interval_vec.reserve(intervals.size());
+    int64_t max_time = 0;
     for (auto const & [start, end]: intervals) {
         interval_vec.push_back(Interval{start, end});
+        max_time = std::max(max_time, end);
     }
-    return std::make_shared<DigitalIntervalSeries>(std::move(interval_vec));
+    auto series = std::make_shared<DigitalIntervalSeries>(std::move(interval_vec));
+    series->setTimeFrame(createIdentityTimeFrameForMax(max_time));
+    return series;
 }
 
 /**

@@ -36,7 +36,7 @@
  * @see TransformPipeline::execute() for pipeline execution
  */
 
-#include "DataManager/DataManagerTypes.hpp" // DataTypeVariant
+#include "DataManager/DataManagerTypes.hpp"// DataTypeVariant
 
 #include <memory>
 #include <vector>
@@ -79,9 +79,9 @@ namespace Neuralyzer::Gather {
  *   2. Executes @p pipeline on that gathered view (T → DataTypeVariant).
  *   3. Calls extractSingleFloat() on the result.
  *
- * If the source data and @p intervals use different TimeFrames, the interval
- * boundaries are converted to the source's coordinate system before gathering
- * (same logic as TensorColumnBuilders::prepareIntervalsForGather).
+ * If the source data and @p intervals use different TimeFrames, GatherResult
+ * converts interval boundaries to the source coordinate system when each view
+ * is created.
  *
  * Dispatch is fully type-erased: the function visits the DataTypeVariant and
  * uses GatherResult<T>::create() + pipeline.execute<T>() for each concrete

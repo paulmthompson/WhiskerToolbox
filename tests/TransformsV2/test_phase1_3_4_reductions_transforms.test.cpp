@@ -20,31 +20,34 @@
  * @see TensorColumnBuilders.hpp  (buildAnalogSampleAtOffsetProvider)
  */
 
-#include "TransformsV2/algorithms/RangeReductions/IntervalRangeReductions.hpp"
-#include "TransformsV2/algorithms/RangeReductions/EventRangeReductions.hpp"
 #include "TransformsV2/algorithms/LineLength/LineLength.hpp"
+#include "TransformsV2/algorithms/RangeReductions/EventRangeReductions.hpp"
+#include "TransformsV2/algorithms/RangeReductions/IntervalRangeReductions.hpp"
 
+#include "TransformsV2/core/ElementRegistry.hpp"
+#include "TransformsV2/core/RangeReductionRegistry.hpp"
 #include "TransformsV2/core/TensorColumnBuilders.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
-#include "TransformsV2/core/RangeReductionRegistry.hpp"
-#include "TransformsV2/core/ElementRegistry.hpp"
 
-#include "DataManager/DataManager.hpp"
+#include "../fixtures/GatherAlignmentFixtures.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "Tensors/TensorData.hpp"
 #include "Tensors/RowDescriptor.hpp"
+#include "Tensors/TensorData.hpp"
 #include "Tensors/storage/LazyColumnTensorStorage.hpp"
 
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
 
 #include "TimeFrame/StrongTimeTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
+#include <algorithm>
 #include <any>
 #include <cmath>
 #include <memory>
@@ -61,6 +64,17 @@ using Catch::Matchers::WithinAbs;
 
 namespace {
 
+using Neuralyzer::Test::GatherFixtures::createIdentityTimeFrameForMax;
+
+/**
+ * @brief Replace DataManager's default clock with a non-empty identity TimeFrame.
+ * @pre max_time must cover all source and row indices inserted under TimeKey("time").
+ * @post Data registered with TimeKey("time") receives a usable TimeFrame.
+ */
+void setDefaultIdentityTimeFrame(DataManager & dm, int64_t max_time) {
+    REQUIRE(dm.setTime(TimeKey("time"), createIdentityTimeFrameForMax(max_time), true));
+}
+
 std::shared_ptr<AnalogTimeSeries> createLinearAnalog(std::size_t num_samples) {
     std::vector<float> data;
     std::vector<TimeFrameIndex> times;
@@ -68,34 +82,46 @@ std::shared_ptr<AnalogTimeSeries> createLinearAnalog(std::size_t num_samples) {
     times.reserve(num_samples);
     for (std::size_t i = 0; i < num_samples; ++i) {
         data.push_back(static_cast<float>(i));
-        times.push_back(TimeFrameIndex(static_cast<int64_t>(i)));
+        times.emplace_back(static_cast<int64_t>(i));
     }
-    return std::make_shared<AnalogTimeSeries>(std::move(data), std::move(times));
+    auto series = std::make_shared<AnalogTimeSeries>(std::move(data), std::move(times));
+    series->setTimeFrame(createIdentityTimeFrameForMax(static_cast<int64_t>(num_samples)));
+    return series;
 }
 
 std::shared_ptr<DigitalIntervalSeries> createIntervalSeries(
-    std::vector<std::pair<int64_t, int64_t>> const & intervals)
-{
+        std::vector<std::pair<int64_t, int64_t>> const & intervals) {
     std::vector<Interval> vec;
     vec.reserve(intervals.size());
-    for (auto const & [s, e] : intervals) {
+    for (auto const & [s, e]: intervals) {
         vec.push_back(Interval{s, e});
     }
-    return std::make_shared<DigitalIntervalSeries>(vec);
+    auto series = std::make_shared<DigitalIntervalSeries>(vec);
+    int64_t max_time = 0;
+    for (auto const & [s, e]: intervals) {
+        max_time = std::max(max_time, std::max(s, e));
+    }
+    series->setTimeFrame(createIdentityTimeFrameForMax(max_time));
+    return series;
 }
 
 std::shared_ptr<DigitalEventSeries> createEventSeries(
-    std::vector<int64_t> const & times)
-{
+        std::vector<int64_t> const & times) {
     auto series = std::make_shared<DigitalEventSeries>();
-    for (auto t : times) {
+    for (auto t: times) {
         series->addEvent(TimeFrameIndex(t));
     }
+    int64_t max_time = 0;
+    for (auto t: times) {
+        max_time = std::max(max_time, t);
+    }
+    series->setTimeFrame(createIdentityTimeFrameForMax(max_time));
     return series;
 }
 
 std::unique_ptr<DataManager> makeDMWithAnalog(std::string const & key, std::size_t samples) {
     auto dm = std::make_unique<DataManager>();
+    setDefaultIdentityTimeFrame(*dm, static_cast<int64_t>(samples));
     auto analog = createLinearAnalog(samples);
     dm->setData<AnalogTimeSeries>(key, analog, TimeKey("time"));
     return dm;
@@ -104,13 +130,13 @@ std::unique_ptr<DataManager> makeDMWithAnalog(std::string const & key, std::size
 std::vector<TimeFrameIndex> makeRowTimes(std::vector<int64_t> const & ts) {
     std::vector<TimeFrameIndex> result;
     result.reserve(ts.size());
-    for (auto t : ts) {
-        result.push_back(TimeFrameIndex(t));
+    for (auto t: ts) {
+        result.emplace_back(t);
     }
     return result;
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // =============================================================================
 // Section A: IntervalRangeReductions — standalone function tests
@@ -119,70 +145,65 @@ std::vector<TimeFrameIndex> makeRowTimes(std::vector<int64_t> const & ts) {
 TEST_CASE("IntervalCount — counts intervals in span", "[Phase1.3][IntervalReductions]") {
     // Build a span of 3 IntervalWithId elements
     std::vector<IntervalWithId> data{
-        IntervalWithId{Interval{10, 20}, EntityId{0}},
-        IntervalWithId{Interval{30, 50}, EntityId{1}},
-        IntervalWithId{Interval{60, 90}, EntityId{2}}
-    };
-    std::span<IntervalWithId const> span{data};
+            IntervalWithId{Interval{10, 20}, EntityId{0}},
+            IntervalWithId{Interval{30, 50}, EntityId{1}},
+            IntervalWithId{Interval{60, 90}, EntityId{2}}};
+    std::span<IntervalWithId const> const span{data};
 
     CHECK(intervalCount(span) == 3);
 }
 
 TEST_CASE("IntervalCount — empty span returns zero", "[Phase1.3][IntervalReductions]") {
-    std::span<IntervalWithId const> empty;
+    std::span<IntervalWithId const> const empty;
     CHECK(intervalCount(empty) == 0);
 }
 
 TEST_CASE("IntervalStartExtract — returns start of first interval", "[Phase1.3][IntervalReductions]") {
     std::vector<IntervalWithId> data{
-        IntervalWithId{Interval{100, 200}, EntityId{0}},
-        IntervalWithId{Interval{300, 400}, EntityId{1}}
-    };
-    std::span<IntervalWithId const> span{data};
+            IntervalWithId{Interval{100, 200}, EntityId{0}},
+            IntervalWithId{Interval{300, 400}, EntityId{1}}};
+    std::span<IntervalWithId const> const span{data};
 
     CHECK_THAT(intervalStartExtract(span), WithinAbs(100.0f, 1e-5));
 }
 
 TEST_CASE("IntervalStartExtract — empty span returns NaN", "[Phase1.3][IntervalReductions]") {
-    std::span<IntervalWithId const> empty;
+    std::span<IntervalWithId const> const empty;
     CHECK(std::isnan(intervalStartExtract(empty)));
 }
 
 TEST_CASE("IntervalEndExtract — returns end of first interval", "[Phase1.3][IntervalReductions]") {
     std::vector<IntervalWithId> data{
-        IntervalWithId{Interval{100, 200}, EntityId{0}},
-        IntervalWithId{Interval{300, 400}, EntityId{1}}
-    };
-    std::span<IntervalWithId const> span{data};
+            IntervalWithId{Interval{100, 200}, EntityId{0}},
+            IntervalWithId{Interval{300, 400}, EntityId{1}}};
+    std::span<IntervalWithId const> const span{data};
 
     CHECK_THAT(intervalEndExtract(span), WithinAbs(200.0f, 1e-5));
 }
 
 TEST_CASE("IntervalEndExtract — empty span returns NaN", "[Phase1.3][IntervalReductions]") {
-    std::span<IntervalWithId const> empty;
+    std::span<IntervalWithId const> const empty;
     CHECK(std::isnan(intervalEndExtract(empty)));
 }
 
 TEST_CASE("IntervalSourceIndex — returns entity ID of first interval", "[Phase1.3][IntervalReductions]") {
     std::vector<IntervalWithId> data{
-        IntervalWithId{Interval{10, 20}, EntityId{42}},
-        IntervalWithId{Interval{30, 50}, EntityId{99}}
-    };
-    std::span<IntervalWithId const> span{data};
+            IntervalWithId{Interval{10, 20}, EntityId{42}},
+            IntervalWithId{Interval{30, 50}, EntityId{99}}};
+    std::span<IntervalWithId const> const span{data};
 
     CHECK(intervalSourceIndex(span) == 42);
 }
 
 TEST_CASE("IntervalSourceIndex — empty span returns -1", "[Phase1.3][IntervalReductions]") {
-    std::span<IntervalWithId const> empty;
+    std::span<IntervalWithId const> const empty;
     CHECK(intervalSourceIndex(empty) == -1);
 }
 
 TEST_CASE("IntervalCount — single interval", "[Phase1.3][IntervalReductions]") {
     std::vector<IntervalWithId> data{
-        IntervalWithId{Interval{0, 100}, EntityId{5}}
-    };
-    std::span<IntervalWithId const> span{data};
+            IntervalWithId{Interval{0, 100}, EntityId{5}}};
+    std::span<IntervalWithId const> const span{data};
 
     CHECK(intervalCount(span) == 1);
     CHECK_THAT(intervalStartExtract(span), WithinAbs(0.0f, 1e-5));
@@ -196,24 +217,22 @@ TEST_CASE("IntervalCount — single interval", "[Phase1.3][IntervalReductions]")
 
 TEST_CASE("EventPresence — returns 1 when events exist", "[Phase1.3][EventPresence]") {
     std::vector<EventWithId> data{
-        EventWithId{TimeFrameIndex(10), EntityId{0}},
-        EventWithId{TimeFrameIndex(20), EntityId{0}}
-    };
-    std::span<EventWithId const> span{data};
+            EventWithId{TimeFrameIndex(10), EntityId{0}},
+            EventWithId{TimeFrameIndex(20), EntityId{0}}};
+    std::span<EventWithId const> const span{data};
 
     CHECK(eventPresence(span) == 1);
 }
 
 TEST_CASE("EventPresence — returns 0 when no events", "[Phase1.3][EventPresence]") {
-    std::span<EventWithId const> empty;
+    std::span<EventWithId const> const empty;
     CHECK(eventPresence(empty) == 0);
 }
 
 TEST_CASE("EventPresence — single event returns 1", "[Phase1.3][EventPresence]") {
     std::vector<EventWithId> data{
-        EventWithId{TimeFrameIndex(5), EntityId{0}}
-    };
-    std::span<EventWithId const> span{data};
+            EventWithId{TimeFrameIndex(5), EntityId{0}}};
+    std::span<EventWithId const> const span{data};
 
     CHECK(eventPresence(span) == 1);
 }
@@ -224,50 +243,48 @@ TEST_CASE("EventPresence — single event returns 1", "[Phase1.3][EventPresence]
 
 TEST_CASE("LineLength — horizontal line", "[Phase1.4][LineLength]") {
     // Line from (0,0) to (10,0) — arc length = 10
-    Line2D line({Point2D<float>{0.0f, 0.0f}, Point2D<float>{10.0f, 0.0f}});
-    LineLengthParams params;
+    Line2D const line({Point2D<float>{0.0f, 0.0f}, Point2D<float>{10.0f, 0.0f}});
+    LineLengthParams const params;
 
     CHECK_THAT(calculateLineLength(line, params), WithinAbs(10.0f, 1e-5));
 }
 
 TEST_CASE("LineLength — vertical line", "[Phase1.4][LineLength]") {
     // Line from (0,0) to (0,5) — arc length = 5
-    Line2D line({Point2D<float>{0.0f, 0.0f}, Point2D<float>{0.0f, 5.0f}});
-    LineLengthParams params;
+    Line2D const line({Point2D<float>{0.0f, 0.0f}, Point2D<float>{0.0f, 5.0f}});
+    LineLengthParams const params;
 
     CHECK_THAT(calculateLineLength(line, params), WithinAbs(5.0f, 1e-5));
 }
 
 TEST_CASE("LineLength — multi-segment line", "[Phase1.4][LineLength]") {
     // Right angle path: (0,0)→(3,0)→(3,4) — arc length = 3 + 4 = 7
-    Line2D line({
-        Point2D<float>{0.0f, 0.0f},
-        Point2D<float>{3.0f, 0.0f},
-        Point2D<float>{3.0f, 4.0f}
-    });
-    LineLengthParams params;
+    Line2D const line({Point2D<float>{0.0f, 0.0f},
+                       Point2D<float>{3.0f, 0.0f},
+                       Point2D<float>{3.0f, 4.0f}});
+    LineLengthParams const params;
 
     CHECK_THAT(calculateLineLength(line, params), WithinAbs(7.0f, 1e-5));
 }
 
 TEST_CASE("LineLength — diagonal 3-4-5 triangle", "[Phase1.4][LineLength]") {
     // Single segment (0,0)→(3,4) — arc length = 5
-    Line2D line({Point2D<float>{0.0f, 0.0f}, Point2D<float>{3.0f, 4.0f}});
-    LineLengthParams params;
+    Line2D const line({Point2D<float>{0.0f, 0.0f}, Point2D<float>{3.0f, 4.0f}});
+    LineLengthParams const params;
 
     CHECK_THAT(calculateLineLength(line, params), WithinAbs(5.0f, 1e-5));
 }
 
 TEST_CASE("LineLength — single point returns 0", "[Phase1.4][LineLength]") {
-    Line2D line({Point2D<float>{1.0f, 2.0f}});
-    LineLengthParams params;
+    Line2D const line({Point2D<float>{1.0f, 2.0f}});
+    LineLengthParams const params;
 
     CHECK_THAT(calculateLineLength(line, params), WithinAbs(0.0f, 1e-5));
 }
 
 TEST_CASE("LineLength — empty line returns 0", "[Phase1.4][LineLength]") {
-    Line2D line;
-    LineLengthParams params;
+    Line2D const line;
+    LineLengthParams const params;
 
     CHECK_THAT(calculateLineLength(line, params), WithinAbs(0.0f, 1e-5));
 }
@@ -306,7 +323,7 @@ TEST_CASE("buildAnalogSampleAtOffsetProvider — negative offset", "[Phase1.4][A
 }
 
 TEST_CASE("buildAnalogSampleAtOffsetProvider — offset out of range produces NaN", "[Phase1.4][AnalogSampleAtOffset]") {
-    auto dm = makeDMWithAnalog("analog", 10); // times 0..9
+    auto dm = makeDMWithAnalog("analog", 10);// times 0..9
     auto row_times = makeRowTimes({0, 5, 8});
 
     // Offset +10: reads at times 10, 15, 18 — all out of range for 10-sample source
@@ -325,7 +342,7 @@ TEST_CASE("buildAnalogSampleAtOffsetProvider — zero offset same as passthrough
 
     auto provider_offset = buildAnalogSampleAtOffsetProvider(*dm, "analog", row_times, 0);
     auto provider_direct = buildPipelineColumnProvider(*dm, "analog", row_times,
-        Neuralyzer::Transforms::V2::TransformPipeline{});
+                                                       Neuralyzer::Transforms::V2::TransformPipeline{});
 
     auto vals_offset = provider_offset();
     auto vals_direct = provider_direct();
@@ -341,8 +358,8 @@ TEST_CASE("buildAnalogSampleAtOffsetProvider — invalid source throws", "[Phase
     auto row_times = makeRowTimes({0});
 
     CHECK_THROWS_AS(
-        buildAnalogSampleAtOffsetProvider(dm, "nonexistent", row_times, 0),
-        std::runtime_error);
+            buildAnalogSampleAtOffsetProvider(dm, "nonexistent", row_times, 0),
+            std::runtime_error);
 }
 
 TEST_CASE("buildAnalogSampleAtOffsetProvider — multi-column offset scenario", "[Phase1.4][AnalogSampleAtOffset]") {
@@ -352,22 +369,22 @@ TEST_CASE("buildAnalogSampleAtOffsetProvider — multi-column offset scenario", 
     auto row_times = makeRowTimes({10, 20, 30});
 
     auto p_minus2 = buildAnalogSampleAtOffsetProvider(*dm, "analog", row_times, -2);
-    auto p_zero   = buildAnalogSampleAtOffsetProvider(*dm, "analog", row_times, 0);
-    auto p_plus2  = buildAnalogSampleAtOffsetProvider(*dm, "analog", row_times, 2);
+    auto p_zero = buildAnalogSampleAtOffsetProvider(*dm, "analog", row_times, 0);
+    auto p_plus2 = buildAnalogSampleAtOffsetProvider(*dm, "analog", row_times, 2);
 
     auto v_minus2 = p_minus2();
-    auto v_zero   = p_zero();
-    auto v_plus2  = p_plus2();
+    auto v_zero = p_zero();
+    auto v_plus2 = p_plus2();
 
     // Row 0: reads at 8, 10, 12
     CHECK_THAT(v_minus2[0], WithinAbs(8.0f, 1e-5));
-    CHECK_THAT(v_zero[0],   WithinAbs(10.0f, 1e-5));
-    CHECK_THAT(v_plus2[0],  WithinAbs(12.0f, 1e-5));
+    CHECK_THAT(v_zero[0], WithinAbs(10.0f, 1e-5));
+    CHECK_THAT(v_plus2[0], WithinAbs(12.0f, 1e-5));
 
     // Row 1: reads at 18, 20, 22
     CHECK_THAT(v_minus2[1], WithinAbs(18.0f, 1e-5));
-    CHECK_THAT(v_zero[1],   WithinAbs(20.0f, 1e-5));
-    CHECK_THAT(v_plus2[1],  WithinAbs(22.0f, 1e-5));
+    CHECK_THAT(v_zero[1], WithinAbs(20.0f, 1e-5));
+    CHECK_THAT(v_plus2[1], WithinAbs(22.0f, 1e-5));
 }
 
 // =============================================================================
@@ -381,6 +398,7 @@ TEST_CASE("Builder scenario — IntervalCount through buildIntervalPipelineProvi
     //   Row 0 [0, 50):  overlaps source intervals at [10,20] and [30,40]
     //   Row 1 [60, 100): overlaps source interval at [70,80]
     auto dm = std::make_unique<DataManager>();
+    setDefaultIdentityTimeFrame(*dm, 1000);
 
     auto source_intervals = createIntervalSeries({{10, 20}, {30, 40}, {70, 80}});
     dm->setData<DigitalIntervalSeries>("source_ivals", source_intervals, TimeKey("time"));
@@ -392,7 +410,7 @@ TEST_CASE("Builder scenario — IntervalCount through buildIntervalPipelineProvi
     pipeline.setRangeReductionErased("IntervalCount", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
-        *dm, "source_ivals", row_intervals, std::move(pipeline));
+            *dm, "source_ivals", row_intervals, std::move(pipeline));
 
     auto values = provider();
     REQUIRE(values.size() == 2);
@@ -404,6 +422,7 @@ TEST_CASE("Builder scenario — IntervalCount through buildIntervalPipelineProvi
 TEST_CASE("Builder scenario — IntervalStartExtract through builder",
           "[Phase1.3][BuilderScenario]") {
     auto dm = std::make_unique<DataManager>();
+    setDefaultIdentityTimeFrame(*dm, 1000);
 
     auto source_intervals = createIntervalSeries({{100, 200}, {300, 400}});
     dm->setData<DigitalIntervalSeries>("source_ivals", source_intervals, TimeKey("time"));
@@ -415,7 +434,7 @@ TEST_CASE("Builder scenario — IntervalStartExtract through builder",
     pipeline.setRangeReductionErased("IntervalStartExtract", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
-        *dm, "source_ivals", row_intervals, std::move(pipeline));
+            *dm, "source_ivals", row_intervals, std::move(pipeline));
 
     auto values = provider();
     REQUIRE(values.size() == 1);
@@ -426,6 +445,7 @@ TEST_CASE("Builder scenario — IntervalStartExtract through builder",
 TEST_CASE("Builder scenario — IntervalEndExtract through builder",
           "[Phase1.3][BuilderScenario]") {
     auto dm = std::make_unique<DataManager>();
+    setDefaultIdentityTimeFrame(*dm, 1000);
 
     auto source_intervals = createIntervalSeries({{100, 200}, {300, 400}});
     dm->setData<DigitalIntervalSeries>("source_ivals", source_intervals, TimeKey("time"));
@@ -436,7 +456,7 @@ TEST_CASE("Builder scenario — IntervalEndExtract through builder",
     pipeline.setRangeReductionErased("IntervalEndExtract", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
-        *dm, "source_ivals", row_intervals, std::move(pipeline));
+            *dm, "source_ivals", row_intervals, std::move(pipeline));
 
     auto values = provider();
     REQUIRE(values.size() == 1);
@@ -447,6 +467,7 @@ TEST_CASE("Builder scenario — IntervalEndExtract through builder",
 TEST_CASE("Builder scenario — EventPresence through builder",
           "[Phase1.3][BuilderScenario]") {
     auto dm = std::make_unique<DataManager>();
+    setDefaultIdentityTimeFrame(*dm, 1000);
 
     // Events at times 15, 25, 75
     auto events = createEventSeries({15, 25, 75});
@@ -461,18 +482,19 @@ TEST_CASE("Builder scenario — EventPresence through builder",
     pipeline.setRangeReductionErased("EventPresence", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
-        *dm, "spikes", row_intervals, std::move(pipeline));
+            *dm, "spikes", row_intervals, std::move(pipeline));
 
     auto values = provider();
     REQUIRE(values.size() == 3);
-    CHECK_THAT(values[0], WithinAbs(1.0f, 1e-5));  // has events
-    CHECK_THAT(values[1], WithinAbs(0.0f, 1e-5));  // no events
-    CHECK_THAT(values[2], WithinAbs(1.0f, 1e-5));  // has event
+    CHECK_THAT(values[0], WithinAbs(1.0f, 1e-5));// has events
+    CHECK_THAT(values[1], WithinAbs(0.0f, 1e-5));// no events
+    CHECK_THAT(values[2], WithinAbs(1.0f, 1e-5));// has event
 }
 
 TEST_CASE("Builder scenario — IntervalSourceIndex through builder",
           "[Phase1.3][BuilderScenario]") {
     auto dm = std::make_unique<DataManager>();
+    setDefaultIdentityTimeFrame(*dm, 1000);
 
     // Source intervals all have EntityId{0} (default constructor from vector<Interval>)
     auto source_intervals = createIntervalSeries({{100, 200}, {300, 400}});
@@ -484,7 +506,7 @@ TEST_CASE("Builder scenario — IntervalSourceIndex through builder",
     pipeline.setRangeReductionErased("IntervalSourceIndex", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
-        *dm, "source_ivals", row_intervals, std::move(pipeline));
+            *dm, "source_ivals", row_intervals, std::move(pipeline));
 
     auto values = provider();
     REQUIRE(values.size() == 1);
@@ -496,6 +518,7 @@ TEST_CASE("Builder scenario — IntervalSourceIndex through builder",
 TEST_CASE("Builder scenario — empty interval overlap produces default values",
           "[Phase1.3][BuilderScenario]") {
     auto dm = std::make_unique<DataManager>();
+    setDefaultIdentityTimeFrame(*dm, 1000);
 
     auto source_intervals = createIntervalSeries({{100, 200}});
     dm->setData<DigitalIntervalSeries>("source_ivals", source_intervals, TimeKey("time"));
@@ -508,7 +531,7 @@ TEST_CASE("Builder scenario — empty interval overlap produces default values",
         Neuralyzer::Transforms::V2::TransformPipeline pipeline;
         pipeline.setRangeReductionErased("IntervalCount", std::any{});
         auto provider = buildIntervalPipelineProvider(
-            *dm, "source_ivals", row_intervals, std::move(pipeline));
+                *dm, "source_ivals", row_intervals, std::move(pipeline));
         auto values = provider();
         REQUIRE(values.size() == 1);
         CHECK_THAT(values[0], WithinAbs(0.0f, 1e-5));
@@ -519,7 +542,7 @@ TEST_CASE("Builder scenario — empty interval overlap produces default values",
         Neuralyzer::Transforms::V2::TransformPipeline pipeline;
         pipeline.setRangeReductionErased("IntervalStartExtract", std::any{});
         auto provider = buildIntervalPipelineProvider(
-            *dm, "source_ivals", row_intervals, std::move(pipeline));
+                *dm, "source_ivals", row_intervals, std::move(pipeline));
         auto values = provider();
         REQUIRE(values.size() == 1);
         CHECK(std::isnan(values[0]));
@@ -532,6 +555,7 @@ TEST_CASE("Builder scenario — multi-column tensor with new reductions",
     //           2 row intervals: [0, 30), [40, 70)
     // Columns: Mean of analog, event count, event presence
     auto dm = std::make_unique<DataManager>();
+    setDefaultIdentityTimeFrame(*dm, 1000);
     auto analog = createLinearAnalog(100);
     dm->setData<AnalogTimeSeries>("analog", analog, TimeKey("time"));
     auto events = createEventSeries({5, 15, 55});
@@ -556,13 +580,12 @@ TEST_CASE("Builder scenario — multi-column tensor with new reductions",
 
     // Build lazy tensor
     std::vector<ColumnSource> columns{
-        ColumnSource{"mean_analog", std::move(prov1)},
-        ColumnSource{"event_count", std::move(prov2)},
-        ColumnSource{"event_presence", std::move(prov3)}
-    };
+            ColumnSource{"mean_analog", std::move(prov1)},
+            ColumnSource{"event_count", std::move(prov2)},
+            ColumnSource{"event_presence", std::move(prov3)}};
 
     auto tensor = TensorData::createFromLazyColumns(
-        2, std::move(columns), RowDescriptor::ordinal(2), nullptr);
+            2, std::move(columns), RowDescriptor::ordinal(2), nullptr);
 
     // Row 0 [0,30): analog mean of 0..29 = 14.5, events {5,15} = count 2, presence 1
     // Row 1 [40,70): analog mean of 40..69 = 54.5, events {55} = count 1, presence 1
@@ -588,17 +611,16 @@ TEST_CASE("Builder scenario — offset columns as lazy tensor",
     auto row_times = makeRowTimes({20, 40, 60});
 
     auto col_m5 = buildAnalogSampleAtOffsetProvider(*dm, "src", row_times, -5);
-    auto col_0  = buildAnalogSampleAtOffsetProvider(*dm, "src", row_times,  0);
-    auto col_p5 = buildAnalogSampleAtOffsetProvider(*dm, "src", row_times,  5);
+    auto col_0 = buildAnalogSampleAtOffsetProvider(*dm, "src", row_times, 0);
+    auto col_p5 = buildAnalogSampleAtOffsetProvider(*dm, "src", row_times, 5);
 
     std::vector<ColumnSource> columns{
-        ColumnSource{"t-5", std::move(col_m5)},
-        ColumnSource{"t+0", std::move(col_0)},
-        ColumnSource{"t+5", std::move(col_p5)}
-    };
+            ColumnSource{"t-5", std::move(col_m5)},
+            ColumnSource{"t+0", std::move(col_0)},
+            ColumnSource{"t+5", std::move(col_p5)}};
 
     auto tensor = TensorData::createFromLazyColumns(
-        3, std::move(columns), RowDescriptor::ordinal(3), nullptr);
+            3, std::move(columns), RowDescriptor::ordinal(3), nullptr);
 
     // Row 0 (t=20): 15.0, 20.0, 25.0
     // Row 1 (t=40): 35.0, 40.0, 45.0

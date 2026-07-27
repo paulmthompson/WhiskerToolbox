@@ -7,14 +7,12 @@
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "TypeTraits/DataTypeTraits.hpp"
-#include "TimeFrame/TimeFrame.hpp"
-#include "TimeFrame/interval_data.hpp"
 #include "TransformsV2/core/RangeReductionRegistry.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/extension/RangeReductionTypes.hpp"
+#include "TypeTraits/DataTypeTraits.hpp"
 
-#include <cmath>     // NAN
+#include <cmath>// NAN
 #include <memory>
 #include <stdexcept>
 #include <type_traits>
@@ -22,51 +20,6 @@
 #include <vector>
 
 namespace Neuralyzer::Gather {
-
-namespace {
-
-/**
- * @brief Convert interval boundaries to the source data's TimeFrame coordinate
- *        system if the source and interval series use different TimeFrames.
- *
- * If either TimeFrame is null, or they are the same object, the original
- * interval series shared_ptr is returned unchanged (zero allocation).
- *
- * When conversion is required, a new DigitalIntervalSeries is constructed with
- * the converted boundaries and the source's TimeFrame attached.
- *
- * @param intervals The row interval series (in its own coordinate system)
- * @param source_tf The source data's TimeFrame
- * @return Shared pointer to intervals expressed in the source's coordinate system
- */
-std::shared_ptr<DigitalIntervalSeries> prepareIntervalsForGather(
-        std::shared_ptr<DigitalIntervalSeries> const & intervals,
-        std::shared_ptr<TimeFrame> const & source_tf) {
-    auto interval_tf = intervals->getTimeFrame();
-
-    // No conversion needed: same TimeFrame or one of them is null
-    if (!source_tf || !interval_tf || source_tf.get() == interval_tf.get()) {
-        return intervals;
-    }
-
-    auto const & interval_data = intervals->view();
-    std::vector<Interval> converted;
-    converted.reserve(interval_data.size());
-
-    for (auto const & iv : interval_data) {
-        auto [new_start, new_end] = convertTimeFrameRange(
-                TimeFrameIndex(iv.interval.start),
-                TimeFrameIndex(iv.interval.end),
-                *interval_tf, *source_tf);
-        converted.push_back(Interval{new_start.getValue(), new_end.getValue()});
-    }
-
-    auto result = std::make_shared<DigitalIntervalSeries>(converted);
-    result->setTimeFrame(source_tf);
-    return result;
-}
-
-}// namespace
 
 // ============================================================================
 // extractSingleFloat
@@ -138,7 +91,11 @@ float applyRangeReductionToOutput(
         return extractSingleFloat(output);
     }
 
-    auto const & reduction = pipeline.getRangeReduction().value();
+    auto const & reduction_opt = pipeline.getRangeReduction();
+    if (!reduction_opt) {
+        return extractSingleFloat(output);
+    }
+    auto const & reduction = *reduction_opt;
     auto & registry = Neuralyzer::Transforms::V2::RangeReductionRegistry::instance();
 
     return std::visit([&](auto const & ptr) -> float {
@@ -148,14 +105,14 @@ float applyRangeReductionToOutput(
             using TimeValuePoint = AnalogTimeSeries::TimeValuePoint;
             auto view = ptr->view();
             std::vector<TimeValuePoint> elements(view.begin(), view.end());
-            std::span<TimeValuePoint const> span{elements};
-            std::any input_any{span};
+            std::span<TimeValuePoint const> const span{elements};
+            std::any const input_any{span};
 
-            std::any params_to_use = reduction.params.has_value()
-                ? reduction.params
-                : std::any{Neuralyzer::Transforms::V2::NoReductionParams{}};
+            std::any const params_to_use = reduction.params.has_value()
+                                                   ? reduction.params
+                                                   : std::any{Neuralyzer::Transforms::V2::NoReductionParams{}};
 
-            std::any result = registry.executeErased(
+            std::any const result = registry.executeErased(
                     reduction.reduction_name,
                     typeid(TimeValuePoint),
                     input_any,
@@ -168,21 +125,21 @@ float applyRangeReductionToOutput(
             // non-ragged AnalogTimeSeries after element transforms.
             using TimeValuePoint = AnalogTimeSeries::TimeValuePoint;
             std::vector<TimeValuePoint> elements;
-            for (auto const & ti : ptr->getTimeIndices()) {
+            for (auto const & ti: ptr->getTimeIndices()) {
                 auto data = ptr->getDataAtTime(ti);
-                for (auto val : data) {
+                for (auto val: data) {
                     elements.push_back({ti, val});
                 }
             }
             if (elements.empty()) return NAN;
-            std::span<TimeValuePoint const> span{elements};
-            std::any input_any{span};
+            std::span<TimeValuePoint const> const span{elements};
+            std::any const input_any{span};
 
-            std::any params_to_use = reduction.params.has_value()
-                ? reduction.params
-                : std::any{Neuralyzer::Transforms::V2::NoReductionParams{}};
+            std::any const params_to_use = reduction.params.has_value()
+                                                   ? reduction.params
+                                                   : std::any{Neuralyzer::Transforms::V2::NoReductionParams{}};
 
-            std::any result = registry.executeErased(
+            std::any const result = registry.executeErased(
                     reduction.reduction_name,
                     typeid(TimeValuePoint),
                     input_any,
@@ -192,17 +149,17 @@ float applyRangeReductionToOutput(
         } else if constexpr (std::is_same_v<T, DigitalEventSeries>) {
             // Materialize events into a vector and apply reduction.
             std::vector<EventWithId> elements;
-            for (auto const & e : ptr->view()) {
+            for (auto const & e: ptr->view()) {
                 elements.push_back(e);
             }
-            std::span<EventWithId const> span{elements};
-            std::any input_any{span};
+            std::span<EventWithId const> const span{elements};
+            std::any const input_any{span};
 
-            std::any params_to_use = reduction.params.has_value()
-                ? reduction.params
-                : std::any{Neuralyzer::Transforms::V2::NoReductionParams{}};
+            std::any const params_to_use = reduction.params.has_value()
+                                                   ? reduction.params
+                                                   : std::any{Neuralyzer::Transforms::V2::NoReductionParams{}};
 
-            std::any result = registry.executeErased(
+            std::any const result = registry.executeErased(
                     reduction.reduction_name,
                     typeid(EventWithId),
                     input_any,
@@ -212,17 +169,17 @@ float applyRangeReductionToOutput(
         } else if constexpr (std::is_same_v<T, DigitalIntervalSeries>) {
             // Materialize intervals into a vector and apply reduction.
             std::vector<IntervalWithId> elements;
-            for (auto const & iv : ptr->view()) {
+            for (auto const & iv: ptr->view()) {
                 elements.push_back(iv);
             }
-            std::span<IntervalWithId const> span{elements};
-            std::any input_any{span};
+            std::span<IntervalWithId const> const span{elements};
+            std::any const input_any{span};
 
-            std::any params_to_use = reduction.params.has_value()
-                ? reduction.params
-                : std::any{Neuralyzer::Transforms::V2::NoReductionParams{}};
+            std::any const params_to_use = reduction.params.has_value()
+                                                   ? reduction.params
+                                                   : std::any{Neuralyzer::Transforms::V2::NoReductionParams{}};
 
-            std::any result = registry.executeErased(
+            std::any const result = registry.executeErased(
                     reduction.reduction_name,
                     typeid(IntervalWithId),
                     input_any,
@@ -234,10 +191,11 @@ float applyRangeReductionToOutput(
                     "applyRangeReductionToOutput: pipeline output is not a float "
                     "time series — cannot apply range reduction");
         }
-    }, output);
+    },
+                      output);
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // ============================================================================
 // gatherAndExecutePipeline
@@ -261,16 +219,13 @@ std::vector<float> gatherAndExecutePipeline(
         // RaggedAnalogTimeSeries is excluded — its per-interval gather semantics
         // are ill-defined.
         constexpr bool can_gather =
-            (Neuralyzer::TypeTraits::HasDataTraits<T> && !std::is_same_v<T, RaggedAnalogTimeSeries>) ||
-            std::is_same_v<T, DigitalEventSeries> ||
-            std::is_same_v<T, DigitalIntervalSeries>;
+                (Neuralyzer::TypeTraits::HasDataTraits<T> && !std::is_same_v<T, RaggedAnalogTimeSeries>) ||
+                std::is_same_v<T, DigitalEventSeries> ||
+                std::is_same_v<T, DigitalIntervalSeries>;
 
         if constexpr (can_gather) {
-            // Convert interval boundaries to the source's TimeFrame if needed
-            auto gather_ivals = prepareIntervalsForGather(intervals, ptr->getTimeFrame());
-
-            // Gather: create one view/copy per interval
-            auto gather = GatherResult<T>::create(ptr, gather_ivals);
+            // GatherResult converts interval bounds to the source TimeFrame at query time.
+            auto gather = GatherResult<T>::create(ptr, intervals);
 
             std::vector<float> result;
             result.reserve(gather.size());
@@ -278,11 +233,11 @@ std::vector<float> gatherAndExecutePipeline(
             bool const has_element_steps = !pipeline.empty();
 
             for (std::size_t i = 0; i < gather.size(); ++i) {
-                DataTypeVariant segment_var{gather[i]};
+                DataTypeVariant const segment_var{gather[i]};
 
                 if (has_element_steps) {
                     // Run element transforms then apply range reduction
-                    DataTypeVariant output = executePipeline(segment_var, pipeline);
+                    DataTypeVariant const output = executePipeline(segment_var, pipeline);
                     result.push_back(applyRangeReductionToOutput(output, pipeline));
                 } else {
                     // No element steps — apply range reduction directly to

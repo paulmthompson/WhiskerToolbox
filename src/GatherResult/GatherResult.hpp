@@ -85,6 +85,7 @@
 #include "TransformsV2/extension/ValueProjectionTypes.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <concepts>
 #include <functional>
@@ -92,6 +93,7 @@
 #include <memory>
 #include <numeric>
 #include <ranges>
+#include <stdexcept>
 #include <type_traits>
 #include <vector>
 
@@ -207,6 +209,111 @@ struct element_type_of<DigitalIntervalSeries> {
 template<typename T>
 using element_type_of_t = typename element_type_of<T>::type;
 
+/**
+ * @brief Convert an interval from one TimeFrame coordinate system to another.
+ *
+ * @param interval Interval expressed in @p from_time_frame indices
+ * @param from_time_frame TimeFrame that owns @p interval coordinates
+ * @param to_time_frame TimeFrame used by the source data being queried
+ * @return Interval expressed in @p to_time_frame indices
+ *
+ * @pre @p from_time_frame and @p to_time_frame are valid TimeFrame references.
+ * @post Returned bounds are expressed in @p to_time_frame coordinates.
+ */
+[[nodiscard]] inline Interval convertIntervalToTimeFrame(
+        Interval const & interval,
+        TimeFrame const & from_time_frame,
+        TimeFrame const & to_time_frame) {
+    auto [converted_start, converted_end] = convertTimeFrameRange(
+            TimeFrameIndex(interval.start),
+            TimeFrameIndex(interval.end),
+            from_time_frame,
+            to_time_frame);
+    return Interval{converted_start.getValue(), converted_end.getValue()};
+}
+
+/**
+ * @brief Convert prepared gather-window bounds to source-data query bounds.
+ *
+ * @param interval Window bounds in the interval series TimeFrame
+ * @param interval_time_frame Non-null TimeFrame from the interval/window series
+ * @param source_time_frame Non-null TimeFrame from the source data
+ * @return Query interval in source-data TimeFrame coordinates
+ *
+ * @pre Prepared gather windows and source data must both carry non-null TimeFrames.
+ * @post Returned bounds are expressed in the source data TimeFrame.
+ */
+[[nodiscard]] inline Interval convertPreparedWindowToSourceInterval(
+        Interval const & interval,
+        std::shared_ptr<TimeFrame> const & interval_time_frame,
+        std::shared_ptr<TimeFrame> const & source_time_frame) {
+    assert(interval_time_frame && "convertPreparedWindowToSourceInterval: interval TimeFrame must not be null");
+    assert(source_time_frame && "convertPreparedWindowToSourceInterval: source TimeFrame must not be null");
+
+    if (!interval_time_frame || !source_time_frame) {
+        throw std::invalid_argument(
+                "convertPreparedWindowToSourceInterval: prepared windows and source data must have TimeFrames");
+    }
+
+    return convertIntervalToTimeFrame(interval, *interval_time_frame, *source_time_frame);
+}
+
+/**
+ * @brief Resolve legacy adapter interval bounds to source-data query bounds.
+ *
+ * @param aligned_interval Adapter-provided bounds and alignment time
+ * @param adapter_time_frame TimeFrame for adapter index coordinates, or null for legacy absolute-time bounds
+ * @param source_time_frame TimeFrame for source data, or null for legacy raw-index source data
+ * @return Query interval in source-data coordinates when possible
+ *
+ * @pre @p aligned_interval contains valid start/end bounds for its adapter contract.
+ * @post Returned bounds preserve the legacy adapter null-TimeFrame behavior.
+ */
+[[nodiscard]] inline Interval resolveLegacyAdapterIntervalForSource(
+        AlignedInterval const & aligned_interval,
+        TimeFrame const * adapter_time_frame,
+        TimeFrame const * source_time_frame) {
+    if (adapter_time_frame && source_time_frame) {
+        return convertIntervalToTimeFrame(
+                Interval{aligned_interval.start, aligned_interval.end},
+                *adapter_time_frame,
+                *source_time_frame);
+    }
+
+    if (adapter_time_frame) {
+        return Interval{
+                adapter_time_frame->getTimeAtIndex(TimeFrameIndex(aligned_interval.start)),
+                adapter_time_frame->getTimeAtIndex(TimeFrameIndex(aligned_interval.end))};
+    }
+
+    if (source_time_frame) {
+        return Interval{
+                source_time_frame->getIndexAtTime(static_cast<float>(aligned_interval.start), false).getValue(),
+                source_time_frame->getIndexAtTime(static_cast<float>(aligned_interval.end)).getValue()};
+    }
+
+    return Interval{aligned_interval.start, aligned_interval.end};
+}
+
+/**
+ * @brief Resolve legacy adapter alignment time to the absolute-time value stored by GatherResult.
+ *
+ * @param alignment_time Adapter-provided alignment value
+ * @param adapter_time_frame TimeFrame for adapter index coordinates, or null for legacy absolute-time values
+ * @return Absolute alignment time under the legacy adapter contract
+ *
+ * @pre @p alignment_time is valid in the adapter coordinate system.
+ * @post Return value matches the existing adapter-backed alignmentTimeAt() behavior.
+ */
+[[nodiscard]] inline int64_t resolveLegacyAdapterAlignmentTime(
+        int64_t alignment_time,
+        TimeFrame const * adapter_time_frame) {
+    if (!adapter_time_frame) {
+        return alignment_time;
+    }
+    return adapter_time_frame->getTimeAtIndex(TimeFrameIndex(alignment_time));
+}
+
 }// namespace Neuralyzer::Gather
 
 // =============================================================================
@@ -258,17 +365,30 @@ public:
     static GatherResult create(
             std::shared_ptr<U> source,
             std::shared_ptr<DigitalIntervalSeries> intervals) {
+        assert(source && "GatherResult::create: source must not be null");
+        assert(intervals && "GatherResult::create: intervals must not be null");
+        if (!source || !intervals) {
+            throw std::invalid_argument("GatherResult::create: source and intervals must not be null");
+        }
+
         GatherResult result;
         result._source = source;
         result._views.reserve(intervals->size());
         result._intervals.reserve(intervals->size());
 
+        auto const source_tf = source->getTimeFrame();
+        auto const interval_tf = intervals->getTimeFrame();
+
         for (auto const & interval: intervals->view()) {
-            result._intervals.push_back(interval.interval);
+            auto const query_interval = Neuralyzer::Gather::convertPreparedWindowToSourceInterval(
+                    interval.interval,
+                    interval_tf,
+                    source_tf);
+            result._intervals.push_back(query_interval);
             auto view = U::createView(
                     source,
-                    TimeFrameIndex(interval.interval.start),
-                    TimeFrameIndex(interval.interval.end));
+                    TimeFrameIndex(query_interval.start),
+                    TimeFrameIndex(query_interval.end));
             result._views.push_back(std::move(view));
         }
 
@@ -291,17 +411,30 @@ public:
     static GatherResult create(
             std::shared_ptr<U> source,
             std::shared_ptr<DigitalIntervalSeries> intervals) {
+        assert(source && "GatherResult::create: source must not be null");
+        assert(intervals && "GatherResult::create: intervals must not be null");
+        if (!source || !intervals) {
+            throw std::invalid_argument("GatherResult::create: source and intervals must not be null");
+        }
+
         GatherResult result;
         result._source = source;
         result._views.reserve(intervals->size());
         result._intervals.reserve(intervals->size());
 
+        auto const source_tf = source->getTimeFrame();
+        auto const interval_tf = intervals->getTimeFrame();
+
         for (auto const & interval: intervals->view()) {
-            result._intervals.push_back(interval.interval);
+            auto const query_interval = Neuralyzer::Gather::convertPreparedWindowToSourceInterval(
+                    interval.interval,
+                    interval_tf,
+                    source_tf);
+            result._intervals.push_back(query_interval);
             auto view = U::createView(
                     source,
-                    interval.interval.start,
-                    interval.interval.end);
+                    query_interval.start,
+                    query_interval.end);
             result._views.push_back(std::move(view));
         }
 
@@ -325,16 +458,29 @@ public:
     static GatherResult create(
             std::shared_ptr<U> source,
             std::shared_ptr<DigitalIntervalSeries> intervals) {
+        assert(source && "GatherResult::create: source must not be null");
+        assert(intervals && "GatherResult::create: intervals must not be null");
+        if (!source || !intervals) {
+            throw std::invalid_argument("GatherResult::create: source and intervals must not be null");
+        }
+
         GatherResult result;
         result._source = source;
         result._views.reserve(intervals->size());
         result._intervals.reserve(intervals->size());
 
+        auto const source_tf = source->getTimeFrame();
+        auto const interval_tf = intervals->getTimeFrame();
+
         for (auto const & interval: intervals->view()) {
-            result._intervals.push_back(interval.interval);
+            auto const query_interval = Neuralyzer::Gather::convertPreparedWindowToSourceInterval(
+                    interval.interval,
+                    interval_tf,
+                    source_tf);
+            result._intervals.push_back(query_interval);
             auto copy = std::make_shared<U>(source->createTimeRangeCopy(
-                    TimeFrameIndex(interval.interval.start),
-                    TimeFrameIndex(interval.interval.end)));
+                    TimeFrameIndex(query_interval.start),
+                    TimeFrameIndex(query_interval.end)));
             // Inherit TimeFrame and ImageSize from source
             copy->setTimeFrame(source->getTimeFrame());
             copy->setImageSize(source->getImageSize());
@@ -356,10 +502,8 @@ public:
      * - start/end: interval bounds for view creation
      * - alignment_time: custom alignment point for projections
      *
-     * If the adapter and source data have different TimeFrames, times are 
-     * automatically converted from the adapter's TimeFrame to the source's
-     * TimeFrame using convert_time_index(). This enables cross-rate alignment
-     * (e.g., 500Hz behavioral events aligning 30kHz spike data).
+     * Adapter bounds are resolved by the legacy adapter compatibility path.
+     * Prefer prepared DigitalIntervalSeries windows for new code.
      *
      * @tparam IntervalSourceT Type satisfying IntervalSource concept
      * @param source Source data to create views from
@@ -396,53 +540,21 @@ public:
         }
 
         for (auto const & aligned_interval: interval_source) {
-            int64_t view_start, view_end, alignment_abs_time;
+            auto const query_interval = Neuralyzer::Gather::resolveLegacyAdapterIntervalForSource(
+                    aligned_interval,
+                    adapter_tf.get(),
+                    source_tf.get());
+            auto const alignment_abs_time = Neuralyzer::Gather::resolveLegacyAdapterAlignmentTime(
+                    aligned_interval.alignment_time,
+                    adapter_tf.get());
 
-            if (adapter_tf) {
-                // Adapter yields indices in its own TimeFrame; convert to
-                // absolute time, then to source-TF indices for view creation.
-                alignment_abs_time = adapter_tf->getTimeAtIndex(
-                        TimeFrameIndex(aligned_interval.alignment_time));
-                int64_t start_abs = adapter_tf->getTimeAtIndex(
-                        TimeFrameIndex(aligned_interval.start));
-                int64_t end_abs = adapter_tf->getTimeAtIndex(
-                        TimeFrameIndex(aligned_interval.end));
-
-                if (source_tf) {
-                    view_start = source_tf->getIndexAtTime(
-                                                  static_cast<float>(start_abs))
-                                         .getValue();
-                    view_end = source_tf->getIndexAtTime(
-                                                static_cast<float>(end_abs))
-                                       .getValue();
-                } else {
-                    view_start = start_abs;
-                    view_end = end_abs;
-                }
-            } else if (source_tf) {
-                // No adapter TF: adapter values are already in absolute time.
-                // Convert directly to source-TF indices.
-                alignment_abs_time = aligned_interval.alignment_time;
-                view_start = source_tf->getIndexAtTime(
-                                              static_cast<float>(aligned_interval.start))
-                                     .getValue();
-                view_end = source_tf->getIndexAtTime(
-                                            static_cast<float>(aligned_interval.end))
-                                   .getValue();
-            } else {
-                // No TimeFrame at all: raw indices are the only option
-                alignment_abs_time = aligned_interval.alignment_time;
-                view_start = aligned_interval.start;
-                view_end = aligned_interval.end;
-            }
-
-            result._intervals.push_back(Interval{view_start, view_end});
+            result._intervals.push_back(query_interval);
             result._alignment_times.push_back(alignment_abs_time);
 
             auto view = U::createView(
                     source,
-                    TimeFrameIndex(view_start),
-                    TimeFrameIndex(view_end));
+                    TimeFrameIndex(query_interval.start),
+                    TimeFrameIndex(query_interval.end));
             result._views.push_back(std::move(view));
         }
 
@@ -473,48 +585,21 @@ public:
         }
 
         for (auto const & aligned_interval: interval_source) {
-            int64_t view_start, view_end, alignment_abs_time;
+            auto const query_interval = Neuralyzer::Gather::resolveLegacyAdapterIntervalForSource(
+                    aligned_interval,
+                    adapter_tf.get(),
+                    source_tf.get());
+            auto const alignment_abs_time = Neuralyzer::Gather::resolveLegacyAdapterAlignmentTime(
+                    aligned_interval.alignment_time,
+                    adapter_tf.get());
 
-            if (adapter_tf) {
-                alignment_abs_time = adapter_tf->getTimeAtIndex(
-                        TimeFrameIndex(aligned_interval.alignment_time));
-                int64_t start_abs = adapter_tf->getTimeAtIndex(
-                        TimeFrameIndex(aligned_interval.start));
-                int64_t end_abs = adapter_tf->getTimeAtIndex(
-                        TimeFrameIndex(aligned_interval.end));
-
-                if (source_tf) {
-                    view_start = source_tf->getIndexAtTime(
-                                                  static_cast<float>(start_abs))
-                                         .getValue();
-                    view_end = source_tf->getIndexAtTime(
-                                                static_cast<float>(end_abs))
-                                       .getValue();
-                } else {
-                    view_start = start_abs;
-                    view_end = end_abs;
-                }
-            } else if (source_tf) {
-                alignment_abs_time = aligned_interval.alignment_time;
-                view_start = source_tf->getIndexAtTime(
-                                              static_cast<float>(aligned_interval.start))
-                                     .getValue();
-                view_end = source_tf->getIndexAtTime(
-                                            static_cast<float>(aligned_interval.end))
-                                   .getValue();
-            } else {
-                alignment_abs_time = aligned_interval.alignment_time;
-                view_start = aligned_interval.start;
-                view_end = aligned_interval.end;
-            }
-
-            result._intervals.push_back(Interval{view_start, view_end});
+            result._intervals.push_back(query_interval);
             result._alignment_times.push_back(alignment_abs_time);
 
             auto view = U::createView(
                     source,
-                    view_start,
-                    view_end);
+                    query_interval.start,
+                    query_interval.end);
             result._views.push_back(std::move(view));
         }
 
@@ -546,47 +631,20 @@ public:
         }
 
         for (auto const & aligned_interval: interval_source) {
-            int64_t view_start, view_end, alignment_abs_time;
+            auto const query_interval = Neuralyzer::Gather::resolveLegacyAdapterIntervalForSource(
+                    aligned_interval,
+                    adapter_tf.get(),
+                    source_tf.get());
+            auto const alignment_abs_time = Neuralyzer::Gather::resolveLegacyAdapterAlignmentTime(
+                    aligned_interval.alignment_time,
+                    adapter_tf.get());
 
-            if (adapter_tf) {
-                alignment_abs_time = adapter_tf->getTimeAtIndex(
-                        TimeFrameIndex(aligned_interval.alignment_time));
-                int64_t start_abs = adapter_tf->getTimeAtIndex(
-                        TimeFrameIndex(aligned_interval.start));
-                int64_t end_abs = adapter_tf->getTimeAtIndex(
-                        TimeFrameIndex(aligned_interval.end));
-
-                if (source_tf) {
-                    view_start = source_tf->getIndexAtTime(
-                                                  static_cast<float>(start_abs))
-                                         .getValue();
-                    view_end = source_tf->getIndexAtTime(
-                                                static_cast<float>(end_abs))
-                                       .getValue();
-                } else {
-                    view_start = start_abs;
-                    view_end = end_abs;
-                }
-            } else if (source_tf) {
-                alignment_abs_time = aligned_interval.alignment_time;
-                view_start = source_tf->getIndexAtTime(
-                                              static_cast<float>(aligned_interval.start))
-                                     .getValue();
-                view_end = source_tf->getIndexAtTime(
-                                            static_cast<float>(aligned_interval.end))
-                                   .getValue();
-            } else {
-                alignment_abs_time = aligned_interval.alignment_time;
-                view_start = aligned_interval.start;
-                view_end = aligned_interval.end;
-            }
-
-            result._intervals.push_back(Interval{view_start, view_end});
+            result._intervals.push_back(query_interval);
             result._alignment_times.push_back(alignment_abs_time);
 
             auto copy = std::make_shared<U>(source->createTimeRangeCopy(
-                    TimeFrameIndex(view_start),
-                    TimeFrameIndex(view_end)));
+                    TimeFrameIndex(query_interval.start),
+                    TimeFrameIndex(query_interval.end)));
             copy->setTimeFrame(source->getTimeFrame());
             copy->setImageSize(source->getImageSize());
             result._views.push_back(std::move(copy));
@@ -1101,60 +1159,6 @@ public:
     }
 
 private:
-    /**
-     * @brief Get a time conversion function for cross-TimeFrame alignment
-     *
-     * Checks if source and interval_source have different TimeFrames.
-     * If so, returns a function that converts times from the adapter's
-     * TimeFrame to the source's TimeFrame. Otherwise returns identity.
-     *
-     * @param source The source data (spikes, analog signals, etc.)
-     * @param interval_source The adapter providing alignment intervals
-     * @return A function int64_t -> int64_t for time conversion
-     */
-    template<typename U, typename IntervalSourceT>
-        requires Neuralyzer::Gather::HasTimeFrame<U>
-    static std::function<int64_t(int64_t)> getTimeConverter(
-            std::shared_ptr<U> const & source,
-            IntervalSourceT const & interval_source) {
-
-        // Get TimeFrames
-        auto source_tf = source ? source->getTimeFrame() : nullptr;
-
-        // Check if adapter has TimeFrame access
-        std::shared_ptr<TimeFrame> adapter_tf = nullptr;
-        if constexpr (Neuralyzer::Gather::HasTimeFrameAccess<IntervalSourceT>) {
-            adapter_tf = interval_source.getTimeFrame();
-        }
-
-        // If both have TimeFrames and they're different, need conversion
-        if (source_tf && adapter_tf && source_tf.get() != adapter_tf.get()) {
-            // Return a converting function
-            return [source_tf, adapter_tf](int64_t time) -> int64_t {
-                // Convert from adapter's TimeFrame to source's TimeFrame
-                // adapter_tf: index -> absolute time via getTimeAtIndex
-                // source_tf: absolute time -> index via getIndexAtTime
-                auto absolute_time = static_cast<float>(
-                        adapter_tf->getTimeAtIndex(TimeFrameIndex(time)));
-                return source_tf->getIndexAtTime(absolute_time).getValue();
-            };
-        }
-
-        // No conversion needed - return identity
-        return [](int64_t time) -> int64_t { return time; };
-    }
-
-    /**
-     * @brief Fallback for sources without TimeFrame access - no conversion
-     */
-    template<typename U, typename IntervalSourceT>
-        requires(!Neuralyzer::Gather::HasTimeFrame<U>)
-    static std::function<int64_t(int64_t)> getTimeConverter(
-            std::shared_ptr<U> const & /*source*/,
-            IntervalSourceT const & /*interval_source*/) {
-        return [](int64_t time) -> int64_t { return time; };
-    }
-
     std::shared_ptr<T> _source;
     std::vector<Interval> _intervals;// Stored intervals (no merging)
     std::vector<value_type> _views;

@@ -118,49 +118,6 @@ std::shared_ptr<T> borrowAsShared(T const & obj) {
             const_cast<T *>(&obj));
 }
 
-/**
- * @brief Prepare intervals for gathering, with cross-TimeFrame conversion if needed.
- *
- * If the source data and interval series have different TimeFrames, the interval
- * boundaries are converted from the interval's coordinate system to the source's
- * coordinate system so that GatherResult queries the correct data range.
- *
- * When no conversion is needed (same TimeFrame, or either is null), a non-owning
- * alias of the original intervals is returned to avoid unnecessary copies.
- *
- * @param intervals The original interval series (in its own TimeFrame)
- * @param source_tf The source data's TimeFrame
- * @return Shared pointer to intervals with boundaries in the source's TimeFrame
- */
-std::shared_ptr<DigitalIntervalSeries> prepareIntervalsForGather(
-        DigitalIntervalSeries const & intervals,
-        std::shared_ptr<TimeFrame> const & source_tf) {
-
-    auto interval_tf = intervals.getTimeFrame();
-
-    // No conversion needed if same TimeFrame or either is null
-    if (!source_tf || !interval_tf || source_tf.get() == interval_tf.get()) {
-        return borrowAsShared(intervals);
-    }
-
-    // Convert interval boundaries from interval's TimeFrame to source's TimeFrame
-    auto const & interval_data = intervals.view();
-    std::vector<Interval> converted;
-    converted.reserve(interval_data.size());
-
-    for (auto const & iv: interval_data) {
-        auto [new_start, new_end] = convertTimeFrameRange(
-                TimeFrameIndex(iv.interval.start),
-                TimeFrameIndex(iv.interval.end),
-                *interval_tf, *source_tf);
-        converted.push_back(Interval{new_start.getValue(), new_end.getValue()});
-    }
-
-    auto result = std::make_shared<DigitalIntervalSeries>(converted);
-    result->setTimeFrame(source_tf);
-    return result;
-}
-
 }// anonymous namespace
 
 // ============================================================================
@@ -197,10 +154,11 @@ std::shared_ptr<TensorData> analogIntervalReduction(
 
     using TimeValuePoint = AnalogTimeSeries::TimeValuePoint;
 
-    // Create GatherResult with cross-TimeFrame conversion if needed
+    // GatherResult converts interval bounds to the source TimeFrame at query time.
     auto analog_ptr = borrowAsShared(analog);
-    auto gather_intervals = prepareIntervalsForGather(intervals, analog.getTimeFrame());
-    auto gather = GatherResult<AnalogTimeSeries>::create(analog_ptr, gather_intervals);
+    auto gather = GatherResult<AnalogTimeSeries>::create(
+            analog_ptr,
+            borrowAsShared(intervals));
 
     ctx.reportProgress(15);
 
@@ -274,10 +232,11 @@ std::shared_ptr<TensorData> eventIntervalReduction(
 
     using EventElement = Neuralyzer::Gather::element_type_of_t<DigitalEventSeries>;
 
-    // Create GatherResult with cross-TimeFrame conversion if needed
+    // GatherResult converts interval bounds to the source TimeFrame at query time.
     auto events_ptr = borrowAsShared(events);
-    auto gather_intervals = prepareIntervalsForGather(intervals, events.getTimeFrame());
-    auto gather = GatherResult<DigitalEventSeries>::create(events_ptr, gather_intervals);
+    auto gather = GatherResult<DigitalEventSeries>::create(
+            events_ptr,
+            borrowAsShared(intervals));
 
     ctx.reportProgress(15);
 
@@ -351,10 +310,11 @@ std::shared_ptr<TensorData> intervalOverlapReduction(
 
     using IntervalElement = Neuralyzer::Gather::element_type_of_t<DigitalIntervalSeries>;
 
-    // Create GatherResult with cross-TimeFrame conversion if needed
+    // GatherResult converts interval bounds to the source TimeFrame at query time.
     auto source_ptr = borrowAsShared(source);
-    auto gather_intervals = prepareIntervalsForGather(intervals, source.getTimeFrame());
-    auto gather = GatherResult<DigitalIntervalSeries>::create(source_ptr, gather_intervals);
+    auto gather = GatherResult<DigitalIntervalSeries>::create(
+            source_ptr,
+            borrowAsShared(intervals));
 
     ctx.reportProgress(15);
 

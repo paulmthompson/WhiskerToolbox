@@ -5,6 +5,7 @@
 
 #include "TensorDesign/TensorDesignBuilder.hpp"
 
+#include "../fixtures/GatherAlignmentFixtures.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
@@ -31,10 +32,13 @@ using Neuralyzer::TensorDesign::TensorDesignSpec;
 
 namespace {
 
+using Neuralyzer::Test::GatherFixtures::createIdentityTimeFrameForMax;
+using Neuralyzer::Test::GatherFixtures::createTimeFrameForRate;
+
 constexpr char const * kMeanValuePipelineJson =
         R"({"steps": [], "range_reduction": {"reduction_name": "MeanValue"}})";
 
-template <typename T>
+template<typename T>
 T requireValue(std::optional<T> const & opt) {
     if (!opt.has_value()) {
         throw std::runtime_error("expected optional value");
@@ -52,6 +56,15 @@ std::shared_ptr<AnalogTimeSeries> createLinearAnalog(std::size_t num_samples) {
         times.emplace_back(static_cast<int64_t>(i));
     }
     return std::make_shared<AnalogTimeSeries>(std::move(data), std::move(times));
+}
+
+/**
+ * @brief Replace DataManager's default clock with an identity TimeFrame.
+ * @pre max_time must cover all source and row indices inserted under TimeKey("time").
+ * @post Data registered with TimeKey("time") receives a non-empty identity TimeFrame.
+ */
+void setDefaultIdentityTimeFrame(DataManager & dm, int64_t max_time) {
+    REQUIRE(dm.setTime(TimeKey("time"), createIdentityTimeFrameForMax(max_time), true));
 }
 
 std::shared_ptr<DigitalIntervalSeries> createIntervalSeries(
@@ -104,6 +117,7 @@ TEST_CASE("parseDesignJson rejects unknown row_type", "[TensorDesign]") {
 
 TEST_CASE("buildTensor builds interval-row tensor from design spec", "[TensorDesign]") {
     DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 100);
     auto analog = createLinearAnalog(100);
     dm.setData<AnalogTimeSeries>("signal", analog, TimeKey("time"));
     auto intervals = createIntervalSeries({{10, 20}, {50, 60}});
@@ -127,8 +141,37 @@ TEST_CASE("buildTensor builds interval-row tensor from design spec", "[TensorDes
     CHECK_THAT(values[1], WithinAbs(55.0, 0.01));
 }
 
+TEST_CASE("buildTensor converts interval-row windows across TimeFrames", "[TensorDesign][GatherResult]") {
+    DataManager dm;
+    REQUIRE(dm.setTime(TimeKey("source_time"), createIdentityTimeFrameForMax(100)));
+    REQUIRE(dm.setTime(TimeKey("row_time"), createTimeFrameForRate(31, 2)));
+
+    auto analog = createLinearAnalog(100);
+    dm.setData<AnalogTimeSeries>("signal", analog, TimeKey("source_time"));
+    auto intervals = createIntervalSeries({{5, 10}, {25, 30}});
+    dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("row_time"));
+
+    TensorDesignSpec spec;
+    spec.row_source_key = "intervals";
+    spec.row_type = DesignRowType::Interval;
+    spec.columns.push_back({
+            .column_name = "mean_signal",
+            .source_key = "signal",
+            .pipeline_json = kMeanValuePipelineJson,
+    });
+
+    auto const built = requireValue(buildTensor(dm, spec));
+    REQUIRE(built.numRows() == 2);
+    REQUIRE(built.numColumns() == 1);
+
+    auto const values = built.getColumn(0);
+    CHECK_THAT(values[0], WithinAbs(15.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(55.0, 0.01));
+}
+
 TEST_CASE("buildTensor fails when columns are empty", "[TensorDesign]") {
     DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 5);
     auto intervals = createIntervalSeries({{0, 5}});
     dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("time"));
 
@@ -156,6 +199,7 @@ TEST_CASE("buildTensor rejects ordinal row type", "[TensorDesign]") {
 
 TEST_CASE("populateDataManager requires tensor_key", "[TensorDesign]") {
     DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 20);
     auto analog = createLinearAnalog(20);
     dm.setData<AnalogTimeSeries>("signal", analog, TimeKey("time"));
     auto intervals = createIntervalSeries({{0, 5}});
@@ -175,6 +219,7 @@ TEST_CASE("populateDataManager requires tensor_key", "[TensorDesign]") {
 
 TEST_CASE("populateDataManager registers tensor in DataManager", "[TensorDesign]") {
     DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 20);
     auto analog = createLinearAnalog(20);
     dm.setData<AnalogTimeSeries>("signal", analog, TimeKey("time"));
     auto intervals = createIntervalSeries({{0, 5}});

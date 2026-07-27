@@ -3,15 +3,31 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
-#include <vector>
-#include <memory>
+#include <algorithm>
 #include <cmath>
 #include <functional>
+#include <memory>
+#include <numeric>
+#include <vector>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
+
+/**
+ * @brief Create an identity TimeFrame large enough for generated analog test data.
+ *
+ * @pre @p max_time is the largest generated time index, or zero for empty data.
+ * @post The returned TimeFrame maps each index to the same physical time value.
+ */
+[[nodiscard]] inline std::shared_ptr<TimeFrame> makeAnalogBuilderIdentityTimeFrame(int64_t max_time) {
+    auto const size = static_cast<int>(std::max<int64_t>(max_time + 10'000, 10'000));
+    std::vector<int> times(static_cast<std::size_t>(size));
+    std::iota(times.begin(), times.end(), 0);
+    return std::make_shared<TimeFrame>(times);
+}
 
 /**
  * @brief Lightweight builder for AnalogTimeSeries objects
@@ -42,7 +58,7 @@ public:
      * @brief Specify values explicitly
      * @param values Vector of analog values
      */
-    AnalogTimeSeriesBuilder& withValues(std::vector<float> values) {
+    AnalogTimeSeriesBuilder & withValues(std::vector<float> values) {
         m_values = std::move(values);
         return *this;
     }
@@ -51,9 +67,9 @@ public:
      * @brief Specify time indices explicitly
      * @param times Vector of time indices (must match values size)
      */
-    AnalogTimeSeriesBuilder& atTimes(std::vector<int> times) {
+    AnalogTimeSeriesBuilder & atTimes(std::vector<int> times) {
         m_time_indices.clear();
-        for (int t : times) {
+        for (int t: times) {
             m_time_indices.emplace_back(t);
         }
         return *this;
@@ -63,7 +79,7 @@ public:
      * @brief Use sequential time indices starting from 0
      * Creates indices {0, 1, 2, ...} matching the number of values
      */
-    AnalogTimeSeriesBuilder& withSequentialTimes() {
+    AnalogTimeSeriesBuilder & withSequentialTimes() {
         m_time_indices.clear();
         for (size_t i = 0; i < m_values.size(); ++i) {
             m_time_indices.emplace_back(static_cast<int64_t>(i));
@@ -78,10 +94,10 @@ public:
      * @param end_time Ending time index (inclusive)
      * @param step Time step between samples
      */
-    AnalogTimeSeriesBuilder& withConstant(float value, int start_time, int end_time, int step = 1) {
+    AnalogTimeSeriesBuilder & withConstant(float value, int start_time, int end_time, int step = 1) {
         m_values.clear();
         m_time_indices.clear();
-        
+
         for (int t = start_time; t <= end_time; t += step) {
             m_values.push_back(value);
             m_time_indices.emplace_back(t);
@@ -95,10 +111,10 @@ public:
      * @param end_time Ending time index (inclusive)
      * @param peak_value Peak value at midpoint
      */
-    AnalogTimeSeriesBuilder& withTriangleWave(int start_time, int end_time, float peak_value) {
+    AnalogTimeSeriesBuilder & withTriangleWave(int start_time, int end_time, float peak_value) {
         m_values.clear();
         m_time_indices.clear();
-        
+
         int mid = (start_time + end_time) / 2;
         for (int t = start_time; t <= end_time; ++t) {
             float value;
@@ -123,13 +139,13 @@ public:
      * @param amplitude Amplitude of the wave
      * @param phase Phase offset in radians
      */
-    AnalogTimeSeriesBuilder& withSineWave(int start_time, int end_time, 
-                                          float frequency = 0.01f,  // 1 cycle per 100 time units
-                                          float amplitude = 100.0f, 
-                                          float phase = 0.0f) {
+    AnalogTimeSeriesBuilder & withSineWave(int start_time, int end_time,
+                                           float frequency = 0.01f,// 1 cycle per 100 time units
+                                           float amplitude = 100.0f,
+                                           float phase = 0.0f) {
         m_values.clear();
         m_time_indices.clear();
-        
+
         for (int t = start_time; t <= end_time; ++t) {
             float value = amplitude * std::sin(2.0f * static_cast<float>(M_PI) * frequency * static_cast<float>(t) + phase);
             m_values.push_back(value);
@@ -146,13 +162,13 @@ public:
      * @param amplitude Amplitude of the wave
      * @param phase Phase offset in radians
      */
-    AnalogTimeSeriesBuilder& withCosineWave(int start_time, int end_time, 
-                                            float frequency = 0.01f, 
-                                            float amplitude = 100.0f, 
-                                            float phase = 0.0f) {
+    AnalogTimeSeriesBuilder & withCosineWave(int start_time, int end_time,
+                                             float frequency = 0.01f,
+                                             float amplitude = 100.0f,
+                                             float phase = 0.0f) {
         m_values.clear();
         m_time_indices.clear();
-        
+
         for (int t = start_time; t <= end_time; ++t) {
             float value = amplitude * std::cos(2.0f * static_cast<float>(M_PI) * frequency * static_cast<float>(t) + phase);
             m_values.push_back(value);
@@ -169,13 +185,13 @@ public:
      * @param high_value High level value
      * @param low_value Low level value
      */
-    AnalogTimeSeriesBuilder& withSquareWave(int start_time, int end_time, 
-                                            int period, 
-                                            float high_value = 1.0f, 
-                                            float low_value = 0.0f) {
+    AnalogTimeSeriesBuilder & withSquareWave(int start_time, int end_time,
+                                             int period,
+                                             float high_value = 1.0f,
+                                             float low_value = 0.0f) {
         m_values.clear();
         m_time_indices.clear();
-        
+
         for (int t = start_time; t <= end_time; ++t) {
             float value = ((t / period) % 2 == 0) ? high_value : low_value;
             m_values.push_back(value);
@@ -191,14 +207,14 @@ public:
      * @param start_value Starting value
      * @param end_value Ending value
      */
-    AnalogTimeSeriesBuilder& withRamp(int start_time, int end_time, 
-                                      float start_value, float end_value) {
+    AnalogTimeSeriesBuilder & withRamp(int start_time, int end_time,
+                                       float start_value, float end_value) {
         m_values.clear();
         m_time_indices.clear();
-        
+
         int count = end_time - start_time + 1;
         float slope = (end_value - start_value) / static_cast<float>(count - 1);
-        
+
         for (int i = 0; i < count; ++i) {
             m_values.push_back(start_value + slope * static_cast<float>(i));
             m_time_indices.emplace_back(start_time + i);
@@ -212,11 +228,11 @@ public:
      * @param end_time Ending time index (inclusive)
      * @param func Function taking time index and returning value
      */
-    AnalogTimeSeriesBuilder& withFunction(int start_time, int end_time, 
-                                          std::function<float(int)> func) {
+    AnalogTimeSeriesBuilder & withFunction(int start_time, int end_time,
+                                           std::function<float(int)> func) {
         m_values.clear();
         m_time_indices.clear();
-        
+
         for (int t = start_time; t <= end_time; ++t) {
             m_values.push_back(func(t));
             m_time_indices.emplace_back(t);
@@ -229,20 +245,25 @@ public:
      * @return Shared pointer to constructed AnalogTimeSeries
      */
     std::shared_ptr<AnalogTimeSeries> build() const {
-        return std::make_shared<AnalogTimeSeries>(m_values, m_time_indices);
+        auto series = std::make_shared<AnalogTimeSeries>(m_values, m_time_indices);
+        auto const max_time = m_time_indices.empty()
+                                      ? int64_t{0}
+                                      : std::ranges::max(m_time_indices).getValue();
+        series->setTimeFrame(makeAnalogBuilderIdentityTimeFrame(max_time));
+        return series;
     }
 
     /**
      * @brief Get the values (for inspection)
      */
-    const std::vector<float>& getValues() const {
+    std::vector<float> const & getValues() const {
         return m_values;
     }
 
     /**
      * @brief Get the time indices (for inspection)
      */
-    const std::vector<TimeFrameIndex>& getTimeIndices() const {
+    std::vector<TimeFrameIndex> const & getTimeIndices() const {
         return m_time_indices;
     }
 
@@ -251,4 +272,4 @@ private:
     std::vector<TimeFrameIndex> m_time_indices;
 };
 
-#endif // ANALOG_TIME_SERIES_BUILDER_HPP
+#endif// ANALOG_TIME_SERIES_BUILDER_HPP

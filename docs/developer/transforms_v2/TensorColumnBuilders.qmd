@@ -84,6 +84,7 @@ Key test files:
 ## Related documentation
 
 - [Tensor stack overview](../tensor_stack.qmd)
+- [Column row pipeline (design)](../TensorDesign/column_row_pipeline.qmd) — planned `row_pipeline_json` per column
 - [TensorDesign Builder](../TensorDesign/TensorDesignBuilder.qmd) — JSON assembly on top of builders
 - [Pipeline loader](pipeline_loader.qmd) — `PipelineDescriptor` JSON format
 - [TableView → Tensor refactoring plan](../tableview_to_tensor_refactoring_plan.md) — design history

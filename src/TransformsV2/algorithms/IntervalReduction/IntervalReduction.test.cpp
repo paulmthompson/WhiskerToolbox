@@ -14,6 +14,7 @@
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
 
+#include "../../../../tests/fixtures/GatherAlignmentFixtures.hpp"
 #include "fixtures/builders/AnalogTimeSeriesBuilder.hpp"
 #include "fixtures/builders/DigitalTimeSeriesBuilder.hpp"
 
@@ -21,6 +22,8 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include <memory>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 using namespace Neuralyzer::Transforms::V2;
@@ -31,9 +34,24 @@ using namespace Neuralyzer::Transforms::V2::Examples;
 // ============================================================================
 namespace {
 
+using Neuralyzer::Test::GatherFixtures::createIdentityTimeFrameForMax;
+
 float tensorAt(TensorData const & t, std::size_t row, std::size_t col) {
     std::size_t idx[2] = {row, col};
     return t.at(std::span<std::size_t const>(idx, 2));
+}
+
+/**
+ * @brief Require a DataManager output variant by key.
+ * @pre dm may or may not contain key; missing keys are reported as test failures via exception.
+ * @post Returned variant contains the value registered under key.
+ */
+DataTypeVariant requireDataVariant(DataManager & dm, std::string const & key) {
+    auto variant = dm.getDataVariant(key);
+    if (!variant.has_value()) {
+        throw std::runtime_error("Expected DataManager output key: " + key);
+    }
+    return variant.value();
 }
 
 }// anonymous namespace
@@ -391,7 +409,7 @@ TEST_CASE("V2 IntervalReduction: JSON Pipeline Execution",
 
     SECTION("AnalogIntervalReduction via DataManagerPipelineExecutor") {
         DataManager dm;
-        auto time_frame = std::make_shared<TimeFrame>();
+        auto time_frame = createIdentityTimeFrameForMax(20);
         dm.setTime(TimeKey("default"), time_frame);
 
         // Create analog signal: values [0..9] at times [0..9]
@@ -418,10 +436,8 @@ TEST_CASE("V2 IntervalReduction: JSON Pipeline Execution",
         REQUIRE(result.success);
 
         // Verify output is stored in DataManager
-        auto output_variant = dm.getDataVariant("reduced_tensor");
-        REQUIRE(output_variant.has_value());
-
-        auto tensor_ptr = std::get<std::shared_ptr<TensorData>>(*output_variant);
+        auto output_variant = requireDataVariant(dm, "reduced_tensor");
+        auto tensor_ptr = std::get<std::shared_ptr<TensorData>>(output_variant);
         REQUIRE(tensor_ptr != nullptr);
         REQUIRE(tensor_ptr->numRows() == 2);
         REQUIRE(tensor_ptr->numColumns() == 1);
@@ -431,7 +447,7 @@ TEST_CASE("V2 IntervalReduction: JSON Pipeline Execution",
 
     SECTION("EventIntervalReduction via DataManagerPipelineExecutor") {
         DataManager dm;
-        auto time_frame = std::make_shared<TimeFrame>();
+        auto time_frame = createIdentityTimeFrameForMax(20);
         dm.setTime(TimeKey("default"), time_frame);
 
         auto des = DigitalEventSeriesBuilder()
@@ -454,10 +470,8 @@ TEST_CASE("V2 IntervalReduction: JSON Pipeline Execution",
         auto result = executor.execute();
         REQUIRE(result.success);
 
-        auto output_variant = dm.getDataVariant("event_counts");
-        REQUIRE(output_variant.has_value());
-
-        auto tensor_ptr = std::get<std::shared_ptr<TensorData>>(*output_variant);
+        auto output_variant = requireDataVariant(dm, "event_counts");
+        auto tensor_ptr = std::get<std::shared_ptr<TensorData>>(output_variant);
         REQUIRE(tensor_ptr != nullptr);
         REQUIRE(tensor_ptr->numRows() == 2);
         REQUIRE_THAT(tensorAt(*tensor_ptr, 0, 0), Catch::Matchers::WithinAbs(2.0, 0.01));
@@ -466,7 +480,7 @@ TEST_CASE("V2 IntervalReduction: JSON Pipeline Execution",
 
     SECTION("IntervalOverlapReduction via DataManagerPipelineExecutor") {
         DataManager dm;
-        auto time_frame = std::make_shared<TimeFrame>();
+        auto time_frame = createIdentityTimeFrameForMax(20);
         dm.setTime(TimeKey("default"), time_frame);
 
         auto source = DigitalIntervalSeriesBuilder()
@@ -491,10 +505,8 @@ TEST_CASE("V2 IntervalReduction: JSON Pipeline Execution",
         auto result = executor.execute();
         REQUIRE(result.success);
 
-        auto output_variant = dm.getDataVariant("overlap_counts");
-        REQUIRE(output_variant.has_value());
-
-        auto tensor_ptr = std::get<std::shared_ptr<TensorData>>(*output_variant);
+        auto output_variant = requireDataVariant(dm, "overlap_counts");
+        auto tensor_ptr = std::get<std::shared_ptr<TensorData>>(output_variant);
         REQUIRE(tensor_ptr != nullptr);
         REQUIRE(tensor_ptr->numRows() == 2);
         REQUIRE_THAT(tensorAt(*tensor_ptr, 0, 0), Catch::Matchers::WithinAbs(2.0, 0.01));
@@ -517,7 +529,7 @@ TEST_CASE("V2 IntervalReduction: Cross-TimeFrame AnalogIntervalReduction",
         // Each index maps to 100ms intervals
         std::vector<int> interval_times;
         interval_times.reserve(40);
-for (int i = 0; i < 40; ++i) {
+        for (int i = 0; i < 40; ++i) {
             interval_times.push_back(i * 100);// 0, 100, 200, ..., 3900 ms
         }
         auto interval_tf = std::make_shared<TimeFrame>(interval_times);
@@ -526,7 +538,7 @@ for (int i = 0; i < 40; ++i) {
         // Each index maps to 10ms intervals
         std::vector<int> source_times;
         source_times.reserve(400);
-for (int i = 0; i < 400; ++i) {
+        for (int i = 0; i < 400; ++i) {
             source_times.push_back(i * 10);// 0, 10, 20, ..., 3990 ms
         }
         auto source_tf = std::make_shared<TimeFrame>(source_times);
@@ -640,7 +652,7 @@ TEST_CASE("V2 IntervalReduction: Cross-TimeFrame EventIntervalReduction",
         // Interval TimeFrame: 10 Hz → times [0, 100, 200, ...]
         std::vector<int> interval_times;
         interval_times.reserve(20);
-for (int i = 0; i < 20; ++i) {
+        for (int i = 0; i < 20; ++i) {
             interval_times.push_back(i * 100);
         }
         auto interval_tf = std::make_shared<TimeFrame>(interval_times);
@@ -648,7 +660,7 @@ for (int i = 0; i < 20; ++i) {
         // Source TimeFrame: 100 Hz → times [0, 10, 20, ...]
         std::vector<int> source_times;
         source_times.reserve(200);
-for (int i = 0; i < 200; ++i) {
+        for (int i = 0; i < 200; ++i) {
             source_times.push_back(i * 10);
         }
         auto source_tf = std::make_shared<TimeFrame>(source_times);
@@ -700,7 +712,7 @@ TEST_CASE("V2 IntervalReduction: Cross-TimeFrame IntervalOverlapReduction",
         // Interval TimeFrame: 10 Hz
         std::vector<int> interval_times;
         interval_times.reserve(20);
-for (int i = 0; i < 20; ++i) {
+        for (int i = 0; i < 20; ++i) {
             interval_times.push_back(i * 100);
         }
         auto interval_tf = std::make_shared<TimeFrame>(interval_times);
@@ -708,7 +720,7 @@ for (int i = 0; i < 20; ++i) {
         // Source TimeFrame: 100 Hz
         std::vector<int> source_times;
         source_times.reserve(200);
-for (int i = 0; i < 200; ++i) {
+        for (int i = 0; i < 200; ++i) {
             source_times.push_back(i * 10);
         }
         auto source_tf = std::make_shared<TimeFrame>(source_times);
@@ -767,7 +779,7 @@ TEST_CASE("V2 IntervalReduction: Cross-TimeFrame JSON Pipeline",
         // Two TimeFrames at different rates
         std::vector<int> interval_times;
         interval_times.reserve(20);
-for (int i = 0; i < 20; ++i) {
+        for (int i = 0; i < 20; ++i) {
             interval_times.push_back(i * 100);// 10 Hz
         }
         auto interval_tf = std::make_shared<TimeFrame>(interval_times);
@@ -775,7 +787,7 @@ for (int i = 0; i < 20; ++i) {
 
         std::vector<int> source_times;
         source_times.reserve(200);
-for (int i = 0; i < 200; ++i) {
+        for (int i = 0; i < 200; ++i) {
             source_times.push_back(i * 10);// 100 Hz
         }
         auto source_tf = std::make_shared<TimeFrame>(source_times);
@@ -805,10 +817,8 @@ for (int i = 0; i < 200; ++i) {
         auto result = executor.execute();
         REQUIRE(result.success);
 
-        auto output_variant = dm.getDataVariant("reduced_tensor");
-        REQUIRE(output_variant.has_value());
-
-        auto tensor_ptr = std::get<std::shared_ptr<TensorData>>(*output_variant);
+        auto output_variant = requireDataVariant(dm, "reduced_tensor");
+        auto tensor_ptr = std::get<std::shared_ptr<TensorData>>(output_variant);
         REQUIRE(tensor_ptr != nullptr);
         REQUIRE(tensor_ptr->numRows() == 2);
         REQUIRE(tensor_ptr->numColumns() == 1);

@@ -19,25 +19,28 @@
 
 #include "TransformsV2/core/TensorColumnBuilders.hpp"
 
-#include "DataManager/DataManager.hpp"
+#include "../fixtures/GatherAlignmentFixtures.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "Tensors/TensorData.hpp"
 #include "Tensors/RowDescriptor.hpp"
+#include "Tensors/TensorData.hpp"
 #include "Tensors/storage/LazyColumnTensorStorage.hpp"
 
+#include "TransformsV2/algorithms/ZScoreNormalization/ZScoreNormalizationV2.hpp"
+#include "TransformsV2/core/ElementRegistry.hpp"
+#include "TransformsV2/core/RangeReductionRegistry.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/io/PipelineLoader.hpp"
-#include "TransformsV2/core/RangeReductionRegistry.hpp"
-#include "TransformsV2/core/ElementRegistry.hpp"
-#include "TransformsV2/algorithms/ZScoreNormalization/ZScoreNormalizationV2.hpp"
 
 #include "TimeFrame/StrongTimeTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
+#include <algorithm>
 #include <any>
 #include <cmath>
 #include <memory>
@@ -54,6 +57,17 @@ using Catch::Matchers::WithinAbs;
 
 namespace {
 
+using Neuralyzer::Test::GatherFixtures::createIdentityTimeFrameForMax;
+
+/**
+ * @brief Replace DataManager's default clock with a non-empty identity TimeFrame.
+ * @pre max_time must cover all source and row indices inserted under TimeKey("time").
+ * @post Data registered with TimeKey("time") receives a usable TimeFrame.
+ */
+void setDefaultIdentityTimeFrame(DataManager & dm, int64_t max_time) {
+    REQUIRE(dm.setTime(TimeKey("time"), createIdentityTimeFrameForMax(max_time), true));
+}
+
 /**
  * @brief Create AnalogTimeSeries with custom values at timestamp indices 0..N-1.
  */
@@ -61,42 +75,49 @@ std::shared_ptr<AnalogTimeSeries> createAnalogWithValues(std::vector<float> cons
     std::vector<TimeFrameIndex> times;
     times.reserve(values.size());
     for (std::size_t i = 0; i < values.size(); ++i) {
-        times.push_back(TimeFrameIndex(static_cast<int64_t>(i)));
+        times.emplace_back(static_cast<int64_t>(i));
     }
-    return std::make_shared<AnalogTimeSeries>(
-        std::vector<float>(values), std::move(times));
+    auto series = std::make_shared<AnalogTimeSeries>(
+            std::vector<float>(values), std::move(times));
+    series->setTimeFrame(createIdentityTimeFrameForMax(static_cast<int64_t>(values.size())));
+    return series;
 }
 
 std::shared_ptr<DigitalIntervalSeries> createIntervalSeries(
-    std::vector<std::pair<int64_t, int64_t>> const & intervals)
-{
+        std::vector<std::pair<int64_t, int64_t>> const & intervals) {
     std::vector<Interval> vec;
     vec.reserve(intervals.size());
-    for (auto const & [s, e] : intervals) {
+    for (auto const & [s, e]: intervals) {
         vec.push_back(Interval{s, e});
     }
-    return std::make_shared<DigitalIntervalSeries>(vec);
+    auto series = std::make_shared<DigitalIntervalSeries>(vec);
+    int64_t max_time = 0;
+    for (auto const & [s, e]: intervals) {
+        max_time = std::max(max_time, std::max(s, e));
+    }
+    series->setTimeFrame(createIdentityTimeFrameForMax(max_time));
+    return series;
 }
 
 std::vector<TimeFrameIndex> makeRowTimes(std::vector<int64_t> const & ts) {
     std::vector<TimeFrameIndex> result;
     result.reserve(ts.size());
-    for (auto t : ts) {
-        result.push_back(TimeFrameIndex(t));
+    for (auto t: ts) {
+        result.emplace_back(t);
     }
     return result;
 }
 
 std::unique_ptr<DataManager> makeDMWithAnalogValues(
-    std::string const & key, std::vector<float> const & values)
-{
+        std::string const & key, std::vector<float> const & values) {
     auto dm = std::make_unique<DataManager>();
+    setDefaultIdentityTimeFrame(*dm, static_cast<int64_t>(values.size()));
     auto analog = createAnalogWithValues(values);
     dm->setData<AnalogTimeSeries>(key, analog, TimeKey("time"));
     return dm;
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // =============================================================================
 // Section A: Timestamp rows with element steps (no reduction)
@@ -139,9 +160,9 @@ TEST_CASE("MultiStep timestamp - element steps return NaN for missing timestamps
     auto values = provider();
 
     REQUIRE(values.size() == 3);
-    CHECK_THAT(values[0], WithinAbs(-1.0f, 1e-5f));  // (10-20)/10 = -1
-    CHECK(std::isnan(values[1]));                      // missing → NaN
-    CHECK_THAT(values[2], WithinAbs(1.0f, 1e-5f));    // (30-20)/10 = 1
+    CHECK_THAT(values[0], WithinAbs(-1.0f, 1e-5f));// (10-20)/10 = -1
+    CHECK(std::isnan(values[1]));                  // missing → NaN
+    CHECK_THAT(values[2], WithinAbs(1.0f, 1e-5f)); // (30-20)/10 = 1
 }
 
 TEST_CASE("MultiStep timestamp - empty pipeline falls back to passthrough",
@@ -149,7 +170,7 @@ TEST_CASE("MultiStep timestamp - empty pipeline falls back to passthrough",
     auto dm = makeDMWithAnalogValues("src", {5.0f, 10.0f, 15.0f});
     auto row_times = makeRowTimes({0, 1, 2});
 
-    TransformPipeline pipeline;  // empty, no steps, no reduction
+    TransformPipeline pipeline;// empty, no steps, no reduction
     auto provider = buildPipelineColumnProvider(*dm, "src", row_times, std::move(pipeline));
     auto values = provider();
 
@@ -176,8 +197,8 @@ TEST_CASE("MultiStep timestamp - range reduction on timestamp rows is rejected",
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
     CHECK_THROWS_AS(
-        buildPipelineColumnProvider(*dm, "src", row_times, std::move(pipeline)),
-        std::runtime_error);
+            buildPipelineColumnProvider(*dm, "src", row_times, std::move(pipeline)),
+            std::runtime_error);
 }
 
 // =============================================================================
@@ -188,7 +209,7 @@ TEST_CASE("MultiStep interval - element steps + MeanValue reduction",
           "[TensorColumnBuilders][MultiStep]") {
     // Source: values 0,1,2,...,9 at timestamps 0..9
     auto dm = makeDMWithAnalogValues("src",
-        {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f});
+                                     {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f});
     // Intervals are inclusive on both ends: {0,4} gathers timestamps 0,1,2,3,4
     auto intervals = createIntervalSeries({{0, 4}, {5, 9}});
 
@@ -200,7 +221,7 @@ TEST_CASE("MultiStep interval - element steps + MeanValue reduction",
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
-        *dm, "src", intervals, std::move(pipeline));
+            *dm, "src", intervals, std::move(pipeline));
     auto values = provider();
 
     REQUIRE(values.size() == 2);
@@ -214,7 +235,7 @@ TEST_CASE("MultiStep interval - element steps transform values before reduction"
           "[TensorColumnBuilders][MultiStep]") {
     // Source: values 10, 20, 30, 40, 50 at timestamps 0..4
     auto dm = makeDMWithAnalogValues("src", {10.0f, 20.0f, 30.0f, 40.0f, 50.0f});
-    auto intervals = createIntervalSeries({{0, 4}});  // inclusive: timestamps 0-4
+    auto intervals = createIntervalSeries({{0, 4}});// inclusive: timestamps 0-4
 
     // ZScore with mean=30, std=10 → [-2, -1, 0, 1, 2]
     // Then MeanValue → should be 0.0
@@ -224,7 +245,7 @@ TEST_CASE("MultiStep interval - element steps transform values before reduction"
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
-        *dm, "src", intervals, std::move(pipeline));
+            *dm, "src", intervals, std::move(pipeline));
     auto values = provider();
 
     REQUIRE(values.size() == 1);
@@ -235,7 +256,7 @@ TEST_CASE("MultiStep interval - element steps with MaxValue reduction",
           "[TensorColumnBuilders][MultiStep]") {
     // Source: values 1, 3, 5, 7, 9 at timestamps 0..4
     auto dm = makeDMWithAnalogValues("src", {1.0f, 3.0f, 5.0f, 7.0f, 9.0f});
-    auto intervals = createIntervalSeries({{0, 4}});  // inclusive: timestamps 0-4
+    auto intervals = createIntervalSeries({{0, 4}});// inclusive: timestamps 0-4
 
     // ZScore(mean=5, std=2) → [-2, -1, 0, 1, 2]
     // MaxValue → 2.0
@@ -245,7 +266,7 @@ TEST_CASE("MultiStep interval - element steps with MaxValue reduction",
     pipeline.setRangeReductionErased("MaxValue", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
-        *dm, "src", intervals, std::move(pipeline));
+            *dm, "src", intervals, std::move(pipeline));
     auto values = provider();
 
     REQUIRE(values.size() == 1);
@@ -274,13 +295,13 @@ TEST_CASE("MultiStep interval - ZScore with pre-reductions (full pipeline)",
 
     // Element step: ZScore using bound mean/std
     pipeline.addStepWithBindings("ZScoreNormalizeV2",
-        ZScoreNormalizationParamsV2{},
-        {{"mean", "computed_mean"}, {"std_dev", "computed_std"}});
+                                 ZScoreNormalizationParamsV2{},
+                                 {{"mean", "computed_mean"}, {"std_dev", "computed_std"}});
 
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
-        *dm, "src", intervals, std::move(pipeline));
+            *dm, "src", intervals, std::move(pipeline));
     auto values = provider();
 
     REQUIRE(values.size() == 2);
@@ -294,7 +315,7 @@ TEST_CASE("MultiStep interval - pre-reduction computes per-interval stats",
     // Two intervals with very different value ranges to verify per-interval computation
     // Source: timestamps 0-9
     auto dm = makeDMWithAnalogValues("src",
-        {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 100.0f, 200.0f, 300.0f, 400.0f, 500.0f});
+                                     {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 100.0f, 200.0f, 300.0f, 400.0f, 500.0f});
     // Inclusive intervals: [0,4] and [5,9]
     auto intervals = createIntervalSeries({{0, 4}, {5, 9}});
 
@@ -304,12 +325,12 @@ TEST_CASE("MultiStep interval - pre-reduction computes per-interval stats",
     TransformPipeline pipeline;
     pipeline.addPreReduction("MeanValueRaw", "computed_mean");
     pipeline.addStepWithBindings("ZScoreNormalizeV2",
-        ZScoreNormalizationParamsV2{.std_dev = 1.0f},
-        {{"mean", "computed_mean"}});
+                                 ZScoreNormalizationParamsV2{.std_dev = 1.0f},
+                                 {{"mean", "computed_mean"}});
     pipeline.setRangeReductionErased("MaxValue", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
-        *dm, "src", intervals, std::move(pipeline));
+            *dm, "src", intervals, std::move(pipeline));
     auto values = provider();
 
     REQUIRE(values.size() == 2);
@@ -327,7 +348,7 @@ TEST_CASE("MultiStep recipe - timestamp rows with element step JSON",
     auto row_times = makeRowTimes({0, 1, 2});
 
     // JSON pipeline with ZScore step (fixed params)
-    std::string json = R"({
+    std::string const json = R"({
         "steps": [
             {
                 "step_id": "zscore_step",
@@ -355,10 +376,10 @@ TEST_CASE("MultiStep recipe - timestamp rows with element step JSON",
 TEST_CASE("MultiStep recipe - interval rows with step + reduction JSON",
           "[TensorColumnBuilders][MultiStep]") {
     auto dm = makeDMWithAnalogValues("src", {10.0f, 20.0f, 30.0f, 40.0f, 50.0f});
-    auto intervals = createIntervalSeries({{0, 4}});  // inclusive: timestamps 0-4
+    auto intervals = createIntervalSeries({{0, 4}});// inclusive: timestamps 0-4
 
     // JSON: ZScore(mean=30, std=10) → MeanValue
-    std::string json = R"({
+    std::string const json = R"({
         "steps": [
             {
                 "step_id": "zscore_step",
@@ -386,12 +407,12 @@ TEST_CASE("MultiStep recipe - interval rows with step + reduction JSON",
 TEST_CASE("MultiStep recipe - interval rows with pre-reductions + steps JSON",
           "[TensorColumnBuilders][MultiStep]") {
     auto dm = makeDMWithAnalogValues("src",
-        {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f});
+                                     {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f});
     // Inclusive intervals: [0,4] and [5,9]
     auto intervals = createIntervalSeries({{0, 4}, {5, 9}});
 
     // Full ZScore pipeline via JSON: pre-reduce mean/std → bind → normalize → MeanValue
-    std::string json = R"({
+    std::string const json = R"({
         "pre_reductions": [
             { "reduction_name": "MeanValueRaw", "output_key": "computed_mean" },
             { "reduction_name": "StdValueRaw", "output_key": "computed_std" }
@@ -440,8 +461,8 @@ TEST_CASE("MultiStep timestamp - invalid source key throws",
                      ZScoreNormalizationParamsV2{.mean = 0.0f, .std_dev = 1.0f});
 
     CHECK_THROWS_AS(
-        buildPipelineColumnProvider(*dm, "nonexistent", row_times, std::move(pipeline)),
-        std::runtime_error);
+            buildPipelineColumnProvider(*dm, "nonexistent", row_times, std::move(pipeline)),
+            std::runtime_error);
 }
 
 TEST_CASE("MultiStep interval - empty interval series",
@@ -455,7 +476,7 @@ TEST_CASE("MultiStep interval - empty interval series",
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
-        *dm, "src", intervals, std::move(pipeline));
+            *dm, "src", intervals, std::move(pipeline));
     auto values = provider();
 
     CHECK(values.empty());
@@ -464,7 +485,7 @@ TEST_CASE("MultiStep interval - empty interval series",
 TEST_CASE("MultiStep interval - single-element interval",
           "[TensorColumnBuilders][MultiStep]") {
     auto dm = makeDMWithAnalogValues("src", {42.0f, 0.0f, 0.0f});
-    auto intervals = createIntervalSeries({{0, 0}});  // inclusive: just timestamp 0
+    auto intervals = createIntervalSeries({{0, 0}});// inclusive: just timestamp 0
 
     // ZScore(mean=42, std=1) → (42-42)/1 = 0. MeanValue of single element = 0.
     TransformPipeline pipeline;
@@ -473,7 +494,7 @@ TEST_CASE("MultiStep interval - single-element interval",
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
-        *dm, "src", intervals, std::move(pipeline));
+            *dm, "src", intervals, std::move(pipeline));
     auto values = provider();
 
     REQUIRE(values.size() == 1);
@@ -485,14 +506,14 @@ TEST_CASE("MultiStep interval - reduction-only pipeline still works (regression)
     // Verify that the original reduction-only path (no element steps) still works
     // after the multi-step refactor
     auto dm = makeDMWithAnalogValues("src",
-        {0.0f, 1.0f, 2.0f, 3.0f, 4.0f});
-    auto intervals = createIntervalSeries({{0, 4}});  // inclusive: timestamps 0-4
+                                     {0.0f, 1.0f, 2.0f, 3.0f, 4.0f});
+    auto intervals = createIntervalSeries({{0, 4}});// inclusive: timestamps 0-4
 
     TransformPipeline pipeline;
     pipeline.setRangeReductionErased("MeanValue", std::any{});
 
     auto provider = buildIntervalPipelineProvider(
-        *dm, "src", intervals, std::move(pipeline));
+            *dm, "src", intervals, std::move(pipeline));
     auto values = provider();
 
     REQUIRE(values.size() == 1);
@@ -505,7 +526,7 @@ TEST_CASE("MultiStep end-to-end - lazy tensor with multi-step columns",
     // 1. Raw mean (reduction only)
     // 2. ZScore'd mean (element step + reduction)
     auto dm = makeDMWithAnalogValues("src",
-        {10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f, 70.0f, 80.0f, 90.0f, 100.0f});
+                                     {10.0f, 20.0f, 30.0f, 40.0f, 50.0f, 60.0f, 70.0f, 80.0f, 90.0f, 100.0f});
     // Inclusive intervals: [0,4] and [5,9]
     auto intervals = createIntervalSeries({{0, 4}, {5, 9}});
 
@@ -513,7 +534,7 @@ TEST_CASE("MultiStep end-to-end - lazy tensor with multi-step columns",
     TransformPipeline pipe1;
     pipe1.setRangeReductionErased("MeanValue", std::any{});
     auto col1 = buildIntervalPipelineProvider(
-        *dm, "src", intervals, std::move(pipe1));
+            *dm, "src", intervals, std::move(pipe1));
 
     // Column 2: ZScore(mean=55, std=10) → MeanValue
     TransformPipeline pipe2;
@@ -521,16 +542,15 @@ TEST_CASE("MultiStep end-to-end - lazy tensor with multi-step columns",
                   ZScoreNormalizationParamsV2{.mean = 55.0f, .std_dev = 10.0f});
     pipe2.setRangeReductionErased("MeanValue", std::any{});
     auto col2 = buildIntervalPipelineProvider(
-        *dm, "src", intervals, std::move(pipe2));
+            *dm, "src", intervals, std::move(pipe2));
 
     // Assemble lazy tensor
     std::vector<ColumnSource> columns = {
-        {"raw_mean", std::move(col1)},
-        {"zscore_mean", std::move(col2)}
-    };
+            {"raw_mean", std::move(col1)},
+            {"zscore_mean", std::move(col2)}};
 
     auto tensor = TensorData::createFromLazyColumns(
-        2, std::move(columns), RowDescriptor::ordinal(2));
+            2, std::move(columns), RowDescriptor::ordinal(2));
 
     // Column 0 (raw mean): interval [0,4] → mean(10,20,30,40,50)=30
     //                       interval [5,9] → mean(60,70,80,90,100)=80
