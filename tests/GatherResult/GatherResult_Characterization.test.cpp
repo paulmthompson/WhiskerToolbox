@@ -15,6 +15,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 using Neuralyzer::Gather::expandEvents;
@@ -23,6 +24,7 @@ using Neuralyzer::Test::GatherFixtures::createEventSeries;
 namespace {
 
 using Neuralyzer::Test::GatherFixtures::createIdentityTimeFrame;
+using Neuralyzer::Test::GatherFixtures::createIntervalSeries;
 
 }// namespace
 
@@ -164,4 +166,66 @@ TEST_CASE("GatherResult - centered event window alignment differs from window st
     CHECK(result.intervalAt(0).end == 150);
     CHECK(result.alignmentTimeAt(0) == 100);
     CHECK(result.alignmentTimeAt(0) != static_cast<int64_t>(result.intervalAt(0).start));
+}
+
+TEST_CASE("GatherResult - prepared windows use companion alignment events",
+          "[GatherResult][migration][phase3]") {
+    auto spikes = createEventSeries({5, 10, 15, 20, 25, 30});
+    auto windows = createIntervalSeries({{0, 20}, {5, 25}, {10, 30}});
+    auto alignment_events = createEventSeries({10, 15, 20});
+
+    auto result = gather(spikes, windows, alignment_events);
+
+    REQUIRE(result.size() == 3);
+    REQUIRE(result.windows() == windows);
+    REQUIRE(result.alignmentPoints() == alignment_events);
+
+    CHECK(result.intervalAt(0) == Interval{0, 20});
+    CHECK(result.intervalAt(1) == Interval{5, 25});
+    CHECK(result.intervalAt(2) == Interval{10, 30});
+
+    CHECK(result.alignmentTimeAt(0) == 10);
+    CHECK(result.alignmentTimeAt(1) == 15);
+    CHECK(result.alignmentTimeAt(2) == 20);
+    CHECK(result.alignmentTimeAt(0) != static_cast<int64_t>(result.intervalAt(0).start));
+}
+
+TEST_CASE("GatherResult - prepared metadata survives reorder and materialize",
+          "[GatherResult][migration][phase3]") {
+    auto spikes = createEventSeries({5, 10, 15, 20, 25, 30});
+    auto windows = createIntervalSeries({{0, 20}, {5, 25}, {10, 30}});
+    auto alignment_events = createEventSeries({10, 15, 20});
+
+    auto gathered = gather(spikes, windows, alignment_events);
+    auto reordered = gathered.reorder({2, 0, 1});
+
+    REQUIRE(reordered.size() == gathered.size());
+    CHECK(reordered.windows() == windows);
+    CHECK(reordered.alignmentPoints() == alignment_events);
+    CHECK(reordered.originalIndex(0) == 2);
+    CHECK(reordered.originalIndex(1) == 0);
+    CHECK(reordered.originalIndex(2) == 1);
+    CHECK(reordered.intervalAtReordered(0) == gathered.intervalAt(2));
+    CHECK(reordered.intervalAtReordered(1) == gathered.intervalAt(0));
+    CHECK(reordered.intervalAtReordered(2) == gathered.intervalAt(1));
+    CHECK(reordered.alignmentTimeAt(0) == 20);
+    CHECK(reordered.alignmentTimeAt(1) == 10);
+    CHECK(reordered.alignmentTimeAt(2) == 15);
+
+    auto materialized = reordered.materialize();
+    REQUIRE(materialized.size() == reordered.size());
+    CHECK(materialized.windows() == windows);
+    CHECK(materialized.alignmentPoints() == alignment_events);
+    CHECK(materialized.originalIndex(0) == 2);
+    CHECK(materialized.intervalAtReordered(0) == gathered.intervalAt(2));
+    CHECK(materialized.alignmentTimeAt(0) == 20);
+}
+
+TEST_CASE("GatherResult - prepared alignment point count must match windows",
+          "[GatherResult][migration][phase3]") {
+    auto spikes = createEventSeries({5, 10, 15, 20});
+    auto windows = createIntervalSeries({{0, 20}, {5, 25}});
+    auto alignment_events = createEventSeries({10});
+
+    CHECK_THROWS_AS(gather(spikes, windows, alignment_events), std::invalid_argument);
 }

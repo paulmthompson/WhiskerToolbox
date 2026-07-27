@@ -95,6 +95,7 @@
 #include <ranges>
 #include <stdexcept>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 // =============================================================================
@@ -163,14 +164,6 @@ concept HasElementType = requires {
  */
 template<typename T>
 concept HasTimeFrameAccess = requires(T const & t) {
-    { t.getTimeFrame() } -> std::same_as<std::shared_ptr<TimeFrame>>;
-};
-
-/**
- * @brief Concept for data types that have a TimeFrame
- */
-template<typename T>
-concept HasTimeFrame = requires(T const & t) {
     { t.getTimeFrame() } -> std::same_as<std::shared_ptr<TimeFrame>>;
 };
 
@@ -364,35 +357,12 @@ public:
         requires Neuralyzer::Gather::ViewableDataType<U>
     static GatherResult create(
             std::shared_ptr<U> source,
-            std::shared_ptr<DigitalIntervalSeries> intervals) {
-        assert(source && "GatherResult::create: source must not be null");
-        assert(intervals && "GatherResult::create: intervals must not be null");
-        if (!source || !intervals) {
-            throw std::invalid_argument("GatherResult::create: source and intervals must not be null");
-        }
-
-        GatherResult result;
-        result._source = source;
-        result._views.reserve(intervals->size());
-        result._intervals.reserve(intervals->size());
-
-        auto const source_tf = source->getTimeFrame();
-        auto const interval_tf = intervals->getTimeFrame();
-
-        for (auto const & interval: intervals->view()) {
-            auto const query_interval = Neuralyzer::Gather::convertPreparedWindowToSourceInterval(
-                    interval.interval,
-                    interval_tf,
-                    source_tf);
-            result._intervals.push_back(query_interval);
-            auto view = U::createView(
-                    source,
-                    TimeFrameIndex(query_interval.start),
-                    TimeFrameIndex(query_interval.end));
-            result._views.push_back(std::move(view));
-        }
-
-        return result;
+            std::shared_ptr<DigitalIntervalSeries const> windows,
+            std::shared_ptr<DigitalEventSeries const> alignment_points = nullptr) {
+        return _createFromPreparedWindows<U>(
+                std::move(source),
+                std::move(windows),
+                std::move(alignment_points));
     }
 
     /**
@@ -410,35 +380,12 @@ public:
                  (!Neuralyzer::Gather::ViewableDataType<U>)
     static GatherResult create(
             std::shared_ptr<U> source,
-            std::shared_ptr<DigitalIntervalSeries> intervals) {
-        assert(source && "GatherResult::create: source must not be null");
-        assert(intervals && "GatherResult::create: intervals must not be null");
-        if (!source || !intervals) {
-            throw std::invalid_argument("GatherResult::create: source and intervals must not be null");
-        }
-
-        GatherResult result;
-        result._source = source;
-        result._views.reserve(intervals->size());
-        result._intervals.reserve(intervals->size());
-
-        auto const source_tf = source->getTimeFrame();
-        auto const interval_tf = intervals->getTimeFrame();
-
-        for (auto const & interval: intervals->view()) {
-            auto const query_interval = Neuralyzer::Gather::convertPreparedWindowToSourceInterval(
-                    interval.interval,
-                    interval_tf,
-                    source_tf);
-            result._intervals.push_back(query_interval);
-            auto view = U::createView(
-                    source,
-                    query_interval.start,
-                    query_interval.end);
-            result._views.push_back(std::move(view));
-        }
-
-        return result;
+            std::shared_ptr<DigitalIntervalSeries const> windows,
+            std::shared_ptr<DigitalEventSeries const> alignment_points = nullptr) {
+        return _createFromPreparedWindows<U>(
+                std::move(source),
+                std::move(windows),
+                std::move(alignment_points));
     }
 
     /**
@@ -457,37 +404,12 @@ public:
                  (!Neuralyzer::Gather::ViewableDataTypeInt64<U>)
     static GatherResult create(
             std::shared_ptr<U> source,
-            std::shared_ptr<DigitalIntervalSeries> intervals) {
-        assert(source && "GatherResult::create: source must not be null");
-        assert(intervals && "GatherResult::create: intervals must not be null");
-        if (!source || !intervals) {
-            throw std::invalid_argument("GatherResult::create: source and intervals must not be null");
-        }
-
-        GatherResult result;
-        result._source = source;
-        result._views.reserve(intervals->size());
-        result._intervals.reserve(intervals->size());
-
-        auto const source_tf = source->getTimeFrame();
-        auto const interval_tf = intervals->getTimeFrame();
-
-        for (auto const & interval: intervals->view()) {
-            auto const query_interval = Neuralyzer::Gather::convertPreparedWindowToSourceInterval(
-                    interval.interval,
-                    interval_tf,
-                    source_tf);
-            result._intervals.push_back(query_interval);
-            auto copy = std::make_shared<U>(source->createTimeRangeCopy(
-                    TimeFrameIndex(query_interval.start),
-                    TimeFrameIndex(query_interval.end)));
-            // Inherit TimeFrame and ImageSize from source
-            copy->setTimeFrame(source->getTimeFrame());
-            copy->setImageSize(source->getImageSize());
-            result._views.push_back(std::move(copy));
-        }
-
-        return result;
+            std::shared_ptr<DigitalIntervalSeries const> windows,
+            std::shared_ptr<DigitalEventSeries const> alignment_points = nullptr) {
+        return _createFromPreparedWindows<U>(
+                std::move(source),
+                std::move(windows),
+                std::move(alignment_points));
     }
 
     // ========== Factory Methods for Interval Adapters ==========
@@ -529,8 +451,8 @@ public:
         GatherResult result;
         result._source = source;
         result._views.reserve(interval_source.size());
-        result._intervals.reserve(interval_source.size());
-        result._alignment_times.reserve(interval_source.size());
+        result._query_intervals.reserve(interval_source.size());
+        result._legacy_alignment_times.reserve(interval_source.size());
 
         // Resolve TimeFrames for absolute-time conversion
         auto source_tf = source ? source->getTimeFrame() : nullptr;
@@ -548,8 +470,8 @@ public:
                     aligned_interval.alignment_time,
                     adapter_tf.get());
 
-            result._intervals.push_back(query_interval);
-            result._alignment_times.push_back(alignment_abs_time);
+            result._query_intervals.push_back(query_interval);
+            result._legacy_alignment_times.push_back(alignment_abs_time);
 
             auto view = U::createView(
                     source,
@@ -574,8 +496,8 @@ public:
         GatherResult result;
         result._source = source;
         result._views.reserve(interval_source.size());
-        result._intervals.reserve(interval_source.size());
-        result._alignment_times.reserve(interval_source.size());
+        result._query_intervals.reserve(interval_source.size());
+        result._legacy_alignment_times.reserve(interval_source.size());
 
         // Resolve TimeFrames for absolute-time conversion
         auto source_tf = source ? source->getTimeFrame() : nullptr;
@@ -593,8 +515,8 @@ public:
                     aligned_interval.alignment_time,
                     adapter_tf.get());
 
-            result._intervals.push_back(query_interval);
-            result._alignment_times.push_back(alignment_abs_time);
+            result._query_intervals.push_back(query_interval);
+            result._legacy_alignment_times.push_back(alignment_abs_time);
 
             auto view = U::createView(
                     source,
@@ -620,8 +542,8 @@ public:
         GatherResult result;
         result._source = source;
         result._views.reserve(interval_source.size());
-        result._intervals.reserve(interval_source.size());
-        result._alignment_times.reserve(interval_source.size());
+        result._query_intervals.reserve(interval_source.size());
+        result._legacy_alignment_times.reserve(interval_source.size());
 
         // Resolve TimeFrames for absolute-time conversion
         auto source_tf = source ? source->getTimeFrame() : nullptr;
@@ -639,8 +561,8 @@ public:
                     aligned_interval.alignment_time,
                     adapter_tf.get());
 
-            result._intervals.push_back(query_interval);
-            result._alignment_times.push_back(alignment_abs_time);
+            result._query_intervals.push_back(query_interval);
+            result._legacy_alignment_times.push_back(alignment_abs_time);
 
             auto copy = std::make_shared<U>(source->createTimeRangeCopy(
                     TimeFrameIndex(query_interval.start),
@@ -722,7 +644,27 @@ public:
     /**
      * @brief Get the alignment intervals used to create views
      */
-    [[nodiscard]] std::vector<Interval> const & intervals() const { return _intervals; }
+    [[nodiscard]] std::vector<Interval> const & intervals() const { return _query_intervals; }
+
+    /**
+     * @brief Get the prepared gather-window series used to define rows.
+     *
+     * @return Shared pointer to the original prepared windows, or nullptr for
+     *         empty/default and legacy adapter-only results.
+     *
+     * @post Return value is shared with the GatherResult and is never modified by it.
+     */
+    [[nodiscard]] std::shared_ptr<DigitalIntervalSeries const> windows() const noexcept { return _windows; }
+
+    /**
+     * @brief Get the companion alignment-point event series.
+     *
+     * @return Shared pointer to row-aligned alignment events, or nullptr when
+     *         the gather has no companion alignment metadata.
+     *
+     * @post If non-null, the series has the same row count as `windows()`.
+     */
+    [[nodiscard]] std::shared_ptr<DigitalEventSeries const> alignmentPoints() const noexcept { return _alignment_points; }
 
     /**
      * @brief Get the interval at a specific index (O(1) access)
@@ -732,10 +674,10 @@ public:
      * @throws std::out_of_range if i >= size()
      */
     [[nodiscard]] Interval intervalAt(size_type i) const {
-        if (i >= _intervals.size()) {
+        if (i >= _query_intervals.size()) {
             throw std::out_of_range("GatherResult::intervalAt: index out of range");
         }
-        return _intervals[i];
+        return _query_intervals[i];
     }
 
     /**
@@ -755,17 +697,21 @@ public:
      * @throws std::out_of_range if i >= size()
      */
     [[nodiscard]] int64_t alignmentTimeAt(size_type i) const {
-        if (i >= _intervals.size()) {
+        if (i >= size()) {
             throw std::out_of_range("GatherResult::alignmentTimeAt: index out of range");
         }
         // Handle potential reordering from sortBy()/reorder()
         size_type orig_idx = !_reorder_indices.empty() ? _reorder_indices[i] : i;
 
-        // Use alignment_times if available, otherwise fall back to interval start
-        if (!_alignment_times.empty() && orig_idx < _alignment_times.size()) {
-            return _alignment_times[orig_idx];
+        if (_alignment_points) {
+            return _alignmentTimeFromCompanionEvent(orig_idx);
         }
-        return _intervals[orig_idx].start;
+
+        // Use legacy adapter alignment times if available, otherwise fall back to interval start.
+        if (!_legacy_alignment_times.empty() && orig_idx < _legacy_alignment_times.size()) {
+            return _legacy_alignment_times[orig_idx];
+        }
+        return _query_intervals[orig_idx].start;
     }
 
     // ========== Convenience Methods ==========
@@ -827,7 +773,7 @@ public:
             results.push_back(std::invoke(
                     std::forward<F>(func),
                     _views[idx],
-                    _intervals[idx]));
+                    _query_intervals[idx]));
         }
         return results;
     }
@@ -843,8 +789,10 @@ public:
     [[nodiscard]] GatherResult materialize() const {
         GatherResult result;
         result._source = _source;
-        result._intervals = _intervals;
-        result._alignment_times = _alignment_times;
+        result._windows = _windows;
+        result._alignment_points = _alignment_points;
+        result._query_intervals = _query_intervals;
+        result._legacy_alignment_times = _legacy_alignment_times;
         result._reorder_indices = _reorder_indices;
         result._views.reserve(_views.size());
 
@@ -903,12 +851,8 @@ public:
         }
 
         auto interval = intervalAtReordered(trial_idx);
+        int64_t alignment_time = alignmentTimeAt(trial_idx);
         size_type orig_idx = originalIndex(trial_idx);
-
-        // Use stored alignment time if available, otherwise default to interval start
-        int64_t alignment_time = !_alignment_times.empty()
-                                         ? _alignment_times[orig_idx]
-                                         : static_cast<int64_t>(interval.start);
 
         Neuralyzer::Transforms::V2::PipelineValueStore store;
         store.set("alignment_time", alignment_time);
@@ -1103,8 +1047,10 @@ public:
         GatherResult result;
         result._source = _source;
         // Note: We keep the original intervals - reordering is logical only
-        result._intervals = _intervals;
-        result._alignment_times = _alignment_times;
+        result._windows = _windows;
+        result._alignment_points = _alignment_points;
+        result._query_intervals = _query_intervals;
+        result._legacy_alignment_times = _legacy_alignment_times;
         result._views.reserve(size());
         result._reorder_indices = indices;// Store the reorder mapping
 
@@ -1159,11 +1105,146 @@ public:
     }
 
 private:
+    /**
+     * @brief Validate source, windows, and optional companion alignment points.
+     *
+     * @pre `windows` must be non-null. Direct gather creation also requires a non-null source.
+     * @post Throws `std::invalid_argument` if any runtime precondition is violated.
+     */
+    template<typename U>
+    static void _validatePreparedGatherInputs(
+            std::shared_ptr<U> const & source,
+            std::shared_ptr<DigitalIntervalSeries const> const & windows,
+            std::shared_ptr<DigitalEventSeries const> const & alignment_points) {
+        assert(source && "GatherResult::create: source must not be null");
+        assert(windows && "GatherResult::create: windows must not be null");
+        assert((!alignment_points || alignment_points->size() == windows->size()) &&
+               "GatherResult::create: alignment point count must match window count");
+
+        if (!source || !windows) {
+            throw std::invalid_argument("GatherResult::create: source and windows must not be null");
+        }
+        if (alignment_points && alignment_points->size() != windows->size()) {
+            throw std::invalid_argument(
+                    "GatherResult::create: alignment point count must match window count");
+        }
+    }
+
+    /**
+     * @brief Create one row DataObject with TimeFrameIndex view bounds.
+     *
+     * @pre `source` must be non-null and `query_interval` must be expressed in source coordinates.
+     * @post Returns a row object created by the DataObject view API.
+     */
+    template<typename U>
+        requires Neuralyzer::Gather::ViewableDataType<U>
+    static std::shared_ptr<U> _createRowForQueryInterval(
+            std::shared_ptr<U> const & source,
+            Interval const & query_interval) {
+        return U::createView(
+                source,
+                TimeFrameIndex(query_interval.start),
+                TimeFrameIndex(query_interval.end));
+    }
+
+    /**
+     * @brief Create one row DataObject with int64 view bounds.
+     *
+     * @pre `source` must be non-null and `query_interval` must be expressed in source coordinates.
+     * @post Returns a row object created by the DataObject view API.
+     */
+    template<typename U>
+        requires Neuralyzer::Gather::ViewableDataTypeInt64<U> &&
+                 (!Neuralyzer::Gather::ViewableDataType<U>)
+    static std::shared_ptr<U> _createRowForQueryInterval(
+            std::shared_ptr<U> const & source,
+            Interval const & query_interval) {
+        return U::createView(source, query_interval.start, query_interval.end);
+    }
+
+    /**
+     * @brief Create one row DataObject as an owning time-range copy.
+     *
+     * @pre `source` must be non-null and `query_interval` must be expressed in source coordinates.
+     * @post Returns a row object with source TimeFrame and image-size metadata.
+     */
+    template<typename U>
+        requires Neuralyzer::Gather::CopyableTimeRangeDataType<U> &&
+                 (!Neuralyzer::Gather::ViewableDataType<U>) &&
+                 (!Neuralyzer::Gather::ViewableDataTypeInt64<U>)
+    static std::shared_ptr<U> _createRowForQueryInterval(
+            std::shared_ptr<U> const & source,
+            Interval const & query_interval) {
+        auto copy = std::make_shared<U>(source->createTimeRangeCopy(
+                TimeFrameIndex(query_interval.start),
+                TimeFrameIndex(query_interval.end)));
+        copy->setTimeFrame(source->getTimeFrame());
+        copy->setImageSize(source->getImageSize());
+        return copy;
+    }
+
+    /**
+     * @brief Create a GatherResult from prepared windows and optional alignment points.
+     *
+     * @pre `source` and `windows` must be non-null. If supplied, `alignment_points`
+     *      must have the same row count as `windows`.
+     * @post Rows are created from source-query intervals while prepared metadata is retained.
+     */
+    template<typename U>
+    static GatherResult _createFromPreparedWindows(
+            std::shared_ptr<U> source,
+            std::shared_ptr<DigitalIntervalSeries const> windows,
+            std::shared_ptr<DigitalEventSeries const> alignment_points) {
+        _validatePreparedGatherInputs(source, windows, alignment_points);
+
+        GatherResult result;
+        result._source = std::move(source);
+        result._windows = std::move(windows);
+        result._alignment_points = std::move(alignment_points);
+        result._views.reserve(result._windows->size());
+        result._query_intervals.reserve(result._windows->size());
+
+        auto const source_tf = result._source->getTimeFrame();
+        auto const window_tf = result._windows->getTimeFrame();
+
+        for (auto const & window: result._windows->view()) {
+            auto const query_interval = Neuralyzer::Gather::convertPreparedWindowToSourceInterval(
+                    window.interval,
+                    window_tf,
+                    source_tf);
+            result._query_intervals.push_back(query_interval);
+            result._views.push_back(_createRowForQueryInterval<U>(result._source, query_interval));
+        }
+
+        return result;
+    }
+
+    /**
+     * @brief Resolve a companion alignment event for an original row index.
+     *
+     * @pre `_alignment_points` must be non-null and `original_idx` must be in range.
+     * @post Returned time is converted into source coordinates when both TimeFrames are available.
+     */
+    [[nodiscard]] int64_t _alignmentTimeFromCompanionEvent(size_type original_idx) const {
+        assert(_alignment_points && "GatherResult::alignmentTimeAt: alignment points must exist");
+        assert(original_idx < _alignment_points->size() &&
+               "GatherResult::alignmentTimeAt: row index must be in range");
+
+        auto const alignment_view = _alignment_points->view();
+        auto const alignment_time = alignment_view[original_idx].time();
+        auto const alignment_tf = _alignment_points->getTimeFrame();
+        auto const source_tf = _source ? _source->getTimeFrame() : nullptr;
+
+        return convert_time_index(alignment_time, alignment_tf.get(), source_tf.get()).getValue();
+    }
+
     std::shared_ptr<T> _source;
-    std::vector<Interval> _intervals;// Stored intervals (no merging)
+    std::shared_ptr<DigitalIntervalSeries const> _windows;
+    std::shared_ptr<DigitalEventSeries const> _alignment_points;
+    std::vector<Interval> _query_intervals;// Source-coordinate intervals used for row creation
     std::vector<value_type> _views;
-    std::vector<size_type> _reorder_indices;// Maps reordered position → original index
-    std::vector<int64_t> _alignment_times;  // Per-trial alignment times (optional)
+    std::vector<size_type> _reorder_indices;     // Maps reordered position → original index
+    std::vector<int64_t> _legacy_alignment_times;// Adapter compatibility until IntervalAdapters is removed
 };
 
 // =============================================================================
@@ -1199,8 +1280,32 @@ private:
 template<typename T>
 [[nodiscard]] GatherResult<T> gather(
         std::shared_ptr<T> source,
-        std::shared_ptr<DigitalIntervalSeries> intervals) {
-    return GatherResult<T>::create(source, intervals);
+        std::shared_ptr<DigitalIntervalSeries const> windows) {
+    return GatherResult<T>::create(std::move(source), std::move(windows));
+}
+
+/**
+ * @brief Create a GatherResult from source data, prepared windows, and alignment points.
+ *
+ * @tparam T The source data type
+ * @param source Source data to create rows from
+ * @param windows Prepared gather windows defining the row bounds
+ * @param alignment_points Optional row-aligned alignment events used for trial-relative metadata
+ * @return GatherResult containing one row per window
+ *
+ * @pre `source` and `windows` must be non-null.
+ * @pre If non-null, `alignment_points` must have the same row count as `windows`.
+ * @post Prepared windows and alignment points are retained as row metadata.
+ */
+template<typename T>
+[[nodiscard]] GatherResult<T> gather(
+        std::shared_ptr<T> source,
+        std::shared_ptr<DigitalIntervalSeries const> windows,
+        std::shared_ptr<DigitalEventSeries const> alignment_points) {
+    return GatherResult<T>::create(
+            std::move(source),
+            std::move(windows),
+            std::move(alignment_points));
 }
 
 // =============================================================================
