@@ -17,11 +17,11 @@
  * terminal range reduction via `RangeReductionRegistry::executeErased()`.
  *
  * **Per-element projection (raster plots):**
- * `bindValueProjectionV2()` + `GatherResult::project()` with
- * `PipelineValueStore` from `buildTrialStore()`.
+ * `bindValueProjectionV2()` + `projectGatherRows()` with row stores from
+ * `buildGatherRowStore()`.
  *
  * **Trial sorting / batch reduce:**
- * Build a `ReducerFactoryV2` lambda and pass it to `GatherResult::reduce()`.
+ * Build a `ReducerFactoryV2` lambda and pass it to `reduceGatherRows()`.
  *
  * ```cpp
  * ReducerFactoryV2<EventWithId, float> factory =
@@ -33,7 +33,7 @@
  *                 "FirstPositiveLatency", typeid(EventWithId), input_any, {}));
  *         };
  *     };
- * auto latencies = gather.reduce(factory);
+ * auto latencies = reduceGatherRows(gather, factory);
  * ```
  *
  * @see TransformPipeline::bindValueProjectionV2()

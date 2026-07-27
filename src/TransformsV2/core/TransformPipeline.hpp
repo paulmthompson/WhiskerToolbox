@@ -15,8 +15,8 @@
 //#include "CoreGeometry/lines.hpp"
 //#include "CoreGeometry/masks.hpp"
 //#include "CoreGeometry/points.hpp"
-#include "DataManager/DataManagerTypes.hpp"// DataTypeVariant
-#include "TransformTypes/TransformTypes.hpp"      // ElementVariant, BatchVariant
+#include "DataManager/DataManagerTypes.hpp" // DataTypeVariant
+#include "TransformTypes/TransformTypes.hpp"// ElementVariant, BatchVariant
 
 #include <any>       // std::any
 #include <functional>// std::function
@@ -1095,7 +1095,7 @@ private:
  * auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
  *
  * for (size_t i = 0; i < gather_result.size(); ++i) {
- *     auto store = gather_result.buildTrialStore(i);  // V2 method
+ *     auto store = buildGatherRowStore(gather_result, i);
  *     auto projection = factory(store);
  *
  *     for (auto const& event : gather_result[i]->view()) {
@@ -1121,7 +1121,7 @@ private:
  * @throws std::runtime_error if pipeline is empty or contains unsupported transforms
  *
  * @see PipelineValueStore For value store documentation
- * @see GatherResult::buildTrialStore() For populating store with trial values
+ * @see buildGatherRowStore() For populating store with trial values
  */
 template<typename InElement, typename Value>
 ValueProjectionFactoryV2<InElement, Value> bindValueProjectionV2(TransformPipeline const & pipeline);

@@ -3,6 +3,7 @@
 #include "core/ComputeContext.hpp"
 #include "core/RangeReductionRegistry.hpp"
 #include "extension/RangeReductionTypes.hpp"
+#include "extension/gatherResult/GatherResultRowContext.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
@@ -191,7 +192,7 @@ std::shared_ptr<TensorData> analogIntervalReduction(
     };
 
     // Reduce all gathered views
-    auto values = gather.template reduce<float>(factory);
+    auto values = Neuralyzer::Gather::reduceGatherRows(gather, factory);
 
     ctx.reportProgress(85);
 
@@ -269,7 +270,7 @@ std::shared_ptr<TensorData> eventIntervalReduction(
     };
 
     // Reduce all gathered views
-    auto values = gather.template reduce<float>(factory);
+    auto values = Neuralyzer::Gather::reduceGatherRows(gather, factory);
 
     ctx.reportProgress(85);
 
@@ -350,7 +351,7 @@ std::shared_ptr<TensorData> intervalOverlapReduction(
     };
 
     // Reduce all gathered views
-    auto values = gather.template reduce<float>(factory);
+    auto values = Neuralyzer::Gather::reduceGatherRows(gather, factory);
 
     ctx.reportProgress(85);
 

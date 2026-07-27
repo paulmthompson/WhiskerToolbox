@@ -256,7 +256,7 @@ private:
 };
 ```
 
-The implemented Phase 3 prepared-window path follows this model with one compatibility detail: `GatherResult` keeps a clearly named `_query_intervals` cache containing the source-coordinate intervals used for row creation. Existing `intervalAt()`, `intervalAtReordered()`, `buildTrialStore()`, plot, and export consumers continue to use those query intervals until later phases migrate call sites to prepared-window metadata directly. The original prepared windows are available through `windows()`, and companion alignment events are available through `alignmentPoints()`.
+The implemented prepared-window path follows this model with one compatibility detail: `GatherResult` keeps a clearly named `_query_intervals` cache containing the source-coordinate intervals used for row creation. Existing `intervalAt()`, `intervalAtReordered()`, plot, export, and TransformsV2 extension consumers continue to use those query intervals where row-interval metadata is required. The original prepared windows are available through `windows()`, and companion alignment events are available through `alignmentPoints()`.
 
 The direct gather factories use `createView()` or `createTimeRangeCopy()` only to construct row DataObjects. After construction, `GatherResult` should treat each row as a normal `T`; ownership, view backing, lazy storage, entity IDs, and `TimeFrame` semantics remain responsibilities of the DataObject implementation.
 
@@ -268,7 +268,7 @@ Alignment points should be represented as a companion `DigitalEventSeries`:
 std::shared_ptr<DigitalEventSeries const> _alignment_events;
 ```
 
-This follows the same principle as the window series: pass domain objects, not raw vectors. It also makes alignment points reusable outside `GatherResult` and removes `AlignmentPoint` from the `GatherResult` API. `alignmentTimeAt()` should read from `_alignment_points` using the current row order. Existing `buildTrialStore()` behavior can be preserved during the migration, but longer-term TransformsV2-specific store construction should move to an extension helper that reads `GatherResult` row metadata.
+This follows the same principle as the window series: pass domain objects, not raw vectors. It also makes alignment points reusable outside `GatherResult` and removes `AlignmentPoint` from the `GatherResult` API. `alignmentTimeAt()` reads from `_alignment_points` using the current row order. TransformsV2-specific store construction now lives in the gather extension helper `buildGatherRowStore()`, which reads public `GatherResult` row metadata.
 
 The number and ordering of alignment points must match the number and ordering of windows. Debug builds should assert this precondition when a `GatherResult` is created.
 
@@ -302,7 +302,7 @@ The migration must preserve:
 
 - Event alignment using `window_size / 2` before and after each event.
 - Interval alignment using beginning or end alignment.
-- Trial-relative event projection through stable row metadata such as `alignmentTimeAt()`. Current `GatherResult::buildTrialStore()` behavior should remain available during the migration, but future TransformsV2 projection code should be able to construct row-specific parameters outside core `GatherResult`.
+- Trial-relative event projection through stable row metadata such as `alignmentTimeAt()`. TransformsV2 projection code constructs row-specific parameters outside core `GatherResult` through the gather extension.
 - Optional overlap prevention.
 
 ### Event Plot Widget
@@ -379,8 +379,8 @@ Avoid adding long-term backwards compatibility unless an external consumer or pe
 - Whether `IntervalEventPoint` should live in TransformsV2 or a shared non-Qt alignment namespace. **Current:** it lives in `Neuralyzer::Transforms::V2::Examples` as part of `IntervalToEventParams`. It should not live in `GatherResult` because start/end/center selection is part of alignment-point extraction and projection setup, not source slicing.
 - Whether generated temporary data objects should participate in lineage tracing. They should not inherit entity IDs directly from source events/intervals; if provenance is needed, use the lineage tracing mechanism. Temporary non-DataManager data objects generally do not have a lineage registry and will assign default entity IDs.
 - Whether Phase 3 should rename `_views` to `_rows`. **Current:** deferred; `_views` remains in place to keep the prepared-window storage refactor focused.
-- Whether `fromRows()` / `fromRowsLike()` should be added in Phase 3 or later. **Current:** deferred to Phase 5.5. They are not required for adapter removal, but they are the preferred future construction path for DataObject-producing per-row transforms.
-- How aggressively to move `buildTrialStore()`, `project()`, `reduce()`, and `sortIndicesBy()` out of core `GatherResult`. The target dependency direction is TransformsV2 extension code depending on `GatherResult`, not core `GatherResult` depending on TransformsV2.
+- Whether `fromRows()` / `fromRowsLike()` should be added in Phase 3 or later. **Current:** implemented in Phase 5.5 as the row-synthesis construction path for DataObject-producing per-row transforms.
+- How aggressively to move `buildTrialStore()`, `project()`, `reduce()`, and `sortIndicesBy()` out of core `GatherResult`. **Current:** completed in Phase 5.5. The dependency direction is TransformsV2 extension code depending on `GatherResult`, not core `GatherResult` depending on TransformsV2.
 
 ## Recommended Direction
 

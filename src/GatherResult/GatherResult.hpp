@@ -71,28 +71,21 @@
  * @see AnalogTimeSeries::createView() for analog series views
  */
 
-#include "ViewAdaptorTypes.hpp"
-
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
-#include "TransformsV2/PipelineValueStore/PipelineValueStore.hpp"
-#include "TransformsV2/extension/ValueProjectionTypes.hpp"
 
 #include <algorithm>
 #include <cassert>
-#include <cmath>
 #include <concepts>
 #include <functional>
 #include <iterator>
 #include <memory>
-#include <numeric>
 #include <ranges>
 #include <stdexcept>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -343,6 +336,67 @@ public:
                 std::move(alignment_points));
     }
 
+    /**
+     * @brief Create a GatherResult from already-created row DataObjects.
+     *
+     * @param rows Row-aligned DataObjects in display order
+     * @param windows Optional row-window metadata with the same row count
+     * @param alignment_points Optional row-aligned alignment events with the same row count
+     * @return GatherResult that owns row pointers and optional metadata
+     *
+     * @pre Every row pointer must be non-null.
+     * @pre If supplied, @p windows and @p alignment_points must match @p rows size.
+     * @post The returned result has no direct-gather source provenance.
+     */
+    [[nodiscard]] static GatherResult fromRows(
+            std::vector<value_type> rows,
+            std::shared_ptr<DigitalIntervalSeries const> windows = nullptr,
+            std::shared_ptr<DigitalEventSeries const> alignment_points = nullptr) {
+        _validateRowInputs(rows, windows, alignment_points);
+
+        GatherResult result;
+        result._views = std::move(rows);
+        result._windows = std::move(windows);
+        result._alignment_points = std::move(alignment_points);
+        result._query_intervals = _queryIntervalsFromWindows(result._windows);
+        return result;
+    }
+
+    /**
+     * @brief Create transformed rows while preserving metadata from another GatherResult.
+     *
+     * @tparam ParentT Parent row DataObject type
+     * @param parent GatherResult that supplies row metadata and ordering
+     * @param rows Row DataObjects aligned to the visible order of @p parent
+     * @return GatherResult with @p rows and parent row metadata
+     *
+     * @pre Every row pointer must be non-null.
+     * @pre @p rows must have the same row count as @p parent.
+     * @post The returned result has no direct-gather source provenance.
+     */
+    template<typename ParentT>
+    [[nodiscard]] static GatherResult fromRowsLike(
+            GatherResult<ParentT> const & parent,
+            std::vector<value_type> rows) {
+        if (rows.size() != parent.size()) {
+            throw std::invalid_argument("GatherResult::fromRowsLike: row count must match parent result size");
+        }
+        _validateRowInputs(rows, parent.windows(), parent.alignmentPoints());
+
+        GatherResult result;
+        result._views = std::move(rows);
+        result._windows = parent.windows();
+        result._alignment_points = parent.alignmentPoints();
+        result._query_intervals = parent.intervals();
+        if (parent.isReordered()) {
+            result._reorder_indices.reserve(parent.size());
+            for (size_type i = 0; i < parent.size(); ++i) {
+                result._reorder_indices.push_back(parent.originalIndex(i));
+            }
+        }
+        return result;
+    }
+
     // ========== Range Interface ==========
 
     /**
@@ -474,6 +528,9 @@ public:
             return _alignmentTimeFromCompanionEvent(orig_idx);
         }
 
+        if (orig_idx >= _query_intervals.size()) {
+            throw std::out_of_range("GatherResult::alignmentTimeAt: no alignment metadata for row");
+        }
         return _query_intervals[orig_idx].start;
     }
 
@@ -536,7 +593,7 @@ public:
             results.push_back(std::invoke(
                     std::forward<F>(func),
                     _views[idx],
-                    _query_intervals[idx]));
+                    intervalAt(idx)));
         }
         return results;
     }
@@ -570,216 +627,6 @@ public:
         return result;
     }
 
-    // ========== Pipeline Integration Methods ==========
-
-    /**
-     * @brief Build value store for a specific trial (V2 pattern)
-     *
-     * Creates a PipelineValueStore populated with standard trial values that can
-     * be bound to transform parameters. This enables generic parameter binding
-     * without specialized context structs.
-     *
-     * ## Store Keys
-     *
-     * - "alignment_time": int64_t - Trial start time (used as t=0 reference)
-     * - "trial_index": int64_t - Original trial index (0-based)
-     * - "trial_duration": int64_t - Duration (end - start)
-     * - "end_time": int64_t - Trial end time
-     *
-     * ## Usage with Pipeline Bindings
-     *
-     * @code
-     * // Pipeline with bindings
-     * // {"transform": "NormalizeTimeV2", "bindings": {"alignment_time": "alignment_time"}}
-     * auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
-     *
-     * for (size_t i = 0; i < result.size(); ++i) {
-     *     auto store = result.buildTrialStore(i);
-     *     auto projection = factory(store);
-     *     // Use projection on trial events...
-     * }
-     * @endcode
-     *
-     * @param trial_idx Index of the trial (0-based, respects reordering)
-     * @return PipelineValueStore populated with trial values
-     * @throws std::out_of_range if trial_idx >= size()
-     *
-     * @see PipelineValueStore for store documentation
-     * @see project() for applying store-based projections to all trials
-     */
-    [[nodiscard]] Neuralyzer::Transforms::V2::PipelineValueStore buildTrialStore(size_type trial_idx) const {
-        if (trial_idx >= size()) {
-            throw std::out_of_range("GatherResult::buildTrialStore: index out of range");
-        }
-
-        auto interval = intervalAtReordered(trial_idx);
-        int64_t alignment_time = alignmentTimeAt(trial_idx);
-        size_type orig_idx = originalIndex(trial_idx);
-
-        Neuralyzer::Transforms::V2::PipelineValueStore store;
-        store.set("alignment_time", alignment_time);
-        store.set("trial_index", static_cast<int64_t>(orig_idx));
-        store.set("trial_duration", interval.end - interval.start);
-        store.set("end_time", static_cast<int64_t>(interval.end));
-
-        return store;
-    }
-
-    /**
-     * @brief Project values across all trials using value store bindings
-     *
-     * Creates per-trial value projections using a pipeline that normalizes or
-     * transforms element properties (e.g., time normalization). The projection
-     * factory receives a value store populated with trial values and applies
-     * parameter bindings to produce per-trial projections.
-     *
-     * @tparam Value The projected value type (e.g., float for normalized time)
-     * @param factory Store-based projection factory from bindValueProjectionV2()
-     * @return Vector of projection functions, one per trial
-     *
-     * @example
-     * @code
-     * // Pipeline with param bindings
-     * auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
-     * auto projections = result.project(factory);
-     *
-     * for (size_t i = 0; i < result.size(); ++i) {
-     *     auto const& projection = projections[i];
-     *     for (auto const& event : result[i]->view()) {
-     *         float norm_time = projection(event);
-     *         EntityId id = event.id();
-     *         draw_point(norm_time, i, id);
-     *     }
-     * }
-     * @endcode
-     *
-     * @see buildTrialStore() for store population
-     * @see bindValueProjectionV2() for creating factories
-     */
-    template<typename Value>
-    [[nodiscard]] auto project(
-            Neuralyzer::Transforms::V2::ValueProjectionFactoryV2<element_type, Value> const & factory) const {
-        using ProjectionFn = Neuralyzer::Transforms::V2::ValueProjectionFn<element_type, Value>;
-        std::vector<ProjectionFn> projections;
-        projections.reserve(size());
-
-        for (size_type i = 0; i < size(); ++i) {
-            auto store = buildTrialStore(i);
-            projections.push_back(factory(store));
-        }
-
-        return projections;
-    }
-
-    /**
-     * @brief Apply reduction across all trials using value store bindings
-     *
-     * Executes a range reduction on each trial's view, producing a scalar per trial.
-     * The reducer factory is called once per trial with the trial's value store,
-     * enabling context-aware reductions (e.g., counting events after alignment).
-     *
-     * @tparam Scalar Result type of reduction (e.g., int for count, float for latency)
-     * @param reducer_factory Store-based reducer factory
-     * @return Vector of reduction results, one per trial
-     *
-     * @example
-     * @code
-     * auto factory = [](PipelineValueStore const& store) -> ReducerFn<EventWithId, float> {
-     *     int64_t alignment = store.getInt("alignment_time").value();
-     *     return [alignment](std::span<EventWithId const> events) -> float {
-     *         if (events.empty()) return NaN;
-     *         return static_cast<float>(events[0].time().getValue() - alignment);
-     *     };
-     * };
-     * auto latencies = result.reduce(factory);
-     * @endcode
-     *
-     * @note This requires T to have a view() method that returns a range
-     * @see buildTrialStore() for store population
-     */
-    template<typename Scalar>
-    [[nodiscard]] std::vector<Scalar> reduce(
-            Neuralyzer::Gather::ReducerFactoryV2<element_type, Scalar> const & reducer_factory) const {
-        std::vector<Scalar> results;
-        results.reserve(size());
-
-        for (size_type i = 0; i < size(); ++i) {
-            auto store = buildTrialStore(i);
-            auto reducer = reducer_factory(store);
-
-            // Materialize view into vector for reducer (takes span)
-            auto view = _views[i]->view();
-            std::vector<element_type> elements(view.begin(), view.end());
-
-            results.push_back(reducer(std::span<element_type const>{elements}));
-        }
-
-        return results;
-    }
-
-    /**
-     * @brief Get sort indices by reduction result
-     *
-     * Computes a reduction for each trial and returns the indices that would
-     * sort the trials by their reduction values. Useful for sorting trials
-     * by first-spike latency, event count, or other metrics.
-     *
-     * @tparam Scalar Reduction result type (must be comparable)
-     * @param reducer_factory Store-based reducer factory
-     * @param ascending Sort order (true = smallest first, false = largest first)
-     * @return Vector of indices that would sort trials by reduction result
-     *
-     * @example
-     * @code
-     * // Sort trials by first-spike latency (ascending)
-     * auto factory = [](PipelineValueStore const& store) { ... };
-     * auto sort_order = result.sortIndicesBy(factory, true);
-     *
-     * // Draw trials in sorted order
-     * for (size_t row = 0; row < sort_order.size(); ++row) {
-     *     size_t trial_idx = sort_order[row];
-     *     // Draw trial trial_idx at row position...
-     * }
-     * @endcode
-     *
-     * @see reduce() for the underlying reduction
-     * @see reorder() for creating a reordered GatherResult
-     */
-    template<typename Scalar>
-    [[nodiscard]] std::vector<size_type> sortIndicesBy(
-            Neuralyzer::Gather::ReducerFactoryV2<element_type, Scalar> const & reducer_factory,
-            bool ascending = true) const {
-
-        auto values = reduce(reducer_factory);
-
-        std::vector<size_type> indices(size());
-        std::iota(indices.begin(), indices.end(), size_type{0});
-
-        if (ascending) {
-            std::stable_sort(indices.begin(), indices.end(),
-                             [&values](size_type a, size_type b) {
-                                 // Handle NaN: NaN values sort to end
-                                 if constexpr (std::is_floating_point_v<Scalar>) {
-                                     if (std::isnan(values[a])) return false;
-                                     if (std::isnan(values[b])) return true;
-                                 }
-                                 return values[a] < values[b];
-                             });
-        } else {
-            std::stable_sort(indices.begin(), indices.end(),
-                             [&values](size_type a, size_type b) {
-                                 // Handle NaN: NaN values sort to end
-                                 if constexpr (std::is_floating_point_v<Scalar>) {
-                                     if (std::isnan(values[a])) return false;
-                                     if (std::isnan(values[b])) return true;
-                                 }
-                                 return values[a] > values[b];
-                             });
-        }
-
-        return indices;
-    }
-
     /**
      * @brief Create reordered GatherResult using index permutation
      *
@@ -794,7 +641,7 @@ public:
      *
      * @example
      * @code
-     * auto sort_order = result.sortIndicesBy(reducer_factory, true);
+     * auto sort_order = computeSortOrder(result);
      * auto sorted_result = result.reorder(sort_order);
      *
      * // sorted_result[0] is now the trial with smallest reduction value
@@ -866,6 +713,58 @@ public:
     }
 
 private:
+    /**
+     * @brief Validate row-synthesis inputs and optional row metadata.
+     *
+     * @pre Every row pointer must be non-null.
+     * @pre Optional metadata series must have the same row count as @p rows.
+     * @post Throws `std::invalid_argument` if any runtime precondition is violated.
+     */
+    static void _validateRowInputs(
+            std::vector<value_type> const & rows,
+            std::shared_ptr<DigitalIntervalSeries const> const & windows,
+            std::shared_ptr<DigitalEventSeries const> const & alignment_points) {
+        auto const has_null_row = std::ranges::any_of(rows, [](auto const & row) {
+            return row == nullptr;
+        });
+
+        assert(!has_null_row && "GatherResult::fromRows: rows must not contain null pointers");
+        assert((!windows || windows->size() == rows.size()) &&
+               "GatherResult::fromRows: window count must match row count");
+        assert((!alignment_points || alignment_points->size() == rows.size()) &&
+               "GatherResult::fromRows: alignment point count must match row count");
+
+        if (has_null_row) {
+            throw std::invalid_argument("GatherResult::fromRows: rows must not contain null pointers");
+        }
+        if (windows && windows->size() != rows.size()) {
+            throw std::invalid_argument("GatherResult::fromRows: window count must match row count");
+        }
+        if (alignment_points && alignment_points->size() != rows.size()) {
+            throw std::invalid_argument("GatherResult::fromRows: alignment point count must match row count");
+        }
+    }
+
+    /**
+     * @brief Extract compatibility interval metadata from prepared windows.
+     *
+     * @pre @p windows may be null.
+     * @post Returns empty metadata when @p windows is null.
+     */
+    [[nodiscard]] static std::vector<Interval> _queryIntervalsFromWindows(
+            std::shared_ptr<DigitalIntervalSeries const> const & windows) {
+        std::vector<Interval> intervals;
+        if (!windows) {
+            return intervals;
+        }
+
+        intervals.reserve(windows->size());
+        for (auto const & window: windows->view()) {
+            intervals.push_back(window.interval);
+        }
+        return intervals;
+    }
+
     /**
      * @brief Validate source, windows, and optional companion alignment points.
      *

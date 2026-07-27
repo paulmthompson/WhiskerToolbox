@@ -16,7 +16,7 @@
  * ## Trial-aligned usage
  *
  * For per-trial alignment, use `NormalizeTimeParamsV2` with
- * `param_bindings` and `PipelineValueStore` from `GatherResult::buildTrialStore()`,
+ * `param_bindings` and `PipelineValueStore` from `buildGatherRowStore()`,
  * or `bindValueProjectionV2()` for value projections.
  *
  * @see NormalizeTime.hpp for transform implementation

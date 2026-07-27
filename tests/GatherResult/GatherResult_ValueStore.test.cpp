@@ -3,8 +3,8 @@
  * @brief Tests for GatherResult V2 pattern with PipelineValueStore
  *
  * These tests verify the Value Store integration:
- * - buildTrialStore() - produces correct PipelineValueStore for each trial
- * - projectV2() - applies value projection factory with store bindings
+ * - buildGatherRowStore() - produces correct PipelineValueStore for each trial
+ * - projectGatherRows() - applies value projection factory with store bindings
  * - bindValueProjectionV2() - creates factories from pipelines with bindings
  * - NormalizeTimeParamsV2 - binding-based normalization parameters
  *
@@ -16,11 +16,14 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TransformsV2/PipelineValueStore/PipelineValueStore.hpp"
+#include "TransformsV2/algorithms/EventToInterval/EventToInterval.hpp"
 #include "TransformsV2/algorithms/Temporal/NormalizeTime.hpp"
 #include "TransformsV2/algorithms/Temporal/RegisteredTemporalTransforms.hpp"
+#include "TransformsV2/core/ElementRegistry.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/extension/ParameterBinding.hpp"
 #include "TransformsV2/extension/ValueProjectionTypes.hpp"
+#include "TransformsV2/extension/gatherResult/GatherResultRowContext.hpp"
 
 #include "fixtures/GatherAlignmentFixtures.hpp"
 
@@ -28,8 +31,10 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <memory>
 #include <numeric>
+#include <span>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -40,6 +45,7 @@ using Catch::Matchers::WithinAbs;
 using Neuralyzer::Test::GatherFixtures::createAlignmentEventsForIntervals;
 using Neuralyzer::Test::GatherFixtures::createWindowsAroundEvents;
 using Neuralyzer::Test::GatherFixtures::TestIntervalAlignmentPoint;
+using Neuralyzer::Transforms::V2::Examples::EventToIntervalParams;
 
 // =============================================================================
 // Test Fixtures
@@ -63,6 +69,9 @@ std::shared_ptr<TimeFrame> createIdentityTimeFrameForMax(int64_t max_time) {
 struct V2TestFixture {
     V2TestFixture() {
         Temporal::registerTemporalTransforms();
+        ElementRegistry::instance().registerContainerTransform<DigitalEventSeries, DigitalIntervalSeries, EventToIntervalParams>(
+                "EventToInterval",
+                Examples::eventToInterval);
     }
 };
 
@@ -127,10 +136,10 @@ std::string requireStoreJson(PipelineValueStore const & store, std::string const
 }// anonymous namespace
 
 // =============================================================================
-// buildTrialStore Tests
+// buildGatherRowStore Tests
 // =============================================================================
 
-TEST_CASE("GatherResult - buildTrialStore", "[GatherResult][ValueStore][Phase3]") {
+TEST_CASE("GatherResult extension - buildGatherRowStore", "[GatherResult][ValueStore][Phase5_5]") {
     // Create events spread across time
     auto events = createEventSeries({5, 15, 25, 35, 45, 55, 65, 75});
 
@@ -145,7 +154,7 @@ TEST_CASE("GatherResult - buildTrialStore", "[GatherResult][ValueStore][Phase3]"
     REQUIRE(result.size() == 3);
 
     SECTION("Trial 0 store values") {
-        auto store = result.buildTrialStore(0);
+        auto store = buildGatherRowStore(result, 0);
 
         REQUIRE(store.contains("alignment_time"));
         REQUIRE(store.contains("trial_index"));
@@ -159,7 +168,7 @@ TEST_CASE("GatherResult - buildTrialStore", "[GatherResult][ValueStore][Phase3]"
     }
 
     SECTION("Trial 1 store values") {
-        auto store = result.buildTrialStore(1);
+        auto store = buildGatherRowStore(result, 1);
 
         CHECK(requireStoreInt(store, "alignment_time") == 30);
         CHECK(requireStoreInt(store, "trial_index") == 1);
@@ -168,7 +177,7 @@ TEST_CASE("GatherResult - buildTrialStore", "[GatherResult][ValueStore][Phase3]"
     }
 
     SECTION("Trial 2 store values") {
-        auto store = result.buildTrialStore(2);
+        auto store = buildGatherRowStore(result, 2);
 
         CHECK(requireStoreInt(store, "alignment_time") == 60);
         CHECK(requireStoreInt(store, "trial_index") == 2);
@@ -177,12 +186,12 @@ TEST_CASE("GatherResult - buildTrialStore", "[GatherResult][ValueStore][Phase3]"
     }
 
     SECTION("Out of range throws") {
-        CHECK_THROWS_AS(result.buildTrialStore(3), std::out_of_range);
-        CHECK_THROWS_AS(result.buildTrialStore(100), std::out_of_range);
+        CHECK_THROWS_AS(buildGatherRowStore(result, 3), std::out_of_range);
+        CHECK_THROWS_AS(buildGatherRowStore(result, 100), std::out_of_range);
     }
 
     SECTION("Store values are correct type for JSON binding") {
-        auto store = result.buildTrialStore(0);
+        auto store = buildGatherRowStore(result, 0);
 
         // Verify JSON representation is correct for binding
         CHECK(requireStoreJson(store, "alignment_time") == "0");
@@ -190,10 +199,11 @@ TEST_CASE("GatherResult - buildTrialStore", "[GatherResult][ValueStore][Phase3]"
 }
 
 // =============================================================================
-// buildTrialStore with Reordering Tests
+// buildGatherRowStore with Reordering Tests
 // =============================================================================
 
-TEST_CASE("GatherResult - buildTrialStore with reordering", "[GatherResult][ValueStore][Phase3]") {
+TEST_CASE("GatherResult extension - buildGatherRowStore with reordering",
+          "[GatherResult][ValueStore][Phase5_5]") {
     // Create events
     auto events = createEventSeries({5, 15, 35, 45, 65});
     auto intervals = createIntervalSeries({
@@ -208,7 +218,7 @@ TEST_CASE("GatherResult - buildTrialStore with reordering", "[GatherResult][Valu
     auto reordered = result.reorder({2, 0, 1});
 
     SECTION("Reordered position 0 (original trial 2)") {
-        auto store = reordered.buildTrialStore(0);
+        auto store = buildGatherRowStore(reordered, 0);
 
         // Should have trial 2's values
         CHECK(requireStoreInt(store, "alignment_time") == 60);
@@ -216,7 +226,7 @@ TEST_CASE("GatherResult - buildTrialStore with reordering", "[GatherResult][Valu
     }
 
     SECTION("Reordered position 1 (original trial 0)") {
-        auto store = reordered.buildTrialStore(1);
+        auto store = buildGatherRowStore(reordered, 1);
 
         // Should have trial 0's values
         CHECK(requireStoreInt(store, "alignment_time") == 0);
@@ -224,7 +234,7 @@ TEST_CASE("GatherResult - buildTrialStore with reordering", "[GatherResult][Valu
     }
 
     SECTION("Reordered position 2 (original trial 1)") {
-        auto store = reordered.buildTrialStore(2);
+        auto store = buildGatherRowStore(reordered, 2);
 
         // Should have trial 1's values
         CHECK(requireStoreInt(store, "alignment_time") == 30);
@@ -400,7 +410,7 @@ TEST_CASE("GatherResult - project", "[GatherResult][ValueStore][Phase3]") {
         pipeline.addStep(step);
 
         auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
-        auto projections = result.project(factory);
+        auto projections = projectGatherRows(result, factory);
 
         REQUIRE(projections.size() == 3);
 
@@ -431,6 +441,69 @@ TEST_CASE("GatherResult - project", "[GatherResult][ValueStore][Phase3]") {
         CHECK_THAT(trial2_values[0], WithinAbs(5.0f, 0.001f)); // 65 - 60
         CHECK_THAT(trial2_values[1], WithinAbs(15.0f, 0.001f));// 75 - 60
     }
+}
+
+TEST_CASE("GatherResult extension - reduce and sort rows",
+          "[GatherResult][ValueStore][Phase5_5]") {
+    auto events = createEventSeries({5, 15, 35, 45, 65});
+    auto intervals = createIntervalSeries({{0, 20},
+                                           {30, 50},
+                                           {70, 80}});
+
+    auto result = gather(events, intervals);
+
+    ReducerFactoryV2<EventWithId, float> const first_latency_factory =
+            [](PipelineValueStore const & store) -> ReducerFn<EventWithId, float> {
+        auto const alignment = store.getInt("alignment_time").value();
+        return [alignment](std::span<EventWithId const> events) -> float {
+            if (events.empty()) {
+                return NAN;
+            }
+            return static_cast<float>(events.front().time().getValue() - alignment);
+        };
+    };
+
+    auto const latencies = reduceGatherRows(result, first_latency_factory);
+    REQUIRE(latencies.size() == 3);
+    CHECK_THAT(latencies[0], WithinAbs(5.0f, 0.001f));
+    CHECK_THAT(latencies[1], WithinAbs(5.0f, 0.001f));
+    CHECK(std::isnan(latencies[2]));
+
+    auto const sort_order = sortGatherRowsBy(result, first_latency_factory);
+    REQUIRE(sort_order.size() == 3);
+    CHECK(sort_order[0] == 0);
+    CHECK(sort_order[1] == 1);
+    CHECK(sort_order[2] == 2);
+}
+
+TEST_CASE("GatherResult extension - transform rows preserves metadata",
+          "[GatherResult][ValueStore][Phase5_5]") {
+    V2TestFixture const fixture;
+
+    auto spikes = createEventSeries({5, 15, 105, 115});
+    auto alignment_events = createEventSeries({10, 110});
+    auto windows = createWindowsAroundEvents(alignment_events, 10, 10);
+    auto raster = gather(spikes, windows, alignment_events);
+
+    TransformPipeline pipeline;
+    pipeline.addStep(
+            "EventToInterval",
+            EventToIntervalParams{
+                    .pre_expansion = TimeFrameIndex{0},
+                    .post_expansion = TimeFrameIndex{0}});
+
+    auto transformed = transformGatherRows<DigitalEventSeries, DigitalIntervalSeries>(
+            raster,
+            pipeline);
+
+    REQUIRE(transformed.size() == raster.size());
+    CHECK(transformed.source() == nullptr);
+    CHECK(transformed.windows() == raster.windows());
+    CHECK(transformed.alignmentPoints() == raster.alignmentPoints());
+    CHECK(transformed.alignmentTimeAt(0) == raster.alignmentTimeAt(0));
+    CHECK(transformed.alignmentTimeAt(1) == raster.alignmentTimeAt(1));
+    CHECK(transformed[0]->size() == raster[0]->size());
+    CHECK(transformed[1]->size() == raster[1]->size());
 }
 
 // =============================================================================
@@ -465,7 +538,7 @@ TEST_CASE("GatherResult - V2 raster plot workflow", "[GatherResult][ValueStore][
     pipeline.addStep(step);
 
     auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
-    auto projections = raster.project(factory);
+    auto projections = projectGatherRows(raster, factory);
 
     SECTION("Verify normalized times for raster plot") {
         // Trial 0: alignment = 0
@@ -548,10 +621,10 @@ TEST_CASE("Prepared event windows - basic functionality", "[GatherResult][Phase6
         auto windows = createWindowsAroundEvents(alignment_events, 50, 50);
         auto result = gather(spikes, windows, alignment_events);
 
-        // Check that buildTrialStore uses the event time (alignment) not interval start
-        auto store0 = result.buildTrialStore(0);
-        auto store1 = result.buildTrialStore(1);
-        auto store2 = result.buildTrialStore(2);
+        // Check that buildGatherRowStore uses the event time (alignment) not interval start
+        auto store0 = buildGatherRowStore(result, 0);
+        auto store1 = buildGatherRowStore(result, 1);
+        auto store2 = buildGatherRowStore(result, 2);
 
         // Alignment time should be the event time, not the window start
         CHECK(requireStoreInt(store0, "alignment_time") == 100);// Event time, not 50
@@ -587,9 +660,9 @@ TEST_CASE("Prepared interval alignment events - alignment options", "[GatherResu
                 TestIntervalAlignmentPoint::Start);
         auto result = gather(spikes, intervals, alignment_events);
 
-        auto store0 = result.buildTrialStore(0);
-        auto store1 = result.buildTrialStore(1);
-        auto store2 = result.buildTrialStore(2);
+        auto store0 = buildGatherRowStore(result, 0);
+        auto store1 = buildGatherRowStore(result, 1);
+        auto store2 = buildGatherRowStore(result, 2);
 
         CHECK(requireStoreInt(store0, "alignment_time") == 0);
         CHECK(requireStoreInt(store1, "alignment_time") == 150);
@@ -602,9 +675,9 @@ TEST_CASE("Prepared interval alignment events - alignment options", "[GatherResu
                 TestIntervalAlignmentPoint::End);
         auto result = gather(spikes, intervals, alignment_events);
 
-        auto store0 = result.buildTrialStore(0);
-        auto store1 = result.buildTrialStore(1);
-        auto store2 = result.buildTrialStore(2);
+        auto store0 = buildGatherRowStore(result, 0);
+        auto store1 = buildGatherRowStore(result, 1);
+        auto store2 = buildGatherRowStore(result, 2);
 
         CHECK(requireStoreInt(store0, "alignment_time") == 100);
         CHECK(requireStoreInt(store1, "alignment_time") == 250);
@@ -617,9 +690,9 @@ TEST_CASE("Prepared interval alignment events - alignment options", "[GatherResu
                 TestIntervalAlignmentPoint::Center);
         auto result = gather(spikes, intervals, alignment_events);
 
-        auto store0 = result.buildTrialStore(0);
-        auto store1 = result.buildTrialStore(1);
-        auto store2 = result.buildTrialStore(2);
+        auto store0 = buildGatherRowStore(result, 0);
+        auto store1 = buildGatherRowStore(result, 1);
+        auto store2 = buildGatherRowStore(result, 2);
 
         CHECK(requireStoreInt(store0, "alignment_time") == 50); // (0 + 100) / 2
         CHECK(requireStoreInt(store1, "alignment_time") == 200);// (150 + 250) / 2
@@ -653,7 +726,7 @@ TEST_CASE("Prepared event windows with time normalization", "[GatherResult][Valu
     pipeline.addStep(step);
 
     auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
-    auto projections = raster.project(factory);
+    auto projections = projectGatherRows(raster, factory);
 
     SECTION("Each trial uses correct alignment time") {
         // Trial 0: alignment = 100

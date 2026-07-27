@@ -17,7 +17,7 @@ The migration is complete when:
 - `GatherResult` primarily accepts prepared `DigitalIntervalSeries` windows for direct gather creation.
 - `GatherResult<T>` is positioned as a row-aligned collection of supported DataObject instances plus row metadata; it should not care whether each row DataObject is view-backed, owning, lazy, or transform-produced.
 - PSTH, event plot, event-rate estimation, interval reduction, and export paths no longer depend on `EventExpanderAdapter` or `IntervalWithAlignmentAdapter`.
-- Trial alignment metadata remains available through `alignmentTimeAt()` and, during migration, existing `buildTrialStore()` behavior.
+- Trial alignment metadata remains available through `alignmentTimeAt()` and TransformsV2 gather-extension row stores.
 - Cross-timeframe gather uses the existing `TimeFrame` conversion primitives (`convertTimeFrameRange()` for interval edges and `convert_time_index()` for single alignment/event indices) in one gather/query path.
 - Future DataObject-producing per-row transforms can return another `GatherResult<OutputDataObject>` through external TransformsV2 helpers rather than introducing a parallel row-collection container.
 - Tests cover overlapping windows, cross-timeframe alignment, overlap pruning (via `PruneOverlappingIntervals`), reordering, and plot-facing gather behavior.
@@ -203,7 +203,7 @@ Adapter overloads remain as legacy compatibility until phases 4 and 6 migrate ca
 10. ~~Implement `alignmentTimeAt()` from `_alignment_points` and row ordering.~~ **Done for prepared-window gathers.**
 11. ~~Collapse the duplicated row DataObject creation logic into one helper path. The helper may call `createView()` or `createTimeRangeCopy()`, but after construction the row is just a `T`.~~ **Done.**
 12. ~~Update `materialize()` and `reorder()` to copy or share `_windows`, `_alignment_points`, row objects, and order metadata.~~ **Done.**
-13. Consider adding `fromRows()` and `fromRowsLike(parent, rows)` if it is low-risk. These are optional for adapter migration but are the preferred future API for DataObject-producing per-row transforms. **Deferred to Phase 5.5.**
+13. ~~Consider adding `fromRows()` and `fromRowsLike(parent, rows)` if it is low-risk. These are optional for adapter migration but are the preferred future API for DataObject-producing per-row transforms.~~ **Done in Phase 5.5.**
 14. ~~Do not expand the TransformsV2 responsibility inside `GatherResult` during this phase. Preserve existing methods if needed for compatibility, but design the storage/accessors so they can move to extension helpers later.~~ **Done.**
 
 ### Exit Criteria
@@ -311,15 +311,19 @@ Move TransformsV2-specific per-row projection/reduction concerns out of the core
 
 This phase can occur after adapter migration if moving the methods earlier would create unnecessary churn.
 
+### Status
+
+**Complete.** Core `GatherResult` now provides `fromRows()` and `fromRowsLike(parent, rows)` for synthesized row DataObjects without requiring a direct source pointer. TransformsV2 row stores, projection helpers, reduction helpers, sort helpers, and DataObject-producing row pipeline execution live in `src/TransformsV2/extension/gatherResult/GatherResultRowContext.hpp`. `GatherResult` no longer exposes `PipelineValueStore` or value-projection APIs and no longer links to `TransformsV2`.
+
 ### Tasks
 
-1. Add or finalize `GatherResult::fromRows()` for row-aligned DataObjects and `fromRowsLike(parent, rows)` for preserving parent row metadata.
-2. Add TransformsV2 extension helpers that consume `GatherResult<InputT>` and run a pipeline per row.
-3. Return `GatherResult<OutputT>` when the per-row pipeline output is a supported DataObject type.
-4. Return `std::vector<Scalar>` for scalar reductions such as spike counts.
-5. Move `PipelineValueStore` construction for trial-specific parameters into the TransformsV2 extension helper or caller-provided row-context function.
-6. Deprecate or remove core `GatherResult` methods that directly expose TransformsV2 types, such as `buildTrialStore()`, `project()`, `reduce()`, and `sortIndicesBy()`, once callers have migrated.
-7. Drop TransformsV2 includes from `GatherResult.hpp` when no core API uses them.
+1. ~~Add or finalize `GatherResult::fromRows()` for row-aligned DataObjects and `fromRowsLike(parent, rows)` for preserving parent row metadata.~~ **Done.**
+2. ~~Add TransformsV2 extension helpers that consume `GatherResult<InputT>` and run a pipeline per row.~~ **Done.**
+3. ~~Return `GatherResult<OutputT>` when the per-row pipeline output is a supported DataObject type.~~ **Done.**
+4. ~~Return `std::vector<Scalar>` for scalar reductions such as spike counts.~~ **Done.**
+5. ~~Move `PipelineValueStore` construction for trial-specific parameters into the TransformsV2 extension helper or caller-provided row-context function.~~ **Done.**
+6. ~~Deprecate or remove core `GatherResult` methods that directly expose TransformsV2 types, such as `buildTrialStore()`, `project()`, `reduce()`, and `sortIndicesBy()`, once callers have migrated.~~ **Done.**
+7. ~~Drop TransformsV2 includes from `GatherResult.hpp` when no core API uses them.~~ **Done.**
 
 ### Exit Criteria
 
@@ -384,7 +388,7 @@ Use this checklist before considering the migration complete:
 - `GatherResult::size()` matches the number of generated windows.
 - `GatherResult::intervalAt(i)` preserves its documented compatibility semantics. If both prepared-window and source-query interval accessors exist, each is named clearly.
 - `GatherResult::alignmentTimeAt(i)` returns the original event time or selected interval alignment point.
-- Current `GatherResult::buildTrialStore(i)` behavior, if still present, sets `alignment_time`, `trial_index`, `trial_duration`, and `end_time` correctly.
+- `buildGatherRowStore(result, i)` sets `alignment_time`, `trial_index`, `trial_duration`, and `end_time` correctly.
 - `GatherResult::reorder()` preserves original-index semantics.
 - `GatherResult` rows are normal DataObjects; callers do not branch on view-backed versus owning row storage.
 - A future `fromRowsLike()` path can preserve row metadata when a per-row transform produces another DataObject type.

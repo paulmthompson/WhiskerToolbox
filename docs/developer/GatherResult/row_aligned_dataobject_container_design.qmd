@@ -129,7 +129,7 @@ TimeFrame conversion belongs at operation boundaries:
 
 ## TransformsV2 Decoupling
 
-The current `GatherResult` API contains TransformsV2-facing helpers such as `buildTrialStore()`, `project()`, `reduce()`, and `sortIndicesBy()`. These are useful but do not require private state beyond row access and row metadata.
+The TransformsV2-facing helpers that formerly lived on `GatherResult` now live in the gather extension. `buildGatherRowStore()`, `projectGatherRows()`, `reduceGatherRows()`, `sortGatherRowsBy()`, and `transformGatherRows()` use public `GatherResult` row access and row metadata.
 
 The target dependency direction is:
 
@@ -183,6 +183,6 @@ Recommended order:
 
 1. Complete prepared-window storage and adapter removal.
 2. Preserve existing projection/reduction helpers until callers are stable.
-3. Add `fromRows()` / `fromRowsLike()` when a concrete per-row transform caller needs them.
-4. Move TransformsV2-specific helpers into extension code.
-5. Remove TransformsV2 includes from core `GatherResult.hpp` once the core API no longer exposes those types.
+3. ~~Add `fromRows()` / `fromRowsLike()` when a concrete per-row transform caller needs them.~~ **Done in Phase 5.5.**
+4. ~~Move TransformsV2-specific helpers into extension code.~~ **Done in Phase 5.5.**
+5. ~~Remove TransformsV2 includes from core `GatherResult.hpp` once the core API no longer exposes those types.~~ **Done in Phase 5.5.**

@@ -77,8 +77,8 @@ ctest --preset my-clang-release --output-on-failure -R "GatherResult|PlotAlignme
 
 | TEST_CASE | Covers |
 |---|---|
-| `GatherResult - buildTrialStore` | Trial metadata |
-| `GatherResult - buildTrialStore with reordering` | `trial_index` after reorder |
+| `GatherResult extension - buildGatherRowStore` | Trial metadata |
+| `GatherResult extension - buildGatherRowStore with reordering` | `trial_index` after reorder |
 | `Prepared event windows - basic functionality` | Prepared event-aligned windows and companion alignment events |
 | `Prepared interval alignment events - alignment options` | Start/end/center companion alignment events |
 | `Prepared event windows with time normalization` | Prepared windows + normalization pipeline |

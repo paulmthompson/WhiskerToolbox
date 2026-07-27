@@ -34,7 +34,7 @@
  * }
  *
  * // At runtime
- * auto store = gather_result.buildTrialStore(trial_idx);  // Populates alignment_time
+ * auto store = buildGatherRowStore(gather_result, trial_idx);  // Populates alignment_time
  * // Pipeline applies bindings automatically
  * ```
  *
@@ -48,8 +48,8 @@
  * @see PipelineValueStore for value store documentation
  */
 
-#include "DigitalTimeSeries/EventWithId.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DigitalTimeSeries/EventWithId.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -93,7 +93,7 @@ namespace Neuralyzer::Transforms::V2 {
  * }
  *
  * // At runtime with GatherResult
- * auto store = gather_result.buildTrialStore(i);  // Contains "alignment_time"
+ * auto store = buildGatherRowStore(gather_result, i);  // Contains "alignment_time"
  * // Pipeline applies bindings automatically
  * @endcode
  *
@@ -129,8 +129,8 @@ struct NormalizeTimeParamsV2 {
  * @endcode
  */
 [[nodiscard]] inline float normalizeTimeValueV2(
-        TimeFrameIndex const& time,
-        NormalizeTimeParamsV2 const& params) {
+        TimeFrameIndex const & time,
+        NormalizeTimeParamsV2 const & params) {
     return static_cast<float>(time.getValue() - params.alignment_time);
 }
 
@@ -144,8 +144,8 @@ struct NormalizeTimeParamsV2 {
  * @return float The normalized time (event.time() - alignment_time)
  */
 [[nodiscard]] inline float normalizeEventTimeValueV2(
-        EventWithId const& event,
-        NormalizeTimeParamsV2 const& params) {
+        EventWithId const & event,
+        NormalizeTimeParamsV2 const & params) {
     return static_cast<float>(event.time().getValue() - params.alignment_time);
 }
 
@@ -157,11 +157,11 @@ struct NormalizeTimeParamsV2 {
  * @return float The normalized time (sample.time() - alignment_time)
  */
 [[nodiscard]] inline float normalizeSampleTimeValueV2(
-        AnalogTimeSeries::TimeValuePoint const& sample,
-        NormalizeTimeParamsV2 const& params) {
+        AnalogTimeSeries::TimeValuePoint const & sample,
+        NormalizeTimeParamsV2 const & params) {
     return static_cast<float>(sample.time().getValue() - params.alignment_time);
 }
 
-}  // namespace Neuralyzer::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2
 
-#endif  // NEURALYZER_V2_NORMALIZE_TIME_HPP
+#endif// NEURALYZER_V2_NORMALIZE_TIME_HPP

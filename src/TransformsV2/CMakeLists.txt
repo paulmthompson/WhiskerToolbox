@@ -29,6 +29,7 @@ set(TRANSFORM_V2_SOURCES
 
         extension/gatherResult/GatherPipelineExecutor.hpp
         extension/gatherResult/GatherPipelineExecutor.cpp
+        extension/gatherResult/GatherResultRowContext.hpp
         extension/ElementTransform.hpp
         extension/ParameterBinding.hpp
         extension/ParameterBinding.cpp

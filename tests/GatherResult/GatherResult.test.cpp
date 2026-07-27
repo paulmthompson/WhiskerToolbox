@@ -286,6 +286,95 @@ TEST_CASE("GatherResult - at() with bounds checking", "[GatherResult]") {
     CHECK_THROWS_AS(result.at(2), std::out_of_range);
 }
 
+TEST_CASE("GatherResult - fromRows stores row DataObjects with optional metadata",
+          "[GatherResult][fromRows][Phase5_5]") {
+    std::vector<std::shared_ptr<DigitalEventSeries>> rows{
+            createEventSeries({11, 12}),
+            createEventSeries({31, 32})};
+    auto windows = createIntervalSeries({{10, 20}, {30, 40}});
+    auto alignment_events = createEventSeries({15, 35});
+
+    auto result = GatherResult<DigitalEventSeries>::fromRows(rows, windows, alignment_events);
+
+    REQUIRE(result.size() == 2);
+    CHECK(result.source() == nullptr);
+    CHECK(result[0] == rows[0]);
+    CHECK(result[1] == rows[1]);
+    CHECK(result.windows() == windows);
+    CHECK(result.alignmentPoints() == alignment_events);
+    CHECK(result.intervalAt(0) == Interval{10, 20});
+    CHECK(result.intervalAt(1) == Interval{30, 40});
+    CHECK(result.alignmentTimeAt(0) == 15);
+    CHECK(result.alignmentTimeAt(1) == 35);
+}
+
+TEST_CASE("GatherResult - fromRows validates rows and metadata",
+          "[GatherResult][fromRows][Phase5_5]") {
+    std::vector<std::shared_ptr<DigitalEventSeries>> rows{
+            createEventSeries({1}),
+            createEventSeries({2})};
+
+    SECTION("Null row pointer throws") {
+        rows[1] = nullptr;
+        CHECK_THROWS_AS(
+                GatherResult<DigitalEventSeries>::fromRows(rows),
+                std::invalid_argument);
+    }
+
+    SECTION("Window count mismatch throws") {
+        auto windows = createIntervalSeries({{0, 10}});
+        CHECK_THROWS_AS(
+                GatherResult<DigitalEventSeries>::fromRows(rows, windows),
+                std::invalid_argument);
+    }
+
+    SECTION("Alignment point count mismatch throws") {
+        auto alignment_events = createEventSeries({5});
+        CHECK_THROWS_AS(
+                GatherResult<DigitalEventSeries>::fromRows(rows, nullptr, alignment_events),
+                std::invalid_argument);
+    }
+
+    SECTION("Metadata-free rows reject interval and alignment access") {
+        auto result = GatherResult<DigitalEventSeries>::fromRows(rows);
+        REQUIRE(result.size() == 2);
+        CHECK_THROWS_AS(result.intervalAt(0), std::out_of_range);
+        CHECK_THROWS_AS(result.alignmentTimeAt(0), std::out_of_range);
+    }
+}
+
+TEST_CASE("GatherResult - fromRowsLike preserves reordered parent metadata",
+          "[GatherResult][fromRows][Phase5_5]") {
+    auto spikes = createEventSeries({5, 15, 105, 115});
+    auto alignment_events = createEventSeries({10, 110});
+    auto windows = createWindowsAroundEvents(alignment_events, 10, 10);
+    auto parent = gather(spikes, windows, alignment_events).reorder({1, 0});
+
+    std::vector<std::shared_ptr<DigitalEventSeries>> rows{
+            createEventSeries({1001}),
+            createEventSeries({2001})};
+    auto child = GatherResult<DigitalEventSeries>::fromRowsLike(parent, rows);
+
+    REQUIRE(child.size() == 2);
+    CHECK(child.source() == nullptr);
+    CHECK(child[0] == rows[0]);
+    CHECK(child[1] == rows[1]);
+    CHECK(child.windows() == windows);
+    CHECK(child.alignmentPoints() == alignment_events);
+    CHECK(child.isReordered());
+    CHECK(child.originalIndex(0) == 1);
+    CHECK(child.originalIndex(1) == 0);
+    CHECK(child.intervalAtReordered(0) == parent.intervalAtReordered(0));
+    CHECK(child.intervalAtReordered(1) == parent.intervalAtReordered(1));
+    CHECK(child.alignmentTimeAt(0) == parent.alignmentTimeAt(0));
+    CHECK(child.alignmentTimeAt(1) == parent.alignmentTimeAt(1));
+
+    rows.push_back(createEventSeries({3001}));
+    CHECK_THROWS_AS(
+            GatherResult<DigitalEventSeries>::fromRowsLike(parent, rows),
+            std::invalid_argument);
+}
+
 // =============================================================================
 // Integration Tests
 // =============================================================================
