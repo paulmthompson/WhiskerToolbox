@@ -99,7 +99,7 @@ namespace Neuralyzer::Gather {
  */
 [[nodiscard]] std::vector<float> gatherAndExecutePipeline(
         DataTypeVariant const & source,
-        std::shared_ptr<DigitalIntervalSeries> intervals,
+        std::shared_ptr<DigitalIntervalSeries const> intervals,
         Neuralyzer::Transforms::V2::TransformPipeline const & pipeline);
 
 }// namespace Neuralyzer::Gather

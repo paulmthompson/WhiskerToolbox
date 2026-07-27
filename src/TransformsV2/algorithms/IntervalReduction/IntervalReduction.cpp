@@ -103,19 +103,33 @@ std::shared_ptr<TimeFrame> getOrCreateTimeFrame(
 }
 
 /**
- * @brief Create a non-owning shared_ptr alias for use with GatherResult.
+ * @brief Create a non-owning source shared_ptr alias for use with GatherResult.
  *
  * The resulting shared_ptr does NOT own the object; it merely provides a
  * compatible smart-pointer interface. The caller must ensure the referenced
  * object outlives the shared_ptr (which is guaranteed within a single
  * transform function call).
+ *
+ * Current DataObject view APIs used by GatherResult require non-const source
+ * pointers, so this source alias remains mutable until those APIs are
+ * const-correct.
  */
 template<typename T>
-std::shared_ptr<T> borrowAsShared(T const & obj) {
+std::shared_ptr<T> borrowSourceAsShared(T const & obj) {
     // Aliasing constructor with null controlling block → no-op deleter
     return std::shared_ptr<T>(
             std::shared_ptr<T>{},
             const_cast<T *>(&obj));
+}
+
+/**
+ * @brief Create a non-owning const shared_ptr alias for row-defining intervals.
+ */
+std::shared_ptr<DigitalIntervalSeries const> borrowIntervalsAsShared(
+        DigitalIntervalSeries const & intervals) {
+    return {
+            std::shared_ptr<DigitalIntervalSeries const>{},
+            &intervals};
 }
 
 }// anonymous namespace
@@ -155,10 +169,10 @@ std::shared_ptr<TensorData> analogIntervalReduction(
     using TimeValuePoint = AnalogTimeSeries::TimeValuePoint;
 
     // GatherResult converts interval bounds to the source TimeFrame at query time.
-    auto analog_ptr = borrowAsShared(analog);
+    auto analog_ptr = borrowSourceAsShared(analog);
     auto gather = GatherResult<AnalogTimeSeries>::create(
             analog_ptr,
-            borrowAsShared(intervals));
+            borrowIntervalsAsShared(intervals));
 
     ctx.reportProgress(15);
 
@@ -233,10 +247,10 @@ std::shared_ptr<TensorData> eventIntervalReduction(
     using EventElement = Neuralyzer::Gather::element_type_of_t<DigitalEventSeries>;
 
     // GatherResult converts interval bounds to the source TimeFrame at query time.
-    auto events_ptr = borrowAsShared(events);
+    auto events_ptr = borrowSourceAsShared(events);
     auto gather = GatherResult<DigitalEventSeries>::create(
             events_ptr,
-            borrowAsShared(intervals));
+            borrowIntervalsAsShared(intervals));
 
     ctx.reportProgress(15);
 
@@ -280,7 +294,9 @@ std::shared_ptr<TensorData> eventIntervalReduction(
 // IntervalOverlapReduction
 // ============================================================================
 
-std::shared_ptr<TensorData> intervalOverlapReduction(
+// The two interval-series parameters intentionally distinguish row windows from
+// the source interval series gathered inside each row.
+std::shared_ptr<TensorData> intervalOverlapReduction(// NOLINT(bugprone-easily-swappable-parameters)
         DigitalIntervalSeries const & intervals,
         DigitalIntervalSeries const & source,
         IntervalReductionParams const & params,
@@ -311,10 +327,10 @@ std::shared_ptr<TensorData> intervalOverlapReduction(
     using IntervalElement = Neuralyzer::Gather::element_type_of_t<DigitalIntervalSeries>;
 
     // GatherResult converts interval bounds to the source TimeFrame at query time.
-    auto source_ptr = borrowAsShared(source);
+    auto source_ptr = borrowSourceAsShared(source);
     auto gather = GatherResult<DigitalIntervalSeries>::create(
             source_ptr,
-            borrowAsShared(intervals));
+            borrowIntervalsAsShared(intervals));
 
     ctx.reportProgress(15);
 

@@ -203,7 +203,7 @@ float applyRangeReductionToOutput(
 
 std::vector<float> gatherAndExecutePipeline(
         DataTypeVariant const & source,
-        std::shared_ptr<DigitalIntervalSeries> intervals,
+        std::shared_ptr<DigitalIntervalSeries const> intervals,
         Neuralyzer::Transforms::V2::TransformPipeline const & pipeline) {
     using Neuralyzer::Transforms::V2::executePipeline;
 

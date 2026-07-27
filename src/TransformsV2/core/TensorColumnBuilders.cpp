@@ -5,16 +5,16 @@
 #include "TransformsV2/extension/gatherResult/GatherPipelineExecutor.hpp"
 #include "TransformsV2/io/PipelineLoader.hpp"
 
+#include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/ContainerTypeIndex.hpp"
 #include "DataManager/utils/DataTypeIndexBridge.hpp"
-#include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "Tensors/storage/LazyColumnTensorStorage.hpp"
 #include "Tensors/TensorData.hpp"
+#include "Tensors/storage/LazyColumnTensorStorage.hpp"
 
-#include <cmath>     // NAN
+#include <cmath>// NAN
 #include <functional>
 #include <stdexcept>
 #include <utility>
@@ -68,8 +68,8 @@ std::vector<std::string> getStepNames(
 bool pipelineProducesFloat(
         std::type_index source_container_type,
         Neuralyzer::Transforms::V2::TransformPipeline const & pipeline) {
-    using Neuralyzer::TypeTraits::TypeIndexMapper;
     using Neuralyzer::Transforms::V2::resolveTypeChain;
+    using Neuralyzer::TypeTraits::TypeIndexMapper;
 
     auto const step_names = getStepNames(pipeline);
 
@@ -82,25 +82,23 @@ bool pipelineProducesFloat(
             return false;
         }
 
-        if (pipeline.hasRangeReduction()) {
+        if (auto const range_reduction = pipeline.getRangeReduction();
+            range_reduction.has_value()) {
             // Range reduction follows the element chain —
             // check the reduction's declared output type.
-            auto const & red = pipeline.getRangeReduction().value();
-            return red.output_type == typeid(float)
-                || red.output_type == typeid(double)
-                || red.output_type == typeid(int);
+            auto const & red = *range_reduction;
+            return red.output_type == typeid(float) || red.output_type == typeid(double) || red.output_type == typeid(int);
         }
 
         // No range reduction: the chain itself must end at float.
         return chain.output_element_type == typeid(float);
     }
 
-    if (pipeline.hasRangeReduction()) {
+    if (auto const range_reduction = pipeline.getRangeReduction();
+        range_reduction.has_value()) {
         // Range-reduction-only (no element steps).
-        auto const & red = pipeline.getRangeReduction().value();
-        return red.output_type == typeid(float)
-            || red.output_type == typeid(double)
-            || red.output_type == typeid(int);
+        auto const & red = *range_reduction;
+        return red.output_type == typeid(float) || red.output_type == typeid(double) || red.output_type == typeid(int);
     }
 
     // Empty pipeline (identity / passthrough).
@@ -109,26 +107,25 @@ bool pipelineProducesFloat(
     return element_type == typeid(float);
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // ============================================================================
 // buildIntervalPropertyProvider
 // ============================================================================
 
 ColumnProviderFn buildIntervalPropertyProvider(
-    std::shared_ptr<DigitalIntervalSeries> intervals,
-    IntervalProperty property)
-{
+        std::shared_ptr<DigitalIntervalSeries const> intervals,
+        IntervalProperty property) {
     if (!intervals) {
         throw std::runtime_error(
-            "buildIntervalPropertyProvider: intervals must not be null");
+                "buildIntervalPropertyProvider: intervals must not be null");
     }
 
     return [ivals = std::move(intervals), property]() -> std::vector<float> {
         std::vector<float> result;
         result.reserve(ivals->size());
 
-        for (auto const & iv : ivals->view()) {
+        for (auto const & iv: ivals->view()) {
             switch (property) {
                 case IntervalProperty::Start:
                     result.push_back(static_cast<float>(iv.interval.start));
@@ -150,30 +147,29 @@ ColumnProviderFn buildIntervalPropertyProvider(
 // ============================================================================
 
 ColumnProviderFn buildAnalogSampleAtOffsetProvider(
-    DataManager & dm,
-    std::string const & source_key,
-    std::vector<TimeFrameIndex> const & row_times,
-    int64_t offset)
-{
+        DataManager & dm,
+        std::string const & source_key,
+        std::vector<TimeFrameIndex> const & row_times,
+        int64_t offset) {
     // Validate source exists
     auto source = dm.getData<AnalogTimeSeries>(source_key);
     if (!source) {
         throw std::runtime_error(
-            "buildAnalogSampleAtOffsetProvider: source_key '" + source_key +
-            "' not found or is not AnalogTimeSeries");
+                "buildAnalogSampleAtOffsetProvider: source_key '" + source_key +
+                "' not found or is not AnalogTimeSeries");
     }
 
     return [&dm, key = source_key, times = row_times, off = offset]() -> std::vector<float> {
         auto src = dm.getData<AnalogTimeSeries>(key);
         if (!src) {
             throw std::runtime_error(
-                "buildAnalogSampleAtOffsetProvider: source '" + key +
-                "' no longer available");
+                    "buildAnalogSampleAtOffsetProvider: source '" + key +
+                    "' no longer available");
         }
 
         std::vector<float> result;
         result.reserve(times.size());
-        for (auto const & t : times) {
+        for (auto const & t: times) {
             auto offset_time = TimeFrameIndex(t.getValue() + off);
             auto val = src->getAtTime(offset_time);
             result.push_back(val.value_or(NAN));
@@ -197,16 +193,15 @@ namespace {
  * must ensure the pipeline produces float output before calling this.
  */
 std::vector<float> sampleOutputAtRowTimes(
-    DataTypeVariant const & output,
-    std::vector<TimeFrameIndex> const & row_times)
-{
+        DataTypeVariant const & output,
+        std::vector<TimeFrameIndex> const & row_times) {
     return std::visit([&](auto const & ptr) -> std::vector<float> {
         using T = std::remove_reference_t<decltype(*ptr)>;
 
         if constexpr (std::is_same_v<T, AnalogTimeSeries>) {
             std::vector<float> result;
             result.reserve(row_times.size());
-            for (auto const & t : row_times) {
+            for (auto const & t: row_times) {
                 auto val = ptr->getAtTime(t);
                 result.push_back(val.value_or(NAN));
             }
@@ -215,7 +210,7 @@ std::vector<float> sampleOutputAtRowTimes(
         } else if constexpr (std::is_same_v<T, RaggedAnalogTimeSeries>) {
             std::vector<float> result;
             result.reserve(row_times.size());
-            for (auto const & t : row_times) {
+            for (auto const & t: row_times) {
                 auto data = ptr->getDataAtTime(t);
                 result.push_back(data.empty() ? NAN : data[0]);
             }
@@ -223,31 +218,31 @@ std::vector<float> sampleOutputAtRowTimes(
 
         } else {
             throw std::runtime_error(
-                "sampleOutputAtRowTimes: pipeline output is not a float time "
-                "series (AnalogTimeSeries or RaggedAnalogTimeSeries)");
+                    "sampleOutputAtRowTimes: pipeline output is not a float time "
+                    "series (AnalogTimeSeries or RaggedAnalogTimeSeries)");
         }
-    }, output);
+    },
+                      output);
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 ColumnProviderFn buildPipelineColumnProvider(
-    DataManager & dm,
-    std::string const & source_key,
-    std::vector<TimeFrameIndex> const & row_times,
-    Neuralyzer::Transforms::V2::TransformPipeline pipeline)
-{
+        DataManager & dm,
+        std::string const & source_key,
+        std::vector<TimeFrameIndex> const & row_times,
+        Neuralyzer::Transforms::V2::TransformPipeline pipeline) {
     if (row_times.empty()) {
         throw std::runtime_error(
-            "buildPipelineColumnProvider: row_times must not be empty");
+                "buildPipelineColumnProvider: row_times must not be empty");
     }
 
     // ── Validate source exists ───────────────────────────────────────────
     auto const src_type = dm.getType(source_key);
     if (src_type == DM_DataType::Unknown) {
         throw std::runtime_error(
-            "buildPipelineColumnProvider: source_key '" + source_key +
-            "' not found in DataManager");
+                "buildPipelineColumnProvider: source_key '" + source_key +
+                "' not found in DataManager");
     }
 
     auto const src_type_index = Neuralyzer::TypeTraits::dmDataTypeToContainerTypeIndex(src_type);
@@ -257,17 +252,18 @@ ColumnProviderFn buildPipelineColumnProvider(
     // ── Reject terminal range reductions for timestamp rows ─────────────
     if (pipeline.hasRangeReduction()) {
         throw std::runtime_error(
-            "buildPipelineColumnProvider: terminal range reductions are not "
-            "appropriate for timestamp-row columns (they collapse the entire "
-            "series to a single scalar). Use buildIntervalPipelineProvider() "
-            "for interval-row columns instead.");
+                "buildPipelineColumnProvider: terminal range reductions are not "
+                "appropriate for timestamp-row columns (they collapse the entire "
+                "series to a single scalar). Use buildIntervalPipelineProvider() "
+                "for interval-row columns instead.");
     }
 
     // ── Validate pipeline produces float output ─────────────────────────
     if (!pipelineProducesFloat(src_type_index, pipeline)) {
         throw std::runtime_error(
-            "buildPipelineColumnProvider: pipeline does not produce float "
-            "output for source '" + source_key + "'");
+                "buildPipelineColumnProvider: pipeline does not produce float "
+                "output for source '" +
+                source_key + "'");
     }
 
     // ── Empty pipeline (passthrough): sample source directly ────────────
@@ -277,8 +273,8 @@ ColumnProviderFn buildPipelineColumnProvider(
             auto var = dm.getDataVariant(key);
             if (!var) {
                 throw std::runtime_error(
-                    "buildPipelineColumnProvider(passthrough): source '" +
-                    key + "' no longer available");
+                        "buildPipelineColumnProvider(passthrough): source '" +
+                        key + "' no longer available");
             }
             return sampleOutputAtRowTimes(*var, times);
         };
@@ -290,12 +286,12 @@ ColumnProviderFn buildPipelineColumnProvider(
         auto var = dm.getDataVariant(key);
         if (!var) {
             throw std::runtime_error(
-                "buildPipelineColumnProvider: source '" + key +
-                "' no longer available");
+                    "buildPipelineColumnProvider: source '" + key +
+                    "' no longer available");
         }
 
-        DataTypeVariant output =
-            Neuralyzer::Transforms::V2::executePipeline(*var, pipe);
+        DataTypeVariant const output =
+                Neuralyzer::Transforms::V2::executePipeline(*var, pipe);
 
         return sampleOutputAtRowTimes(output, times);
     };
@@ -306,22 +302,21 @@ ColumnProviderFn buildPipelineColumnProvider(
 // ============================================================================
 
 ColumnProviderFn buildIntervalPipelineProvider(
-    DataManager & dm,
-    std::string const & source_key,
-    std::shared_ptr<DigitalIntervalSeries> intervals,
-    Neuralyzer::Transforms::V2::TransformPipeline pipeline)
-{
+        DataManager & dm,
+        std::string const & source_key,
+        std::shared_ptr<DigitalIntervalSeries const> intervals,
+        Neuralyzer::Transforms::V2::TransformPipeline pipeline) {
     if (!intervals) {
         throw std::runtime_error(
-            "buildIntervalPipelineProvider: intervals must not be null");
+                "buildIntervalPipelineProvider: intervals must not be null");
     }
 
     // ── Validate source exists ───────────────────────────────────────────
     auto const src_type = dm.getType(source_key);
     if (src_type == DM_DataType::Unknown) {
         throw std::runtime_error(
-            "buildIntervalPipelineProvider: source_key '" + source_key +
-            "' not found in DataManager");
+                "buildIntervalPipelineProvider: source_key '" + source_key +
+                "' not found in DataManager");
     }
 
     auto const src_type_index = Neuralyzer::TypeTraits::dmDataTypeToContainerTypeIndex(src_type);
@@ -329,16 +324,17 @@ ColumnProviderFn buildIntervalPipelineProvider(
     // ── Require a range reduction for interval rows ─────────────────────
     if (!pipeline.hasRangeReduction()) {
         throw std::runtime_error(
-            "buildIntervalPipelineProvider: pipeline must have a range "
-            "reduction set (interval rows require collapsing each gathered "
-            "view to a single scalar)");
+                "buildIntervalPipelineProvider: pipeline must have a range "
+                "reduction set (interval rows require collapsing each gathered "
+                "view to a single scalar)");
     }
 
     // ── Validate pipeline produces float output ─────────────────────────
     if (!pipelineProducesFloat(src_type_index, pipeline)) {
         throw std::runtime_error(
-            "buildIntervalPipelineProvider: pipeline does not produce float "
-            "output for source '" + source_key + "'");
+                "buildIntervalPipelineProvider: pipeline does not produce float "
+                "output for source '" +
+                source_key + "'");
     }
 
     // ── Return closure that delegates to gatherAndExecutePipeline ────────
@@ -348,8 +344,8 @@ ColumnProviderFn buildIntervalPipelineProvider(
         auto var = dm.getDataVariant(key);
         if (!var) {
             throw std::runtime_error(
-                "buildIntervalPipelineProvider: source '" + key +
-                "' no longer available");
+                    "buildIntervalPipelineProvider: source '" + key +
+                    "' no longer available");
         }
         return Neuralyzer::Gather::gatherAndExecutePipeline(*var, ivals, pipe);
     };
@@ -360,16 +356,15 @@ ColumnProviderFn buildIntervalPipelineProvider(
 // ============================================================================
 
 ColumnProviderFn buildProviderFromRecipe(
-    DataManager & dm,
-    ColumnRecipe const & recipe,
-    std::vector<TimeFrameIndex> const & row_times,
-    std::shared_ptr<DigitalIntervalSeries> intervals)
-{
+        DataManager & dm,
+        ColumnRecipe const & recipe,
+        std::vector<TimeFrameIndex> const & row_times,
+        std::shared_ptr<DigitalIntervalSeries const> intervals) {
     // 1. Interval-property column (no data source needed)
     if (recipe.interval_property.has_value()) {
         if (!intervals) {
             throw std::runtime_error(
-                "buildProviderFromRecipe: interval_property column requires intervals");
+                    "buildProviderFromRecipe: interval_property column requires intervals");
         }
         return buildIntervalPropertyProvider(intervals, recipe.interval_property.value());
     }
@@ -377,32 +372,34 @@ ColumnProviderFn buildProviderFromRecipe(
     // 2. source_key must be set for all non-interval-property columns
     if (recipe.source_key.empty()) {
         throw std::runtime_error(
-            "buildProviderFromRecipe: source_key is empty and no interval_property set");
+                "buildProviderFromRecipe: source_key is empty and no interval_property set");
     }
 
     // 3. Interval-row columns → Pattern B (generic gather + pipeline)
     if (intervals) {
         if (recipe.pipeline_json.empty()) {
             throw std::runtime_error(
-                "buildProviderFromRecipe: interval-row columns require a pipeline "
-                "with a range reduction (pipeline_json is empty)");
+                    "buildProviderFromRecipe: interval-row columns require a pipeline "
+                    "with a range reduction (pipeline_json is empty)");
         }
 
         auto pipeline_result = Neuralyzer::Transforms::V2::Examples::loadPipelineFromJson(recipe.pipeline_json);
         if (!pipeline_result) {
+            auto const error = pipeline_result.error();
+            auto const error_message = error ? std::string(error->what()) : std::string("unknown error");
             throw std::runtime_error(
-                "buildProviderFromRecipe: failed to load pipeline from JSON: " +
-                std::string(pipeline_result.error()->what()));
+                    "buildProviderFromRecipe: failed to load pipeline from JSON: " +
+                    error_message);
         }
 
         return buildIntervalPipelineProvider(
-            dm, recipe.source_key, std::move(intervals), std::move(pipeline_result.value()));
+                dm, recipe.source_key, std::move(intervals), std::move(pipeline_result.value()));
     }
 
     // 4. Timestamp-row columns → Pattern A (generic pipeline + sample)
     if (row_times.empty()) {
         throw std::runtime_error(
-            "buildProviderFromRecipe: timestamp-row column requires non-empty row_times");
+                "buildProviderFromRecipe: timestamp-row column requires non-empty row_times");
     }
 
     // Load pipeline from JSON (empty JSON = empty pipeline = identity passthrough)
@@ -410,15 +407,17 @@ ColumnProviderFn buildProviderFromRecipe(
     if (!recipe.pipeline_json.empty()) {
         auto pipeline_result = Neuralyzer::Transforms::V2::Examples::loadPipelineFromJson(recipe.pipeline_json);
         if (!pipeline_result) {
+            auto const error = pipeline_result.error();
+            auto const error_message = error ? std::string(error->what()) : std::string("unknown error");
             throw std::runtime_error(
-                "buildProviderFromRecipe: failed to load pipeline from JSON: " +
-                std::string(pipeline_result.error()->what()));
+                    "buildProviderFromRecipe: failed to load pipeline from JSON: " +
+                    error_message);
         }
         pipeline = std::move(pipeline_result.value());
     }
 
     return buildPipelineColumnProvider(
-        dm, recipe.source_key, row_times, std::move(pipeline));
+            dm, recipe.source_key, row_times, std::move(pipeline));
 }
 
 // ============================================================================
@@ -426,27 +425,26 @@ ColumnProviderFn buildProviderFromRecipe(
 // ============================================================================
 
 InvalidationWiringFn buildInvalidationWiringFn(
-    DataManager & dm,
-    std::vector<std::string> const & source_keys)
-{
+        DataManager & dm,
+        std::vector<std::string> const & source_keys) {
     return [&dm, keys = source_keys](
-               LazyColumnTensorStorage & storage,
-               TensorData & tensor) {
+                   LazyColumnTensorStorage & storage,
+                   TensorData & tensor) {
         for (std::size_t col = 0; col < keys.size(); ++col) {
             auto const & key = keys[col];
             if (key.empty()) {
-                continue; // no source dependency for this column
+                continue;// no source dependency for this column
             }
 
             // Register a DataManager observer that invalidates this column
             // and notifies the tensor's observers.
             [[maybe_unused]] auto cb_id =
-                dm.addCallbackToData(key, [&storage, &tensor, col]() {
-                    storage.invalidateColumn(col);
-                    tensor.notifyObservers();
-                });
+                    dm.addCallbackToData(key, [&storage, &tensor, col]() {
+                        storage.invalidateColumn(col);
+                        tensor.notifyObservers();
+                    });
         }
     };
 }
 
-} // namespace Neuralyzer::TensorBuilders
+}// namespace Neuralyzer::TensorBuilders

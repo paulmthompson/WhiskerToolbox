@@ -18,9 +18,9 @@
  * @see GatherResult for the gather+reduce pattern
  */
 
-#include "Tensors/InvalidationWiringFn.hpp"                     // InvalidationWiringFn
+#include "Tensors/InvalidationWiringFn.hpp"           // InvalidationWiringFn
 #include "Tensors/storage/LazyColumnTensorStorage.hpp"// ColumnProviderFn, ColumnSource
-#include "TimeFrame/TimeFrameIndex.hpp"                           // TimeFrameIndex
+#include "TimeFrame/TimeFrameIndex.hpp"               // TimeFrameIndex
 
 #include <functional>
 #include <memory>
@@ -99,7 +99,7 @@ struct ColumnRecipe {
  * @return ColumnProviderFn producing one float per interval
  */
 ColumnProviderFn buildIntervalPropertyProvider(
-        std::shared_ptr<DigitalIntervalSeries> intervals,
+        std::shared_ptr<DigitalIntervalSeries const> intervals,
         IntervalProperty property);
 
 /**
@@ -202,7 +202,7 @@ ColumnProviderFn buildPipelineColumnProvider(
 ColumnProviderFn buildIntervalPipelineProvider(
         DataManager & dm,
         std::string const & source_key,
-        std::shared_ptr<DigitalIntervalSeries> intervals,
+        std::shared_ptr<DigitalIntervalSeries const> intervals,
         Neuralyzer::Transforms::V2::TransformPipeline pipeline);
 
 /**
@@ -222,7 +222,7 @@ ColumnProviderFn buildProviderFromRecipe(
         DataManager & dm,
         ColumnRecipe const & recipe,
         std::vector<TimeFrameIndex> const & row_times,
-        std::shared_ptr<DigitalIntervalSeries> intervals);
+        std::shared_ptr<DigitalIntervalSeries const> intervals);
 
 // ============================================================================
 // Invalidation Wiring

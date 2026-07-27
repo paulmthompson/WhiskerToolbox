@@ -116,7 +116,7 @@ using Neuralyzer::TensorBuilders::IntervalProperty;
 }
 
 struct RowBuildContext {
-    std::shared_ptr<DigitalIntervalSeries> intervals;
+    std::shared_ptr<DigitalIntervalSeries const> intervals;
     std::vector<TimeFrameIndex> row_times;
     RowDescriptor row_desc = RowDescriptor::ordinal(0);
     std::size_t num_rows = 0;
@@ -209,7 +209,7 @@ struct RowBuildContext {
         DataManager & dm,
         ColumnRecipe const & recipe,
         std::vector<TimeFrameIndex> const & row_times,
-        std::shared_ptr<DigitalIntervalSeries> const & intervals) {
+        std::shared_ptr<DigitalIntervalSeries const> const & intervals) {
     if (recipe.interval_property.has_value()) {
         return buildIntervalPropertyProvider(intervals, recipe.interval_property.value());
     }
