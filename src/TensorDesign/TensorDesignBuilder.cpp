@@ -100,6 +100,7 @@ using Neuralyzer::TensorBuilders::IntervalProperty;
     recipe.column_name = col.value("name", "");
     recipe.source_key = col.value("source_key", "");
     recipe.pipeline_json = col.value("pipeline_json", "");
+    recipe.row_pipeline_json = col.value("row_pipeline_json", "");
 
     if (col.contains("interval_property")) {
         auto const prop = col["interval_property"].get<std::string>();
@@ -293,6 +294,9 @@ std::string serializeDesignJson(TensorDesignSpec const & spec) {
         col["name"] = recipe.column_name;
         col["source_key"] = recipe.source_key;
         col["pipeline_json"] = recipe.pipeline_json;
+        if (!recipe.row_pipeline_json.empty()) {
+            col["row_pipeline_json"] = recipe.row_pipeline_json;
+        }
         if (recipe.interval_property.has_value()) {
             col["interval_property"] =
                     intervalPropertyToString(recipe.interval_property.value());

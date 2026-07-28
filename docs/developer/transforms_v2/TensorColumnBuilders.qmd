@@ -35,11 +35,13 @@ struct ColumnRecipe {
     std::string column_name;
     std::string source_key;       // empty for interval-property columns
     std::string pipeline_json;    // embedded PipelineDescriptor JSON
+    std::string row_pipeline_json; // row PipelineDescriptor JSON, not executed yet
     std::optional<IntervalProperty> interval_property;  // start, end, duration
 };
 ```
 
 Use `buildProviderFromRecipe()` to dispatch a recipe to the correct builder.
+In the Phase 2 row-pipeline refactor state, `row_pipeline_json` is a serialized data-model field only. It is parsed and serialized by TensorDesign, but `buildProviderFromRecipe()` still ignores it and preserves the existing full-row interval or timestamp-row behavior.
 
 ## Builder functions
 
