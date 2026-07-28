@@ -101,7 +101,8 @@ Spikes are drawn via **Lewis–Shedler thinning** (`fixtures/stochastic/PoissonT
 | `tests/DataManager/fixtures/whisker_contact_test_fixture.hpp` | Catch2 fixture |
 | `tests/DataManager/fixtures/stochastic/*.hpp` | AR(1), intervals, rate builder, thinning |
 | `tests/DataManager/test_whisker_contact_scenario.cpp` | Scenario unit / property tests |
-| `tests/TransformsV2/test_tensor_whisker_contact_scenario.cpp` | Cross-timeframe tensor integration |
+| `tests/TransformsV2/test_tensor_whisker_contact_scenario.cpp` | Programmatic TransformsV2 column-provider / lazy tensor integration |
+| `tests/TensorDesign/test_tensor_whisker_contact_scenario.cpp` | TensorDesign JSON integration, including contact-aligned spike windows |
 
 ## Configuration
 
@@ -143,10 +144,10 @@ Increase `duration_sec` for statistical tests that need more contact intervals (
 
 ### Programmatic assembly
 
-`test_tensor_whisker_contact_scenario.cpp` builds a lazy tensor with:
+The TransformsV2 scenario test builds a lazy tensor programmatically with:
 
 - **Rows**: `Contact` intervals
-- **Columns**: mean `Curvature`, spike count in interval, spike presence in a one-frame contact-onset window
+- **Columns**: mean `Curvature`, spike count in interval
 
 ```cpp
 WhiskerContactTestFixture fixture(cfg);
@@ -159,7 +160,7 @@ auto tensor = TensorData::createFromLazyColumns(...);
 
 ### JSON design specification
 
-The same tensor can be built from a [TensorDesigner-compatible JSON envelope](../../TensorDesign/TensorDesignBuilder.qmd) using the Qt-free `TensorDesign` library:
+The TensorDesign scenario test builds the same feature set plus contact-aligned spike presence from a [TensorDesigner-compatible JSON envelope](../../TensorDesign/TensorDesignBuilder.qmd) using the Qt-free `TensorDesign` library:
 
 ```json
 {
@@ -205,10 +206,7 @@ For future point-sampling and per-row normalization examples (angle at onset, tr
 
 ```bash
 cmake --build --preset my-clang-release > build_log.txt 2>&1
-
-out/build/Clang/Release/bin/test_data_manager "[whisker_contact]"
-out/build/Clang/Release/tests/TransformsV2/test_TransformsV2 "[whisker_contact]"
-out/build/Clang/Release/bin/test_tensor_design "[TensorDesign]"
+ctest --preset my-clang-release --output-on-failure -R "whisker_contact|Whisker contact scenario builds tensor from design JSON" > test_log.txt 2>&1
 ```
 
 Catch2 tags: `[whisker_contact]`, `[scenario]`, `[statistics]`, `[stochastic]`.

@@ -5,6 +5,8 @@ format: html
 
 **Status:** Implementation roadmap for [Column Row Pipeline Design](column_row_pipeline.qmd).
 
+Phases 1-4 are implemented. Phase 5 and later remain planned.
+
 This roadmap breaks the per-column row-pipeline refactor into small, testable steps. The design goal is to let each tensor column derive its own row-aligned gather inputs through TransformPipelines while keeping `GatherResult` a container/direct-gather executor rather than a pipeline runner.
 
 ## End State
@@ -35,19 +37,21 @@ Implemented foundations:
 - `buildIntervalPipelineProvider()` gathers over interval rows and applies range reductions.
 - `buildPipelineColumnProvider()` handles timestamp-row columns.
 - `TensorDesignBuilder` builds lazy-column tensors from JSON.
+- `ColumnRecipe::row_pipeline_json` is parsed and serialized.
+- `resolveIntervalGatherWindows()` resolves identity and `DigitalIntervalSeries` row-pipeline output.
+- `buildProviderFromRecipe()` uses row-pipeline windows for interval-row columns.
+- Contact-aligned spike presence is tested through TensorDesign JSON in the whisker-contact scenario.
 
 Known gaps:
 
-- `ColumnRecipe` does not include `row_pipeline_json`.
-- TensorDesign JSON does not parse or serialize `columns[].row_pipeline_json`.
-- Tensor column builders do not execute row pipelines before source gather.
 - Tensor column builders cannot yet bind iterable DataObject elements into `PipelineValueStore` for per-row column TransformPipeline execution.
+- Tensor column builders reject `DigitalEventSeries` sample-time row-pipeline output for interval-row columns; timestamp/sample dispatch is not implemented yet.
 - Point sampling still uses a temporary `pipeline_json` `"offset"` detection path in `TensorDesignBuilder::buildColumnProvider()`.
 - There is no row-pipeline caching.
 - UI does not expose row-pipeline configuration.
 - There is no column recipe preset registry, preset expansion layer, or bundled preset catalog.
 
-## Phase 1: Baseline Tests
+## Phase 1: Baseline Tests — Done
 
 Goal: lock down current behavior before adding row-pipeline dispatch.
 
@@ -70,7 +74,7 @@ Suggested test areas:
 - `tests/TransformsV2/` TensorColumnBuilders tests
 - Whisker-contact scenario tests
 
-## Phase 2: Add Recipe Field And JSON Round Trip
+## Phase 2: Add Recipe Field And JSON Round Trip — Done
 
 Goal: make `row_pipeline_json` part of the data model without changing provider behavior.
 
@@ -88,7 +92,7 @@ Exit criteria:
 - New JSON round-trips `row_pipeline_json`.
 - No provider behavior changes yet.
 
-## Phase 3: Row Pipeline Execution Skeleton
+## Phase 3: Row Pipeline Execution Skeleton — Done
 
 Goal: execute an empty or identity row pipeline and route through existing providers.
 
@@ -105,7 +109,7 @@ Exit criteria:
 - Identity row-pipeline output produces exactly the same values as current full-interval gather.
 - No new transform requirements are introduced.
 
-## Phase 4: DigitalIntervalSeries Output Dispatch
+## Phase 4: DigitalIntervalSeries Output Dispatch — Done
 
 Goal: support row pipelines that output prepared `DigitalIntervalSeries` windows.
 
@@ -194,19 +198,39 @@ Exit criteria:
 
 Goal: prove the design on the motivating analysis table.
 
+Status: partially implemented. The contact-onset spike-presence column is covered by TensorDesign JSON. Angle-at-onset point sampling and trial-relative raster/PSTH examples remain planned.
+
 Tasks:
 
-1. Extend the whisker-contact scenario with contact onset features.
-2. Add a full-contact curvature column.
-3. Add a spike-in-onset-window column.
-4. Add an angle-at-onset column.
+1. ~~Extend the whisker-contact scenario with contact onset features.~~ **Done for onset spike presence.**
+2. ~~Add a full-contact curvature column.~~ **Done.**
+3. ~~Add a spike-in-onset-window column.~~ **Done.**
+4. Add an angle-at-onset column after timestamp/sample row-pipeline dispatch is implemented.
 5. Verify row count, row descriptors, and expected values.
 6. Update scenario documentation with valid JSON.
 
 Exit criteria:
 
-- The motivating tuning-table inputs are built through production TensorDesign code.
+- Contact-aligned spike presence is built through production TensorDesign code.
 - The JSON example in the design document can be promoted from target shape to working example.
+
+## Test Coverage Notes
+
+Current row-pipeline coverage is split across four files:
+
+- `tests/TransformsV2/test_tensor_column_builders.test.cpp` covers the TransformsV2 provider layer and `resolveIntervalGatherWindows()` behavior.
+- `tests/TensorDesign/test_tensor_design_builder.cpp` covers TensorDesign JSON parsing, serialization, and JSON-to-tensor builds.
+- `tests/TransformsV2/test_tensor_whisker_contact_scenario.cpp` covers programmatic provider/lazy tensor construction over the whisker-contact fixture.
+- `tests/TensorDesign/test_tensor_whisker_contact_scenario.cpp` covers the TensorDesign JSON path over the same fixture, including contact-aligned spikes.
+
+The two whisker-contact files are not exact duplicates. They exercise different architectural layers. The older TransformsV2 file does not validate `row_pipeline_json`; it remains useful as lower-level integration coverage, though it may be a candidate for reduced assertions if runtime becomes an issue.
+
+Potential stale or missing coverage after Phase 4:
+
+- The timestamp offset characterization test is intentionally stale-by-design until Phase 6 replaces it.
+- `DigitalEventSeries` row-pipeline output rejection is covered at the row-geometry/helper layer; add a TensorDesign JSON-level rejection test if error messages become part of the user contract.
+- Add explicit tests for malformed but non-empty `row_pipeline_json` at the TensorDesign JSON build layer if not already covered by provider tests.
+- Add cache behavior tests when row-pipeline caching is introduced.
 
 ## Phase 9: Preset Registry And Expansion
 
