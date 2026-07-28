@@ -3,6 +3,7 @@
 #include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/core/TypeChainResolver.hpp"
 #include "TransformsV2/extension/gatherResult/GatherPipelineExecutor.hpp"
+#include "TransformsV2/extension/gatherResult/RowGatherGeometry.hpp"
 #include "TransformsV2/io/PipelineLoader.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
@@ -359,7 +360,7 @@ ColumnProviderFn buildProviderFromRecipe(
         DataManager & dm,
         ColumnRecipe const & recipe,
         std::vector<TimeFrameIndex> const & row_times,
-        std::shared_ptr<DigitalIntervalSeries const> intervals) {
+        std::shared_ptr<DigitalIntervalSeries const> const & intervals) {
     // 1. Interval-property column (no data source needed)
     if (recipe.interval_property.has_value()) {
         if (!intervals) {
@@ -392,8 +393,11 @@ ColumnProviderFn buildProviderFromRecipe(
                     error_message);
         }
 
+        auto gather_windows = Neuralyzer::Gather::resolveIntervalGatherWindows(
+                intervals, recipe.row_pipeline_json, intervals->size());
+
         return buildIntervalPipelineProvider(
-                dm, recipe.source_key, std::move(intervals), std::move(pipeline_result.value()));
+                dm, recipe.source_key, std::move(gather_windows), std::move(pipeline_result.value()));
     }
 
     // 4. Timestamp-row columns → Pattern A (generic pipeline + sample)

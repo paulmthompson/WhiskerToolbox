@@ -60,13 +60,13 @@ The format matches `TensorDesigner::toJson()` / `fromJson()`:
 | `row_source.row_type` | Yes | `interval`, `timestamp`, `derived_from_source`, `ordinal` (unsupported), or `none` |
 | `columns[].name` | Yes | Column display name |
 | `columns[].source_key` | For data columns | DataManager source key |
-| `columns[].row_pipeline_json` | No | Embedded row `PipelineDescriptor` JSON string. Currently parsed and serialized only; execution is planned for the row-pipeline refactor. |
+| `columns[].row_pipeline_json` | No | Embedded row `PipelineDescriptor` JSON string. Empty or explicit identity (`{"steps": []}`) preserves current row geometry; non-identity row pipelines are deferred to the next row-pipeline phase. |
 | `columns[].pipeline_json` | For interval/timestamp data columns | Embedded `PipelineDescriptor` JSON string |
 | `columns[].interval_property` | For property columns | `start`, `end`, or `duration` (no `source_key` needed) |
 
 Each `pipeline_json` string is a [`PipelineDescriptor`](../transforms_v2/pipeline_loader.qmd) fragment. Interval-row columns require a terminal `range_reduction`.
 
-Current interval-row tensor columns gather over the full row interval. `row_pipeline_json` is part of the serialized column recipe and round-trips through `parseDesignJson()` / `serializeDesignJson()`, but provider dispatch does not execute it yet. The planned design is to run a TransformPipeline on the row source to produce prepared `DigitalIntervalSeries` windows or `DigitalEventSeries` sample times, then gather or sample source data for each row. Per-row normalization markers should be bound into the column TransformPipeline through TransformsV2 `PipelineValueStore` parameter bindings rather than through `row_pipeline_json`; `GatherResult` remains only the row container and direct gather executor.
+Current interval-row tensor columns gather over the full row interval when `row_pipeline_json` is omitted, empty, or an explicit identity descriptor such as `{"steps": []}`. Non-identity row pipelines are rejected until `DigitalIntervalSeries` row-pipeline output dispatch is implemented. The planned design is to run a TransformPipeline on the row source to produce prepared `DigitalIntervalSeries` windows or `DigitalEventSeries` sample times, then gather or sample source data for each row. Per-row normalization markers should be bound into the column TransformPipeline through TransformsV2 `PipelineValueStore` parameter bindings rather than through `row_pipeline_json`; `GatherResult` remains only the row container and direct gather executor.
 
 There is still a temporary compatibility path in `TensorDesignBuilder::buildColumnProvider()` that detects a top-level `"offset"` field inside `pipeline_json` for analog sample-at-offset columns. This should be removed once point sampling is expressible through the row-pipeline design.
 

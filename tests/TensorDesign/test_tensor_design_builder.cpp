@@ -42,6 +42,7 @@ using Neuralyzer::Test::GatherFixtures::createTimeFrameForRate;
 
 constexpr char const * kMeanValuePipelineJson =
         R"({"steps": [], "range_reduction": {"reduction_name": "MeanValue"}})";
+constexpr char const * kIdentityRowPipelineJson = R"({"steps": []})";
 
 template<typename T>
 T requireValue(std::optional<T> const & opt) {
@@ -215,6 +216,69 @@ TEST_CASE("buildTensorFromDesignJson counts events over full interval rows",
     CHECK_THAT(values[1], WithinAbs(2.0, 0.01));
 }
 
+TEST_CASE("buildTensorFromDesignJson empty row_pipeline_json preserves event count",
+          "[TensorDesign][Phase3]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 100);
+    auto events = createEventSeries({5, 15, 25, 35, 45, 55});
+    dm.setData<DigitalEventSeries>("events", events, TimeKey("time"));
+    auto intervals = createIntervalSeries({{0, 20}, {30, 50}});
+    dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("time"));
+
+    std::string const json = R"({
+        "tensor_key": "event_features",
+        "row_source": {
+            "data_key": "intervals",
+            "row_type": "interval"
+        },
+        "columns": [
+            {
+                "name": "event_count",
+                "source_key": "events",
+                "row_pipeline_json": "",
+                "pipeline_json": "{\"steps\": [], \"range_reduction\": {\"reduction_name\": \"EventCount\"}}"
+            }
+        ]
+    })";
+
+    auto const built = requireValue(buildTensorFromDesignJson(dm, json));
+    REQUIRE(built.numRows() == intervals->size());
+    REQUIRE(built.numColumns() == 1);
+
+    auto const values = built.getColumn(0);
+    REQUIRE(values.size() == intervals->size());
+    CHECK_THAT(values[0], WithinAbs(2.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(2.0, 0.01));
+}
+
+TEST_CASE("buildTensor explicit identity row_pipeline_json preserves full-interval mean",
+          "[TensorDesign][Phase3]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 100);
+    auto analog = createLinearAnalog(100);
+    dm.setData<AnalogTimeSeries>("signal", analog, TimeKey("time"));
+    auto intervals = createIntervalSeries({{10, 20}, {50, 60}});
+    dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("time"));
+
+    TensorDesignSpec spec;
+    spec.row_source_key = "intervals";
+    spec.row_type = DesignRowType::Interval;
+    spec.columns.push_back({
+            .column_name = "mean_signal",
+            .source_key = "signal",
+            .pipeline_json = kMeanValuePipelineJson,
+            .row_pipeline_json = kIdentityRowPipelineJson,
+    });
+
+    auto const built = requireValue(buildTensor(dm, spec));
+    REQUIRE(built.numRows() == intervals->size());
+    REQUIRE(built.numColumns() == 1);
+
+    auto const values = built.getColumn(0);
+    CHECK_THAT(values[0], WithinAbs(15.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(55.0, 0.01));
+}
+
 TEST_CASE("buildTensor converts interval-row windows across TimeFrames", "[TensorDesign][GatherResult]") {
     DataManager dm;
     REQUIRE(dm.setTime(TimeKey("source_time"), createIdentityTimeFrameForMax(100)));
@@ -264,6 +328,43 @@ TEST_CASE("buildTensorFromDesignJson counts events across TimeFrames",
             {
                 "name": "event_count",
                 "source_key": "events",
+                "pipeline_json": "{\"steps\": [], \"range_reduction\": {\"reduction_name\": \"EventCount\"}}"
+            }
+        ]
+    })";
+
+    auto const built = requireValue(buildTensorFromDesignJson(dm, json));
+    REQUIRE(built.numRows() == intervals->size());
+    REQUIRE(built.numColumns() == 1);
+
+    auto const values = built.getColumn(0);
+    REQUIRE(values.size() == intervals->size());
+    CHECK_THAT(values[0], WithinAbs(2.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(2.0, 0.01));
+}
+
+TEST_CASE("buildTensorFromDesignJson identity row_pipeline_json preserves cross-TimeFrame event count",
+          "[TensorDesign][GatherResult][Phase3]") {
+    DataManager dm;
+    REQUIRE(dm.setTime(TimeKey("source_time"), createIdentityTimeFrameForMax(100)));
+    REQUIRE(dm.setTime(TimeKey("row_time"), createTimeFrameForRate(31, 2)));
+
+    auto events = createEventSeries({12, 18, 22, 55, 59, 61});
+    dm.setData<DigitalEventSeries>("events", events, TimeKey("source_time"));
+    auto intervals = createIntervalSeries({{5, 10}, {25, 30}});
+    dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("row_time"));
+
+    std::string const json = R"({
+        "tensor_key": "cross_time_event_features",
+        "row_source": {
+            "data_key": "intervals",
+            "row_type": "interval"
+        },
+        "columns": [
+            {
+                "name": "event_count",
+                "source_key": "events",
+                "row_pipeline_json": "{\"steps\": []}",
                 "pipeline_json": "{\"steps\": [], \"range_reduction\": {\"reduction_name\": \"EventCount\"}}"
             }
         ]
@@ -351,6 +452,58 @@ TEST_CASE("buildTensorFromDesignJson mixes interval properties and gathered colu
             {
                 "name": "event_count",
                 "source_key": "events",
+                "pipeline_json": "{\"steps\": [], \"range_reduction\": {\"reduction_name\": \"EventCount\"}}"
+            }
+        ]
+    })";
+
+    auto const built = requireValue(buildTensorFromDesignJson(dm, json));
+    REQUIRE(built.numRows() == intervals->size());
+    REQUIRE(built.numColumns() == 3);
+
+    auto const mean_signal = built.getColumn(0);
+    auto const duration = built.getColumn(1);
+    auto const event_count = built.getColumn(2);
+    CHECK_THAT(mean_signal[0], WithinAbs(10.0, 0.01));
+    CHECK_THAT(mean_signal[1], WithinAbs(40.0, 0.01));
+    CHECK_THAT(duration[0], WithinAbs(20.0, 0.01));
+    CHECK_THAT(duration[1], WithinAbs(20.0, 0.01));
+    CHECK_THAT(event_count[0], WithinAbs(2.0, 0.01));
+    CHECK_THAT(event_count[1], WithinAbs(2.0, 0.01));
+}
+
+TEST_CASE("buildTensorFromDesignJson identity row_pipeline_json preserves mixed interval columns",
+          "[TensorDesign][Phase3]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 100);
+    auto analog = createLinearAnalog(100);
+    dm.setData<AnalogTimeSeries>("signal", analog, TimeKey("time"));
+    auto events = createEventSeries({5, 15, 25, 35, 45, 55});
+    dm.setData<DigitalEventSeries>("events", events, TimeKey("time"));
+    auto intervals = createIntervalSeries({{0, 20}, {30, 50}});
+    dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("time"));
+
+    std::string const json = R"({
+        "tensor_key": "mixed_interval_features",
+        "row_source": {
+            "data_key": "intervals",
+            "row_type": "interval"
+        },
+        "columns": [
+            {
+                "name": "mean_signal",
+                "source_key": "signal",
+                "row_pipeline_json": "{\"steps\": []}",
+                "pipeline_json": "{\"steps\": [], \"range_reduction\": {\"reduction_name\": \"MeanValue\"}}"
+            },
+            {
+                "name": "duration",
+                "interval_property": "duration"
+            },
+            {
+                "name": "event_count",
+                "source_key": "events",
+                "row_pipeline_json": "",
                 "pipeline_json": "{\"steps\": [], \"range_reduction\": {\"reduction_name\": \"EventCount\"}}"
             }
         ]

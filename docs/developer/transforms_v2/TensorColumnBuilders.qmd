@@ -35,13 +35,13 @@ struct ColumnRecipe {
     std::string column_name;
     std::string source_key;       // empty for interval-property columns
     std::string pipeline_json;    // embedded PipelineDescriptor JSON
-    std::string row_pipeline_json; // row PipelineDescriptor JSON, not executed yet
+    std::string row_pipeline_json; // identity row geometry supported for interval rows
     std::optional<IntervalProperty> interval_property;  // start, end, duration
 };
 ```
 
 Use `buildProviderFromRecipe()` to dispatch a recipe to the correct builder.
-In the Phase 2 row-pipeline refactor state, `row_pipeline_json` is a serialized data-model field only. It is parsed and serialized by TensorDesign, but `buildProviderFromRecipe()` still ignores it and preserves the existing full-row interval or timestamp-row behavior.
+In the Phase 3 row-pipeline refactor state, interval-row data columns route through row-gather geometry resolution before `buildIntervalPipelineProvider()`. Empty `row_pipeline_json`, whitespace, or explicit `{"steps": []}` are identity and preserve the original row-source `DigitalIntervalSeries` as prepared gather windows. Non-identity row pipelines are rejected until `DigitalIntervalSeries` row-pipeline output dispatch is implemented. `interval_property` columns still bypass gather, and timestamp-row columns ignore row-pipeline geometry for now.
 
 ## Builder functions
 

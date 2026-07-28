@@ -26,6 +26,7 @@
 
 #include "TransformsV2/core/RangeReductionRegistry.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
+#include "TransformsV2/extension/gatherResult/RowGatherGeometry.hpp"
 
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -38,6 +39,7 @@
 #include <cmath>
 #include <memory>
 #include <numeric>
+#include <string>
 #include <vector>
 
 using namespace Neuralyzer::TensorBuilders;
@@ -51,6 +53,12 @@ using Neuralyzer::Transforms::V2::TransformPipeline;
 namespace {
 
 using Neuralyzer::Test::GatherFixtures::createIdentityTimeFrameForMax;
+
+constexpr char const * kMeanValuePipelineJson =
+        R"({"steps": [], "range_reduction": {"reduction_name": "MeanValue"}})";
+constexpr char const * kIdentityRowPipelineJson = R"({"steps": []})";
+constexpr char const * kNonIdentityRowPipelineJson =
+        R"({"steps": [{"step_id": "interval_start", "transform_name": "IntervalToEvent"}]})";
 
 /**
  * @brief Replace DataManager's default clock with a non-empty identity TimeFrame.
@@ -264,6 +272,156 @@ TEST_CASE("buildIntervalPropertyProvider - null intervals throws", "[TensorColum
     CHECK_THROWS_AS(
             buildIntervalPropertyProvider(nullptr, IntervalProperty::Start),
             std::runtime_error);
+}
+
+// =============================================================================
+// Row gather geometry identity helpers
+// =============================================================================
+
+TEST_CASE("isIdentityRowPipelineJson recognizes empty row pipelines",
+          "[TensorColumnBuilders][Phase3]") {
+    CHECK(Neuralyzer::Gather::isIdentityRowPipelineJson(""));
+    CHECK(Neuralyzer::Gather::isIdentityRowPipelineJson("   \n\t  "));
+    CHECK(Neuralyzer::Gather::isIdentityRowPipelineJson(kIdentityRowPipelineJson));
+    CHECK_FALSE(Neuralyzer::Gather::isIdentityRowPipelineJson(kNonIdentityRowPipelineJson));
+}
+
+TEST_CASE("resolveIntervalGatherWindows returns source intervals for identity",
+          "[TensorColumnBuilders][Phase3]") {
+    auto intervals = createIntervalSeries({{10, 20}, {50, 60}});
+
+    auto const resolved = Neuralyzer::Gather::resolveIntervalGatherWindows(
+            intervals, kIdentityRowPipelineJson, intervals->size());
+
+    REQUIRE(resolved == intervals);
+    REQUIRE(resolved->size() == intervals->size());
+}
+
+TEST_CASE("resolveIntervalGatherWindows rejects non-identity row pipelines",
+          "[TensorColumnBuilders][Phase3]") {
+    auto intervals = createIntervalSeries({{10, 20}, {50, 60}});
+
+    CHECK_THROWS_AS(
+            Neuralyzer::Gather::resolveIntervalGatherWindows(
+                    intervals, kNonIdentityRowPipelineJson, intervals->size()),
+            std::runtime_error);
+}
+
+// =============================================================================
+// buildProviderFromRecipe row-pipeline identity dispatch
+// =============================================================================
+
+TEST_CASE("buildProviderFromRecipe - empty row_pipeline_json matches interval gather",
+          "[TensorColumnBuilders][Phase3]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 1000);
+    auto analog = createLinearAnalog(100);
+    dm.setData<AnalogTimeSeries>("analog", analog, TimeKey("time"));
+    auto intervals = createIntervalSeries({{10, 20}, {50, 60}});
+
+    ColumnRecipe const recipe{
+            .column_name = "mean_signal",
+            .source_key = "analog",
+            .pipeline_json = kMeanValuePipelineJson,
+            .row_pipeline_json = "",
+    };
+
+    auto provider = buildProviderFromRecipe(dm, recipe, {}, intervals);
+    auto const values = provider();
+
+    REQUIRE(values.size() == intervals->size());
+    CHECK_THAT(values[0], WithinAbs(15.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(55.0, 0.01));
+}
+
+TEST_CASE("buildProviderFromRecipe - explicit identity row_pipeline_json matches interval gather",
+          "[TensorColumnBuilders][Phase3]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 1000);
+    auto analog = createLinearAnalog(100);
+    dm.setData<AnalogTimeSeries>("analog", analog, TimeKey("time"));
+    auto intervals = createIntervalSeries({{10, 20}, {50, 60}});
+
+    ColumnRecipe const recipe{
+            .column_name = "mean_signal",
+            .source_key = "analog",
+            .pipeline_json = kMeanValuePipelineJson,
+            .row_pipeline_json = kIdentityRowPipelineJson,
+    };
+
+    auto provider = buildProviderFromRecipe(dm, recipe, {}, intervals);
+    auto const values = provider();
+
+    REQUIRE(values.size() == intervals->size());
+    CHECK_THAT(values[0], WithinAbs(15.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(55.0, 0.01));
+}
+
+TEST_CASE("buildProviderFromRecipe - interval_property ignores row_pipeline_json",
+          "[TensorColumnBuilders][Phase3]") {
+    auto intervals = createIntervalSeries({{10, 30}, {50, 80}});
+    DataManager dm;
+
+    ColumnRecipe const recipe{
+            .column_name = "start",
+            .source_key = "",
+            .pipeline_json = "",
+            .row_pipeline_json = kNonIdentityRowPipelineJson,
+            .interval_property = IntervalProperty::Start,
+    };
+
+    auto provider = buildProviderFromRecipe(dm, recipe, {}, intervals);
+    auto const values = provider();
+
+    REQUIRE(values.size() == intervals->size());
+    CHECK_THAT(values[0], WithinAbs(10.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(50.0, 0.01));
+}
+
+TEST_CASE("buildProviderFromRecipe - rejects non-identity interval row_pipeline_json",
+          "[TensorColumnBuilders][Phase3]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 1000);
+    auto analog = createLinearAnalog(100);
+    dm.setData<AnalogTimeSeries>("analog", analog, TimeKey("time"));
+    auto intervals = createIntervalSeries({{10, 20}, {50, 60}});
+
+    ColumnRecipe const recipe{
+            .column_name = "mean_signal",
+            .source_key = "analog",
+            .pipeline_json = kMeanValuePipelineJson,
+            .row_pipeline_json = kNonIdentityRowPipelineJson,
+    };
+
+    CHECK_THROWS_AS(
+            buildProviderFromRecipe(dm, recipe, {}, intervals),
+            std::runtime_error);
+}
+
+TEST_CASE("buildProviderFromRecipe - timestamp rows ignore empty row_pipeline_json",
+          "[TensorColumnBuilders][Phase3]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 1000);
+    auto analog = createLinearAnalog(100);
+    dm.setData<AnalogTimeSeries>("analog", analog, TimeKey("time"));
+    auto row_times = makeRowTimes({0, 10, 20, 50, 99});
+
+    ColumnRecipe const recipe{
+            .column_name = "sampled_signal",
+            .source_key = "analog",
+            .pipeline_json = "",
+            .row_pipeline_json = "",
+    };
+
+    auto provider = buildProviderFromRecipe(dm, recipe, row_times, nullptr);
+    auto const values = provider();
+
+    REQUIRE(values.size() == row_times.size());
+    CHECK_THAT(values[0], WithinAbs(0.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(10.0, 0.01));
+    CHECK_THAT(values[2], WithinAbs(20.0, 0.01));
+    CHECK_THAT(values[3], WithinAbs(50.0, 0.01));
+    CHECK_THAT(values[4], WithinAbs(99.0, 0.01));
 }
 
 // =============================================================================

@@ -226,7 +226,7 @@ ColumnProviderFn buildProviderFromRecipe(
         DataManager & dm,
         ColumnRecipe const & recipe,
         std::vector<TimeFrameIndex> const & row_times,
-        std::shared_ptr<DigitalIntervalSeries const> intervals);
+        std::shared_ptr<DigitalIntervalSeries const> const & intervals);
 
 // ============================================================================
 // Invalidation Wiring
