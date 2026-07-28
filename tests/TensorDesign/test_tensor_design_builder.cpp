@@ -380,6 +380,119 @@ TEST_CASE("buildTensorFromDesignJson identity row_pipeline_json preserves cross-
     CHECK_THAT(values[1], WithinAbs(2.0, 0.01));
 }
 
+TEST_CASE("buildTensorFromDesignJson counts events over row-pipeline onset windows",
+          "[TensorDesign][Phase4]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 100);
+    auto events = createEventSeries({9, 11, 12, 29, 31, 90});
+    dm.setData<DigitalEventSeries>("events", events, TimeKey("time"));
+    auto intervals = createIntervalSeries({{10, 20}, {30, 40}});
+    dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("time"));
+
+    std::string const json = R"({
+        "tensor_key": "onset_event_features",
+        "row_source": {
+            "data_key": "intervals",
+            "row_type": "interval"
+        },
+        "columns": [
+            {
+                "name": "onset_event_count",
+                "source_key": "events",
+                "row_pipeline_json": "{\"steps\": [{\"step_id\": \"interval_start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}, {\"step_id\": \"start_window\", \"transform_name\": \"EventToInterval\", \"parameters\": {\"pre_expansion\": 2, \"post_expansion\": 3}}]}",
+                "pipeline_json": "{\"steps\": [], \"range_reduction\": {\"reduction_name\": \"EventCount\"}}"
+            }
+        ]
+    })";
+
+    auto const built = requireValue(buildTensorFromDesignJson(dm, json));
+    REQUIRE(built.numRows() == intervals->size());
+    REQUIRE(built.numColumns() == 1);
+
+    auto const values = built.getColumn(0);
+    REQUIRE(values.size() == intervals->size());
+    CHECK_THAT(values[0], WithinAbs(3.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(2.0, 0.01));
+}
+
+TEST_CASE("buildTensorFromDesignJson mixes interval properties and row-pipeline windows",
+          "[TensorDesign][Phase4]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 100);
+    auto events = createEventSeries({9, 11, 12, 29, 31, 90});
+    dm.setData<DigitalEventSeries>("events", events, TimeKey("time"));
+    auto intervals = createIntervalSeries({{10, 20}, {30, 40}});
+    dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("time"));
+
+    std::string const json = R"({
+        "tensor_key": "mixed_onset_features",
+        "row_source": {
+            "data_key": "intervals",
+            "row_type": "interval"
+        },
+        "columns": [
+            {
+                "name": "contact_start",
+                "interval_property": "start"
+            },
+            {
+                "name": "onset_event_count",
+                "source_key": "events",
+                "row_pipeline_json": "{\"steps\": [{\"step_id\": \"interval_start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}, {\"step_id\": \"start_window\", \"transform_name\": \"EventToInterval\", \"parameters\": {\"pre_expansion\": 2, \"post_expansion\": 3}}]}",
+                "pipeline_json": "{\"steps\": [], \"range_reduction\": {\"reduction_name\": \"EventCount\"}}"
+            }
+        ]
+    })";
+
+    auto const built = requireValue(buildTensorFromDesignJson(dm, json));
+    REQUIRE(built.numRows() == intervals->size());
+    REQUIRE(built.numColumns() == 2);
+
+    auto const starts = built.getColumn(0);
+    auto const event_counts = built.getColumn(1);
+    CHECK_THAT(starts[0], WithinAbs(10.0, 0.01));
+    CHECK_THAT(starts[1], WithinAbs(30.0, 0.01));
+    CHECK_THAT(event_counts[0], WithinAbs(3.0, 0.01));
+    CHECK_THAT(event_counts[1], WithinAbs(2.0, 0.01));
+}
+
+TEST_CASE("buildTensorFromDesignJson row-pipeline windows gather across TimeFrames",
+          "[TensorDesign][GatherResult][Phase4]") {
+    DataManager dm;
+    REQUIRE(dm.setTime(TimeKey("source_time"), createIdentityTimeFrameForMax(100)));
+    REQUIRE(dm.setTime(TimeKey("row_time"), createTimeFrameForRate(31, 2)));
+
+    auto events = createEventSeries({8, 10, 12, 48, 50, 52, 90});
+    dm.setData<DigitalEventSeries>("events", events, TimeKey("source_time"));
+    auto intervals = createIntervalSeries({{5, 10}, {25, 30}});
+    dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("row_time"));
+
+    std::string const json = R"({
+        "tensor_key": "cross_time_onset_event_features",
+        "row_source": {
+            "data_key": "intervals",
+            "row_type": "interval"
+        },
+        "columns": [
+            {
+                "name": "onset_event_count",
+                "source_key": "events",
+                "row_pipeline_json": "{\"steps\": [{\"step_id\": \"interval_start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}, {\"step_id\": \"start_window\", \"transform_name\": \"EventToInterval\", \"parameters\": {\"pre_expansion\": 1, \"post_expansion\": 1}}]}",
+                "pipeline_json": "{\"steps\": [], \"range_reduction\": {\"reduction_name\": \"EventCount\"}}"
+            }
+        ]
+    })";
+
+    auto const built = requireValue(buildTensorFromDesignJson(dm, json));
+    REQUIRE(built.numRows() == intervals->size());
+    REQUIRE(built.numColumns() == 1);
+
+    auto const values = built.getColumn(0);
+    REQUIRE(values.size() == intervals->size());
+    CHECK_THAT(values[0], WithinAbs(3.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(3.0, 0.01));
+}
+
 TEST_CASE("buildTensorFromDesignJson builds interval_property columns",
           "[TensorDesign][Phase1]") {
     DataManager dm;

@@ -1,0 +1,18 @@
+---
+title: "Row Gather Geometry"
+format: html
+---
+
+`RowGatherGeometry` (`src/TransformsV2/extension/gatherResult/RowGatherGeometry.hpp`) resolves per-column tensor gather windows before `TensorColumnBuilders` builds an interval-row provider.
+
+The helper supports identity row geometry and non-identity interval-row pipelines that produce prepared interval windows:
+
+- Empty or whitespace `row_pipeline_json` is identity.
+- Explicit `{"steps": []}` is identity.
+- Non-identity `row_pipeline_json` is loaded as a `TransformPipeline` and executed against the original row-source `DigitalIntervalSeries`.
+- The output must be a `DigitalIntervalSeries` with the same row count as the original row source.
+- Other outputs, including `DigitalEventSeries` sample times, are rejected until later row-pipeline phases implement the corresponding provider dispatch.
+
+Identity resolution returns the original row-source `DigitalIntervalSeries` as the prepared gather windows and verifies that the row count remains unchanged. Non-identity interval-window outputs are treated only as per-column gather geometry; the tensor `RowDescriptor` remains tied to the original row source. `interval_property` columns bypass this path because they read metadata from the original row source and do not gather source data.
+
+Window-producing transforms should preserve one output interval per original row. If overlap is possible, transforms should return `DigitalIntervalSeries::createOverlapping()` output so overlapping gather windows remain separate tensor rows.

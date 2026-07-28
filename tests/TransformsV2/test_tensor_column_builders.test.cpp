@@ -59,6 +59,12 @@ constexpr char const * kMeanValuePipelineJson =
 constexpr char const * kIdentityRowPipelineJson = R"({"steps": []})";
 constexpr char const * kNonIdentityRowPipelineJson =
         R"({"steps": [{"step_id": "interval_start", "transform_name": "IntervalToEvent"}]})";
+constexpr char const * kStartWindowRowPipelineJson =
+        R"({"steps": [{"step_id": "interval_start", "transform_name": "IntervalToEvent", "parameters": {"point": "start"}}, {"step_id": "start_window", "transform_name": "EventToInterval", "parameters": {"pre_expansion": 2, "post_expansion": 3}}]})";
+constexpr char const * kOverlappingWindowRowPipelineJson =
+        R"({"steps": [{"step_id": "interval_start", "transform_name": "IntervalToEvent", "parameters": {"point": "start"}}, {"step_id": "start_window", "transform_name": "EventToInterval", "parameters": {"pre_expansion": 5, "post_expansion": 5}}]})";
+constexpr char const * kPrunedWindowRowPipelineJson =
+        R"({"steps": [{"step_id": "interval_start", "transform_name": "IntervalToEvent", "parameters": {"point": "start"}}, {"step_id": "start_window", "transform_name": "EventToInterval", "parameters": {"pre_expansion": 5, "post_expansion": 5}}, {"step_id": "prune", "transform_name": "PruneOverlappingIntervals"}]})";
 
 /**
  * @brief Replace DataManager's default clock with a non-empty identity TimeFrame.
@@ -307,6 +313,62 @@ TEST_CASE("resolveIntervalGatherWindows rejects non-identity row pipelines",
             std::runtime_error);
 }
 
+TEST_CASE("resolveIntervalGatherWindows executes DigitalIntervalSeries row pipelines",
+          "[TensorColumnBuilders][Phase4]") {
+    auto intervals = createIntervalSeries({{10, 20}, {50, 60}});
+
+    auto const resolved = Neuralyzer::Gather::resolveIntervalGatherWindows(
+            intervals, kStartWindowRowPipelineJson, intervals->size());
+
+    REQUIRE(resolved != nullptr);
+    REQUIRE(resolved != intervals);
+    REQUIRE(resolved->size() == intervals->size());
+    REQUIRE(resolved->layout() == IntervalLayout::Overlapping);
+
+    std::vector<Interval> windows;
+    for (auto const & interval_with_id: resolved->view()) {
+        windows.push_back(interval_with_id.interval);
+    }
+
+    REQUIRE(windows.size() == 2);
+    CHECK(windows[0].start == 8);
+    CHECK(windows[0].end == 13);
+    CHECK(windows[1].start == 48);
+    CHECK(windows[1].end == 53);
+}
+
+TEST_CASE("resolveIntervalGatherWindows preserves overlapping output windows",
+          "[TensorColumnBuilders][Phase4]") {
+    auto intervals = createIntervalSeries({{10, 20}, {12, 22}});
+
+    auto const resolved = Neuralyzer::Gather::resolveIntervalGatherWindows(
+            intervals, kOverlappingWindowRowPipelineJson, intervals->size());
+
+    REQUIRE(resolved->size() == intervals->size());
+    REQUIRE(resolved->layout() == IntervalLayout::Overlapping);
+
+    std::vector<Interval> windows;
+    for (auto const & interval_with_id: resolved->view()) {
+        windows.push_back(interval_with_id.interval);
+    }
+
+    REQUIRE(windows.size() == 2);
+    CHECK(windows[0].start == 5);
+    CHECK(windows[0].end == 15);
+    CHECK(windows[1].start == 7);
+    CHECK(windows[1].end == 17);
+}
+
+TEST_CASE("resolveIntervalGatherWindows rejects row-count-changing pipelines",
+          "[TensorColumnBuilders][Phase4]") {
+    auto intervals = createIntervalSeries({{10, 20}, {12, 22}});
+
+    CHECK_THROWS_AS(
+            Neuralyzer::Gather::resolveIntervalGatherWindows(
+                    intervals, kPrunedWindowRowPipelineJson, intervals->size()),
+            std::runtime_error);
+}
+
 // =============================================================================
 // buildProviderFromRecipe row-pipeline identity dispatch
 // =============================================================================
@@ -396,6 +458,29 @@ TEST_CASE("buildProviderFromRecipe - rejects non-identity interval row_pipeline_
     CHECK_THROWS_AS(
             buildProviderFromRecipe(dm, recipe, {}, intervals),
             std::runtime_error);
+}
+
+TEST_CASE("buildProviderFromRecipe - derived row windows gather event counts",
+          "[TensorColumnBuilders][Phase4]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 1000);
+    auto events = createEventSeries({9, 11, 12, 29, 31, 90});
+    dm.setData<DigitalEventSeries>("events", events, TimeKey("time"));
+    auto intervals = createIntervalSeries({{10, 20}, {30, 40}});
+
+    ColumnRecipe const recipe{
+            .column_name = "onset_event_count",
+            .source_key = "events",
+            .pipeline_json = R"({"steps": [], "range_reduction": {"reduction_name": "EventCount"}})",
+            .row_pipeline_json = kStartWindowRowPipelineJson,
+    };
+
+    auto provider = buildProviderFromRecipe(dm, recipe, {}, intervals);
+    auto const values = provider();
+
+    REQUIRE(values.size() == intervals->size());
+    CHECK_THAT(values[0], WithinAbs(3.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(2.0, 0.01));
 }
 
 TEST_CASE("buildProviderFromRecipe - timestamp rows ignore empty row_pipeline_json",

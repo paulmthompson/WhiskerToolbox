@@ -31,10 +31,11 @@ namespace Neuralyzer::Gather {
  * @param row_pipeline_json Embedded row-pipeline JSON string.
  * @param expected_row_count Number of rows in the original row source.
  * @return Prepared gather windows for the column.
- * @post Identity row pipelines return the original interval series.
+ * @post Identity row pipelines return the original interval series; non-identity
+ *       pipelines return a row-aligned DigitalIntervalSeries result.
  *
  * @throws std::runtime_error if intervals is null, row count changes, JSON is invalid,
- *         or the row pipeline is non-identity.
+ *         or the row pipeline output is not a DigitalIntervalSeries.
  */
 [[nodiscard]] std::shared_ptr<DigitalIntervalSeries const> resolveIntervalGatherWindows(
         std::shared_ptr<DigitalIntervalSeries const> intervals,

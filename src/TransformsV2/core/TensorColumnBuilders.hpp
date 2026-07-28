@@ -78,8 +78,9 @@ struct ColumnRecipe {
     /// JSON string describing the TransformPipeline (empty for passthrough)
     std::string pipeline_json;
 
-    /// JSON string describing a future row TransformPipeline.
-    /// Empty means current row-source geometry is used.
+    /// JSON string describing a row TransformPipeline for per-column geometry.
+    /// Empty means current row-source geometry is used; interval-row pipelines
+    /// may produce row-aligned DigitalIntervalSeries gather windows.
     std::string row_pipeline_json;
 
     /// If this is an interval-property column, which property to extract.

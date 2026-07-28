@@ -146,7 +146,7 @@ Increase `duration_sec` for statistical tests that need more contact intervals (
 `test_tensor_whisker_contact_scenario.cpp` builds a lazy tensor with:
 
 - **Rows**: `Contact` intervals
-- **Columns**: mean `Curvature`, spike count in interval (cross-timeframe via `buildIntervalPipelineProvider`)
+- **Columns**: mean `Curvature`, spike count in interval, spike presence in a one-frame contact-onset window
 
 ```cpp
 WhiskerContactTestFixture fixture(cfg);
@@ -178,6 +178,12 @@ The same tensor can be built from a [TensorDesigner-compatible JSON envelope](..
       "name": "spike_count",
       "source_key": "Spikes",
       "pipeline_json": "{\"steps\": [], \"range_reduction\": {\"reduction_name\": \"EventCount\"}}"
+    },
+    {
+      "name": "onset_spike_present",
+      "source_key": "Spikes",
+      "row_pipeline_json": "{\"steps\": [{\"step_id\": \"contact_start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}, {\"step_id\": \"onset_window\", \"transform_name\": \"EventToInterval\", \"parameters\": {\"pre_expansion\": 0, \"post_expansion\": 1}}]}",
+      "pipeline_json": "{\"steps\": [], \"range_reduction\": {\"reduction_name\": \"EventPresence\"}}"
     }
   ]
 }
@@ -191,9 +197,9 @@ auto tensor = Neuralyzer::TensorDesign::buildTensorFromDesignJson(fixture.dm(), 
 REQUIRE(tensor.has_value());
 ```
 
-Note that `pipeline_json` is an **embedded JSON string** (double-encoded in the outer file). Cross-timeframe spike counting works because interval gather resolves timebases automatically.
+Note that `pipeline_json` and `row_pipeline_json` are **embedded JSON strings** (double-encoded in the outer file). Cross-timeframe spike counting works because interval gather resolves timebases automatically. The `onset_spike_present` column keeps the tensor rows tied to the original `Contact` intervals while its `row_pipeline_json` converts each contact to a start event and expands that event into a one-frame prepared window before running the `EventPresence` reduction over `Spikes`.
 
-For **onset-aligned windows** and **per-column gather geometry** (spike presence near onset, angle at onset, tuning-curve tables), see the planned [column row pipeline design](../../TensorDesign/column_row_pipeline.qmd) and [roadmap](../../TensorDesign/column_row_pipeline_roadmap.qmd). That work is not implemented yet; current JSON always gathers over the full contact interval.
+For future point-sampling and per-row normalization examples (angle at onset, trial-relative rasters, tuning-curve tables), see the [column row pipeline design](../../TensorDesign/column_row_pipeline.qmd) and [roadmap](../../TensorDesign/column_row_pipeline_roadmap.qmd).
 
 ## Running tests
 

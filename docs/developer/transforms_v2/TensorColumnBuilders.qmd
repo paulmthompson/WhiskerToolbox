@@ -35,13 +35,13 @@ struct ColumnRecipe {
     std::string column_name;
     std::string source_key;       // empty for interval-property columns
     std::string pipeline_json;    // embedded PipelineDescriptor JSON
-    std::string row_pipeline_json; // identity row geometry supported for interval rows
+    std::string row_pipeline_json; // interval-row DIS window output supported
     std::optional<IntervalProperty> interval_property;  // start, end, duration
 };
 ```
 
 Use `buildProviderFromRecipe()` to dispatch a recipe to the correct builder.
-In the Phase 3 row-pipeline refactor state, interval-row data columns route through row-gather geometry resolution before `buildIntervalPipelineProvider()`. Empty `row_pipeline_json`, whitespace, or explicit `{"steps": []}` are identity and preserve the original row-source `DigitalIntervalSeries` as prepared gather windows. Non-identity row pipelines are rejected until `DigitalIntervalSeries` row-pipeline output dispatch is implemented. `interval_property` columns still bypass gather, and timestamp-row columns ignore row-pipeline geometry for now.
+Interval-row data columns route through row-gather geometry resolution before `buildIntervalPipelineProvider()`. Empty `row_pipeline_json`, whitespace, or explicit `{"steps": []}` are identity and preserve the original row-source `DigitalIntervalSeries` as prepared gather windows. Non-identity row pipelines execute against the original interval row source when they produce a row-aligned `DigitalIntervalSeries`; the output size must match the original row count. `DigitalEventSeries` sample-time output is still deferred. `interval_property` columns still bypass gather, and timestamp-row columns ignore row-pipeline geometry for now.
 
 ## Builder functions
 
