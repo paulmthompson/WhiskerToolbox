@@ -79,7 +79,8 @@ std::shared_ptr<DigitalEventSeries> intervalToEvent(
             return makeEmptyResult(time_frame);
         }
 
-        auto const & interval = interval_with_id.value();
+        assert(time_frame != nullptr && "intervalToEvent requires series time frame");
+        auto const interval = toTimeFrameInterval(interval_with_id.value(), *time_frame);
         events.emplace_back(eventTimeForInterval(interval, params.point));
 
         ++processed;

@@ -2,16 +2,46 @@
 
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/interval_data.hpp"
+#include "fixtures/UniformIntervalTestTimeFrame.hpp"
 #include "transforms/data_transforms.hpp"
 
+#include <algorithm>
 #include <catch2/catch_test_macros.hpp>
 #include <cmath>
+#include <cstddef>
 #include <functional>
 #include <memory>
 #include <vector>
 
+namespace {
+
+/// Covers the largest index used in this file (4'000'000 in edge-case tests).
+constexpr std::size_t k_frame_count = 5'000'001;
+
+using uniform_interval_test::tick;
+
+[[nodiscard]] std::shared_ptr<TimeFrame> uniformIntervalTestTimeFrame() {
+    return uniform_interval_test::uniformIntervalTestTimeFrame(k_frame_count);
+}
+
+/// Attach uniform TimeFrame so @c view() is valid (transform outputs do not copy TimeFrame).
+void assignUniformTimeFrame(DigitalIntervalSeries & series) {
+    uniform_interval_test::assignUniformIntervalTestTimeFrame(series, k_frame_count);
+}
+
+void assignUniformTimeFrame(std::shared_ptr<DigitalIntervalSeries> const & series) {
+    uniform_interval_test::assignUniformIntervalTestTimeFrame(series, k_frame_count);
+}
+
+[[nodiscard]] std::shared_ptr<DigitalIntervalSeries> makeIntervalSeries(
+        std::vector<TimeFrameInterval> intervals) {
+    return uniform_interval_test::makeIntervalSeries(std::move(intervals), k_frame_count);
+}
+
+}// namespace
+
 // Helper function to validate that grouped intervals don't violate spacing constraints
-auto validateGrouping = [](std::ranges::input_range auto const & original,
+auto validateGrouping = [](std::vector<TimeFrameInterval> const & original,
                            std::ranges::input_range auto const & grouped,
                            double maxSpacing) -> bool {
     // Check that all grouped intervals respect the spacing constraint
@@ -26,7 +56,7 @@ auto validateGrouping = [](std::ranges::input_range auto const & original,
     for (auto const & orig: original) {
         bool covered = false;
         for (auto const & group: grouped) {
-            if (orig.start >= group.value().start && orig.end <= group.value().end) {
+            if (tick(orig.start) >= group.value().start && tick(orig.end) <= group.value().end) {
                 covered = true;
                 break;
             }
@@ -47,25 +77,26 @@ TEST_CASE("Digital Interval Group Transform", "[transforms][digital_interval_gro
     SECTION("Basic grouping functionality") {
         // Test the example from documentation: (1,2), (4,5), (10,11) with spacing=3
         std::vector<TimeFrameInterval> intervals = {
-            {TimeFrameIndex(1), TimeFrameIndex(2)}, 
-            {TimeFrameIndex(4), TimeFrameIndex(5)}, 
-            {TimeFrameIndex(10), TimeFrameIndex(11)}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+                {TimeFrameIndex(1), TimeFrameIndex(2)},
+                {TimeFrameIndex(4), TimeFrameIndex(5)},
+                {TimeFrameIndex(10), TimeFrameIndex(11)}};
+        auto dis = makeIntervalSeries(intervals);
 
         params.maxSpacing = 3.0;
 
         auto result = group_intervals(dis.get(), params);
+        assignUniformTimeFrame(result);
         REQUIRE(result != nullptr);
 
         auto const & grouped = result->view();
         REQUIRE(result->size() == 2);
 
         // First group: (1,2) and (4,5) combined to (1,5)
-        REQUIRE(grouped[0].value().start == TimeFrameIndex(1));
-        REQUIRE(grouped[0].value().end == TimeFrameIndex(5));
+        REQUIRE(grouped[0].value().start == ClockTicks(1));
+        REQUIRE(grouped[0].value().end == ClockTicks(5));
         // Second group: (10,11) remains separate
-        REQUIRE(grouped[1].value().start == TimeFrameIndex(10));
-        REQUIRE(grouped[1].value().end == TimeFrameIndex(11));
+        REQUIRE(grouped[1].value().start == ClockTicks(10));
+        REQUIRE(grouped[1].value().end == ClockTicks(11));
 
         // Validate grouping constraints
         REQUIRE(validateGrouping(intervals, grouped, params.maxSpacing));
@@ -73,178 +104,185 @@ TEST_CASE("Digital Interval Group Transform", "[transforms][digital_interval_gro
 
     SECTION("No grouping needed - all intervals separate") {
         std::vector<TimeFrameInterval> intervals = {
-            {TimeFrameIndex(1), TimeFrameIndex(2)}, 
-            {TimeFrameIndex(10), TimeFrameIndex(11)}, 
-            {TimeFrameIndex(20), TimeFrameIndex(21)}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+                {TimeFrameIndex(1), TimeFrameIndex(2)},
+                {TimeFrameIndex(10), TimeFrameIndex(11)},
+                {TimeFrameIndex(20), TimeFrameIndex(21)}};
+        auto dis = makeIntervalSeries(intervals);
 
         params.maxSpacing = 3.0;// Gaps are 7 and 8, both > 3
 
         auto result = group_intervals(dis.get(), params);
+        assignUniformTimeFrame(result);
         REQUIRE(result != nullptr);
 
         auto const & grouped = result->view();
         REQUIRE(result->size() == 3);// No grouping should occur
 
-        REQUIRE(grouped[0].value().start == TimeFrameIndex(1));
-        REQUIRE(grouped[0].value().end == TimeFrameIndex(2));
-        REQUIRE(grouped[1].value().start == TimeFrameIndex(10));
-        REQUIRE(grouped[1].value().end == TimeFrameIndex(11));
-        REQUIRE(grouped[2].value().start == TimeFrameIndex(20));
-        REQUIRE(grouped[2].value().end == TimeFrameIndex(21));
+        REQUIRE(grouped[0].value().start == ClockTicks(1));
+        REQUIRE(grouped[0].value().end == ClockTicks(2));
+        REQUIRE(grouped[1].value().start == ClockTicks(10));
+        REQUIRE(grouped[1].value().end == ClockTicks(11));
+        REQUIRE(grouped[2].value().start == ClockTicks(20));
+        REQUIRE(grouped[2].value().end == ClockTicks(21));
 
         REQUIRE(validateGrouping(intervals, grouped, params.maxSpacing));
     }
 
     SECTION("All intervals grouped into one") {
         std::vector<TimeFrameInterval> intervals = {
-            {TimeFrameIndex(1), TimeFrameIndex(2)}, 
-            {TimeFrameIndex(4), TimeFrameIndex(5)}, 
-            {TimeFrameIndex(7), TimeFrameIndex(8)}, 
-            {TimeFrameIndex(10), TimeFrameIndex(11)}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+                {TimeFrameIndex(1), TimeFrameIndex(2)},
+                {TimeFrameIndex(4), TimeFrameIndex(5)},
+                {TimeFrameIndex(7), TimeFrameIndex(8)},
+                {TimeFrameIndex(10), TimeFrameIndex(11)}};
+        auto dis = makeIntervalSeries(intervals);
 
         params.maxSpacing = 2.0;// All gaps are ≤ 2
 
         auto result = group_intervals(dis.get(), params);
+        assignUniformTimeFrame(result);
         REQUIRE(result != nullptr);
 
         auto const & grouped = result->view();
         REQUIRE(result->size() == 1);// All should be grouped
 
-        REQUIRE(grouped[0].value().start == TimeFrameIndex(1));
-        REQUIRE(grouped[0].value().end == TimeFrameIndex(11));
+        REQUIRE(grouped[0].value().start == ClockTicks(1));
+        REQUIRE(grouped[0].value().end == ClockTicks(11));
 
         REQUIRE(validateGrouping(intervals, grouped, params.maxSpacing));
     }
 
     SECTION("Zero spacing - only adjacent intervals group") {
         std::vector<TimeFrameInterval> intervals = {
-            {TimeFrameIndex(1), TimeFrameIndex(2)}, 
-            {TimeFrameIndex(3), TimeFrameIndex(4)}, 
-            {TimeFrameIndex(6), TimeFrameIndex(7)}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+                {TimeFrameIndex(1), TimeFrameIndex(2)},
+                {TimeFrameIndex(3), TimeFrameIndex(4)},
+                {TimeFrameIndex(6), TimeFrameIndex(7)}};
+        auto dis = makeIntervalSeries(intervals);
 
         params.maxSpacing = 0.0;// Only touching intervals group
 
         auto result = group_intervals(dis.get(), params);
+        assignUniformTimeFrame(result);
         REQUIRE(result != nullptr);
 
         auto const & grouped = result->view();
         REQUIRE(result->size() == 2);
 
         // (1,2) and (3,4) are adjacent (gap = 0), so they group
-        REQUIRE(grouped[0].value().start == TimeFrameIndex(1));
-        REQUIRE(grouped[0].value().end == TimeFrameIndex(4));
+        REQUIRE(grouped[0].value().start == ClockTicks(1));
+        REQUIRE(grouped[0].value().end == ClockTicks(4));
 
         // (6,7) is separate (gap = 1 > 0)
-        REQUIRE(grouped[1].value().start == TimeFrameIndex(6));
-        REQUIRE(grouped[1].value().end == TimeFrameIndex(7));
+        REQUIRE(grouped[1].value().start == ClockTicks(6));
+        REQUIRE(grouped[1].value().end == ClockTicks(7));
 
         REQUIRE(validateGrouping(intervals, grouped, params.maxSpacing));
     }
 
     SECTION("Large spacing - everything groups") {
         std::vector<TimeFrameInterval> intervals = {
-            {TimeFrameIndex(1), TimeFrameIndex(2)}, 
-            {TimeFrameIndex(100), TimeFrameIndex(101)}, 
-            {TimeFrameIndex(200), TimeFrameIndex(201)}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+                {TimeFrameIndex(1), TimeFrameIndex(2)},
+                {TimeFrameIndex(100), TimeFrameIndex(101)},
+                {TimeFrameIndex(200), TimeFrameIndex(201)}};
+        auto dis = makeIntervalSeries(intervals);
 
         params.maxSpacing = 1000.0;// Very large spacing
 
         auto result = group_intervals(dis.get(), params);
+        assignUniformTimeFrame(result);
         REQUIRE(result != nullptr);
 
         auto const & grouped = result->view();
         REQUIRE(result->size() == 1);
 
-        REQUIRE(grouped[0].value().start == TimeFrameIndex(1));
-        REQUIRE(grouped[0].value().end == TimeFrameIndex(201));
+        REQUIRE(grouped[0].value().start == ClockTicks(1));
+        REQUIRE(grouped[0].value().end == ClockTicks(201));
         REQUIRE(validateGrouping(intervals, grouped, params.maxSpacing));
     }
 
     SECTION("Overlapping intervals") {
         std::vector<TimeFrameInterval> intervals = {
-            {TimeFrameIndex(1), TimeFrameIndex(5)}, 
-            {TimeFrameIndex(3), TimeFrameIndex(7)}, 
-            {TimeFrameIndex(10), TimeFrameIndex(12)}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+                {TimeFrameIndex(1), TimeFrameIndex(5)},
+                {TimeFrameIndex(3), TimeFrameIndex(7)},
+                {TimeFrameIndex(10), TimeFrameIndex(12)}};
+        auto dis = makeIntervalSeries(intervals);
 
         params.maxSpacing = 1.0;
 
         auto result = group_intervals(dis.get(), params);
+        assignUniformTimeFrame(result);
         REQUIRE(result != nullptr);
 
         auto const & grouped = result->view();
         REQUIRE(result->size() == 2);
 
         // Overlapping intervals should be merged into one group
-        REQUIRE(grouped[0].value().start == TimeFrameIndex(1));
-        REQUIRE(grouped[0].value().end == TimeFrameIndex(7));
+        REQUIRE(grouped[0].value().start == ClockTicks(1));
+        REQUIRE(grouped[0].value().end == ClockTicks(7));
 
-        REQUIRE(grouped[1].value().start == TimeFrameIndex(10));
-        REQUIRE(grouped[1].value().end == TimeFrameIndex(12));
+        REQUIRE(grouped[1].value().start == ClockTicks(10));
+        REQUIRE(grouped[1].value().end == ClockTicks(12));
     }
 
     SECTION("Unsorted input intervals") {
         std::vector<TimeFrameInterval> intervals = {
-            {TimeFrameIndex(10), TimeFrameIndex(11)}, 
-            {TimeFrameIndex(1), TimeFrameIndex(2)}, 
-            {TimeFrameIndex(4), TimeFrameIndex(5)}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+                {TimeFrameIndex(10), TimeFrameIndex(11)},
+                {TimeFrameIndex(1), TimeFrameIndex(2)},
+                {TimeFrameIndex(4), TimeFrameIndex(5)}};
+        auto dis = makeIntervalSeries(intervals);
 
         params.maxSpacing = 3.0;
 
         auto result = group_intervals(dis.get(), params);
+        assignUniformTimeFrame(result);
         REQUIRE(result != nullptr);
 
         auto const & grouped = result->view();
         REQUIRE(result->size() == 2);
 
         // Should be sorted and grouped properly
-        REQUIRE(grouped[0].value().start == TimeFrameIndex(1));
-        REQUIRE(grouped[0].value().end == TimeFrameIndex(5));
-        REQUIRE(grouped[1].value().start == TimeFrameIndex(10));
-        REQUIRE(grouped[1].value().end == TimeFrameIndex(11));
+        REQUIRE(grouped[0].value().start == ClockTicks(1));
+        REQUIRE(grouped[0].value().end == ClockTicks(5));
+        REQUIRE(grouped[1].value().start == ClockTicks(10));
+        REQUIRE(grouped[1].value().end == ClockTicks(11));
 
         REQUIRE(validateGrouping(intervals, grouped, params.maxSpacing));
     }
 
     SECTION("Single interval") {
         std::vector<TimeFrameInterval> intervals = {
-            {TimeFrameIndex(5), TimeFrameIndex(10)}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+                {TimeFrameIndex(5), TimeFrameIndex(10)}};
+        auto dis = makeIntervalSeries(intervals);
 
         params.maxSpacing = 1.0;
 
         auto result = group_intervals(dis.get(), params);
+        assignUniformTimeFrame(result);
         REQUIRE(result != nullptr);
 
         auto const & grouped = result->view();
         REQUIRE(result->size() == 1);
 
-        REQUIRE(grouped[0].value().start == TimeFrameIndex(5));
-        REQUIRE(grouped[0].value().end == TimeFrameIndex(10));
+        REQUIRE(grouped[0].value().start == ClockTicks(5));
+        REQUIRE(grouped[0].value().end == ClockTicks(10));
     }
 
     SECTION("Empty input") {
         std::vector<TimeFrameInterval> intervals = {};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+        auto dis = makeIntervalSeries(intervals);
 
         params.maxSpacing = 1.0;
 
         auto result = group_intervals(dis.get(), params);
+        assignUniformTimeFrame(result);
         REQUIRE(result != nullptr);
 
-        auto const & grouped = result->view();
-        REQUIRE(grouped.empty());
+        REQUIRE(result->size() == 0);
     }
 
     SECTION("Null input") {
         auto result = group_intervals(nullptr, params);
         REQUIRE(result != nullptr);
-        REQUIRE(result->view().empty());
+        REQUIRE(result->size() == 0);
     }
 }
 
@@ -261,9 +299,9 @@ TEST_CASE("Group Operation Class Tests", "[transforms][digital_interval_group][o
     SECTION("canApply validation") {
         // Valid input
         std::vector<TimeFrameInterval> intervals = {
-            {TimeFrameIndex(1), TimeFrameIndex(2)}, 
-            {TimeFrameIndex(4), TimeFrameIndex(5)}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+                {TimeFrameIndex(1), TimeFrameIndex(2)},
+                {TimeFrameIndex(4), TimeFrameIndex(5)}};
+        auto dis = makeIntervalSeries(intervals);
         variant = dis;
         REQUIRE(operation.canApply(variant));
 
@@ -284,10 +322,10 @@ TEST_CASE("Group Operation Class Tests", "[transforms][digital_interval_group][o
 
     SECTION("execute with valid input") {
         std::vector<TimeFrameInterval> intervals = {
-            {TimeFrameIndex(1), TimeFrameIndex(2)}, 
-            {TimeFrameIndex(4), TimeFrameIndex(5)}, 
-            {TimeFrameIndex(10), TimeFrameIndex(11)}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+                {TimeFrameIndex(1), TimeFrameIndex(2)},
+                {TimeFrameIndex(4), TimeFrameIndex(5)},
+                {TimeFrameIndex(10), TimeFrameIndex(11)}};
+        auto dis = makeIntervalSeries(intervals);
         variant = dis;
 
         params.maxSpacing = 3.0;
@@ -297,21 +335,22 @@ TEST_CASE("Group Operation Class Tests", "[transforms][digital_interval_group][o
 
         auto result_dis = std::get<std::shared_ptr<DigitalIntervalSeries>>(result);
         REQUIRE(result_dis != nullptr);
+        assignUniformTimeFrame(result_dis);
 
         auto const & grouped = result_dis->view();
         REQUIRE(result_dis->size() == 2);
-        REQUIRE(grouped[0].value().start == TimeFrameIndex(1));
-        REQUIRE(grouped[0].value().end == TimeFrameIndex(5));
-        REQUIRE(grouped[1].value().start == TimeFrameIndex(10));
-        REQUIRE(grouped[1].value().end == TimeFrameIndex(11));
+        REQUIRE(grouped[0].value().start == ClockTicks(1));
+        REQUIRE(grouped[0].value().end == ClockTicks(5));
+        REQUIRE(grouped[1].value().start == ClockTicks(10));
+        REQUIRE(grouped[1].value().end == ClockTicks(11));
     }
 
     SECTION("execute with progress callback") {
         std::vector<TimeFrameInterval> intervals = {
-            {TimeFrameIndex(1), TimeFrameIndex(2)}, 
-            {TimeFrameIndex(4), TimeFrameIndex(5)}, 
-            {TimeFrameIndex(10), TimeFrameIndex(11)}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+                {TimeFrameIndex(1), TimeFrameIndex(2)},
+                {TimeFrameIndex(4), TimeFrameIndex(5)},
+                {TimeFrameIndex(10), TimeFrameIndex(11)}};
+        auto dis = makeIntervalSeries(intervals);
         variant = dis;
 
         int volatile progress_val = -1;
@@ -332,9 +371,9 @@ TEST_CASE("Group Operation Class Tests", "[transforms][digital_interval_group][o
 
     SECTION("execute with wrong parameter type") {
         std::vector<TimeFrameInterval> intervals = {
-            {TimeFrameIndex(1), TimeFrameIndex(2)}, 
-            {TimeFrameIndex(4), TimeFrameIndex(5)}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+                {TimeFrameIndex(1), TimeFrameIndex(2)},
+                {TimeFrameIndex(4), TimeFrameIndex(5)}};
+        auto dis = makeIntervalSeries(intervals);
         variant = dis;
 
         // Create a different parameter type
@@ -352,9 +391,9 @@ TEST_CASE("Group Operation Class Tests", "[transforms][digital_interval_group][o
 
     SECTION("execute with null parameters") {
         std::vector<TimeFrameInterval> intervals = {
-            {TimeFrameIndex(1), TimeFrameIndex(2)}, 
-            {TimeFrameIndex(4), TimeFrameIndex(5)}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+                {TimeFrameIndex(1), TimeFrameIndex(2)},
+                {TimeFrameIndex(4), TimeFrameIndex(5)}};
+        auto dis = makeIntervalSeries(intervals);
         variant = dis;
 
         auto result = operation.execute(variant, nullptr);
@@ -370,14 +409,15 @@ TEST_CASE("Group Transform Edge Cases", "[transforms][digital_interval_group][ed
 
     SECTION("Fractional spacing") {
         std::vector<TimeFrameInterval> intervals = {
-            {TimeFrameIndex(1), TimeFrameIndex(2)}, 
-            {TimeFrameIndex(4), TimeFrameIndex(5)}, 
-            {TimeFrameIndex(7), TimeFrameIndex(8)}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+                {TimeFrameIndex(1), TimeFrameIndex(2)},
+                {TimeFrameIndex(4), TimeFrameIndex(5)},
+                {TimeFrameIndex(7), TimeFrameIndex(8)}};
+        auto dis = makeIntervalSeries(intervals);
 
         params.maxSpacing = 1.5;// Between 1 and 2
 
         auto result = group_intervals(dis.get(), params);
+        assignUniformTimeFrame(result);
         REQUIRE(result != nullptr);
 
         auto const & grouped = result->view();
@@ -385,46 +425,48 @@ TEST_CASE("Group Transform Edge Cases", "[transforms][digital_interval_group][ed
         // All intervals should group into one since all gaps are ≤ 1.5
         // Gap between (1,2) and (4,5) is 1 ≤ 1.5, and gap between (4,5) and (7,8) is 1 ≤ 1.5
         REQUIRE(result->size() == 1);
-        REQUIRE(grouped[0].value().start == TimeFrameIndex(1));
-        REQUIRE(grouped[0].value().end == TimeFrameIndex(8));
+        REQUIRE(grouped[0].value().start == ClockTicks(1));
+        REQUIRE(grouped[0].value().end == ClockTicks(8));
     }
 
     SECTION("Negative spacing") {
         std::vector<TimeFrameInterval> intervals = {
-            {TimeFrameIndex(1), TimeFrameIndex(2)}, 
-            {TimeFrameIndex(4), TimeFrameIndex(5)}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+                {TimeFrameIndex(1), TimeFrameIndex(2)},
+                {TimeFrameIndex(4), TimeFrameIndex(5)}};
+        auto dis = makeIntervalSeries(intervals);
 
         params.maxSpacing = -1.0;// Negative spacing
 
         auto result = group_intervals(dis.get(), params);
+        assignUniformTimeFrame(result);
         REQUIRE(result != nullptr);
 
         auto const & grouped = result->view();
         REQUIRE(result->size() == 2);// No grouping with negative spacing
 
-        REQUIRE(grouped[0].value().start == TimeFrameIndex(1));
-        REQUIRE(grouped[0].value().end == TimeFrameIndex(2));
-        REQUIRE(grouped[1].value().start == TimeFrameIndex(4));
-        REQUIRE(grouped[1].value().end == TimeFrameIndex(5));
+        REQUIRE(grouped[0].value().start == ClockTicks(1));
+        REQUIRE(grouped[0].value().end == ClockTicks(2));
+        REQUIRE(grouped[1].value().start == ClockTicks(4));
+        REQUIRE(grouped[1].value().end == ClockTicks(5));
     }
 
     SECTION("Very large intervals") {
         std::vector<TimeFrameInterval> intervals = {
-            {TimeFrameIndex(1000000), TimeFrameIndex(2000000)}, 
-            {TimeFrameIndex(3000000), TimeFrameIndex(4000000)}};
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+                {TimeFrameIndex(1000000), TimeFrameIndex(2000000)},
+                {TimeFrameIndex(3000000), TimeFrameIndex(4000000)}};
+        auto dis = makeIntervalSeries(intervals);
 
         params.maxSpacing = 1000000.0;// Exactly the gap size
 
         auto result = group_intervals(dis.get(), params);
+        assignUniformTimeFrame(result);
         REQUIRE(result != nullptr);
 
         auto const & grouped = result->view();
         REQUIRE(result->size() == 1);// Should group (gap = 999999 ≤ 1000000)
 
-        REQUIRE(grouped[0].value().start == TimeFrameIndex(1000000));
-        REQUIRE(grouped[0].value().end == TimeFrameIndex(4000000));
+        REQUIRE(grouped[0].value().start == ClockTicks(1000000));
+        REQUIRE(grouped[0].value().end == ClockTicks(4000000));
     }
 
     SECTION("Many small intervals") {
@@ -432,18 +474,19 @@ TEST_CASE("Group Transform Edge Cases", "[transforms][digital_interval_group][ed
         for (int i = 0; i < 100; ++i) {
             intervals.push_back({TimeFrameIndex(i * 3), TimeFrameIndex(i * 3 + 1)});// Intervals with gaps of 1
         }
-        auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
+        auto dis = makeIntervalSeries(intervals);
 
         params.maxSpacing = 1.0;// Should group all
 
         auto result = group_intervals(dis.get(), params);
+        assignUniformTimeFrame(result);
         REQUIRE(result != nullptr);
 
         auto const & grouped = result->view();
         REQUIRE(result->size() == 1);
 
-        REQUIRE(grouped[0].value().start == TimeFrameIndex(0));
-        REQUIRE(grouped[0].value().end == TimeFrameIndex(99 * 3 + 1));
+        REQUIRE(grouped[0].value().start == ClockTicks(0));
+        REQUIRE(grouped[0].value().end == ClockTicks(99 * 3 + 1));
     }
 }
 
@@ -456,31 +499,21 @@ TEST_CASE("Group Transform Edge Cases", "[transforms][digital_interval_group][ed
 #include <iostream>
 
 TEST_CASE("Data Transform: Digital Interval Group - JSON pipeline", "[transforms][digital_interval_group][json]") {
-    const nlohmann::json json_config = {
-        {"steps", {{
-            {"step_id", "group_step_1"},
-            {"transform_name", "Group Intervals"},
-            {"input_key", "TestIntervals.channel1"},
-            {"output_key", "GroupedIntervals"},
-            {"parameters", {
-                {"max_spacing", 3.0}
-            }}
-        }}}
-    };
+    nlohmann::json const json_config = {
+            {"steps", {{{"step_id", "group_step_1"}, {"transform_name", "Group Intervals"}, {"input_key", "TestIntervals.channel1"}, {"output_key", "GroupedIntervals"}, {"parameters", {{"max_spacing", 3.0}}}}}}};
 
     DataManager dm;
     TransformRegistry registry;
 
-    auto time_frame = std::make_shared<TimeFrame>();
+    auto time_frame = uniformIntervalTestTimeFrame();
     dm.setTime(TimeKey("default"), time_frame);
 
     // Create test intervals: (1,2), (4,5), (10,11) - same as documentation example
     std::vector<TimeFrameInterval> intervals = {
-        {TimeFrameIndex(1), TimeFrameIndex(2)}, 
-        {TimeFrameIndex(4), TimeFrameIndex(5)}, 
-        {TimeFrameIndex(10), TimeFrameIndex(11)}};
-    auto dis = std::make_shared<DigitalIntervalSeries>(intervals);
-    dis->setTimeFrame(time_frame);
+            {TimeFrameIndex(1), TimeFrameIndex(2)},
+            {TimeFrameIndex(4), TimeFrameIndex(5)},
+            {TimeFrameIndex(10), TimeFrameIndex(11)}};
+    auto dis = makeIntervalSeries(intervals);
     dm.setData("TestIntervals.channel1", dis, TimeKey("default"));
 
     TransformPipeline pipeline(&dm, &registry);
@@ -490,17 +523,18 @@ TEST_CASE("Data Transform: Digital Interval Group - JSON pipeline", "[transforms
     // Verify the results
     auto grouped_series = dm.getData<DigitalIntervalSeries>("GroupedIntervals");
     REQUIRE(grouped_series != nullptr);
+    assignUniformTimeFrame(grouped_series);
 
     auto const & grouped = grouped_series->view();
     REQUIRE(grouped_series->size() == 2);
 
     // First group: (1,2) and (4,5) combined to (1,5)
-    REQUIRE(grouped[0].value().start == TimeFrameIndex(1));
-    REQUIRE(grouped[0].value().end == TimeFrameIndex(5));
+    REQUIRE(grouped[0].value().start == ClockTicks(1));
+    REQUIRE(grouped[0].value().end == ClockTicks(5));
 
     // Second group: (10,11) remains separate
-    REQUIRE(grouped[1].value().start == TimeFrameIndex(10));
-    REQUIRE(grouped[1].value().end == TimeFrameIndex(11));
+    REQUIRE(grouped[1].value().start == ClockTicks(10));
+    REQUIRE(grouped[1].value().end == ClockTicks(11));
 }
 
 TEST_CASE("Data Transform: Digital Interval Group - load_data_from_json_config", "[transforms][digital_interval_group][json_config]") {
@@ -508,51 +542,50 @@ TEST_CASE("Data Transform: Digital Interval Group - load_data_from_json_config",
     DataManager dm;
 
     // Create a TimeFrame for our data
-    auto time_frame = std::make_shared<TimeFrame>();
+    auto time_frame = uniformIntervalTestTimeFrame();
     dm.setTime(TimeKey("default"), time_frame);
-    
+
     // Create test interval data in code - same as documentation example
     std::vector<TimeFrameInterval> intervals = {
-        {TimeFrameIndex(1), TimeFrameIndex(2)}, 
-        {TimeFrameIndex(4), TimeFrameIndex(5)}, 
-        {TimeFrameIndex(10), TimeFrameIndex(11)}};
-    
-    auto test_intervals = std::make_shared<DigitalIntervalSeries>(intervals);
-    test_intervals->setTimeFrame(time_frame);
-    
+            {TimeFrameIndex(1), TimeFrameIndex(2)},
+            {TimeFrameIndex(4), TimeFrameIndex(5)},
+            {TimeFrameIndex(10), TimeFrameIndex(11)}};
+
+    auto test_intervals = makeIntervalSeries(intervals);
+
     // Store the interval data in DataManager with a known key
     dm.setData("test_intervals", test_intervals, TimeKey("default"));
-    
+
     // Create JSON configuration for transformation pipeline using unified format
-    const char* json_config = 
-        "[\n"
-        "{\n"
-        "    \"transformations\": {\n"
-        "        \"metadata\": {\n"
-        "            \"name\": \"Interval Grouping Pipeline\",\n"
-        "            \"description\": \"Test interval grouping on digital interval series\",\n"
-        "            \"version\": \"1.0\"\n"
-        "        },\n"
-        "        \"steps\": [\n"
-        "            {\n"
-        "                \"step_id\": \"1\",\n"
-        "                \"transform_name\": \"Group Intervals\",\n"
-        "                \"phase\": \"analysis\",\n"
-        "                \"input_key\": \"test_intervals\",\n"
-        "                \"output_key\": \"grouped_intervals\",\n"
-        "                \"parameters\": {\n"
-        "                    \"max_spacing\": 3.0\n"
-        "                }\n"
-        "            }\n"
-        "        ]\n"
-        "    }\n"
-        "}\n"
-        "]";
-    
+    char const * json_config =
+            "[\n"
+            "{\n"
+            "    \"transformations\": {\n"
+            "        \"metadata\": {\n"
+            "            \"name\": \"Interval Grouping Pipeline\",\n"
+            "            \"description\": \"Test interval grouping on digital interval series\",\n"
+            "            \"version\": \"1.0\"\n"
+            "        },\n"
+            "        \"steps\": [\n"
+            "            {\n"
+            "                \"step_id\": \"1\",\n"
+            "                \"transform_name\": \"Group Intervals\",\n"
+            "                \"phase\": \"analysis\",\n"
+            "                \"input_key\": \"test_intervals\",\n"
+            "                \"output_key\": \"grouped_intervals\",\n"
+            "                \"parameters\": {\n"
+            "                    \"max_spacing\": 3.0\n"
+            "                }\n"
+            "            }\n"
+            "        ]\n"
+            "    }\n"
+            "}\n"
+            "]";
+
     // Create temporary directory and write JSON config to file
     std::filesystem::path test_dir = std::filesystem::temp_directory_path() / "digital_interval_group_pipeline_test";
     std::filesystem::create_directories(test_dir);
-    
+
     std::filesystem::path json_filepath = test_dir / "pipeline_config.json";
     {
         std::ofstream json_file(json_filepath);
@@ -560,52 +593,52 @@ TEST_CASE("Data Transform: Digital Interval Group - load_data_from_json_config",
         json_file << json_config;
         json_file.close();
     }
-    
+
     // Execute the transformation pipeline using load_data_from_json_config
     auto data_info_list = load_data_from_json_config(&dm, json_filepath.string());
-    
+
     // Verify the transformation was executed and results are available
     auto result_intervals = dm.getData<DigitalIntervalSeries>("grouped_intervals");
     REQUIRE(result_intervals != nullptr);
-    
-    // Verify the grouping results - same as documentation example
+    assignUniformTimeFrame(result_intervals);
+
     auto const & grouped = result_intervals->view();
     REQUIRE(result_intervals->size() == 2);
-    
+
     // First group: (1,2) and (4,5) combined to (1,5)
-    REQUIRE(grouped[0].value().start == TimeFrameIndex(1));
-    REQUIRE(grouped[0].value().end == TimeFrameIndex(5));
-    
+    REQUIRE(grouped[0].value().start == ClockTicks(1));
+    REQUIRE(grouped[0].value().end == ClockTicks(5));
+
     // Second group: (10,11) remains separate
-    REQUIRE(grouped[1].value().start == TimeFrameIndex(10));
-    REQUIRE(grouped[1].value().end == TimeFrameIndex(11));
-    
+    REQUIRE(grouped[1].value().start == ClockTicks(10));
+    REQUIRE(grouped[1].value().end == ClockTicks(11));
+
     // Test another pipeline with different parameters (smaller spacing)
-    const char* json_config_small_spacing = 
-        "[\n"
-        "{\n"
-        "    \"transformations\": {\n"
-        "        \"metadata\": {\n"
-        "            \"name\": \"Interval Grouping with Small Spacing\",\n"
-        "            \"description\": \"Test interval grouping with smaller spacing\",\n"
-        "            \"version\": \"1.0\"\n"
-        "        },\n"
-        "        \"steps\": [\n"
-        "            {\n"
-        "                \"step_id\": \"1\",\n"
-        "                \"transform_name\": \"Group Intervals\",\n"
-        "                \"phase\": \"analysis\",\n"
-        "                \"input_key\": \"test_intervals\",\n"
-        "                \"output_key\": \"grouped_intervals_small\",\n"
-        "                \"parameters\": {\n"
-        "                    \"max_spacing\": 1.0\n"
-        "                }\n"
-        "            }\n"
-        "        ]\n"
-        "    }\n"
-        "}\n"
-        "]";
-    
+    char const * json_config_small_spacing =
+            "[\n"
+            "{\n"
+            "    \"transformations\": {\n"
+            "        \"metadata\": {\n"
+            "            \"name\": \"Interval Grouping with Small Spacing\",\n"
+            "            \"description\": \"Test interval grouping with smaller spacing\",\n"
+            "            \"version\": \"1.0\"\n"
+            "        },\n"
+            "        \"steps\": [\n"
+            "            {\n"
+            "                \"step_id\": \"1\",\n"
+            "                \"transform_name\": \"Group Intervals\",\n"
+            "                \"phase\": \"analysis\",\n"
+            "                \"input_key\": \"test_intervals\",\n"
+            "                \"output_key\": \"grouped_intervals_small\",\n"
+            "                \"parameters\": {\n"
+            "                    \"max_spacing\": 1.0\n"
+            "                }\n"
+            "            }\n"
+            "        ]\n"
+            "    }\n"
+            "}\n"
+            "]";
+
     std::filesystem::path json_filepath_small = test_dir / "pipeline_config_small.json";
     {
         std::ofstream json_file(json_filepath_small);
@@ -613,51 +646,52 @@ TEST_CASE("Data Transform: Digital Interval Group - load_data_from_json_config",
         json_file << json_config_small_spacing;
         json_file.close();
     }
-    
+
     // Execute the small spacing pipeline
     auto data_info_list_small = load_data_from_json_config(&dm, json_filepath_small.string());
-    
+
     // Verify the small spacing results
     auto result_intervals_small = dm.getData<DigitalIntervalSeries>("grouped_intervals_small");
     REQUIRE(result_intervals_small != nullptr);
-    
+    assignUniformTimeFrame(result_intervals_small);
+
     auto const & grouped_small = result_intervals_small->view();
     REQUIRE(result_intervals_small->size() == 2);
-    
+
     // With spacing=1.0, (1,2) and (4,5) still group (gap=1 ≤ 1.0)
-    REQUIRE(grouped_small[0].value().start == TimeFrameIndex(1));
-    REQUIRE(grouped_small[0].value().end == TimeFrameIndex(5));
-    
+    REQUIRE(grouped_small[0].value().start == ClockTicks(1));
+    REQUIRE(grouped_small[0].value().end == ClockTicks(5));
+
     // (10,11) remains separate (gap=4 > 1.0)
-    REQUIRE(grouped_small[1].value().start == TimeFrameIndex(10));
-    REQUIRE(grouped_small[1].value().end == TimeFrameIndex(11));
-    
+    REQUIRE(grouped_small[1].value().start == ClockTicks(10));
+    REQUIRE(grouped_small[1].value().end == ClockTicks(11));
+
     // Test zero spacing pipeline (only adjacent intervals group)
-    const char* json_config_zero = 
-        "[\n"
-        "{\n"
-        "    \"transformations\": {\n"
-        "        \"metadata\": {\n"
-        "            \"name\": \"Interval Grouping with Zero Spacing\",\n"
-        "            \"description\": \"Test interval grouping with zero spacing\",\n"
-        "            \"version\": \"1.0\"\n"
-        "        },\n"
-        "        \"steps\": [\n"
-        "            {\n"
-        "                \"step_id\": \"1\",\n"
-        "                \"transform_name\": \"Group Intervals\",\n"
-        "                \"phase\": \"analysis\",\n"
-        "                \"input_key\": \"test_intervals\",\n"
-        "                \"output_key\": \"grouped_intervals_zero\",\n"
-        "                \"parameters\": {\n"
-        "                    \"max_spacing\": 0.0\n"
-        "                }\n"
-        "            }\n"
-        "        ]\n"
-        "    }\n"
-        "}\n"
-        "]";
-    
+    char const * json_config_zero =
+            "[\n"
+            "{\n"
+            "    \"transformations\": {\n"
+            "        \"metadata\": {\n"
+            "            \"name\": \"Interval Grouping with Zero Spacing\",\n"
+            "            \"description\": \"Test interval grouping with zero spacing\",\n"
+            "            \"version\": \"1.0\"\n"
+            "        },\n"
+            "        \"steps\": [\n"
+            "            {\n"
+            "                \"step_id\": \"1\",\n"
+            "                \"transform_name\": \"Group Intervals\",\n"
+            "                \"phase\": \"analysis\",\n"
+            "                \"input_key\": \"test_intervals\",\n"
+            "                \"output_key\": \"grouped_intervals_zero\",\n"
+            "                \"parameters\": {\n"
+            "                    \"max_spacing\": 0.0\n"
+            "                }\n"
+            "            }\n"
+            "        ]\n"
+            "    }\n"
+            "}\n"
+            "]";
+
     std::filesystem::path json_filepath_zero = test_dir / "pipeline_config_zero.json";
     {
         std::ofstream json_file(json_filepath_zero);
@@ -665,29 +699,30 @@ TEST_CASE("Data Transform: Digital Interval Group - load_data_from_json_config",
         json_file << json_config_zero;
         json_file.close();
     }
-    
+
     // Execute the zero spacing pipeline
     auto data_info_list_zero = load_data_from_json_config(&dm, json_filepath_zero.string());
-    
+
     // Verify the zero spacing results
     auto result_intervals_zero = dm.getData<DigitalIntervalSeries>("grouped_intervals_zero");
     REQUIRE(result_intervals_zero != nullptr);
-    
+    assignUniformTimeFrame(result_intervals_zero);
+
     auto const & grouped_zero = result_intervals_zero->view();
     REQUIRE(result_intervals_zero->size() == 3);
-    
+
     // With spacing=0.0, no intervals group (gaps are 1 and 4, both > 0.0)
-    REQUIRE(grouped_zero[0].value().start == TimeFrameIndex(1));
-    REQUIRE(grouped_zero[0].value().end == TimeFrameIndex(2));
-    REQUIRE(grouped_zero[1].value().start == TimeFrameIndex(4));
-    REQUIRE(grouped_zero[1].value().end == TimeFrameIndex(5));
-    REQUIRE(grouped_zero[2].value().start == TimeFrameIndex(10));
-    REQUIRE(grouped_zero[2].value().end == TimeFrameIndex(11));
-    
+    REQUIRE(grouped_zero[0].value().start == ClockTicks(1));
+    REQUIRE(grouped_zero[0].value().end == ClockTicks(2));
+    REQUIRE(grouped_zero[1].value().start == ClockTicks(4));
+    REQUIRE(grouped_zero[1].value().end == ClockTicks(5));
+    REQUIRE(grouped_zero[2].value().start == ClockTicks(10));
+    REQUIRE(grouped_zero[2].value().end == ClockTicks(11));
+
     // Cleanup
     try {
         std::filesystem::remove_all(test_dir);
-    } catch (const std::exception& e) {
+    } catch (std::exception const & e) {
         std::cerr << "Warning: Cleanup failed: " << e.what() << std::endl;
     }
 }

@@ -27,12 +27,10 @@ std::shared_ptr<TimeFrame> createDerivedTimeFrame(DerivedTimeFrameFromIntervalsO
     auto const & intervals = options.interval_series->view();
 
     for (auto const & interval: intervals) {
-        TimeFrameIndex const index = (options.edge == IntervalEdge::START)
-                                             ? TimeFrameIndex(interval.value().start)
-                                             : TimeFrameIndex(interval.value().end);
+        ClockTicks const time_value = (options.edge == IntervalEdge::START)
+                                             ? interval.value().start
+                                             : interval.value().end;
 
-        // Get the actual time value from the source timeframe at this index
-        ClockTicks const time_value = options.source_timeframe->getTimeAtIndex(index);
         derived_times.push_back(time_value.getValue());
     }
 

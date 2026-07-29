@@ -1,6 +1,7 @@
 #include "PruneOverlappingIntervals.hpp"
 
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "fixtures/UniformIntervalTestTimeFrame.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
 #include "TransformsV2/core/ComputeContext.hpp"
@@ -17,21 +18,27 @@ using namespace Neuralyzer::Transforms::V2::Examples;
 namespace {
 
 std::shared_ptr<DigitalIntervalSeries> makeIntervalSeries(std::vector<TimeFrameInterval> const & intervals) {
-    return std::make_shared<DigitalIntervalSeries>(intervals);
+    auto series = std::make_shared<DigitalIntervalSeries>(intervals);
+    series->setTimeFrame(uniform_interval_test::uniformIntervalTestTimeFrame());
+    return series;
 }
 
 std::shared_ptr<DigitalIntervalSeries> makeOverlappingIntervalSeries(std::vector<TimeFrameInterval> const & intervals) {
-    return DigitalIntervalSeries::createOverlapping(intervals);
+    return DigitalIntervalSeries::createOverlapping(
+            intervals,
+            uniform_interval_test::uniformIntervalTestTimeFrame());
 }
 
 void requireIntervalsEqual(std::shared_ptr<DigitalIntervalSeries> const & series,
                            std::vector<TimeFrameInterval> const & expected) {
     REQUIRE(series != nullptr);
     REQUIRE(series->size() == expected.size());
+    REQUIRE(series->getTimeFrame() != nullptr);
     size_t idx = 0;
+    auto const & time_frame = *series->getTimeFrame();
     for (auto const & interval_with_id: series->view()) {
-        REQUIRE(interval_with_id.interval.start == expected[idx].start);
-        REQUIRE(interval_with_id.interval.end == expected[idx].end);
+        REQUIRE(time_frame.getIndexAtTime(interval_with_id.interval.start) == expected[idx].start);
+        REQUIRE(time_frame.getIndexAtTime(interval_with_id.interval.end) == expected[idx].end);
         ++idx;
     }
 }
@@ -117,9 +124,9 @@ TEST_CASE("V2 Container Transform: Prune Overlapping Intervals - Algorithm",
         std::vector<int> const times{0, 10, 20, 30, 40, 50, 60, 70, 80, 90};
         auto time_frame = std::make_shared<TimeFrame>(times);
 
-        auto intervals = makeIntervalSeries({{TimeFrameInterval{TimeFrameIndex(50), TimeFrameIndex(150)},
-             TimeFrameInterval{TimeFrameIndex(70), TimeFrameIndex(170)},
-             TimeFrameInterval{TimeFrameIndex(250), TimeFrameIndex(350)}}});
+        auto intervals = makeIntervalSeries({{TimeFrameInterval{TimeFrameIndex(1), TimeFrameIndex(3)},
+             TimeFrameInterval{TimeFrameIndex(2), TimeFrameIndex(4)},
+             TimeFrameInterval{TimeFrameIndex(6), TimeFrameIndex(8)}}});
         intervals->setTimeFrame(time_frame);
 
         auto const result = pruneOverlappingIntervals(*intervals, params, ctx);

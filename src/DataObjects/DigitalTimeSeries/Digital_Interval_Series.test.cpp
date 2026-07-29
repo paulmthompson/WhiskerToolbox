@@ -4,17 +4,26 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Entity/EntityRegistry.hpp"
 
+namespace {
+
+std::shared_ptr<TimeFrame> makeUniformTimeFrame(int count) {
+    std::vector<int> times;
+    times.reserve(static_cast<size_t>(count));
+    for (int i = 0; i < count; ++i) {
+        times.push_back(i);
+    }
+    return std::make_shared<TimeFrame>(times);
+}
+
+}// namespace
+
 TEST_CASE("DigitalIntervalSeries - interval entity identity uses start and end",
           "[DataManager][interval][entity]") {
     EntityRegistry registry;
     DigitalIntervalSeries series;
     series.setIdentityContext("test_intervals", &registry);
 
-    std::vector<int> times;
-    for (int i: std::views::iota(0, 1000)) {
-        times.push_back(i);
-    }
-    auto timeframe = std::make_shared<TimeFrame>(times);
+    auto timeframe = makeUniformTimeFrame(1000);
     series.setTimeFrame(timeframe);
 
     series.addEvent(TimeFrameInterval{TimeFrameIndex(100), TimeFrameIndex(200)});
@@ -57,11 +66,7 @@ TEST_CASE("DigitalIntervalSeries - extend preserves EntityId",
     DigitalIntervalSeries series;
     series.setIdentityContext("test_intervals", &registry);
 
-    std::vector<int> times;
-    for (int i: std::views::iota(0, 1000)) {
-        times.push_back(i);
-    }
-    auto timeframe = std::make_shared<TimeFrame>(times);
+    auto timeframe = makeUniformTimeFrame(1000);
     series.setTimeFrame(timeframe);
 
     series.addEvent(TimeFrameInterval{TimeFrameIndex(100), TimeFrameIndex(200)});
@@ -73,8 +78,8 @@ TEST_CASE("DigitalIntervalSeries - extend preserves EntityId",
 
     REQUIRE(series.size() == 1);
     REQUIRE(series.view()[0].id() == original_id);
-    REQUIRE(series.view()[0].value().start == TimeFrameIndex(100));
-    REQUIRE(series.view()[0].value().end == TimeFrameIndex(250));
+    REQUIRE(series.view()[0].value().start == ClockTicks(100));
+    REQUIRE(series.view()[0].value().end == ClockTicks(250));
 
     auto desc = registry.get(original_id);
     REQUIRE(desc.has_value());
@@ -93,6 +98,9 @@ TEST_CASE("DigitalIntervalSeries - merge inherits earliest-start EntityId",
     DigitalIntervalSeries series;
     series.setIdentityContext("test_intervals", &registry);
 
+    auto timeframe = makeUniformTimeFrame(1000);
+    series.setTimeFrame(timeframe);
+
     series.addEvent(TimeFrameInterval{TimeFrameIndex(100), TimeFrameIndex(150)});
     series.addEvent(TimeFrameInterval{TimeFrameIndex(200), TimeFrameIndex(250)});
     series.rebuildAllEntityIds();
@@ -105,21 +113,23 @@ TEST_CASE("DigitalIntervalSeries - merge inherits earliest-start EntityId",
 
     REQUIRE(series.size() == 1);
     REQUIRE(series.view()[0].id() == first_id);
-    REQUIRE(series.view()[0].value().start == TimeFrameIndex(100));
-    REQUIRE(series.view()[0].value().end == TimeFrameIndex(250));
+    REQUIRE(series.view()[0].value().start == ClockTicks(100));
+    REQUIRE(series.view()[0].value().end == ClockTicks(250));
 }
 
 TEST_CASE("Digital Interval Overlap Left", "[DataManager]") {
 
     DigitalIntervalSeries dis;
+    auto timeframe = makeUniformTimeFrame(100);
+    dis.setTimeFrame(timeframe);
     dis.addEvent(TimeFrameIndex(0), TimeFrameIndex(10));
     dis.addEvent(TimeFrameIndex(5), TimeFrameIndex(15));
 
     auto data = dis.view();
 
     REQUIRE(dis.size() == 1);
-    REQUIRE(data[0].value().start == TimeFrameIndex(0));
-    REQUIRE(data[0].value().end == TimeFrameIndex(15));
+    REQUIRE(data[0].value().start == ClockTicks(0));
+    REQUIRE(data[0].value().end == ClockTicks(15));
 }
 
 TEST_CASE("DigitalIntervalSeries - Range-based access", "[DataManager]") {
@@ -238,13 +248,15 @@ TEST_CASE("DigitalIntervalSeries - Range-based access", "[DataManager]") {
 
 TEST_CASE("DigitalIntervalSeries - view() method", "[DataManager][view]") {
     DigitalIntervalSeries dis;
+    auto timeframe = makeUniformTimeFrame(100);
+    dis.setTimeFrame(timeframe);
     dis.addEvent(TimeFrameIndex(0), TimeFrameIndex(10));
     dis.addEvent(TimeFrameIndex(20), TimeFrameIndex(30));
     dis.addEvent(TimeFrameIndex(40), TimeFrameIndex(50));
 
-    SECTION("Basic iteration with IntervalWithId accessors") {
-        std::vector<TimeFrameIndex> collected_times;
-        std::vector<TimeFrameInterval> collected_intervals;
+    SECTION("Basic iteration with ClockTicksIntervalWithId accessors") {
+        std::vector<ClockTicks> collected_times;
+        std::vector<ClockTicksInterval> collected_intervals;
         std::vector<EntityId> collected_ids;
 
         for (auto const interval_with_id: dis.view()) {
@@ -254,18 +266,16 @@ TEST_CASE("DigitalIntervalSeries - view() method", "[DataManager][view]") {
         }
 
         REQUIRE(collected_times.size() == 3);
-        // time() should be the start of each interval
-        REQUIRE(collected_times[0] == TimeFrameIndex(0));
-        REQUIRE(collected_times[1] == TimeFrameIndex(20));
-        REQUIRE(collected_times[2] == TimeFrameIndex(40));
+        REQUIRE(collected_times[0] == ClockTicks(0));
+        REQUIRE(collected_times[1] == ClockTicks(20));
+        REQUIRE(collected_times[2] == ClockTicks(40));
 
-        // Verify intervals
-        REQUIRE(collected_intervals[0].start == TimeFrameIndex(0));
-        REQUIRE(collected_intervals[0].end == TimeFrameIndex(10));
-        REQUIRE(collected_intervals[1].start == TimeFrameIndex(20));
-        REQUIRE(collected_intervals[1].end == TimeFrameIndex(30));
-        REQUIRE(collected_intervals[2].start == TimeFrameIndex(40));
-        REQUIRE(collected_intervals[2].end == TimeFrameIndex(50));
+        REQUIRE(collected_intervals[0].start == ClockTicks(0));
+        REQUIRE(collected_intervals[0].end == ClockTicks(10));
+        REQUIRE(collected_intervals[1].start == ClockTicks(20));
+        REQUIRE(collected_intervals[1].end == ClockTicks(30));
+        REQUIRE(collected_intervals[2].start == ClockTicks(40));
+        REQUIRE(collected_intervals[2].end == ClockTicks(50));
     }
 
     SECTION("Empty series") {
@@ -283,14 +293,12 @@ TEST_CASE("DigitalIntervalSeries - view() method", "[DataManager][view]") {
         auto it = std::ranges::begin(v);
         auto first_element = *it;
 
-        // Test direct member access
-        REQUIRE(first_element.interval.start == TimeFrameIndex(0));
-        REQUIRE(first_element.interval.end == TimeFrameIndex(10));
-        REQUIRE(first_element.time() == TimeFrameIndex(0));
+        REQUIRE(first_element.interval.start == ClockTicks(0));
+        REQUIRE(first_element.interval.end == ClockTicks(10));
+        REQUIRE(first_element.time() == ClockTicks(0));
     }
 
     SECTION("Works with range algorithms") {
-        // Count elements in range
         auto count = std::ranges::distance(dis.view());
         REQUIRE(count == 3);
     }
@@ -298,13 +306,15 @@ TEST_CASE("DigitalIntervalSeries - view() method", "[DataManager][view]") {
 
 TEST_CASE("DigitalIntervalSeries - view() concept-compliant iteration", "[DataManager][view]") {
     DigitalIntervalSeries dis;
+    auto timeframe = makeUniformTimeFrame(1000);
+    dis.setTimeFrame(timeframe);
     dis.addEvent(TimeFrameIndex(100), TimeFrameIndex(200));
     dis.addEvent(TimeFrameIndex(300), TimeFrameIndex(400));
 
-    SECTION("IntervalWithId satisfies concept requirements") {
-        std::vector<TimeFrameIndex> collected_times;
+    SECTION("ClockTicksIntervalWithId satisfies clock-tick accessors") {
+        std::vector<ClockTicks> collected_times;
         std::vector<EntityId> collected_ids;
-        std::vector<TimeFrameInterval> collected_values;
+        std::vector<ClockTicksInterval> collected_values;
 
         for (auto interval: dis.view()) {
             collected_times.push_back(interval.time());
@@ -313,16 +323,24 @@ TEST_CASE("DigitalIntervalSeries - view() concept-compliant iteration", "[DataMa
         }
 
         REQUIRE(collected_times.size() == 2);
-        // time() returns start of interval
-        REQUIRE(collected_times[0] == TimeFrameIndex(100));
-        REQUIRE(collected_times[1] == TimeFrameIndex(300));
+        REQUIRE(collected_times[0] == ClockTicks(100));
+        REQUIRE(collected_times[1] == ClockTicks(300));
 
-        // value() returns the full interval
-        REQUIRE(collected_values[0].start == TimeFrameIndex(100));
-        REQUIRE(collected_values[0].end == TimeFrameIndex(200));
-        REQUIRE(collected_values[1].start == TimeFrameIndex(300));
-        REQUIRE(collected_values[1].end == TimeFrameIndex(400));
+        REQUIRE(collected_values[0].start == ClockTicks(100));
+        REQUIRE(collected_values[0].end == ClockTicks(200));
+        REQUIRE(collected_values[1].start == ClockTicks(300));
+        REQUIRE(collected_values[1].end == ClockTicks(400));
     }
+}
+
+TEST_CASE("DigitalIntervalSeries - getStoredInterval", "[DataManager][view]") {
+    DigitalIntervalSeries dis;
+    dis.addEvent(TimeFrameIndex(0), TimeFrameIndex(10));
+    dis.addEvent(TimeFrameIndex(20), TimeFrameIndex(30));
+
+    REQUIRE(dis.getStoredInterval(0).start == TimeFrameIndex(0));
+    REQUIRE(dis.getStoredInterval(0).end == TimeFrameIndex(10));
+    REQUIRE(dis.getStoredInterval(1).start == TimeFrameIndex(20));
 }
 
 TEST_CASE("DigitalIntervalSeries - IntervalLayout", "[DataManager][interval][layout]") {
@@ -333,11 +351,13 @@ TEST_CASE("DigitalIntervalSeries - IntervalLayout", "[DataManager][interval][lay
 
     SECTION("Disjoint layout merges overlapping addEvent calls") {
         DigitalIntervalSeries series;
+        auto timeframe = makeUniformTimeFrame(100);
+        series.setTimeFrame(timeframe);
         series.addEvent(TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(10)});
         series.addEvent(TimeFrameInterval{TimeFrameIndex(5), TimeFrameIndex(15)});
         REQUIRE(series.size() == 1);
-        REQUIRE(series.view()[0].value().start == TimeFrameIndex(0));
-        REQUIRE(series.view()[0].value().end == TimeFrameIndex(15));
+        REQUIRE(series.view()[0].value().start == ClockTicks(0));
+        REQUIRE(series.view()[0].value().end == ClockTicks(15));
     }
 
     SECTION("Overlapping layout preserves intervals on addEvent") {
@@ -389,10 +409,11 @@ TEST_CASE("DigitalIntervalSeries - IntervalLayout", "[DataManager][interval][lay
         auto overlapping = DigitalIntervalSeries::createOverlapping(
                 {TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(100)},
                  TimeFrameInterval{TimeFrameIndex(50), TimeFrameIndex(60)}});
+        overlapping->setTimeFrame(makeUniformTimeFrame(200));
         auto shared = std::const_pointer_cast<DigitalIntervalSeries const>(overlapping);
         auto filtered = DigitalIntervalSeries::createView(shared, TimeFrameIndex(62), TimeFrameIndex(65));
         REQUIRE(filtered->size() == 1);
-        REQUIRE(filtered->view()[0].value().start == TimeFrameIndex(0));
-        REQUIRE(filtered->view()[0].value().end == TimeFrameIndex(100));
+        REQUIRE(filtered->view()[0].value().start == ClockTicks(0));
+        REQUIRE(filtered->view()[0].value().end == ClockTicks(100));
     }
 }

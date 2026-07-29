@@ -63,17 +63,18 @@ private:
 
 /**
  * @brief Helper to verify interval data equality between original and loaded data
+ *
+ * CSV round-trip preserves stored TimeFrameIndex bounds; compare index space directly.
  */
 void verifyIntervalsEqual(DigitalIntervalSeries const& original, 
                           DigitalIntervalSeries const& loaded) {
     REQUIRE(loaded.size() == original.size());
     
-    auto original_view = original.view();
-    auto loaded_view = loaded.view();
-    
     for (size_t i = 0; i < original.size(); ++i) {
-        REQUIRE(loaded_view[i].value().start == original_view[i].value().start);
-        REQUIRE(loaded_view[i].value().end == original_view[i].value().end);
+        auto const original_interval = original.getStoredInterval(i);
+        auto const loaded_interval = loaded.getStoredInterval(i);
+        REQUIRE(loaded_interval.start == original_interval.start);
+        REQUIRE(loaded_interval.end == original_interval.end);
     }
 }
 

@@ -228,8 +228,8 @@ TEST_CASE("DigitalIntervalSeriesInspector data manipulation", "[DigitalIntervalS
         REQUIRE(intervals != nullptr);
         REQUIRE(intervals->size() == 1);
         auto interval_view = intervals->view();
-        REQUIRE(interval_view[0].value().start == TimeFrameIndex(50));
-        REQUIRE(interval_view[0].value().end == TimeFrameIndex(60));
+        REQUIRE(interval_view[0].value().start == ClockTicks(50));
+        REQUIRE(interval_view[0].value().end == ClockTicks(60));
     }
 
     SECTION("Remove interval button removes interval at current time") {
@@ -482,7 +482,7 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create interval series with initial intervals
         auto interval_series = std::make_shared<DigitalIntervalSeries>();
@@ -522,7 +522,7 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create interval series with initial intervals
         auto interval_series = std::make_shared<DigitalIntervalSeries>();
@@ -560,7 +560,7 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create interval series with initial intervals
         auto interval_series = std::make_shared<DigitalIntervalSeries>();
@@ -600,7 +600,7 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create interval series with initial intervals
         auto interval_series = std::make_shared<DigitalIntervalSeries>();
@@ -647,7 +647,7 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create two interval series
         auto interval_series_1 = std::make_shared<DigitalIntervalSeries>();
@@ -698,7 +698,7 @@ TEST_CASE("DigitalIntervalSeriesInspector selection mechanism", "[DigitalInterva
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create interval series with intervals
         auto interval_series = std::make_shared<DigitalIntervalSeries>();
@@ -757,7 +757,7 @@ TEST_CASE("DigitalIntervalSeriesInspector selection mechanism", "[DigitalInterva
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create interval series with intervals
         auto interval_series = std::make_shared<DigitalIntervalSeries>();
@@ -810,8 +810,8 @@ TEST_CASE("DigitalIntervalSeriesInspector selection mechanism", "[DigitalInterva
         auto interval_view = interval_series->view();
         bool found_merged = false;
         for (auto const & interval_with_id: interval_view) {
-            TimeFrameInterval const & interval = interval_with_id.value();
-            if (interval.start == TimeFrameIndex(10) && interval.end == TimeFrameIndex(40)) {
+            ClockTicksInterval const & interval = interval_with_id.value();
+            if (interval.start == ClockTicks(10) && interval.end == ClockTicks(40)) {
                 found_merged = true;
                 break;
             }
@@ -827,7 +827,7 @@ TEST_CASE("DigitalIntervalSeriesInspector selection mechanism", "[DigitalInterva
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create interval series with intervals
         auto interval_series = std::make_shared<DigitalIntervalSeries>();
@@ -911,8 +911,8 @@ TEST_CASE("DigitalIntervalSeriesInspector selection mechanism", "[DigitalInterva
         auto interval_view = interval_series->view();
         bool found_extended = false;
         for (auto const & interval_with_id: interval_view) {
-            TimeFrameInterval const & interval = interval_with_id.value();
-            if (interval.start == TimeFrameIndex(10) && interval.end == TimeFrameIndex(70)) {
+            ClockTicksInterval const & interval = interval_with_id.value();
+            if (interval.start == ClockTicks(10) && interval.end == ClockTicks(70)) {
                 found_extended = true;
                 break;
             }
@@ -938,7 +938,7 @@ TEST_CASE("DigitalIntervalSeriesDataView double-click emits frameSelected withou
     std::vector<int> t(kNumTimes);
     std::iota(t.begin(), t.end(), 0);
     auto tf = std::make_shared<TimeFrame>(t);
-    data_manager->setTime(TimeKey("time"), tf);
+    data_manager->setTime(TimeKey("time"), tf, true);
 
     // Interval data
     auto interval_series = std::make_shared<DigitalIntervalSeries>();
@@ -1112,8 +1112,8 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
         REQUIRE(intervals != nullptr);
         REQUIRE(intervals->size() == 1);
         auto interval_view = intervals->view();
-        REQUIRE(interval_view[0].value().start == TimeFrameIndex(100));
-        REQUIRE(interval_view[0].value().end == TimeFrameIndex(200));
+        REQUIRE(interval_view[0].value().start == ClockTicks(100));
+        REQUIRE(interval_view[0].value().end == ClockTicks(200));
     }
 
     SECTION("Bidirectional interval creation - reverse order") {
@@ -1123,9 +1123,8 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
         // Clear any existing intervals from previous sections
         auto intervals = data_manager->getData<DigitalIntervalSeries>("test_intervals");
         REQUIRE(intervals != nullptr);
-        auto view = intervals->view();
-        for (auto const & interval_with_id: view) {
-            intervals->removeInterval(interval_with_id.value());
+        while (intervals->size() > 0) {
+            intervals->removeInterval(intervals->getStoredInterval(0));
         }
 
         state->current_position = TimePosition(TimeFrameIndex(300), tf);
@@ -1156,8 +1155,8 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
         REQUIRE(intervals != nullptr);
         REQUIRE(intervals->size() == 1);
         auto interval_view = intervals->view();
-        REQUIRE(interval_view[0].value().start == TimeFrameIndex(150));
-        REQUIRE(interval_view[0].value().end == TimeFrameIndex(300));
+        REQUIRE(interval_view[0].value().start == ClockTicks(150));
+        REQUIRE(interval_view[0].value().end == ClockTicks(300));
     }
 
     SECTION("Cancel interval creation via button") {
@@ -1167,9 +1166,8 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
         // Clear any existing intervals from previous sections
         auto intervals = data_manager->getData<DigitalIntervalSeries>("test_intervals");
         REQUIRE(intervals != nullptr);
-        auto view = intervals->view();
-        for (auto const & interval_with_id: view) {
-            intervals->removeInterval(interval_with_id.value());
+        while (intervals->size() > 0) {
+            intervals->removeInterval(intervals->getStoredInterval(0));
         }
 
         state->current_position = TimePosition(TimeFrameIndex(50), tf);

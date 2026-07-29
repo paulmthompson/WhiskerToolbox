@@ -56,17 +56,22 @@ std::shared_ptr<DigitalEventSeries> find_interval_peaks(
         // Search within each interval: [start, end]
         for (auto const & interval_with_id : intervals_view) {
             auto const & interval = interval_with_id.value();
-            search_ranges.emplace_back(interval.start, interval.end);
+            TimeFrameIndex const start = interval_timeframe->getIndexAtTime(interval.start);
+            TimeFrameIndex const end = interval_timeframe->getIndexAtTime(interval.end);
+            search_ranges.emplace_back(start, end);
         }
     } else {
         // Search between interval starts: [start_i, start_{i+1})
         for (size_t i = 0; i < num_intervals - 1; ++i) {
-            search_ranges.emplace_back(intervals_view[i].value().start, 
-                                      intervals_view[i + 1].value().start - TimeFrameIndex{1});
+            TimeFrameIndex const start = interval_timeframe->getIndexAtTime(intervals_view[i].value().start);
+            TimeFrameIndex const end = interval_timeframe->getIndexAtTime(intervals_view[i + 1].value().start) - TimeFrameIndex{1};
+            search_ranges.emplace_back(start, end);
         }
         // For the last interval, search from its start to its end
         auto const last_interval = intervals_view[num_intervals - 1].value();
-        search_ranges.emplace_back(last_interval.start, last_interval.end);
+        TimeFrameIndex const start = interval_timeframe->getIndexAtTime(last_interval.start);
+        TimeFrameIndex const end = interval_timeframe->getIndexAtTime(last_interval.end);
+        search_ranges.emplace_back(start, end);
     }
 
     if (progressCallback) progressCallback(10);

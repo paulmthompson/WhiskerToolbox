@@ -86,10 +86,10 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 2);// Two intervals: [200-400] and [600-700]
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(400));
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(600));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(700));
+        REQUIRE(intervals[0].value().start == ClockTicks(200));
+        REQUIRE(intervals[0].value().end == ClockTicks(400));
+        REQUIRE(intervals[1].value().start == ClockTicks(600));
+        REQUIRE(intervals[1].value().end == ClockTicks(700));
 
         // Validate that all values during intervals are above threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
@@ -120,10 +120,10 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 2);// Two intervals: [200-400] and [600-700]
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(400));
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(600));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(700));
+        REQUIRE(intervals[0].value().start == ClockTicks(200));
+        REQUIRE(intervals[0].value().end == ClockTicks(400));
+        REQUIRE(intervals[1].value().start == ClockTicks(600));
+        REQUIRE(intervals[1].value().end == ClockTicks(700));
 
         // Validate that all values during intervals meet negative threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
@@ -145,10 +145,10 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 2);// Two intervals: [200-400] and [600-700]
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(400));
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(600));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(700));
+        REQUIRE(intervals[0].value().start == ClockTicks(200));
+        REQUIRE(intervals[0].value().end == ClockTicks(400));
+        REQUIRE(intervals[1].value().start == ClockTicks(600));
+        REQUIRE(intervals[1].value().end == ClockTicks(700));
 
         // Validate that all values during intervals meet absolute threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
@@ -170,12 +170,12 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 3);// Three separate intervals - lockout prevents starting too soon
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(200));
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(300));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(300));
-        REQUIRE(intervals[2].value().start == TimeFrameIndex(450));
-        REQUIRE(intervals[2].value().end == TimeFrameIndex(450));
+        REQUIRE(intervals[0].value().start == ClockTicks(200));
+        REQUIRE(intervals[0].value().end == ClockTicks(200));
+        REQUIRE(intervals[1].value().start == ClockTicks(300));
+        REQUIRE(intervals[1].value().end == ClockTicks(300));
+        REQUIRE(intervals[2].value().start == ClockTicks(450));
+        REQUIRE(intervals[2].value().end == ClockTicks(450));
 
         // Validate that all values during intervals are above threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
@@ -197,8 +197,8 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 1);// Only one interval meets minimum duration
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(300));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(500));
+        REQUIRE(intervals[0].value().start == ClockTicks(300));
+        REQUIRE(intervals[0].value().end == ClockTicks(500));
         // Validate that all values during intervals are above threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
     }
@@ -219,8 +219,8 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 1);
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(500));// Should extend to end of signal
+        REQUIRE(intervals[0].value().start == ClockTicks(200));
+        REQUIRE(intervals[0].value().end == ClockTicks(500));// Should extend to end of signal
         // Validate that all values during intervals are above threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
     }
@@ -288,10 +288,10 @@ TEST_CASE("Data Transform: Interval Threshold - Happy Path", "[transforms][analo
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 2);// Two intervals that meet minimum duration
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(100));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(200));
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(400));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(500));
+        REQUIRE(intervals[0].value().start == ClockTicks(100));
+        REQUIRE(intervals[0].value().end == ClockTicks(200));
+        REQUIRE(intervals[1].value().start == ClockTicks(400));
+        REQUIRE(intervals[1].value().end == ClockTicks(500));
 
         // Validate that all values during intervals are above threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
@@ -354,8 +354,8 @@ TEST_CASE( "Data Transform: Interval Threshold - Error and Edge Cases", "[transf
 
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 1);
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(100));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(100));
+        REQUIRE(intervals[0].value().start == ClockTicks(100));
+        REQUIRE(intervals[0].value().end == ClockTicks(100));
 
         // Validate that all values during intervals are above threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
@@ -389,8 +389,8 @@ TEST_CASE( "Data Transform: Interval Threshold - Error and Edge Cases", "[transf
 
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 1);
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(100));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(500));
+        REQUIRE(intervals[0].value().start == ClockTicks(100));
+        REQUIRE(intervals[0].value().end == ClockTicks(500));
     }
 
     SECTION("Zero threshold") {
@@ -406,10 +406,10 @@ TEST_CASE( "Data Transform: Interval Threshold - Error and Edge Cases", "[transf
 
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 2);
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(300));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(300));
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(500));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(500));
+        REQUIRE(intervals[0].value().start == ClockTicks(300));
+        REQUIRE(intervals[0].value().end == ClockTicks(300));
+        REQUIRE(intervals[1].value().start == ClockTicks(500));
+        REQUIRE(intervals[1].value().end == ClockTicks(500));
     }
 
     SECTION("Negative threshold value") {
@@ -425,10 +425,10 @@ TEST_CASE( "Data Transform: Interval Threshold - Error and Edge Cases", "[transf
 
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 2);
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(100));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(100));
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(400));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(400));
+        REQUIRE(intervals[0].value().start == ClockTicks(100));
+        REQUIRE(intervals[0].value().end == ClockTicks(100));
+        REQUIRE(intervals[1].value().start == ClockTicks(400));
+        REQUIRE(intervals[1].value().end == ClockTicks(400));
     }
 
     SECTION("Very large lockout time") {
@@ -444,8 +444,8 @@ TEST_CASE( "Data Transform: Interval Threshold - Error and Edge Cases", "[transf
 
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 1);// Only first interval should be detected
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(200));
+        REQUIRE(intervals[0].value().start == ClockTicks(200));
+        REQUIRE(intervals[0].value().end == ClockTicks(200));
     }
 
     SECTION("Very large minimum duration") {
@@ -476,10 +476,10 @@ TEST_CASE( "Data Transform: Interval Threshold - Error and Edge Cases", "[transf
 
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 2);
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(1));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(1));
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(101));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(101));
+        REQUIRE(intervals[0].value().start == ClockTicks(1));
+        REQUIRE(intervals[0].value().end == ClockTicks(1));
+        REQUIRE(intervals[1].value().start == ClockTicks(101));
+        REQUIRE(intervals[1].value().end == ClockTicks(101));
     }
 }
 
@@ -504,8 +504,8 @@ TEST_CASE( "Data Transform: Interval Threshold - Single Sample Above Threshold Z
 
         // The interval should start and end at time 200 (the single sample above threshold)
         // This ensures all signals during the detected interval are above threshold
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(200));
+        REQUIRE(intervals[0].value().start == ClockTicks(200));
+        REQUIRE(intervals[0].value().end == ClockTicks(200));
 
         // Validate that all values during intervals are above threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
@@ -530,12 +530,12 @@ TEST_CASE( "Data Transform: Interval Threshold - Single Sample Above Threshold Z
         REQUIRE(result_intervals->size() == 3);// Three isolated single samples above threshold
 
         // Each interval should be a single point in time
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(200));
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(400));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(400));
-        REQUIRE(intervals[2].value().start == TimeFrameIndex(600));
-        REQUIRE(intervals[2].value().end == TimeFrameIndex(600));
+        REQUIRE(intervals[0].value().start == ClockTicks(200));
+        REQUIRE(intervals[0].value().end == ClockTicks(200));
+        REQUIRE(intervals[1].value().start == ClockTicks(400));
+        REQUIRE(intervals[1].value().end == ClockTicks(400));
+        REQUIRE(intervals[2].value().start == ClockTicks(600));
+        REQUIRE(intervals[2].value().end == ClockTicks(600));
         // Validate that all values during intervals are above threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
     }
@@ -648,8 +648,8 @@ TEST_CASE( "Data Transform: Interval Threshold - Operation Class Tests", "[trans
 
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 1);
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(200));
+        REQUIRE(intervals[0].value().start == ClockTicks(200));
+        REQUIRE(intervals[0].value().end == ClockTicks(200));
 
         // Test absolute threshold
         params.direction = IntervalThresholdParams::ThresholdDirection::ABSOLUTE;
@@ -688,10 +688,10 @@ TEST_CASE( "Data Transform: Interval Threshold - Missing Data Handling", "[trans
         // Should get: [101,102] (ends when gap with zeros starts), [153,153] (single sample)
         REQUIRE(result_intervals->size() == 2);
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(101));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(102));// Ends before gap because zeros don't meet threshold
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(153));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(153));
+        REQUIRE(intervals[0].value().start == ClockTicks(101));
+        REQUIRE(intervals[0].value().end == ClockTicks(102));// Ends before gap because zeros don't meet threshold
+        REQUIRE(intervals[1].value().start == ClockTicks(153));
+        REQUIRE(intervals[1].value().end == ClockTicks(153));
 
         // Validate that all values during intervals are above threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
@@ -714,10 +714,10 @@ TEST_CASE( "Data Transform: Interval Threshold - Missing Data Handling", "[trans
         // Note: zeros (0.0) > -0.5, so they don't meet the negative threshold
         REQUIRE(result_intervals->size() == 2);
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(101));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(101));
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(152));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(152));
+        REQUIRE(intervals[0].value().start == ClockTicks(101));
+        REQUIRE(intervals[0].value().end == ClockTicks(101));
+        REQUIRE(intervals[1].value().start == ClockTicks(152));
+        REQUIRE(intervals[1].value().end == ClockTicks(152));
     }
 
     SECTION("Missing data treated as zero - negative threshold where zeros DO meet threshold") {
@@ -737,10 +737,10 @@ TEST_CASE( "Data Transform: Interval Threshold - Missing Data Handling", "[trans
         // Note: zeros (0.0) < 0.5, so they meet the negative threshold and extend the interval
         REQUIRE(result_intervals->size() == 2);
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(101));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(150));// Interval extends through gap to just before next sample
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(152));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(152));
+        REQUIRE(intervals[0].value().start == ClockTicks(101));
+        REQUIRE(intervals[0].value().end == ClockTicks(150));// Interval extends through gap to just before next sample
+        REQUIRE(intervals[1].value().start == ClockTicks(152));
+        REQUIRE(intervals[1].value().end == ClockTicks(152));
     }
 
     SECTION("Missing data ignored mode") {
@@ -761,10 +761,10 @@ TEST_CASE( "Data Transform: Interval Threshold - Missing Data Handling", "[trans
         // With IGNORE mode, gaps are not considered, so we get: [101,102] and [153,153]
         REQUIRE(result_intervals->size() == 2);
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(101));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(102));// Continuous despite time gap
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(153));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(153));
+        REQUIRE(intervals[0].value().start == ClockTicks(101));
+        REQUIRE(intervals[0].value().end == ClockTicks(102));// Continuous despite time gap
+        REQUIRE(intervals[1].value().start == ClockTicks(153));
+        REQUIRE(intervals[1].value().end == ClockTicks(153));
 
         // Validate that all values during intervals are above threshold
         REQUIRE(validateIntervalsAboveThreshold(values, times, intervals, params));
@@ -837,10 +837,10 @@ TEST_CASE( "Data Transform: Analog Interval Threshold - JSON pipeline", "[transf
     auto const & intervals = interval_series->view();
     REQUIRE(interval_series->size() == 2); // Two intervals: [200-400] and [600-700]
 
-    REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-    REQUIRE(intervals[0].value().end == TimeFrameIndex(400));
-    REQUIRE(intervals[1].value().start == TimeFrameIndex(600));
-    REQUIRE(intervals[1].value().end == TimeFrameIndex(700));
+    REQUIRE(intervals[0].value().start == ClockTicks(200));
+    REQUIRE(intervals[0].value().end == ClockTicks(400));
+    REQUIRE(intervals[1].value().start == ClockTicks(600));
+    REQUIRE(intervals[1].value().end == ClockTicks(700));
 }
 
 #include "transforms/ParameterFactory.hpp"
@@ -940,10 +940,10 @@ TEST_CASE( "Data Transform: Analog Interval Threshold - load_data_from_json_conf
     auto const & intervals = result_intervals->view();
     REQUIRE(result_intervals->size() == 2); // Two intervals: [200-400] and [600-700]
 
-    REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-    REQUIRE(intervals[0].value().end == TimeFrameIndex(400));
-    REQUIRE(intervals[1].value().start == TimeFrameIndex(600));
-    REQUIRE(intervals[1].value().end == TimeFrameIndex(700));
+    REQUIRE(intervals[0].value().start == ClockTicks(200));
+    REQUIRE(intervals[0].value().end == ClockTicks(400));
+    REQUIRE(intervals[1].value().start == ClockTicks(600));
+    REQUIRE(intervals[1].value().end == ClockTicks(700));
     
     // Test another pipeline with different parameters (lockout time and minimum duration)
     const char* json_config_advanced = 
@@ -992,8 +992,8 @@ TEST_CASE( "Data Transform: Analog Interval Threshold - load_data_from_json_conf
     
     auto const & intervals_advanced = result_intervals_advanced->view();
     REQUIRE(result_intervals_advanced->size() == 1); // Only one interval meets minimum duration: [200-400]
-    REQUIRE(intervals_advanced[0].value().start == TimeFrameIndex(200));
-    REQUIRE(intervals_advanced[0].value().end == TimeFrameIndex(400));
+    REQUIRE(intervals_advanced[0].value().start == ClockTicks(200));
+    REQUIRE(intervals_advanced[0].value().end == ClockTicks(400));
     
     // Test absolute threshold detection
     const char* json_config_absolute = 
@@ -1042,10 +1042,10 @@ TEST_CASE( "Data Transform: Analog Interval Threshold - load_data_from_json_conf
     
     auto const & intervals_absolute = result_intervals_absolute->view();
     REQUIRE(result_intervals_absolute->size() == 2); // Two intervals: [200-400] and [600-600]
-    REQUIRE(intervals_absolute[0].value().start == TimeFrameIndex(200));
-    REQUIRE(intervals_absolute[0].value().end == TimeFrameIndex(400));
-    REQUIRE(intervals_absolute[1].value().start == TimeFrameIndex(600));
-    REQUIRE(intervals_absolute[1].value().end == TimeFrameIndex(600));
+    REQUIRE(intervals_absolute[0].value().start == ClockTicks(200));
+    REQUIRE(intervals_absolute[0].value().end == ClockTicks(400));
+    REQUIRE(intervals_absolute[1].value().start == ClockTicks(600));
+    REQUIRE(intervals_absolute[1].value().end == ClockTicks(600));
     
     // Cleanup
     try {

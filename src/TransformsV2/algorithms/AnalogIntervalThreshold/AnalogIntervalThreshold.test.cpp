@@ -54,10 +54,10 @@ TEST_CASE(
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 2);// Two intervals: [200-400] and [600-700]
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(400));
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(600));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(700));
+        REQUIRE(intervals[0].value().start == ClockTicks(200));
+        REQUIRE(intervals[0].value().end == ClockTicks(400));
+        REQUIRE(intervals[1].value().start == ClockTicks(600));
+        REQUIRE(intervals[1].value().end == ClockTicks(700));
 
         // Check progress was reported
         REQUIRE(progress_val == 100);
@@ -79,10 +79,10 @@ TEST_CASE(
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 2);// Two intervals: [200-400] and [600-700]
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(400));
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(600));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(700));
+        REQUIRE(intervals[0].value().start == ClockTicks(200));
+        REQUIRE(intervals[0].value().end == ClockTicks(400));
+        REQUIRE(intervals[1].value().start == ClockTicks(600));
+        REQUIRE(intervals[1].value().end == ClockTicks(700));
     }
 
     SECTION("Absolute threshold") {
@@ -100,10 +100,10 @@ TEST_CASE(
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 2);// Two intervals: [200-400] and [600-700]
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(400));
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(600));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(700));
+        REQUIRE(intervals[0].value().start == ClockTicks(200));
+        REQUIRE(intervals[0].value().end == ClockTicks(400));
+        REQUIRE(intervals[1].value().start == ClockTicks(600));
+        REQUIRE(intervals[1].value().end == ClockTicks(700));
     }
 
     SECTION("With lockout time") {
@@ -121,12 +121,12 @@ TEST_CASE(
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 3);// Three separate intervals - lockout prevents starting too soon
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(200));
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(300));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(300));
-        REQUIRE(intervals[2].value().start == TimeFrameIndex(450));
-        REQUIRE(intervals[2].value().end == TimeFrameIndex(450));
+        REQUIRE(intervals[0].value().start == ClockTicks(200));
+        REQUIRE(intervals[0].value().end == ClockTicks(200));
+        REQUIRE(intervals[1].value().start == ClockTicks(300));
+        REQUIRE(intervals[1].value().end == ClockTicks(300));
+        REQUIRE(intervals[2].value().start == ClockTicks(450));
+        REQUIRE(intervals[2].value().end == ClockTicks(450));
     }
 
     SECTION("With minimum duration") {
@@ -144,8 +144,8 @@ TEST_CASE(
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 1);// Only one interval meets minimum duration
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(300));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(500));
+        REQUIRE(intervals[0].value().start == ClockTicks(300));
+        REQUIRE(intervals[0].value().end == ClockTicks(500));
     }
 
     SECTION("Signal ends while above threshold") {
@@ -163,8 +163,8 @@ TEST_CASE(
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 1);
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(500));// Should extend to end of signal
+        REQUIRE(intervals[0].value().start == ClockTicks(200));
+        REQUIRE(intervals[0].value().end == ClockTicks(500));// Should extend to end of signal
     }
 
     SECTION("No intervals detected") {
@@ -198,10 +198,10 @@ TEST_CASE(
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 2);// Two intervals that meet minimum duration
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(100));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(200));
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(400));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(500));
+        REQUIRE(intervals[0].value().start == ClockTicks(100));
+        REQUIRE(intervals[0].value().end == ClockTicks(200));
+        REQUIRE(intervals[1].value().start == ClockTicks(400));
+        REQUIRE(intervals[1].value().end == ClockTicks(500));
     }
 }
 
@@ -242,8 +242,8 @@ TEST_CASE(
         REQUIRE(result_intervals != nullptr);
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 1);
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(100));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(100));
+        REQUIRE(intervals[0].value().start == ClockTicks(100));
+        REQUIRE(intervals[0].value().end == ClockTicks(100));
     }
 
     SECTION("Single sample below threshold") {
@@ -275,8 +275,8 @@ TEST_CASE(
         REQUIRE(result_intervals != nullptr);
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 1);
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(100));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(500));
+        REQUIRE(intervals[0].value().start == ClockTicks(100));
+        REQUIRE(intervals[0].value().end == ClockTicks(500));
     }
 
     SECTION("Cancellation support") {
@@ -517,10 +517,10 @@ TEST_CASE(
         auto const & intervals = interval_series->view();
         REQUIRE(interval_series->size() == 2);
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(400));
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(600));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(700));
+        REQUIRE(intervals[0].value().start == ClockTicks(200));
+        REQUIRE(intervals[0].value().end == ClockTicks(400));
+        REQUIRE(intervals[1].value().start == ClockTicks(600));
+        REQUIRE(intervals[1].value().end == ClockTicks(700));
     }
 
     SECTION("Execute pipeline with lockout and min_duration parameters") {
@@ -549,10 +549,10 @@ TEST_CASE(
         auto const & intervals = interval_series->view();
         REQUIRE(interval_series->size() == 2);
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(100));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(200));
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(400));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(500));
+        REQUIRE(intervals[0].value().start == ClockTicks(100));
+        REQUIRE(intervals[0].value().end == ClockTicks(200));
+        REQUIRE(intervals[1].value().start == ClockTicks(400));
+        REQUIRE(intervals[1].value().end == ClockTicks(500));
     }
 
     SECTION("Execute pipeline with absolute threshold") {
@@ -580,10 +580,10 @@ TEST_CASE(
         auto const & intervals = interval_series->view();
         REQUIRE(interval_series->size() == 2);
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(400));
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(600));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(700));
+        REQUIRE(intervals[0].value().start == ClockTicks(200));
+        REQUIRE(intervals[0].value().end == ClockTicks(400));
+        REQUIRE(intervals[1].value().start == ClockTicks(600));
+        REQUIRE(intervals[1].value().end == ClockTicks(700));
     }
 
     SECTION("Execute pipeline with negative threshold") {
@@ -611,10 +611,10 @@ TEST_CASE(
         auto const & intervals = interval_series->view();
         REQUIRE(interval_series->size() == 2);
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(400));
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(600));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(700));
+        REQUIRE(intervals[0].value().start == ClockTicks(200));
+        REQUIRE(intervals[0].value().end == ClockTicks(400));
+        REQUIRE(intervals[1].value().start == ClockTicks(600));
+        REQUIRE(intervals[1].value().end == ClockTicks(700));
     }
 }
 
@@ -643,10 +643,10 @@ TEST_CASE(
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 2);
 
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(400));
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(600));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(700));
+        REQUIRE(intervals[0].value().start == ClockTicks(200));
+        REQUIRE(intervals[0].value().end == ClockTicks(400));
+        REQUIRE(intervals[1].value().start == ClockTicks(600));
+        REQUIRE(intervals[1].value().end == ClockTicks(700));
     }
 
     SECTION("Execute V2 pipeline with advanced parameters") {
@@ -671,7 +671,7 @@ TEST_CASE(
 
         auto const & intervals = result_intervals->view();
         REQUIRE(result_intervals->size() == 1);
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(200));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(400));
+        REQUIRE(intervals[0].value().start == ClockTicks(200));
+        REQUIRE(intervals[0].value().end == ClockTicks(400));
     }
 }

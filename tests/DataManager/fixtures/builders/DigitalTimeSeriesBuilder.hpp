@@ -3,6 +3,7 @@
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "fixtures/UniformIntervalTestTimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
@@ -10,7 +11,6 @@
 #include <algorithm>
 #include <cstdint>
 #include <memory>
-#include <numeric>
 #include <vector>
 
 /**
@@ -20,10 +20,8 @@
  * @post The returned TimeFrame maps each index to the same physical time value.
  */
 [[nodiscard]] inline std::shared_ptr<TimeFrame> makeDigitalBuilderIdentityTimeFrame(int64_t max_time) {
-    auto const size = static_cast<int>(std::max<int64_t>(max_time + 10'000, 10'000));
-    std::vector<int> times(static_cast<std::size_t>(size));
-    std::iota(times.begin(), times.end(), 0);
-    return std::make_shared<TimeFrame>(times);
+    auto const frame_count = static_cast<std::size_t>(std::max<int64_t>(max_time + 10'000, 10'000));
+    return uniform_interval_test::uniformIntervalTestTimeFrame(frame_count);
 }
 
 /**

@@ -49,11 +49,12 @@ namespace Neuralyzer::Plots {
     }
 
     // Extract the appropriate edge from each interval
-    for (auto const & item : intervals->view()) {
+    for (size_t i = 0; i < intervals->size(); ++i) {
+        auto const interval = intervals->getStoredInterval(i);
         if (edge == IntervalAlignmentType::Beginning) {
-            result->addEvent(TimeFrameIndex(item.interval.start));
+            result->addEvent(interval.start);
         } else {
-            result->addEvent(TimeFrameIndex(item.interval.end));
+            result->addEvent(interval.end);
         }
     }
 

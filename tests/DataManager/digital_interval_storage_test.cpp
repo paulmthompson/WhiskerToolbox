@@ -17,10 +17,17 @@
 #include "DigitalTimeSeries/storage/OwningDigitalIntervalStorage.hpp"
 #include "DigitalTimeSeries/storage/ViewDigitalIntervalStorage.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "fixtures/UniformIntervalTestTimeFrame.hpp"
 
 #include <ranges>
 #include <unordered_set>
 #include <vector>
+
+namespace {
+std::shared_ptr<TimeFrame> makeTestTimeFrame(int64_t num_frames) {
+    return uniform_interval_test::uniformIntervalTestTimeFrame(static_cast<std::size_t>(num_frames));
+}
+}// namespace
 
 // =============================================================================
 // OwningDigitalIntervalStorage Tests
@@ -447,12 +454,16 @@ TEST_CASE("DigitalIntervalSeries storage integration", "[DigitalIntervalSeries][
                 TimeFrameInterval{TimeFrameIndex{30}, TimeFrameIndex{40}},
                 TimeFrameInterval{TimeFrameIndex{10}, TimeFrameIndex{20}}};
         DigitalIntervalSeries series{intervals};
+        auto time = std::vector<int>(100);
+        std::iota(time.begin(), time.end(), 0);
+        auto time_frame = std::make_shared<TimeFrame>(time);
+        series.setTimeFrame(time_frame);
 
         CHECK(series.size() == 2);
         // Intervals should be sorted
         auto const & data = series.view();
-        CHECK(data[0].value().start == TimeFrameIndex{10});
-        CHECK(data[1].value().start == TimeFrameIndex{30});
+        CHECK(data[0].value().start == ClockTicks{10});
+        CHECK(data[1].value().start == ClockTicks{30});
     }
 
     SECTION("Mutations sync storage") {
@@ -487,7 +498,9 @@ TEST_CASE("DigitalIntervalSeries view creation by time range", "[DigitalInterval
 TEST_CASE("DigitalIntervalSeries view creation with DataManager", "[DigitalIntervalSeries][view][entity]") {
     // Use DataManager to get proper EntityId registration
     auto data_manager = std::make_unique<DataManager>();
-    auto time_frame = std::make_shared<TimeFrame>(std::vector<int>{0, 10, 20, 30, 40, 50, 60, 70, 80});
+    auto time = std::vector<int>(100);
+    std::iota(time.begin(), time.end(), 0);
+    auto time_frame = std::make_shared<TimeFrame>(time);
     data_manager->setTime(TimeKey("test_time"), time_frame);
 
     data_manager->setData<DigitalIntervalSeries>("source_intervals", TimeKey("test_time"));
@@ -521,13 +534,17 @@ TEST_CASE("DigitalIntervalSeries view creation with DataManager", "[DigitalInter
 
         // Verify the intervals are the right ones
         auto const & interval_vec = view->view();
-        CHECK(interval_vec[0].value().start == TimeFrameIndex{10});
-        CHECK(interval_vec[1].value().start == TimeFrameIndex{50});
+        CHECK(interval_vec[0].value().start == ClockTicks{10});
+        CHECK(interval_vec[1].value().start == ClockTicks{50});
     }
 }
 
 TEST_CASE("DigitalIntervalSeries materialization", "[DigitalIntervalSeries][materialize]") {
     auto source = std::make_shared<DigitalIntervalSeries>();
+    auto time = std::vector<int>(100);
+    std::iota(time.begin(), time.end(), 0);
+    auto time_frame = std::make_shared<TimeFrame>(time);
+    source->setTimeFrame(time_frame);
 
     source->addEvent(TimeFrameInterval{TimeFrameIndex{10}, TimeFrameIndex{20}});
     source->addEvent(TimeFrameInterval{TimeFrameIndex{30}, TimeFrameIndex{40}});
@@ -724,13 +741,18 @@ TEST_CASE("DigitalIntervalSeries::createFromView basic operations", "[DigitalInt
 
         auto lazy_series = DigitalIntervalSeries::createFromView(view, source_data.size());
 
+        auto times = std::vector<int>(100);
+        std::iota(times.begin(), times.end(), 0);
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        lazy_series->setTimeFrame(time_frame);
+
         size_t count = 0;
         for (auto const & element: lazy_series->view()) {
             if (count == 0) {
-                CHECK(element.interval.start == TimeFrameIndex{10});
+                CHECK(element.interval.start == ClockTicks{10});
                 CHECK(element.entity_id == EntityId{1});
             } else if (count == 1) {
-                CHECK(element.interval.start == TimeFrameIndex{30});
+                CHECK(element.interval.start == ClockTicks{30});
                 CHECK(element.entity_id == EntityId{2});
             }
             ++count;
@@ -753,19 +775,24 @@ TEST_CASE("DigitalIntervalSeries::createFromView basic operations", "[DigitalInt
 
         auto lazy_series = DigitalIntervalSeries::createFromView(shifted_view, source_data.size());
 
+        auto times = std::vector<int>(500);
+        std::iota(times.begin(), times.end(), 0);
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        lazy_series->setTimeFrame(time_frame);
+
         CHECK(lazy_series->size() == 2);
 
         // Verify transformation was applied
         auto series_view = lazy_series->view();
         auto it = series_view.begin();
 
-        CHECK((*it).interval.start == TimeFrameIndex{110});// 10 + 100
-        CHECK((*it).interval.end == TimeFrameIndex{120});  // 20 + 100
+        CHECK((*it).interval.start == ClockTicks{110});// 10 + 100
+        CHECK((*it).interval.end == ClockTicks{120});  // 20 + 100
         CHECK((*it).entity_id == EntityId{1});
 
         ++it;
-        CHECK((*it).interval.start == TimeFrameIndex{130});// 30 + 100
-        CHECK((*it).interval.end == TimeFrameIndex{140});  // 40 + 100
+        CHECK((*it).interval.start == ClockTicks{130});// 30 + 100
+        CHECK((*it).interval.end == ClockTicks{140});  // 40 + 100
         CHECK((*it).entity_id == EntityId{2});
     }
 
@@ -805,6 +832,11 @@ TEST_CASE("DigitalIntervalSeries::createFromView materialize", "[DigitalInterval
 
         auto lazy_series = DigitalIntervalSeries::createFromView(doubled_view, source_data.size());
 
+        auto times = std::vector<int>(200);
+        std::iota(times.begin(), times.end(), 0);
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        lazy_series->setTimeFrame(time_frame);
+
         CHECK(lazy_series->isLazy());
 
         // Materialize
@@ -818,12 +850,12 @@ TEST_CASE("DigitalIntervalSeries::createFromView materialize", "[DigitalInterval
 
         // Verify values were computed correctly
         auto const & intervals = materialized->view();
-        CHECK(intervals[0].value().start == TimeFrameIndex{20}); // 10 * 2
-        CHECK(intervals[0].value().end == TimeFrameIndex{40});   // 20 * 2
-        CHECK(intervals[1].value().start == TimeFrameIndex{60}); // 30 * 2
-        CHECK(intervals[1].value().end == TimeFrameIndex{80});   // 40 * 2
-        CHECK(intervals[2].value().start == TimeFrameIndex{100});// 50 * 2
-        CHECK(intervals[2].value().end == TimeFrameIndex{120});  // 60 * 2
+        CHECK(intervals[0].value().start == ClockTicks{20}); // 10 * 2
+        CHECK(intervals[0].value().end == ClockTicks{40});   // 20 * 2
+        CHECK(intervals[1].value().start == ClockTicks{60}); // 30 * 2
+        CHECK(intervals[1].value().end == ClockTicks{80});   // 40 * 2
+        CHECK(intervals[2].value().start == ClockTicks{100});// 50 * 2
+        CHECK(intervals[2].value().end == ClockTicks{120});  // 60 * 2
     }
 
     SECTION("Materialize preserves EntityIds") {
@@ -839,6 +871,11 @@ TEST_CASE("DigitalIntervalSeries::createFromView materialize", "[DigitalInterval
         auto lazy_series = DigitalIntervalSeries::createFromView(view, source_data.size());
         auto materialized = lazy_series->materialize();
 
+        auto times = std::vector<int>(200);
+        std::iota(times.begin(), times.end(), 0);
+        auto time_frame = std::make_shared<TimeFrame>(times);
+        materialized->setTimeFrame(time_frame);
+
         auto const & entity_ids = materialized->view();
         REQUIRE(materialized->size() == 2);
         CHECK(entity_ids[0].id() == EntityId{100});
@@ -849,15 +886,18 @@ TEST_CASE("DigitalIntervalSeries::createFromView materialize", "[DigitalInterval
 TEST_CASE("DigitalIntervalSeries::createFromView from existing series", "[DigitalIntervalSeries][createFromView][integration]") {
 
     SECTION("Create lazy from existing DigitalIntervalSeries::view()") {
+        auto time_frame = makeTestTimeFrame(200);
+
         // Create an owning series
         auto source = std::make_shared<DigitalIntervalSeries>();
+        source->setTimeFrame(time_frame);
         source->addEvent(TimeFrameInterval{TimeFrameIndex{10}, TimeFrameIndex{20}});
         source->addEvent(TimeFrameInterval{TimeFrameIndex{30}, TimeFrameIndex{40}});
         source->addEvent(TimeFrameInterval{TimeFrameIndex{50}, TimeFrameIndex{60}});
 
         // Create a lazy transform from the series' view
-        auto filtered_view = source->view() | std::views::filter([](IntervalWithId const & iwid) {
-                                 return iwid.interval.start >= TimeFrameIndex{30};// Only intervals starting at 30+
+        auto filtered_view = source->view() | std::views::filter([](ClockTicksIntervalWithId const & iwid) {
+                                 return iwid.interval.start >= ClockTicks{30};// Only intervals starting at 30+
                              });
 
         // Count elements for lazy series creation
@@ -872,44 +912,49 @@ TEST_CASE("DigitalIntervalSeries::createFromView from existing series", "[Digita
         // or use a different approach. This test shows the limitation.
 
         // For random-access transforms (not filters), createFromView works:
-        auto transformed_view = source->view() | std::views::transform([](IntervalWithId const & iwid) {
-                                    return IntervalWithId(
-                                            TimeFrameInterval{iwid.interval.start, iwid.interval.end + TimeFrameIndex{10}},
+        auto transformed_view = source->view() | std::views::transform([](ClockTicksIntervalWithId const & iwid) {
+                                    return ClockTicksIntervalWithId(
+                                            ClockTicksInterval{iwid.interval.start, iwid.interval.end + 10},
                                             iwid.entity_id);
                                 });
 
         auto lazy_extended = DigitalIntervalSeries::createFromView(
-                transformed_view, source->size());
+                transformed_view, source->size(), time_frame);
 
         CHECK(lazy_extended->size() == 3);
 
         // Check first interval was extended
         auto first = *lazy_extended->view().begin();
-        CHECK(first.interval.end == TimeFrameIndex{30});// Was 20, now 20+10
+        CHECK(first.interval.end == ClockTicks{30});// Was 20, now 20+10
     }
 
     SECTION("Round trip: series -> lazy transform -> materialize") {
+        auto time_frame = makeTestTimeFrame(1000);
+
         auto source = std::make_shared<DigitalIntervalSeries>();
+        source->setTimeFrame(time_frame);
         source->addEvent(TimeFrameInterval{TimeFrameIndex{100}, TimeFrameIndex{200}});
         source->addEvent(TimeFrameInterval{TimeFrameIndex{300}, TimeFrameIndex{400}});
 
         // Scale intervals by 2
-        auto scaled_view = source->view() | std::views::transform([](IntervalWithId const & iwid) {
-                               return IntervalWithId(
-                                       TimeFrameInterval{iwid.interval.start * 2, iwid.interval.end * 2},
+        auto scaled_view = source->view() | std::views::transform([](ClockTicksIntervalWithId const & iwid) {
+                               return ClockTicksIntervalWithId(
+                                       ClockTicksInterval{
+                                               ClockTicks{iwid.interval.start.getValue() * 2},
+                                               ClockTicks{iwid.interval.end.getValue() * 2}},
                                        iwid.entity_id);
                            });
 
-        auto lazy = DigitalIntervalSeries::createFromView(scaled_view, source->size());
+        auto lazy = DigitalIntervalSeries::createFromView(scaled_view, source->size(), time_frame);
         auto final_series = lazy->materialize();
 
         CHECK(final_series->size() == 2);
 
         auto const & intervals = final_series->view();
-        CHECK(intervals[0].value().start == TimeFrameIndex{200});
-        CHECK(intervals[0].value().end == TimeFrameIndex{400});
-        CHECK(intervals[1].value().start == TimeFrameIndex{600});
-        CHECK(intervals[1].value().end == TimeFrameIndex{800});
+        CHECK(intervals[0].value().start == ClockTicks{200});
+        CHECK(intervals[0].value().end == ClockTicks{400});
+        CHECK(intervals[1].value().start == ClockTicks{600});
+        CHECK(intervals[1].value().end == ClockTicks{800});
     }
 }
 
@@ -936,29 +981,19 @@ TEST_CASE("DigitalIntervalSeries::createFromView empty series", "[DigitalInterva
 // Public Interface with All Storage Backends Tests
 // =============================================================================
 
-namespace {
-// Helper to create a simple TimeFrame for testing
-std::shared_ptr<TimeFrame> makeTestTimeFrame(int64_t num_frames) {
-    std::vector<int> times;
-    times.reserve(static_cast<size_t>(num_frames));
-    for (int64_t i = 0; i < num_frames; ++i) {
-        times.push_back(static_cast<int>(i));
-    }
-    return std::make_shared<TimeFrame>(times);
-}
-}// namespace
-
 TEST_CASE("DigitalIntervalSeries view() works with all storage backends", "[DigitalIntervalSeries][public-api][view]") {
 
     SECTION("Owning storage - view() iteration") {
+        auto tf = makeTestTimeFrame(200);
         DigitalIntervalSeries series;
+        series.setTimeFrame(tf);
         series.addEvent(TimeFrameInterval{TimeFrameIndex{10}, TimeFrameIndex{20}});
         series.addEvent(TimeFrameInterval{TimeFrameIndex{30}, TimeFrameIndex{40}});
         series.addEvent(TimeFrameInterval{TimeFrameIndex{50}, TimeFrameIndex{60}});
 
         CHECK(series.getStorageType() == DigitalIntervalStorageType::Owning);
 
-        std::vector<TimeFrameInterval> collected;
+        std::vector<ClockTicksInterval> collected;
         std::vector<EntityId> collected_ids;
         for (auto const & element: series.view()) {
             collected.push_back(element.interval);
@@ -966,34 +1001,38 @@ TEST_CASE("DigitalIntervalSeries view() works with all storage backends", "[Digi
         }
 
         REQUIRE(collected.size() == 3);
-        CHECK(collected[0].start == TimeFrameIndex{10});
-        CHECK(collected[1].start == TimeFrameIndex{30});
-        CHECK(collected[2].start == TimeFrameIndex{50});
+        CHECK(collected[0].start == ClockTicks{10});
+        CHECK(collected[1].start == ClockTicks{30});
+        CHECK(collected[2].start == ClockTicks{50});
     }
 
     SECTION("View storage - view() iteration") {
+        auto tf = makeTestTimeFrame(200);
         auto source = std::make_shared<DigitalIntervalSeries>();
+        source->setTimeFrame(tf);
         source->addEvent(TimeFrameInterval{TimeFrameIndex{10}, TimeFrameIndex{20}});
         source->addEvent(TimeFrameInterval{TimeFrameIndex{30}, TimeFrameIndex{40}});
         source->addEvent(TimeFrameInterval{TimeFrameIndex{50}, TimeFrameIndex{60}});
         source->addEvent(TimeFrameInterval{TimeFrameIndex{70}, TimeFrameIndex{80}});
 
         auto view_series = DigitalIntervalSeries::createView(source, TimeFrameIndex{25}, TimeFrameIndex{55});
+        view_series->setTimeFrame(tf);
 
         CHECK(view_series->getStorageType() == DigitalIntervalStorageType::View);
 
-        std::vector<TimeFrameInterval> collected;
+        std::vector<ClockTicksInterval> collected;
         for (auto const & element: view_series->view()) {
             collected.push_back(element.interval);
         }
 
         // Should have [30,40] and [50,60] which overlap with [25,55]
         REQUIRE(collected.size() == 2);
-        CHECK(collected[0].start == TimeFrameIndex{30});
-        CHECK(collected[1].start == TimeFrameIndex{50});
+        CHECK(collected[0].start == ClockTicks{30});
+        CHECK(collected[1].start == ClockTicks{50});
     }
 
     SECTION("Lazy storage - view() iteration") {
+        auto tf = makeTestTimeFrame(200);
         std::vector<IntervalWithId> source_data = {
                 IntervalWithId(TimeFrameInterval{TimeFrameIndex{10}, TimeFrameIndex{20}}, EntityId{1}),
                 IntervalWithId(TimeFrameInterval{TimeFrameIndex{30}, TimeFrameIndex{40}}, EntityId{2}),
@@ -1007,19 +1046,19 @@ TEST_CASE("DigitalIntervalSeries view() works with all storage backends", "[Digi
                                         iwid.entity_id);
                             });
 
-        auto lazy_series = DigitalIntervalSeries::createFromView(shifted_view, source_data.size());
+        auto lazy_series = DigitalIntervalSeries::createFromView(shifted_view, source_data.size(), tf);
 
         CHECK(lazy_series->getStorageType() == DigitalIntervalStorageType::Lazy);
 
-        std::vector<TimeFrameInterval> collected;
+        std::vector<ClockTicksInterval> collected;
         for (auto const & element: lazy_series->view()) {
             collected.push_back(element.interval);
         }
 
         REQUIRE(collected.size() == 3);
-        CHECK(collected[0].start == TimeFrameIndex{110});// 10 + 100
-        CHECK(collected[1].start == TimeFrameIndex{130});// 30 + 100
-        CHECK(collected[2].start == TimeFrameIndex{150});// 50 + 100
+        CHECK(collected[0].start == ClockTicks{110});// 10 + 100
+        CHECK(collected[1].start == ClockTicks{130});// 30 + 100
+        CHECK(collected[2].start == ClockTicks{150});// 50 + 100
     }
 }
 
@@ -1272,12 +1311,15 @@ TEST_CASE("DigitalIntervalSeries materialize() from all backends", "[DigitalInte
     }
 
     SECTION("Materialize from View") {
+        auto tf = makeTestTimeFrame(200);
         auto source = std::make_shared<DigitalIntervalSeries>();
+        source->setTimeFrame(tf);
         source->addEvent(TimeFrameInterval{TimeFrameIndex{10}, TimeFrameIndex{20}});
         source->addEvent(TimeFrameInterval{TimeFrameIndex{30}, TimeFrameIndex{40}});
         source->addEvent(TimeFrameInterval{TimeFrameIndex{50}, TimeFrameIndex{60}});
 
         auto view = DigitalIntervalSeries::createView(source, TimeFrameIndex{25}, TimeFrameIndex{55});
+        view->setTimeFrame(tf);
         CHECK(view->isView());
         CHECK(view->size() == 2);
 
@@ -1287,15 +1329,16 @@ TEST_CASE("DigitalIntervalSeries materialize() from all backends", "[DigitalInte
         CHECK(materialized->size() == 2);
 
         // Verify data
-        std::vector<TimeFrameInterval> collected;
+        std::vector<ClockTicksInterval> collected;
         for (auto const & e: materialized->view()) {
             collected.push_back(e.interval);
         }
-        CHECK(collected[0].start == TimeFrameIndex{30});
-        CHECK(collected[1].start == TimeFrameIndex{50});
+        CHECK(collected[0].start == ClockTicks{30});
+        CHECK(collected[1].start == ClockTicks{50});
     }
 
     SECTION("Materialize from Lazy with transform") {
+        auto tf = makeTestTimeFrame(200);
         std::vector<IntervalWithId> source_data = {
                 IntervalWithId(TimeFrameInterval{TimeFrameIndex{10}, TimeFrameIndex{20}}, EntityId{1}),
                 IntervalWithId(TimeFrameInterval{TimeFrameIndex{30}, TimeFrameIndex{40}}, EntityId{2})};
@@ -1307,7 +1350,7 @@ TEST_CASE("DigitalIntervalSeries materialize() from all backends", "[DigitalInte
                                    iwid.entity_id);
                        });
 
-        auto lazy = DigitalIntervalSeries::createFromView(doubled, source_data.size());
+        auto lazy = DigitalIntervalSeries::createFromView(doubled, source_data.size(), tf);
         CHECK(lazy->isLazy());
 
         auto materialized = lazy->materialize();
@@ -1316,14 +1359,14 @@ TEST_CASE("DigitalIntervalSeries materialize() from all backends", "[DigitalInte
         CHECK(materialized->size() == 2);
 
         // Verify transform was applied
-        std::vector<TimeFrameInterval> collected;
+        std::vector<ClockTicksInterval> collected;
         for (auto const & e: materialized->view()) {
             collected.push_back(e.interval);
         }
-        CHECK(collected[0].start == TimeFrameIndex{20});// 10 * 2
-        CHECK(collected[0].end == TimeFrameIndex{40});  // 20 * 2
-        CHECK(collected[1].start == TimeFrameIndex{60});// 30 * 2
-        CHECK(collected[1].end == TimeFrameIndex{80});  // 40 * 2
+        CHECK(collected[0].start == ClockTicks{20});// 10 * 2
+        CHECK(collected[0].end == ClockTicks{40});  // 20 * 2
+        CHECK(collected[1].start == ClockTicks{60});// 30 * 2
+        CHECK(collected[1].end == ClockTicks{80});  // 40 * 2
     }
 }
 

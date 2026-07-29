@@ -486,8 +486,9 @@ void TriageSessionProperties_Widget::_updateTrackedRegionsSummary() {
 
     auto const interval_count = intervals->size();
     int64_t total_frames = 0;
-    for (auto const & iwid: intervals->view()) {
-        total_frames += iwid.interval.end.getValue() - iwid.interval.start.getValue();
+    for (size_t i = 0; i < intervals->size(); ++i) {
+        auto const iv = intervals->getStoredInterval(i);
+        total_frames += iv.end.getValue() - iv.start.getValue();
     }
 
     _tracked_summary_label->setText(

@@ -46,7 +46,7 @@ std::shared_ptr<TimeFrame> makeTimeFrame(int count) {
 std::vector<TimeFrameIndex> makeRowTimes(std::vector<int64_t> const & values) {
     std::vector<TimeFrameIndex> times;
     times.reserve(values.size());
-    for (auto v : values) {
+    for (auto v: values) {
         times.emplace_back(v);
     }
     return times;
@@ -68,36 +68,36 @@ std::shared_ptr<DataManager> makeDM(std::string const & time_key, int frame_coun
  * based on the provided label pattern.
  */
 MLCore::PredictionOutput makeBinaryPrediction(
-    std::vector<std::size_t> const & labels)
-{
+        std::vector<std::size_t> const & labels) {
     MLCore::PredictionOutput output;
     output.class_predictions = arma::Row<std::size_t>(labels.size());
     for (std::size_t i = 0; i < labels.size(); ++i) {
         output.class_predictions[i] = labels[i];
     }
     output.prediction_times = makeRowTimes(
-        [&]() {
-            std::vector<int64_t> v(labels.size());
-            std::iota(v.begin(), v.end(), 0);
-            return v;
-        }());
+            [&]() {
+                std::vector<int64_t> v(labels.size());
+                std::iota(v.begin(), v.end(), 0);
+                return v;
+            }());
     return output;
 }
 
 /**
- * @brief Collect all intervals from a DigitalIntervalSeries into a vector
+ * @brief Collect stored interval bounds in TimeFrameIndex space (save/export path).
  */
 std::vector<std::pair<int64_t, int64_t>> collectIntervals(
-    DigitalIntervalSeries const & series)
-{
+        DigitalIntervalSeries const & series) {
     std::vector<std::pair<int64_t, int64_t>> result;
-    for (auto iv : series.view()) {
-        result.emplace_back(iv.interval.start.getValue(), iv.interval.end.getValue());
+    result.reserve(series.size());
+    for (size_t i = 0; i < series.size(); ++i) {
+        auto const iv = series.getStoredInterval(i);
+        result.emplace_back(iv.start.getValue(), iv.end.getValue());
     }
     return result;
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // ============================================================================
 // writePredictionsAsIntervals
@@ -192,8 +192,11 @@ TEST_CASE("writePredictionsAsIntervals: three classes", "[PredictionWriter]") {
     output.class_predictions = {0, 1, 2, 2, 1, 0};
     output.prediction_times = makeRowTimes({0, 1, 2, 3, 4, 5});
 
+    MLCore::PredictionWriterConfig config;
+    config.time_key_str = "cam";
+
     auto keys = MLCore::writePredictionsAsIntervals(
-        *dm, output, {"A", "B", "C"});
+            *dm, output, {"A", "B", "C"}, config);
 
     REQUIRE(keys.size() == 3);
 
@@ -231,10 +234,14 @@ TEST_CASE("writeProbabilitiesAsAnalog: basic binary", "[PredictionWriter]") {
 
     // 2 classes × 4 observations
     arma::mat probs(2, 4);
-    probs(0, 0) = 0.9; probs(1, 0) = 0.1;
-    probs(0, 1) = 0.8; probs(1, 1) = 0.2;
-    probs(0, 2) = 0.3; probs(1, 2) = 0.7;
-    probs(0, 3) = 0.1; probs(1, 3) = 0.9;
+    probs(0, 0) = 0.9;
+    probs(1, 0) = 0.1;
+    probs(0, 1) = 0.8;
+    probs(1, 1) = 0.2;
+    probs(0, 2) = 0.3;
+    probs(1, 2) = 0.7;
+    probs(0, 3) = 0.1;
+    probs(1, 3) = 0.9;
     output.class_probabilities = probs;
 
     MLCore::PredictionWriterConfig config;
@@ -253,7 +260,7 @@ TEST_CASE("writeProbabilitiesAsAnalog: basic binary", "[PredictionWriter]") {
 
     // Collect values via view
     std::vector<float> no_values;
-    for (auto tvp : no_prob->view()) {
+    for (auto tvp: no_prob->view()) {
         no_values.push_back(tvp.value());
     }
     REQUIRE(no_values.size() == 4);
@@ -267,7 +274,7 @@ TEST_CASE("writeProbabilitiesAsAnalog: basic binary", "[PredictionWriter]") {
     REQUIRE(yes_prob != nullptr);
 
     std::vector<float> yes_values;
-    for (auto tvp : yes_prob->view()) {
+    for (auto tvp: yes_prob->view()) {
         yes_values.push_back(tvp.value());
     }
     REQUIRE(yes_values.size() == 4);
@@ -304,7 +311,7 @@ TEST_CASE("writeTimePredictionsToGroups: basic binary", "[PredictionWriter]") {
     config.output_prefix = "Predicted:";
 
     auto group_ids = MLCore::writeTimePredictionsToGroups(
-        *dm, output, {"Outside", "Inside"}, config);
+            *dm, output, {"Outside", "Inside"}, config);
 
     REQUIRE(group_ids.size() == 2);
 
@@ -321,8 +328,8 @@ TEST_CASE("writeTimePredictionsToGroups: basic binary", "[PredictionWriter]") {
     CHECK(desc1->name == "Predicted:Inside");
 
     // Check entity counts
-    CHECK(groups->getGroupSize(group_ids[0]) == 3); // times 0,1,4
-    CHECK(groups->getGroupSize(group_ids[1]) == 2); // times 2,3
+    CHECK(groups->getGroupSize(group_ids[0]) == 3);// times 0,1,4
+    CHECK(groups->getGroupSize(group_ids[1]) == 2);// times 2,3
 }
 
 TEST_CASE("writeTimePredictionsToGroups: entities are valid TimeEntities", "[PredictionWriter]") {
@@ -336,7 +343,7 @@ TEST_CASE("writeTimePredictionsToGroups: entities are valid TimeEntities", "[Pre
     config.time_key_str = "cam";
 
     auto group_ids = MLCore::writeTimePredictionsToGroups(
-        *dm, output, {"A", "B"}, config);
+            *dm, output, {"A", "B"}, config);
 
     auto * groups = dm->getEntityGroupManager();
     auto * registry = dm->getEntityRegistry();
@@ -375,9 +382,9 @@ TEST_CASE("writeTimePredictionsToGroups: idempotent entity registration", "[Pred
 
     // Write twice
     auto groups1 = MLCore::writeTimePredictionsToGroups(
-        *dm, output, {"A", "B"}, config);
+            *dm, output, {"A", "B"}, config);
     auto groups2 = MLCore::writeTimePredictionsToGroups(
-        *dm, output, {"A", "B"}, config);
+            *dm, output, {"A", "B"}, config);
 
     // Different group IDs each time (new groups are created)
     CHECK(groups1[0] != groups2[0]);
@@ -409,9 +416,9 @@ TEST_CASE("writeClusterAssignmentsToGroups: basic 3 clusters", "[PredictionWrite
     arma::Row<std::size_t> assignments = {0, 1, 2, 0, 1, 2};
 
     auto group_ids = MLCore::writeClusterAssignmentsToGroups(
-        groups, assignments,
-        std::span<EntityId const>(entity_ids),
-        "Cluster:");
+            groups, assignments,
+            std::span<EntityId const>(entity_ids),
+            "Cluster:");
 
     REQUIRE(group_ids.size() == 3);
 
@@ -444,7 +451,7 @@ TEST_CASE("writeClusterAssignmentsToGroups: empty input", "[PredictionWriter]") 
     std::span<EntityId const> empty_ids;
 
     auto group_ids = MLCore::writeClusterAssignmentsToGroups(
-        groups, assignments, empty_ids);
+            groups, assignments, empty_ids);
 
     CHECK(group_ids.empty());
 }
@@ -455,10 +462,10 @@ TEST_CASE("writeClusterAssignmentsToGroups: size mismatch throws", "[PredictionW
     std::vector<EntityId> entities = {EntityId{1}, EntityId{2}};
 
     CHECK_THROWS_AS(
-        MLCore::writeClusterAssignmentsToGroups(
-            groups, assignments,
-            std::span<EntityId const>(entities)),
-        std::invalid_argument);
+            MLCore::writeClusterAssignmentsToGroups(
+                    groups, assignments,
+                    std::span<EntityId const>(entities)),
+            std::invalid_argument);
 }
 
 TEST_CASE("writeClusterAssignmentsToGroups: custom prefix", "[PredictionWriter]") {
@@ -467,9 +474,9 @@ TEST_CASE("writeClusterAssignmentsToGroups: custom prefix", "[PredictionWriter]"
     arma::Row<std::size_t> assignments = {0, 1};
 
     auto group_ids = MLCore::writeClusterAssignmentsToGroups(
-        groups, assignments,
-        std::span<EntityId const>(entities),
-        "KMeans:");
+            groups, assignments,
+            std::span<EntityId const>(entities),
+            "KMeans:");
 
     REQUIRE(group_ids.size() == 2);
     auto desc0 = groups.getGroupDescriptor(group_ids[0]);
@@ -509,18 +516,18 @@ TEST_CASE("writePredictions: all outputs enabled", "[PredictionWriter]") {
     CHECK(result.putative_group_ids.size() == 2);
 
     // Verify interval keys exist in DataManager
-    for (auto const & key : result.interval_keys) {
+    for (auto const & key: result.interval_keys) {
         CHECK(dm->getData<DigitalIntervalSeries>(key) != nullptr);
     }
 
     // Verify probability keys exist in DataManager
-    for (auto const & key : result.probability_keys) {
+    for (auto const & key: result.probability_keys) {
         CHECK(dm->getData<AnalogTimeSeries>(key) != nullptr);
     }
 
     // Verify groups exist
     auto * gm = dm->getEntityGroupManager();
-    for (auto gid : result.putative_group_ids) {
+    for (auto gid: result.putative_group_ids) {
         CHECK(gm->hasGroup(gid));
     }
 }
@@ -557,7 +564,7 @@ TEST_CASE("writePredictions: everything disabled produces empty result", "[Predi
     CHECK(result.interval_keys.empty());
     CHECK(result.probability_keys.empty());
     CHECK(result.putative_group_ids.empty());
-    CHECK(result.class_names.size() == 2); // class_names always set
+    CHECK(result.class_names.size() == 2);// class_names always set
 }
 
 // ============================================================================
@@ -568,12 +575,12 @@ TEST_CASE("writePredictions: prediction/time size mismatch throws", "[Prediction
     auto dm = makeDM("cam", 10);
 
     MLCore::PredictionOutput output;
-    output.class_predictions = {0, 1, 0}; // 3 predictions
-    output.prediction_times = makeRowTimes({0, 1}); // 2 times — mismatch
+    output.class_predictions = {0, 1, 0};          // 3 predictions
+    output.prediction_times = makeRowTimes({0, 1});// 2 times — mismatch
 
     CHECK_THROWS_AS(
-        MLCore::writePredictions(*dm, output, {"A", "B"}),
-        std::invalid_argument);
+            MLCore::writePredictions(*dm, output, {"A", "B"}),
+            std::invalid_argument);
 }
 
 TEST_CASE("writePredictions: empty prediction_times throws", "[PredictionWriter]") {
@@ -585,8 +592,8 @@ TEST_CASE("writePredictions: empty prediction_times throws", "[PredictionWriter]
     output.prediction_times = {};
 
     CHECK_THROWS_AS(
-        MLCore::writePredictions(*dm, output, {"A"}),
-        std::invalid_argument);
+            MLCore::writePredictions(*dm, output, {"A"}),
+            std::invalid_argument);
 }
 
 TEST_CASE("writePredictions: empty class_names throws", "[PredictionWriter]") {
@@ -594,20 +601,20 @@ TEST_CASE("writePredictions: empty class_names throws", "[PredictionWriter]") {
     auto output = makeBinaryPrediction({0, 0});
 
     CHECK_THROWS_AS(
-        MLCore::writePredictions(*dm, output, {}),
-        std::invalid_argument);
+            MLCore::writePredictions(*dm, output, {}),
+            std::invalid_argument);
 }
 
 TEST_CASE("writePredictions: label exceeds class_names range throws", "[PredictionWriter]") {
     auto dm = makeDM("cam", 10);
 
     MLCore::PredictionOutput output;
-    output.class_predictions = {0, 2}; // label 2, but only 2 class_names
+    output.class_predictions = {0, 2};// label 2, but only 2 class_names
     output.prediction_times = makeRowTimes({0, 1});
 
     CHECK_THROWS_AS(
-        MLCore::writePredictions(*dm, output, {"A", "B"}),
-        std::invalid_argument);
+            MLCore::writePredictions(*dm, output, {"A", "B"}),
+            std::invalid_argument);
 }
 
 TEST_CASE("writeProbabilitiesAsAnalog: dimension mismatch throws", "[PredictionWriter]") {
@@ -618,10 +625,11 @@ TEST_CASE("writeProbabilitiesAsAnalog: dimension mismatch throws", "[PredictionW
     output.prediction_times = makeRowTimes({0, 1});
 
     // Wrong number of columns (3 instead of 2)
-    arma::mat bad_probs(2, 3); bad_probs.fill(0.5);
+    arma::mat bad_probs(2, 3);
+    bad_probs.fill(0.5);
     output.class_probabilities = bad_probs;
 
     CHECK_THROWS_AS(
-        MLCore::writeProbabilitiesAsAnalog(*dm, output, {"A", "B"}),
-        std::invalid_argument);
+            MLCore::writeProbabilitiesAsAnalog(*dm, output, {"A", "B"}),
+            std::invalid_argument);
 }

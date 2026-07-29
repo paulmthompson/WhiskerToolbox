@@ -150,10 +150,8 @@ struct RowBuildContext {
 
         std::vector<TimeFrameInterval> tfi_intervals;
         tfi_intervals.reserve(ctx.num_rows);
-        for (auto const & iw: ctx.intervals->view()) {
-            tfi_intervals.push_back(TimeFrameInterval{
-                    TimeFrameIndex(iw.interval.start),
-                    TimeFrameIndex(iw.interval.end)});
+        for (std::size_t i = 0; i < ctx.num_rows; ++i) {
+            tfi_intervals.push_back(ctx.intervals->getStoredInterval(i));
         }
         ctx.row_desc = RowDescriptor::fromIntervals(
                 std::move(tfi_intervals), ctx.intervals->getTimeFrame());

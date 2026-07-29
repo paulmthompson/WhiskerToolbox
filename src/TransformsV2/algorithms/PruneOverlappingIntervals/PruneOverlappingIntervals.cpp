@@ -77,8 +77,8 @@ std::shared_ptr<DigitalIntervalSeries> pruneOverlappingIntervals(
 
     std::vector<TimeFrameInterval> intervals;
     intervals.reserve(input.size());
-    for (auto const & interval_with_id: input.view()) {
-        intervals.push_back(interval_with_id.interval);
+    for (size_t i = 0; i < input.size(); ++i) {
+        intervals.push_back(input.getStoredInterval(i));
     }
 
     auto const kept_indices = pruneOverlappingIntervalIndices(intervals);

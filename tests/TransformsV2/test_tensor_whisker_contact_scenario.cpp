@@ -64,10 +64,8 @@ TEST_CASE("Whisker contact scenario builds cross-timeframe tensor",
 
     std::vector<TimeFrameInterval> tfi_intervals;
     tfi_intervals.reserve(num_rows);
-    for (auto const & iw: scenario.contact->view()) {
-        tfi_intervals.push_back(TimeFrameInterval{
-                TimeFrameIndex(iw.interval.start),
-                TimeFrameIndex(iw.interval.end)});
+    for (std::size_t row = 0; row < num_rows; ++row) {
+        tfi_intervals.push_back(scenario.contact->getStoredInterval(row));
     }
     auto row_desc = RowDescriptor::fromIntervals(
             std::move(tfi_intervals), scenario.contact->getTimeFrame());

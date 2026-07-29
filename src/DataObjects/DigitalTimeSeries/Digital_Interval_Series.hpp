@@ -31,7 +31,7 @@
  * ### Lazy Storage (DigitalIntervalStorageType::Lazy)
  * - **On-demand computation** from transform views
  * - Created via createFromView() template method
- * - Stores a C++20 ranges view that computes IntervalWithId on access
+ * - Stores a C++20 ranges view that computes interval elements on access
  * - Useful for transform pipelines without materializing intermediate results
  * - **Read-only**: mutation operations will materialize to owning storage first
  * - Always returns invalid cache (forces virtual dispatch)
@@ -54,7 +54,8 @@
  * - Cross-data-type entity tracking
  * 
  * @see DigitalIntervalStorage.hpp for storage implementation details
- * @see IntervalWithId for the element type returned by iterators
+ * @see ClockTicksIntervalWithId for the element type returned by view()
+ * @see IntervalWithId for index-based lazy-pipeline element type
  * @see TimeFrame for time base management
  * @see EntityRegistry for entity ID management
  */
@@ -108,7 +109,8 @@ enum class IntervalLayout {
  * 
  * ## Primary Interface
  * 
- * - **view()**: Returns a lazy range of IntervalWithId objects for iteration
+ * - **view()**: Returns a lazy range of ClockTicksIntervalWithId objects for iteration
+ * - **getStoredInterval()**: Returns index-space interval at storage index (save/export)
  * - **viewInRange()**: Returns intervals overlapping a time range (requires TimeFrame)
  * - **hasIntervalAtTime()**: Check if any interval contains a time (requires TimeFrame)
  * - **addEvent()/removeInterval()**: Modify intervals (owning storage only)
@@ -150,12 +152,12 @@ enum class IntervalLayout {
  * @note Intervals are always sorted by start time.
  * @note View and Lazy storage will auto-materialize on mutation.
  * 
- * @see IntervalWithId for element accessors (time(), id(), value())
+ * @see ClockTicksIntervalWithId for view() element accessors (time(), id(), value())
  * @see DigitalEventSeries for discrete event data
  */
 class DigitalIntervalSeries : public ObserverData {
 public:
-    struct DataTraits : Neuralyzer::TypeTraits::DataTypeTraitsBase<DigitalIntervalSeries, IntervalWithId> {
+    struct DataTraits : Neuralyzer::TypeTraits::DataTypeTraitsBase<DigitalIntervalSeries, ClockTicksIntervalWithId> {
         static constexpr bool is_ragged = false;
         static constexpr bool is_temporal = true;
         static constexpr bool has_entity_ids = true;
@@ -190,25 +192,33 @@ public:
     // =============================================================
 
     /**
-     * @brief Get a std::ranges compatible view of the series.
-     * 
-     * Returns a random-access view that synthesizes IntervalWithId objects on demand.
-     * Uses cached pointers for fast-path iteration when storage is contiguous.
-     * Allows iterating over IntervalWithId objects directly.
+     * @brief Get a std::ranges compatible view of the series in absolute clock-tick time.
+     *
+     * Returns a random-access view that synthesizes ClockTicksIntervalWithId objects on demand.
+     *
+     * @pre series time frame must be set (@ref getTimeFrame() non-null)
+     * @see getStoredInterval for index-space access (save/export)
      */
     [[nodiscard]] auto view() const {
-        return std::views::iota(size_t{0}, size()) | std::views::transform([this](size_t idx) {
-                   // Fast path: use cached pointers if valid
-                   if (_cached_storage.isValid()) {
-                       return IntervalWithId(
-                               _cached_storage.getInterval(idx),
-                               _cached_storage.getEntityId(idx));
-                   }
-                   // Slow path: virtual dispatch through wrapper
-                   return IntervalWithId(
-                           _storage.getInterval(idx),
+        assert(_time_frame != nullptr && "view() requires series time frame");
+        TimeFrame const * time_frame = _time_frame.get();
+        return std::views::iota(size_t{0}, size()) | std::views::transform([this, time_frame](size_t idx) {
+                   return ClockTicksIntervalWithId(
+                           toClockTicksInterval(_storage.getInterval(idx), *time_frame),
                            _storage.getEntityId(idx));
                });
+    }
+
+    /**
+     * @brief Get the stored interval at a flat storage index in TimeFrameIndex space.
+     *
+     * Use for save/export and other persistence paths that must write index coordinates.
+     *
+     * @param index Flat index in [0, size())
+     * @return TimeFrameInterval from internal storage
+     */
+    [[nodiscard]] TimeFrameInterval getStoredInterval(size_t index) const {
+        return _storage.getInterval(index);
     }
 
     /**
@@ -534,10 +544,10 @@ public:
      * elements on-demand from the provided view. Useful for transform pipelines
      * where you want to defer computation until elements are accessed.
      * 
-     * The view must yield objects that are convertible to IntervalWithId, or
-     * have .interval and .entity_id members, or be a pair/tuple of (Interval, EntityId).
-     * 
-     * @tparam ViewType Random-access range type yielding IntervalWithId-like objects
+     * The view must yield objects with .interval and .entity_id members (ClockTicksIntervalWithId
+     * or IntervalWithId), or be a pair/tuple of (Interval, EntityId).
+     *
+     * @tparam ViewType Random-access range type yielding interval-with-id-like objects
      * @param view The transform view (will be moved)
      * @param num_elements Number of elements in the view
      * @param time_frame Optional time frame for the new series
@@ -551,10 +561,10 @@ public:
      * auto source = std::make_shared<DigitalIntervalSeries>(...);
      * 
      * // Create a lazy transform that shifts all intervals by 100
-     * auto shifted_view = source->view() 
-     *     | std::views::transform([](IntervalWithId const& iwid) {
-     *           return IntervalWithId(
-     *               Interval{iwid.interval.start + 100, iwid.interval.end + 100},
+     * auto shifted_view = source->view()
+     *     | std::views::transform([](ClockTicksIntervalWithId const& iwid) {
+     *           return ClockTicksIntervalWithId(
+     *               ClockTicksInterval{iwid.interval.start + 100, iwid.interval.end + 100},
      *               iwid.entity_id);
      *       });
      * 
@@ -768,9 +778,9 @@ std::shared_ptr<DigitalIntervalSeries> DigitalIntervalSeries::createFromView(
         IntervalLayout layout) {
     auto result = std::make_shared<DigitalIntervalSeries>();
     result->_layout = layout;
+    result->_time_frame = time_frame;
     result->_storage = DigitalIntervalStorageWrapper{
-            LazyDigitalIntervalStorage<ViewType>{std::move(view), num_elements}};
-    result->_time_frame = std::move(time_frame);
+            LazyDigitalIntervalStorage<ViewType>{std::move(view), num_elements, time_frame}};
     result->_cacheOptimizationPointers();
     return result;
 }

@@ -199,12 +199,10 @@ namespace {
     float const height = layout.y_transform.gain * 2.0f;// gain is half-height
     float const y_bottom = y_center - height / 2.0f;
 
-    return series.view() | std::views::transform([&time_frame, y_bottom, height](auto const & interval_with_id) {
-               float x_start = static_cast<float>(
-                       time_frame.getTimeAtIndex(TimeFrameIndex{interval_with_id.interval.start}).getValue());
-               float x_end = static_cast<float>(
-                       time_frame.getTimeAtIndex(TimeFrameIndex{interval_with_id.interval.end}).getValue());
-               float width = x_end - x_start;
+    return series.view() | std::views::transform([y_bottom, height](auto const & interval_with_id) {
+               float const x_start = static_cast<float>(interval_with_id.interval.start.getValue());
+               float const x_end = static_cast<float>(interval_with_id.interval.end.getValue());
+               float const width = x_end - x_start;
                return MappedRectElement{x_start, y_bottom, width, height, interval_with_id.entity_id};
            });
 }

@@ -1,9 +1,9 @@
 #ifndef DIGITAL_INTERVAL_BINARY_LOADING_SCENARIOS_HPP
 #define DIGITAL_INTERVAL_BINARY_LOADING_SCENARIOS_HPP
 
-#include "fixtures/builders/DigitalTimeSeriesBuilder.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/interval_data.hpp"
+#include "fixtures/builders/DigitalTimeSeriesBuilder.hpp"
 
 #include <cstdint>
 #include <filesystem>
@@ -28,8 +28,8 @@ namespace digital_interval_binary_scenarios {
  * @param header_size Number of header bytes to write (filled with zeros)
  * @return true if write succeeded
  */
-inline bool writeBinaryUint16(DigitalIntervalSeries const* intervals,
-                              std::string const& filepath,
+inline bool writeBinaryUint16(DigitalIntervalSeries const * intervals,
+                              std::string const & filepath,
                               size_t total_samples,
                               int channel = 0,
                               size_t header_size = 0) {
@@ -37,35 +37,36 @@ inline bool writeBinaryUint16(DigitalIntervalSeries const* intervals,
     if (!file.is_open()) {
         return false;
     }
-    
+
     // Write header (zeros)
     if (header_size > 0) {
         std::vector<char> header(header_size, 0);
         file.write(header.data(), static_cast<std::streamsize>(header_size));
     }
-    
+
     // Create sample buffer
     std::vector<uint16_t> samples(total_samples, 0);
-    
-    // Set bits during intervals
+
+    // Set bits during intervals (sample indices in storage)
     uint16_t const mask = static_cast<uint16_t>(1u << channel);
-    for (auto const& interval : intervals->view()) {
-        auto start = static_cast<size_t>(interval.value().start.getValue());
-        auto end = static_cast<size_t>(interval.value().end.getValue());
-        
+    for (size_t i = 0; i < intervals->size(); ++i) {
+        auto const stored = intervals->getStoredInterval(i);
+        auto start = static_cast<size_t>(stored.start.getValue());
+        auto end = static_cast<size_t>(stored.end.getValue());
+
         // Clamp to valid range
         if (start >= total_samples) continue;
         if (end > total_samples) end = total_samples;
-        
+
         for (size_t i = start; i < end; ++i) {
             samples[i] |= mask;
         }
     }
-    
+
     // Write samples
-    file.write(reinterpret_cast<char const*>(samples.data()), 
+    file.write(reinterpret_cast<char const *>(samples.data()),
                static_cast<std::streamsize>(samples.size() * sizeof(uint16_t)));
-    
+
     return file.good();
 }
 
@@ -81,54 +82,55 @@ inline bool writeBinaryUint16(DigitalIntervalSeries const* intervals,
  * @return true if write succeeded
  */
 inline bool writeBinaryUint16MultiChannel(
-        std::vector<std::pair<int, std::shared_ptr<DigitalIntervalSeries>>> const& channel_intervals,
-        std::string const& filepath,
+        std::vector<std::pair<int, std::shared_ptr<DigitalIntervalSeries>>> const & channel_intervals,
+        std::string const & filepath,
         size_t total_samples,
         size_t header_size = 0) {
-    
+
     std::ofstream file(filepath, std::ios::binary);
     if (!file.is_open()) {
         return false;
     }
-    
+
     // Write header (zeros)
     if (header_size > 0) {
         std::vector<char> header(header_size, 0);
         file.write(header.data(), static_cast<std::streamsize>(header_size));
     }
-    
+
     // Create sample buffer
     std::vector<uint16_t> samples(total_samples, 0);
-    
+
     // Set bits for each channel's intervals
-    for (auto const& [channel, intervals] : channel_intervals) {
+    for (auto const & [channel, intervals]: channel_intervals) {
         uint16_t const mask = static_cast<uint16_t>(1u << channel);
-        
-        for (auto const& interval : intervals->view()) {
-            auto start = static_cast<size_t>(interval.value().start.getValue());
-            auto end = static_cast<size_t>(interval.value().end.getValue());
-            
+
+        for (size_t i = 0; i < intervals->size(); ++i) {
+            auto const stored = intervals->getStoredInterval(i);
+            auto start = static_cast<size_t>(stored.start.getValue());
+            auto end = static_cast<size_t>(stored.end.getValue());
+
             if (start >= total_samples) continue;
             if (end > total_samples) end = total_samples;
-            
+
             for (size_t i = start; i < end; ++i) {
                 samples[i] |= mask;
             }
         }
     }
-    
+
     // Write samples
-    file.write(reinterpret_cast<char const*>(samples.data()), 
+    file.write(reinterpret_cast<char const *>(samples.data()),
                static_cast<std::streamsize>(samples.size() * sizeof(uint16_t)));
-    
+
     return file.good();
 }
 
 /**
  * @brief Write binary file with uint8_t data type (8 channels max)
  */
-inline bool writeBinaryUint8(DigitalIntervalSeries const* intervals,
-                             std::string const& filepath,
+inline bool writeBinaryUint8(DigitalIntervalSeries const * intervals,
+                             std::string const & filepath,
                              size_t total_samples,
                              int channel = 0,
                              size_t header_size = 0) {
@@ -136,30 +138,31 @@ inline bool writeBinaryUint8(DigitalIntervalSeries const* intervals,
     if (!file.is_open()) {
         return false;
     }
-    
+
     if (header_size > 0) {
         std::vector<char> header(header_size, 0);
         file.write(header.data(), static_cast<std::streamsize>(header_size));
     }
-    
+
     std::vector<uint8_t> samples(total_samples, 0);
-    
+
     uint8_t const mask = static_cast<uint8_t>(1u << channel);
-    for (auto const& interval : intervals->view()) {
-        auto start = static_cast<size_t>(interval.value().start.getValue());
-        auto end = static_cast<size_t>(interval.value().end.getValue());
-        
+    for (size_t i = 0; i < intervals->size(); ++i) {
+        auto const stored = intervals->getStoredInterval(i);
+        auto start = static_cast<size_t>(stored.start.getValue());
+        auto end = static_cast<size_t>(stored.end.getValue());
+
         if (start >= total_samples) continue;
         if (end > total_samples) end = total_samples;
-        
+
         for (size_t i = start; i < end; ++i) {
             samples[i] |= mask;
         }
     }
-    
-    file.write(reinterpret_cast<char const*>(samples.data()), 
+
+    file.write(reinterpret_cast<char const *>(samples.data()),
                static_cast<std::streamsize>(samples.size() * sizeof(uint8_t)));
-    
+
     return file.good();
 }
 
@@ -175,10 +178,10 @@ inline bool writeBinaryUint8(DigitalIntervalSeries const* intervals,
  */
 inline std::shared_ptr<DigitalIntervalSeries> simple_ttl_pulses() {
     return DigitalIntervalSeriesBuilder()
-        .withInterval(10, 20)
-        .withInterval(50, 60)
-        .withInterval(100, 120)
-        .build();
+            .withInterval(10, 20)
+            .withInterval(50, 60)
+            .withInterval(100, 120)
+            .build();
 }
 
 /**
@@ -188,8 +191,8 @@ inline std::shared_ptr<DigitalIntervalSeries> simple_ttl_pulses() {
  */
 inline std::shared_ptr<DigitalIntervalSeries> single_pulse() {
     return DigitalIntervalSeriesBuilder()
-        .withInterval(25, 75)
-        .build();
+            .withInterval(25, 75)
+            .build();
 }
 
 /**
@@ -201,8 +204,8 @@ inline std::shared_ptr<DigitalIntervalSeries> single_pulse() {
  */
 inline std::shared_ptr<DigitalIntervalSeries> periodic_pulses() {
     return DigitalIntervalSeriesBuilder()
-        .withPattern(5, 200, 5, 15)  // Start at 5, 5 duration, 15 gap (20 period)
-        .build();
+            .withPattern(5, 200, 5, 15)// Start at 5, 5 duration, 15 gap (20 period)
+            .build();
 }
 
 /**
@@ -213,11 +216,11 @@ inline std::shared_ptr<DigitalIntervalSeries> periodic_pulses() {
  */
 inline std::shared_ptr<DigitalIntervalSeries> adjacent_pulses() {
     return DigitalIntervalSeriesBuilder()
-        .withInterval(5, 15)
-        .withInterval(15, 25)
-        .withInterval(25, 35)
-        .withInterval(35, 45)
-        .build();
+            .withInterval(5, 15)
+            .withInterval(15, 25)
+            .withInterval(25, 35)
+            .withInterval(35, 45)
+            .build();
 }
 
 /**
@@ -227,10 +230,10 @@ inline std::shared_ptr<DigitalIntervalSeries> adjacent_pulses() {
  */
 inline std::shared_ptr<DigitalIntervalSeries> wide_spaced_pulses() {
     return DigitalIntervalSeriesBuilder()
-        .withInterval(100, 200)
-        .withInterval(500, 600)
-        .withInterval(1000, 1200)
-        .build();
+            .withInterval(100, 200)
+            .withInterval(500, 600)
+            .withInterval(1000, 1200)
+            .build();
 }
 
 /**
@@ -240,11 +243,11 @@ inline std::shared_ptr<DigitalIntervalSeries> wide_spaced_pulses() {
  */
 inline std::shared_ptr<DigitalIntervalSeries> minimal_pulses() {
     return DigitalIntervalSeriesBuilder()
-        .withInterval(10, 11)
-        .withInterval(20, 21)
-        .withInterval(30, 31)
-        .withInterval(40, 41)
-        .build();
+            .withInterval(10, 11)
+            .withInterval(20, 21)
+            .withInterval(30, 31)
+            .withInterval(40, 41)
+            .build();
 }
 
 /**
@@ -254,6 +257,6 @@ inline std::shared_ptr<DigitalIntervalSeries> no_pulses() {
     return std::make_shared<DigitalIntervalSeries>();
 }
 
-} // namespace digital_interval_binary_scenarios
+}// namespace digital_interval_binary_scenarios
 
-#endif // DIGITAL_INTERVAL_BINARY_LOADING_SCENARIOS_HPP
+#endif// DIGITAL_INTERVAL_BINARY_LOADING_SCENARIOS_HPP

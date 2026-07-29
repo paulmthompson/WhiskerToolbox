@@ -11,6 +11,7 @@
 
 #include "DataManager/DataManagerTypes.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
 
 #include <cstdint>
@@ -55,7 +56,15 @@ DataTypeVariant generateRegularIntervals(RegularIntervalsParams const & params) 
         t += period;
     }
 
-    return std::make_shared<DigitalIntervalSeries>(std::move(intervals));
+    auto series = std::make_shared<DigitalIntervalSeries>(std::move(intervals));
+
+    std::vector<int> frame_times(static_cast<std::size_t>(params.num_samples));
+    for (int i = 0; i < params.num_samples; ++i) {
+        frame_times[static_cast<std::size_t>(i)] = i;
+    }
+    series->setTimeFrame(std::make_shared<TimeFrame>(frame_times));
+
+    return series;
 }
 
 auto const regular_intervals_reg =

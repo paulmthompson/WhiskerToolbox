@@ -53,8 +53,9 @@ void init_digital_interval(py::module_ & m) {
         .def("toList",
             [](DigitalIntervalSeries const & self) {
                 std::vector<TimeFrameInterval> result;
-                for (auto const & iv : self.view()) {
-                    result.push_back(iv.value());
+                result.reserve(self.size());
+                for (size_t i = 0; i < self.size(); ++i) {
+                    result.push_back(self.getStoredInterval(i));
                 }
                 return result;
             },
@@ -63,8 +64,9 @@ void init_digital_interval(py::module_ & m) {
         .def("toListWithIds",
             [](DigitalIntervalSeries const & self) {
                 py::list result;
-                for (auto const & iv : self.view()) {
-                    result.append(py::make_tuple(iv.value(), iv.id()));
+                auto const view = self.view();
+                for (size_t i = 0; i < self.size(); ++i) {
+                    result.append(py::make_tuple(self.getStoredInterval(i), view[i].id()));
                 }
                 return result;
             },

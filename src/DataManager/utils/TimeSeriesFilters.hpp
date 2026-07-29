@@ -71,9 +71,9 @@
 
 #include "TimeSeriesConcepts.hpp"
 
+#include <algorithm>
 #include <ranges>
 #include <vector>
-#include <algorithm>
 
 namespace Neuralyzer::Filters {
 
@@ -116,14 +116,28 @@ using namespace Neuralyzer::Concepts;
 template<std::ranges::input_range R>
     requires TimeSeriesElement<std::ranges::range_value_t<R>>
 [[nodiscard]] constexpr auto filterByTimeRange(
-    R&& range,
-    TimeFrameIndex start,
-    TimeFrameIndex end)
-{
-    return std::forward<R>(range) 
-        | std::views::filter([start, end](auto const& elem) {
-            return isInTimeRange(elem, start, end);
-        });
+        R && range,
+        TimeFrameIndex start,
+        TimeFrameIndex end) {
+    return std::forward<R>(range) | std::views::filter([start, end](auto const & elem) {
+               return isInTimeRange(elem, start, end);
+           });
+}
+
+/**
+ * @brief Filter clock-tick time series elements by clock-tick time range
+ *
+ * @see filterByTimeRange for index-space elements using TimeFrameIndex bounds
+ */
+template<std::ranges::input_range R>
+    requires ClockTimeSeriesElement<std::ranges::range_value_t<R>>
+[[nodiscard]] auto filterByTimeRange(
+        R && range,
+        ClockTicks start,
+        ClockTicks end) {
+    return std::forward<R>(range) | std::views::filter([start, end](auto const & elem) {
+               return isInClockTimeRange(elem, start, end);
+           });
 }
 
 /**
@@ -141,15 +155,13 @@ template<std::ranges::input_range R>
 template<std::ranges::input_range R>
     requires TimeSeriesElement<std::ranges::range_value_t<R>>
 [[nodiscard]] constexpr auto filterByTimeRangeExclusive(
-    R&& range,
-    TimeFrameIndex start,
-    TimeFrameIndex end)
-{
-    return std::forward<R>(range)
-        | std::views::filter([start, end](auto const& elem) {
-            auto const time = elem.time();
-            return time >= start && time < end;
-        });
+        R && range,
+        TimeFrameIndex start,
+        TimeFrameIndex end) {
+    return std::forward<R>(range) | std::views::filter([start, end](auto const & elem) {
+               auto const time = elem.time();
+               return time >= start && time < end;
+           });
 }
 
 // ============================================================================
@@ -191,13 +203,11 @@ template<std::ranges::input_range R>
 template<std::ranges::input_range R>
     requires EntityElement<std::ranges::range_value_t<R>>
 [[nodiscard]] constexpr auto filterByEntityIds(
-    R&& range,
-    std::unordered_set<EntityId> const& entity_ids)
-{
-    return std::forward<R>(range)
-        | std::views::filter([&entity_ids](auto const& elem) {
-            return isInEntitySet(elem, entity_ids);
-        });
+        R && range,
+        std::unordered_set<EntityId> const & entity_ids) {
+    return std::forward<R>(range) | std::views::filter([&entity_ids](auto const & elem) {
+               return isInEntitySet(elem, entity_ids);
+           });
 }
 
 /**
@@ -214,13 +224,11 @@ template<std::ranges::input_range R>
 template<std::ranges::input_range R>
     requires EntityElement<std::ranges::range_value_t<R>>
 [[nodiscard]] constexpr auto filterByEntityId(
-    R&& range,
-    EntityId entity_id)
-{
-    return std::forward<R>(range)
-        | std::views::filter([entity_id](auto const& elem) {
-            return elem.id() == entity_id;
-        });
+        R && range,
+        EntityId entity_id) {
+    return std::forward<R>(range) | std::views::filter([entity_id](auto const & elem) {
+               return elem.id() == entity_id;
+           });
 }
 
 // ============================================================================
@@ -247,16 +255,14 @@ template<std::ranges::input_range R>
 template<std::ranges::input_range R>
     requires EntityElement<std::ranges::range_value_t<R>>
 [[nodiscard]] constexpr auto filterByTimeRangeAndEntityIds(
-    R&& range,
-    TimeFrameIndex start,
-    TimeFrameIndex end,
-    std::unordered_set<EntityId> const& entity_ids)
-{
-    return std::forward<R>(range)
-        | std::views::filter([start, end, &entity_ids](auto const& elem) {
-            return isInTimeRange(elem, start, end) && 
-                   isInEntitySet(elem, entity_ids);
-        });
+        R && range,
+        TimeFrameIndex start,
+        TimeFrameIndex end,
+        std::unordered_set<EntityId> const & entity_ids) {
+    return std::forward<R>(range) | std::views::filter([start, end, &entity_ids](auto const & elem) {
+               return isInTimeRange(elem, start, end) &&
+                      isInEntitySet(elem, entity_ids);
+           });
 }
 
 // ============================================================================
@@ -284,20 +290,19 @@ template<std::ranges::input_range R>
  * @endcode
  */
 template<std::ranges::input_range R>
-[[nodiscard]] auto materializeToVector(R&& range)
-{
+[[nodiscard]] auto materializeToVector(R && range) {
     using ValueType = std::ranges::range_value_t<R>;
     std::vector<ValueType> result;
-    
+
     // Reserve if we can determine size (for sized_range)
     if constexpr (std::ranges::sized_range<R>) {
         result.reserve(std::ranges::size(range));
     }
-    
-    for (auto&& elem : range) {
+
+    for (auto && elem: range) {
         result.push_back(std::forward<decltype(elem)>(elem));
     }
-    
+
     return result;
 }
 
@@ -315,14 +320,13 @@ template<std::ranges::input_range R>
 template<std::ranges::input_range R>
     requires TimeSeriesElement<std::ranges::range_value_t<R>>
 [[nodiscard]] constexpr std::size_t countInTimeRange(
-    R&& range,
-    TimeFrameIndex start,
-    TimeFrameIndex end)
-{
+        R && range,
+        TimeFrameIndex start,
+        TimeFrameIndex end) {
     return static_cast<std::size_t>(
-        std::ranges::count_if(std::forward<R>(range), [start, end](auto const& elem) {
-            return isInTimeRange(elem, start, end);
-        }));
+            std::ranges::count_if(std::forward<R>(range), [start, end](auto const & elem) {
+                return isInTimeRange(elem, start, end);
+            }));
 }
 
 /**
@@ -338,13 +342,12 @@ template<std::ranges::input_range R>
 template<std::ranges::input_range R>
     requires EntityElement<std::ranges::range_value_t<R>>
 [[nodiscard]] std::size_t countWithEntityIds(
-    R&& range,
-    std::unordered_set<EntityId> const& entity_ids)
-{
+        R && range,
+        std::unordered_set<EntityId> const & entity_ids) {
     return static_cast<std::size_t>(
-        std::ranges::count_if(std::forward<R>(range), [&entity_ids](auto const& elem) {
-            return isInEntitySet(elem, entity_ids);
-        }));
+            std::ranges::count_if(std::forward<R>(range), [&entity_ids](auto const & elem) {
+                return isInEntitySet(elem, entity_ids);
+            }));
 }
 
 // ============================================================================
@@ -363,11 +366,10 @@ template<std::ranges::input_range R>
 template<std::ranges::input_range R>
     requires TimeSeriesElement<std::ranges::range_value_t<R>>
 [[nodiscard]] constexpr bool anyInTimeRange(
-    R&& range,
-    TimeFrameIndex start,
-    TimeFrameIndex end)
-{
-    return std::ranges::any_of(std::forward<R>(range), [start, end](auto const& elem) {
+        R && range,
+        TimeFrameIndex start,
+        TimeFrameIndex end) {
+    return std::ranges::any_of(std::forward<R>(range), [start, end](auto const & elem) {
         return isInTimeRange(elem, start, end);
     });
 }
@@ -384,11 +386,10 @@ template<std::ranges::input_range R>
 template<std::ranges::input_range R>
     requires TimeSeriesElement<std::ranges::range_value_t<R>>
 [[nodiscard]] constexpr bool allInTimeRange(
-    R&& range,
-    TimeFrameIndex start,
-    TimeFrameIndex end)
-{
-    return std::ranges::all_of(std::forward<R>(range), [start, end](auto const& elem) {
+        R && range,
+        TimeFrameIndex start,
+        TimeFrameIndex end) {
+    return std::ranges::all_of(std::forward<R>(range), [start, end](auto const & elem) {
         return isInTimeRange(elem, start, end);
     });
 }
@@ -404,10 +405,9 @@ template<std::ranges::input_range R>
 template<std::ranges::input_range R>
     requires EntityElement<std::ranges::range_value_t<R>>
 [[nodiscard]] bool anyWithEntityIds(
-    R&& range,
-    std::unordered_set<EntityId> const& entity_ids)
-{
-    return std::ranges::any_of(std::forward<R>(range), [&entity_ids](auto const& elem) {
+        R && range,
+        std::unordered_set<EntityId> const & entity_ids) {
+    return std::ranges::any_of(std::forward<R>(range), [&entity_ids](auto const & elem) {
         return isInEntitySet(elem, entity_ids);
     });
 }
@@ -436,12 +436,10 @@ template<std::ranges::input_range R>
  */
 template<std::ranges::input_range R>
     requires TimeSeriesElement<std::ranges::range_value_t<R>>
-[[nodiscard]] constexpr auto extractTimes(R&& range)
-{
-    return std::forward<R>(range)
-        | std::views::transform([](auto const& elem) {
-            return elem.time();
-        });
+[[nodiscard]] constexpr auto extractTimes(R && range) {
+    return std::forward<R>(range) | std::views::transform([](auto const & elem) {
+               return elem.time();
+           });
 }
 
 /**
@@ -455,12 +453,10 @@ template<std::ranges::input_range R>
  */
 template<std::ranges::input_range R>
     requires EntityElement<std::ranges::range_value_t<R>>
-[[nodiscard]] constexpr auto extractEntityIds(R&& range)
-{
-    return std::forward<R>(range)
-        | std::views::transform([](auto const& elem) {
-            return elem.id();
-        });
+[[nodiscard]] constexpr auto extractEntityIds(R && range) {
+    return std::forward<R>(range) | std::views::transform([](auto const & elem) {
+               return elem.id();
+           });
 }
 
 /**
@@ -474,10 +470,9 @@ template<std::ranges::input_range R>
  */
 template<std::ranges::input_range R>
     requires EntityElement<std::ranges::range_value_t<R>>
-[[nodiscard]] std::unordered_set<EntityId> uniqueEntityIds(R&& range)
-{
+[[nodiscard]] std::unordered_set<EntityId> uniqueEntityIds(R && range) {
     std::unordered_set<EntityId> result;
-    for (auto const& elem : range) {
+    for (auto const & elem: range) {
         result.insert(elem.id());
     }
     return result;
@@ -496,13 +491,12 @@ template<std::ranges::input_range R>
  */
 template<std::ranges::input_range R>
     requires TimeSeriesElement<std::ranges::range_value_t<R>>
-[[nodiscard]] std::optional<TimeFrameIndex> minTime(R&& range)
-{
-    auto it = std::ranges::min_element(std::forward<R>(range), 
-        [](auto const& a, auto const& b) {
-            return a.time() < b.time();
-        });
-    
+[[nodiscard]] std::optional<TimeFrameIndex> minTime(R && range) {
+    auto it = std::ranges::min_element(std::forward<R>(range),
+                                       [](auto const & a, auto const & b) {
+                                           return a.time() < b.time();
+                                       });
+
     if (it == std::ranges::end(range)) {
         return std::nullopt;
     }
@@ -518,13 +512,12 @@ template<std::ranges::input_range R>
  */
 template<std::ranges::input_range R>
     requires TimeSeriesElement<std::ranges::range_value_t<R>>
-[[nodiscard]] std::optional<TimeFrameIndex> maxTime(R&& range)
-{
+[[nodiscard]] std::optional<TimeFrameIndex> maxTime(R && range) {
     auto it = std::ranges::max_element(std::forward<R>(range),
-        [](auto const& a, auto const& b) {
-            return a.time() < b.time();
-        });
-    
+                                       [](auto const & a, auto const & b) {
+                                           return a.time() < b.time();
+                                       });
+
     if (it == std::ranges::end(range)) {
         return std::nullopt;
     }
@@ -541,19 +534,18 @@ template<std::ranges::input_range R>
  */
 template<std::ranges::input_range R>
     requires TimeSeriesElement<std::ranges::range_value_t<R>>
-[[nodiscard]] std::optional<std::pair<TimeFrameIndex, TimeFrameIndex>> timeBounds(R&& range)
-{
+[[nodiscard]] std::optional<std::pair<TimeFrameIndex, TimeFrameIndex>> timeBounds(R && range) {
     auto [min_it, max_it] = std::ranges::minmax_element(std::forward<R>(range),
-        [](auto const& a, auto const& b) {
-            return a.time() < b.time();
-        });
-    
+                                                        [](auto const & a, auto const & b) {
+                                                            return a.time() < b.time();
+                                                        });
+
     if (min_it == std::ranges::end(range)) {
         return std::nullopt;
     }
     return std::make_pair((*min_it).time(), (*max_it).time());
 }
 
-} // namespace Neuralyzer::Filters
+}// namespace Neuralyzer::Filters
 
-#endif // TIME_SERIES_FILTERS_HPP
+#endif// TIME_SERIES_FILTERS_HPP

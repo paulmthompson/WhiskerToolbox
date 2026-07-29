@@ -14,6 +14,7 @@
 
 #include "fixtures/pipeline/pipeline_json_test_helpers.hpp"
 #include "fixtures/scenarios/digital/digital_interval_boolean_scenarios.hpp"
+#include "fixtures/UniformIntervalTestTimeFrame.hpp"
 
 using namespace Neuralyzer::Transforms::V2;
 using namespace Neuralyzer::Transforms::V2::Examples;
@@ -48,10 +49,10 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - AND Operati
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 2);
-        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(3));
-        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(5));
-        REQUIRE(result_intervals[1].value().start == TimeFrameIndex(12));
-        REQUIRE(result_intervals[1].value().end == TimeFrameIndex(15));
+        REQUIRE(result_intervals[0].value().start == ClockTicks(3));
+        REQUIRE(result_intervals[0].value().end == ClockTicks(5));
+        REQUIRE(result_intervals[1].value().start == ClockTicks(12));
+        REQUIRE(result_intervals[1].value().end == ClockTicks(15));
     }
 
     SECTION("AND - no overlap") {
@@ -89,8 +90,8 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - AND Operati
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 1);
-        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
-        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(10));
+        REQUIRE(result_intervals[0].value().start == ClockTicks(1));
+        REQUIRE(result_intervals[0].value().end == ClockTicks(10));
     }
 
     SECTION("AND - one series subset of other") {
@@ -110,8 +111,8 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - AND Operati
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 1);
-        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(5));
-        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(15));
+        REQUIRE(result_intervals[0].value().start == ClockTicks(5));
+        REQUIRE(result_intervals[0].value().end == ClockTicks(15));
     }
 }
 
@@ -141,10 +142,10 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - OR Operatio
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 2);
-        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
-        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(5));
-        REQUIRE(result_intervals[1].value().start == TimeFrameIndex(10));
-        REQUIRE(result_intervals[1].value().end == TimeFrameIndex(15));
+        REQUIRE(result_intervals[0].value().start == ClockTicks(1));
+        REQUIRE(result_intervals[0].value().end == ClockTicks(5));
+        REQUIRE(result_intervals[1].value().start == ClockTicks(10));
+        REQUIRE(result_intervals[1].value().end == ClockTicks(15));
     }
 
     SECTION("OR - overlapping intervals merge") {
@@ -164,8 +165,8 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - OR Operatio
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 1);
-        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
-        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(15));
+        REQUIRE(result_intervals[0].value().start == ClockTicks(1));
+        REQUIRE(result_intervals[0].value().end == ClockTicks(15));
     }
 
     SECTION("OR - multiple intervals with gaps") {
@@ -185,12 +186,12 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - OR Operatio
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 3);
-        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
-        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(5));
-        REQUIRE(result_intervals[1].value().start == TimeFrameIndex(8));
-        REQUIRE(result_intervals[1].value().end == TimeFrameIndex(12));
-        REQUIRE(result_intervals[2].value().start == TimeFrameIndex(15));
-        REQUIRE(result_intervals[2].value().end == TimeFrameIndex(25));
+        REQUIRE(result_intervals[0].value().start == ClockTicks(1));
+        REQUIRE(result_intervals[0].value().end == ClockTicks(5));
+        REQUIRE(result_intervals[1].value().start == ClockTicks(8));
+        REQUIRE(result_intervals[1].value().end == ClockTicks(12));
+        REQUIRE(result_intervals[2].value().start == ClockTicks(15));
+        REQUIRE(result_intervals[2].value().end == ClockTicks(25));
     }
 }
 
@@ -220,10 +221,10 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - XOR Operati
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 2);
-        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
-        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(5));
-        REQUIRE(result_intervals[1].value().start == TimeFrameIndex(10));
-        REQUIRE(result_intervals[1].value().end == TimeFrameIndex(15));
+        REQUIRE(result_intervals[0].value().start == ClockTicks(1));
+        REQUIRE(result_intervals[0].value().end == ClockTicks(5));
+        REQUIRE(result_intervals[1].value().start == ClockTicks(10));
+        REQUIRE(result_intervals[1].value().end == ClockTicks(15));
     }
 
     SECTION("XOR - partial overlap excludes overlap") {
@@ -243,10 +244,10 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - XOR Operati
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 2);
-        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
-        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(4));
-        REQUIRE(result_intervals[1].value().start == TimeFrameIndex(11));
-        REQUIRE(result_intervals[1].value().end == TimeFrameIndex(15));
+        REQUIRE(result_intervals[0].value().start == ClockTicks(1));
+        REQUIRE(result_intervals[0].value().end == ClockTicks(4));
+        REQUIRE(result_intervals[1].value().start == ClockTicks(11));
+        REQUIRE(result_intervals[1].value().end == ClockTicks(15));
     }
 
     SECTION("XOR - complete overlap results in nothing") {
@@ -284,12 +285,12 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - XOR Operati
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 3);
-        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
-        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(2));
-        REQUIRE(result_intervals[1].value().start == TimeFrameIndex(6));
-        REQUIRE(result_intervals[1].value().end == TimeFrameIndex(9));
-        REQUIRE(result_intervals[2].value().start == TimeFrameIndex(13));
-        REQUIRE(result_intervals[2].value().end == TimeFrameIndex(15));
+        REQUIRE(result_intervals[0].value().start == ClockTicks(1));
+        REQUIRE(result_intervals[0].value().end == ClockTicks(2));
+        REQUIRE(result_intervals[1].value().start == ClockTicks(6));
+        REQUIRE(result_intervals[1].value().end == ClockTicks(9));
+        REQUIRE(result_intervals[2].value().start == ClockTicks(13));
+        REQUIRE(result_intervals[2].value().end == ClockTicks(15));
     }
 }
 
@@ -339,8 +340,8 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - NOT Operati
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 1);
-        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(6));
-        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(9));
+        REQUIRE(result_intervals[0].value().start == ClockTicks(6));
+        REQUIRE(result_intervals[0].value().end == ClockTicks(9));
     }
 
     SECTION("NOT - multiple gaps") {
@@ -361,10 +362,10 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - NOT Operati
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 2);
-        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(4));
-        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(4));
-        REQUIRE(result_intervals[1].value().start == TimeFrameIndex(8));
-        REQUIRE(result_intervals[1].value().end == TimeFrameIndex(8));
+        REQUIRE(result_intervals[0].value().start == ClockTicks(4));
+        REQUIRE(result_intervals[0].value().end == ClockTicks(4));
+        REQUIRE(result_intervals[1].value().start == ClockTicks(8));
+        REQUIRE(result_intervals[1].value().end == ClockTicks(8));
     }
 }
 
@@ -394,8 +395,8 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - AND_NOT Ope
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 1);
-        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
-        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(4));
+        REQUIRE(result_intervals[0].value().start == ClockTicks(1));
+        REQUIRE(result_intervals[0].value().end == ClockTicks(4));
     }
 
     SECTION("AND_NOT - no overlap keeps input") {
@@ -415,8 +416,8 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - AND_NOT Ope
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 1);
-        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
-        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(5));
+        REQUIRE(result_intervals[0].value().start == ClockTicks(1));
+        REQUIRE(result_intervals[0].value().end == ClockTicks(5));
     }
 
     SECTION("AND_NOT - complete overlap removes everything") {
@@ -454,12 +455,12 @@ TEST_CASE("V2 Binary Container Transform: Digital Interval Boolean - AND_NOT Ope
         REQUIRE(result != nullptr);
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 3);
-        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
-        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(4));
-        REQUIRE(result_intervals[1].value().start == TimeFrameIndex(9));
-        REQUIRE(result_intervals[1].value().end == TimeFrameIndex(11));
-        REQUIRE(result_intervals[2].value().start == TimeFrameIndex(16));
-        REQUIRE(result_intervals[2].value().end == TimeFrameIndex(20));
+        REQUIRE(result_intervals[0].value().start == ClockTicks(1));
+        REQUIRE(result_intervals[0].value().end == ClockTicks(4));
+        REQUIRE(result_intervals[1].value().start == ClockTicks(9));
+        REQUIRE(result_intervals[1].value().end == ClockTicks(11));
+        REQUIRE(result_intervals[2].value().start == ClockTicks(16));
+        REQUIRE(result_intervals[2].value().end == ClockTicks(20));
     }
 }
 
@@ -593,8 +594,7 @@ TEST_CASE("V2 DataManager Integration: Digital Interval Boolean via load_data_fr
     using namespace pipeline_json_test;
 
     DataManager dm;
-    auto time_frame = std::make_shared<TimeFrame>();
-    dm.setTime(TimeKey("default"), time_frame);
+    dm.setTime(TimeKey("default"), uniform_interval_test::uniformIntervalTestTimeFrame());
 
     auto [and_input, and_other] = and_overlapping();
     dm.setData("and_overlapping_input", and_input, TimeKey("default"));
@@ -623,10 +623,10 @@ TEST_CASE("V2 DataManager Integration: Digital Interval Boolean via load_data_fr
 
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 2);
-        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(3));
-        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(5));
-        REQUIRE(result_intervals[1].value().start == TimeFrameIndex(12));
-        REQUIRE(result_intervals[1].value().end == TimeFrameIndex(15));
+        REQUIRE(result_intervals[0].value().start == ClockTicks(3));
+        REQUIRE(result_intervals[0].value().end == ClockTicks(5));
+        REQUIRE(result_intervals[1].value().start == ClockTicks(12));
+        REQUIRE(result_intervals[1].value().end == ClockTicks(15));
     }
 
     SECTION("OR operation through JSON pipeline") {
@@ -648,7 +648,7 @@ TEST_CASE("V2 DataManager Integration: Digital Interval Boolean via load_data_fr
 
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 1);
-        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
-        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(15));
+        REQUIRE(result_intervals[0].value().start == ClockTicks(1));
+        REQUIRE(result_intervals[0].value().end == ClockTicks(15));
     }
 }

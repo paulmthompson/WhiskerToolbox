@@ -168,11 +168,11 @@ float applyRangeReductionToOutput(
 
         } else if constexpr (std::is_same_v<T, DigitalIntervalSeries>) {
             // Materialize intervals into a vector and apply reduction.
-            std::vector<IntervalWithId> elements;
+            std::vector<ClockTicksIntervalWithId> elements;
             for (auto const & iv: ptr->view()) {
                 elements.push_back(iv);
             }
-            std::span<IntervalWithId const> const span{elements};
+            std::span<ClockTicksIntervalWithId const> const span{elements};
             std::any const input_any{span};
 
             std::any const params_to_use = reduction.params.has_value()
@@ -181,7 +181,7 @@ float applyRangeReductionToOutput(
 
             std::any const result = registry.executeErased(
                     reduction.reduction_name,
-                    typeid(IntervalWithId),
+                    typeid(ClockTicksIntervalWithId),
                     input_any,
                     params_to_use);
             return castReductionResult(result);

@@ -45,19 +45,23 @@ std::shared_ptr<DigitalEventSeries> analogIntervalPeak(
 
     if (params.search_mode == AnalogIntervalPeakParams::SearchMode::within_intervals) {
         // Search within each interval: [start, end]
+        assert(interval_timeframe != nullptr && "analogIntervalPeak requires interval time frame");
         for (auto const & interval: interval_data) {
-            search_ranges.emplace_back(interval.value().start, interval.value().end);
+            auto const tf_interval = toTimeFrameInterval(interval.value(), *interval_timeframe);
+            search_ranges.emplace_back(tf_interval.start, tf_interval.end);
         }
     } else {
         // Search between interval starts: [start_i, start_{i+1})
+        assert(interval_timeframe != nullptr && "analogIntervalPeak requires interval time frame");
         for (size_t i = 0; i < intervals.size() - 1; ++i) {
-            search_ranges.emplace_back(interval_data[i].value().start,
-                                       interval_data[i + 1].value().start - TimeFrameIndex{1});
+            auto const start_i = toTimeFrameInterval(interval_data[i].value(), *interval_timeframe).start;
+            auto const start_next = toTimeFrameInterval(interval_data[i + 1].value(), *interval_timeframe).start;
+            search_ranges.emplace_back(start_i, start_next - TimeFrameIndex{1});
         }
         // For the last interval, search from its start to its end
         if (!interval_data.empty()) {
-            auto const & last_interval = interval_data.back();
-            search_ranges.emplace_back(last_interval.value().start, last_interval.value().end);
+            auto const last_interval = toTimeFrameInterval(interval_data.back().value(), *interval_timeframe);
+            search_ranges.emplace_back(last_interval.start, last_interval.end);
         }
     }
 

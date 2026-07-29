@@ -56,7 +56,7 @@ static_assert(ValueElement<EventWithId, TimeFrameIndex>,
 static_assert(FullElement<EventWithId, TimeFrameIndex>,
     "EventWithId must satisfy FullElement<TimeFrameIndex> concept");
 
-// ========== IntervalWithId (DigitalIntervalSeries) ==========
+// ========== IntervalWithId (index-space lazy pipeline element) ==========
 static_assert(TimeSeriesElement<IntervalWithId>,
     "IntervalWithId must satisfy TimeSeriesElement concept");
 static_assert(EntityElement<IntervalWithId>,
@@ -65,6 +65,16 @@ static_assert(ValueElement<IntervalWithId, TimeFrameInterval const&>,
     "IntervalWithId must satisfy ValueElement<TimeFrameInterval const&> concept");
 static_assert(FullElement<IntervalWithId, TimeFrameInterval const&>,
     "IntervalWithId must satisfy FullElement<TimeFrameInterval const&> concept");
+
+// ========== ClockTicksIntervalWithId (DigitalIntervalSeries view()) ==========
+static_assert(ClockTimeSeriesElement<ClockTicksIntervalWithId>,
+    "ClockTicksIntervalWithId must satisfy ClockTimeSeriesElement concept");
+static_assert(ClockEntityElement<ClockTicksIntervalWithId>,
+    "ClockTicksIntervalWithId must satisfy ClockEntityElement concept");
+static_assert(ClockValueElement<ClockTicksIntervalWithId, ClockTicksInterval const&>,
+    "ClockTicksIntervalWithId must satisfy ClockValueElement<ClockTicksInterval const&> concept");
+static_assert(ClockFullElement<ClockTicksIntervalWithId, ClockTicksInterval const&>,
+    "ClockTicksIntervalWithId must satisfy ClockFullElement<ClockTicksInterval const&> concept");
 
 // ========== RaggedElement<Line2D> (RaggedTimeSeries<Line2D>) ==========
 static_assert(TimeSeriesElement<RaggedTimeSeries<Line2D>::RaggedElement>,

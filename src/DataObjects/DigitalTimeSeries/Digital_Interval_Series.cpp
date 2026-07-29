@@ -397,20 +397,17 @@ std::vector<ClockTicksInterval> DigitalIntervalSeries::_getClockTicksIntervalsCl
 }
 
 int find_closest_preceding_event(DigitalIntervalSeries * digital_series, TimeFrameIndex time) {
-    auto const & intervals = digital_series->view();
-
     int closest_index = -1;
-    int i = 0;
-    for (auto const & interval: intervals) {
-        if (interval.value().start <= time) {
+    for (size_t i = 0; i < digital_series->size(); ++i) {
+        TimeFrameInterval const interval = digital_series->getStoredInterval(i);
+        if (interval.start <= time) {
             closest_index = static_cast<int>(i);
-            if (time <= interval.value().end) {
+            if (time <= interval.end) {
                 return static_cast<int>(i);
             }
         } else {
             break;
         }
-        ++i;
     }
     return closest_index;
 }

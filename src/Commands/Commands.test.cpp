@@ -300,8 +300,15 @@ TEST_CASE("CopyByTimeRange copies entities between LineData objects",
 TEST_CASE("CopyByTimeRange with DigitalIntervalSeries",
           "[commands][CopyByTimeRange]") {
     auto dm = std::make_shared<DataManager>();
+
+    auto time = std::vector<int>(100);
+    std::ranges::iota(time.begin(), time.end(), 0);
+    auto time_frame = std::make_shared<TimeFrame>(time);
+    dm->setTime(TimeKey("time"), time_frame, true);
+
     dm->setData<DigitalIntervalSeries>("src_intervals", TimeKey("time"));
     dm->setData<DigitalIntervalSeries>("dst_intervals", TimeKey("time"));
+
 
     auto src = dm->getData<DigitalIntervalSeries>("src_intervals");
     src->addEvent(TimeFrameIndex(10), TimeFrameIndex(20));

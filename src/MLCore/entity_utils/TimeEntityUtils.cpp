@@ -53,8 +53,9 @@ std::vector<EntityId> intervalsToTimeEntities(
     // Use a set to deduplicate overlapping intervals and produce sorted output
     std::set<TimeFrameIndex> all_times;
 
-    for (auto const & iv: intervals.view()) {
-        for (TimeFrameIndex t = iv.interval.start; t <= iv.interval.end; ++t) {
+    for (size_t i = 0; i < intervals.size(); ++i) {
+        TimeFrameInterval const iv = intervals.getStoredInterval(i);
+        for (TimeFrameIndex t = iv.start; t <= iv.end; ++t) {
             all_times.insert(t);
         }
     }

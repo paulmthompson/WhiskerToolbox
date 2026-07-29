@@ -1506,7 +1506,7 @@ TEST_CASE_METHOD(IntervalTableRegistryTestFixture, "DM - TV - IntervalOverlapCom
         // (Not all source EntityIDs may appear in the table due to overlap filtering)
         for (auto const & table_entity_id: table_entity_ids) {
             bool found = std::ranges::find_if(source_stimulus_entity_ids,
-                                             [&](IntervalWithId const & interval_with_id) {
+                                             [&](auto const & interval_with_id) {
                                                  return interval_with_id.id() == table_entity_id;
                                              }) != source_stimulus_entity_ids.end();
             REQUIRE(found);

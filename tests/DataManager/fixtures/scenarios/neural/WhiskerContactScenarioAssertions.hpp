@@ -102,10 +102,10 @@ inline double computeSpearmanCorrelation(
 
 inline bool isTimeFrameInContact(
         DigitalIntervalSeries const & contact,
-        TimeFrameIndex time_frame_index) {
-    for (auto interval: contact.view()) {
-        auto const value = interval.value();
-        if (time_frame_index >= value.start && time_frame_index <= value.end) {
+        TimeFrameIndex frame_index) {
+    for (size_t i = 0; i < contact.size(); ++i) {
+        TimeFrameInterval const interval = contact.getStoredInterval(i);
+        if (frame_index >= interval.start && frame_index <= interval.end) {
             return true;
         }
     }
@@ -138,8 +138,8 @@ inline bool assertContactDuration(
         return false;
     }
     double sum = 0.0;
-    for (auto interval: contact.view()) {
-        auto const value = interval.value();
+    for (size_t i = 0; i < contact.size(); ++i) {
+        TimeFrameInterval const value = contact.getStoredInterval(i);
         sum += static_cast<double>(value.end.getValue() - value.start.getValue() + 1);
     }
     double const mean = sum / static_cast<double>(contact.size());
@@ -205,8 +205,8 @@ inline bool assertCurvatureOnsetModulation(
     std::vector<double> onset_curvatures;
     std::vector<double> onset_spike_counts;
 
-    for (auto interval: scenario.contact->view()) {
-        auto const value = interval.value();
+    for (size_t i = 0; i < scenario.contact->size(); ++i) {
+        TimeFrameInterval const value = scenario.contact->getStoredInterval(i);
         auto const onset_frame = value.start.getValue();
         if (static_cast<std::size_t>(onset_frame) >= curvature.size()) {
             continue;

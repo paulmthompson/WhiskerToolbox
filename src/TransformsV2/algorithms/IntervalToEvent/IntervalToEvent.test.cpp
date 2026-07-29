@@ -2,6 +2,7 @@
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "fixtures/UniformIntervalTestTimeFrame.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
 #include "TransformsV2/core/ComputeContext.hpp"
@@ -23,7 +24,9 @@ std::shared_ptr<DigitalIntervalSeries> makeIntervalSeries(
     for (auto const & [start, end]: intervals) {
         interval_data.push_back(TimeFrameInterval{TimeFrameIndex(start), TimeFrameIndex(end)});
     }
-    return DigitalIntervalSeries::createOverlapping(std::move(interval_data));
+    return DigitalIntervalSeries::createOverlapping(
+            std::move(interval_data),
+            uniform_interval_test::uniformIntervalTestTimeFrame());
 }
 
 }// namespace
@@ -98,7 +101,7 @@ TEST_CASE("V2 Container Transform: Interval To Event - Algorithm",
         std::vector<int> const times{0, 10, 20, 30, 40, 50, 60, 70, 80, 90};
         auto time_frame = std::make_shared<TimeFrame>(times);
 
-        auto intervals = makeIntervalSeries({{10, 20}});
+        auto intervals = makeIntervalSeries({{1, 2}});
         intervals->setTimeFrame(time_frame);
 
         auto const result = intervalToEvent(
@@ -115,6 +118,7 @@ TEST_CASE("V2 Container Transform: Interval To Event - Algorithm",
         event_times.emplace_back(100);
         event_times.emplace_back(200);
         auto events = std::make_shared<DigitalEventSeries>(std::move(event_times));
+        events->setTimeFrame(uniform_interval_test::uniformIntervalTestTimeFrame());
 
         auto const expanded = eventToInterval(
                 *events,

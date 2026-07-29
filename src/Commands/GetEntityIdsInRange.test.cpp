@@ -7,14 +7,27 @@
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "Entity/EntityRegistry.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
-#include "Entity/EntityRegistry.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
 using namespace commands;
+
+namespace {
+
+std::shared_ptr<TimeFrame> makeIdentityTimeFrame(int64_t max_index) {
+    std::vector<int> times(static_cast<std::size_t>(max_index + 1));
+    for (int64_t i = 0; i <= max_index; ++i) {
+        times[static_cast<std::size_t>(i)] = static_cast<int>(i);
+    }
+    return std::make_shared<TimeFrame>(times);
+}
+
+}// namespace
 
 // =============================================================================
 // RaggedTimeSeries (LineData) tests
@@ -154,6 +167,7 @@ TEST_CASE("getEntityIdsInRange with DigitalIntervalSeries returns overlapping in
     intervals.addEvent(TimeFrameInterval{TimeFrameIndex(10), TimeFrameIndex(20)});
     intervals.addEvent(TimeFrameInterval{TimeFrameIndex(30), TimeFrameIndex(40)});
     intervals.addEvent(TimeFrameInterval{TimeFrameIndex(50), TimeFrameIndex(60)});
+    intervals.setTimeFrame(makeIdentityTimeFrame(100));
 
     SECTION("all intervals overlap range") {
         auto ids = getEntityIdsInRange(intervals, TimeFrameIndex(0), TimeFrameIndex(100));

@@ -80,14 +80,13 @@ protected:
     }
 
     void verifyIntervalDataEquality(DigitalIntervalSeries const & loaded_data) const {
-        auto original_intervals = original_interval_data->view();
-        auto loaded_intervals = loaded_data.view();
-
         REQUIRE(loaded_data.size() == original_interval_data->size());
 
         for (size_t i = 0; i < original_interval_data->size(); ++i) {
-            REQUIRE(original_intervals[i].value().start == loaded_intervals[i].value().start);
-            REQUIRE(original_intervals[i].value().end == loaded_intervals[i].value().end);
+            auto const original_interval = original_interval_data->getStoredInterval(i);
+            auto const loaded_interval = loaded_data.getStoredInterval(i);
+            REQUIRE(loaded_interval.start == original_interval.start);
+            REQUIRE(loaded_interval.end == original_interval.end);
         }
     }
 

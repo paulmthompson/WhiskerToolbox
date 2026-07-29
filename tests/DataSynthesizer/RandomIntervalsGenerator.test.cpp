@@ -24,8 +24,8 @@ TEST_CASE("RandomIntervals produces intervals within range", "[RandomIntervals]"
     REQUIRE(dis->size() > 0);
 
     for (auto interval: dis->view()) {
-        REQUIRE(interval.value().start >= TimeFrameIndex(0));
-        REQUIRE(interval.value().end < TimeFrameIndex(10000));
+        REQUIRE(interval.value().start >= ClockTicks(0));
+        REQUIRE(interval.value().end < ClockTicks(10000));
         REQUIRE(interval.value().start <= interval.value().end);
     }
 }
@@ -36,7 +36,7 @@ TEST_CASE("RandomIntervals intervals are sorted and non-overlapping", "[RandomIn
 
     int64_t prev_end = -1;
     for (auto interval: dis->view()) {
-        REQUIRE(interval.value().start > TimeFrameIndex(prev_end));
+        REQUIRE(interval.value().start > ClockTicks(prev_end));
         REQUIRE(interval.value().start <= interval.value().end);
         prev_end = interval.value().end.getValue();
     }

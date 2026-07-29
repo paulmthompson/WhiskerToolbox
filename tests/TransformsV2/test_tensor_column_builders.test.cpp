@@ -325,16 +325,16 @@ TEST_CASE("resolveIntervalGatherWindows executes DigitalIntervalSeries row pipel
     REQUIRE(resolved->size() == intervals->size());
     REQUIRE(resolved->layout() == IntervalLayout::Overlapping);
 
-    std::vector<TimeFrameInterval> windows;
+    std::vector<ClockTicksInterval> windows;
     for (auto const & interval_with_id: resolved->view()) {
         windows.push_back(interval_with_id.interval);
     }
 
     REQUIRE(windows.size() == 2);
-    CHECK(windows[0].start == TimeFrameIndex(8));
-    CHECK(windows[0].end == TimeFrameIndex(13));
-    CHECK(windows[1].start == TimeFrameIndex(48));
-    CHECK(windows[1].end == TimeFrameIndex(53));
+    CHECK(windows[0].start == ClockTicks(8));
+    CHECK(windows[0].end == ClockTicks(13));
+    CHECK(windows[1].start == ClockTicks(48));
+    CHECK(windows[1].end == ClockTicks(53));
 }
 
 TEST_CASE("resolveIntervalGatherWindows preserves overlapping output windows",
@@ -347,16 +347,16 @@ TEST_CASE("resolveIntervalGatherWindows preserves overlapping output windows",
     REQUIRE(resolved->size() == intervals->size());
     REQUIRE(resolved->layout() == IntervalLayout::Overlapping);
 
-    std::vector<TimeFrameInterval> windows;
+    std::vector<ClockTicksInterval> windows;
     for (auto const & interval_with_id: resolved->view()) {
         windows.push_back(interval_with_id.interval);
     }
 
     REQUIRE(windows.size() == 2);
-    CHECK(windows[0].start == TimeFrameIndex(5));
-    CHECK(windows[0].end == TimeFrameIndex(15));
-    CHECK(windows[1].start == TimeFrameIndex(7));
-    CHECK(windows[1].end == TimeFrameIndex(17));
+    CHECK(windows[0].start == ClockTicks(5));
+    CHECK(windows[0].end == ClockTicks(15));
+    CHECK(windows[1].start == ClockTicks(7));
+    CHECK(windows[1].end == ClockTicks(17));
 }
 
 TEST_CASE("resolveIntervalGatherWindows rejects row-count-changing pipelines",
@@ -1060,10 +1060,10 @@ TEST_CASE("Integration - cross-TimeFrame lazy tensor assembly",
     // Row 0: interval [0,4] at 10Hz → [0ms,400ms] → source [0..40]
     CHECK_THAT(means[0], WithinAbs(20.0, 1.0));
     CHECK_THAT(maxes[0], WithinAbs(40.0, 1.0));
-    CHECK_THAT(durations[0], WithinAbs(4.0, 0.01));// duration in interval-TF indices
+    CHECK_THAT(durations[0], WithinAbs(400.0, 0.01));// duration in interval CLOCK ticks
 
     // Row 1: interval [10,14] at 10Hz → [1000ms,1400ms] → source [100..140]
     CHECK_THAT(means[1], WithinAbs(120.0, 1.0));
     CHECK_THAT(maxes[1], WithinAbs(140.0, 1.0));
-    CHECK_THAT(durations[1], WithinAbs(4.0, 0.01));
+    CHECK_THAT(durations[1], WithinAbs(400.0, 0.01));
 }

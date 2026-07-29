@@ -5,11 +5,16 @@
 #include "DigitalIntervalStorageCache.hpp"
 
 #include "Entity/EntityTypes.hpp"     // EntityId with hash specialization
+#include "TimeFrame/ClockTicks.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"// Interval struct
 
 #include <algorithm>    // std::ranges::lower_bound, std::ranges::upper_bound, std::min, std::max
+#include <cassert>      // assert
+#include <memory>       // std::shared_ptr
 #include <optional>     // std::optional
 #include <ranges>       // std::ranges::random_access_range, std::ranges::views::iota
+#include <type_traits>  // std::same_as, std::remove_cvref_t
 #include <unordered_map>// std::unordered_map
 
 // =============================================================================
@@ -24,7 +29,7 @@
  * intermediate results.
  * 
  * The view must yield objects with .interval and .entity_id members
- * (or convertible to Interval/EntityId pair).
+ * (ClockTicksIntervalWithId, IntervalWithId, or convertible pair/tuple).
  *
  * ## Range-query limitation
  *
@@ -45,10 +50,15 @@ public:
      * 
      * @param view Random-access range view yielding interval-like objects
      * @param num_elements Number of elements in the view
+     * @param time_frame Time frame for converting ClockTicks elements to storage indices
      */
-    explicit LazyDigitalIntervalStorage(ViewType view, size_t num_elements)
+    explicit LazyDigitalIntervalStorage(
+            ViewType view,
+            size_t num_elements,
+            std::shared_ptr<TimeFrame> time_frame = nullptr)
         : _view(std::move(view)),
-          _num_elements(num_elements) {
+          _num_elements(num_elements),
+          _time_frame(std::move(time_frame)) {
         static_assert(std::ranges::random_access_range<ViewType>,
                       "LazyDigitalIntervalStorage requires random access range");
         _buildLocalIndices();
@@ -63,7 +73,15 @@ public:
     [[nodiscard]] TimeFrameInterval const & getIntervalImpl(size_t idx) const {
         auto const & element = _view[idx];
         if constexpr (requires { element.interval; }) {
-            _cached_interval = element.interval;
+            using IntervalStartType =
+                    std::remove_cvref_t<decltype(element.interval.start)>;
+            if constexpr (std::same_as<IntervalStartType, ClockTicks>) {
+                assert(_time_frame != nullptr &&
+                       "LazyDigitalIntervalStorage requires TimeFrame for ClockTicks elements");
+                _cached_interval = toTimeFrameInterval(element.interval, *_time_frame);
+            } else {
+                _cached_interval = element.interval;
+            }
         } else if constexpr (requires { element.first; }) {
             _cached_interval = element.first;
         } else {
@@ -198,6 +216,7 @@ private:
 
     ViewType _view;
     size_t _num_elements;
+    std::shared_ptr<TimeFrame> _time_frame;
     std::unordered_map<EntityId, size_t> _entity_id_to_index;
     mutable TimeFrameInterval _cached_interval{TimeFrameIndex{0}, TimeFrameIndex{0}};
 

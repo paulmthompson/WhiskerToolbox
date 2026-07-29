@@ -26,7 +26,7 @@ std::shared_ptr<DigitalIntervalSeries> group_intervals(
     }
 
     auto const & intervals = digital_interval_series->view();
-
+    auto const * timeframe = digital_interval_series->getTimeFrame().get();
     if (intervals.empty()) {
         return std::make_shared<DigitalIntervalSeries>();;
     }
@@ -38,7 +38,10 @@ std::shared_ptr<DigitalIntervalSeries> group_intervals(
     // Create a copy and sort by start time to ensure proper ordering
     std::vector<TimeFrameInterval> sorted_intervals;
     for (auto const & interval_with_id : intervals) {
-        sorted_intervals.push_back(interval_with_id.value());
+
+        TimeFrameIndex const start = timeframe->getIndexAtTime(interval_with_id.value().start);
+        TimeFrameIndex const end = timeframe->getIndexAtTime(interval_with_id.value().end);
+        sorted_intervals.push_back({start, end});
     }
     std::sort(sorted_intervals.begin(), sorted_intervals.end(), [](TimeFrameInterval const & a, TimeFrameInterval const & b) {
         return a.start < b.start;

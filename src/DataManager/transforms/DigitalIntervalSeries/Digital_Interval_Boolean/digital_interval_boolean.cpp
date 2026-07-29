@@ -18,11 +18,12 @@ std::shared_ptr<DigitalIntervalSeries> apply_boolean_operation(
 
 namespace {
 
-/// Extract plain Interval values from a DigitalIntervalSeries view
-std::vector<TimeFrameInterval> extract_intervals(auto const & view_data) {
+/// Extract plain Interval values from storage indices
+std::vector<TimeFrameInterval> extract_intervals(DigitalIntervalSeries const & series) {
     std::vector<TimeFrameInterval> result;
-    for (auto const & item: view_data) {
-        result.push_back(item.value());
+    result.reserve(series.size());
+    for (size_t i = 0; i < series.size(); ++i) {
+        result.push_back(series.getStoredInterval(i));
     }
     return result;
 }
@@ -149,7 +150,16 @@ std::shared_ptr<DigitalIntervalSeries> apply_boolean_operation(
     }
 
     auto input_timeframe = digital_interval_series->getTimeFrame();
-    auto input_ivs = sort_and_merge(extract_intervals(digital_interval_series->view()));
+
+    // Binary operations require the other series
+    if (booleanParams.operation != BooleanParams::BooleanOperation::NOT && !booleanParams.other_series) {
+        std::cerr << "apply_boolean_operation: other_series is null for operation requiring two inputs" << std::endl;
+        auto result = std::make_shared<DigitalIntervalSeries>();
+        result->setTimeFrame(input_timeframe);
+        return result;
+    }
+
+    auto input_ivs = sort_and_merge(extract_intervals(*digital_interval_series));
 
     if (progressCallback) {
         progressCallback(10);
@@ -169,12 +179,6 @@ std::shared_ptr<DigitalIntervalSeries> apply_boolean_operation(
     }
 
     // Binary operations require the other series
-    if (!booleanParams.other_series) {
-        std::cerr << "apply_boolean_operation: other_series is null for operation requiring two inputs" << std::endl;
-        return std::make_shared<DigitalIntervalSeries>();
-    }
-
-    auto const & other_view = booleanParams.other_series->view();
     auto other_timeframe = booleanParams.other_series->getTimeFrame();
 
     if (progressCallback) {
@@ -184,9 +188,10 @@ std::shared_ptr<DigitalIntervalSeries> apply_boolean_operation(
     // Convert other_intervals to input timeframe if they differ
     std::vector<TimeFrameInterval> converted_other_intervals;
     if (input_timeframe && other_timeframe && input_timeframe != other_timeframe) {
-        for (auto const & interval: other_view) {
-            auto start_time = other_timeframe->getTimeAtIndex(TimeFrameIndex{interval.value().start});
-            auto end_time = other_timeframe->getTimeAtIndex(TimeFrameIndex{interval.value().end});
+        for (size_t i = 0; i < booleanParams.other_series->size(); ++i) {
+            auto const stored = booleanParams.other_series->getStoredInterval(i);
+            auto const start_time = other_timeframe->getTimeAtIndex(stored.start);
+            auto const end_time = other_timeframe->getTimeAtIndex(stored.end);
 
             auto converted_start = input_timeframe->getIndexAtTime(start_time, false);
             auto converted_end = input_timeframe->getIndexAtTime(end_time, true);
@@ -194,7 +199,7 @@ std::shared_ptr<DigitalIntervalSeries> apply_boolean_operation(
             converted_other_intervals.push_back({converted_start, converted_end});
         }
     } else {
-        converted_other_intervals = extract_intervals(other_view);
+        converted_other_intervals = extract_intervals(*booleanParams.other_series);
     }
 
     auto other_ivs = sort_and_merge(std::move(converted_other_intervals));

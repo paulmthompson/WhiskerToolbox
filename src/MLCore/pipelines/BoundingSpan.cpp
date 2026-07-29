@@ -22,9 +22,10 @@ std::optional<BoundingSpan> computeIntervalBounds(
     auto min_val = std::numeric_limits<int64_t>::max();
     auto max_val = std::numeric_limits<int64_t>::min();
 
-    for (auto const & iwid: intervals.view()) {
-        min_val = std::min(min_val, iwid.interval.start.getValue());
-        max_val = std::max(max_val, iwid.interval.end.getValue());
+    for (size_t i = 0; i < intervals.size(); ++i) {
+        TimeFrameInterval const iv = intervals.getStoredInterval(i);
+        min_val = std::min(min_val, iv.start.getValue());
+        max_val = std::max(max_val, iv.end.getValue());
     }
 
     return BoundingSpan{TimeFrameIndex(min_val), TimeFrameIndex(max_val)};
@@ -92,8 +93,8 @@ FilteredPredictions filterPredictionsToIntervals(
     // Collect all intervals into a sorted vector for efficient lookup
     std::vector<TimeFrameInterval> sorted_intervals;
     sorted_intervals.reserve(intervals.size());
-    for (auto const & iwid: intervals.view()) {
-        sorted_intervals.push_back(iwid.interval);
+    for (size_t i = 0; i < intervals.size(); ++i) {
+        sorted_intervals.push_back(intervals.getStoredInterval(i));
     }
     std::sort(sorted_intervals.begin(), sorted_intervals.end());
 
@@ -151,8 +152,8 @@ FilteredTrainingRows filterTrainingRowsToIntervals(
     // Collect all intervals into a sorted vector for efficient lookup
     std::vector<TimeFrameInterval> sorted_intervals;
     sorted_intervals.reserve(intervals.size());
-    for (auto const & iwid: intervals.view()) {
-        sorted_intervals.push_back(iwid.interval);
+    for (size_t i = 0; i < intervals.size(); ++i) {
+        sorted_intervals.push_back(intervals.getStoredInterval(i));
     }
     std::sort(sorted_intervals.begin(), sorted_intervals.end());
 

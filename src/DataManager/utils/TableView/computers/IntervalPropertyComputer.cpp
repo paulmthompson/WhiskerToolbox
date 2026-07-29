@@ -33,7 +33,9 @@ void IntervalPropertyComputer<T>::_validateRowIntervalsAreSubset(std::vector<Tim
     for (auto const & rowInterval: rowIntervals) {
         bool found = false;
         for (auto const & sourceInterval: sourceIntervals) {
-            if (rowInterval.start == sourceInterval.value().start && rowInterval.end == sourceInterval.value().end) {
+            TimeFrameIndex const source_start = sourceTimeFrame->getIndexAtTime(sourceInterval.value().start);
+            TimeFrameIndex const source_end = sourceTimeFrame->getIndexAtTime(sourceInterval.value().end);
+            if (rowInterval.start == source_start && rowInterval.end == source_end) {
                 found = true;
                 break;
             }

@@ -8,6 +8,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/EventWithId.hpp"
 #include "DigitalTimeSeries/IntervalWithId.hpp"
+#include "TimeFrame/interval_data.hpp"
 
 namespace Neuralyzer::Transforms::V2::RangeReductions {
 
@@ -355,6 +356,50 @@ void registerIntervalRangeReductions() {
     registry.registerStatelessReduction<IntervalWithId, int>(
             "IntervalSourceIndex",
             [](std::span<IntervalWithId const> intervals) -> int {
+                return intervalSourceIndex(intervals);
+            },
+            RangeReductionMetadata{
+                    .description = "Entity ID of first interval in range",
+                    .category = "Interval Statistics",
+                    .requires_time_series_element = false,
+                    .requires_entity_element = true});
+
+    registry.registerStatelessReduction<ClockTicksIntervalWithId, int>(
+            "IntervalCount",
+            [](std::span<ClockTicksIntervalWithId const> intervals) -> int {
+                return intervalCount(intervals);
+            },
+            RangeReductionMetadata{
+                    .description = "Count of intervals in gathered range",
+                    .category = "Interval Statistics",
+                    .requires_time_series_element = false,
+                    .requires_entity_element = true});
+
+    registry.registerStatelessReduction<ClockTicksIntervalWithId, float>(
+            "IntervalStartExtract",
+            [](std::span<ClockTicksIntervalWithId const> intervals) -> float {
+                return intervalStartExtract(intervals);
+            },
+            RangeReductionMetadata{
+                    .description = "Start time of first interval in range",
+                    .category = "Interval Statistics",
+                    .requires_time_series_element = false,
+                    .requires_entity_element = true});
+
+    registry.registerStatelessReduction<ClockTicksIntervalWithId, float>(
+            "IntervalEndExtract",
+            [](std::span<ClockTicksIntervalWithId const> intervals) -> float {
+                return intervalEndExtract(intervals);
+            },
+            RangeReductionMetadata{
+                    .description = "End time of first interval in range",
+                    .category = "Interval Statistics",
+                    .requires_time_series_element = false,
+                    .requires_entity_element = true});
+
+    registry.registerStatelessReduction<ClockTicksIntervalWithId, int>(
+            "IntervalSourceIndex",
+            [](std::span<ClockTicksIntervalWithId const> intervals) -> int {
                 return intervalSourceIndex(intervals);
             },
             RangeReductionMetadata{

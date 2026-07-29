@@ -17,7 +17,8 @@
  * 
  * Types with EntityId support additionally satisfy `EntityElement`:
  * - `EventWithId` (DigitalEventSeries)
- * - `IntervalWithId` (DigitalIntervalSeries)
+ * - `IntervalWithId` (lazy-pipeline / index-space element type)
+ * - `ClockTicksIntervalWithId` (DigitalIntervalSeries view())
  * - `RaggedElement<TData>` (RaggedTimeSeries<TData>::RaggedElement)
  * 
  * Types without EntityId support:
@@ -50,11 +51,13 @@
  * @see RaggedAnalogTimeSeries::FlatElement
  * @see EventWithId
  * @see IntervalWithId
+ * @see ClockTicksIntervalWithId
  * @see RaggedTimeSeries<TData>::RaggedElement
  */
 
 #include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
+#include "TimeFrame/ClockTicks.hpp"
 #include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <concepts>
@@ -131,6 +134,41 @@ template<typename T, typename V>
 concept FullElement = EntityElement<T> && ValueElement<T, V>;
 
 /**
+ * @brief Concept for clock-tick time series element types
+ *
+ * @tparam T The element type to check
+ *
+ * Requirements:
+ * - `t.time()` must return a value convertible to `ClockTicks`
+ */
+template<typename T>
+concept ClockTimeSeriesElement = requires(T const & t) {
+    { t.time() } -> std::convertible_to<ClockTicks>;
+};
+
+/**
+ * @brief Concept for entity-bearing clock-tick time series element types
+ */
+template<typename T>
+concept ClockEntityElement = ClockTimeSeriesElement<T> && requires(T const & t) {
+    { t.id() } -> std::convertible_to<EntityId>;
+};
+
+/**
+ * @brief Concept for value-bearing clock-tick time series element types
+ */
+template<typename T, typename V>
+concept ClockValueElement = ClockTimeSeriesElement<T> && requires(T const & t) {
+    { t.value() } -> std::convertible_to<V>;
+};
+
+/**
+ * @brief Concept for complete clock-tick elements with both entity and value
+ */
+template<typename T, typename V>
+concept ClockFullElement = ClockEntityElement<T> && ClockValueElement<T, V>;
+
+/**
  * @brief Concept for data containers that support overwrite-merge into another instance
  *
  * @tparam T Container type (const source, mutable target)
@@ -202,6 +240,18 @@ template<TimeSeriesElement T>
         T const & elem,
         TimeFrameIndex start,
         TimeFrameIndex end) {
+    auto const time = elem.time();
+    return time >= start && time <= end;
+}
+
+/**
+ * @brief Check if a clock-tick element's time is within a range
+ */
+template<ClockTimeSeriesElement T>
+[[nodiscard]] bool isInClockTimeRange(
+        T const & elem,
+        ClockTicks start,
+        ClockTicks end) {
     auto const time = elem.time();
     return time >= start && time <= end;
 }

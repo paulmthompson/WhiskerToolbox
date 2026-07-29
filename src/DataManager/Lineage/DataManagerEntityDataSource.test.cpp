@@ -13,6 +13,7 @@
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 using namespace Neuralyzer::Lineage;
 using Catch::Matchers::UnorderedEquals;
@@ -83,6 +84,14 @@ std::shared_ptr<DigitalIntervalSeries> createTestIntervalSeries() {
     interval_data->addEvent(TimeFrameIndex(20), TimeFrameIndex(30));  // Covers T20-T30
     
     return interval_data;
+}
+
+std::shared_ptr<TimeFrame> makeIdentityTimeFrame(int frame_count) {
+    std::vector<int> times(static_cast<std::size_t>(frame_count));
+    for (int i = 0; i < frame_count; ++i) {
+        times[static_cast<std::size_t>(i)] = i;
+    }
+    return std::make_shared<TimeFrame>(times);
 }
 
 } // anonymous namespace
@@ -276,6 +285,7 @@ TEST_CASE("DataManagerEntityDataSource - DigitalEventSeries", "[lineage][datasou
 
 TEST_CASE("DataManagerEntityDataSource - DigitalIntervalSeries", "[lineage][datasource][interval]") {
     DataManager dm;
+    dm.setTime(TimeKey("time"), makeIdentityTimeFrame(51), true);
     auto interval_data = createTestIntervalSeries();
     dm.setData<DigitalIntervalSeries>("intervals", interval_data, TimeKey("time"));
     

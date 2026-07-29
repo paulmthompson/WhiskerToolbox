@@ -49,7 +49,7 @@ std::shared_ptr<DataManager> makeDM(std::string const & time_key, int frame_coun
 std::vector<TimeFrameIndex> makeFrames(std::vector<int64_t> const & values) {
     std::vector<TimeFrameIndex> frames;
     frames.reserve(values.size());
-    for (auto v : values) {
+    for (auto v: values) {
         frames.emplace_back(v);
     }
     return frames;
@@ -59,37 +59,39 @@ std::vector<TimeFrameIndex> makeFrames(std::vector<int64_t> const & values) {
  * @brief Create a DigitalIntervalSeries with given interval bounds
  */
 std::shared_ptr<DigitalIntervalSeries> makeIntervalSeries(
-    std::vector<std::pair<int64_t, int64_t>> const & intervals_vec)
-{
+        std::vector<std::pair<int64_t, int64_t>> const & intervals_vec) {
     auto series = std::make_shared<DigitalIntervalSeries>();
-    for (auto const & [s, e] : intervals_vec) {
+    int64_t max_end = 0;
+    for (auto const & [s, e]: intervals_vec) {
         series->addEvent(TimeFrameIndex(s), TimeFrameIndex(e));
+        max_end = std::max(max_end, std::max(s, e));
     }
+    series->setTimeFrame(makeTimeFrame(static_cast<int>(max_end + 1)));
     return series;
 }
 
 /**
- * @brief Collect all intervals from a DigitalIntervalSeries into a vector
+ * @brief Collect stored interval bounds in TimeFrameIndex space (save/export path).
  */
 std::vector<std::pair<int64_t, int64_t>> collectIntervals(
-    DigitalIntervalSeries const & series)
-{
+        DigitalIntervalSeries const & series) {
     std::vector<std::pair<int64_t, int64_t>> result;
-    for (auto iv : series.view()) {
-        result.emplace_back(iv.interval.start.getValue(), iv.interval.end.getValue());
+    result.reserve(series.size());
+    for (size_t i = 0; i < series.size(); ++i) {
+        auto const iv = series.getStoredInterval(i);
+        result.emplace_back(iv.start.getValue(), iv.end.getValue());
     }
     return result;
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 // ============================================================================
 // registerTimeEntities
 // ============================================================================
 
 TEST_CASE("registerTimeEntities - basic registration",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     auto frames = makeFrames({5, 10, 15, 20});
 
@@ -105,8 +107,7 @@ TEST_CASE("registerTimeEntities - basic registration",
 }
 
 TEST_CASE("registerTimeEntities - idempotent re-registration",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     auto frames = makeFrames({10, 20, 30});
 
@@ -120,8 +121,7 @@ TEST_CASE("registerTimeEntities - idempotent re-registration",
 }
 
 TEST_CASE("registerTimeEntities - empty span returns empty",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     std::vector<TimeFrameIndex> empty;
 
@@ -131,8 +131,7 @@ TEST_CASE("registerTimeEntities - empty span returns empty",
 }
 
 TEST_CASE("registerTimeEntities - preserves input order",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     // Deliberately non-sorted input
     auto frames = makeFrames({50, 10, 90, 30});
@@ -151,8 +150,7 @@ TEST_CASE("registerTimeEntities - preserves input order",
 }
 
 TEST_CASE("registerTimeEntities - different time keys give different IDs",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     dm->setTime(TimeKey("neural"), makeTimeFrame(100));
 
@@ -167,8 +165,7 @@ TEST_CASE("registerTimeEntities - different time keys give different IDs",
 }
 
 TEST_CASE("registerTimeEntities - descriptors are correct",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     auto frames = makeFrames({42});
 
@@ -188,8 +185,7 @@ TEST_CASE("registerTimeEntities - descriptors are correct",
 // ============================================================================
 
 TEST_CASE("intervalsToTimeEntities - single interval",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     auto series = makeIntervalSeries({{10, 14}});
 
@@ -207,8 +203,7 @@ TEST_CASE("intervalsToTimeEntities - single interval",
 }
 
 TEST_CASE("intervalsToTimeEntities - multiple disjoint intervals",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     auto series = makeIntervalSeries({{5, 7}, {20, 22}});
 
@@ -219,7 +214,7 @@ TEST_CASE("intervalsToTimeEntities - multiple disjoint intervals",
 
     // Sorted by time
     std::vector<int64_t> time_values;
-    for (auto const & id : ids) {
+    for (auto const & id: ids) {
         auto resolved = dm->resolveTimeEntity(id);
         REQUIRE(resolved.has_value());
         time_values.push_back(resolved->second.getValue());
@@ -228,8 +223,7 @@ TEST_CASE("intervalsToTimeEntities - multiple disjoint intervals",
 }
 
 TEST_CASE("intervalsToTimeEntities - overlapping intervals are deduplicated",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     // Intervals [10, 15] and [13, 18] overlap on frames 13, 14, 15
     auto series = makeIntervalSeries({{10, 15}, {13, 18}});
@@ -240,7 +234,7 @@ TEST_CASE("intervalsToTimeEntities - overlapping intervals are deduplicated",
     REQUIRE(ids.size() == 9);
 
     std::vector<int64_t> time_values;
-    for (auto const & id : ids) {
+    for (auto const & id: ids) {
         auto resolved = dm->resolveTimeEntity(id);
         REQUIRE(resolved.has_value());
         time_values.push_back(resolved->second.getValue());
@@ -249,8 +243,7 @@ TEST_CASE("intervalsToTimeEntities - overlapping intervals are deduplicated",
 }
 
 TEST_CASE("intervalsToTimeEntities - empty series returns empty",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     auto series = makeIntervalSeries({});
 
@@ -260,8 +253,7 @@ TEST_CASE("intervalsToTimeEntities - empty series returns empty",
 }
 
 TEST_CASE("intervalsToTimeEntities - single-frame interval",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     auto series = makeIntervalSeries({{42, 42}});
 
@@ -274,8 +266,7 @@ TEST_CASE("intervalsToTimeEntities - single-frame interval",
 }
 
 TEST_CASE("intervalsToTimeEntities - idempotent with repeated calls",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     auto series = makeIntervalSeries({{10, 12}});
 
@@ -293,8 +284,7 @@ TEST_CASE("intervalsToTimeEntities - idempotent with repeated calls",
 // ============================================================================
 
 TEST_CASE("timeEntitiesToIntervals - contiguous frames produce single interval",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     auto * groups = dm->getEntityGroupManager();
 
@@ -314,8 +304,7 @@ TEST_CASE("timeEntitiesToIntervals - contiguous frames produce single interval",
 }
 
 TEST_CASE("timeEntitiesToIntervals - disjoint frames produce multiple intervals",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     auto * groups = dm->getEntityGroupManager();
 
@@ -336,8 +325,7 @@ TEST_CASE("timeEntitiesToIntervals - disjoint frames produce multiple intervals"
 }
 
 TEST_CASE("timeEntitiesToIntervals - single frame produces single-frame interval",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     auto * groups = dm->getEntityGroupManager();
 
@@ -356,8 +344,7 @@ TEST_CASE("timeEntitiesToIntervals - single frame produces single-frame interval
 }
 
 TEST_CASE("timeEntitiesToIntervals - empty group returns nullptr",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     auto * groups = dm->getEntityGroupManager();
 
@@ -368,8 +355,7 @@ TEST_CASE("timeEntitiesToIntervals - empty group returns nullptr",
 }
 
 TEST_CASE("timeEntitiesToIntervals - nonexistent group returns nullptr",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
 
     // GroupId 999 does not exist
@@ -378,8 +364,7 @@ TEST_CASE("timeEntitiesToIntervals - nonexistent group returns nullptr",
 }
 
 TEST_CASE("timeEntitiesToIntervals - filters by time key",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     dm->setTime(TimeKey("neural"), makeTimeFrame(100));
     auto * groups = dm->getEntityGroupManager();
@@ -411,8 +396,7 @@ TEST_CASE("timeEntitiesToIntervals - filters by time key",
 }
 
 TEST_CASE("timeEntitiesToIntervals - group with only non-matching TimeEntities returns nullptr",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     dm->setTime(TimeKey("neural"), makeTimeFrame(100));
     auto * groups = dm->getEntityGroupManager();
@@ -429,8 +413,7 @@ TEST_CASE("timeEntitiesToIntervals - group with only non-matching TimeEntities r
 }
 
 TEST_CASE("timeEntitiesToIntervals - unsorted entities are handled correctly",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     auto * groups = dm->getEntityGroupManager();
 
@@ -457,8 +440,7 @@ TEST_CASE("timeEntitiesToIntervals - unsorted entities are handled correctly",
 // ============================================================================
 
 TEST_CASE("Round-trip: intervals → entities → intervals",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     auto * groups = dm->getEntityGroupManager();
 
@@ -467,7 +449,7 @@ TEST_CASE("Round-trip: intervals → entities → intervals",
 
     // Convert to entities
     auto ids = MLCore::intervalsToTimeEntities(*dm, *original, "camera");
-    REQUIRE(ids.size() == 10); // 5 + 5
+    REQUIRE(ids.size() == 10);// 5 + 5
 
     // Put in a group
     GroupId gid = groups->createGroup("round_trip");
@@ -484,8 +466,7 @@ TEST_CASE("Round-trip: intervals → entities → intervals",
 }
 
 TEST_CASE("Round-trip: entities → intervals → entities",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     auto * groups = dm->getEntityGroupManager();
 
@@ -517,8 +498,7 @@ TEST_CASE("Round-trip: entities → intervals → entities",
 }
 
 TEST_CASE("Round-trip: single-frame interval preserves identity",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     auto * groups = dm->getEntityGroupManager();
 
@@ -538,8 +518,7 @@ TEST_CASE("Round-trip: single-frame interval preserves identity",
 }
 
 TEST_CASE("Round-trip: overlapping intervals merge after entity dedup",
-          "[mlcore][entity_utils][time_entity]")
-{
+          "[mlcore][entity_utils][time_entity]") {
     auto dm = makeDM("camera", 100);
     auto * groups = dm->getEntityGroupManager();
 

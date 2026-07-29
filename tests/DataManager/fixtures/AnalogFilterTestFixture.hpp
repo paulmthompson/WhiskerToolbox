@@ -69,8 +69,10 @@ private:
         auto ats = std::make_shared<AnalogTimeSeries>(data, times);
         auto time_frame = std::make_shared<TimeFrame>(timeframe_values);
         ats->setTimeFrame(time_frame);
-        
-        m_data_manager->setData(key, ats, TimeKey(key + "_time"));
+
+        TimeKey const time_key(key + "_time");
+        m_data_manager->setTime(time_key, time_frame);
+        m_data_manager->setData(key, ats, time_key);
         m_test_analog_signals[key] = ats;
         m_test_timeframes[key + "_tf"] = time_frame;
     }
@@ -88,8 +90,10 @@ private:
         auto ats = std::make_shared<AnalogTimeSeries>(data, times);
         auto time_frame = std::make_shared<TimeFrame>(timeframe_values);
         ats->setTimeFrame(time_frame);
-        
-        m_data_manager->setData(key, ats, TimeKey(key + "_time"));
+
+        TimeKey const time_key(key + "_time");
+        m_data_manager->setTime(time_key, time_frame);
+        m_data_manager->setData(key, ats, time_key);
         m_test_analog_signals[key] = ats;
         m_test_timeframes[key + "_tf"] = time_frame;
     }
@@ -108,8 +112,10 @@ private:
         auto ats = std::make_shared<AnalogTimeSeries>(data, times);
         auto time_frame = std::make_shared<TimeFrame>(timeframe_values);
         ats->setTimeFrame(time_frame);
-        
-        m_data_manager->setData(key, ats, TimeKey(key + "_time"));
+
+        TimeKey const time_key(key + "_time");
+        m_data_manager->setTime(time_key, time_frame);
+        m_data_manager->setData(key, ats, time_key);
         m_test_analog_signals[key] = ats;
         m_test_timeframes[key + "_tf"] = time_frame;
     }
@@ -137,8 +143,10 @@ private:
         auto ats = std::make_shared<AnalogTimeSeries>(data, times);
         auto time_frame = std::make_shared<TimeFrame>(timeframe_values);
         ats->setTimeFrame(time_frame);
-        
-        m_data_manager->setData(key, ats, TimeKey(key + "_time"));
+
+        TimeKey const time_key(key + "_time");
+        m_data_manager->setTime(time_key, time_frame);
+        m_data_manager->setData(key, ats, time_key);
         m_test_analog_signals[key] = ats;
         m_test_timeframes[key + "_tf"] = time_frame;
     }

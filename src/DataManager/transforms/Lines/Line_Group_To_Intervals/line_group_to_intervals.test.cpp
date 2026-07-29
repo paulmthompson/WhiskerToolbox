@@ -7,18 +7,40 @@
 #include "Entity/EntityGroupManager.hpp"
 #include "Entity/EntityRegistry.hpp"
 #include "Entity/EntityTypes.hpp"
-#include "fixtures/entity_id.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
+#include "fixtures/builders/TimeFrameBuilder.hpp"
+#include "fixtures/entity_id.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
 #include <algorithm>
 #include <memory>
 #include <vector>
+
+namespace {
+
+/// Mirrors DataManager::setData assigning the input TimeKey after a V1 transform.
+void assignInputTimeFrameToResult(
+        std::shared_ptr<DigitalIntervalSeries> const & result,
+        std::shared_ptr<LineData> const & input) {
+    if (result != nullptr && input != nullptr && input->getTimeFrame() != nullptr) {
+        result->setTimeFrame(input->getTimeFrame());
+    }
+}
+
+std::shared_ptr<DigitalIntervalSeries> runLineGroupToIntervals(
+        std::shared_ptr<LineData> const & line_data,
+        LineGroupToIntervalsParameters const * params) {
+    auto const result = lineGroupToIntervals(line_data, params);
+    assignInputTimeFrameToResult(result, line_data);
+    return result;
+}
+
+}// namespace
 
 /**
  * @brief Test fixture for Line Group to Intervals transformation
@@ -31,13 +53,14 @@ protected:
     LineGroupToIntervalsTestFixture() {
         // Create DataManager and initialize components
         data_manager = std::make_unique<DataManager>();
-        
+
         // Create EntityGroupManager
         group_manager = std::make_unique<EntityGroupManager>();
 
         // Create LineData with entity tracking enabled
         line_data = std::make_shared<LineData>();
         line_data->setIdentityContext("test_lines", data_manager->getEntityRegistry());
+        line_data->setTimeFrame(TimeFrameBuilder().withCount(100).build());
 
         // Create three groups for testing
         // Group 1: "Whisker A" - will be present in frames 0-4, 10-14
@@ -64,8 +87,8 @@ protected:
 
         // Frames 5-9: Group B and Group C
         for (int frame = 5; frame < 10; ++frame) {
-            line_data->addAtTime(TimeFrameIndex(frame), create_line(20.0f), NotifyObservers::No); // Group B
-            line_data->addAtTime(TimeFrameIndex(frame), create_line(30.0f), NotifyObservers::No); // Group C
+            line_data->addAtTime(TimeFrameIndex(frame), create_line(20.0f), NotifyObservers::No);// Group B
+            line_data->addAtTime(TimeFrameIndex(frame), create_line(30.0f), NotifyObservers::No);// Group C
         }
 
         // Frames 10-14: Group A only
@@ -130,8 +153,8 @@ protected:
     GroupId group_c_id;
 };
 
-TEST_CASE_METHOD(LineGroupToIntervalsTestFixture, 
-                 "Data Transform: LineGroupToIntervals - Basic Functionality", 
+TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
+                 "Data Transform: LineGroupToIntervals - Basic Functionality",
                  "[LineGroupToIntervals]") {
 
     SECTION("Test fixture setup is correct") {
@@ -145,18 +168,18 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         REQUIRE(group_manager->hasGroup(group_c_id));
 
         // Verify group sizes
-        REQUIRE(group_manager->getGroupSize(group_a_id) == 10); // frames 0-4, 10-14
-        REQUIRE(group_manager->getGroupSize(group_b_id) == 10); // frames 5-9, 15-19
-        REQUIRE(group_manager->getGroupSize(group_c_id) == 10); // frames 5-9, 20-24
+        REQUIRE(group_manager->getGroupSize(group_a_id) == 10);// frames 0-4, 10-14
+        REQUIRE(group_manager->getGroupSize(group_b_id) == 10);// frames 5-9, 15-19
+        REQUIRE(group_manager->getGroupSize(group_c_id) == 10);// frames 5-9, 20-24
 
         // Verify total entities
         auto all_entities = get_all_entity_ids(*line_data);
-        REQUIRE(all_entities.size() == 30); // 5*1 + 5*2 + 5*1 + 5*1 + 5*1
+        REQUIRE(all_entities.size() == 30);// 5*1 + 5*2 + 5*1 + 5*1 + 5*1
     }
 }
 
-TEST_CASE_METHOD(LineGroupToIntervalsTestFixture, 
-                 "Data Transform: LineGroupToIntervals - Track Presence", 
+TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
+                 "Data Transform: LineGroupToIntervals - Track Presence",
                  "[LineGroupToIntervals]") {
 
     SECTION("Track presence of Group A (discontinuous)") {
@@ -165,20 +188,20 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         params.target_group_id = group_a_id;
         params.track_presence = true;
 
-        auto result = lineGroupToIntervals(line_data, &params);
+        auto result = runLineGroupToIntervals(line_data, &params);
 
         REQUIRE(result != nullptr);
-        
+
         auto intervals = result->view();
-        REQUIRE(result->size() == 2); // Two separate intervals
+        REQUIRE(result->size() == 2);// Two separate intervals
 
         // First interval: frames 0-4
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(0));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(4));
+        REQUIRE(intervals[0].value().start == ClockTicks(0));
+        REQUIRE(intervals[0].value().end == ClockTicks(4));
 
         // Second interval: frames 10-14
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(10));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(14));
+        REQUIRE(intervals[1].value().start == ClockTicks(10));
+        REQUIRE(intervals[1].value().end == ClockTicks(14));
     }
 
     SECTION("Track presence of Group B (discontinuous)") {
@@ -187,20 +210,20 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         params.target_group_id = group_b_id;
         params.track_presence = true;
 
-        auto result = lineGroupToIntervals(line_data, &params);
+        auto result = runLineGroupToIntervals(line_data, &params);
 
         REQUIRE(result != nullptr);
-        
+
         auto intervals = result->view();
-        REQUIRE(result->size() == 2); // Two separate intervals
+        REQUIRE(result->size() == 2);// Two separate intervals
 
         // First interval: frames 5-9
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(5));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(9));
+        REQUIRE(intervals[0].value().start == ClockTicks(5));
+        REQUIRE(intervals[0].value().end == ClockTicks(9));
 
         // Second interval: frames 15-19
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(15));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(19));
+        REQUIRE(intervals[1].value().start == ClockTicks(15));
+        REQUIRE(intervals[1].value().end == ClockTicks(19));
     }
 
     SECTION("Track presence of Group C (discontinuous)") {
@@ -209,92 +232,92 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         params.target_group_id = group_c_id;
         params.track_presence = true;
 
-        auto result = lineGroupToIntervals(line_data, &params);
+        auto result = runLineGroupToIntervals(line_data, &params);
 
         REQUIRE(result != nullptr);
-        
+
         auto intervals = result->view();
-        REQUIRE(result->size() == 2); // Two separate intervals
+        REQUIRE(result->size() == 2);// Two separate intervals
 
         // First interval: frames 5-9
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(5));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(9));
+        REQUIRE(intervals[0].value().start == ClockTicks(5));
+        REQUIRE(intervals[0].value().end == ClockTicks(9));
 
         // Second interval: frames 20-24
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(20));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(24));
+        REQUIRE(intervals[1].value().start == ClockTicks(20));
+        REQUIRE(intervals[1].value().end == ClockTicks(24));
     }
 }
 
-TEST_CASE_METHOD(LineGroupToIntervalsTestFixture, 
-                 "Data Transform: LineGroupToIntervals - Track Absence", 
+TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
+                 "Data Transform: LineGroupToIntervals - Track Absence",
                  "[LineGroupToIntervals]") {
 
     SECTION("Track absence of Group A") {
         LineGroupToIntervalsParameters params;
         params.group_manager = group_manager.get();
         params.target_group_id = group_a_id;
-        params.track_presence = false; // Track absence
+        params.track_presence = false;// Track absence
 
-        auto result = lineGroupToIntervals(line_data, &params);
+        auto result = runLineGroupToIntervals(line_data, &params);
 
         REQUIRE(result != nullptr);
-        
+
         auto intervals = result->view();
-        REQUIRE(result->size() == 2); // Two gaps
+        REQUIRE(result->size() == 2);// Two gaps
 
         // First gap: frames 5-9
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(5));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(9));
+        REQUIRE(intervals[0].value().start == ClockTicks(5));
+        REQUIRE(intervals[0].value().end == ClockTicks(9));
 
         // Second gap: frames 15-24
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(15));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(24));
+        REQUIRE(intervals[1].value().start == ClockTicks(15));
+        REQUIRE(intervals[1].value().end == ClockTicks(24));
     }
 
     SECTION("Track absence of Group B") {
         LineGroupToIntervalsParameters params;
         params.group_manager = group_manager.get();
         params.target_group_id = group_b_id;
-        params.track_presence = false; // Track absence
+        params.track_presence = false;// Track absence
 
-        auto result = lineGroupToIntervals(line_data, &params);
+        auto result = runLineGroupToIntervals(line_data, &params);
 
         REQUIRE(result != nullptr);
-        
+
         auto intervals = result->view();
-        REQUIRE(result->size() == 3); // Three gaps
+        REQUIRE(result->size() == 3);// Three gaps
 
         // First gap: frames 0-4
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(0));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(4));
+        REQUIRE(intervals[0].value().start == ClockTicks(0));
+        REQUIRE(intervals[0].value().end == ClockTicks(4));
 
         // Second gap: frames 10-14
-        REQUIRE(intervals[1].value().start == TimeFrameIndex(10));
-        REQUIRE(intervals[1].value().end == TimeFrameIndex(14));
+        REQUIRE(intervals[1].value().start == ClockTicks(10));
+        REQUIRE(intervals[1].value().end == ClockTicks(14));
         // Third gap: frames 20-24
-        REQUIRE(intervals[2].value().start == TimeFrameIndex(20));
-        REQUIRE(intervals[2].value().end == TimeFrameIndex(24));
+        REQUIRE(intervals[2].value().start == ClockTicks(20));
+        REQUIRE(intervals[2].value().end == ClockTicks(24));
     }
 }
 
-TEST_CASE_METHOD(LineGroupToIntervalsTestFixture, 
-                 "Data Transform: LineGroupToIntervals - Minimum Interval Length", 
+TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
+                 "Data Transform: LineGroupToIntervals - Minimum Interval Length",
                  "[LineGroupToIntervals]") {
 
     SECTION("Filter short intervals with min_interval_length = 6") {
         LineGroupToIntervalsParameters params;
         params.group_manager = group_manager.get();
-        params.target_group_id = group_a_id; // Has intervals of length 5
+        params.target_group_id = group_a_id;// Has intervals of length 5
         params.track_presence = true;
-        params.min_interval_length = 6; // Filter out intervals shorter than 6
+        params.min_interval_length = 6;// Filter out intervals shorter than 6
 
-        auto result = lineGroupToIntervals(line_data, &params);
+        auto result = runLineGroupToIntervals(line_data, &params);
 
         REQUIRE(result != nullptr);
-        
+
         auto intervals = result->view();
-        REQUIRE(intervals.empty()); // Both intervals are length 5, should be filtered out
+        REQUIRE(intervals.empty());// Both intervals are length 5, should be filtered out
     }
 
     SECTION("Allow intervals with min_interval_length = 5") {
@@ -302,14 +325,14 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         params.group_manager = group_manager.get();
         params.target_group_id = group_a_id;
         params.track_presence = true;
-        params.min_interval_length = 5; // Exact match
+        params.min_interval_length = 5;// Exact match
 
-        auto result = lineGroupToIntervals(line_data, &params);
+        auto result = runLineGroupToIntervals(line_data, &params);
 
         REQUIRE(result != nullptr);
-        
+
         auto intervals = result->view();
-        REQUIRE(result->size() == 2); // Both intervals should pass
+        REQUIRE(result->size() == 2);// Both intervals should pass
     }
 
     SECTION("Filter with min_interval_length on absence tracking") {
@@ -317,12 +340,12 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         params.group_manager = group_manager.get();
         params.target_group_id = group_b_id;
         params.track_presence = false; // Track absence
-        params.min_interval_length = 6; // Filter intervals < 6
+        params.min_interval_length = 6;// Filter intervals < 6
 
-        auto result = lineGroupToIntervals(line_data, &params);
+        auto result = runLineGroupToIntervals(line_data, &params);
 
         REQUIRE(result != nullptr);
-        
+
         auto intervals = result->view();
         // Group B absent in: frames 0-4 (5 frames), 10-14 (5 frames), 20-24 (5 frames)
         // All are length 5, so all should be filtered out
@@ -330,86 +353,86 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
     }
 }
 
-TEST_CASE_METHOD(LineGroupToIntervalsTestFixture, 
-                 "Data Transform: LineGroupToIntervals - Merge Gap Threshold", 
+TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
+                 "Data Transform: LineGroupToIntervals - Merge Gap Threshold",
                  "[LineGroupToIntervals]") {
 
     SECTION("Merge intervals with gap_threshold = 6") {
         LineGroupToIntervalsParameters params;
         params.group_manager = group_manager.get();
-        params.target_group_id = group_a_id; // Present in 0-4 and 10-14 (gap of 5)
+        params.target_group_id = group_a_id;// Present in 0-4 and 10-14 (gap of 5)
         params.track_presence = true;
-        params.merge_gap_threshold = 6; // Merge if gap <= 6
+        params.merge_gap_threshold = 6;// Merge if gap <= 6
 
-        auto result = lineGroupToIntervals(line_data, &params);
+        auto result = runLineGroupToIntervals(line_data, &params);
 
         REQUIRE(result != nullptr);
-        
+
         auto intervals = result->view();
-        REQUIRE(result->size() == 1); // Should be merged into one
+        REQUIRE(result->size() == 1);// Should be merged into one
 
         // Merged interval: frames 0-14
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(0));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(14));
+        REQUIRE(intervals[0].value().start == ClockTicks(0));
+        REQUIRE(intervals[0].value().end == ClockTicks(14));
     }
 
     SECTION("Do not merge intervals with gap_threshold = 4") {
         LineGroupToIntervalsParameters params;
         params.group_manager = group_manager.get();
-        params.target_group_id = group_a_id; // Gap of 5 between intervals
+        params.target_group_id = group_a_id;// Gap of 5 between intervals
         params.track_presence = true;
-        params.merge_gap_threshold = 4; // Don't merge if gap > 4
+        params.merge_gap_threshold = 4;// Don't merge if gap > 4
 
-        auto result = lineGroupToIntervals(line_data, &params);
+        auto result = runLineGroupToIntervals(line_data, &params);
 
         REQUIRE(result != nullptr);
-        
+
         auto intervals = result->view();
-        REQUIRE(result->size() == 2); // Should remain separate
+        REQUIRE(result->size() == 2);// Should remain separate
     }
 
     SECTION("Merge multiple gaps with high threshold") {
         LineGroupToIntervalsParameters params;
         params.group_manager = group_manager.get();
-        params.target_group_id = group_b_id; // Present in 5-9 and 15-19 (gap of 5)
+        params.target_group_id = group_b_id;// Present in 5-9 and 15-19 (gap of 5)
         params.track_presence = true;
-        params.merge_gap_threshold = 10; // Large threshold
+        params.merge_gap_threshold = 10;// Large threshold
 
-        auto result = lineGroupToIntervals(line_data, &params);
+        auto result = runLineGroupToIntervals(line_data, &params);
 
         REQUIRE(result != nullptr);
-        
+
         auto intervals = result->view();
-        REQUIRE(result->size() == 1); // Should be merged
+        REQUIRE(result->size() == 1);// Should be merged
 
         // Merged interval: frames 5-19
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(5));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(19));
+        REQUIRE(intervals[0].value().start == ClockTicks(5));
+        REQUIRE(intervals[0].value().end == ClockTicks(19));
     }
 }
 
-TEST_CASE_METHOD(LineGroupToIntervalsTestFixture, 
-                 "Data Transform: LineGroupToIntervals - Combined Filters", 
+TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
+                 "Data Transform: LineGroupToIntervals - Combined Filters",
                  "[LineGroupToIntervals]") {
 
     SECTION("Merge then filter") {
         LineGroupToIntervalsParameters params;
         params.group_manager = group_manager.get();
-        params.target_group_id = group_c_id; // Present in 5-9 and 20-24
+        params.target_group_id = group_c_id;// Present in 5-9 and 20-24
         params.track_presence = true;
-        params.merge_gap_threshold = 15; // Merge (gap is 10)
-        params.min_interval_length = 20; // Then filter
+        params.merge_gap_threshold = 15;// Merge (gap is 10)
+        params.min_interval_length = 20;// Then filter
 
-        auto result = lineGroupToIntervals(line_data, &params);
+        auto result = runLineGroupToIntervals(line_data, &params);
 
         REQUIRE(result != nullptr);
-        
+
         auto intervals = result->view();
         // After merge: 5-24 (length 20)
         // After filter: length 20 passes
         REQUIRE(result->size() == 1);
-        REQUIRE(intervals[0].value().start == TimeFrameIndex(5));
-        REQUIRE(intervals[0].value().end == TimeFrameIndex(24));
+        REQUIRE(intervals[0].value().start == ClockTicks(5));
+        REQUIRE(intervals[0].value().end == ClockTicks(24));
     }
 
     SECTION("Merge then filter out") {
@@ -417,31 +440,32 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         params.group_manager = group_manager.get();
         params.target_group_id = group_c_id;
         params.track_presence = true;
-        params.merge_gap_threshold = 15; // Merge
-        params.min_interval_length = 21; // Filter out (length is 20)
+        params.merge_gap_threshold = 15;// Merge
+        params.min_interval_length = 21;// Filter out (length is 20)
 
-        auto result = lineGroupToIntervals(line_data, &params);
+        auto result = runLineGroupToIntervals(line_data, &params);
 
         REQUIRE(result != nullptr);
-        
+
         auto intervals = result->view();
-        REQUIRE(intervals.empty()); // Should be filtered out
+        REQUIRE(intervals.empty());// Should be filtered out
     }
 }
 
-TEST_CASE_METHOD(LineGroupToIntervalsTestFixture, 
-                 "Data Transform: LineGroupToIntervals - Edge Cases", 
+TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
+                 "Data Transform: LineGroupToIntervals - Edge Cases",
                  "[LineGroupToIntervals]") {
 
     SECTION("Empty line data") {
         auto empty_line_data = std::make_shared<LineData>();
         empty_line_data->setIdentityContext("empty", data_manager->getEntityRegistry());
+        empty_line_data->setTimeFrame(TimeFrameBuilder().withCount(100).build());
 
         LineGroupToIntervalsParameters params;
         params.group_manager = group_manager.get();
         params.target_group_id = group_a_id;
 
-        auto result = lineGroupToIntervals(empty_line_data, &params);
+        auto result = runLineGroupToIntervals(empty_line_data, &params);
 
         REQUIRE(result != nullptr);
         REQUIRE(result->view().empty());
@@ -462,7 +486,7 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         params.group_manager = nullptr;
         params.target_group_id = group_a_id;
 
-        auto result = lineGroupToIntervals(line_data, &params);
+        auto result = runLineGroupToIntervals(line_data, &params);
 
         REQUIRE(result == nullptr);
     }
@@ -470,21 +494,21 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
     SECTION("Invalid group ID") {
         LineGroupToIntervalsParameters params;
         params.group_manager = group_manager.get();
-        params.target_group_id = 9999; // Non-existent group
+        params.target_group_id = 9999;// Non-existent group
 
-        auto result = lineGroupToIntervals(line_data, &params);
+        auto result = runLineGroupToIntervals(line_data, &params);
 
         REQUIRE(result == nullptr);
     }
 
     SECTION("Empty group") {
         auto empty_group = group_manager->createGroup("Empty Group", "No entities");
-        
+
         LineGroupToIntervalsParameters params;
         params.group_manager = group_manager.get();
         params.target_group_id = empty_group;
 
-        auto result = lineGroupToIntervals(line_data, &params);
+        auto result = runLineGroupToIntervals(line_data, &params);
 
         REQUIRE(result != nullptr);
         REQUIRE(result->view().empty());
@@ -495,14 +519,14 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         params.group_manager = group_manager.get();
         params.target_group_id = 0;
 
-        auto result = lineGroupToIntervals(line_data, &params);
+        auto result = runLineGroupToIntervals(line_data, &params);
 
         REQUIRE(result == nullptr);
     }
 }
 
-TEST_CASE_METHOD(LineGroupToIntervalsTestFixture, 
-                 "Data Transform: LineGroupToIntervals - Operation Interface", 
+TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
+                 "Data Transform: LineGroupToIntervals - Operation Interface",
                  "[LineGroupToIntervals]") {
 
     SECTION("Operation getName") {
@@ -527,8 +551,8 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         LineGroupToIntervalsOperation op;
         auto params = op.getDefaultParameters();
         REQUIRE(params != nullptr);
-        
-        auto* typed_params = dynamic_cast<LineGroupToIntervalsParameters*>(params.get());
+
+        auto * typed_params = dynamic_cast<LineGroupToIntervalsParameters *>(params.get());
         REQUIRE(typed_params != nullptr);
         REQUIRE(typed_params->group_manager == nullptr);
         REQUIRE(typed_params->target_group_id == 0);
@@ -537,7 +561,7 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
 
     SECTION("Operation execute") {
         LineGroupToIntervalsOperation op;
-        
+
         LineGroupToIntervalsParameters params;
         params.group_manager = group_manager.get();
         params.target_group_id = group_a_id;
@@ -547,7 +571,7 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         auto result_variant = op.execute(input_variant, &params);
 
         REQUIRE(std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(result_variant));
-        
+
         auto result = std::get<std::shared_ptr<DigitalIntervalSeries>>(result_variant);
         REQUIRE(result != nullptr);
         REQUIRE(result->size() == 2);
@@ -555,7 +579,7 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
 
     SECTION("Operation execute with progress callback") {
         LineGroupToIntervalsOperation op;
-        
+
         LineGroupToIntervalsParameters params;
         params.group_manager = group_manager.get();
         params.target_group_id = group_b_id;
@@ -565,7 +589,7 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         auto progress_callback = [&last_progress](int progress) {
             REQUIRE(progress >= 0);
             REQUIRE(progress <= 100);
-            REQUIRE(progress >= last_progress); // Progress should be monotonic
+            REQUIRE(progress >= last_progress);// Progress should be monotonic
             last_progress = progress;
         };
 
@@ -573,77 +597,75 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         auto result_variant = op.execute(input_variant, &params, progress_callback);
 
         REQUIRE(std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(result_variant));
-        REQUIRE(last_progress == 100); // Should reach 100%
+        REQUIRE(last_progress == 100);// Should reach 100%
     }
 }
 
-TEST_CASE_METHOD(LineGroupToIntervalsTestFixture, 
-                 "Data Transform: LineGroupToIntervals - Verify Interval Correctness", 
+TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
+                 "Data Transform: LineGroupToIntervals - Verify Interval Correctness",
                  "[LineGroupToIntervals]") {
 
     SECTION("Check isEventAtTime for presence tracking") {
         LineGroupToIntervalsParameters params;
         params.group_manager = group_manager.get();
-        params.target_group_id = group_a_id; // Present in 0-4, 10-14
+        params.target_group_id = group_a_id;// Present in 0-4, 10-14
         params.track_presence = true;
 
-        auto result = lineGroupToIntervals(line_data, &params);
+        auto result = runLineGroupToIntervals(line_data, &params);
         REQUIRE(result != nullptr);
 
-        // Result has no TimeFrame set; create a default identity one for querying
-        TimeFrame const identity_tf;
+        TimeFrame const & query_tf = *line_data->getTimeFrame();
 
         // Check frames in first interval
         for (int i = 0; i <= 4; ++i) {
-            REQUIRE(result->hasIntervalAtTime(TimeFrameIndex(i), identity_tf));
+            REQUIRE(result->hasIntervalAtTime(TimeFrameIndex(i), query_tf));
         }
 
         // Check frames in gap
         for (int i = 5; i <= 9; ++i) {
-            REQUIRE_FALSE(result->hasIntervalAtTime(TimeFrameIndex(i), identity_tf));
+            REQUIRE_FALSE(result->hasIntervalAtTime(TimeFrameIndex(i), query_tf));
         }
 
         // Check frames in second interval
         for (int i = 10; i <= 14; ++i) {
-            REQUIRE(result->hasIntervalAtTime(TimeFrameIndex(i), identity_tf));
+            REQUIRE(result->hasIntervalAtTime(TimeFrameIndex(i), query_tf));
         }
 
         // Check frames after
         for (int i = 15; i <= 24; ++i) {
-            REQUIRE_FALSE(result->hasIntervalAtTime(TimeFrameIndex(i), identity_tf));
+            REQUIRE_FALSE(result->hasIntervalAtTime(TimeFrameIndex(i), query_tf));
         }
     }
 
     SECTION("Check isEventAtTime for absence tracking") {
         LineGroupToIntervalsParameters params;
         params.group_manager = group_manager.get();
-        params.target_group_id = group_a_id; // Present in 0-4, 10-14
-        params.track_presence = false; // Track absence
+        params.target_group_id = group_a_id;// Present in 0-4, 10-14
+        params.track_presence = false;      // Track absence
 
-        auto result = lineGroupToIntervals(line_data, &params);
+        auto result = runLineGroupToIntervals(line_data, &params);
         REQUIRE(result != nullptr);
 
-        // Result has no TimeFrame set; create a default identity one for querying
-        TimeFrame const identity_tf;
+        TimeFrame const & query_tf = *line_data->getTimeFrame();
 
         // Check frames in first interval (should be absent)
         for (int i = 0; i <= 4; ++i) {
-            REQUIRE_FALSE(result->hasIntervalAtTime(TimeFrameIndex(i), identity_tf));
+            REQUIRE_FALSE(result->hasIntervalAtTime(TimeFrameIndex(i), query_tf));
         }
 
         // Check frames in first absence interval
         for (int i = 5; i <= 9; ++i) {
-            REQUIRE(result->hasIntervalAtTime(TimeFrameIndex(i), identity_tf));
+            REQUIRE(result->hasIntervalAtTime(TimeFrameIndex(i), query_tf));
         }
 
         // Check frames in second interval (should be absent)
         for (int i = 10; i <= 14; ++i) {
-            REQUIRE_FALSE(result->hasIntervalAtTime(TimeFrameIndex(i), identity_tf));
+            REQUIRE_FALSE(result->hasIntervalAtTime(TimeFrameIndex(i), query_tf));
         }
 
         // Check frames in second absence interval
         for (int i = 15; i <= 24; ++i) {
-            REQUIRE(result->hasIntervalAtTime(TimeFrameIndex(i), identity_tf));
+            REQUIRE(result->hasIntervalAtTime(TimeFrameIndex(i), query_tf));
         }
     }
 }

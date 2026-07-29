@@ -198,20 +198,18 @@ toIntervalEventPoint(AlignmentPoint point) noexcept {
     }
     for (auto const & interval_with_id: intervals.view()) {
         auto const & interval = interval_with_id.interval;
-        TimeFrameIndex index{0};
         switch (align) {
             case AlignmentPoint::End:
-                index = interval.end;
+                times.push_back(interval.end);
                 break;
             case AlignmentPoint::Center:
-                index = (interval.start + interval.end) / 2;
+                times.push_back(ClockTicks((interval.start.getValue() + interval.end.getValue()) / 2));
                 break;
             case AlignmentPoint::Start:
             default:
-                index = interval.start;
+                times.push_back(interval.start);
                 break;
         }
-        times.push_back(time_frame->getTimeAtIndex(index));
     }
     return times;
 }
@@ -302,14 +300,8 @@ toIntervalEventPoint(AlignmentPoint point) noexcept {
     std::vector<TimeFrameInterval> kept_intervals;
     kept_intervals.reserve(kept_indices.size());
 
-    size_t index = 0;
-    size_t kept_pos = 0;
-    for (auto const & interval_with_id: source->view()) {
-        if (kept_pos < kept_indices.size() && index == kept_indices[kept_pos]) {
-            kept_intervals.push_back(interval_with_id.interval);
-            ++kept_pos;
-        }
-        ++index;
+    for (size_t const index: kept_indices) {
+        kept_intervals.push_back(source->getStoredInterval(index));
     }
 
     auto filtered = std::make_shared<DigitalIntervalSeries>(std::move(kept_intervals));
@@ -392,8 +384,8 @@ toIntervalEventPoint(AlignmentPoint point) noexcept {
 [[nodiscard]] inline std::vector<size_t> keptWindowIndices(DigitalIntervalSeries const & windows) {
     std::vector<TimeFrameInterval> intervals;
     intervals.reserve(windows.size());
-    for (auto const & window: windows.view()) {
-        intervals.push_back(window.interval);
+    for (size_t i = 0; i < windows.size(); ++i) {
+        intervals.push_back(windows.getStoredInterval(i));
     }
 
     std::vector<size_t> kept_indices;

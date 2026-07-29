@@ -75,13 +75,10 @@ float castReductionResult(std::any const & result) {
  */
 std::vector<TimeFrameInterval> buildTimeFrameIntervals(
         DigitalIntervalSeries const & intervals) {
-    auto const & interval_data = intervals.view();
     std::vector<TimeFrameInterval> tf_intervals;
-    tf_intervals.reserve(interval_data.size());
-    for (auto const & interval: interval_data) {
-        tf_intervals.push_back(TimeFrameInterval{
-                TimeFrameIndex(interval.value().start),
-                TimeFrameIndex(interval.value().end)});
+    tf_intervals.reserve(intervals.size());
+    for (size_t i = 0; i < intervals.size(); ++i) {
+        tf_intervals.push_back(intervals.getStoredInterval(i));
     }
     return tf_intervals;
 }

@@ -615,11 +615,11 @@ ClassificationPipelineResult runClassificationPipeline(
                 config.training_interval_key);
 
         if (cv_train_intervals && cv_train_intervals->size() > 1) {
-            // Collect all training intervals
+            // Collect all training intervals (index space for row-time comparison)
             std::vector<TimeFrameInterval> all_train_ivs;
             all_train_ivs.reserve(cv_train_intervals->size());
-            for (auto const & iwid: cv_train_intervals->view()) {
-                all_train_ivs.push_back(iwid.interval);
+            for (std::size_t i = 0; i < cv_train_intervals->size(); ++i) {
+                all_train_ivs.push_back(cv_train_intervals->getStoredInterval(i));
             }
             std::sort(all_train_ivs.begin(), all_train_ivs.end());
 
@@ -1349,8 +1349,8 @@ ClassificationPipelineResult runClassificationPipeline(
                             config.training_interval_key);
                     if (training_intervals && training_intervals->size() > 0) {
                         sorted_train_ivs.reserve(training_intervals->size());
-                        for (auto const & iwid: training_intervals->view()) {
-                            sorted_train_ivs.push_back(iwid.interval);
+                        for (std::size_t i = 0; i < training_intervals->size(); ++i) {
+                            sorted_train_ivs.push_back(training_intervals->getStoredInterval(i));
                         }
                         std::sort(sorted_train_ivs.begin(), sorted_train_ivs.end());
                     }
@@ -1363,8 +1363,8 @@ ClassificationPipelineResult runClassificationPipeline(
                             config.validation_interval_key);
                     if (validation_intervals && validation_intervals->size() > 0) {
                         sorted_val_ivs.reserve(validation_intervals->size());
-                        for (auto const & iwid: validation_intervals->view()) {
-                            sorted_val_ivs.push_back(iwid.interval);
+                        for (std::size_t i = 0; i < validation_intervals->size(); ++i) {
+                            sorted_val_ivs.push_back(validation_intervals->getStoredInterval(i));
                         }
                         std::sort(sorted_val_ivs.begin(), sorted_val_ivs.end());
                     }

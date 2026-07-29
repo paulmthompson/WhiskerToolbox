@@ -53,8 +53,8 @@ TimeIndexResult extractTimeIndices(
             }
             std::vector<TimeFrameIndex> times;
             times.reserve(dis->size());
-            for (auto const & iw : dis->view()) {
-                times.push_back(TimeFrameIndex(iw.interval.start));
+            for (size_t i = 0; i < dis->size(); ++i) {
+                times.push_back(dis->getStoredInterval(i).start);
             }
             return {std::move(times), dis->getTimeFrame()};
         }

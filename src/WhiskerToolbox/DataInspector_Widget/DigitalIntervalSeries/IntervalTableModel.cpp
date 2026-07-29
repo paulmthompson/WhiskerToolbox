@@ -28,6 +28,9 @@ void IntervalTableModel::setIntervals(DigitalIntervalSeries const * interval_dat
     _interval_data_source = interval_data;
 
     if (interval_data) {
+
+        auto time_frame = interval_data->getTimeFrame();
+
         for (auto const & interval_with_id: interval_data->view()) {
             QString group_name = "No Group";
             EntityId const eid = interval_with_id.id();
@@ -41,9 +44,10 @@ void IntervalTableModel::setIntervals(DigitalIntervalSeries const * interval_dat
                     }
                 }
             }
-
+            TimeFrameIndex const start_index = time_frame->getIndexAtTime(interval_with_id.interval.start, false);
+            TimeFrameIndex const end_index = time_frame->getIndexAtTime(interval_with_id.interval.end, true);
             _all_data.push_back(IntervalTableRow{
-                    .interval = interval_with_id.interval,
+                    .interval = TimeFrameInterval{start_index, end_index},
                     .entity_id = eid,
                     .group_name = group_name});
         }

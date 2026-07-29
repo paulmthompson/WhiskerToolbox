@@ -158,8 +158,8 @@ RenderableScene createIntervalScene(
     RenderableRectangleBatch batch;
     
     for (auto const& interval : intervals.view()) {
-        float x_start = static_cast<float>(time_frame.getTimeAtIndex(TimeFrameIndex{interval.interval.start}).getValue());
-        float x_end = static_cast<float>(time_frame.getTimeAtIndex(TimeFrameIndex{interval.interval.end}).getValue());
+        float x_start = static_cast<float>(interval.interval.start.getValue());
+        float x_end = static_cast<float>(interval.interval.end.getValue());
         float width = x_end - x_start;
         // y_transform: offset=center, gain=half_height
         float height = layout.y_transform.gain * 2.0f;

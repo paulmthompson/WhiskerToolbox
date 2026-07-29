@@ -127,9 +127,12 @@ std::vector<EntityId> DataManagerEntityDataSource::getEntityIds(
         case DM_DataType::DigitalInterval:
             if (auto data = _dm->getData<DigitalIntervalSeries>(data_key)) {
                 auto const & intervals = data->view();
+                auto const * timeframe = data->getTimeFrame().get();
                 for (auto const & interval : intervals) {
-                    if (TimeFrameIndex(interval.value().start) <= time &&
-                        time <= TimeFrameIndex(interval.value().end)) {
+                    TimeFrameIndex const start = timeframe->getIndexAtTime(interval.value().start);
+                    TimeFrameIndex const end = timeframe->getIndexAtTime(interval.value().end);
+                    if (start <= time &&
+                        time <= end) {
                         return {interval.id()};
                     }
                 }
@@ -194,9 +197,10 @@ std::vector<EntityId> DataManagerEntityDataSource::getAllEntityIdsAtTime(
             if (auto data = _dm->getData<DigitalIntervalSeries>(data_key)) {
                 std::vector<EntityId> result;
                 auto const & intervals = data->view();
+                ClockTicks const time_ticks = data->getTimeFrame()->getTimeAtIndex(time);
                 for (auto const & interval : intervals) {
-                    if (TimeFrameIndex(interval.value().start) <= time &&
-                        time <= TimeFrameIndex(interval.value().end)) {
+                    if (interval.value().start <= time_ticks &&
+                        time_ticks <= interval.value().end) {
                         result.push_back(interval.id());
                     }
                 }
@@ -319,9 +323,10 @@ std::size_t DataManagerEntityDataSource::getElementCount(
 
         case DM_DataType::DigitalInterval:
             if (auto data = _dm->getData<DigitalIntervalSeries>(data_key)) {
+                ClockTicks const time_ticks = data->getTimeFrame()->getTimeAtIndex(time);
                 std::size_t count = 0;
                 for (auto const & interval : data->view()) {
-                    if (TimeFrameIndex(interval.value().start) <= time && time <= TimeFrameIndex(interval.value().end)) {
+                    if (interval.value().start <= time_ticks && time_ticks <= interval.value().end) {
                         ++count;
                     }
                 }

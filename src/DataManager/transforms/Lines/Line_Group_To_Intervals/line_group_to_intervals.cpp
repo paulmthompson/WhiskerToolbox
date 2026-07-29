@@ -10,79 +10,79 @@
 #include <iostream>
 #include <vector>
 
-namespace {  // NOLINT(cert-dcl59-cpp)
-    /**
+namespace {// NOLINT(cert-dcl59-cpp)
+/**
      * @brief Helper to merge nearby intervals
      * 
      * @param intervals Input intervals (must be sorted by start time)
      * @param gap_threshold Maximum gap size to merge across
      * @return Merged intervals
      */
-    std::vector<TimeFrameInterval> mergeIntervals(std::vector<TimeFrameInterval> const & intervals, int gap_threshold) {
-        if (intervals.empty()) {
-            return {};
-        }
-
-        std::vector<TimeFrameInterval> merged;
-        merged.reserve(intervals.size());
-        merged.push_back(intervals[0]);
-
-        for (size_t i = 1; i < intervals.size(); ++i) {
-            auto & last = merged.back();
-            auto const & current = intervals[i];
-
-            // Check if current interval is within gap_threshold of the last one
-            int64_t const gap = current.start.getValue() - last.end.getValue();
-            if (gap <= gap_threshold) {
-                // Merge by extending the last interval
-                last.end = current.end;
-            } else {
-                // No merge, add as new interval
-                merged.push_back(current);
-            }
-        }
-
-        return merged;
+std::vector<TimeFrameInterval> mergeIntervals(std::vector<TimeFrameInterval> const & intervals, int gap_threshold) {
+    if (intervals.empty()) {
+        return {};
     }
 
-    /**
+    std::vector<TimeFrameInterval> merged;
+    merged.reserve(intervals.size());
+    merged.push_back(intervals[0]);
+
+    for (size_t i = 1; i < intervals.size(); ++i) {
+        auto & last = merged.back();
+        auto const & current = intervals[i];
+
+        // Check if current interval is within gap_threshold of the last one
+        int64_t const gap = current.start.getValue() - last.end.getValue();
+        if (gap <= gap_threshold) {
+            // Merge by extending the last interval
+            last.end = current.end;
+        } else {
+            // No merge, add as new interval
+            merged.push_back(current);
+        }
+    }
+
+    return merged;
+}
+
+/**
      * @brief Helper to filter intervals by minimum length
      * 
      * @param intervals Input intervals
      * @param min_length Minimum interval length (inclusive)
      * @return Filtered intervals
      */
-    std::vector<TimeFrameInterval> filterByLength(std::vector<TimeFrameInterval> const & intervals, int min_length) {
-        if (min_length <= 1) {
-            return intervals; // No filtering needed
-        }
-
-        std::vector<TimeFrameInterval> filtered;
-        filtered.reserve(intervals.size());
-
-        for (auto const & interval : intervals) {
-            int64_t const length = interval.end.getValue() - interval.start.getValue() + 1; // Inclusive length
-            if (length >= min_length) {
-                filtered.push_back(interval);
-            }
-        }
-
-        return filtered;
+std::vector<TimeFrameInterval> filterByLength(std::vector<TimeFrameInterval> const & intervals, int min_length) {
+    if (min_length <= 1) {
+        return intervals;// No filtering needed
     }
+
+    std::vector<TimeFrameInterval> filtered;
+    filtered.reserve(intervals.size());
+
+    for (auto const & interval: intervals) {
+        int64_t const length = interval.end.getValue() - interval.start.getValue() + 1;// Inclusive length
+        if (length >= min_length) {
+            filtered.push_back(interval);
+        }
+    }
+
+    return filtered;
 }
+}// namespace
 
 std::shared_ptr<DigitalIntervalSeries> lineGroupToIntervals(
-    std::shared_ptr<LineData> const & line_data,
-    LineGroupToIntervalsParameters const * params) {
+        std::shared_ptr<LineData> const & line_data,
+        LineGroupToIntervalsParameters const * params) {
     // Delegate to version with progress callback
-    return lineGroupToIntervals(line_data, params, [](int) {/* no progress reporting */});
+    return lineGroupToIntervals(line_data, params, [](int) { /* no progress reporting */ });
 }
 
 std::shared_ptr<DigitalIntervalSeries> lineGroupToIntervals(
-    std::shared_ptr<LineData> const & line_data,
-    LineGroupToIntervalsParameters const * params,
-    ProgressCallback progressCallback) {
-    
+        std::shared_ptr<LineData> const & line_data,
+        LineGroupToIntervalsParameters const * params,
+        ProgressCallback progressCallback) {
+
     // Validate inputs
     if (!line_data || !params) {
         std::cerr << "lineGroupToIntervals: Invalid input (null line_data or params)" << std::endl;
@@ -101,7 +101,7 @@ std::shared_ptr<DigitalIntervalSeries> lineGroupToIntervals(
 
     // Check if the group exists
     if (!params->group_manager->hasGroup(params->target_group_id)) {
-        std::cerr << "lineGroupToIntervals: Target group " << params->target_group_id 
+        std::cerr << "lineGroupToIntervals: Target group " << params->target_group_id
                   << " does not exist" << std::endl;
         return nullptr;
     }
@@ -111,9 +111,9 @@ std::shared_ptr<DigitalIntervalSeries> lineGroupToIntervals(
     // Get all entities in the target group
     auto group_entities = params->group_manager->getEntitiesInGroup(params->target_group_id);
     if (group_entities.empty()) {
-        std::cerr << "lineGroupToIntervals: Target group " << params->target_group_id 
+        std::cerr << "lineGroupToIntervals: Target group " << params->target_group_id
                   << " is empty" << std::endl;
-        return std::make_shared<DigitalIntervalSeries>(); // Return empty series
+        return std::make_shared<DigitalIntervalSeries>();// Return empty series
     }
 
     // Convert to unordered_set for O(1) lookup
@@ -122,10 +122,10 @@ std::shared_ptr<DigitalIntervalSeries> lineGroupToIntervals(
     // Get all times with data
     auto times_view = line_data->getTimesWithData();
     std::vector<TimeFrameIndex> all_times(times_view.begin(), times_view.end());
-    
+
     if (all_times.empty()) {
         std::cerr << "lineGroupToIntervals: No data found in LineData" << std::endl;
-        return std::make_shared<DigitalIntervalSeries>(); // Return empty series
+        return std::make_shared<DigitalIntervalSeries>();// Return empty series
     }
 
     // Sort times to ensure sequential processing
@@ -135,14 +135,14 @@ std::shared_ptr<DigitalIntervalSeries> lineGroupToIntervals(
 
     // For each time, check if any entity at that time is in the target group
     std::vector<bool> frame_active(all_times.size(), false);
-    
+
     for (size_t i = 0; i < all_times.size(); ++i) {
         auto const time = all_times[i];
         auto entity_ids = line_data->getEntityIdsAtTime(time);
-        
+
         // Check if any entity is in the group
         bool has_group_member = false;
-        for (auto entity_id : entity_ids) {
+        for (auto entity_id: entity_ids) {
             if (group_entity_set.contains(entity_id)) {
                 has_group_member = true;
                 break;
@@ -163,7 +163,7 @@ std::shared_ptr<DigitalIntervalSeries> lineGroupToIntervals(
 
     // Build intervals from consecutive active frames
     std::vector<TimeFrameInterval> intervals;
-    intervals.reserve(all_times.size() / 2); // Rough estimate
+    intervals.reserve(all_times.size() / 2);// Rough estimate
 
     TimeFrameIndex interval_start = TimeFrameIndex{-1};
     for (size_t i = 0; i < all_times.size(); ++i) {
@@ -209,7 +209,7 @@ std::shared_ptr<DigitalIntervalSeries> lineGroupToIntervals(
 
     progressCallback(100);
 
-    std::cout << "lineGroupToIntervals: Created " << intervals.size() 
+    std::cout << "lineGroupToIntervals: Created " << intervals.size()
               << " intervals for group " << params->target_group_id << std::endl;
 
     return result;
@@ -235,17 +235,17 @@ std::unique_ptr<TransformParametersBase> LineGroupToIntervalsOperation::getDefau
 }
 
 DataTypeVariant LineGroupToIntervalsOperation::execute(
-    DataTypeVariant const & dataVariant,
-    TransformParametersBase const * transformParameters) {
+        DataTypeVariant const & dataVariant,
+        TransformParametersBase const * transformParameters) {
     // Delegate to version with progress callback
-    return execute(dataVariant, transformParameters, [](int) {/* no-op */});
+    return execute(dataVariant, transformParameters, [](int) { /* no-op */ });
 }
 
 DataTypeVariant LineGroupToIntervalsOperation::execute(
-    DataTypeVariant const & dataVariant,
-    TransformParametersBase const * transformParameters,
-    ProgressCallback progressCallback) {
-    
+        DataTypeVariant const & dataVariant,
+        TransformParametersBase const * transformParameters,
+        ProgressCallback progressCallback) {
+
     if (!std::holds_alternative<std::shared_ptr<LineData>>(dataVariant)) {
         std::cerr << "LineGroupToIntervalsOperation: Invalid input type" << std::endl;
         return dataVariant;
@@ -260,7 +260,7 @@ DataTypeVariant LineGroupToIntervalsOperation::execute(
     }
 
     auto result = lineGroupToIntervals(line_data, params, progressCallback);
-    
+
     if (!result) {
         std::cerr << "LineGroupToIntervalsOperation: Failed to create intervals" << std::endl;
         return dataVariant;

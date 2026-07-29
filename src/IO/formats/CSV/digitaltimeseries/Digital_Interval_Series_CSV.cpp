@@ -21,10 +21,11 @@ bool save(
             out << opts.header << opts.line_delim;
         }
 
-        for (auto const & interval: interval_data->view()) {
-            out << interval.value().start.getValue()
+        for (size_t i = 0; i < interval_data->size(); ++i) {
+            auto const interval = interval_data->getStoredInterval(i);
+            out << interval.start.getValue()
                 << opts.delimiter
-                << interval.value().end.getValue()
+                << interval.end.getValue()
                 << opts.line_delim;
         }
         return out.good();

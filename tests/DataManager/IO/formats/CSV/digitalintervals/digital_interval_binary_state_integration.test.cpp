@@ -19,6 +19,7 @@
 
 #include "DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "TimeFrame/interval_data.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -111,6 +112,16 @@ std::string getJunTestDataPath() {
     return "data/DigitalIntervals/jun_test.dat";
 }
 
+void checkStoredInterval(
+        DigitalIntervalSeries const & series,
+        size_t index,
+        int64_t start,
+        int64_t end) {
+    auto const stored = series.getStoredInterval(index);
+    CHECK(stored.start == TimeFrameIndex(start));
+    CHECK(stored.end == TimeFrameIndex(end));
+}
+
 } // anonymous namespace
 
 //=============================================================================
@@ -161,14 +172,11 @@ TEST_CASE("DigitalInterval Binary State - Single Column Loading",
         auto loaded = dm.getData<DigitalIntervalSeries>("test_binary_state");
         REQUIRE(loaded != nullptr);
         
-        // Should have 2 intervals: [0,2] and [5,6]
+        // Should have 2 intervals: [0,2] and [5,6] (row indices in storage)
         REQUIRE(loaded->size() == 2);
-        
-        auto intervals = loaded->view();
-        CHECK(intervals[0].value().start == TimeFrameIndex(0));
-        CHECK(intervals[0].value().end == TimeFrameIndex(2));
-        CHECK(intervals[1].value().start == TimeFrameIndex(5));
-        CHECK(intervals[1].value().end == TimeFrameIndex(6));
+
+        checkStoredInterval(*loaded, 0, 0, 2);
+        checkStoredInterval(*loaded, 1, 5, 6);
     }
     
     SECTION("All ones - single interval spanning entire data") {
@@ -199,12 +207,10 @@ TEST_CASE("DigitalInterval Binary State - Single Column Loading",
         auto loaded = dm.getData<DigitalIntervalSeries>("all_ones");
         REQUIRE(loaded != nullptr);
         
-        // Should have exactly 1 interval spanning [0, 9]
+        // Should have exactly 1 interval spanning [0, 9] (row indices)
         REQUIRE(loaded->size() == 1);
-        
-        auto intervals = loaded->view();
-        CHECK(intervals[0].value().start == TimeFrameIndex(0));
-        CHECK(intervals[0].value().end == TimeFrameIndex(9));
+
+        checkStoredInterval(*loaded, 0, 0, 9);
     }
     
     SECTION("All zeros - no intervals") {
@@ -273,14 +279,11 @@ TEST_CASE("DigitalInterval Binary State - Single Column Loading",
         auto loaded = dm.getData<DigitalIntervalSeries>("threshold_test");
         REQUIRE(loaded != nullptr);
         
-        // Should have 2 intervals: [0,1] and [4,5]
+        // Should have 2 intervals: [0,1] and [4,5] (row indices)
         REQUIRE(loaded->size() == 2);
-        
-        auto intervals = loaded->view();
-        CHECK(intervals[0].value().start == TimeFrameIndex(0));
-        CHECK(intervals[0].value().end == TimeFrameIndex(1));
-        CHECK(intervals[1].value().start == TimeFrameIndex(4));
-        CHECK(intervals[1].value().end == TimeFrameIndex(5));
+
+        checkStoredInterval(*loaded, 0, 0, 1);
+        checkStoredInterval(*loaded, 1, 4, 5);
     }
 }
 
@@ -337,13 +340,16 @@ TEST_CASE("DigitalInterval Binary State - Batch Loading All Columns",
         REQUIRE(v1 != nullptr);
         REQUIRE(v2 != nullptr);
         
-        // v0: one interval [0,4]
+        // v0: one interval [0,4] (row indices)
         REQUIRE(v0->size() == 1);
-        CHECK(v0->view()[0].value().start == TimeFrameIndex(0));
-        CHECK(v0->view()[0].value().end == TimeFrameIndex(4));
+        checkStoredInterval(*v0, 0, 0, 4);
         
         // v1: four single-point intervals [0,0], [2,2], [4,4], [6,6]
         REQUIRE(v1->size() == 4);
+        checkStoredInterval(*v1, 0, 0, 0);
+        checkStoredInterval(*v1, 1, 2, 2);
+        checkStoredInterval(*v1, 2, 4, 4);
+        checkStoredInterval(*v1, 3, 6, 6);
         
         // v2: no intervals
         CHECK(v2->size() == 0);
@@ -385,11 +391,10 @@ TEST_CASE("DigitalInterval Binary State - Real Test Data (jun_test.dat)",
         auto loaded = dm.getData<DigitalIntervalSeries>("v0_intervals");
         REQUIRE(loaded != nullptr);
         
-        // v0 is all 1s in jun_test.dat, so should be one interval
+        // v0 is all 1s in jun_test.dat, so should be one interval from row 0
         REQUIRE(loaded->size() == 1);
-        
-        // First interval should start at 0
-        CHECK(loaded->view()[0].value().start == TimeFrameIndex(0));
+
+        CHECK(loaded->getStoredInterval(0).start == TimeFrameIndex(0));
     }
     
     SECTION("Load column v1 (all zeros)") {
@@ -546,10 +551,9 @@ TEST_CASE("DigitalInterval Binary State - Edge Cases",
         auto loaded = dm.getData<DigitalIntervalSeries>("single_on");
         REQUIRE(loaded != nullptr);
         
-        // Single row that is on should be one interval [0,0]
+        // Single row that is on should be one interval [0,0] (row index)
         REQUIRE(loaded->size() == 1);
-        CHECK(loaded->view()[0].value().start == TimeFrameIndex(0));
-        CHECK(loaded->view()[0].value().end == TimeFrameIndex(0));
+        checkStoredInterval(*loaded, 0, 0, 0);
     }
     
     SECTION("Single row - off") {
@@ -609,9 +613,8 @@ TEST_CASE("DigitalInterval Binary State - Edge Cases",
         auto loaded = dm.getData<DigitalIntervalSeries>("ends_on");
         REQUIRE(loaded != nullptr);
         
-        // Should have one interval [2,3]
+        // Should have one interval [2,3] (row indices)
         REQUIRE(loaded->size() == 1);
-        CHECK(loaded->view()[0].value().start == TimeFrameIndex(2));
-        CHECK(loaded->view()[0].value().end == TimeFrameIndex(3));
+        checkStoredInterval(*loaded, 0, 2, 3);
     }
 }

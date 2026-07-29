@@ -8,6 +8,7 @@
 #include "fixtures/whisker_contact_test_fixture.hpp"
 
 #include "Tensors/TensorData.hpp"
+#include "TimeFrame/interval_data.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -68,22 +69,24 @@ std::string whiskerContactDesignJson(
  * @brief Compute whether the scenario has any spike in the first contact frame.
  * @pre scenario.contact and scenario.spikes must have valid TimeFrames.
  * @param scenario Generated whisker-contact data.
- * @param contact_interval Contact interval expressed on the scenario Time clock.
- * @return 1.0 when at least one spike falls in [start, start + 1], otherwise 0.0.
+ * @param contact_interval Contact interval in clock-tick space (from @c contact->view()).
+ * @return 1.0 when at least one spike falls in the one-frame onset window
+ *         [start_index, start_index + 1], otherwise 0.0.
  * @post Does not mutate scenario data.
  */
 [[nodiscard]] float expectedOnsetSpikePresence(
         WhiskerContactScenario const & scenario,
-        TimeFrameInterval const & contact_interval) {
+        ClockTicksInterval const & contact_interval) {
     auto const time_frame = scenario.contact->getTimeFrame();
     if (!time_frame) {
         throw std::runtime_error("expected contact TimeFrame");
     }
 
+    TimeFrameIndex const start_index = time_frame->getIndexAtTime(contact_interval.start, false);
+    TimeFrameIndex const end_index(start_index.getValue() + 1);
+
     auto const onset_events = scenario.spikes->viewInRange(
-            TimeFrameIndex(contact_interval.start),
-            TimeFrameIndex(contact_interval.start.getValue() + 1),
-            *time_frame);
+            start_index, end_index, *time_frame);
 
     for ([[maybe_unused]] auto const & event: onset_events) {
         return 1.0f;

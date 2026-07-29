@@ -10,6 +10,27 @@
 #include <iostream>
 #include <vector>
 
+namespace {
+
+/**
+ * @brief Build interval-series output with the source analog TimeFrame attached.
+ * @pre @p time_frame may be null (view() will remain invalid until a frame is set)
+ */
+std::shared_ptr<DigitalIntervalSeries> makeIntervalThresholdResult(
+        std::vector<TimeFrameInterval> intervals,
+        std::shared_ptr<TimeFrame> time_frame) {
+    auto result = std::make_shared<DigitalIntervalSeries>(std::move(intervals));
+    result->setTimeFrame(std::move(time_frame));
+    return result;
+}
+
+std::shared_ptr<DigitalIntervalSeries> makeEmptyIntervalThresholdResult(
+        std::shared_ptr<TimeFrame> time_frame) {
+    return makeIntervalThresholdResult({}, std::move(time_frame));
+}
+
+} // namespace
+
 
 std::shared_ptr<DigitalIntervalSeries> interval_threshold(
         AnalogTimeSeries const * analog_time_series,
@@ -28,12 +49,14 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
         return std::make_shared<DigitalIntervalSeries>();
     }
 
+    auto const input_time_frame = analog_time_series->getTimeFrame();
+
     auto const & timestamps = analog_time_series->getTimeSeries();
     auto const & values = analog_time_series->getAnalogTimeSeries();
 
     if (timestamps.empty()) {
         std::cerr << "interval_threshold: Input time series is empty" << std::endl;
-        return std::make_shared<DigitalIntervalSeries>();
+        return makeEmptyIntervalThresholdResult(input_time_frame);
     }
 
     if (progressCallback) {
@@ -175,7 +198,7 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
         progressCallback(100);
     }
 
-    return std::make_shared<DigitalIntervalSeries>(intervals);
+    return makeIntervalThresholdResult(std::move(intervals), input_time_frame);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

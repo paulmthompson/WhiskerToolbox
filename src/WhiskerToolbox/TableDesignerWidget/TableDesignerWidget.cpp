@@ -1,13 +1,9 @@
 #include "TableDesignerWidget.hpp"
 #include "ui_TableDesignerWidget.h"
 
-#include "Collapsible_Widget/Section.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "Collapsible_Widget/Section.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
-#include "Lines/Line_Data.hpp"
-#include "Points/Point_Data.hpp"
 #include "DataManager/utils/TableView/ComputerRegistry.hpp"
 #include "DataManager/utils/TableView/TableEvents.hpp"
 #include "DataManager/utils/TableView/TableRegistry.hpp"
@@ -18,7 +14,11 @@
 #include "DataManager/utils/TableView/interfaces/IColumnComputer.h"
 #include "DataManager/utils/TableView/interfaces/IRowSelector.h"
 #include "DataManager/utils/TableView/transforms/PCATransform.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Entity/EntityGroupManager.hpp"
+#include "Lines/Line_Data.hpp"
+#include "Points/Point_Data.hpp"
 #include "TableDesignerState.hpp"
 #include "TableDesignerStateData.hpp"
 #include "TableExportWidget.hpp"
@@ -150,7 +150,8 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
     if (_data_manager) {
         _data_manager->addObserver([this]() {
             refreshAllDataSources();
-        }, "TableDesignerWidget");
+        },
+                                   "TableDesignerWidget");
     }
 
     qDebug() << "TableDesignerWidget initialized with TableViewerWidget for efficient pagination";
@@ -162,7 +163,7 @@ TableDesignerWidget::~TableDesignerWidget() {
 
 void TableDesignerWidget::setState(std::shared_ptr<TableDesignerState> state) {
     if (!state) {
-        return;  // Don't accept null state
+        return;// Don't accept null state
     }
 
     _state = std::move(state);
@@ -180,12 +181,12 @@ void TableDesignerWidget::connectStateSignals() {
     }
 
     // State → UI: When state changes externally (e.g., from JSON load), update UI
-    
+
     // Table selection
     connect(_state.get(), &TableDesignerState::currentTableIdChanged, this, [this](QString const & table_id) {
         if (_updating_from_state) return;
         _updating_from_state = true;
-        
+
         // Find and select the table in the combo
         for (int i = 0; i < ui->table_combo->count(); ++i) {
             if (ui->table_combo->itemData(i).toString() == table_id) {
@@ -193,7 +194,7 @@ void TableDesignerWidget::connectStateSignals() {
                 break;
             }
         }
-        
+
         _updating_from_state = false;
     });
 
@@ -201,17 +202,17 @@ void TableDesignerWidget::connectStateSignals() {
     connect(_state.get(), &TableDesignerState::rowSettingsChanged, this, [this]() {
         if (_updating_from_state) return;
         _updating_from_state = true;
-        
+
         // Update row source combo
         QString source_name = _state->rowSourceName();
         int index = ui->row_data_source_combo->findText(source_name);
         if (index >= 0) {
             ui->row_data_source_combo->setCurrentIndex(index);
         }
-        
+
         // Update capture range
         ui->capture_range_spinbox->setValue(_state->captureRange());
-        
+
         // Update interval mode radio buttons
         switch (_state->intervalMode()) {
             case IntervalRowMode::Beginning:
@@ -224,7 +225,7 @@ void TableDesignerWidget::connectStateSignals() {
                 ui->interval_itself_radio->setChecked(true);
                 break;
         }
-        
+
         _updating_from_state = false;
     });
 
@@ -232,15 +233,15 @@ void TableDesignerWidget::connectStateSignals() {
     connect(_state.get(), &TableDesignerState::groupSettingsChanged, this, [this]() {
         if (_updating_from_state) return;
         _updating_from_state = true;
-        
+
         ui->group_mode_toggle_btn->setChecked(_state->groupModeEnabled());
         // Note: grouping pattern is stored in state but UI currently doesn't expose editing it
         _group_mode = _state->groupModeEnabled();
         _grouping_pattern = _state->groupingPattern().toStdString();
-        
+
         // Refresh tree to reflect group mode change
         refreshComputersTree();
-        
+
         _updating_from_state = false;
     });
 
@@ -256,11 +257,11 @@ void TableDesignerWidget::connectStateSignals() {
     connect(_state.get(), &TableDesignerState::computerStatesCleared, this, [this]() {
         if (_updating_from_state) return;
         _updating_from_state = true;
-        
+
         // Clear all checkboxes in tree
         _persisted_computer_states.clear();
         refreshComputersTree();
-        
+
         _updating_from_state = false;
     });
 }
@@ -314,7 +315,7 @@ void TableDesignerWidget::syncUIFromState() {
     // === Computer States ===
     // Copy computer states from state to widget's persisted states
     _persisted_computer_states.clear();
-    for (auto const & [key, entry] : _state->computerStates()) {
+    for (auto const & [key, entry]: _state->computerStates()) {
         QString qkey = QString::fromStdString(key);
         Qt::CheckState check_state = entry.enabled ? Qt::Checked : Qt::Unchecked;
         QString column_name = QString::fromStdString(entry.column_name);
@@ -324,10 +325,10 @@ void TableDesignerWidget::syncUIFromState() {
     // === Column Orders ===
     // Copy column orders from state to widget
     _table_column_order.clear();
-    for (auto const & [table_id_str, columns] : _state->data().column_orders) {
+    for (auto const & [table_id_str, columns]: _state->data().column_orders) {
         QString qtable_id = QString::fromStdString(table_id_str);
         QStringList qcolumns;
-        for (auto const & col : columns) {
+        for (auto const & col: columns) {
             qcolumns.append(QString::fromStdString(col));
         }
         _table_column_order[qtable_id] = qcolumns;
@@ -427,12 +428,12 @@ void TableDesignerWidget::onTableSelectionChanged() {
     }
 
     _current_table_id = table_id;
-    
+
     // UI → State: Propagate table selection to state
     if (_state && !_updating_from_state) {
         _state->setCurrentTableId(table_id);
     }
-    
+
     loadTableInfo(table_id);
 
     // Enable/disable controls
@@ -844,13 +845,13 @@ void TableDesignerWidget::onExportCsv() {
         // Export separate files by group
         QString directory = promptSaveDirectoryForGroupExport();
         if (directory.isEmpty()) return;
-        
+
         // Extract base name from current table ID
         QString base_name = _current_table_id;
-        
+
         try {
             int files_exported = exportTableByGroups(view.get(), directory, base_name, delim, eol, precision, includeHeader);
-            
+
             if (files_exported > 0) {
                 updateBuildStatus(QString("Exported %1 CSV files to: %2").arg(files_exported).arg(directory));
             } else {
@@ -865,7 +866,7 @@ void TableDesignerWidget::onExportCsv() {
         QString filename = promptSaveCsvFilename();
         if (filename.isEmpty()) return;
         if (!filename.endsWith(".csv", Qt::CaseInsensitive)) filename += ".csv";
-        
+
         if (exportTableToSingleCsv(view.get(), filename, delim, eol, precision, includeHeader)) {
             updateBuildStatus(QString("Exported CSV: %1").arg(filename));
         } else {
@@ -900,7 +901,7 @@ bool TableDesignerWidget::exportTableToSingleCsv(TableView * view, QString const
             }
             file << eol;
         }
-        
+
         size_t rows = view->getRowCount();
         for (size_t r = 0; r < rows; ++r) {
             for (size_t c = 0; c < names.size(); ++c) {
@@ -962,9 +963,9 @@ bool TableDesignerWidget::exportTableToSingleCsv(TableView * view, QString const
 }
 
 int TableDesignerWidget::exportTableByGroups(TableView * view, QString const & directory,
-                                            QString const & base_name,
-                                            std::string const & delim, std::string const & eol,
-                                            int precision, bool includeHeader) {
+                                             QString const & base_name,
+                                             std::string const & delim, std::string const & eol,
+                                             int precision, bool includeHeader) {
     if (!view || !_data_manager) {
         return 0;
     }
@@ -1011,7 +1012,7 @@ int TableDesignerWidget::exportTableByGroups(TableView * view, QString const & d
     int files_exported = 0;
 
     // For each group, find matching rows and export
-    for (auto const & group_desc : group_descriptors) {
+    for (auto const & group_desc: group_descriptors) {
         // Get entities in this group
         auto group_entities = group_manager->getEntitiesInGroup(group_desc.id);
         if (group_entities.empty()) {
@@ -1026,7 +1027,7 @@ int TableDesignerWidget::exportTableByGroups(TableView * view, QString const & d
         for (size_t r = 0; r < all_entity_ids.size(); ++r) {
             // Check if any of the row's entities are in this group
             bool has_match = false;
-            for (auto const & entity_id : all_entity_ids[r]) {
+            for (auto const & entity_id: all_entity_ids[r]) {
                 if (group_entity_set.count(entity_id) > 0) {
                     has_match = true;
                     break;
@@ -1067,7 +1068,7 @@ int TableDesignerWidget::exportTableByGroups(TableView * view, QString const & d
             }
 
             // Write only matching rows
-            for (size_t r : matching_rows) {
+            for (size_t r: matching_rows) {
                 for (size_t c = 0; c < names.size(); ++c) {
                     if (c > 0) file << delim;
 
@@ -1116,10 +1117,10 @@ int TableDesignerWidget::exportTableByGroups(TableView * view, QString const & d
                 }
                 file << eol;
             }
-            
+
             file.close();
             files_exported++;
-            
+
         } catch (std::exception const & e) {
             qWarning() << "Failed to export group" << group_name << ":" << e.what();
         }
@@ -1504,7 +1505,7 @@ TableDesignerWidget::createColumnDataSourceVariant(QString const & data_source_s
 
 std::optional<RowSelectorType> TableDesignerWidget::getCurrentRowSelectorType() const {
     QString row_source = ui->row_data_source_combo->currentText();
-    
+
     if (row_source.isEmpty()) {
         return std::nullopt;
     }
@@ -1512,7 +1513,7 @@ std::optional<RowSelectorType> TableDesignerWidget::getCurrentRowSelectorType() 
     if (row_source.startsWith("TimeFrame: ")) {
         return RowSelectorType::Timestamp;
     } else if (row_source.startsWith("Events: ")) {
-        return RowSelectorType::Timestamp;  // Events create timestamp rows
+        return RowSelectorType::Timestamp;// Events create timestamp rows
     } else if (row_source.startsWith("Intervals: ")) {
         return RowSelectorType::IntervalBased;
     }
@@ -1572,7 +1573,6 @@ void TableDesignerWidget::updateRowInfoLabel(QString const & selected_source) {
     } else if (source_type == "Intervals") {
         auto interval_series = _data_manager->getData<DigitalIntervalSeries>(source_name_str);
         if (interval_series) {
-            auto intervals = interval_series->view();
             info_text += QString(" - %1 intervals").arg(interval_series->size());
 
             // Add capture range and interval setting information
@@ -1658,7 +1658,6 @@ std::unique_ptr<IRowSelector> TableDesignerWidget::createRowSelector(QString con
                 return nullptr;
             }
 
-            auto intervals = interval_series->view();
             auto timeframe_key = _data_manager->getTimeKey(source_name_str);
             auto timeframe_obj = _data_manager->getTime(timeframe_key);
             if (!timeframe_obj) {
@@ -1673,17 +1672,18 @@ std::unique_ptr<IRowSelector> TableDesignerWidget::createRowSelector(QString con
 
             // Create intervals based on the selected option
             std::vector<TimeFrameInterval> tf_intervals;
-            for (auto const & interval: intervals) {
+            tf_intervals.reserve(interval_series->size());
+            for (size_t i = 0; i < interval_series->size(); ++i) {
+                TimeFrameInterval const stored = interval_series->getStoredInterval(i);
                 if (use_interval_itself) {
-                    // Use the interval as-is
-                    tf_intervals.emplace_back(TimeFrameIndex(interval.value().start), TimeFrameIndex(interval.value().end));
+                    tf_intervals.push_back(stored);
                 } else {
                     // Determine the reference point (beginning or end of interval)
                     int64_t reference_point;
                     if (use_beginning) {
-                        reference_point = interval.value().start.getValue();
+                        reference_point = stored.start.getValue();
                     } else {
-                        reference_point = interval.value().end.getValue();
+                        reference_point = stored.end.getValue();
                     }
 
                     // Create a new interval around the reference point
@@ -2347,7 +2347,7 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
             if (!computer_exists) {
                 errors << QString("Requested computer does not exist: %1").arg(computer);
             }
-            
+
             // Validate compatibility using registry and current row selector type
             if (_data_manager) {
                 if (auto * reg = _data_manager->getTableRegistry()) {
@@ -2355,7 +2355,7 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
                     if (data_manager_ext) {
                         auto & cr = reg->getComputerRegistry();
                         auto current_row_type = getCurrentRowSelectorType();
-                        
+
                         // Build data source variant based on data type
                         bool type_event = false, type_interval = false, type_analog = false;
                         for (int i = 0; i < tree->topLevelItemCount(); ++i) {
@@ -2363,22 +2363,26 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
                             QString ds_text = ds_item->text(0);
                             if (ds_text.contains(data_source)) {
                                 if (ds_text.startsWith("Events: ")) type_event = true;
-                                else if (ds_text.startsWith("Intervals: ")) type_interval = true;
-                                else if (ds_text.startsWith("analog:")) type_analog = true;
+                                else if (ds_text.startsWith("Intervals: "))
+                                    type_interval = true;
+                                else if (ds_text.startsWith("analog:"))
+                                    type_analog = true;
                             }
                         }
-                        
+
                         QString ds_repr;
                         if (type_event) ds_repr = QString("Events: %1").arg(data_source);
-                        else if (type_interval) ds_repr = QString("Intervals: %1").arg(data_source);
-                        else if (type_analog) ds_repr = QString("analog:%1").arg(data_source);
-                        
+                        else if (type_interval)
+                            ds_repr = QString("Intervals: %1").arg(data_source);
+                        else if (type_analog)
+                            ds_repr = QString("analog:%1").arg(data_source);
+
                         if (!ds_repr.isEmpty() && current_row_type.has_value()) {
                             auto ds_variant = createColumnDataSourceVariant(ds_repr, data_manager_ext);
                             if (ds_variant.has_value()) {
                                 auto available = cr.getAvailableComputers(current_row_type.value(), ds_variant.value());
                                 bool found = false;
-                                for (auto const & comp_info : available) {
+                                for (auto const & comp_info: available) {
                                     if (comp_info.name == computer.toStdString()) {
                                         found = true;
                                         break;
@@ -2387,7 +2391,7 @@ void TableDesignerWidget::applyJsonTemplateToUI(QString const & jsonText) {
                                 if (!found) {
                                     // Phrase includes 'not valid for data source type' to satisfy tests
                                     errors << QString("Computer '%1' is not valid for data source type and not compatible with '%2' for the current row selector type")
-                                                  .arg(computer, ds_repr);
+                                                      .arg(computer, ds_repr);
                                 }
                             }
                         }

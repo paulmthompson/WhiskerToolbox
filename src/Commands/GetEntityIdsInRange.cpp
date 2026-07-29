@@ -7,6 +7,7 @@
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "TimeFrame/interval_data.hpp"
 
 namespace commands {
 
@@ -28,9 +29,17 @@ std::unordered_set<EntityId> getEntityIdsInRange(
         TimeFrameIndex start,
         TimeFrameIndex end) {
     std::unordered_set<EntityId> result;
+    auto const time_frame = data.getTimeFrame();
+    if (!time_frame) {
+        return result;
+    }
+
+    ClockTicksInterval const query{
+            time_frame->getTimeAtIndex(start),
+            time_frame->getTimeAtIndex(end)};
+
     for (auto const & elem: data.view()) {
-        // Overlap check: interval.start <= end && interval.end >= start
-        if (elem.interval.start <= end && elem.interval.end >= start) {
+        if (is_overlapping(elem.interval, query)) {
             result.insert(elem.id());
         }
     }

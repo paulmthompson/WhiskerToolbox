@@ -173,10 +173,10 @@ struct element_type_of<AnalogTimeSeries> {
     using type = AnalogTimeSeries::TimeValuePoint;
 };
 
-// Specialization: DigitalIntervalSeries uses IntervalWithId
+// Specialization: DigitalIntervalSeries uses ClockTicksIntervalWithId
 template<>
 struct element_type_of<DigitalIntervalSeries> {
-    using type = IntervalWithId;
+    using type = ClockTicksIntervalWithId;
 };
 
 template<typename T>
@@ -766,8 +766,8 @@ private:
         }
 
         intervals.reserve(windows->size());
-        for (auto const & window: windows->view()) {
-            intervals.push_back(window.interval);
+        for (size_t i = 0; i < windows->size(); ++i) {
+            intervals.push_back(windows->getStoredInterval(i));
         }
         return intervals;
     }
@@ -794,6 +794,10 @@ private:
         if (alignment_points && alignment_points->size() != windows->size()) {
             throw std::invalid_argument(
                     "GatherResult::create: alignment point count must match window count");
+        }
+        if (!source->getTimeFrame() || !windows->getTimeFrame()) {
+            throw std::invalid_argument(
+                    "convertPreparedWindowToSourceInterval: prepared windows and source data must have TimeFrames");
         }
     }
 
@@ -874,9 +878,10 @@ private:
         auto const source_tf = result._source->getTimeFrame();
         auto const window_tf = result._windows->getTimeFrame();
 
-        for (auto const & window: result._windows->view()) {
+        for (size_t i = 0; i < result._windows->size(); ++i) {
+            TimeFrameInterval const stored = result._windows->getStoredInterval(i);
             auto const query_interval = Neuralyzer::Gather::convertPreparedWindowToSourceInterval(
-                    window.interval,
+                    stored,
                     window_tf,
                     source_tf);
             result._query_intervals.push_back(query_interval);

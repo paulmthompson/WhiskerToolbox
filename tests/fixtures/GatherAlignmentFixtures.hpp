@@ -162,19 +162,20 @@ enum class TestIntervalAlignmentPoint {
         std::shared_ptr<DigitalIntervalSeries> const & intervals,
         TestIntervalAlignmentPoint point) {
     auto events = std::make_shared<DigitalEventSeries>();
+    auto const * timeframe = intervals->getTimeFrame().get();
     events->setTimeFrame(intervals->getTimeFrame());
 
     for (auto const & interval: intervals->view()) {
-        TimeFrameIndex alignment_time = interval.interval.start;
+        TimeFrameIndex alignment_time = timeframe->getIndexAtTime(interval.value().start);
         switch (point) {
             case TestIntervalAlignmentPoint::Start:
-                alignment_time = interval.interval.start;
+                alignment_time = timeframe->getIndexAtTime(interval.value().start);
                 break;
             case TestIntervalAlignmentPoint::End:
-                alignment_time = interval.interval.end;
+                alignment_time = timeframe->getIndexAtTime(interval.value().end);
                 break;
             case TestIntervalAlignmentPoint::Center:
-                alignment_time = (interval.interval.start + interval.interval.end) / 2;
+                alignment_time = (timeframe->getIndexAtTime(interval.value().start) + timeframe->getIndexAtTime(interval.value().end)) / 2;
                 break;
         }
         events->addEvent(alignment_time);

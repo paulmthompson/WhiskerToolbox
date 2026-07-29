@@ -41,9 +41,10 @@ inline bool writeCSVTwoColumn(DigitalIntervalSeries const* intervals,
         file << header_text << "\n";
     }
     
-    // Write data rows
-    for (auto const& interval : intervals->view()) {
-        file << interval.value().start.getValue() << delimiter << interval.value().end.getValue() << "\n";
+    // Write data rows (index-space coordinates, matching CSV save/load)
+    for (size_t i = 0; i < intervals->size(); ++i) {
+        auto const stored = intervals->getStoredInterval(i);
+        file << stored.start.getValue() << delimiter << stored.end.getValue() << "\n";
     }
     
     return file.good();
@@ -75,9 +76,10 @@ inline bool writeCSVReversedColumns(DigitalIntervalSeries const* intervals,
         file << "End" << delimiter << "Start" << "\n";
     }
     
-    // Write data rows (end first, then start)
-    for (auto const& interval : intervals->view()) {
-        file << interval.value().end.getValue() << delimiter << interval.value().start.getValue() << "\n";
+    // Write data rows (end first, then start; index-space coordinates)
+    for (size_t i = 0; i < intervals->size(); ++i) {
+        auto const stored = intervals->getStoredInterval(i);
+        file << stored.end.getValue() << delimiter << stored.start.getValue() << "\n";
     }
     
     return file.good();
