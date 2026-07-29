@@ -397,7 +397,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>std::vector&lt; <a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> &gt;</td>
+<td>std::vector&lt; <a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> &gt;</td>
 <td><strong><a href="../../api_generated/Files/Digital__Interval__Series__Binary_8cpp.html#function-load">load</a></strong>(<a href="../../api_generated/Classes/structBinaryIntervalLoaderOptions.html">BinaryIntervalLoaderOptions</a> const &amp; options)<br>Load digital interval series data from binary file using specified options.</td>
 </tr>
 <tr class="even">
@@ -411,7 +411,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="functions-documentation">Functions Documentation</h2>
 <section id="function-load" class="level3">
 <h3 class="anchored" data-anchor-id="function-load">function load</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> Interval <span class="op">&gt;</span> load<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> TimeFrameInterval <span class="op">&gt;</span> load<span class="op">(</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    BinaryIntervalLoaderOptions <span class="at">const</span> <span class="op">&amp;</span> options</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Load digital interval series data from binary file using specified options.</p>
@@ -448,7 +448,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="op">{</span></span>
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Helper function to load and extract intervals based on data type</span></span>
 <span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> loadIntervalsFromBinary<span class="op">(</span>BinaryIntervalLoaderOptions <span class="at">const</span> <span class="op">&amp;</span> options<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameInterval<span class="op">&gt;</span> loadIntervalsFromBinary<span class="op">(</span>BinaryIntervalLoaderOptions <span class="at">const</span> <span class="op">&amp;</span> options<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Set up binary loading options</span></span>
 <span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        Loader<span class="op">::</span>BinaryAnalogOptions binary_opts<span class="op">;</span></span>
 <span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        binary_opts<span class="op">.</span>file_path <span class="op">=</span> options<span class="op">.</span>filepath<span class="op">;</span></span>
@@ -473,12 +473,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> interval_pairs <span class="op">=</span> Loader<span class="op">::</span>extractIntervals<span class="op">(</span>digital_data<span class="op">,</span> options<span class="op">.</span><span class="dt">transition_type</span><span class="op">);</span></span>
 <span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>        </span>
 <span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Convert to Interval objects</span></span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> intervals<span class="op">;</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameInterval<span class="op">&gt;</span> intervals<span class="op">;</span></span>
 <span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>        intervals<span class="op">.</span>reserve<span class="op">(</span>interval_pairs<span class="op">.</span>size<span class="op">());</span></span>
 <span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> pair <span class="op">:</span> interval_pairs<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>            intervals<span class="op">.</span>emplace_back<span class="op">(</span>Interval<span class="op">{</span></span>
-<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>                <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">&gt;(</span>pair<span class="op">.</span>first<span class="op">),</span> </span>
-<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>                <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">&gt;(</span>pair<span class="op">.</span>second<span class="op">)</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>            intervals<span class="op">.</span>emplace_back<span class="op">(</span>TimeFrameInterval<span class="op">{</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>                TimeFrameIndex<span class="op">{</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">&gt;(</span>pair<span class="op">.</span>first<span class="op">)},</span> </span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>                TimeFrameIndex<span class="op">{</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">&gt;(</span>pair<span class="op">.</span>second<span class="op">)}</span></span>
 <span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>            <span class="op">});</span></span>
 <span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>        </span>
@@ -486,7 +486,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> load<span class="op">(</span>BinaryIntervalLoaderOptions <span class="at">const</span> <span class="op">&amp;</span> options<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameInterval<span class="op">&gt;</span> load<span class="op">(</span>BinaryIntervalLoaderOptions <span class="at">const</span> <span class="op">&amp;</span> options<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Validate options</span></span>
 <span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>options<span class="op">.</span>filepath<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
 <span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"Error: Filepath cannot be empty"</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
@@ -564,7 +564,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-126"><a href="#cb3-126" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;();</span></span>
 <span id="cb3-127"><a href="#cb3-127" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:55 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:36 +0000</p>
 
 
 </section>

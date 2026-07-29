@@ -357,7 +357,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#function-timeaxisparams" id="toc-function-timeaxisparams" class="nav-link" data-scroll-target="#function-timeaxisparams">function TimeAxisParams</a></li>
   <li><a href="#function-timeaxisparams-1" id="toc-function-timeaxisparams-1" class="nav-link" data-scroll-target="#function-timeaxisparams-1">function TimeAxisParams</a></li>
-  <li><a href="#function-timeaxisparams-2" id="toc-function-timeaxisparams-2" class="nav-link" data-scroll-target="#function-timeaxisparams-2">function TimeAxisParams</a></li>
   <li><a href="#function-gettimespan" id="toc-function-gettimespan" class="nav-link" data-scroll-target="#function-gettimespan">function getTimeSpan</a></li>
   </ul></li>
   <li><a href="#public-attributes-documentation" id="toc-public-attributes-documentation" class="nav-link" data-scroll-target="#public-attributes-documentation">Public Attributes Documentation</a>
@@ -413,15 +412,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td></td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1TimeAxisParams.html#function-timeaxisparams">TimeAxisParams</a></strong>(int64_t start, int64_t end, int width)<br>Construct from explicit values.</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1TimeAxisParams.html#function-timeaxisparams">TimeAxisParams</a></strong>(<a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> start, <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> end, int width)<br>Construct from explicit clock-tick endpoints.</td>
 </tr>
 <tr class="odd">
-<td></td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1TimeAxisParams.html#function-timeaxisparams">TimeAxisParams</a></strong>(<a href="../../api_generated/Classes/structCorePlotting_1_1TimeSeriesViewState.html">TimeSeriesViewState</a> const &amp; view_state, int width)<br>Construct from <a href="">TimeSeriesViewState</a> and viewport width.</td>
-</tr>
-<tr class="even">
 <td>int64_t</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1TimeAxisParams.html#function-gettimespan">getTimeSpan</a></strong>() const<br>Get the time span of the visible range.</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1TimeAxisParams.html#function-gettimespan">getTimeSpan</a></strong>() const<br>Get the time span of the visible range in clock ticks.</td>
 </tr>
 </tbody>
 </table>
@@ -437,12 +432,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>int64_t</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1TimeAxisParams.html#variable-time-start">time_start</a></strong> <br>Start of visible time range.</td>
+<td><a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a></td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1TimeAxisParams.html#variable-time-start">time_start</a></strong> <br>Start of visible time range (absolute clock ticks)</td>
 </tr>
 <tr class="even">
-<td>int64_t</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1TimeAxisParams.html#variable-time-end">time_end</a></strong> <br>End of visible time range.</td>
+<td><a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a></td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1TimeAxisParams.html#variable-time-end">time_end</a></strong> <br>End of visible time range (absolute clock ticks)</td>
 </tr>
 <tr class="odd">
 <td>int</td>
@@ -455,8 +450,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> CorePlotting<span class="op">::</span>TimeAxisParams<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Parameters for time axis coordinate conversions.</p>
-<p>This struct bundles all necessary information for converting between canvas pixel coordinates and time coordinates. It is designed to be lightweight and easily constructed from <a href="../../api_generated/Classes/structCorePlotting_1_1TimeSeriesViewState.html">TimeSeriesViewState</a> and viewport dimensions.</p>
-<p>All time values are in the same units as <a href="../../api_generated/Classes/structCorePlotting_1_1TimeSeriesViewState.html">TimeSeriesViewState</a> (typically <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>).</p>
+<p>Bundles information for converting between canvas pixel coordinates and physical time (clock ticks). Endpoints are absolute <code>[ClockTicks](/api_generated/Classes/classClockTicks.md)</code> in the master clock — the same scalar space as <code>[TimeFrame::getTimeAtIndex](/api_generated/Classes/classTimeFrame.md#function-gettimeatindex)</code>.</p>
+<p>Construct via explicit tick endpoints, or <code>makeTimeAxisParams</code> when the visible window is expressed as master <code>[TimeFrameIndex](/api_generated/Classes/structTimeFrameIndex.md)</code> values.</p>
 </section>
 <section id="public-functions-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
@@ -468,56 +463,43 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-timeaxisparams-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-timeaxisparams-1">function TimeAxisParams</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> TimeAxisParams<span class="op">(</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> start<span class="op">,</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> end<span class="op">,</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    ClockTicks start<span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    ClockTicks end<span class="op">,</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> width</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Construct from explicit values.</p>
+<p>Construct from explicit clock-tick endpoints.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>start</strong> Start time coordinate</li>
-<li><strong>end</strong> End time coordinate</li>
-<li><strong>width</strong> Viewport width in pixels</li>
-</ul>
-</section>
-<section id="function-timeaxisparams-2" class="level3">
-<h3 class="anchored" data-anchor-id="function-timeaxisparams-2">function TimeAxisParams</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> TimeAxisParams<span class="op">(</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    TimeSeriesViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> width</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Construct from <a href="">TimeSeriesViewState</a> and viewport width.</p>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>view_state</strong> <a href="../../api_generated/Classes/structCorePlotting_1_1TimeSeriesViewState.html">TimeSeriesViewState</a> providing visible time bounds</li>
+<li><strong>start</strong> Start time in absolute clock ticks</li>
+<li><strong>end</strong> End time in absolute clock ticks</li>
 <li><strong>width</strong> Viewport width in pixels</li>
 </ul>
 </section>
 <section id="function-gettimespan" class="level3">
 <h3 class="anchored" data-anchor-id="function-gettimespan">function getTimeSpan</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">int64_t</span> getTimeSpan<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Get the time span of the visible range.</p>
-<p><strong>Return</strong>: time_end - time_start</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">int64_t</span> getTimeSpan<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the time span of the visible range in clock ticks.</p>
+<p><strong>Return</strong>: <code>time_end</code> - <code>time_start</code></p>
 </section>
 </section>
 <section id="public-attributes-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-attributes-documentation">Public Attributes Documentation</h2>
 <section id="variable-time_start" class="level3">
 <h3 class="anchored" data-anchor-id="variable-time_start">variable time_start</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int64_t</span> time_start <span class="op">{</span><span class="dv">0</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Start of visible time range.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>ClockTicks time_start <span class="op">{</span><span class="dv">0</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Start of visible time range (absolute clock ticks)</p>
 </section>
 <section id="variable-time_end" class="level3">
 <h3 class="anchored" data-anchor-id="variable-time_end">variable time_end</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int64_t</span> time_end <span class="op">{</span><span class="dv">0</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>End of visible time range.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>ClockTicks time_end <span class="op">{</span><span class="dv">0</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>End of visible time range (absolute clock ticks)</p>
 </section>
 <section id="variable-viewport_width_px" class="level3">
 <h3 class="anchored" data-anchor-id="variable-viewport_width_px">variable viewport_width_px</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> viewport_width_px <span class="op">{</span><span class="dv">1</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> viewport_width_px <span class="op">{</span><span class="dv">1</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Canvas width in pixels.</p>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:53 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:34 +0000</p>
 
 
 </section>

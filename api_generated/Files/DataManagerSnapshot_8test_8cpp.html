@@ -661,8 +661,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb16-76"><a href="#cb16-76" aria-hidden="true" tabindex="-1"></a>    DataManager dm<span class="op">;</span></span>
 <span id="cb16-77"><a href="#cb16-77" aria-hidden="true" tabindex="-1"></a>    dm<span class="op">.</span>setData<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;(</span><span class="st">"intervals"</span><span class="op">,</span> TimeKey<span class="op">(</span><span class="st">"time"</span><span class="op">));</span></span>
 <span id="cb16-78"><a href="#cb16-78" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> ivs <span class="op">=</span> dm<span class="op">.</span>getData<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;(</span><span class="st">"intervals"</span><span class="op">);</span></span>
-<span id="cb16-79"><a href="#cb16-79" aria-hidden="true" tabindex="-1"></a>    ivs<span class="op">-&gt;</span>addEvent<span class="op">(</span>Interval<span class="op">{</span><span class="dv">10</span><span class="op">,</span> <span class="dv">20</span><span class="op">});</span></span>
-<span id="cb16-80"><a href="#cb16-80" aria-hidden="true" tabindex="-1"></a>    ivs<span class="op">-&gt;</span>addEvent<span class="op">(</span>Interval<span class="op">{</span><span class="dv">30</span><span class="op">,</span> <span class="dv">40</span><span class="op">});</span></span>
+<span id="cb16-79"><a href="#cb16-79" aria-hidden="true" tabindex="-1"></a>    ivs<span class="op">-&gt;</span>addEvent<span class="op">(</span>TimeFrameInterval<span class="op">{</span>TimeFrameIndex<span class="op">(</span><span class="dv">10</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">20</span><span class="op">)});</span></span>
+<span id="cb16-80"><a href="#cb16-80" aria-hidden="true" tabindex="-1"></a>    ivs<span class="op">-&gt;</span>addEvent<span class="op">(</span>TimeFrameInterval<span class="op">{</span>TimeFrameIndex<span class="op">(</span><span class="dv">30</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">40</span><span class="op">)});</span></span>
 <span id="cb16-81"><a href="#cb16-81" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-82"><a href="#cb16-82" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> snap <span class="op">=</span> snapshotDataManager<span class="op">(</span>dm<span class="op">);</span></span>
 <span id="cb16-83"><a href="#cb16-83" aria-hidden="true" tabindex="-1"></a></span>
@@ -1050,7 +1050,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb16-465"><a href="#cb16-465" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>snap1 <span class="op">==</span> snap2<span class="op">);</span></span>
 <span id="cb16-466"><a href="#cb16-466" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:54 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:36 +0000</p>
 
 
 </section>

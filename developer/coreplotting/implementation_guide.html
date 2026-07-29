@@ -408,8 +408,7 @@ void initializeGL() override;<br>
 void resizeGL(int w, int h) override;<br>
 void paintGL() override;</p>
 <p>private:<br>
-// 1. View State: Manages Zoom/Pan and Time Window<br>
-CorePlotting::TimeSeriesViewState _view_state;</p>
+// 1. View State: Manages zoom/pan and time window (ViewStateData in DataViewerState) CorePlotting::ViewStateData _view_state;</p>
 <pre><code>// 2\. Layout Engine: Calculates vertical positioning  
 CorePlotting::LayoutEngine \_layout\_engine;
 
@@ -589,7 +588,7 @@ setActiveSeries(result.series_key);<br>
 <ul class="task-list">
 <li><label><input type="checkbox"><strong>Data Storage</strong>: Does the widget own the data, or reference a DataManager? (Ideally reference).<br>
 </label></li>
-<li><label><input type="checkbox"><strong>View State</strong>: Are you using TimeSeriesViewState for X-axis scrolling?<br>
+<li><label><input type="checkbox"><strong>View State</strong>: Are you using <code>ViewStateData</code> (<code>x_min</code>/<code>x_max</code> as master <code>TimeFrameIndex</code>) for X-axis scrolling?<br>
 </label></li>
 <li><label><input type="checkbox"><strong>Layout</strong>: Are you using StackedLayoutStrategy (vertical channels) or RowLayoutStrategy (raster plots)?<br>
 </label></li>

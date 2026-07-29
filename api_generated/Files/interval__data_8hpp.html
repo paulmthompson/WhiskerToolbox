@@ -357,6 +357,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#using-interval" id="toc-using-interval" class="nav-link" data-scroll-target="#using-interval">using Interval</a></li>
   <li><a href="#using-timeframeinterval" id="toc-using-timeframeinterval" class="nav-link" data-scroll-target="#using-timeframeinterval">using TimeFrameInterval</a></li>
+  <li><a href="#using-clockticksinterval" id="toc-using-clockticksinterval" class="nav-link" data-scroll-target="#using-clockticksinterval">using ClockTicksInterval</a></li>
   </ul></li>
   <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
   <ul class="collapse">
@@ -375,6 +376,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-is_contained-4" id="toc-function-is_contained-4" class="nav-link" data-scroll-target="#function-is_contained-4">function is_contained</a></li>
   <li><a href="#function-is_contained-5" id="toc-function-is_contained-5" class="nav-link" data-scroll-target="#function-is_contained-5">function is_contained</a></li>
   <li><a href="#function-operator-2" id="toc-function-operator-2" class="nav-link" data-scroll-target="#function-operator-2">function operator&lt;</a></li>
+  <li><a href="#function-toclockticksinterval" id="toc-function-toclockticksinterval" class="nav-link" data-scroll-target="#function-toclockticksinterval">function toClockTicksInterval</a></li>
+  <li><a href="#function-totimeframeinterval" id="toc-function-totimeframeinterval" class="nav-link" data-scroll-target="#function-totimeframeinterval">function toTimeFrameInterval</a></li>
   </ul></li>
   <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
   </ul></li>
@@ -440,6 +443,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>using <a href="../../api_generated/Classes/structIntervalT.html">IntervalT</a>&lt; <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt;</td>
 <td><strong><a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a></strong></td>
+</tr>
+<tr class="odd">
+<td>using <a href="../../api_generated/Classes/structIntervalT.html">IntervalT</a>&lt; <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> &gt;</td>
+<td><strong><a href="../../api_generated/Files/interval__data_8hpp.html#using-clockticksinterval">ClockTicksInterval</a></strong></td>
 </tr>
 </tbody>
 </table>
@@ -514,6 +521,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>template bool</td>
 <td><strong><a href="../../api_generated/Files/interval__data_8hpp.html#function-operator<">operator&lt;</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> const &amp; a, <a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> const &amp; b)</td>
 </tr>
+<tr class="even">
+<td><a href="../../api_generated/Files/interval__data_8hpp.html#using-clockticksinterval">ClockTicksInterval</a></td>
+<td><strong><a href="../../api_generated/Files/interval__data_8hpp.html#function-toclockticksinterval">toClockTicksInterval</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> const &amp; interval, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const &amp; time_frame)<br>Convert a TimeFrame-indexed interval to absolute clock ticks.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a></td>
+<td><strong><a href="../../api_generated/Files/interval__data_8hpp.html#function-totimeframeinterval">toTimeFrameInterval</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-clockticksinterval">ClockTicksInterval</a> const &amp; interval, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const &amp; time_frame)<br>Convert a clock-tick interval to <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> indices.</td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -527,185 +542,234 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="using-timeframeinterval">using TimeFrameInterval</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> TimeFrameInterval <span class="op">=</span>  IntervalT<span class="op">&lt;</span>TimeFrameIndex<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
+<section id="using-clockticksinterval" class="level3">
+<h3 class="anchored" data-anchor-id="using-clockticksinterval">using ClockTicksInterval</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ClockTicksInterval <span class="op">=</span>  IntervalT<span class="op">&lt;</span>ClockTicks<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
 </section>
 <section id="functions-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="functions-documentation">Functions Documentation</h2>
 <section id="function-operator" class="level3">
 <h3 class="anchored" data-anchor-id="function-operator">function operator&lt;</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> <span class="kw">operator</span><span class="op">&lt;(</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    IntervalT<span class="op">&lt;</span> T <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    IntervalT<span class="op">&lt;</span> T <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> b</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="function-is_overlapping" class="level3">
-<h3 class="anchored" data-anchor-id="function-is_overlapping">function is_overlapping</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> is_overlapping<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> <span class="kw">operator</span><span class="op">&lt;(</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    IntervalT<span class="op">&lt;</span> T <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    IntervalT<span class="op">&lt;</span> T <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> b</span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="function-is_contiguous" class="level3">
-<h3 class="anchored" data-anchor-id="function-is_contiguous">function is_contiguous</h3>
+<section id="function-is_overlapping" class="level3">
+<h3 class="anchored" data-anchor-id="function-is_overlapping">function is_overlapping</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> is_contiguous<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> is_overlapping<span class="op">(</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    IntervalT<span class="op">&lt;</span> T <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    IntervalT<span class="op">&lt;</span> T <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> b</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="function-is_contained" class="level3">
-<h3 class="anchored" data-anchor-id="function-is_contained">function is_contained</h3>
+<section id="function-is_contiguous" class="level3">
+<h3 class="anchored" data-anchor-id="function-is_contiguous">function is_contiguous</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> is_contained<span class="op">(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> is_contiguous<span class="op">(</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    IntervalT<span class="op">&lt;</span> T <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    IntervalT<span class="op">&lt;</span> T <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> b</span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="function-is_contained-1" class="level3">
-<h3 class="anchored" data-anchor-id="function-is_contained-1">function is_contained</h3>
+<section id="function-is_contained" class="level3">
+<h3 class="anchored" data-anchor-id="function-is_contained">function is_contained</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> is_contained<span class="op">(</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    IntervalT<span class="op">&lt;</span> T <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    T <span class="at">const</span> time</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    IntervalT<span class="op">&lt;</span> T <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> b</span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-is_contained-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-is_contained-1">function is_contained</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> T <span class="op">&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> is_contained<span class="op">(</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    IntervalT<span class="op">&lt;</span> T <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    T <span class="at">const</span> time</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-is_overlapping-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-is_overlapping-1">function is_overlapping</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_overlapping<span class="op">(</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> b</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="function-is_contiguous-1" class="level3">
-<h3 class="anchored" data-anchor-id="function-is_contiguous-1">function is_contiguous</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contiguous<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_overlapping<span class="op">(</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> b</span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="function-is_contained-2" class="level3">
-<h3 class="anchored" data-anchor-id="function-is_contained-2">function is_contained</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contained<span class="op">(</span></span>
+<section id="function-is_contiguous-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-is_contiguous-1">function is_contiguous</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contiguous<span class="op">(</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> b</span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="function-is_contained-3" class="level3">
-<h3 class="anchored" data-anchor-id="function-is_contained-3">function is_contained</h3>
+<section id="function-is_contained-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-is_contained-2">function is_contained</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contained<span class="op">(</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> <span class="at">const</span> time</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> b</span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-is_contained-3" class="level3">
+<h3 class="anchored" data-anchor-id="function-is_contained-3">function is_contained</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contained<span class="op">(</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> <span class="at">const</span> time</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-operator-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-operator-1">function operator&lt;</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> <span class="kw">operator</span><span class="op">&lt;(</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> b</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> <span class="kw">operator</span><span class="op">&lt;(</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> b</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-is_overlapping-2" class="level3">
 <h3 class="anchored" data-anchor-id="function-is_overlapping-2">function is_overlapping</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_overlapping<span class="op">(</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> b</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="function-is_contiguous-2" class="level3">
-<h3 class="anchored" data-anchor-id="function-is_contiguous-2">function is_contiguous</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contiguous<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_overlapping<span class="op">(</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> b</span>
 <span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="function-is_contained-4" class="level3">
-<h3 class="anchored" data-anchor-id="function-is_contained-4">function is_contained</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contained<span class="op">(</span></span>
+<section id="function-is_contiguous-2" class="level3">
+<h3 class="anchored" data-anchor-id="function-is_contiguous-2">function is_contiguous</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contiguous<span class="op">(</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span></span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> b</span>
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="function-is_contained-5" class="level3">
-<h3 class="anchored" data-anchor-id="function-is_contained-5">function is_contained</h3>
+<section id="function-is_contained-4" class="level3">
+<h3 class="anchored" data-anchor-id="function-is_contained-4">function is_contained</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contained<span class="op">(</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex <span class="at">const</span> time</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> b</span>
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-is_contained-5" class="level3">
+<h3 class="anchored" data-anchor-id="function-is_contained-5">function is_contained</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contained<span class="op">(</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex <span class="at">const</span> time</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-operator-2" class="level3">
 <h3 class="anchored" data-anchor-id="function-operator-2">function operator&lt;</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> <span class="kw">operator</span><span class="op">&lt;(</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> b</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> <span class="kw">operator</span><span class="op">&lt;(</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> b</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-toclockticksinterval" class="level3">
+<h3 class="anchored" data-anchor-id="function-toclockticksinterval">function toClockTicksInterval</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> ClockTicksInterval toClockTicksInterval<span class="op">(</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">,</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">&amp;</span> time_frame</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Convert a TimeFrame-indexed interval to absolute clock ticks.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>interval</strong> Interval with start/end as indices into <code>time_frame</code></li>
+<li><strong>time_frame</strong> <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> used to resolve indices to <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a></li>
+</ul>
+<p><strong>Return</strong>: ClockTicksInterval in physical time</p>
+</section>
+<section id="function-totimeframeinterval" class="level3">
+<h3 class="anchored" data-anchor-id="function-totimeframeinterval">function toTimeFrameInterval</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> TimeFrameInterval toTimeFrameInterval<span class="op">(</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    ClockTicksInterval <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">,</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">&amp;</span> time_frame</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Convert a clock-tick interval to <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> indices.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>interval</strong> Interval in absolute clock ticks</li>
+<li><strong>time_frame</strong> <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> used to resolve ticks to indices</li>
+</ul>
+<p><strong>Return</strong>: TimeFrameInterval with start/end indices into <code>time_frame</code></p>
 </section>
 </section>
 <section id="source-code" class="level2">
 <h2 class="anchored" data-anchor-id="source-code">Source code</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef INTERVAL_DATA_HPP</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define INTERVAL_DATA_HPP</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TimeFrame/TimeFrameIndex.hpp"</span></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cstdint&gt;</span></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> IntervalT <span class="op">{</span></span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    T start<span class="op">;</span></span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    T end<span class="op">;</span></span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="kw">operator</span><span class="op">==(</span>IntervalT <span class="at">const</span> <span class="op">&amp;</span> other<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> start <span class="op">==</span> other<span class="op">.</span>start <span class="op">&amp;&amp;</span> end <span class="op">==</span> other<span class="op">.</span>end<span class="op">;</span></span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="co">// Type aliases for backwards compatibility and common types</span></span>
-<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Interval <span class="op">=</span> IntervalT<span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">&gt;;</span></span>
-<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> TimeFrameInterval <span class="op">=</span> IntervalT<span class="op">&lt;</span>TimeFrameIndex<span class="op">&gt;;</span></span>
-<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
-<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> <span class="kw">operator</span><span class="op">&lt;(</span>IntervalT<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> IntervalT<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a<span class="op">.</span>start <span class="op">&lt;</span> b<span class="op">.</span>start<span class="op">;</span></span>
-<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
-<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> is_overlapping<span class="op">(</span>IntervalT<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> IntervalT<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a<span class="op">.</span>start <span class="op">&lt;=</span> b<span class="op">.</span>end <span class="op">&amp;&amp;</span> b<span class="op">.</span>start <span class="op">&lt;=</span> a<span class="op">.</span>end<span class="op">;</span></span>
-<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
-<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> is_contiguous<span class="op">(</span>IntervalT<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> IntervalT<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a<span class="op">.</span>end <span class="op">+</span> T<span class="op">(</span><span class="dv">1</span><span class="op">)</span> <span class="op">==</span> b<span class="op">.</span>start <span class="op">||</span> b<span class="op">.</span>end <span class="op">+</span> T<span class="op">(</span><span class="dv">1</span><span class="op">)</span> <span class="op">==</span> a<span class="op">.</span>start<span class="op">;</span></span>
-<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
-<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> is_contained<span class="op">(</span>IntervalT<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> IntervalT<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a<span class="op">.</span>start <span class="op">&lt;=</span> b<span class="op">.</span>start <span class="op">&amp;&amp;</span> a<span class="op">.</span>end <span class="op">&gt;=</span> b<span class="op">.</span>end<span class="op">;</span></span>
-<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
-<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> is_contained<span class="op">(</span>IntervalT<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> T <span class="at">const</span> time<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a<span class="op">.</span>start <span class="op">&lt;=</span> time <span class="op">&amp;&amp;</span> time <span class="op">&lt;=</span> a<span class="op">.</span>end<span class="op">;</span></span>
-<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-46"><a href="#cb18-46" aria-hidden="true" tabindex="-1"></a><span class="co">//instantiate the template functions for the common types</span></span>
-<span id="cb18-47"><a href="#cb18-47" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_overlapping<span class="op">(</span>Interval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> Interval <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">);</span></span>
-<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contiguous<span class="op">(</span>Interval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> Interval <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">);</span></span>
-<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contained<span class="op">(</span>Interval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> Interval <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">);</span></span>
-<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contained<span class="op">(</span>Interval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> <span class="dt">int64_t</span> <span class="at">const</span> time<span class="op">);</span></span>
-<span id="cb18-51"><a href="#cb18-51" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> <span class="kw">operator</span><span class="op">&lt;(</span>Interval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> Interval <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">);</span></span>
-<span id="cb18-52"><a href="#cb18-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-53"><a href="#cb18-53" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_overlapping<span class="op">(</span>TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">);</span></span>
-<span id="cb18-54"><a href="#cb18-54" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contiguous<span class="op">(</span>TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">);</span></span>
-<span id="cb18-55"><a href="#cb18-55" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contained<span class="op">(</span>TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">);</span></span>
-<span id="cb18-56"><a href="#cb18-56" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contained<span class="op">(</span>TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> TimeFrameIndex <span class="at">const</span> time<span class="op">);</span></span>
-<span id="cb18-57"><a href="#cb18-57" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> <span class="kw">operator</span><span class="op">&lt;(</span>TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">);</span></span>
-<span id="cb18-58"><a href="#cb18-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-59"><a href="#cb18-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-60"><a href="#cb18-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-61"><a href="#cb18-61" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">//INTERVAL_DATA_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef INTERVAL_DATA_HPP</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define INTERVAL_DATA_HPP</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TimeFrame/ClockTicks.hpp"</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TimeFrame/TimeFrame.hpp"</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TimeFrame/TimeFrameIndex.hpp"</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cstdint&gt;</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> IntervalT <span class="op">{</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>    T start<span class="op">;</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>    T end<span class="op">;</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="kw">operator</span><span class="op">==(</span>IntervalT <span class="at">const</span> <span class="op">&amp;</span> other<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> start <span class="op">==</span> other<span class="op">.</span>start <span class="op">&amp;&amp;</span> end <span class="op">==</span> other<span class="op">.</span>end<span class="op">;</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a><span class="co">// Type aliases for backwards compatibility and common types</span></span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Interval <span class="op">=</span> IntervalT<span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">&gt;;</span></span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> TimeFrameInterval <span class="op">=</span> IntervalT<span class="op">&lt;</span>TimeFrameIndex<span class="op">&gt;;</span></span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ClockTicksInterval <span class="op">=</span> IntervalT<span class="op">&lt;</span>ClockTicks<span class="op">&gt;;</span></span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> <span class="kw">operator</span><span class="op">&lt;(</span>IntervalT<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> IntervalT<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a<span class="op">.</span>start <span class="op">&lt;</span> b<span class="op">.</span>start<span class="op">;</span></span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> is_overlapping<span class="op">(</span>IntervalT<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> IntervalT<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a<span class="op">.</span>start <span class="op">&lt;=</span> b<span class="op">.</span>end <span class="op">&amp;&amp;</span> b<span class="op">.</span>start <span class="op">&lt;=</span> a<span class="op">.</span>end<span class="op">;</span></span>
+<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb21-33"><a href="#cb21-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-34"><a href="#cb21-34" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb21-35"><a href="#cb21-35" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> is_contiguous<span class="op">(</span>IntervalT<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> IntervalT<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb21-36"><a href="#cb21-36" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a<span class="op">.</span>end <span class="op">+</span> T<span class="op">(</span><span class="dv">1</span><span class="op">)</span> <span class="op">==</span> b<span class="op">.</span>start <span class="op">||</span> b<span class="op">.</span>end <span class="op">+</span> T<span class="op">(</span><span class="dv">1</span><span class="op">)</span> <span class="op">==</span> a<span class="op">.</span>start<span class="op">;</span></span>
+<span id="cb21-37"><a href="#cb21-37" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb21-38"><a href="#cb21-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-39"><a href="#cb21-39" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb21-40"><a href="#cb21-40" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> is_contained<span class="op">(</span>IntervalT<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> IntervalT<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb21-41"><a href="#cb21-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a<span class="op">.</span>start <span class="op">&lt;=</span> b<span class="op">.</span>start <span class="op">&amp;&amp;</span> a<span class="op">.</span>end <span class="op">&gt;=</span> b<span class="op">.</span>end<span class="op">;</span></span>
+<span id="cb21-42"><a href="#cb21-42" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb21-43"><a href="#cb21-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-44"><a href="#cb21-44" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb21-45"><a href="#cb21-45" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> is_contained<span class="op">(</span>IntervalT<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> T <span class="at">const</span> time<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb21-46"><a href="#cb21-46" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> a<span class="op">.</span>start <span class="op">&lt;=</span> time <span class="op">&amp;&amp;</span> time <span class="op">&lt;=</span> a<span class="op">.</span>end<span class="op">;</span></span>
+<span id="cb21-47"><a href="#cb21-47" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb21-48"><a href="#cb21-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-49"><a href="#cb21-49" aria-hidden="true" tabindex="-1"></a><span class="co">//instantiate the template functions for the common types</span></span>
+<span id="cb21-50"><a href="#cb21-50" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_overlapping<span class="op">(</span>Interval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> Interval <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">);</span></span>
+<span id="cb21-51"><a href="#cb21-51" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contiguous<span class="op">(</span>Interval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> Interval <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">);</span></span>
+<span id="cb21-52"><a href="#cb21-52" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contained<span class="op">(</span>Interval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> Interval <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">);</span></span>
+<span id="cb21-53"><a href="#cb21-53" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contained<span class="op">(</span>Interval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> <span class="dt">int64_t</span> <span class="at">const</span> time<span class="op">);</span></span>
+<span id="cb21-54"><a href="#cb21-54" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> <span class="kw">operator</span><span class="op">&lt;(</span>Interval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> Interval <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">);</span></span>
+<span id="cb21-55"><a href="#cb21-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-56"><a href="#cb21-56" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_overlapping<span class="op">(</span>TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">);</span></span>
+<span id="cb21-57"><a href="#cb21-57" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contiguous<span class="op">(</span>TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">);</span></span>
+<span id="cb21-58"><a href="#cb21-58" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contained<span class="op">(</span>TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">);</span></span>
+<span id="cb21-59"><a href="#cb21-59" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> is_contained<span class="op">(</span>TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> TimeFrameIndex <span class="at">const</span> time<span class="op">);</span></span>
+<span id="cb21-60"><a href="#cb21-60" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="dt">bool</span> <span class="kw">operator</span><span class="op">&lt;(</span>TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> a<span class="op">,</span> TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> b<span class="op">);</span></span>
+<span id="cb21-61"><a href="#cb21-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-62"><a href="#cb21-62" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> ClockTicksInterval toClockTicksInterval<span class="op">(</span></span>
+<span id="cb21-63"><a href="#cb21-63" aria-hidden="true" tabindex="-1"></a>        TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">,</span></span>
+<span id="cb21-64"><a href="#cb21-64" aria-hidden="true" tabindex="-1"></a>        TimeFrame <span class="at">const</span> <span class="op">&amp;</span> time_frame<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb21-65"><a href="#cb21-65" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ClockTicksInterval<span class="op">{</span></span>
+<span id="cb21-66"><a href="#cb21-66" aria-hidden="true" tabindex="-1"></a>            time_frame<span class="op">.</span>getTimeAtIndex<span class="op">(</span>interval<span class="op">.</span>start<span class="op">),</span></span>
+<span id="cb21-67"><a href="#cb21-67" aria-hidden="true" tabindex="-1"></a>            time_frame<span class="op">.</span>getTimeAtIndex<span class="op">(</span>interval<span class="op">.</span>end<span class="op">)};</span></span>
+<span id="cb21-68"><a href="#cb21-68" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb21-69"><a href="#cb21-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-70"><a href="#cb21-70" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> TimeFrameInterval toTimeFrameInterval<span class="op">(</span></span>
+<span id="cb21-71"><a href="#cb21-71" aria-hidden="true" tabindex="-1"></a>        ClockTicksInterval <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">,</span></span>
+<span id="cb21-72"><a href="#cb21-72" aria-hidden="true" tabindex="-1"></a>        TimeFrame <span class="at">const</span> <span class="op">&amp;</span> time_frame<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb21-73"><a href="#cb21-73" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> TimeFrameInterval<span class="op">{</span></span>
+<span id="cb21-74"><a href="#cb21-74" aria-hidden="true" tabindex="-1"></a>            time_frame<span class="op">.</span>getIndexAtTime<span class="op">(</span>interval<span class="op">.</span>start<span class="op">),</span></span>
+<span id="cb21-75"><a href="#cb21-75" aria-hidden="true" tabindex="-1"></a>            time_frame<span class="op">.</span>getIndexAtTime<span class="op">(</span>interval<span class="op">.</span>end<span class="op">)};</span></span>
+<span id="cb21-76"><a href="#cb21-76" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb21-77"><a href="#cb21-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-78"><a href="#cb21-78" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">//INTERVAL_DATA_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:55 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:37 +0000</p>
 
 
 </section>

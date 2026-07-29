@@ -439,7 +439,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> <span class="at">const</span> pre <span class="op">=</span> params<span class="op">.</span>pre_expansion<span class="op">.</span>getValue<span class="op">();</span></span>
 <span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> <span class="at">const</span> post <span class="op">=</span> params<span class="op">.</span>post_expansion<span class="op">.</span>getValue<span class="op">();</span></span>
 <span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> intervals<span class="op">;</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameInterval<span class="op">&gt;</span> intervals<span class="op">;</span></span>
 <span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    intervals<span class="op">.</span>reserve<span class="op">(</span>input<span class="op">.</span>size<span class="op">());</span></span>
 <span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t <span class="at">const</span> total_events <span class="op">=</span> input<span class="op">.</span>size<span class="op">();</span></span>
@@ -452,10 +452,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> DigitalIntervalSeries<span class="op">::</span>createOverlapping<span class="op">({},</span> time_frame<span class="op">);</span></span>
 <span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> <span class="at">const</span> event_index <span class="op">=</span> event<span class="op">.</span>time<span class="op">().</span>getValue<span class="op">();</span></span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>        intervals<span class="op">.</span>push_back<span class="op">(</span>Interval<span class="op">{</span></span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>                event_index <span class="op">-</span> pre<span class="op">,</span></span>
-<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>                event_index <span class="op">+</span> post<span class="op">});</span></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex <span class="at">const</span> event_index <span class="op">=</span> event<span class="op">.</span>time<span class="op">();</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>        intervals<span class="op">.</span>push_back<span class="op">(</span>TimeFrameInterval<span class="op">{</span></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>                event_index <span class="op">-</span> TimeFrameIndex<span class="op">{</span>pre<span class="op">},</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>                event_index <span class="op">+</span> TimeFrameIndex<span class="op">{</span>post<span class="op">}});</span></span>
 <span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>        <span class="op">++</span>processed<span class="op">;</span></span>
 <span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>processed <span class="op">%</span> <span class="dv">100</span> <span class="op">==</span> <span class="dv">0</span> <span class="op">||</span> processed <span class="op">==</span> total_events<span class="op">)</span> <span class="op">{</span></span>
@@ -471,7 +471,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace Neuralyzer::Transforms::V2::Examples</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:56 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:37 +0000</p>
 
 
 </section>

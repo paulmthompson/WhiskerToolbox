@@ -350,14 +350,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#end-state" id="toc-end-state" class="nav-link active" data-scroll-target="#end-state">End State</a></li>
   <li><a href="#current-inventory" id="toc-current-inventory" class="nav-link" data-scroll-target="#current-inventory">Current Inventory</a></li>
-  <li><a href="#phase-1-baseline-tests" id="toc-phase-1-baseline-tests" class="nav-link" data-scroll-target="#phase-1-baseline-tests">Phase 1: Baseline Tests</a></li>
-  <li><a href="#phase-2-add-recipe-field-and-json-round-trip" id="toc-phase-2-add-recipe-field-and-json-round-trip" class="nav-link" data-scroll-target="#phase-2-add-recipe-field-and-json-round-trip">Phase 2: Add Recipe Field And JSON Round Trip</a></li>
-  <li><a href="#phase-3-row-pipeline-execution-skeleton" id="toc-phase-3-row-pipeline-execution-skeleton" class="nav-link" data-scroll-target="#phase-3-row-pipeline-execution-skeleton">Phase 3: Row Pipeline Execution Skeleton</a></li>
-  <li><a href="#phase-4-digitalintervalseries-output-dispatch" id="toc-phase-4-digitalintervalseries-output-dispatch" class="nav-link" data-scroll-target="#phase-4-digitalintervalseries-output-dispatch">Phase 4: DigitalIntervalSeries Output Dispatch</a></li>
+  <li><a href="#phase-1-baseline-tests-done" id="toc-phase-1-baseline-tests-done" class="nav-link" data-scroll-target="#phase-1-baseline-tests-done">Phase 1: Baseline Tests — Done</a></li>
+  <li><a href="#phase-2-add-recipe-field-and-json-round-trip-done" id="toc-phase-2-add-recipe-field-and-json-round-trip-done" class="nav-link" data-scroll-target="#phase-2-add-recipe-field-and-json-round-trip-done">Phase 2: Add Recipe Field And JSON Round Trip — Done</a></li>
+  <li><a href="#phase-3-row-pipeline-execution-skeleton-done" id="toc-phase-3-row-pipeline-execution-skeleton-done" class="nav-link" data-scroll-target="#phase-3-row-pipeline-execution-skeleton-done">Phase 3: Row Pipeline Execution Skeleton — Done</a></li>
+  <li><a href="#phase-4-digitalintervalseries-output-dispatch-done" id="toc-phase-4-digitalintervalseries-output-dispatch-done" class="nav-link" data-scroll-target="#phase-4-digitalintervalseries-output-dispatch-done">Phase 4: DigitalIntervalSeries Output Dispatch — Done</a></li>
   <li><a href="#phase-5-iterable-pipelinevaluestore-bindings" id="toc-phase-5-iterable-pipelinevaluestore-bindings" class="nav-link" data-scroll-target="#phase-5-iterable-pipelinevaluestore-bindings">Phase 5: Iterable PipelineValueStore Bindings</a></li>
   <li><a href="#phase-6-timestamp-and-point-sampling" id="toc-phase-6-timestamp-and-point-sampling" class="nav-link" data-scroll-target="#phase-6-timestamp-and-point-sampling">Phase 6: Timestamp And Point Sampling</a></li>
   <li><a href="#phase-7-optional-additional-row-transforms" id="toc-phase-7-optional-additional-row-transforms" class="nav-link" data-scroll-target="#phase-7-optional-additional-row-transforms">Phase 7: Optional Additional Row Transforms</a></li>
   <li><a href="#phase-8-whisker-contact-integration" id="toc-phase-8-whisker-contact-integration" class="nav-link" data-scroll-target="#phase-8-whisker-contact-integration">Phase 8: Whisker-Contact Integration</a></li>
+  <li><a href="#test-coverage-notes" id="toc-test-coverage-notes" class="nav-link" data-scroll-target="#test-coverage-notes">Test Coverage Notes</a></li>
   <li><a href="#phase-9-preset-registry-and-expansion" id="toc-phase-9-preset-registry-and-expansion" class="nav-link" data-scroll-target="#phase-9-preset-registry-and-expansion">Phase 9: Preset Registry And Expansion</a></li>
   <li><a href="#phase-10-preset-library-files" id="toc-phase-10-preset-library-files" class="nav-link" data-scroll-target="#phase-10-preset-library-files">Phase 10: Preset Library Files</a></li>
   <li><a href="#phase-11-documentation-and-ui-follow-up" id="toc-phase-11-documentation-and-ui-follow-up" class="nav-link" data-scroll-target="#phase-11-documentation-and-ui-follow-up">Phase 11: Documentation And UI Follow-Up</a></li>
@@ -390,6 +391,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p><strong>Status:</strong> Implementation roadmap for <a href="../../developer/TensorDesign/column_row_pipeline.html">Column Row Pipeline Design</a>.</p>
+<p>Phases 1-4 are implemented. Phase 5 and later remain planned.</p>
 <p>This roadmap breaks the per-column row-pipeline refactor into small, testable steps. The design goal is to let each tensor column derive its own row-aligned gather inputs through TransformPipelines while keeping <code>GatherResult</code> a container/direct-gather executor rather than a pipeline runner.</p>
 <section id="end-state" class="level2">
 <h2 class="anchored" data-anchor-id="end-state">End State</h2>
@@ -420,21 +422,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>buildIntervalPipelineProvider()</code> gathers over interval rows and applies range reductions.</li>
 <li><code>buildPipelineColumnProvider()</code> handles timestamp-row columns.</li>
 <li><code>TensorDesignBuilder</code> builds lazy-column tensors from JSON.</li>
+<li><code>ColumnRecipe::row_pipeline_json</code> is parsed and serialized.</li>
+<li><code>resolveIntervalGatherWindows()</code> resolves identity and <code>DigitalIntervalSeries</code> row-pipeline output.</li>
+<li><code>buildProviderFromRecipe()</code> uses row-pipeline windows for interval-row columns.</li>
+<li>Contact-aligned spike presence is tested through TensorDesign JSON in the whisker-contact scenario.</li>
 </ul>
 <p>Known gaps:</p>
 <ul>
-<li><code>ColumnRecipe</code> does not include <code>row_pipeline_json</code>.</li>
-<li>TensorDesign JSON does not parse or serialize <code>columns[].row_pipeline_json</code>.</li>
-<li>Tensor column builders do not execute row pipelines before source gather.</li>
 <li>Tensor column builders cannot yet bind iterable DataObject elements into <code>PipelineValueStore</code> for per-row column TransformPipeline execution.</li>
+<li>Tensor column builders reject <code>DigitalEventSeries</code> sample-time row-pipeline output for interval-row columns; timestamp/sample dispatch is not implemented yet.</li>
 <li>Point sampling still uses a temporary <code>pipeline_json</code> <code>"offset"</code> detection path in <code>TensorDesignBuilder::buildColumnProvider()</code>.</li>
 <li>There is no row-pipeline caching.</li>
 <li>UI does not expose row-pipeline configuration.</li>
 <li>There is no column recipe preset registry, preset expansion layer, or bundled preset catalog.</li>
 </ul>
 </section>
-<section id="phase-1-baseline-tests" class="level2">
-<h2 class="anchored" data-anchor-id="phase-1-baseline-tests">Phase 1: Baseline Tests</h2>
+<section id="phase-1-baseline-tests-done" class="level2">
+<h2 class="anchored" data-anchor-id="phase-1-baseline-tests-done">Phase 1: Baseline Tests — Done</h2>
 <p>Goal: lock down current behavior before adding row-pipeline dispatch.</p>
 <p>Tasks:</p>
 <ol type="1">
@@ -456,8 +460,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Whisker-contact scenario tests</li>
 </ul>
 </section>
-<section id="phase-2-add-recipe-field-and-json-round-trip" class="level2">
-<h2 class="anchored" data-anchor-id="phase-2-add-recipe-field-and-json-round-trip">Phase 2: Add Recipe Field And JSON Round Trip</h2>
+<section id="phase-2-add-recipe-field-and-json-round-trip-done" class="level2">
+<h2 class="anchored" data-anchor-id="phase-2-add-recipe-field-and-json-round-trip-done">Phase 2: Add Recipe Field And JSON Round Trip — Done</h2>
 <p>Goal: make <code>row_pipeline_json</code> part of the data model without changing provider behavior.</p>
 <p>Tasks:</p>
 <ol type="1">
@@ -474,8 +478,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>No provider behavior changes yet.</li>
 </ul>
 </section>
-<section id="phase-3-row-pipeline-execution-skeleton" class="level2">
-<h2 class="anchored" data-anchor-id="phase-3-row-pipeline-execution-skeleton">Phase 3: Row Pipeline Execution Skeleton</h2>
+<section id="phase-3-row-pipeline-execution-skeleton-done" class="level2">
+<h2 class="anchored" data-anchor-id="phase-3-row-pipeline-execution-skeleton-done">Phase 3: Row Pipeline Execution Skeleton — Done</h2>
 <p>Goal: execute an empty or identity row pipeline and route through existing providers.</p>
 <p>Tasks:</p>
 <ol type="1">
@@ -491,8 +495,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>No new transform requirements are introduced.</li>
 </ul>
 </section>
-<section id="phase-4-digitalintervalseries-output-dispatch" class="level2">
-<h2 class="anchored" data-anchor-id="phase-4-digitalintervalseries-output-dispatch">Phase 4: DigitalIntervalSeries Output Dispatch</h2>
+<section id="phase-4-digitalintervalseries-output-dispatch-done" class="level2">
+<h2 class="anchored" data-anchor-id="phase-4-digitalintervalseries-output-dispatch-done">Phase 4: DigitalIntervalSeries Output Dispatch — Done</h2>
 <p>Goal: support row pipelines that output prepared <code>DigitalIntervalSeries</code> windows.</p>
 <p>Tasks:</p>
 <ol type="1">
@@ -513,26 +517,40 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="phase-5-iterable-pipelinevaluestore-bindings" class="level2">
 <h2 class="anchored" data-anchor-id="phase-5-iterable-pipelinevaluestore-bindings">Phase 5: Iterable PipelineValueStore Bindings</h2>
 <p>Goal: supply per-row values to <code>pipeline_json</code> transforms through the existing TransformsV2 <code>PipelineValueStore</code> mechanism without making <code>row_pipeline_json</code> responsible for normalization markers.</p>
+<p>Motivating example: gather <code>Spikes</code> into one <code>DigitalEventSeries</code> per trial/contact interval, then execute a TransformPipeline containing <code>NormalizeTime</code> on each gathered row. The normalization time comes from a row-aligned <code>DigitalEventSeries</code>, such as <code>ContactOnset</code>, or from <code>Contact -&gt; IntervalToEvent(start)</code>. The event for row <code>i</code> is written into <code>PipelineValueStore</code> as a <code>TimePosition</code> and bound to the <code>NormalizeTime</code> parameter for row <code>i</code>.</p>
 <p>Tasks:</p>
 <ol type="1">
 <li>Define a JSON schema for iterable bindings from DataObjects into <code>PipelineValueStore</code> keys.</li>
-<li>Support iterable sources that are DataObjects in <code>DataManager</code> or outputs of a row TransformPipeline.</li>
-<li>Build one store value per tensor row from a row-aligned <code>DigitalEventSeries</code> or other supported iterable DataObject.</li>
+<li>Support direct iterable sources from DataManager keys with implicit identity source pipeline.</li>
+<li>Support derived iterable sources from a DataManager key plus <code>source_pipeline_json</code>.</li>
+<li>Start with <code>DigitalEventSeries</code> binding into <code>PipelineValueStore</code> as <code>TimePosition</code> using the event’s <code>TimeFrameIndex</code> and the series <code>TimeFrame</code>.</li>
+<li>Defer <code>DigitalIntervalSeries</code> binding. Use <code>IntervalToEvent</code> in <code>source_pipeline_json</code> for start/end/center selection.</li>
+<li>Build one store value per tensor row from the resolved iterable DataObject, constructing the source view once before row iteration.</li>
+<li>Merge iterable store values with any base row store from <code>buildGatherRowStore()</code> without relying on GatherResult alignment metadata.</li>
 <li>Inject the current row’s values into <code>PipelineValueStore</code> before applying <code>pipeline_json</code> parameter bindings.</li>
 <li>Verify a normalize-time transform uses the bound store value, not the gather window start.</li>
 <li>Add raster/PSTH-style tests where spikes are gathered in trial windows and normalized to a separate event per row.</li>
+<li>Add row-count mismatch tests for both direct and derived iterable sources.</li>
 </ol>
 <p>Exit criteria:</p>
 <ul>
 <li>Per-row transforms can consume a marker that is outside the gathered DataObject through parameter bindings.</li>
 <li>Trial-relative transforms can consume correct marker times.</li>
 <li>Iterable binding sources are explicit and row-count checked.</li>
+<li>Direct-key iterable bindings and key-plus-pipeline iterable bindings are both covered by tests.</li>
+<li><code>NormalizeTime</code> accepts a <code>TimePosition</code> binding and converts using the supplied <code>TimeFrame</code>.</li>
 </ul>
 <p>Open implementation choices:</p>
 <ul>
-<li><code>pipeline_json</code> includes iterable binding declarations next to <code>steps</code>.</li>
-<li>TensorDesign column recipes declare context input keys separately from source and row pipeline keys.</li>
-<li>Existing <code>PipelineValueStore</code>, parameter bindings, and gather extension helpers are reused or generalized to bind iterable values per row.</li>
+<li>Whether <code>PipelineValueStore</code> should store <code>TimePosition</code> directly or use <code>TimeIndexAndFrame</code> for non-owning contexts.</li>
+<li>How long to keep legacy <code>int64_t</code> absolute-time bindings for <code>NormalizeTime</code>.</li>
+<li>Existing <code>PipelineValueStore</code>, parameter bindings, and gather extension helpers should be reused or generalized to bind iterable values per row.</li>
+</ul>
+<p>Settled design choices:</p>
+<ul>
+<li>Iterable binding declarations live on <code>ColumnRecipe</code>, beside <code>pipeline_json</code>.</li>
+<li><code>source_pipeline_json</code> uses the same <code>PipelineDescriptor</code> schema as <code>row_pipeline_json</code> and <code>pipeline_json</code>.</li>
+<li>Iterable binding <code>store_key</code> values must not overwrite other keys; duplicates are rejected.</li>
 </ul>
 </section>
 <section id="phase-6-timestamp-and-point-sampling" class="level2">
@@ -579,19 +597,38 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="phase-8-whisker-contact-integration" class="level2">
 <h2 class="anchored" data-anchor-id="phase-8-whisker-contact-integration">Phase 8: Whisker-Contact Integration</h2>
 <p>Goal: prove the design on the motivating analysis table.</p>
+<p>Status: partially implemented. The contact-onset spike-presence column is covered by TensorDesign JSON. Angle-at-onset point sampling and trial-relative raster/PSTH examples remain planned.</p>
 <p>Tasks:</p>
 <ol type="1">
-<li>Extend the whisker-contact scenario with contact onset features.</li>
-<li>Add a full-contact curvature column.</li>
-<li>Add a spike-in-onset-window column.</li>
-<li>Add an angle-at-onset column.</li>
+<li><del>Extend the whisker-contact scenario with contact onset features.</del> <strong>Done for onset spike presence.</strong></li>
+<li><del>Add a full-contact curvature column.</del> <strong>Done.</strong></li>
+<li><del>Add a spike-in-onset-window column.</del> <strong>Done.</strong></li>
+<li>Add an angle-at-onset column after timestamp/sample row-pipeline dispatch is implemented.</li>
 <li>Verify row count, row descriptors, and expected values.</li>
 <li>Update scenario documentation with valid JSON.</li>
 </ol>
 <p>Exit criteria:</p>
 <ul>
-<li>The motivating tuning-table inputs are built through production TensorDesign code.</li>
+<li>Contact-aligned spike presence is built through production TensorDesign code.</li>
 <li>The JSON example in the design document can be promoted from target shape to working example.</li>
+</ul>
+</section>
+<section id="test-coverage-notes" class="level2">
+<h2 class="anchored" data-anchor-id="test-coverage-notes">Test Coverage Notes</h2>
+<p>Current row-pipeline coverage is split across four files:</p>
+<ul>
+<li><code>tests/TransformsV2/test_tensor_column_builders.test.cpp</code> covers the TransformsV2 provider layer and <code>resolveIntervalGatherWindows()</code> behavior.</li>
+<li><code>tests/TensorDesign/test_tensor_design_builder.cpp</code> covers TensorDesign JSON parsing, serialization, and JSON-to-tensor builds.</li>
+<li><code>tests/TransformsV2/test_tensor_whisker_contact_scenario.cpp</code> covers programmatic provider/lazy tensor construction over the whisker-contact fixture.</li>
+<li><code>tests/TensorDesign/test_tensor_whisker_contact_scenario.cpp</code> covers the TensorDesign JSON path over the same fixture, including contact-aligned spikes.</li>
+</ul>
+<p>The two whisker-contact files are not exact duplicates. They exercise different architectural layers. The older TransformsV2 file does not validate <code>row_pipeline_json</code>; it remains useful as lower-level integration coverage, though it may be a candidate for reduced assertions if runtime becomes an issue.</p>
+<p>Potential stale or missing coverage after Phase 4:</p>
+<ul>
+<li>The timestamp offset characterization test is intentionally stale-by-design until Phase 6 replaces it.</li>
+<li><code>DigitalEventSeries</code> row-pipeline output rejection is covered at the row-geometry/helper layer; add a TensorDesign JSON-level rejection test if error messages become part of the user contract.</li>
+<li>Add explicit tests for malformed but non-empty <code>row_pipeline_json</code> at the TensorDesign JSON build layer if not already covered by provider tests.</li>
+<li>Add cache behavior tests when row-pipeline caching is introduced.</li>
 </ul>
 </section>
 <section id="phase-9-preset-registry-and-expansion" class="level2">

@@ -745,8 +745,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2_1_1Examples.html#function-eventtointerval">eventToInterval</a></strong>(<a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &amp; input, <a href="../../api_generated/Classes/structNeuralyzer_1_1Transforms_1_1V2_1_1Examples_1_1EventToIntervalParams.html">EventToIntervalParams</a> const &amp; params, <a href="../../api_generated/Classes/structNeuralyzer_1_1Transforms_1_1V2_1_1ComputeContext.html">ComputeContext</a> const &amp; ctx)<br>Expand each event in a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> into a window interval.</td>
 </tr>
 <tr class="even">
-<td>int64_t</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2_1_1Examples.html#function-eventtimeforinterval">eventTimeForInterval</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> const &amp; interval, <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2_1_1Examples.html#enum-intervaleventpoint">IntervalEventPoint</a> point)<br>Compute the event time for an interval at the selected alignment point.</td>
+<td><a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2_1_1Examples.html#function-eventtimeforinterval">eventTimeForInterval</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> const &amp; interval, <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2_1_1Examples.html#enum-intervaleventpoint">IntervalEventPoint</a> point)<br>Compute the event time for an interval at the selected alignment point.</td>
 </tr>
 <tr class="odd">
 <td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt;</td>
@@ -1561,8 +1561,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-eventtimeforinterval" class="level3">
 <h3 class="anchored" data-anchor-id="function-eventtimeforinterval">function eventTimeForInterval</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int64_t</span> eventTimeForInterval<span class="op">(</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">,</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>TimeFrameIndex eventTimeForInterval<span class="op">(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">,</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    IntervalEventPoint point</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Compute the event time for an interval at the selected alignment point.</p>
@@ -2673,7 +2673,7 @@ rfl::Result&lt; TransformPipeline &gt; loadPipelineFromFile(
 <p>Helper to register a <a href="../../api_generated/Classes/structNeuralyzer_1_1Transforms_1_1V2_1_1PipelineStep.html">PipelineStep</a> factory for a parameter type.</p>
 <p>Call this once for each parameter type to register its factory. Template automatically deduces the parameter type.</p>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:53 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:34 +0000</p>
 
 
 </section>

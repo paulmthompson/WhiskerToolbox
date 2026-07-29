@@ -365,7 +365,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#saved-design-strategy" id="toc-saved-design-strategy" class="nav-link" data-scroll-target="#saved-design-strategy">Saved Design Strategy</a></li>
   <li><a href="#preset-library" id="toc-preset-library" class="nav-link" data-scroll-target="#preset-library">Preset Library</a></li>
   </ul></li>
-  <li><a href="#pipelinevaluestore-iterable-binding" id="toc-pipelinevaluestore-iterable-binding" class="nav-link" data-scroll-target="#pipelinevaluestore-iterable-binding">PipelineValueStore Iterable Binding</a></li>
+  <li><a href="#pipelinevaluestore-iterable-binding" id="toc-pipelinevaluestore-iterable-binding" class="nav-link" data-scroll-target="#pipelinevaluestore-iterable-binding">PipelineValueStore Iterable Binding</a>
+  <ul class="collapse">
+  <li><a href="#binding-source-options" id="toc-binding-source-options" class="nav-link" data-scroll-target="#binding-source-options">Binding Source Options</a></li>
+  <li><a href="#binding-value-semantics" id="toc-binding-value-semantics" class="nav-link" data-scroll-target="#binding-value-semantics">Binding Value Semantics</a></li>
+  <li><a href="#execution-shape" id="toc-execution-shape" class="nav-link" data-scroll-target="#execution-shape">Execution Shape</a></li>
+  <li><a href="#validation-rules" id="toc-validation-rules" class="nav-link" data-scroll-target="#validation-rules">Validation Rules</a></li>
+  <li><a href="#motivating-test-cases" id="toc-motivating-test-cases" class="nav-link" data-scroll-target="#motivating-test-cases">Motivating Test Cases</a></li>
+  </ul></li>
   <li><a href="#rasterpsth-example" id="toc-rasterpsth-example" class="nav-link" data-scroll-target="#rasterpsth-example">Raster/PSTH Example</a></li>
   <li><a href="#provider-dispatch" id="toc-provider-dispatch" class="nav-link" data-scroll-target="#provider-dispatch">Provider Dispatch</a></li>
   <li><a href="#timeframe-semantics" id="toc-timeframe-semantics" class="nav-link" data-scroll-target="#timeframe-semantics">TimeFrame Semantics</a></li>
@@ -373,6 +380,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#relationship-to-plot-alignment" id="toc-relationship-to-plot-alignment" class="nav-link" data-scroll-target="#relationship-to-plot-alignment">Relationship To Plot Alignment</a></li>
   <li><a href="#out-of-scope" id="toc-out-of-scope" class="nav-link" data-scroll-target="#out-of-scope">Out Of Scope</a></li>
   <li><a href="#open-questions" id="toc-open-questions" class="nav-link" data-scroll-target="#open-questions">Open Questions</a></li>
+  <li><a href="#tests" id="toc-tests" class="nav-link" data-scroll-target="#tests">Tests</a></li>
   </ul>
 </nav>
     </div>
@@ -399,7 +407,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p><strong>Status:</strong> Design target. The underlying GatherResult and interval-window primitives are implemented; TensorDesign <code>row_pipeline_json</code> wiring is planned.</p>
+<p><strong>Status:</strong> Partially implemented. GatherResult, interval-window primitives, <code>ColumnRecipe::row_pipeline_json</code>, TensorDesign JSON round-trip, identity row-pipeline dispatch, and <code>DigitalIntervalSeries</code> row-pipeline gather windows are implemented. <code>PipelineValueStore</code> iterable bindings, timestamp/sample row-pipeline dispatch, presets, and UI support remain planned.</p>
 <p>This document describes the target architecture for per-column gather geometry in lazy-column tensors. The implementation sequence is tracked separately in <a href="../../developer/TensorDesign/column_row_pipeline_roadmap.html">Column Row Pipeline Roadmap</a>.</p>
 <p>See also:</p>
 <ul>
@@ -436,7 +444,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>TensorDesign</code> can build lazy-column tensors from interval, timestamp, and derived timestamp row sources.</li>
 <li>Interval-row columns gather over the full row interval.</li>
 <li><code>ColumnRecipe::pipeline_json</code> describes source processing and interval range reductions.</li>
+<li><code>ColumnRecipe::row_pipeline_json</code> is parsed, serialized, and used for interval-row gather geometry.</li>
 <li><code>ColumnRecipe::interval_property</code> provides row metadata columns such as interval start, end, and duration.</li>
+<li>Empty or whitespace <code>row_pipeline_json</code> and explicit empty-step descriptors are treated as identity row geometry.</li>
+<li>Non-identity interval-row pipelines may produce row-aligned <code>DigitalIntervalSeries</code> prepared windows.</li>
+<li>TensorDesign verifies row-pipeline window output preserves the original row count.</li>
 <li><code>GatherResult</code> consumes prepared <code>DigitalIntervalSeries</code> windows and can hold companion alignment events, but TensorDesign should not rely on that metadata path for column transformations.</li>
 <li><code>GatherResult</code> converts prepared window bounds to the gathered source <code>TimeFrame</code> with <code>convertTimeFrameRange()</code>.</li>
 <li><code>DigitalIntervalSeries</code> supports <code>IntervalLayout::Overlapping</code> through <code>createOverlapping()</code>.</li>
@@ -444,17 +456,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p>Not implemented yet:</p>
 <ul>
-<li><code>ColumnRecipe::row_pipeline_json</code>.</li>
-<li>TensorDesign JSON parse/serialize support for <code>row_pipeline_json</code>.</li>
-<li>Tensor column provider dispatch based on row-pipeline output type.</li>
+<li><code>DigitalEventSeries</code> row-pipeline output dispatch for timestamp/sample columns.</li>
 <li>A way to bind row-specific iterable values, such as one normalization event per row, into the column TransformPipeline’s <code>PipelineValueStore</code>.</li>
 <li>Replacement of the temporary <code>pipeline_json</code> <code>"offset"</code> sample-at-offset compatibility path.</li>
+<li>Row-pipeline caching across columns.</li>
+<li>Preset registry, bundled preset library, and preset expansion.</li>
 <li>UI support for configuring row pipelines.</li>
 </ul>
 </section>
 <section id="problem" class="level2">
 <h2 class="anchored" data-anchor-id="problem">Problem</h2>
-<p>Current interval-row tensor columns always gather source data over the full row interval. This makes these common per-row features hard or impossible to express in TensorDesign JSON:</p>
+<p>Original interval-row tensor columns always gathered source data over the full row interval. With the implemented <code>DigitalIntervalSeries</code> row-pipeline path, onset-window event reductions are now expressible in TensorDesign JSON. Remaining gaps are point sampling, per-row normalization context, presets, and UI.</p>
+<p>The full design addresses these common per-row features:</p>
 <ul>
 <li>Spike presence within <code>[-W, +W]</code> of contact onset.</li>
 <li>Analog value sampled at contact onset.</li>
@@ -566,7 +579,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>Iterable binding values</td>
 <td>DataManager object or row-pipeline output</td>
-<td>Normalization event for raster/PSTH row <code>i</code></td>
+<td><code>TimePosition</code> for raster/PSTH row <code>i</code></td>
 </tr>
 <tr class="even">
 <td>Feature value</td>
@@ -577,7 +590,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <p>Prepared windows should be represented as <code>DigitalIntervalSeries</code>. Per-row sample times should be represented as <code>DigitalEventSeries</code>. These are normal DataObjects, not tensor-specific side channels.</p>
 <p>When a column needs to normalize gathered data relative to a marker that is not the gather window start, that marker should be supplied through <code>PipelineValueStore</code> parameter binding for <code>pipeline_json</code>, not encoded as a second output of <code>row_pipeline_json</code>.</p>
-<p>For example, a spike raster column may gather spikes inside each trial window, then run a normalize-time transform with the contact onset event for that row supplied through the value store.</p>
+<p>For example, a spike raster column may gather spikes inside each trial window, then run a normalize-time transform with the contact onset event for that row supplied through the value store as a <code>TimePosition</code>.</p>
 </section>
 <section id="transform-composition" class="level2">
 <h2 class="anchored" data-anchor-id="transform-composition">Transform Composition</h2>
@@ -730,7 +743,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
 <span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
 <span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><code>row_pipeline_json</code> describes only the row-aligned gather or sample input. It should not also be responsible for carrying a separate normalization marker. If a column needs one marker per row for a transform such as normalize-time, that marker should be loaded into <code>PipelineValueStore</code> during per-row <code>pipeline_json</code> execution.</p>
+<p><code>row_pipeline_json</code> describes only the row-aligned gather or sample input. The <code>DigitalIntervalSeries</code> gather-window form shown above is implemented. <code>DigitalEventSeries</code> sample-time output remains planned. <code>row_pipeline_json</code> should not also be responsible for carrying a separate normalization marker. If a column needs one marker per row for a transform such as normalize-time, that marker should be loaded into <code>PipelineValueStore</code> during per-row <code>pipeline_json</code> execution.</p>
 </section>
 <section id="json-authoring-levels" class="level2">
 <h2 class="anchored" data-anchor-id="json-authoring-levels">JSON Authoring Levels</h2>
@@ -800,12 +813,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"pipeline_value_bindings"</span><span class="fu">:</span> <span class="ot">[</span></span>
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"ContactOnset"</span><span class="fu">,</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"element"</span><span class="fu">:</span> <span class="st">"physical_time"</span><span class="fu">,</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"store_key"</span><span class="fu">:</span> <span class="st">"row_alignment_time"</span></span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: [{</span><span class="ch">\"</span><span class="st">transform_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">NormalizeTime</span><span class="ch">\"</span><span class="st">, </span><span class="ch">\"</span><span class="st">param_bindings</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">alignment_time</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">row_alignment_time</span><span class="ch">\"</span><span class="st">}}]}"</span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"store_key"</span><span class="fu">:</span> <span class="st">"row_alignment_time"</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: [{</span><span class="ch">\"</span><span class="st">transform_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">NormalizeTime</span><span class="ch">\"</span><span class="st">, </span><span class="ch">\"</span><span class="st">param_bindings</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">alignment_time</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">row_alignment_time</span><span class="ch">\"</span><span class="st">}}]}"</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The raw format should remain stable because it is the execution interchange format and the best target for focused tests.</p>
 </section>
 <section id="saved-design-strategy" class="level3">
@@ -899,26 +911,123 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="pipelinevaluestore-iterable-binding" class="level2">
 <h2 class="anchored" data-anchor-id="pipelinevaluestore-iterable-binding">PipelineValueStore Iterable Binding</h2>
 <p>TransformsV2 already has the mechanism needed to inject runtime values into a <code>TransformPipeline</code>: <code>PipelineValueStore</code> plus parameter bindings loaded from pipeline JSON. GatherResult previously used this mechanism through TransformsV2 gather extension helpers such as <code>buildGatherRowStore()</code>.</p>
-<p>The row-pipeline refactor should reuse that mechanism rather than adding TensorData-specific context plumbing. The missing piece is an iterable binding layer owned by TransformsV2 or the TensorColumnBuilders/TransformsV2 integration:</p>
+<p>The row-pipeline refactor should reuse that mechanism rather than adding TensorData-specific context plumbing. The missing piece is an iterable binding layer owned by TransformsV2 or the TensorColumnBuilders/TransformsV2 integration.</p>
+<p>The core contract is:</p>
 <ol type="1">
 <li>A column recipe or pipeline descriptor identifies an iterable context source.</li>
 <li>The source is a DataObject in <code>DataManager</code> or a DataObject produced by a row TransformPipeline.</li>
 <li>The source has one row-aligned element per tensor row.</li>
-<li>For row <code>i</code>, the iterable binding extracts element <code>i</code> and writes one or more values into <code>PipelineValueStore</code> under declared keys.</li>
+<li>For row <code>i</code>, the iterable binding converts element <code>i</code> into the DataObject’s default binding value and writes it into <code>PipelineValueStore</code> under the declared key.</li>
 <li><code>pipeline_json</code> parameter bindings map those store keys onto transform parameters.</li>
 </ol>
-<p>Example binding shape, shown as design intent rather than final JSON:</p>
+<p>This is conceptually equivalent to how the GatherResult extension previously created a per-row store, but the values are no longer limited to GatherResult metadata. Any row-aligned iterable DataObject can supply bound values.</p>
+<p>Binding declarations should live on <code>ColumnRecipe</code>, beside <code>pipeline_json</code>. They should not be embedded in <code>PipelineDescriptor</code>, because the descriptor should remain a reusable transform pipeline that does not know about DataManager keys, tensor rows, or external iterable sources. All pipeline-valued fields, including <code>row_pipeline_json</code>, <code>source_pipeline_json</code>, and <code>pipeline_json</code>, should use the same <code>PipelineDescriptor</code> schema.</p>
+<section id="binding-source-options" class="level3">
+<h3 class="anchored" data-anchor-id="binding-source-options">Binding Source Options</h3>
+<p>There are two useful source forms.</p>
+<p>Direct DataManager source:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: [{</span><span class="ch">\"</span><span class="st">transform_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">NormalizeTime</span><span class="ch">\"</span><span class="st">, </span><span class="ch">\"</span><span class="st">param_bindings</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">alignment_time</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">row_alignment_time</span><span class="ch">\"</span><span class="st">}}]}"</span><span class="fu">,</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"pipeline_value_bindings"</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"ContactOnset"</span><span class="fu">,</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"element"</span><span class="fu">:</span> <span class="st">"time"</span><span class="fu">,</span></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"store_key"</span><span class="fu">:</span> <span class="st">"row_alignment_time"</span></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"ContactOnset"</span><span class="fu">,</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"store_key"</span><span class="fu">:</span> <span class="st">"row_alignment_time"</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>DataManager source plus transform pipeline:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"Contact"</span><span class="fu">,</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"source_pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: [{</span><span class="ch">\"</span><span class="st">transform_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">IntervalToEvent</span><span class="ch">\"</span><span class="st">, </span><span class="ch">\"</span><span class="st">parameters</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">point</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">start</span><span class="ch">\"</span><span class="st">}}]}"</span><span class="fu">,</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"store_key"</span><span class="fu">:</span> <span class="st">"row_alignment_time"</span></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The second form covers the case where the iterable does not already exist as a DataManager object. The implicit default is identity: if <code>source_pipeline_json</code> is omitted or empty, use the DataObject referenced by <code>source_key</code> directly.</p>
+<p>This keeps every binding grounded in a DataManager key while still allowing the iterable to be derived. It also makes testing straightforward: a direct-key test and a key-plus-transform test should produce the same <code>PipelineValueStore</code> values when the derived object is equivalent to a precomputed object.</p>
+</section>
+<section id="binding-value-semantics" class="level3">
+<h3 class="anchored" data-anchor-id="binding-value-semantics">Binding Value Semantics</h3>
+<p>The user should not need to specify an extractor for the initial Phase 5 use case. Instead, each supported DataObject type should define a default binding value for one row element.</p>
+<p>Initial support should be deliberately narrow:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Source DataObject</th>
+<th>Row element</th>
+<th>Default binding value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>DigitalEventSeries</code></td>
+<td>Event row <code>i</code></td>
+<td><code>TimePosition{event_time, event_series.getTimeFrame()}</code></td>
+</tr>
+</tbody>
+</table>
+<p>If a caller needs interval start, end, or center as the bound value, it should first derive a <code>DigitalEventSeries</code> with <code>IntervalToEvent</code>. This avoids requiring users to choose coordinate extractors and keeps start/end/center selection in the TransformPipeline where it already belongs.</p>
+<p>The project already has temporal coordinate carrier types in <code>TimeFrame/TimeFrame.hpp</code>:</p>
+<ul>
+<li><code>TimeIndexAndFrame</code>, which pairs a <code>TimeFrameIndex</code> with a non-owning <code>TimeFrame const *</code>.</li>
+<li><code>TimePosition</code>, which pairs a <code>TimeFrameIndex</code> with a <code>std::shared_ptr&lt;TimeFrame&gt;</code>.</li>
+</ul>
+<p>Phase 5 should reuse one of these instead of introducing a new temporal binding type. Because most DataObjects expose <code>std::shared_ptr&lt;TimeFrame&gt;</code> through <code>getTimeFrame()</code>, <code>TimePosition</code> is the likely first choice for <code>PipelineValueStore</code> storage and parameter binding.</p>
+<p><code>NormalizeTime</code> should accept a bound temporal value such as <code>TimePosition</code> and perform its own conversion to the coordinate system needed for each input row. Legacy <code>int64_t</code> absolute-time bindings can remain supported if needed, but new row-iterable bindings should use the typed temporal value.</p>
+</section>
+<section id="execution-shape" class="level3">
+<h3 class="anchored" data-anchor-id="execution-shape">Execution Shape</h3>
+<p>For a gathered source and one binding source:</p>
+<pre class="text"><code>windows_i = row_pipeline(row_source)[i]
+row_i = gather(source_key, windows_i)
+
+iterable = source_pipeline(source_key_for_binding)
+store_i = buildGatherRowStore(gathered, i) or empty PipelineValueStore
+store_i[store_key] = defaultBindingValue(iterable, i)
+
+pipeline_i = pipeline_json with param_bindings applied from store_i
+value_i = execute/reduce pipeline_i(row_i)</code></pre>
+<p><code>buildGatherRowStore()</code> may still be useful as a base store for generic row metadata such as <code>trial_index</code> and <code>trial_duration</code>, but TensorDesign should not depend on <code>GatherResult::alignmentTimeAt()</code> for normalization markers. Iterable bindings should override or add store keys explicitly.</p>
+</section>
+<section id="validation-rules" class="level3">
+<h3 class="anchored" data-anchor-id="validation-rules">Validation Rules</h3>
+<p>Phase 5 should enforce these rules:</p>
+<ul>
+<li>Binding source DataObject must exist or the binding source pipeline must produce a supported DataObject.</li>
+<li>Binding source row count must equal the <code>GatherResult</code> row count.</li>
+<li><code>store_key</code> must be unique within the column and must not collide with base row-store keys; reject duplicates rather than silently overwriting.</li>
+<li>Produced DataObject type must have a default binding value implementation.</li>
+<li>Binding value construction must be deterministic and must not mutate the source object.</li>
+<li>If row filtering is introduced later, filtering must be applied consistently to gather windows and binding sources.</li>
+</ul>
+<p>Failure should occur at provider construction when possible. If a lazy source can only be evaluated at provider invocation time, fail with a message that identifies the column, binding source, and store key.</p>
+</section>
+<section id="motivating-test-cases" class="level3">
+<h3 class="anchored" data-anchor-id="motivating-test-cases">Motivating Test Cases</h3>
+<p>Phase 5 should have at least two tests using the raster/PSTH normalization pattern.</p>
+<p>Direct iterable source:</p>
+<pre class="text"><code>row_source: Contact intervals
+source_key: Spikes
+row_pipeline_json: identity or trial window pipeline
+pipeline_value_bindings: ContactOnset DigitalEventSeries[i] -&gt; TimePosition -&gt; row_alignment_time
+pipeline_json: NormalizeTime(alignment_time bound to row_alignment_time) + event/bin reduction</code></pre>
+<p>Derived iterable source:</p>
+<pre class="text"><code>row_source: Contact intervals
+source_key: Spikes
+row_pipeline_json: identity or trial window pipeline
+pipeline_value_bindings: Contact -&gt; IntervalToEvent(start) -&gt; TimePosition -&gt; row_alignment_time
+pipeline_json: NormalizeTime(alignment_time bound to row_alignment_time) + event/bin reduction</code></pre>
+<p>Both tests should assert that normalized event times are relative to contact onset, not to the gather window start. They should also assert row-count mismatch rejection by using a binding source with one missing or extra event.</p>
+<p>Example binding shape, shown as design intent rather than final JSON:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: [{</span><span class="ch">\"</span><span class="st">transform_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">NormalizeTime</span><span class="ch">\"</span><span class="st">, </span><span class="ch">\"</span><span class="st">param_bindings</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">alignment_time</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">row_alignment_time</span><span class="ch">\"</span><span class="st">}}]}"</span><span class="fu">,</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"pipeline_value_bindings"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"ContactOnset"</span><span class="fu">,</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"store_key"</span><span class="fu">:</span> <span class="st">"row_alignment_time"</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The exact schema can change, but the ownership should remain clear: TransformsV2 binds row-specific values into <code>PipelineValueStore</code>; TensorDesign selects the row source, gather/sample input, and column recipe; TensorData stores the resulting column values.</p>
+</section>
 </section>
 <section id="rasterpsth-example" class="level2">
 <h2 class="anchored" data-anchor-id="rasterpsth-example">Raster/PSTH Example</h2>
@@ -934,23 +1043,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Conceptually:</p>
 <pre class="text"><code>row_pipeline_json: trial interval -&gt; spike gather window
 gather:            Spikes + window_i -&gt; spikes_i
-iterable binding:  ContactOnset[i] -&gt; PipelineValueStore["row_alignment_time"]
+iterable binding:  ContactOnset[i] -&gt; TimePosition -&gt; PipelineValueStore["row_alignment_time"]
 pipeline_json:     NormalizeTime(spikes_i, row_alignment_time) -&gt; PSTH/bin/reduction output</code></pre>
 <p>This keeps <code>row_pipeline_json</code> focused on selecting rows of source data and keeps transformations such as normalization inside the column pipeline where they belong.</p>
 </section>
 <section id="provider-dispatch" class="level2">
 <h2 class="anchored" data-anchor-id="provider-dispatch">Provider Dispatch</h2>
-<p>The target dispatch for interval-row columns is:</p>
+<p>The implemented dispatch for interval-row columns is:</p>
 <ol type="1">
 <li>If <code>interval_property</code> is present, use the existing row metadata provider and ignore source gather.</li>
 <li>Resolve <code>row_pipeline_json</code>.</li>
 <li>If <code>row_pipeline_json</code> is empty, use the current full-interval gather path.</li>
 <li>If the row pipeline produces <code>DigitalIntervalSeries</code> windows, verify row count and gather the column source through <code>GatherResult</code>.</li>
+<li>Run <code>pipeline_json</code> over gathered rows to produce one value per tensor row.</li>
+</ol>
+<p>Planned dispatch extensions are:</p>
+<ol type="1">
 <li>If the row pipeline produces <code>DigitalEventSeries</code> sample times without windows, use timestamp/sample provider behavior or expand to windows with <code>EventToInterval</code>, depending on the column recipe.</li>
 <li>Build any iterable <code>PipelineValueStore</code> bindings requested by <code>pipeline_json</code>, such as one normalization marker per row.</li>
 <li>Run <code>pipeline_json</code> over gathered rows or sampled timestamps with the row store to produce one value per tensor row.</li>
 </ol>
 <p>The dispatch should reject row-pipeline outputs that do not preserve row count unless the recipe explicitly opts into row filtering.</p>
+<p>Implemented behavior rejects <code>DigitalEventSeries</code> row-pipeline output for interval-row gather columns with a runtime error explaining that timestamp/sample dispatch is deferred.</p>
 </section>
 <section id="timeframe-semantics" class="level2">
 <h2 class="anchored" data-anchor-id="timeframe-semantics">TimeFrame Semantics</h2>
@@ -1021,6 +1135,47 @@ pipeline_json:     NormalizeTime(spikes_i, row_alignment_time) -&gt; PSTH/bin/re
 <li>How should timestamp-only row-pipeline output choose between sampling, window expansion, or rejection?</li>
 <li>Should row filtering ever be supported, or should row pipelines always be required to preserve row count?</li>
 </ul>
+</section>
+<section id="tests" class="level2">
+<h2 class="anchored" data-anchor-id="tests">Tests</h2>
+<p>Current coverage is split by architectural layer:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Test file</th>
+<th>Layer</th>
+<th>Coverage</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>tests/TransformsV2/test_tensor_column_builders.test.cpp</code></td>
+<td>TransformsV2 column-builder layer</td>
+<td><code>resolveIntervalGatherWindows()</code>, identity row pipelines, <code>DigitalIntervalSeries</code> row-pipeline output, overlapping windows, row-count rejection, interval-property bypass, and provider dispatch.</td>
+</tr>
+<tr class="even">
+<td><code>tests/TensorDesign/test_tensor_design_builder.cpp</code></td>
+<td>TensorDesign JSON/build layer</td>
+<td>Parse/serialize <code>row_pipeline_json</code>, identity behavior, Phase 4 JSON builds, mixed interval-property/gather columns, cross-timeframe gather windows, and offset compatibility characterization.</td>
+</tr>
+<tr class="odd">
+<td><code>tests/TensorDesign/test_tensor_whisker_contact_scenario.cpp</code></td>
+<td>TensorDesign scenario integration</td>
+<td>Builds the whisker-contact JSON design with mean curvature, full-contact spike count, and contact-onset spike presence through <code>row_pipeline_json</code>.</td>
+</tr>
+<tr class="even">
+<td><code>tests/TransformsV2/test_tensor_whisker_contact_scenario.cpp</code></td>
+<td>Lower-level TransformsV2 scenario integration</td>
+<td>Exercises programmatic <code>buildIntervalPipelineProvider()</code> and lazy tensor construction over the same fixture without TensorDesign JSON.</td>
+</tr>
+</tbody>
+</table>
+<p>The two whisker-contact test files intentionally cover different levels. The TransformsV2 test validates the lower-level provider/lazy tensor path. The TensorDesign test validates the JSON-to-tensor path, including the new contact-aligned spike column. If test runtime becomes a concern, keep both layers but reduce duplicate statistical assertions rather than deleting one file.</p>
 
 
 </section>

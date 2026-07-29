@@ -358,6 +358,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-gettime" id="toc-function-gettime" class="nav-link" data-scroll-target="#function-gettime">function getTime</a></li>
   <li><a href="#function-getentityid" id="toc-function-getentityid" class="nav-link" data-scroll-target="#function-getentityid">function getEntityId</a></li>
   <li><a href="#function-isintimerange" id="toc-function-isintimerange" class="nav-link" data-scroll-target="#function-isintimerange">function isInTimeRange</a></li>
+  <li><a href="#function-isinclocktimerange" id="toc-function-isinclocktimerange" class="nav-link" data-scroll-target="#function-isinclocktimerange">function isInClockTimeRange</a></li>
   <li><a href="#function-isinentityset" id="toc-function-isinentityset" class="nav-link" data-scroll-target="#function-isinentityset">function isInEntitySet</a></li>
   </ul></li>
   <li><a href="#attributes-documentation" id="toc-attributes-documentation" class="nav-link" data-scroll-target="#attributes-documentation">Attributes Documentation</a>
@@ -438,6 +439,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Concepts.html#function-isintimerange">isInTimeRange</a></strong>(T const &amp; elem, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end)<br>Check if an element’s time is within a range.</td>
 </tr>
 <tr class="even">
+<td>template &lt;ClockTimeSeriesElement T&gt; <br>bool</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Concepts.html#function-isinclocktimerange">isInClockTimeRange</a></strong>(T const &amp; elem, <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> start, <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> end)<br>Check if a clock-tick element’s time is within a range.</td>
+</tr>
+<tr class="odd">
 <td>template &lt;EntityElement T&gt; <br>bool</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Concepts.html#function-isinentityset">isInEntitySet</a></strong>(T const &amp; elem, std::unordered_set&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt; const &amp; ids)<br>Check if an element’s <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> is in a set.</td>
 </tr>
@@ -522,13 +527,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Return</strong>: true if element’s time is within [start, end]</p>
 </section>
+<section id="function-isinclocktimerange" class="level3">
+<h3 class="anchored" data-anchor-id="function-isinclocktimerange">function isInClockTimeRange</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ClockTimeSeriesElement T<span class="op">&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isInClockTimeRange<span class="op">(</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    T <span class="at">const</span> <span class="op">&amp;</span> elem<span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    ClockTicks start<span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    ClockTicks end</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check if a clock-tick element’s time is within a range.</p>
+</section>
 <section id="function-isinentityset" class="level3">
 <h3 class="anchored" data-anchor-id="function-isinentityset">function isInEntitySet</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>EntityElement T<span class="op">&gt;</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isInEntitySet<span class="op">(</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    T <span class="at">const</span> <span class="op">&amp;</span> elem<span class="op">,</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> ids</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>EntityElement T<span class="op">&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isInEntitySet<span class="op">(</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    T <span class="at">const</span> <span class="op">&amp;</span> elem<span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> ids</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Check if an element’s <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> is in a set.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -546,13 +561,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="attributes-documentation">Attributes Documentation</h2>
 <section id="variable-is_time_series_element_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_time_series_element_v">variable is_time_series_element_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_time_series_element_v <span class="op">=</span> is_time_series_element<span class="op">&lt;</span>T<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_time_series_element_v <span class="op">=</span> is_time_series_element<span class="op">&lt;</span>T<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-is_entity_element_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_entity_element_v">variable is_entity_element_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_entity_element_v <span class="op">=</span> is_entity_element<span class="op">&lt;</span>T<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_entity_element_v <span class="op">=</span> is_entity_element<span class="op">&lt;</span>T<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:52 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:34 +0000</p>
 
 
 </section>

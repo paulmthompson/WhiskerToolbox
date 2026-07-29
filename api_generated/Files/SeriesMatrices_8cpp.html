@@ -523,12 +523,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-123"><a href="#cb1-123" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> View<span class="op">;</span></span>
 <span id="cb1-124"><a href="#cb1-124" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-125"><a href="#cb1-125" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-126"><a href="#cb1-126" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>mat4 getAnalogProjectionMatrix<span class="op">(</span>TimeFrameIndex start_time_index<span class="op">,</span></span>
-<span id="cb1-127"><a href="#cb1-127" aria-hidden="true" tabindex="-1"></a>                                    TimeFrameIndex end_time_index<span class="op">,</span></span>
+<span id="cb1-126"><a href="#cb1-126" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>mat4 getAnalogProjectionMatrix<span class="op">(</span><span class="dt">float</span> x_min<span class="op">,</span></span>
+<span id="cb1-127"><a href="#cb1-127" aria-hidden="true" tabindex="-1"></a>                                    <span class="dt">float</span> x_max<span class="op">,</span></span>
 <span id="cb1-128"><a href="#cb1-128" aria-hidden="true" tabindex="-1"></a>                                    <span class="dt">float</span> y_min<span class="op">,</span></span>
 <span id="cb1-129"><a href="#cb1-129" aria-hidden="true" tabindex="-1"></a>                                    <span class="dt">float</span> y_max<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-130"><a href="#cb1-130" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> left <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>start_time_index<span class="op">.</span>getValue<span class="op">());</span></span>
-<span id="cb1-131"><a href="#cb1-131" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> right <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>end_time_index<span class="op">.</span>getValue<span class="op">());</span></span>
+<span id="cb1-130"><a href="#cb1-130" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> left <span class="op">=</span> x_min<span class="op">;</span></span>
+<span id="cb1-131"><a href="#cb1-131" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> right <span class="op">=</span> x_max<span class="op">;</span></span>
 <span id="cb1-132"><a href="#cb1-132" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> bottom <span class="op">=</span> y_min<span class="op">;</span></span>
 <span id="cb1-133"><a href="#cb1-133" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> top <span class="op">=</span> y_max<span class="op">;</span></span>
 <span id="cb1-134"><a href="#cb1-134" aria-hidden="true" tabindex="-1"></a></span>
@@ -546,28 +546,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-146"><a href="#cb1-146" aria-hidden="true" tabindex="-1"></a><span class="co">// LayoutTransform-based API</span></span>
 <span id="cb1-147"><a href="#cb1-147" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
 <span id="cb1-148"><a href="#cb1-148" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>mat4 createProjectionMatrix<span class="op">(</span>TimeFrameIndex start_time<span class="op">,</span></span>
-<span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a>                                 TimeFrameIndex end_time<span class="op">,</span></span>
+<span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>mat4 createProjectionMatrix<span class="op">(</span><span class="dt">float</span> x_min<span class="op">,</span></span>
+<span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a>                                 <span class="dt">float</span> x_max<span class="op">,</span></span>
 <span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a>                                 <span class="dt">float</span> y_min<span class="op">,</span></span>
 <span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a>                                 <span class="dt">float</span> y_max<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> left <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>start_time<span class="op">.</span>getValue<span class="op">());</span></span>
-<span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> right <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>end_time<span class="op">.</span>getValue<span class="op">());</span></span>
-<span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> bottom <span class="op">=</span> y_min<span class="op">;</span></span>
-<span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> top <span class="op">=</span> y_max<span class="op">;</span></span>
-<span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Validate and fix parameters</span></span>
-<span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a>    validateOrthoParams<span class="op">(</span>left<span class="op">,</span> right<span class="op">,</span> bottom<span class="op">,</span> top<span class="op">,</span> <span class="st">"Projection"</span><span class="op">);</span></span>
-<span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create orthographic projection matrix</span></span>
-<span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 Projection <span class="op">=</span> glm<span class="op">::</span>ortho<span class="op">(</span>left<span class="op">,</span> right<span class="op">,</span> bottom<span class="op">,</span> top<span class="op">);</span></span>
-<span id="cb1-163"><a href="#cb1-163" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-164"><a href="#cb1-164" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Final validation</span></span>
-<span id="cb1-165"><a href="#cb1-165" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> validateMatrix<span class="op">(</span>Projection<span class="op">,</span> <span class="st">"Projection"</span><span class="op">);</span></span>
-<span id="cb1-166"><a href="#cb1-166" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-167"><a href="#cb1-167" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace CorePlotting</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> getAnalogProjectionMatrix<span class="op">(</span>x_min<span class="op">,</span> x_max<span class="op">,</span> y_min<span class="op">,</span> y_max<span class="op">);</span></span>
+<span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace CorePlotting</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:54 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:35 +0000</p>
 
 
 </section>

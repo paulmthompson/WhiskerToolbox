@@ -444,7 +444,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Build the time values vector by iterating through all indices</span></span>
 <span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> total <span class="op">=</span> timeframe<span class="op">-&gt;</span>getTotalFrameCount<span class="op">();</span></span>
-<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> times<span class="op">;</span></span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>ClockTicks<span class="op">&gt;</span> times<span class="op">;</span></span>
 <span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>    times<span class="op">.</span>reserve<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">size_t</span><span class="op">&gt;(</span>total<span class="op">));</span></span>
 <span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> total<span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>        times<span class="op">.</span>push_back<span class="op">(</span>timeframe<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span>TimeFrameIndex<span class="op">(</span>i<span class="op">)));</span></span>
@@ -521,7 +521,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-137"><a href="#cb1-137" aria-hidden="true" tabindex="-1"></a>    updateView<span class="op">();</span></span>
 <span id="cb1-138"><a href="#cb1-138" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:56 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:37 +0000</p>
 
 
 </section>

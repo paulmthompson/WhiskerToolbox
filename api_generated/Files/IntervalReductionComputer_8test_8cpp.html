@@ -981,7 +981,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-476"><a href="#cb7-476" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Convert to TimeFrameIntervals for row selector</span></span>
 <span id="cb7-477"><a href="#cb7-477" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameInterval<span class="op">&gt;</span> row_intervals<span class="op">;</span></span>
 <span id="cb7-478"><a href="#cb7-478" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">:</span> behavior_intervals<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-479"><a href="#cb7-479" aria-hidden="true" tabindex="-1"></a>            row_intervals<span class="op">.</span>emplace_back<span class="op">(</span>TimeFrameIndex<span class="op">(</span>interval<span class="op">.</span>start<span class="op">),</span> TimeFrameIndex<span class="op">(</span>interval<span class="op">.</span>end<span class="op">));</span></span>
+<span id="cb7-479"><a href="#cb7-479" aria-hidden="true" tabindex="-1"></a>            row_intervals<span class="op">.</span>push_back<span class="op">(</span>toTimeFrameInterval<span class="op">(</span>interval<span class="op">,</span> <span class="op">*</span>behavior_time_frame<span class="op">));</span></span>
 <span id="cb7-480"><a href="#cb7-480" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb7-481"><a href="#cb7-481" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-482"><a href="#cb7-482" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>row_intervals<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">4</span><span class="op">);</span></span>
@@ -1493,7 +1493,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-988"><a href="#cb7-988" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb7-989"><a href="#cb7-989" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:54 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:35 +0000</p>
 
 
 </section>

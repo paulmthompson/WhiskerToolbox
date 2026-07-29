@@ -354,6 +354,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
   <ul class="collapse">
   <li><a href="#function-filterbytimerange" id="toc-function-filterbytimerange" class="nav-link" data-scroll-target="#function-filterbytimerange">function filterByTimeRange</a></li>
+  <li><a href="#function-filterbytimerange-1" id="toc-function-filterbytimerange-1" class="nav-link" data-scroll-target="#function-filterbytimerange-1">function filterByTimeRange</a></li>
   <li><a href="#function-filterbytimerangeexclusive" id="toc-function-filterbytimerangeexclusive" class="nav-link" data-scroll-target="#function-filterbytimerangeexclusive">function filterByTimeRangeExclusive</a></li>
   <li><a href="#function-filterbyentityids" id="toc-function-filterbyentityids" class="nav-link" data-scroll-target="#function-filterbyentityids">function filterByEntityIds</a></li>
   <li><a href="#function-filterbyentityid" id="toc-function-filterbyentityid" class="nav-link" data-scroll-target="#function-filterbyentityid">function filterByEntityId</a></li>
@@ -415,66 +416,70 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Filters.html#function-filterbytimerange">filterByTimeRange</a></strong>(R &amp;&amp; range, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end)<br>Filter a range of time series elements by time range.</td>
 </tr>
 <tr class="even">
+<td>template &lt;std::ranges::input_range R&gt; <br>auto</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Filters.html#function-filterbytimerange">filterByTimeRange</a></strong>(R &amp;&amp; range, <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> start, <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> end)<br>Filter clock-tick time series elements by clock-tick time range.</td>
+</tr>
+<tr class="odd">
 <td>template &lt;std::ranges::input_range R&gt; <br>constexpr auto</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Filters.html#function-filterbytimerangeexclusive">filterByTimeRangeExclusive</a></strong>(R &amp;&amp; range, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end)<br>Filter elements by time range with exclusive end.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>template &lt;std::ranges::input_range R&gt; <br>constexpr auto</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Filters.html#function-filterbyentityids">filterByEntityIds</a></strong>(R &amp;&amp; range, std::unordered_set&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt; const &amp; entity_ids)<br>Filter a range of entity elements by <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> set.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>template &lt;std::ranges::input_range R&gt; <br>constexpr auto</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Filters.html#function-filterbyentityid">filterByEntityId</a></strong>(R &amp;&amp; range, <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> entity_id)<br>Filter a range of entity elements by a single <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>template &lt;std::ranges::input_range R&gt; <br>constexpr auto</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Filters.html#function-filterbytimerangeandentityids">filterByTimeRangeAndEntityIds</a></strong>(R &amp;&amp; range, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end, std::unordered_set&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt; const &amp; entity_ids)<br>Filter by both time range and <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> set.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>template &lt;std::ranges::input_range R&gt; <br>auto</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Filters.html#function-materializetovector">materializeToVector</a></strong>(R &amp;&amp; range)<br>Materialize a range into a vector.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>template &lt;std::ranges::input_range R&gt; <br>constexpr std::size_t</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Filters.html#function-countintimerange">countInTimeRange</a></strong>(R &amp;&amp; range, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end)<br>Count elements matching time range criteria.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>template &lt;std::ranges::input_range R&gt; <br>std::size_t</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Filters.html#function-countwithentityids">countWithEntityIds</a></strong>(R &amp;&amp; range, std::unordered_set&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt; const &amp; entity_ids)<br>Count elements matching <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> criteria.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>template &lt;std::ranges::input_range R&gt; <br>constexpr bool</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Filters.html#function-anyintimerange">anyInTimeRange</a></strong>(R &amp;&amp; range, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end)<br>Check if any element exists in time range.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>template &lt;std::ranges::input_range R&gt; <br>constexpr bool</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Filters.html#function-allintimerange">allInTimeRange</a></strong>(R &amp;&amp; range, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end)<br>Check if all elements are in time range.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>template &lt;std::ranges::input_range R&gt; <br>bool</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Filters.html#function-anywithentityids">anyWithEntityIds</a></strong>(R &amp;&amp; range, std::unordered_set&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt; const &amp; entity_ids)<br>Check if any element has a matching <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>template &lt;std::ranges::input_range R&gt; <br>constexpr auto</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Filters.html#function-extracttimes">extractTimes</a></strong>(R &amp;&amp; range)<br>Extract times from a range of elements.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>template &lt;std::ranges::input_range R&gt; <br>constexpr auto</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Filters.html#function-extractentityids">extractEntityIds</a></strong>(R &amp;&amp; range)<br>Extract EntityIds from a range of elements.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>template &lt;std::ranges::input_range R&gt; <br>std::unordered_set&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Filters.html#function-uniqueentityids">uniqueEntityIds</a></strong>(R &amp;&amp; range)<br>Get unique EntityIds from a range.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>template &lt;std::ranges::input_range R&gt; <br>std::optional&lt; <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Filters.html#function-mintime">minTime</a></strong>(R &amp;&amp; range)<br>Find the minimum time in a range.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>template &lt;std::ranges::input_range R&gt; <br>std::optional&lt; <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Filters.html#function-maxtime">maxTime</a></strong>(R &amp;&amp; range)<br>Find the maximum time in a range.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>template &lt;std::ranges::input_range R&gt; <br>std::optional&lt; std::pair&lt; <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt; &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Filters.html#function-timebounds">timeBounds</a></strong>(R &amp;&amp; range)<br>Find the time bounds (min and max) of a range.</td>
 </tr>
@@ -521,14 +526,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>O(1) to create the view. O(n) to fully iterate where n = input size.</p>
 <p>Returns a lazy view containing only elements whose time() falls within the inclusive range [start, end]. The view does not copy data and evaluates lazily during iteration.</p>
 </section>
+<section id="function-filterbytimerange-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-filterbytimerange-1">function filterByTimeRange</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> filterByTimeRange<span class="op">(</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    ClockTicks start<span class="op">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    ClockTicks end</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Filter clock-tick time series elements by clock-tick time range.</p>
+<p><strong>See</strong>: <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Filters.html#function-filterbytimerange">filterByTimeRange</a> for index-space elements using <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> bounds</p>
+</section>
 <section id="function-filterbytimerangeexclusive" class="level3">
 <h3 class="anchored" data-anchor-id="function-filterbytimerangeexclusive">function filterByTimeRangeExclusive</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="kw">auto</span> filterByTimeRangeExclusive<span class="op">(</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start<span class="op">,</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="kw">auto</span> filterByTimeRangeExclusive<span class="op">(</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start<span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Filter elements by time range with exclusive end.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -545,11 +561,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-filterbyentityids" class="level3">
 <h3 class="anchored" data-anchor-id="function-filterbyentityids">function filterByEntityIds</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="kw">auto</span> filterByEntityIds<span class="op">(</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="kw">auto</span> filterByEntityIds<span class="op">(</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Filter a range of entity elements by <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> set.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -567,12 +583,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ul>
 <li>Example</li>
 </ul>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> events <span class="op">=</span> createDigitalEventSeries<span class="op">();</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> selected<span class="op">{</span>EntityId<span class="op">(</span><span class="dv">1</span><span class="op">),</span> EntityId<span class="op">(</span><span class="dv">3</span><span class="op">),</span> EntityId<span class="op">(</span><span class="dv">5</span><span class="op">)};</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> filtered <span class="op">=</span> filterByEntityIds<span class="op">(</span>events<span class="op">-&gt;</span>view<span class="op">(),</span> selected<span class="op">);</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> event <span class="op">:</span> filtered<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Only events with EntityId 1, 3, or 5</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> events <span class="op">=</span> createDigitalEventSeries<span class="op">();</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> selected<span class="op">{</span>EntityId<span class="op">(</span><span class="dv">1</span><span class="op">),</span> EntityId<span class="op">(</span><span class="dv">3</span><span class="op">),</span> EntityId<span class="op">(</span><span class="dv">5</span><span class="op">)};</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> filtered <span class="op">=</span> filterByEntityIds<span class="op">(</span>events<span class="op">-&gt;</span>view<span class="op">(),</span> selected<span class="op">);</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> event <span class="op">:</span> filtered<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Only events with EntityId 1, 3, or 5</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>Complexity</li>
 </ul>
@@ -581,11 +597,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-filterbyentityid" class="level3">
 <h3 class="anchored" data-anchor-id="function-filterbyentityid">function filterByEntityId</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="kw">auto</span> filterByEntityId<span class="op">(</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    EntityId entity_id</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="kw">auto</span> filterByEntityId<span class="op">(</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    EntityId entity_id</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Filter a range of entity elements by a single <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -601,13 +617,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-filterbytimerangeandentityids" class="level3">
 <h3 class="anchored" data-anchor-id="function-filterbytimerangeandentityids">function filterByTimeRangeAndEntityIds</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="kw">auto</span> filterByTimeRangeAndEntityIds<span class="op">(</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start<span class="op">,</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end<span class="op">,</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="kw">auto</span> filterByTimeRangeAndEntityIds<span class="op">(</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start<span class="op">,</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end<span class="op">,</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Filter by both time range and <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> set.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -626,10 +642,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-materializetovector" class="level3">
 <h3 class="anchored" data-anchor-id="function-materializetovector">function materializeToVector</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> materializeToVector<span class="op">(</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> materializeToVector<span class="op">(</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Materialize a range into a vector.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -641,9 +657,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Return</strong>: std::vector containing copies of all elements</p>
 <p><strong>Par</strong>: Example</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> filtered <span class="op">=</span> filterByTimeRange<span class="op">(</span>series<span class="op">-&gt;</span>view<span class="op">(),</span> start<span class="op">,</span> end<span class="op">);</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> vec <span class="op">=</span> materializeToVector<span class="op">(</span>filtered<span class="op">);</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">// vec is now an independent std::vector</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> filtered <span class="op">=</span> filterByTimeRange<span class="op">(</span>series<span class="op">-&gt;</span>view<span class="op">(),</span> start<span class="op">,</span> end<span class="op">);</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> vec <span class="op">=</span> materializeToVector<span class="op">(</span>filtered<span class="op">);</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">// vec is now an independent std::vector</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Converts any range (including lazy views) into an owning vector. Useful when you need to:</p>
 <ul>
 <li>Pass filtered results to APIs expecting vectors</li>
@@ -653,12 +669,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-countintimerange" class="level3">
 <h3 class="anchored" data-anchor-id="function-countintimerange">function countInTimeRange</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="bu">std::</span>size_t countInTimeRange<span class="op">(</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start<span class="op">,</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="bu">std::</span>size_t countInTimeRange<span class="op">(</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start<span class="op">,</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Count elements matching time range criteria.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -675,11 +691,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-countwithentityids" class="level3">
 <h3 class="anchored" data-anchor-id="function-countwithentityids">function countWithEntityIds</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t countWithEntityIds<span class="op">(</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t countWithEntityIds<span class="op">(</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Count elements matching <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> criteria.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -695,12 +711,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-anyintimerange" class="level3">
 <h3 class="anchored" data-anchor-id="function-anyintimerange">function anyInTimeRange</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> anyInTimeRange<span class="op">(</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start<span class="op">,</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> anyInTimeRange<span class="op">(</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start<span class="op">,</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Check if any element exists in time range.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -716,12 +732,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-allintimerange" class="level3">
 <h3 class="anchored" data-anchor-id="function-allintimerange">function allInTimeRange</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> allInTimeRange<span class="op">(</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start<span class="op">,</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> allInTimeRange<span class="op">(</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start<span class="op">,</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Check if all elements are in time range.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -737,11 +753,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-anywithentityids" class="level3">
 <h3 class="anchored" data-anchor-id="function-anywithentityids">function anyWithEntityIds</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> anyWithEntityIds<span class="op">(</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> anyWithEntityIds<span class="op">(</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Check if any element has a matching <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -756,10 +772,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-extracttimes" class="level3">
 <h3 class="anchored" data-anchor-id="function-extracttimes">function extractTimes</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="kw">auto</span> extractTimes<span class="op">(</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="kw">auto</span> extractTimes<span class="op">(</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Extract times from a range of elements.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -771,18 +787,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Return</strong>: A lazy view of <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> values</p>
 <p><strong>Par</strong>: Example</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> times <span class="op">=</span> extractTimes<span class="op">(</span>series<span class="op">-&gt;</span>elementsView<span class="op">());</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> time <span class="op">:</span> times<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> time<span class="op">.</span>getValue<span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> times <span class="op">=</span> extractTimes<span class="op">(</span>series<span class="op">-&gt;</span>elementsView<span class="op">());</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> time <span class="op">:</span> times<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> time<span class="op">.</span>getValue<span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Returns a lazy view that transforms each element to its time value. Useful for getting just the time values without other data.</p>
 </section>
 <section id="function-extractentityids" class="level3">
 <h3 class="anchored" data-anchor-id="function-extractentityids">function extractEntityIds</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="kw">auto</span> extractEntityIds<span class="op">(</span></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="kw">auto</span> extractEntityIds<span class="op">(</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Extract EntityIds from a range of elements.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -797,10 +813,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-uniqueentityids" class="level3">
 <h3 class="anchored" data-anchor-id="function-uniqueentityids">function uniqueEntityIds</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> uniqueEntityIds<span class="op">(</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> uniqueEntityIds<span class="op">(</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get unique EntityIds from a range.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -815,10 +831,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-mintime" class="level3">
 <h3 class="anchored" data-anchor-id="function-mintime">function minTime</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> TimeFrameIndex <span class="op">&gt;</span> minTime<span class="op">(</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> TimeFrameIndex <span class="op">&gt;</span> minTime<span class="op">(</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Find the minimum time in a range.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -832,10 +848,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-maxtime" class="level3">
 <h3 class="anchored" data-anchor-id="function-maxtime">function maxTime</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> TimeFrameIndex <span class="op">&gt;</span> maxTime<span class="op">(</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> TimeFrameIndex <span class="op">&gt;</span> maxTime<span class="op">(</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Find the maximum time in a range.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -849,10 +865,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-timebounds" class="level3">
 <h3 class="anchored" data-anchor-id="function-timebounds">function timeBounds</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="bu">std::</span>pair<span class="op">&lt;</span> TimeFrameIndex<span class="op">,</span> TimeFrameIndex <span class="op">&gt;</span> <span class="op">&gt;</span> timeBounds<span class="op">(</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range</span>
-<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range R<span class="op">&gt;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="bu">std::</span>pair<span class="op">&lt;</span> TimeFrameIndex<span class="op">,</span> TimeFrameIndex <span class="op">&gt;</span> <span class="op">&gt;</span> timeBounds<span class="op">(</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    R <span class="op">&amp;&amp;</span> range</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Find the time bounds (min and max) of a range.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -864,7 +880,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Return</strong>: std::optional&lt;std::pair&lt;TimeFrameIndex, TimeFrameIndex&gt;&gt; The (min, max) time pair, or nullopt if empty</p>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:52 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:34 +0000</p>
 
 
 </section>

@@ -600,9 +600,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb9-96"><a href="#cb9-96" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-97"><a href="#cb9-97" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Returns interval start times"</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb9-98"><a href="#cb9-98" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> intervals <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;();</span></span>
-<span id="cb9-99"><a href="#cb9-99" aria-hidden="true" tabindex="-1"></a>        intervals<span class="op">-&gt;</span>addEvent<span class="op">(</span>Interval<span class="op">{</span><span class="dv">100</span><span class="op">,</span> <span class="dv">200</span><span class="op">});</span></span>
-<span id="cb9-100"><a href="#cb9-100" aria-hidden="true" tabindex="-1"></a>        intervals<span class="op">-&gt;</span>addEvent<span class="op">(</span>Interval<span class="op">{</span><span class="dv">300</span><span class="op">,</span> <span class="dv">400</span><span class="op">});</span></span>
-<span id="cb9-101"><a href="#cb9-101" aria-hidden="true" tabindex="-1"></a>        intervals<span class="op">-&gt;</span>addEvent<span class="op">(</span>Interval<span class="op">{</span><span class="dv">500</span><span class="op">,</span> <span class="dv">600</span><span class="op">});</span></span>
+<span id="cb9-99"><a href="#cb9-99" aria-hidden="true" tabindex="-1"></a>        intervals<span class="op">-&gt;</span>addEvent<span class="op">(</span>TimeFrameInterval<span class="op">{</span>TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">200</span><span class="op">)});</span></span>
+<span id="cb9-100"><a href="#cb9-100" aria-hidden="true" tabindex="-1"></a>        intervals<span class="op">-&gt;</span>addEvent<span class="op">(</span>TimeFrameInterval<span class="op">{</span>TimeFrameIndex<span class="op">(</span><span class="dv">300</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">400</span><span class="op">)});</span></span>
+<span id="cb9-101"><a href="#cb9-101" aria-hidden="true" tabindex="-1"></a>        intervals<span class="op">-&gt;</span>addEvent<span class="op">(</span>TimeFrameInterval<span class="op">{</span>TimeFrameIndex<span class="op">(</span><span class="dv">500</span><span class="op">),</span> TimeFrameIndex<span class="op">(</span><span class="dv">600</span><span class="op">)});</span></span>
 <span id="cb9-102"><a href="#cb9-102" aria-hidden="true" tabindex="-1"></a>        dm<span class="op">-&gt;</span>setData<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;(</span><span class="st">"intervals_key"</span><span class="op">,</span> intervals<span class="op">,</span> TimeKey<span class="op">(</span><span class="st">"time"</span><span class="op">));</span></span>
 <span id="cb9-103"><a href="#cb9-103" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb9-104"><a href="#cb9-104" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> extractTimeIndices<span class="op">(*</span>dm<span class="op">,</span> <span class="st">"intervals_key"</span><span class="op">);</span></span>
@@ -727,7 +727,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb9-223"><a href="#cb9-223" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb9-224"><a href="#cb9-224" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:54 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:36 +0000</p>
 
 
 </section>

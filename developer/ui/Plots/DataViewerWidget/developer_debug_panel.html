@@ -498,8 +498,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </div>
 </li>
           <li class="sidebar-item">
- <span class="menu-text">developer/coreplotting/min_max_polyline_decimation.qmd</span>
-  </li>
+  <div class="sidebar-item-container"> 
+  <a href="../../../../developer/coreplotting/min_max_polyline_decimation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Min–max polyline decimation</span></a>
+  </div>
+</li>
       </ul>
   </li>
           <li class="sidebar-item sidebar-item-section">
@@ -1714,28 +1717,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>Time window</td>
-<td><code>TimeSeriesViewState::time_start / time_end</code></td>
+<td><code>DataViewerState::timeStart() / timeEnd()</code> (<code>ViewStateData::x_min / x_max</code>)</td>
 <td>Verify visible range</td>
 </tr>
 <tr class="even">
 <td>Visible duration</td>
-<td><code>time_end - time_start</code></td>
+<td><code>timeEnd() - timeStart()</code></td>
 <td>Quick sanity check</td>
 </tr>
 <tr class="odd">
 <td>Y bounds (effective)</td>
-<td><code>y_min + vertical_pan_offset</code>, <code>y_max + vertical_pan_offset</code></td>
+<td><code>computeEffectiveYViewport(view)</code></td>
 <td>Debug Y pan/zoom (#227)</td>
 </tr>
 <tr class="even">
-<td><code>vertical_pan_offset</code></td>
-<td><code>TimeSeriesViewState</code></td>
+<td><code>y_pan</code></td>
+<td><code>ViewStateData::y_pan</code></td>
 <td>Track Y panning state</td>
 </tr>
 <tr class="odd">
-<td><code>global_y_scale</code></td>
-<td><code>TimeSeriesViewState</code></td>
-<td>Combined Y-axis scale factor (merged from <code>global_zoom</code> + <code>global_vertical_scale</code>)</td>
+<td><code>y_zoom</code></td>
+<td><code>ViewStateData::y_zoom</code></td>
+<td>Combined Y-axis zoom factor</td>
 </tr>
 <tr class="even">
 <td>Widget pixel size</td>

@@ -581,10 +581,10 @@ ul.task-list li input[type="checkbox"] {
 <li>Standard 2D camera model (Zoom X/Y, Pan X/Y).</li>
 <li>Used for SpatialOverlay where the user navigates a 2D plane.</li>
 </ul></li>
-<li><p><strong>TimeSeriesViewState</strong> (Temporal):</p>
+<li><p><strong>ViewStateData</strong> (Temporal scrolling plots):</p>
 <ul>
-<li><strong>X-Axis (Time Window)</strong>: Defined by start_time and end_time. Changing this window triggers a <strong>buffer rebuild</strong>, as it implies a change in the Level of Detail (LOD) or streaming new data chunks.</li>
-<li><strong>Y-Axis (Visual)</strong>: Handles standard zoom/pan via MVP matrices only. Changing vertical zoom does <em>not</em> require data regeneration.</li>
+<li><strong>X-Axis (Time Window)</strong>: <code>x_min</code> / <code>x_max</code> as master <code>[TimeFrameIndex](/api_generated/Classes/structTimeFrameIndex.md)</code> in <code>ViewStateData</code>. Changing this window triggers a <strong>buffer rebuild</strong>.</li>
+<li><strong>Y-Axis (Visual)</strong>: <code>y_min</code> / <code>y_max</code>, <code>y_zoom</code>, <code>y_pan</code> via MVP matrices only. Changing vertical zoom does <em>not</em> require data regeneration.</li>
 </ul></li>
 </ol>
 </section>
@@ -668,7 +668,7 @@ ul.task-list li input[type="checkbox"] {
 <p>├── SpatialIndex/ # <a href="../../api_generated/Classes/classQuadTree.html">QuadTree</a> implementation</p>
 <p>└── Transformers/ # Data processing utilities (e.g., GapDetector)</p>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:58 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:39 +0000</p>
 
 
 </section>

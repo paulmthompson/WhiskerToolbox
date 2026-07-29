@@ -550,10 +550,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-166"><a href="#cb1-166" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> time_value <span class="op">=</span> time_index_and_frame<span class="op">.</span>time_frame<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span>time_index_and_frame<span class="op">.</span>index<span class="op">);</span></span>
 <span id="cb1-167"><a href="#cb1-167" aria-hidden="true" tabindex="-1"></a>    </span>
 <span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 2. Convert that time value to an index in our timeframe</span></span>
-<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> _time_frame<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>time_value<span class="op">),</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> _time_frame<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span>time_value<span class="op">,</span> <span class="kw">false</span><span class="op">);</span></span>
 <span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:54 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:36 +0000</p>
 
 
 </section>

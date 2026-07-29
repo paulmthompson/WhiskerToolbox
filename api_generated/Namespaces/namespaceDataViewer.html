@@ -364,6 +364,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#function-buildlayoutrequest" id="toc-function-buildlayoutrequest" class="nav-link" data-scroll-target="#function-buildlayoutrequest">function buildLayoutRequest</a></li>
   <li><a href="#function-resolveordering" id="toc-function-resolveordering" class="nav-link" data-scroll-target="#function-resolveordering">function resolveOrdering</a></li>
+  <li><a href="#function-vieworiginmasterabsolute" id="toc-function-vieworiginmasterabsolute" class="nav-link" data-scroll-target="#function-vieworiginmasterabsolute">function viewOriginMasterAbsolute</a></li>
+  <li><a href="#function-vieworiginmasterabsoluteatindex" id="toc-function-vieworiginmasterabsoluteatindex" class="nav-link" data-scroll-target="#function-vieworiginmasterabsoluteatindex">function viewOriginMasterAbsoluteAtIndex</a></li>
+  <li><a href="#function-viewspanmasterabsolute" id="toc-function-viewspanmasterabsolute" class="nav-link" data-scroll-target="#function-viewspanmasterabsolute">function viewSpanMasterAbsolute</a></li>
   <li><a href="#function-composeanalogytransform" id="toc-function-composeanalogytransform" class="nav-link" data-scroll-target="#function-composeanalogytransform">function composeAnalogYTransform</a></li>
   <li><a href="#function-composeeventytransform" id="toc-function-composeeventytransform" class="nav-link" data-scroll-target="#function-composeeventytransform">function composeEventYTransform</a></li>
   <li><a href="#function-composeeventfullcanvasytransform" id="toc-function-composeeventfullcanvasytransform" class="nav-link" data-scroll-target="#function-composeeventfullcanvasytransform">function composeEventFullCanvasYTransform</a></li>
@@ -551,22 +554,34 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceDataViewer.html#function-resolveordering">resolveOrdering</a></strong>(std::vector&lt; <a href="../../api_generated/Classes/structDataViewer_1_1OrderingInputItem.html">OrderingInputItem</a> &gt; const &amp; input_items, <a href="../../api_generated/Files/ChannelPositionMetadata_8hpp.html#using-sortablerankmap">SortableRankMap</a> const &amp; fallback_ranks, std::vector&lt; <a href="../../api_generated/Classes/structDataViewer_1_1OrderingConstraint.html">OrderingConstraint</a> &gt; const &amp; constraints ={})<br>Resolve ordering with precedence.</td>
 </tr>
 <tr class="odd">
+<td><a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceDataViewer.html#function-vieworiginmasterabsolute">viewOriginMasterAbsolute</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; master_tf, <a href="../../api_generated/Classes/structCorePlotting_1_1ViewStateData.html">CorePlotting::ViewStateData</a> const &amp; view_state)<br>Master-clock absolute time at the left edge of the visible view window.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceDataViewer.html#function-vieworiginmasterabsoluteatindex">viewOriginMasterAbsoluteAtIndex</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; master_tf, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> const index)<br>Master-clock absolute time at a specific master <code>[TimeFrameIndex](/api_generated/Classes/structTimeFrameIndex.md)</code>.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceDataViewer.html#function-viewspanmasterabsolute">viewSpanMasterAbsolute</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; master_tf, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> const start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> const end)<br>Visible window span in master clock ticks for view-local orthographic projection.</td>
+</tr>
+<tr class="even">
 <td><a href="../../api_generated/Classes/structCorePlotting_1_1LayoutTransform.html">CorePlotting::LayoutTransform</a></td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceDataViewer.html#function-composeanalogytransform">composeAnalogYTransform</a></strong>(<a href="../../api_generated/Classes/structCorePlotting_1_1SeriesLayout.html">CorePlotting::SeriesLayout</a> const &amp; layout, float data_mean, float std_dev, float intrinsic_scale, float user_scale_factor, float user_vertical_offset, float global_y_scale, float margin_factor =0.8f)<br>Compose Y transform for analog series rendering.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><a href="../../api_generated/Classes/structCorePlotting_1_1LayoutTransform.html">CorePlotting::LayoutTransform</a></td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceDataViewer.html#function-composeeventytransform">composeEventYTransform</a></strong>(<a href="../../api_generated/Classes/structCorePlotting_1_1SeriesLayout.html">CorePlotting::SeriesLayout</a> const &amp; layout, float margin_factor, float global_y_scale)<br>Compose Y transform for event series (stacked mode)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><a href="../../api_generated/Classes/structCorePlotting_1_1LayoutTransform.html">CorePlotting::LayoutTransform</a></td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceDataViewer.html#function-composeeventfullcanvasytransform">composeEventFullCanvasYTransform</a></strong>(float viewport_y_min, float viewport_y_max, float margin_factor)<br>Compose Y transform for event series (full canvas mode)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>float</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceDataViewer.html#function-computeeventglyphsize">computeEventGlyphSize</a></strong>(<a href="../../api_generated/Classes/structCorePlotting_1_1LayoutTransform.html">CorePlotting::LayoutTransform</a> const &amp; composed_event_y_transform, float lane_half_height, float event_height, float margin_factor, float fallback_line_thickness)<br>Compute glyph size for event ticks from explicit world-space event height.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><a href="../../api_generated/Classes/structCorePlotting_1_1LayoutTransform.html">CorePlotting::LayoutTransform</a></td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceDataViewer.html#function-composeintervalytransform">composeIntervalYTransform</a></strong>(<a href="../../api_generated/Classes/structCorePlotting_1_1SeriesLayout.html">CorePlotting::SeriesLayout</a> const &amp; layout, float margin_factor, float global_y_scale)<br>Compose Y transform for interval series.</td>
 </tr>
@@ -712,18 +727,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Resolve ordering with precedence.</p>
 <p>Resolves the ordering of stackable series based on the following precedence: 1) explicit lane order 2) relational constraints (when present) 3) fallback provider ranks 4) deterministic tie-breaks</p>
 </section>
+<section id="function-vieworiginmasterabsolute" class="level3">
+<h3 class="anchored" data-anchor-id="function-vieworiginmasterabsolute">function viewOriginMasterAbsolute</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> ClockTicks viewOriginMasterAbsolute<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> master_tf<span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>ViewStateData <span class="at">const</span> <span class="op">&amp;</span> view_state</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Master-clock absolute time at the left edge of the visible view window.</p>
+<p><strong>Precondition</strong>: When <code>master_tf</code> is non-null, <code>view_state.x_min</code> is a valid <code>[TimeFrameIndex](/api_generated/Classes/structTimeFrameIndex.md)</code> into it.</p>
+<p><strong>Postcondition</strong>: Returns <code>[ClockTicks(0)](/api_generated/Classes/classClockTicks.md)</code> when <code>master_tf</code> is null.</p>
+</section>
+<section id="function-vieworiginmasterabsoluteatindex" class="level3">
+<h3 class="anchored" data-anchor-id="function-vieworiginmasterabsoluteatindex">function viewOriginMasterAbsoluteAtIndex</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> ClockTicks viewOriginMasterAbsoluteAtIndex<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> master_tf<span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex <span class="at">const</span> index</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Master-clock absolute time at a specific master <code>[TimeFrameIndex](/api_generated/Classes/structTimeFrameIndex.md)</code>.</p>
+<p><strong>Precondition</strong>: When <code>master_tf</code> is non-null, <code>index</code> is a valid index into it.</p>
+<p><strong>Postcondition</strong>: Returns <code>[ClockTicks(0)](/api_generated/Classes/classClockTicks.md)</code> when <code>master_tf</code> is null.</p>
+</section>
+<section id="function-viewspanmasterabsolute" class="level3">
+<h3 class="anchored" data-anchor-id="function-viewspanmasterabsolute">function viewSpanMasterAbsolute</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> ClockTicks viewSpanMasterAbsolute<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> master_tf<span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex <span class="at">const</span> start<span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex <span class="at">const</span> end</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Visible window span in master clock ticks for view-local orthographic projection.</p>
+<p><strong>Precondition</strong>: <code>master_tf</code> must not be null.</p>
+<p><strong>Postcondition</strong>: Returns at least <code>[ClockTicks(1)](/api_generated/Classes/classClockTicks.md)</code>.</p>
+<p>View-local X coordinates are expressed as `<code>(absolute_time - origin). The projection right bound is therefore the clock-tick delta between</code>end<code>and</code>start`, not the index delta.</p>
+</section>
 <section id="function-composeanalogytransform" class="level3">
 <h3 class="anchored" data-anchor-id="function-composeanalogytransform">function composeAnalogYTransform</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> CorePlotting<span class="op">::</span>LayoutTransform composeAnalogYTransform<span class="op">(</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>SeriesLayout <span class="at">const</span> <span class="op">&amp;</span> layout<span class="op">,</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> data_mean<span class="op">,</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> std_dev<span class="op">,</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> intrinsic_scale<span class="op">,</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> user_scale_factor<span class="op">,</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> user_vertical_offset<span class="op">,</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> global_y_scale<span class="op">,</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> margin_factor <span class="op">=</span><span class="fl">0.8</span><span class="bu">f</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> CorePlotting<span class="op">::</span>LayoutTransform composeAnalogYTransform<span class="op">(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>SeriesLayout <span class="at">const</span> <span class="op">&amp;</span> layout<span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> data_mean<span class="op">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> std_dev<span class="op">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> intrinsic_scale<span class="op">,</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> user_scale_factor<span class="op">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> user_vertical_offset<span class="op">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> global_y_scale<span class="op">,</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> margin_factor <span class="op">=</span><span class="fl">0.8</span><span class="bu">f</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Compose Y transform for analog series rendering.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -740,42 +787,42 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-composeeventytransform" class="level3">
 <h3 class="anchored" data-anchor-id="function-composeeventytransform">function composeEventYTransform</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> CorePlotting<span class="op">::</span>LayoutTransform composeEventYTransform<span class="op">(</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>SeriesLayout <span class="at">const</span> <span class="op">&amp;</span> layout<span class="op">,</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> margin_factor<span class="op">,</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> global_y_scale</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> CorePlotting<span class="op">::</span>LayoutTransform composeEventYTransform<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>SeriesLayout <span class="at">const</span> <span class="op">&amp;</span> layout<span class="op">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> margin_factor<span class="op">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> global_y_scale</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Compose Y transform for event series (stacked mode)</p>
 </section>
 <section id="function-composeeventfullcanvasytransform" class="level3">
 <h3 class="anchored" data-anchor-id="function-composeeventfullcanvasytransform">function composeEventFullCanvasYTransform</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> CorePlotting<span class="op">::</span>LayoutTransform composeEventFullCanvasYTransform<span class="op">(</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> viewport_y_min<span class="op">,</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> viewport_y_max<span class="op">,</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> margin_factor</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> CorePlotting<span class="op">::</span>LayoutTransform composeEventFullCanvasYTransform<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> viewport_y_min<span class="op">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> viewport_y_max<span class="op">,</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> margin_factor</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Compose Y transform for event series (full canvas mode)</p>
 </section>
 <section id="function-computeeventglyphsize" class="level3">
 <h3 class="anchored" data-anchor-id="function-computeeventglyphsize">function computeEventGlyphSize</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">float</span> computeEventGlyphSize<span class="op">(</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>LayoutTransform <span class="at">const</span> <span class="op">&amp;</span> composed_event_y_transform<span class="op">,</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> lane_half_height<span class="op">,</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> event_height<span class="op">,</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> margin_factor<span class="op">,</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> fallback_line_thickness</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">float</span> computeEventGlyphSize<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>LayoutTransform <span class="at">const</span> <span class="op">&amp;</span> composed_event_y_transform<span class="op">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> lane_half_height<span class="op">,</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> event_height<span class="op">,</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> margin_factor<span class="op">,</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> fallback_line_thickness</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Compute glyph size for event ticks from explicit world-space event height.</p>
 <p>The rendered tick world height is: glyph_size * composed_event_y_transform.gain</p>
 <p>We derive glyph_size from an explicit event_height target (clamped to lane height), so event sizing remains predictable and controllable by state.</p>
 </section>
 <section id="function-composeintervalytransform" class="level3">
 <h3 class="anchored" data-anchor-id="function-composeintervalytransform">function composeIntervalYTransform</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> CorePlotting<span class="op">::</span>LayoutTransform composeIntervalYTransform<span class="op">(</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>SeriesLayout <span class="at">const</span> <span class="op">&amp;</span> layout<span class="op">,</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> margin_factor<span class="op">,</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> global_y_scale</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> CorePlotting<span class="op">::</span>LayoutTransform composeIntervalYTransform<span class="op">(</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>SeriesLayout <span class="at">const</span> <span class="op">&amp;</span> layout<span class="op">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> margin_factor<span class="op">,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> global_y_scale</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Compose Y transform for interval series.</p>
 <p>Note: Intervals intentionally ignore global_y_scale because:</p>
 <ol type="1">
@@ -784,7 +831,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Intervals should always fill their allocated canvas space</li>
 </ol>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:53 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:34 +0000</p>
 
 
 </section>

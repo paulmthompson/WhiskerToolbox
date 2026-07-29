@@ -407,11 +407,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>int64_t</td>
-<td><strong><a href="../../api_generated/Classes/structPlottingOpenGL_1_1GridConfig.html#variable-time-start">time_start</a></strong> <br>Start of visible time range.</td>
+<td><strong><a href="../../api_generated/Classes/structPlottingOpenGL_1_1GridConfig.html#variable-time-start">time_start</a></strong> <br>Start of visible time range (world X, typically view-local ticks)</td>
 </tr>
 <tr class="even">
 <td>int64_t</td>
-<td><strong><a href="../../api_generated/Classes/structPlottingOpenGL_1_1GridConfig.html#variable-time-end">time_end</a></strong> <br>End of visible time range.</td>
+<td><strong><a href="../../api_generated/Classes/structPlottingOpenGL_1_1GridConfig.html#variable-time-end">time_end</a></strong> <br>End of visible time range (world X)</td>
 </tr>
 <tr class="odd">
 <td>int64_t</td>
@@ -456,12 +456,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="variable-time_start" class="level3">
 <h3 class="anchored" data-anchor-id="variable-time_start">variable time_start</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int64_t</span> time_start <span class="op">{</span><span class="dv">0</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Start of visible time range.</p>
+<p>Start of visible time range (world X, typically view-local ticks)</p>
 </section>
 <section id="variable-time_end" class="level3">
 <h3 class="anchored" data-anchor-id="variable-time_end">variable time_end</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int64_t</span> time_end <span class="op">{</span><span class="dv">1000</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>End of visible time range.</p>
+<p>End of visible time range (world X)</p>
 </section>
 <section id="variable-spacing" class="level3">
 <h3 class="anchored" data-anchor-id="variable-spacing">variable spacing</h3>
@@ -498,7 +498,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> gap_length <span class="op">{</span><span class="fl">3.0</span><span class="bu">f</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Gap between dashes in pixels.</p>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:52 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:33 +0000</p>
 
 
 </section>

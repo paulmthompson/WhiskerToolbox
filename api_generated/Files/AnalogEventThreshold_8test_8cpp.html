@@ -725,42 +725,44 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-261"><a href="#cb6-261" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> populateDataManagerWithThresholdVectors<span class="op">(</span>DataManager <span class="op">&amp;</span> dm<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb6-262"><a href="#cb6-262" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> tc<span class="op">:</span> algorithmCases<span class="op">())</span> <span class="op">{</span></span>
 <span id="cb6-263"><a href="#cb6-263" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> time_key <span class="op">=</span> <span class="bu">std::</span>string<span class="op">(</span>tc<span class="op">.</span>dm_key<span class="op">)</span> <span class="op">+</span> <span class="st">"_time"</span><span class="op">;</span></span>
-<span id="cb6-264"><a href="#cb6-264" aria-hidden="true" tabindex="-1"></a>        dm<span class="op">.</span>setData<span class="op">(</span><span class="bu">std::</span>string<span class="op">(</span>tc<span class="op">.</span>dm_key<span class="op">),</span> buildAnalogTimeSeries<span class="op">(</span>tc<span class="op">),</span> TimeKey<span class="op">(</span>time_key<span class="op">));</span></span>
-<span id="cb6-265"><a href="#cb6-265" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb6-266"><a href="#cb6-266" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb6-267"><a href="#cb6-267" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-268"><a href="#cb6-268" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace</span></span>
+<span id="cb6-264"><a href="#cb6-264" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> ats <span class="op">=</span> buildAnalogTimeSeries<span class="op">(</span>tc<span class="op">);</span></span>
+<span id="cb6-265"><a href="#cb6-265" aria-hidden="true" tabindex="-1"></a>        dm<span class="op">.</span>setTime<span class="op">(</span>TimeKey<span class="op">(</span>time_key<span class="op">),</span> ats<span class="op">-&gt;</span>getTimeFrame<span class="op">());</span></span>
+<span id="cb6-266"><a href="#cb6-266" aria-hidden="true" tabindex="-1"></a>        dm<span class="op">.</span>setData<span class="op">(</span><span class="bu">std::</span>string<span class="op">(</span>tc<span class="op">.</span>dm_key<span class="op">),</span> ats<span class="op">,</span> TimeKey<span class="op">(</span>time_key<span class="op">));</span></span>
+<span id="cb6-267"><a href="#cb6-267" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-268"><a href="#cb6-268" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb6-269"><a href="#cb6-269" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-270"><a href="#cb6-270" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"V2 Container Transform: AnalogEventThreshold - load_data_from_json_config_v2"</span><span class="op">,</span></span>
-<span id="cb6-271"><a href="#cb6-271" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][container][analog_event_threshold][json_config]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-272"><a href="#cb6-272" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-273"><a href="#cb6-273" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> <span class="kw">namespace</span> pipeline_json_test<span class="op">;</span></span>
+<span id="cb6-270"><a href="#cb6-270" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace</span></span>
+<span id="cb6-271"><a href="#cb6-271" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-272"><a href="#cb6-272" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"V2 Container Transform: AnalogEventThreshold - load_data_from_json_config_v2"</span><span class="op">,</span></span>
+<span id="cb6-273"><a href="#cb6-273" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][container][analog_event_threshold][json_config]"</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb6-274"><a href="#cb6-274" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-275"><a href="#cb6-275" aria-hidden="true" tabindex="-1"></a>    DataManager dm<span class="op">;</span></span>
-<span id="cb6-276"><a href="#cb6-276" aria-hidden="true" tabindex="-1"></a>    populateDataManagerWithThresholdVectors<span class="op">(</span>dm<span class="op">);</span></span>
-<span id="cb6-277"><a href="#cb6-277" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-278"><a href="#cb6-278" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> tc<span class="op">:</span> algorithmCases<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb6-279"><a href="#cb6-279" aria-hidden="true" tabindex="-1"></a>        DYNAMIC_SECTION<span class="op">(</span><span class="st">"JSON: "</span> <span class="op">+</span> <span class="bu">std::</span>string<span class="op">(</span>tc<span class="op">.</span>name<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb6-280"><a href="#cb6-280" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> toAnalogEventThresholdParams<span class="op">(</span>tc<span class="op">);</span></span>
-<span id="cb6-281"><a href="#cb6-281" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>string <span class="at">const</span> output_key <span class="op">=</span> <span class="st">"v2_"</span> <span class="op">+</span> <span class="bu">std::</span>string<span class="op">(</span>tc<span class="op">.</span>dm_key<span class="op">)</span> <span class="op">+</span> <span class="st">"_out"</span><span class="op">;</span></span>
-<span id="cb6-282"><a href="#cb6-282" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> <span class="at">const</span> pipeline <span class="op">=</span> makeSingleStepPipeline<span class="op">(</span></span>
-<span id="cb6-283"><a href="#cb6-283" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"AnalogEventThreshold"</span><span class="op">,</span> <span class="bu">std::</span>string<span class="op">(</span>tc<span class="op">.</span>dm_key<span class="op">),</span> output_key<span class="op">,</span> params<span class="op">);</span></span>
-<span id="cb6-284"><a href="#cb6-284" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-285"><a href="#cb6-285" aria-hidden="true" tabindex="-1"></a>            executeViaLoadDataFromJsonConfigV2<span class="op">(</span>dm<span class="op">,</span> pipeline<span class="op">);</span></span>
+<span id="cb6-275"><a href="#cb6-275" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> <span class="kw">namespace</span> pipeline_json_test<span class="op">;</span></span>
+<span id="cb6-276"><a href="#cb6-276" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-277"><a href="#cb6-277" aria-hidden="true" tabindex="-1"></a>    DataManager dm<span class="op">;</span></span>
+<span id="cb6-278"><a href="#cb6-278" aria-hidden="true" tabindex="-1"></a>    populateDataManagerWithThresholdVectors<span class="op">(</span>dm<span class="op">);</span></span>
+<span id="cb6-279"><a href="#cb6-279" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-280"><a href="#cb6-280" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> tc<span class="op">:</span> algorithmCases<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb6-281"><a href="#cb6-281" aria-hidden="true" tabindex="-1"></a>        DYNAMIC_SECTION<span class="op">(</span><span class="st">"JSON: "</span> <span class="op">+</span> <span class="bu">std::</span>string<span class="op">(</span>tc<span class="op">.</span>name<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb6-282"><a href="#cb6-282" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> toAnalogEventThresholdParams<span class="op">(</span>tc<span class="op">);</span></span>
+<span id="cb6-283"><a href="#cb6-283" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>string <span class="at">const</span> output_key <span class="op">=</span> <span class="st">"v2_"</span> <span class="op">+</span> <span class="bu">std::</span>string<span class="op">(</span>tc<span class="op">.</span>dm_key<span class="op">)</span> <span class="op">+</span> <span class="st">"_out"</span><span class="op">;</span></span>
+<span id="cb6-284"><a href="#cb6-284" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> <span class="at">const</span> pipeline <span class="op">=</span> makeSingleStepPipeline<span class="op">(</span></span>
+<span id="cb6-285"><a href="#cb6-285" aria-hidden="true" tabindex="-1"></a>                    <span class="st">"AnalogEventThreshold"</span><span class="op">,</span> <span class="bu">std::</span>string<span class="op">(</span>tc<span class="op">.</span>dm_key<span class="op">),</span> output_key<span class="op">,</span> params<span class="op">);</span></span>
 <span id="cb6-286"><a href="#cb6-286" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-287"><a href="#cb6-287" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> result_events <span class="op">=</span> dm<span class="op">.</span>getData<span class="op">&lt;</span>DigitalEventSeries<span class="op">&gt;(</span>output_key<span class="op">);</span></span>
-<span id="cb6-288"><a href="#cb6-288" aria-hidden="true" tabindex="-1"></a>            REQUIRE<span class="op">(</span>result_events <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb6-289"><a href="#cb6-289" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-290"><a href="#cb6-290" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>tc<span class="op">.</span>dm_key <span class="op">==</span> <span class="st">"lockout_larger_than_duration"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-291"><a href="#cb6-291" aria-hidden="true" tabindex="-1"></a>                REQUIRE<span class="op">(</span>result_events<span class="op">-&gt;</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb6-292"><a href="#cb6-292" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
-<span id="cb6-293"><a href="#cb6-293" aria-hidden="true" tabindex="-1"></a>                requireEventTimes<span class="op">(*</span>result_events<span class="op">,</span> tc<span class="op">.</span>expected_event_times<span class="op">);</span></span>
-<span id="cb6-294"><a href="#cb6-294" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb6-295"><a href="#cb6-295" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb6-296"><a href="#cb6-296" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb6-297"><a href="#cb6-297" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb6-287"><a href="#cb6-287" aria-hidden="true" tabindex="-1"></a>            executeViaLoadDataFromJsonConfigV2<span class="op">(</span>dm<span class="op">,</span> pipeline<span class="op">);</span></span>
+<span id="cb6-288"><a href="#cb6-288" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-289"><a href="#cb6-289" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> result_events <span class="op">=</span> dm<span class="op">.</span>getData<span class="op">&lt;</span>DigitalEventSeries<span class="op">&gt;(</span>output_key<span class="op">);</span></span>
+<span id="cb6-290"><a href="#cb6-290" aria-hidden="true" tabindex="-1"></a>            REQUIRE<span class="op">(</span>result_events <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb6-291"><a href="#cb6-291" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-292"><a href="#cb6-292" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>tc<span class="op">.</span>dm_key <span class="op">==</span> <span class="st">"lockout_larger_than_duration"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-293"><a href="#cb6-293" aria-hidden="true" tabindex="-1"></a>                REQUIRE<span class="op">(</span>result_events<span class="op">-&gt;</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb6-294"><a href="#cb6-294" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb6-295"><a href="#cb6-295" aria-hidden="true" tabindex="-1"></a>                requireEventTimes<span class="op">(*</span>result_events<span class="op">,</span> tc<span class="op">.</span>expected_event_times<span class="op">);</span></span>
+<span id="cb6-296"><a href="#cb6-296" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb6-297"><a href="#cb6-297" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-298"><a href="#cb6-298" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-299"><a href="#cb6-299" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:55 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:37 +0000</p>
 
 
 </section>

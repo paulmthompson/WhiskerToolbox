@@ -428,11 +428,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>DATAMANAGERIO_EXPORT std::vector&lt; <a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> &gt;</td>
+<td>DATAMANAGERIO_EXPORT std::vector&lt; <a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> &gt;</td>
 <td><strong><a href="../../api_generated/Files/Digital__Interval__Series__CSV_8hpp.html#function-load-digital-series-from-csv">load_digital_series_from_csv</a></strong>(std::string const &amp; filename, char delimiter =’ ’)</td>
 </tr>
 <tr class="even">
-<td>DATAMANAGERIO_EXPORT std::vector&lt; <a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> &gt;</td>
+<td>DATAMANAGERIO_EXPORT std::vector&lt; <a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> &gt;</td>
 <td><strong><a href="../../api_generated/Files/Digital__Interval__Series__CSV_8hpp.html#function-load">load</a></strong>(<a href="../../api_generated/Classes/structCSVIntervalLoaderOptions.html">CSVIntervalLoaderOptions</a> const &amp; options)<br>Load digital interval series data from CSV using specified options.</td>
 </tr>
 <tr class="odd">
@@ -446,14 +446,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="functions-documentation">Functions Documentation</h2>
 <section id="function-load_digital_series_from_csv" class="level3">
 <h3 class="anchored" data-anchor-id="function-load_digital_series_from_csv">function load_digital_series_from_csv</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>DATAMANAGERIO_EXPORT <span class="bu">std::</span>vector<span class="op">&lt;</span> Interval <span class="op">&gt;</span> load_digital_series_from_csv<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>DATAMANAGERIO_EXPORT <span class="bu">std::</span>vector<span class="op">&lt;</span> TimeFrameInterval <span class="op">&gt;</span> load_digital_series_from_csv<span class="op">(</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> filename<span class="op">,</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">char</span> delimiter <span class="op">=</span><span class="ch">' '</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-load" class="level3">
 <h3 class="anchored" data-anchor-id="function-load">function load</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>DATAMANAGERIO_EXPORT <span class="bu">std::</span>vector<span class="op">&lt;</span> Interval <span class="op">&gt;</span> load<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>DATAMANAGERIO_EXPORT <span class="bu">std::</span>vector<span class="op">&lt;</span> TimeFrameInterval <span class="op">&gt;</span> load<span class="op">(</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    CSVIntervalLoaderOptions <span class="at">const</span> <span class="op">&amp;</span> options</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Load digital interval series data from CSV using specified options.</p>
@@ -495,7 +495,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DigitalIntervalSeries<span class="op">;</span></span>
 <span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>DATAMANAGERIO_EXPORT <span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> load_digital_series_from_csv<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> filename<span class="op">,</span> <span class="dt">char</span> delimiter <span class="op">=</span> <span class="ch">' '</span><span class="op">);</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>DATAMANAGERIO_EXPORT <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameInterval<span class="op">&gt;</span> load_digital_series_from_csv<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> filename<span class="op">,</span> <span class="dt">char</span> delimiter <span class="op">=</span> <span class="ch">' '</span><span class="op">);</span></span>
 <span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> CSVIntervalLoaderOptions <span class="op">{</span></span>
 <span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string filepath<span class="op">;</span></span>
@@ -505,7 +505,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> end_column <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
 <span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
 <span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>DATAMANAGERIO_EXPORT <span class="bu">std::</span>vector<span class="op">&lt;</span>Interval<span class="op">&gt;</span> load<span class="op">(</span>CSVIntervalLoaderOptions <span class="at">const</span> <span class="op">&amp;</span> options<span class="op">);</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>DATAMANAGERIO_EXPORT <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameInterval<span class="op">&gt;</span> load<span class="op">(</span>CSVIntervalLoaderOptions <span class="at">const</span> <span class="op">&amp;</span> options<span class="op">);</span></span>
 <span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;&gt;</span></span>
 <span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ParameterUIHints<span class="op">&lt;</span>CSVIntervalLoaderOptions<span class="op">&gt;</span> <span class="op">{</span></span>
@@ -569,7 +569,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// DIGITAL_INTERVAL_SERIES_CSV_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:55 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:36 +0000</p>
 
 
 </section>

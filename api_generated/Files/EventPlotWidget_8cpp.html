@@ -477,7 +477,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a>                <span class="co">// so we need to convert back to a TimeFrameIndex via the TimeFrame.</span></span>
 <span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a>                TimeFrameIndex frame_index<span class="op">(</span>absolute_time<span class="op">);</span></span>
 <span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(</span>time_frame<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a>                    frame_index <span class="op">=</span> time_frame<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>absolute_time<span class="op">));</span></span>
+<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a>                    frame_index <span class="op">=</span> time_frame<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span>ClockTicks<span class="op">(</span>absolute_time<span class="op">));</span></span>
 <span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
 <span id="cb1-98"><a href="#cb1-98" aria-hidden="true" tabindex="-1"></a>                <span class="ex">emit</span> timePositionSelected<span class="op">(</span>TimePosition<span class="op">(</span>frame_index<span class="op">,</span> time_frame<span class="op">));</span></span>
 <span id="cb1-99"><a href="#cb1-99" aria-hidden="true" tabindex="-1"></a>            <span class="op">});</span></span>
@@ -925,7 +925,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-541"><a href="#cb1-541" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-542"><a href="#cb1-542" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:57 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:38 +0000</p>
 
 
 </section>

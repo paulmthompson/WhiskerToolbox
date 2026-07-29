@@ -494,7 +494,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-109"><a href="#cb1-109" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> tv<span class="op">:</span> _series<span class="op">-&gt;</span>view<span class="op">())</span> <span class="op">{</span></span>
 <span id="cb1-111"><a href="#cb1-111" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> <span class="at">const</span> val <span class="op">=</span> tv<span class="op">.</span>value<span class="op">();</span></span>
-<span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> x <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>time_frame<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span>tv<span class="op">.</span>time_frame_index<span class="op">));</span></span>
+<span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> x <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>time_frame<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span>tv<span class="op">.</span>time_frame_index<span class="op">).</span>getValue<span class="op">());</span></span>
 <span id="cb1-113"><a href="#cb1-113" aria-hidden="true" tabindex="-1"></a>        y_min <span class="op">=</span> <span class="bu">std::</span>min<span class="op">(</span>y_min<span class="op">,</span> val<span class="op">);</span></span>
 <span id="cb1-114"><a href="#cb1-114" aria-hidden="true" tabindex="-1"></a>        y_max <span class="op">=</span> <span class="bu">std::</span>max<span class="op">(</span>y_max<span class="op">,</span> val<span class="op">);</span></span>
 <span id="cb1-115"><a href="#cb1-115" aria-hidden="true" tabindex="-1"></a>        x_min <span class="op">=</span> <span class="bu">std::</span>min<span class="op">(</span>x_min<span class="op">,</span> x<span class="op">);</span></span>
@@ -542,7 +542,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a>    _view_matrix <span class="op">=</span> glm<span class="op">::</span>mat4<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">);</span></span>
 <span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:56 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:37 +0000</p>
 
 
 </section>

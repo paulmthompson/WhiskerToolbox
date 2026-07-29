@@ -675,90 +675,91 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-291"><a href="#cb1-291" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-292"><a href="#cb1-292" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Compute total frame count across all intervals</span></span>
 <span id="cb1-293"><a href="#cb1-293" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> total_frames <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb1-294"><a href="#cb1-294" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> iwid<span class="op">:</span> series<span class="op">-&gt;</span>view<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-295"><a href="#cb1-295" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> <span class="at">const</span> span <span class="op">=</span> iwid<span class="op">.</span>interval<span class="op">.</span>end <span class="op">-</span> iwid<span class="op">.</span>interval<span class="op">.</span>start <span class="op">+</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb1-296"><a href="#cb1-296" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>span <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-297"><a href="#cb1-297" aria-hidden="true" tabindex="-1"></a>            total_frames <span class="op">+=</span> span<span class="op">;</span></span>
-<span id="cb1-298"><a href="#cb1-298" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-299"><a href="#cb1-299" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-300"><a href="#cb1-300" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-301"><a href="#cb1-301" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> info <span class="op">=</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"&lt;b&gt;Intervals:&lt;/b&gt; %1&lt;br&gt;"</span></span>
-<span id="cb1-302"><a href="#cb1-302" aria-hidden="true" tabindex="-1"></a>                                  <span class="st">"&lt;b&gt;Frames:&lt;/b&gt; %2 across %1 intervals"</span><span class="op">)</span></span>
-<span id="cb1-303"><a href="#cb1-303" aria-hidden="true" tabindex="-1"></a>                           <span class="op">.</span>arg<span class="op">(</span>interval_count<span class="op">)</span></span>
-<span id="cb1-304"><a href="#cb1-304" aria-hidden="true" tabindex="-1"></a>                           <span class="op">.</span>arg<span class="op">(</span>total_frames<span class="op">);</span></span>
-<span id="cb1-305"><a href="#cb1-305" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-306"><a href="#cb1-306" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Time frame info</span></span>
-<span id="cb1-307"><a href="#cb1-307" aria-hidden="true" tabindex="-1"></a>    TimeKey <span class="at">const</span> time_key <span class="op">=</span> _data_manager<span class="op">-&gt;</span>getTimeKey<span class="op">(</span>key<span class="op">);</span></span>
-<span id="cb1-308"><a href="#cb1-308" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>time_key<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-309"><a href="#cb1-309" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> time_frame <span class="op">=</span> _data_manager<span class="op">-&gt;</span>getTime<span class="op">(</span>time_key<span class="op">);</span></span>
-<span id="cb1-310"><a href="#cb1-310" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QString</span> tf_info <span class="op">=</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"&lt;br&gt;&lt;b&gt;Time frame:&lt;/b&gt; %1"</span><span class="op">)</span></span>
-<span id="cb1-311"><a href="#cb1-311" aria-hidden="true" tabindex="-1"></a>                                  <span class="op">.</span>arg<span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>time_key<span class="op">.</span>str<span class="op">()));</span></span>
-<span id="cb1-312"><a href="#cb1-312" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>time_frame<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-313"><a href="#cb1-313" aria-hidden="true" tabindex="-1"></a>            tf_info <span class="op">+=</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">" (%1 total frames)"</span><span class="op">)</span></span>
-<span id="cb1-314"><a href="#cb1-314" aria-hidden="true" tabindex="-1"></a>                               <span class="op">.</span>arg<span class="op">(</span>time_frame<span class="op">-&gt;</span>getTotalFrameCount<span class="op">());</span></span>
-<span id="cb1-315"><a href="#cb1-315" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-316"><a href="#cb1-316" aria-hidden="true" tabindex="-1"></a>        info <span class="op">+=</span> tf_info<span class="op">;</span></span>
-<span id="cb1-317"><a href="#cb1-317" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-318"><a href="#cb1-318" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-319"><a href="#cb1-319" aria-hidden="true" tabindex="-1"></a>    ui<span class="op">-&gt;</span>regionInfoLabel<span class="op">-&gt;</span>setText<span class="op">(</span>info<span class="op">);</span></span>
-<span id="cb1-320"><a href="#cb1-320" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-321"><a href="#cb1-321" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- Validation ---</span></span>
-<span id="cb1-322"><a href="#cb1-322" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> new_valid <span class="op">=</span> <span class="op">(</span>interval_count <span class="op">&gt;</span> <span class="dv">0</span><span class="op">);</span></span>
-<span id="cb1-323"><a href="#cb1-323" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> validation_msg<span class="op">;</span></span>
-<span id="cb1-324"><a href="#cb1-324" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-325"><a href="#cb1-325" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>interval_count <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-326"><a href="#cb1-326" aria-hidden="true" tabindex="-1"></a>        validation_msg <span class="op">=</span> <span class="ex">QStringLiteral</span><span class="op">(</span></span>
-<span id="cb1-327"><a href="#cb1-327" aria-hidden="true" tabindex="-1"></a>                <span class="st">"&lt;span style='color: orange;'&gt;Warning: interval series has 0 intervals&lt;/span&gt;"</span><span class="op">);</span></span>
-<span id="cb1-328"><a href="#cb1-328" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-329"><a href="#cb1-329" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-330"><a href="#cb1-330" aria-hidden="true" tabindex="-1"></a>    ui<span class="op">-&gt;</span>validationLabel<span class="op">-&gt;</span>setText<span class="op">(</span>validation_msg<span class="op">);</span></span>
-<span id="cb1-331"><a href="#cb1-331" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-332"><a href="#cb1-332" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>new_valid <span class="op">!=</span> _valid<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-333"><a href="#cb1-333" aria-hidden="true" tabindex="-1"></a>        _valid <span class="op">=</span> new_valid<span class="op">;</span></span>
-<span id="cb1-334"><a href="#cb1-334" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> validityChanged<span class="op">(</span>_valid<span class="op">);</span></span>
-<span id="cb1-335"><a href="#cb1-335" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-336"><a href="#cb1-336" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-337"><a href="#cb1-337" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-338"><a href="#cb1-338" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> RegionSelectionPanel<span class="op">::</span>_registerDataManagerObserver<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-339"><a href="#cb1-339" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_data_manager<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-340"><a href="#cb1-340" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-341"><a href="#cb1-341" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-342"><a href="#cb1-342" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-343"><a href="#cb1-343" aria-hidden="true" tabindex="-1"></a>    _dm_observer_id <span class="op">=</span> _data_manager<span class="op">-&gt;</span>addObserver<span class="op">([</span><span class="kw">this</span><span class="op">]()</span> <span class="op">{</span></span>
-<span id="cb1-344"><a href="#cb1-344" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Use a queued invocation to avoid re-entrancy during DataManager mutations</span></span>
-<span id="cb1-345"><a href="#cb1-345" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QTimer::singleShot</span><span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="kw">this</span><span class="op">,</span> <span class="op">&amp;</span>RegionSelectionPanel<span class="op">::</span>refreshRegionList<span class="op">);</span></span>
-<span id="cb1-346"><a href="#cb1-346" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span> <span class="st">"RegionSelectionPanel"</span><span class="op">);</span></span>
-<span id="cb1-347"><a href="#cb1-347" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-348"><a href="#cb1-348" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-349"><a href="#cb1-349" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> RegionSelectionPanel<span class="op">::</span>_syncToState<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-350"><a href="#cb1-350" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_state<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-351"><a href="#cb1-351" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-352"><a href="#cb1-352" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-353"><a href="#cb1-353" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-354"><a href="#cb1-354" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_mode <span class="op">==</span> RegionMode<span class="op">::</span>Training<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-355"><a href="#cb1-355" aria-hidden="true" tabindex="-1"></a>        _state<span class="op">-&gt;</span>setTrainingRegionKey<span class="op">(</span>key<span class="op">);</span></span>
-<span id="cb1-356"><a href="#cb1-356" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="op">(</span>_mode <span class="op">==</span> RegionMode<span class="op">::</span>Validation<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-357"><a href="#cb1-357" aria-hidden="true" tabindex="-1"></a>        _state<span class="op">-&gt;</span>setValidationRegionKey<span class="op">(</span>key<span class="op">);</span></span>
-<span id="cb1-358"><a href="#cb1-358" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
-<span id="cb1-359"><a href="#cb1-359" aria-hidden="true" tabindex="-1"></a>        _state<span class="op">-&gt;</span>setPredictionRegionKey<span class="op">(</span>key<span class="op">);</span></span>
-<span id="cb1-360"><a href="#cb1-360" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-361"><a href="#cb1-361" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-362"><a href="#cb1-362" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-363"><a href="#cb1-363" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string RegionSelectionPanel<span class="op">::</span>_readKeyFromState<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-364"><a href="#cb1-364" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_state<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-365"><a href="#cb1-365" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
-<span id="cb1-366"><a href="#cb1-366" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-367"><a href="#cb1-367" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-368"><a href="#cb1-368" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_mode <span class="op">==</span> RegionMode<span class="op">::</span>Training<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-369"><a href="#cb1-369" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> _state<span class="op">-&gt;</span>trainingRegionKey<span class="op">();</span></span>
-<span id="cb1-370"><a href="#cb1-370" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-371"><a href="#cb1-371" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_mode <span class="op">==</span> RegionMode<span class="op">::</span>Validation<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-372"><a href="#cb1-372" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> _state<span class="op">-&gt;</span>validationRegionKey<span class="op">();</span></span>
-<span id="cb1-373"><a href="#cb1-373" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-374"><a href="#cb1-374" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> _state<span class="op">-&gt;</span>predictionRegionKey<span class="op">();</span></span>
-<span id="cb1-375"><a href="#cb1-375" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-294"><a href="#cb1-294" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> series<span class="op">-&gt;</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-295"><a href="#cb1-295" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> iv <span class="op">=</span> series<span class="op">-&gt;</span>getStoredInterval<span class="op">(</span>i<span class="op">);</span></span>
+<span id="cb1-296"><a href="#cb1-296" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> <span class="at">const</span> span <span class="op">=</span> iv<span class="op">.</span>end<span class="op">.</span>getValue<span class="op">()</span> <span class="op">-</span> iv<span class="op">.</span>start<span class="op">.</span>getValue<span class="op">()</span> <span class="op">+</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-297"><a href="#cb1-297" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>span <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-298"><a href="#cb1-298" aria-hidden="true" tabindex="-1"></a>            total_frames <span class="op">+=</span> span<span class="op">;</span></span>
+<span id="cb1-299"><a href="#cb1-299" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-300"><a href="#cb1-300" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-301"><a href="#cb1-301" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-302"><a href="#cb1-302" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> info <span class="op">=</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"&lt;b&gt;Intervals:&lt;/b&gt; %1&lt;br&gt;"</span></span>
+<span id="cb1-303"><a href="#cb1-303" aria-hidden="true" tabindex="-1"></a>                                  <span class="st">"&lt;b&gt;Frames:&lt;/b&gt; %2 across %1 intervals"</span><span class="op">)</span></span>
+<span id="cb1-304"><a href="#cb1-304" aria-hidden="true" tabindex="-1"></a>                           <span class="op">.</span>arg<span class="op">(</span>interval_count<span class="op">)</span></span>
+<span id="cb1-305"><a href="#cb1-305" aria-hidden="true" tabindex="-1"></a>                           <span class="op">.</span>arg<span class="op">(</span>total_frames<span class="op">);</span></span>
+<span id="cb1-306"><a href="#cb1-306" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-307"><a href="#cb1-307" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Time frame info</span></span>
+<span id="cb1-308"><a href="#cb1-308" aria-hidden="true" tabindex="-1"></a>    TimeKey <span class="at">const</span> time_key <span class="op">=</span> _data_manager<span class="op">-&gt;</span>getTimeKey<span class="op">(</span>key<span class="op">);</span></span>
+<span id="cb1-309"><a href="#cb1-309" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>time_key<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-310"><a href="#cb1-310" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> time_frame <span class="op">=</span> _data_manager<span class="op">-&gt;</span>getTime<span class="op">(</span>time_key<span class="op">);</span></span>
+<span id="cb1-311"><a href="#cb1-311" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QString</span> tf_info <span class="op">=</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"&lt;br&gt;&lt;b&gt;Time frame:&lt;/b&gt; %1"</span><span class="op">)</span></span>
+<span id="cb1-312"><a href="#cb1-312" aria-hidden="true" tabindex="-1"></a>                                  <span class="op">.</span>arg<span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>time_key<span class="op">.</span>str<span class="op">()));</span></span>
+<span id="cb1-313"><a href="#cb1-313" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>time_frame<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-314"><a href="#cb1-314" aria-hidden="true" tabindex="-1"></a>            tf_info <span class="op">+=</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">" (%1 total frames)"</span><span class="op">)</span></span>
+<span id="cb1-315"><a href="#cb1-315" aria-hidden="true" tabindex="-1"></a>                               <span class="op">.</span>arg<span class="op">(</span>time_frame<span class="op">-&gt;</span>getTotalFrameCount<span class="op">());</span></span>
+<span id="cb1-316"><a href="#cb1-316" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-317"><a href="#cb1-317" aria-hidden="true" tabindex="-1"></a>        info <span class="op">+=</span> tf_info<span class="op">;</span></span>
+<span id="cb1-318"><a href="#cb1-318" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-319"><a href="#cb1-319" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-320"><a href="#cb1-320" aria-hidden="true" tabindex="-1"></a>    ui<span class="op">-&gt;</span>regionInfoLabel<span class="op">-&gt;</span>setText<span class="op">(</span>info<span class="op">);</span></span>
+<span id="cb1-321"><a href="#cb1-321" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-322"><a href="#cb1-322" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- Validation ---</span></span>
+<span id="cb1-323"><a href="#cb1-323" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> new_valid <span class="op">=</span> <span class="op">(</span>interval_count <span class="op">&gt;</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb1-324"><a href="#cb1-324" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> validation_msg<span class="op">;</span></span>
+<span id="cb1-325"><a href="#cb1-325" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-326"><a href="#cb1-326" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>interval_count <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-327"><a href="#cb1-327" aria-hidden="true" tabindex="-1"></a>        validation_msg <span class="op">=</span> <span class="ex">QStringLiteral</span><span class="op">(</span></span>
+<span id="cb1-328"><a href="#cb1-328" aria-hidden="true" tabindex="-1"></a>                <span class="st">"&lt;span style='color: orange;'&gt;Warning: interval series has 0 intervals&lt;/span&gt;"</span><span class="op">);</span></span>
+<span id="cb1-329"><a href="#cb1-329" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-330"><a href="#cb1-330" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-331"><a href="#cb1-331" aria-hidden="true" tabindex="-1"></a>    ui<span class="op">-&gt;</span>validationLabel<span class="op">-&gt;</span>setText<span class="op">(</span>validation_msg<span class="op">);</span></span>
+<span id="cb1-332"><a href="#cb1-332" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-333"><a href="#cb1-333" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>new_valid <span class="op">!=</span> _valid<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-334"><a href="#cb1-334" aria-hidden="true" tabindex="-1"></a>        _valid <span class="op">=</span> new_valid<span class="op">;</span></span>
+<span id="cb1-335"><a href="#cb1-335" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> validityChanged<span class="op">(</span>_valid<span class="op">);</span></span>
+<span id="cb1-336"><a href="#cb1-336" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-337"><a href="#cb1-337" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-338"><a href="#cb1-338" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-339"><a href="#cb1-339" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> RegionSelectionPanel<span class="op">::</span>_registerDataManagerObserver<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-340"><a href="#cb1-340" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_data_manager<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-341"><a href="#cb1-341" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-342"><a href="#cb1-342" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-343"><a href="#cb1-343" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-344"><a href="#cb1-344" aria-hidden="true" tabindex="-1"></a>    _dm_observer_id <span class="op">=</span> _data_manager<span class="op">-&gt;</span>addObserver<span class="op">([</span><span class="kw">this</span><span class="op">]()</span> <span class="op">{</span></span>
+<span id="cb1-345"><a href="#cb1-345" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Use a queued invocation to avoid re-entrancy during DataManager mutations</span></span>
+<span id="cb1-346"><a href="#cb1-346" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QTimer::singleShot</span><span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="kw">this</span><span class="op">,</span> <span class="op">&amp;</span>RegionSelectionPanel<span class="op">::</span>refreshRegionList<span class="op">);</span></span>
+<span id="cb1-347"><a href="#cb1-347" aria-hidden="true" tabindex="-1"></a>    <span class="op">},</span> <span class="st">"RegionSelectionPanel"</span><span class="op">);</span></span>
+<span id="cb1-348"><a href="#cb1-348" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-349"><a href="#cb1-349" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-350"><a href="#cb1-350" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> RegionSelectionPanel<span class="op">::</span>_syncToState<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-351"><a href="#cb1-351" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-352"><a href="#cb1-352" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-353"><a href="#cb1-353" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-354"><a href="#cb1-354" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-355"><a href="#cb1-355" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_mode <span class="op">==</span> RegionMode<span class="op">::</span>Training<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-356"><a href="#cb1-356" aria-hidden="true" tabindex="-1"></a>        _state<span class="op">-&gt;</span>setTrainingRegionKey<span class="op">(</span>key<span class="op">);</span></span>
+<span id="cb1-357"><a href="#cb1-357" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="op">(</span>_mode <span class="op">==</span> RegionMode<span class="op">::</span>Validation<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-358"><a href="#cb1-358" aria-hidden="true" tabindex="-1"></a>        _state<span class="op">-&gt;</span>setValidationRegionKey<span class="op">(</span>key<span class="op">);</span></span>
+<span id="cb1-359"><a href="#cb1-359" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb1-360"><a href="#cb1-360" aria-hidden="true" tabindex="-1"></a>        _state<span class="op">-&gt;</span>setPredictionRegionKey<span class="op">(</span>key<span class="op">);</span></span>
+<span id="cb1-361"><a href="#cb1-361" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-362"><a href="#cb1-362" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-363"><a href="#cb1-363" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-364"><a href="#cb1-364" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string RegionSelectionPanel<span class="op">::</span>_readKeyFromState<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb1-365"><a href="#cb1-365" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-366"><a href="#cb1-366" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb1-367"><a href="#cb1-367" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-368"><a href="#cb1-368" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-369"><a href="#cb1-369" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_mode <span class="op">==</span> RegionMode<span class="op">::</span>Training<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-370"><a href="#cb1-370" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> _state<span class="op">-&gt;</span>trainingRegionKey<span class="op">();</span></span>
+<span id="cb1-371"><a href="#cb1-371" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-372"><a href="#cb1-372" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_mode <span class="op">==</span> RegionMode<span class="op">::</span>Validation<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-373"><a href="#cb1-373" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> _state<span class="op">-&gt;</span>validationRegionKey<span class="op">();</span></span>
+<span id="cb1-374"><a href="#cb1-374" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-375"><a href="#cb1-375" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> _state<span class="op">-&gt;</span>predictionRegionKey<span class="op">();</span></span>
+<span id="cb1-376"><a href="#cb1-376" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:57 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:38 +0000</p>
 
 
 </section>

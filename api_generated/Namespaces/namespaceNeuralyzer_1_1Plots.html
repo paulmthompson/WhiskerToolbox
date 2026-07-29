@@ -702,16 +702,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-getalignmentsource">getAlignmentSource</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, std::string const &amp; alignment_key)<br>Look up an alignment source from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</td>
 </tr>
 <tr class="even">
-<td>std::vector&lt; int64_t &gt;</td>
+<td>std::vector&lt; <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-extractalignmenttimes">extractAlignmentTimes</a></strong>(<a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &amp; events)<br>Extract absolute alignment times from a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>.</td>
 </tr>
 <tr class="odd">
-<td>std::vector&lt; int64_t &gt;</td>
+<td>std::vector&lt; <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-extractalignmenttimes">extractAlignmentTimes</a></strong>(<a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &amp; intervals, <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-alignmentpoint">AlignmentPoint</a> align)<br>Extract absolute alignment times from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</td>
 </tr>
 <tr class="even">
 <td>std::vector&lt; size_t &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-pruneoverlappingalignmenttimes">pruneOverlappingAlignmentTimes</a></strong>(std::vector&lt; int64_t &gt; const &amp; alignment_times, int64_t pre_window, int64_t post_window)<br>Prune alignment times whose expanded windows would overlap.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-pruneoverlappingalignmenttimes">pruneOverlappingAlignmentTimes</a></strong>(std::vector&lt; <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> &gt; const &amp; alignment_times, int64_t pre_window, int64_t post_window)<br>Prune alignment times whose expanded windows would overlap.</td>
 </tr>
 <tr class="odd">
 <td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt;</td>
@@ -722,8 +722,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-createfilteredintervalseries">createFilteredIntervalSeries</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; const &amp; source, std::vector&lt; size_t &gt; const &amp; kept_indices)<br>Create a filtered copy of a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</td>
 </tr>
 <tr class="odd">
-<td><a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-physicalwindowtointerval">physicalWindowToInterval</a></strong>(int64_t alignment_time, int64_t pre_window, int64_t post_window, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; target_time_frame)<br>Convert an absolute-time window to interval indices in a target <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a>.</td>
+<td><a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-physicalwindowtointerval">physicalWindowToInterval</a></strong>(<a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> alignment_time, int64_t pre_window, int64_t post_window, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; target_time_frame)<br>Convert an absolute-time window to interval indices in a target <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a>.</td>
 </tr>
 <tr class="even">
 <td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> &gt;</td>
@@ -1369,7 +1369,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-extractalignmenttimes" class="level3">
 <h3 class="anchored" data-anchor-id="function-extractalignmenttimes">function extractAlignmentTimes</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> extractAlignmentTimes<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> ClockTicks <span class="op">&gt;</span> extractAlignmentTimes<span class="op">(</span></span>
 <span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    DigitalEventSeries <span class="at">const</span> <span class="op">&amp;</span> events</span>
 <span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Extract absolute alignment times from a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>.</p>
@@ -1382,7 +1382,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-extractalignmenttimes-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-extractalignmenttimes-1">function extractAlignmentTimes</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> extractAlignmentTimes<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> ClockTicks <span class="op">&gt;</span> extractAlignmentTimes<span class="op">(</span></span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    DigitalIntervalSeries <span class="at">const</span> <span class="op">&amp;</span> intervals<span class="op">,</span></span>
 <span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    AlignmentPoint align</span>
 <span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -1398,7 +1398,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-pruneoverlappingalignmenttimes" class="level3">
 <h3 class="anchored" data-anchor-id="function-pruneoverlappingalignmenttimes">function pruneOverlappingAlignmentTimes</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">size_t</span> <span class="op">&gt;</span> pruneOverlappingAlignmentTimes<span class="op">(</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int64_t</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> alignment_times<span class="op">,</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> ClockTicks <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> alignment_times<span class="op">,</span></span>
 <span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> pre_window<span class="op">,</span></span>
 <span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> post_window</span>
 <span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -1447,8 +1447,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-physicalwindowtointerval" class="level3">
 <h3 class="anchored" data-anchor-id="function-physicalwindowtointerval">function physicalWindowToInterval</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Interval physicalWindowToInterval<span class="op">(</span></span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> alignment_time<span class="op">,</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> TimeFrameInterval physicalWindowToInterval<span class="op">(</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>    ClockTicks alignment_time<span class="op">,</span></span>
 <span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> pre_window<span class="op">,</span></span>
 <span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> post_window<span class="op">,</span></span>
 <span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> target_time_frame</span>
@@ -1892,7 +1892,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p>Reorders <code>result.rows</code>, <code>result.rate_estimates</code>, and <code>unit_keys</code> in-place according to the given index permutation.</p>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:52 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:34 +0000</p>
 
 
 </section>

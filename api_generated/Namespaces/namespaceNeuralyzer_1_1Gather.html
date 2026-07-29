@@ -374,6 +374,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-reducegatherrows" id="toc-function-reducegatherrows" class="nav-link" data-scroll-target="#function-reducegatherrows">function reduceGatherRows</a></li>
   <li><a href="#function-sortgatherrowsby" id="toc-function-sortgatherrowsby" class="nav-link" data-scroll-target="#function-sortgatherrowsby">function sortGatherRowsBy</a></li>
   <li><a href="#function-transformgatherrows" id="toc-function-transformgatherrows" class="nav-link" data-scroll-target="#function-transformgatherrows">function transformGatherRows</a></li>
+  <li><a href="#function-isidentityrowpipelinejson" id="toc-function-isidentityrowpipelinejson" class="nav-link" data-scroll-target="#function-isidentityrowpipelinejson">function isIdentityRowPipelineJson</a></li>
+  <li><a href="#function-resolveintervalgatherwindows" id="toc-function-resolveintervalgatherwindows" class="nav-link" data-scroll-target="#function-resolveintervalgatherwindows">function resolveIntervalGatherWindows</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -493,12 +495,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td><a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-convertintervaltotimeframe">convertIntervalToTimeFrame</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> const &amp; interval, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const &amp; from_time_frame, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const &amp; to_time_frame)<br>Convert an interval from one <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> coordinate system to another.</td>
+<td><a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-convertintervaltotimeframe">convertIntervalToTimeFrame</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> const &amp; interval, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const &amp; from_time_frame, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const &amp; to_time_frame)<br>Convert an interval from one <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> coordinate system to another.</td>
 </tr>
 <tr class="even">
-<td><a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-convertpreparedwindowtosourceinterval">convertPreparedWindowToSourceInterval</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> const &amp; interval, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; interval_time_frame, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; source_time_frame)<br>Convert prepared gather-window bounds to source-data query bounds.</td>
+<td><a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-convertpreparedwindowtosourceinterval">convertPreparedWindowToSourceInterval</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> const &amp; interval, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; interval_time_frame, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; source_time_frame)<br>Convert prepared gather-window bounds to source-data query bounds.</td>
 </tr>
 <tr class="odd">
 <td>float</td>
@@ -527,6 +529,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>template &lt;typename InputT ,typename OutputT &gt; <br><a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; OutputT &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-transformgatherrows">transformGatherRows</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; InputT &gt; const &amp; gather, <a href="../../api_generated/Classes/classNeuralyzer_1_1Transforms_1_1V2_1_1TransformPipeline.html">Neuralyzer::Transforms::V2::TransformPipeline</a> const &amp; pipeline)<br>Execute a TransformsV2 pipeline for each row and return row-aligned DataObjects.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-isidentityrowpipelinejson">isIdentityRowPipelineJson</a></strong>(std::string_view row_pipeline_json)<br>Check whether row-pipeline JSON represents identity row geometry.</td>
+</tr>
+<tr class="odd">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Gather.html#function-resolveintervalgatherwindows">resolveIntervalGatherWindows</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; intervals, std::string_view row_pipeline_json, std::size_t expected_row_count)<br>Resolve interval-row gather windows for a tensor column.</td>
 </tr>
 </tbody>
 </table>
@@ -593,26 +603,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="functions-documentation">Functions Documentation</h2>
 <section id="function-convertintervaltotimeframe" class="level3">
 <h3 class="anchored" data-anchor-id="function-convertintervaltotimeframe">function convertIntervalToTimeFrame</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Interval convertIntervalToTimeFrame<span class="op">(</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">,</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> TimeFrameInterval convertIntervalToTimeFrame<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">,</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">&amp;</span> from_time_frame<span class="op">,</span></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">&amp;</span> to_time_frame</span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Convert an interval from one <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> coordinate system to another.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>interval</strong> Interval expressed in <code>from_time_frame</code> indices</li>
+<li><strong>interval</strong> TimeFrameInterval expressed in <code>from_time_frame</code> indices</li>
 <li><strong>from_time_frame</strong> <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> that owns <code>interval</code> coordinates</li>
 <li><strong>to_time_frame</strong> <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> used by the source data being queried</li>
 </ul>
-<p><strong>Return</strong>: Interval expressed in <code>to_time_frame</code> indices</p>
+<p><strong>Return</strong>: TimeFrameInterval expressed in <code>to_time_frame</code> indices</p>
 <p><strong>Precondition</strong>: <code>from_time_frame</code> and <code>to_time_frame</code> are valid <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> references.</p>
 <p><strong>Postcondition</strong>: Returned bounds are expressed in <code>to_time_frame</code> coordinates.</p>
 </section>
 <section id="function-convertpreparedwindowtosourceinterval" class="level3">
 <h3 class="anchored" data-anchor-id="function-convertpreparedwindowtosourceinterval">function convertPreparedWindowToSourceInterval</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Interval convertPreparedWindowToSourceInterval<span class="op">(</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">,</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> TimeFrameInterval convertPreparedWindowToSourceInterval<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">,</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> interval_time_frame<span class="op">,</span></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> source_time_frame</span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -799,8 +809,47 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Return</strong>: <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> containing one output DataObject per input row</p>
 <p><strong>Precondition</strong>: <code>pipeline</code> must produce <code>std::shared_ptr&lt;OutputT&gt;</code> for every row.</p>
 <p><strong>Postcondition</strong>: Returned <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> preserves <code>gather</code> row metadata and ordering.</p>
+</section>
+<section id="function-isidentityrowpipelinejson" class="level3">
+<h3 class="anchored" data-anchor-id="function-isidentityrowpipelinejson">function isIdentityRowPipelineJson</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isIdentityRowPipelineJson<span class="op">(</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string_view row_pipeline_json</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check whether row-pipeline JSON represents identity row geometry.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>row_pipeline_json</strong> Embedded row-pipeline JSON string.</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::runtime_error</strong> if non-empty JSON cannot be parsed as a pipeline descriptor.</li>
+</ul>
+<p><strong>Return</strong>: True when the JSON is empty/whitespace or contains no executable row steps.</p>
+<p><strong>Postcondition</strong>: Does not execute any transform pipeline.</p>
+</section>
+<section id="function-resolveintervalgatherwindows" class="level3">
+<h3 class="anchored" data-anchor-id="function-resolveintervalgatherwindows">function resolveIntervalGatherWindows</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> resolveIntervalGatherWindows<span class="op">(</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> intervals<span class="op">,</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string_view row_pipeline_json<span class="op">,</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t expected_row_count</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Resolve interval-row gather windows for a tensor column.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>intervals</strong> Original tensor row-source intervals.</li>
+<li><strong>row_pipeline_json</strong> Embedded row-pipeline JSON string.</li>
+<li><strong>expected_row_count</strong> Number of rows in the original row source.</li>
+</ul>
+<p><strong>Exceptions</strong>:</p>
+<ul>
+<li><strong>std::runtime_error</strong> if intervals is null, row count changes, JSON is invalid, or the row pipeline output is not a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</li>
+</ul>
+<p><strong>Return</strong>: Prepared gather windows for the column.</p>
+<p><strong>Precondition</strong>: intervals must not be null.</p>
+<p><strong>Postcondition</strong>: Identity row pipelines return the original interval series; non-identity pipelines return a row-aligned <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> result.</p>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:52 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:34 +0000</p>
 
 
 </section>

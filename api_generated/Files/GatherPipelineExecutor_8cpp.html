@@ -558,11 +558,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="kw">constexpr</span> <span class="op">(</span><span class="bu">std::</span>is_same_v<span class="op">&lt;</span>T<span class="op">,</span> DigitalIntervalSeries<span class="op">&gt;)</span> <span class="op">{</span></span>
 <span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Materialize intervals into a vector and apply reduction.</span></span>
-<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>vector<span class="op">&lt;</span>IntervalWithId<span class="op">&gt;</span> elements<span class="op">;</span></span>
+<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>vector<span class="op">&lt;</span>ClockTicksIntervalWithId<span class="op">&gt;</span> elements<span class="op">;</span></span>
 <span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> iv<span class="op">:</span> ptr<span class="op">-&gt;</span>view<span class="op">())</span> <span class="op">{</span></span>
 <span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a>                elements<span class="op">.</span>push_back<span class="op">(</span>iv<span class="op">);</span></span>
 <span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>span<span class="op">&lt;</span>IntervalWithId <span class="at">const</span><span class="op">&gt;</span> <span class="at">const</span> span<span class="op">{</span>elements<span class="op">};</span></span>
+<span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>span<span class="op">&lt;</span>ClockTicksIntervalWithId <span class="at">const</span><span class="op">&gt;</span> <span class="at">const</span> span<span class="op">{</span>elements<span class="op">};</span></span>
 <span id="cb1-163"><a href="#cb1-163" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>any <span class="at">const</span> input_any<span class="op">{</span>span<span class="op">};</span></span>
 <span id="cb1-164"><a href="#cb1-164" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-165"><a href="#cb1-165" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>any <span class="at">const</span> params_to_use <span class="op">=</span> reduction<span class="op">.</span>params<span class="op">.</span>has_value<span class="op">()</span></span>
@@ -571,7 +571,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>any <span class="at">const</span> result <span class="op">=</span> registry<span class="op">.</span>executeErased<span class="op">(</span></span>
 <span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a>                    reduction<span class="op">.</span>reduction_name<span class="op">,</span></span>
-<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">typeid</span><span class="op">(</span>IntervalWithId<span class="op">),</span></span>
+<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">typeid</span><span class="op">(</span>ClockTicksIntervalWithId<span class="op">),</span></span>
 <span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a>                    input_any<span class="op">,</span></span>
 <span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a>                    params_to_use<span class="op">);</span></span>
 <span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> castReductionResult<span class="op">(</span>result<span class="op">);</span></span>
@@ -651,7 +651,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-249"><a href="#cb1-249" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace Neuralyzer::Gather</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:56 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:37 +0000</p>
 
 
 </section>

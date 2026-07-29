@@ -357,6 +357,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#variable-column_name" id="toc-variable-column_name" class="nav-link" data-scroll-target="#variable-column_name">variable column_name</a></li>
   <li><a href="#variable-source_key" id="toc-variable-source_key" class="nav-link" data-scroll-target="#variable-source_key">variable source_key</a></li>
   <li><a href="#variable-pipeline_json" id="toc-variable-pipeline_json" class="nav-link" data-scroll-target="#variable-pipeline_json">variable pipeline_json</a></li>
+  <li><a href="#variable-row_pipeline_json" id="toc-variable-row_pipeline_json" class="nav-link" data-scroll-target="#variable-row_pipeline_json">variable row_pipeline_json</a></li>
   <li><a href="#variable-interval_property" id="toc-variable-interval_property" class="nav-link" data-scroll-target="#variable-interval_property">variable interval_property</a></li>
   </ul></li>
   </ul></li>
@@ -413,6 +414,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1TensorBuilders_1_1ColumnRecipe.html#variable-pipeline-json">pipeline_json</a></strong> <br>JSON string describing the <a href="../../api_generated/Classes/classTransformPipeline.html">TransformPipeline</a> (empty for passthrough)</td>
 </tr>
 <tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1TensorBuilders_1_1ColumnRecipe.html#variable-row-pipeline-json">row_pipeline_json</a></strong></td>
+</tr>
+<tr class="odd">
 <td>std::optional&lt; <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1TensorBuilders.html#enum-intervalproperty">IntervalProperty</a> &gt;</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1TensorBuilders_1_1ColumnRecipe.html#variable-interval-property">interval_property</a></strong></td>
 </tr>
@@ -443,12 +448,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string pipeline_json<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>JSON string describing the <a href="../../api_generated/Classes/classTransformPipeline.html">TransformPipeline</a> (empty for passthrough)</p>
 </section>
+<section id="variable-row_pipeline_json" class="level3">
+<h3 class="anchored" data-anchor-id="variable-row_pipeline_json">variable row_pipeline_json</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string row_pipeline_json<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>JSON string describing a row <a href="../../api_generated/Classes/classTransformPipeline.html">TransformPipeline</a> for per-column geometry. Empty means current row-source geometry is used; interval-row pipelines may produce row-aligned <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> gather windows.</p>
+</section>
 <section id="variable-interval_property" class="level3">
 <h3 class="anchored" data-anchor-id="variable-interval_property">variable interval_property</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> IntervalProperty <span class="op">&gt;</span> interval_property<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> IntervalProperty <span class="op">&gt;</span> interval_property<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>If this is an interval-property column, which property to extract. nullopt means this is a data-source column, not an interval-property column.</p>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:52 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:34 +0000</p>
 
 
 </section>

@@ -414,15 +414,16 @@ DataManager  ←─────────────────┘</code></p
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"mean_curvature"</span><span class="fu">,</span></span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"Curvature"</span><span class="fu">,</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: [], </span><span class="ch">\"</span><span class="st">range_reduction</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">reduction_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">MeanValue</span><span class="ch">\"</span><span class="st">}}"</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"spike_count"</span><span class="fu">,</span></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"Spikes"</span><span class="fu">,</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: [], </span><span class="ch">\"</span><span class="st">range_reduction</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">reduction_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">EventCount</span><span class="ch">\"</span><span class="st">}}"</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"row_pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: []}"</span><span class="fu">,</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: [], </span><span class="ch">\"</span><span class="st">range_reduction</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">reduction_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">MeanValue</span><span class="ch">\"</span><span class="st">}}"</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"spike_count"</span><span class="fu">,</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"Spikes"</span><span class="fu">,</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: [], </span><span class="ch">\"</span><span class="st">range_reduction</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">reduction_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">EventCount</span><span class="ch">\"</span><span class="st">}}"</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 23%">
@@ -468,11 +469,16 @@ DataManager  ←─────────────────┘</code></p
 <td>DataManager source key</td>
 </tr>
 <tr class="odd">
+<td><code>columns[].row_pipeline_json</code></td>
+<td>No</td>
+<td>Embedded row <code>PipelineDescriptor</code> JSON string. Empty or explicit identity (<code>{"steps": []}</code>) preserves current row geometry; interval-row pipelines that produce a row-aligned <code>DigitalIntervalSeries</code> provide prepared gather windows.</td>
+</tr>
+<tr class="even">
 <td><code>columns[].pipeline_json</code></td>
 <td>For interval/timestamp data columns</td>
 <td>Embedded <code>PipelineDescriptor</code> JSON string</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>columns[].interval_property</code></td>
 <td>For property columns</td>
 <td><code>start</code>, <code>end</code>, or <code>duration</code> (no <code>source_key</code> needed)</td>
@@ -480,7 +486,7 @@ DataManager  ←─────────────────┘</code></p
 </tbody>
 </table>
 <p>Each <code>pipeline_json</code> string is a <a href="../transforms_v2/pipeline_loader.qmd"><code>PipelineDescriptor</code></a> fragment. Interval-row columns require a terminal <code>range_reduction</code>.</p>
-<p>Current interval-row tensor columns gather over the full row interval. Per-column gather geometry through <code>row_pipeline_json</code> is planned but not implemented. The planned design is to run a TransformPipeline on the row source to produce prepared <code>DigitalIntervalSeries</code> windows or <code>DigitalEventSeries</code> sample times, then gather or sample source data for each row. Per-row normalization markers should be bound into the column TransformPipeline through TransformsV2 <code>PipelineValueStore</code> parameter bindings rather than through <code>row_pipeline_json</code>; <code>GatherResult</code> remains only the row container and direct gather executor.</p>
+<p>Current interval-row tensor columns gather over the full row interval when <code>row_pipeline_json</code> is omitted, empty, or an explicit identity descriptor such as <code>{"steps": []}</code>. Non-identity row pipelines may now run against the original interval row source when they produce a <code>DigitalIntervalSeries</code> with the same row count; the output is used as prepared gather windows for that column. <code>DigitalEventSeries</code> sample-time output remains deferred to the timestamp/sample row-pipeline phase. Per-row normalization markers should be bound into the column TransformPipeline through TransformsV2 <code>PipelineValueStore</code> parameter bindings rather than through <code>row_pipeline_json</code>; <code>GatherResult</code> remains only the row container and direct gather executor.</p>
 <p>There is still a temporary compatibility path in <code>TensorDesignBuilder::buildColumnProvider()</code> that detects a top-level <code>"offset"</code> field inside <code>pipeline_json</code> for analog sample-at-offset columns. This should be removed once point sampling is expressible through the row-pipeline design.</p>
 </section>
 <section id="build-api-lazy-column-tensors" class="level2">

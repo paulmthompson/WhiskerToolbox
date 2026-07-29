@@ -419,8 +419,8 @@ ul.task-list li input[type="checkbox"] {
 <h3 class="anchored" data-anchor-id="viewstate">ViewState</h3>
 <p>The single source of truth for the camera.</p>
 <ul>
-<li><p><strong>TimeSeriesViewState</strong>: Used for scrolling time-series plots. Handles buffer scope (what time range is loaded) and view (pan/zoom).</p></li>
-<li><p><strong>ViewState</strong>: Used for spatial 2D plots.</p></li>
+<li><p><strong>ViewStateData</strong>: Serializable camera state for time-series plots (<code>x_min</code>/<code>x_max</code> as master frame indices, Y bounds, zoom/pan). Used by DataViewer via <code>DataViewerState</code>.</p></li>
+<li><p><strong>ViewState</strong>: Full runtime 2D camera (includes viewport pixels). Used for spatial 2D plots.</p></li>
 </ul>
 </section>
 <section id="layouttransform" class="level3">

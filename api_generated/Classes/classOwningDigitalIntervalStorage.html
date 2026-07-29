@@ -433,19 +433,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td></td>
-<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-owningdigitalintervalstorage">OwningDigitalIntervalStorage</a></strong>(std::vector&lt; <a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> &gt; intervals)<br>Construct from existing interval vector (will sort)</td>
+<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-owningdigitalintervalstorage">OwningDigitalIntervalStorage</a></strong>(std::vector&lt; <a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> &gt; intervals)<br>Construct from existing interval vector (will sort)</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-owningdigitalintervalstorage">OwningDigitalIntervalStorage</a></strong>(std::vector&lt; <a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> &gt; intervals, std::vector&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt; entity_ids)<br>Construct from existing interval and entity ID vectors.</td>
+<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-owningdigitalintervalstorage">OwningDigitalIntervalStorage</a></strong>(std::vector&lt; <a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> &gt; intervals, std::vector&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt; entity_ids)<br>Construct from existing interval and entity ID vectors.</td>
 </tr>
 <tr class="even">
 <td>bool</td>
-<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-addinterval">addInterval</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> const &amp; interval, <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> entity_id)<br>Add an interval.</td>
+<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-addinterval">addInterval</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> const &amp; interval, <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> entity_id)<br>Add an interval.</td>
 </tr>
 <tr class="odd">
 <td>bool</td>
-<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-removeinterval">removeInterval</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> const &amp; interval)<br>Remove an interval by exact match.</td>
+<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-removeinterval">removeInterval</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> const &amp; interval)<br>Remove an interval by exact match.</td>
 </tr>
 <tr class="even">
 <td>bool</td>
@@ -469,7 +469,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-setinterval">setInterval</a></strong>(size_t idx, <a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> interval)<br>Set interval at a specific index (does not re-sort)</td>
+<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-setinterval">setInterval</a></strong>(size_t idx, <a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> interval)<br>Set interval at a specific index (does not re-sort)</td>
 </tr>
 <tr class="even">
 <td>void</td>
@@ -492,7 +492,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-sizeimpl">sizeImpl</a></strong>() const</td>
 </tr>
 <tr class="odd">
-<td><a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> const &amp;</td>
+<td><a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> const &amp;</td>
 <td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-getintervalimpl">getIntervalImpl</a></strong>(size_t idx) const</td>
 </tr>
 <tr class="even">
@@ -501,7 +501,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>std::optional&lt; size_t &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-findbyintervalimpl">findByIntervalImpl</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> const &amp; interval) const</td>
+<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-findbyintervalimpl">findByIntervalImpl</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> const &amp; interval) const</td>
 </tr>
 <tr class="even">
 <td>std::optional&lt; size_t &gt;</td>
@@ -509,15 +509,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>bool</td>
-<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-hasintervalattimeimpl">hasIntervalAtTimeImpl</a></strong>(int64_t time) const</td>
+<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-hasintervalattimeimpl">hasIntervalAtTimeImpl</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time) const</td>
 </tr>
 <tr class="even">
 <td>std::pair&lt; size_t, size_t &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-getoverlappingrangeimpl">getOverlappingRangeImpl</a></strong>(int64_t start, int64_t end) const<br>Get index range of intervals overlapping [start, end].</td>
+<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-getoverlappingrangeimpl">getOverlappingRangeImpl</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end) const<br>Get index range of intervals overlapping [start, end].</td>
 </tr>
 <tr class="odd">
 <td>std::pair&lt; size_t, size_t &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-getcontainedrangeimpl">getContainedRangeImpl</a></strong>(int64_t start, int64_t end) const</td>
+<td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-getcontainedrangeimpl">getContainedRangeImpl</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end) const</td>
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Files/DigitalIntervalStorageCache_8hpp.html#enum-digitalintervalstoragetype">DigitalIntervalStorageType</a></td>
@@ -528,7 +528,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-trygetcacheimpl">tryGetCacheImpl</a></strong>() const<br>Get cache with pointers to contiguous data.</td>
 </tr>
 <tr class="even">
-<td>std::vector&lt; <a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> &gt; const &amp;</td>
+<td>std::vector&lt; <a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> &gt; const &amp;</td>
 <td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-intervals">intervals</a></strong>() const</td>
 </tr>
 <tr class="odd">
@@ -536,7 +536,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-entityids">entityIds</a></strong>() const</td>
 </tr>
 <tr class="even">
-<td>std::span&lt; <a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> const &gt;</td>
+<td>std::span&lt; <a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> const &gt;</td>
 <td><strong><a href="../../api_generated/Classes/classOwningDigitalIntervalStorage.html#function-intervalsspan">intervalsSpan</a></strong>() const</td>
 </tr>
 <tr class="odd">
@@ -566,7 +566,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classDigitalIntervalStorageBase.html#function-empty">empty</a></strong>() const<br>Check if storage is empty.</td>
 </tr>
 <tr class="odd">
-<td><a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> const &amp;</td>
+<td><a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> const &amp;</td>
 <td><strong><a href="../../api_generated/Classes/classDigitalIntervalStorageBase.html#function-getinterval">getInterval</a></strong>(size_t idx) const<br>Get the interval at a flat index.</td>
 </tr>
 <tr class="even">
@@ -575,7 +575,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>std::optional&lt; size_t &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classDigitalIntervalStorageBase.html#function-findbyinterval">findByInterval</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> const &amp; interval) const<br>Find the index of an interval by its exact start/end times.</td>
+<td><strong><a href="../../api_generated/Classes/classDigitalIntervalStorageBase.html#function-findbyinterval">findByInterval</a></strong>(<a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> const &amp; interval) const<br>Find the index of an interval by its exact start/end times.</td>
 </tr>
 <tr class="even">
 <td>std::optional&lt; size_t &gt;</td>
@@ -583,15 +583,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>bool</td>
-<td><strong><a href="../../api_generated/Classes/classDigitalIntervalStorageBase.html#function-hasintervalattime">hasIntervalAtTime</a></strong>(int64_t time) const<br>Check if any interval contains the specified time.</td>
+<td><strong><a href="../../api_generated/Classes/classDigitalIntervalStorageBase.html#function-hasintervalattime">hasIntervalAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time) const<br>Check if any interval contains the specified time.</td>
 </tr>
 <tr class="even">
 <td>std::pair&lt; size_t, size_t &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classDigitalIntervalStorageBase.html#function-getoverlappingrange">getOverlappingRange</a></strong>(int64_t start, int64_t end) const<br>Get range of indices for intervals overlapping [start, end].</td>
+<td><strong><a href="../../api_generated/Classes/classDigitalIntervalStorageBase.html#function-getoverlappingrange">getOverlappingRange</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end) const<br>Get range of indices for intervals overlapping [start, end].</td>
 </tr>
 <tr class="odd">
 <td>std::pair&lt; size_t, size_t &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classDigitalIntervalStorageBase.html#function-getcontainedrange">getContainedRange</a></strong>(int64_t start, int64_t end) const<br>Get range of indices for intervals fully contained in [start, end].</td>
+<td><strong><a href="../../api_generated/Classes/classDigitalIntervalStorageBase.html#function-getcontainedrange">getContainedRange</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end) const<br>Get range of indices for intervals fully contained in [start, end].</td>
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Files/DigitalIntervalStorageCache_8hpp.html#enum-digitalintervalstoragetype">DigitalIntervalStorageType</a></td>
@@ -652,14 +652,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-owningdigitalintervalstorage-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-owningdigitalintervalstorage-1">function OwningDigitalIntervalStorage</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">explicit</span> OwningDigitalIntervalStorage<span class="op">(</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> Interval <span class="op">&gt;</span> intervals</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> TimeFrameInterval <span class="op">&gt;</span> intervals</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Construct from existing interval vector (will sort)</p>
 </section>
 <section id="function-owningdigitalintervalstorage-2" class="level3">
 <h3 class="anchored" data-anchor-id="function-owningdigitalintervalstorage-2">function OwningDigitalIntervalStorage</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>OwningDigitalIntervalStorage<span class="op">(</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> Interval <span class="op">&gt;</span> intervals<span class="op">,</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> TimeFrameInterval <span class="op">&gt;</span> intervals<span class="op">,</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> entity_ids</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Construct from existing interval and entity ID vectors.</p>
@@ -668,7 +668,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-addinterval" class="level3">
 <h3 class="anchored" data-anchor-id="function-addinterval">function addInterval</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> addInterval<span class="op">(</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">,</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">,</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    EntityId entity_id</span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Add an interval.</p>
@@ -683,7 +683,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-removeinterval" class="level3">
 <h3 class="anchored" data-anchor-id="function-removeinterval">function removeInterval</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> removeInterval<span class="op">(</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> interval</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> interval</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Remove an interval by exact match.</p>
 <p><strong>Return</strong>: true if removed, false if not found</p>
@@ -727,7 +727,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="function-setinterval">function setInterval</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setInterval<span class="op">(</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> idx<span class="op">,</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    Interval interval</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval interval</span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Set interval at a specific index (does not re-sort)</p>
 </section>
@@ -770,7 +770,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-getintervalimpl" class="level3">
 <h3 class="anchored" data-anchor-id="function-getintervalimpl">function getIntervalImpl</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Interval <span class="at">const</span> <span class="op">&amp;</span> getIntervalImpl<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> getIntervalImpl<span class="op">(</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> idx</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
@@ -783,7 +783,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-findbyintervalimpl" class="level3">
 <h3 class="anchored" data-anchor-id="function-findbyintervalimpl">function findByIntervalImpl</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="dt">size_t</span> <span class="op">&gt;</span> findByIntervalImpl<span class="op">(</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    Interval <span class="at">const</span> <span class="op">&amp;</span> interval</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameInterval <span class="at">const</span> <span class="op">&amp;</span> interval</span>
 <span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-findbyentityidimpl" class="level3">
@@ -795,14 +795,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-hasintervalattimeimpl" class="level3">
 <h3 class="anchored" data-anchor-id="function-hasintervalattimeimpl">function hasIntervalAtTimeImpl</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasIntervalAtTimeImpl<span class="op">(</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> time</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex time</span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-getoverlappingrangeimpl" class="level3">
 <h3 class="anchored" data-anchor-id="function-getoverlappingrangeimpl">function getOverlappingRangeImpl</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>pair<span class="op">&lt;</span> <span class="dt">size_t</span><span class="op">,</span> <span class="dt">size_t</span> <span class="op">&gt;</span> getOverlappingRangeImpl<span class="op">(</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> start<span class="op">,</span></span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> end</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start<span class="op">,</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end</span>
 <span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get index range of intervals overlapping [start, end].</p>
 <p><strong>See</strong>:</p>
@@ -817,8 +817,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-getcontainedrangeimpl" class="level3">
 <h3 class="anchored" data-anchor-id="function-getcontainedrangeimpl">function getContainedRangeImpl</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>pair<span class="op">&lt;</span> <span class="dt">size_t</span><span class="op">,</span> <span class="dt">size_t</span> <span class="op">&gt;</span> getContainedRangeImpl<span class="op">(</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> start<span class="op">,</span></span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> end</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start<span class="op">,</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end</span>
 <span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-getstoragetypeimpl" class="level3">
@@ -833,7 +833,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-intervals" class="level3">
 <h3 class="anchored" data-anchor-id="function-intervals">function intervals</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> Interval <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> intervals<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> TimeFrameInterval <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> intervals<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-entityids" class="level3">
 <h3 class="anchored" data-anchor-id="function-entityids">function entityIds</h3>
@@ -841,13 +841,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-intervalsspan" class="level3">
 <h3 class="anchored" data-anchor-id="function-intervalsspan">function intervalsSpan</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>span<span class="op">&lt;</span> Interval <span class="at">const</span> <span class="op">&gt;</span> intervalsSpan<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>span<span class="op">&lt;</span> TimeFrameInterval <span class="at">const</span> <span class="op">&gt;</span> intervalsSpan<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-entityidsspan" class="level3">
 <h3 class="anchored" data-anchor-id="function-entityidsspan">function entityIdsSpan</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>span<span class="op">&lt;</span> EntityId <span class="at">const</span> <span class="op">&gt;</span> entityIdsSpan<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:51 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:32 +0000</p>
 
 
 </section>

@@ -512,7 +512,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-source">source</a></strong>()<br>Get the source data that views were created from.</td>
 </tr>
 <tr class="odd">
-<td>std::vector&lt; <a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> &gt; const &amp;</td>
+<td>std::vector&lt; <a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a> &gt; const &amp;</td>
 <td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-intervals">intervals</a></strong>() const<br>Get the alignment intervals used to create views.</td>
 </tr>
 <tr class="even">
@@ -524,11 +524,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-alignmentpoints">alignmentPoints</a></strong>() const<br>Get the companion alignment-point event series.</td>
 </tr>
 <tr class="even">
-<td><a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a></td>
+<td><a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a></td>
 <td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-intervalat">intervalAt</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html#using-size-type">size_type</a> i) const<br>Get the interval at a specific index (O(1) access)</td>
 </tr>
 <tr class="odd">
-<td>int64_t</td>
+<td><a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a></td>
 <td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-alignmenttimeat">alignmentTimeAt</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html#using-size-type">size_type</a> i) const<br>Get the alignment time for a specific trial (O(1) access)</td>
 </tr>
 <tr class="even">
@@ -560,7 +560,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-isreordered">isReordered</a></strong>() const<br>Check if this result has been reordered.</td>
 </tr>
 <tr class="odd">
-<td><a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a></td>
+<td><a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a></td>
 <td><strong><a href="../../api_generated/Classes/classGatherResult.html#function-intervalatreordered">intervalAtReordered</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html#using-size-type">size_type</a> reordered_idx) const<br>Get the interval for a position in a reordered result.</td>
 </tr>
 <tr class="even">
@@ -699,7 +699,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-intervals" class="level3">
 <h3 class="anchored" data-anchor-id="function-intervals">function intervals</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> Interval <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> intervals<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> TimeFrameInterval <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> intervals<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the alignment intervals used to create views.</p>
 </section>
 <section id="function-windows" class="level3">
@@ -718,7 +718,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-intervalat" class="level3">
 <h3 class="anchored" data-anchor-id="function-intervalat">function intervalAt</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Interval intervalAt<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> TimeFrameInterval intervalAt<span class="op">(</span></span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_type</span> i</span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the interval at a specific index (O(1) access)</p>
@@ -734,7 +734,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-alignmenttimeat" class="level3">
 <h3 class="anchored" data-anchor-id="function-alignmenttimeat">function alignmentTimeAt</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">int64_t</span> alignmentTimeAt<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> ClockTicks alignmentTimeAt<span class="op">(</span></span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_type</span> i</span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the alignment time for a specific trial (O(1) access)</p>
@@ -746,7 +746,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ul>
 <li><strong>std::out_of_range</strong> if i &gt;= <a href="../../api_generated/Classes/classGatherResult.html#function-size">size()</a></li>
 </ul>
-<p><strong>Return</strong>: Alignment time for trial i</p>
+<p><strong>Return</strong>: Alignment time for trial i as <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a></p>
 <p>Returns the time point used for alignment (t=0 reference) for the specified trial. This is the value that should be subtracted from event times to get trial-relative times.</p>
 <p>Prepared-window gathers with companion alignment points return the companion event time. Gathers without companion alignment metadata return the source-query interval start as a fallback.</p>
 </section>
@@ -802,7 +802,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-intervalatreordered" class="level3">
 <h3 class="anchored" data-anchor-id="function-intervalatreordered">function intervalAtReordered</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> Interval intervalAtReordered<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> TimeFrameInterval intervalAtReordered<span class="op">(</span></span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_type</span> reordered_idx</span>
 <span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the interval for a position in a reordered result.</p>
@@ -912,7 +912,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Postcondition</strong>: The returned result has no direct-gather source provenance.</p>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:52 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:33 +0000</p>
 
 
 </section>

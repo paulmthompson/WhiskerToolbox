@@ -761,8 +761,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-377"><a href="#cb1-377" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Convert to absolute time using the first trial's alignment time.</span></span>
 <span id="cb1-378"><a href="#cb1-378" aria-hidden="true" tabindex="-1"></a>        <span class="co">// (All trials are overlaid, so we can't determine which trial was clicked.)</span></span>
 <span id="cb1-379"><a href="#cb1-379" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>_cached_alignment_times<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-380"><a href="#cb1-380" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> <span class="at">const</span> alignment_time <span class="op">=</span> _cached_alignment_times<span class="op">.</span>front<span class="op">();</span></span>
-<span id="cb1-381"><a href="#cb1-381" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> <span class="at">const</span> absolute_time <span class="op">=</span> alignment_time <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">&gt;(</span>world<span class="op">.</span>x<span class="op">());</span></span>
+<span id="cb1-380"><a href="#cb1-380" aria-hidden="true" tabindex="-1"></a>            ClockTicks <span class="at">const</span> alignment_time <span class="op">=</span> _cached_alignment_times<span class="op">.</span>front<span class="op">();</span></span>
+<span id="cb1-381"><a href="#cb1-381" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int64_t</span> <span class="at">const</span> absolute_time <span class="op">=</span> alignment_time<span class="op">.</span>getValue<span class="op">()</span> <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int64_t</span><span class="op">&gt;(</span>world<span class="op">.</span>x<span class="op">());</span></span>
 <span id="cb1-382"><a href="#cb1-382" aria-hidden="true" tabindex="-1"></a>            <span class="ex">emit</span> plotDoubleClicked<span class="op">(</span>absolute_time<span class="op">,</span> <span class="ex">QString::fromStdString</span><span class="op">(</span>_cached_series_key<span class="op">));</span></span>
 <span id="cb1-383"><a href="#cb1-383" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb1-384"><a href="#cb1-384" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
@@ -904,7 +904,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-520"><a href="#cb1-520" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span><span class="op">;</span></span>
 <span id="cb1-521"><a href="#cb1-521" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb1-522"><a href="#cb1-522" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-523"><a href="#cb1-523" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> <span class="at">const</span> alignment_time <span class="op">=</span> gathered<span class="op">.</span>alignmentTimeAt<span class="op">(</span>trial<span class="op">);</span></span>
+<span id="cb1-523"><a href="#cb1-523" aria-hidden="true" tabindex="-1"></a>        ClockTicks <span class="at">const</span> alignment_time <span class="op">=</span> gathered<span class="op">.</span>alignmentTimeAt<span class="op">(</span>trial<span class="op">);</span></span>
 <span id="cb1-524"><a href="#cb1-524" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> trial_tf <span class="op">=</span> trial_view<span class="op">-&gt;</span>getTimeFrame<span class="op">();</span></span>
 <span id="cb1-525"><a href="#cb1-525" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-526"><a href="#cb1-526" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> all_samples <span class="op">=</span> trial_view<span class="op">-&gt;</span>view<span class="op">();</span></span>
@@ -923,365 +923,369 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-539"><a href="#cb1-539" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span><span class="op">;</span></span>
 <span id="cb1-540"><a href="#cb1-540" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb1-541"><a href="#cb1-541" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-542"><a href="#cb1-542" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> <span class="at">const</span> first_abs <span class="op">=</span> trial_tf <span class="op">?</span> trial_tf<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span>first_time<span class="op">)</span> <span class="op">:</span> first_time<span class="op">.</span>getValue<span class="op">();</span></span>
-<span id="cb1-543"><a href="#cb1-543" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> <span class="at">const</span> last_abs <span class="op">=</span> trial_tf <span class="op">?</span> trial_tf<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span>last_time<span class="op">)</span> <span class="op">:</span> last_time<span class="op">.</span>getValue<span class="op">();</span></span>
-<span id="cb1-544"><a href="#cb1-544" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> rel_start <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>first_abs <span class="op">-</span> alignment_time<span class="op">);</span></span>
-<span id="cb1-545"><a href="#cb1-545" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> rel_end <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>last_abs <span class="op">-</span> alignment_time<span class="op">);</span></span>
-<span id="cb1-546"><a href="#cb1-546" aria-hidden="true" tabindex="-1"></a>        x_min <span class="op">=</span> <span class="bu">std::</span>min<span class="op">(</span>x_min<span class="op">,</span> rel_start<span class="op">);</span></span>
-<span id="cb1-547"><a href="#cb1-547" aria-hidden="true" tabindex="-1"></a>        x_max <span class="op">=</span> <span class="bu">std::</span>max<span class="op">(</span>x_max<span class="op">,</span> rel_end<span class="op">);</span></span>
-<span id="cb1-548"><a href="#cb1-548" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-549"><a href="#cb1-549" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-550"><a href="#cb1-550" aria-hidden="true" tabindex="-1"></a>    <span class="co">// =========================================================================</span></span>
-<span id="cb1-551"><a href="#cb1-551" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Apply bounds to state</span></span>
-<span id="cb1-552"><a href="#cb1-552" aria-hidden="true" tabindex="-1"></a>    <span class="co">// =========================================================================</span></span>
-<span id="cb1-553"><a href="#cb1-553" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>y_min <span class="op">&lt;</span> y_max<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-554"><a href="#cb1-554" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> <span class="at">const</span> y_margin <span class="op">=</span> <span class="op">(</span>y_max <span class="op">-</span> y_min<span class="op">)</span> <span class="op">*</span> <span class="fl">0.05</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb1-555"><a href="#cb1-555" aria-hidden="true" tabindex="-1"></a>        _state<span class="op">-&gt;</span>setYBounds<span class="op">(</span></span>
-<span id="cb1-556"><a href="#cb1-556" aria-hidden="true" tabindex="-1"></a>                <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>y_min <span class="op">-</span> y_margin<span class="op">),</span></span>
-<span id="cb1-557"><a href="#cb1-557" aria-hidden="true" tabindex="-1"></a>                <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>y_max <span class="op">+</span> y_margin<span class="op">));</span></span>
-<span id="cb1-558"><a href="#cb1-558" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-559"><a href="#cb1-559" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-560"><a href="#cb1-560" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>x_min <span class="op">&lt;</span> x_max<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-561"><a href="#cb1-561" aria-hidden="true" tabindex="-1"></a>        _state<span class="op">-&gt;</span>setXBounds<span class="op">(</span>x_min<span class="op">,</span> x_max<span class="op">);</span></span>
+<span id="cb1-542"><a href="#cb1-542" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>trial_tf<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-543"><a href="#cb1-543" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>throw_with_nested<span class="op">(</span><span class="bu">std::</span>runtime_error<span class="op">(</span><span class="st">"LinePlotOpenGLWidget: no TimeFrame"</span><span class="op">));</span></span>
+<span id="cb1-544"><a href="#cb1-544" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-545"><a href="#cb1-545" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-546"><a href="#cb1-546" aria-hidden="true" tabindex="-1"></a>        ClockTicks <span class="at">const</span> first_abs <span class="op">=</span> trial_tf<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span>first_time<span class="op">);</span></span>
+<span id="cb1-547"><a href="#cb1-547" aria-hidden="true" tabindex="-1"></a>        ClockTicks <span class="at">const</span> last_abs <span class="op">=</span> trial_tf<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span>last_time<span class="op">);</span></span>
+<span id="cb1-548"><a href="#cb1-548" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> rel_start <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;((</span>first_abs <span class="op">-</span> alignment_time<span class="op">.</span>getValue<span class="op">()).</span>getValue<span class="op">());</span></span>
+<span id="cb1-549"><a href="#cb1-549" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> rel_end <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;((</span>last_abs <span class="op">-</span> alignment_time<span class="op">.</span>getValue<span class="op">()).</span>getValue<span class="op">());</span></span>
+<span id="cb1-550"><a href="#cb1-550" aria-hidden="true" tabindex="-1"></a>        x_min <span class="op">=</span> <span class="bu">std::</span>min<span class="op">(</span>x_min<span class="op">,</span> rel_start<span class="op">);</span></span>
+<span id="cb1-551"><a href="#cb1-551" aria-hidden="true" tabindex="-1"></a>        x_max <span class="op">=</span> <span class="bu">std::</span>max<span class="op">(</span>x_max<span class="op">,</span> rel_end<span class="op">);</span></span>
+<span id="cb1-552"><a href="#cb1-552" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-553"><a href="#cb1-553" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-554"><a href="#cb1-554" aria-hidden="true" tabindex="-1"></a>    <span class="co">// =========================================================================</span></span>
+<span id="cb1-555"><a href="#cb1-555" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Apply bounds to state</span></span>
+<span id="cb1-556"><a href="#cb1-556" aria-hidden="true" tabindex="-1"></a>    <span class="co">// =========================================================================</span></span>
+<span id="cb1-557"><a href="#cb1-557" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>y_min <span class="op">&lt;</span> y_max<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-558"><a href="#cb1-558" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> <span class="at">const</span> y_margin <span class="op">=</span> <span class="op">(</span>y_max <span class="op">-</span> y_min<span class="op">)</span> <span class="op">*</span> <span class="fl">0.05</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb1-559"><a href="#cb1-559" aria-hidden="true" tabindex="-1"></a>        _state<span class="op">-&gt;</span>setYBounds<span class="op">(</span></span>
+<span id="cb1-560"><a href="#cb1-560" aria-hidden="true" tabindex="-1"></a>                <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>y_min <span class="op">-</span> y_margin<span class="op">),</span></span>
+<span id="cb1-561"><a href="#cb1-561" aria-hidden="true" tabindex="-1"></a>                <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>y_max <span class="op">+</span> y_margin<span class="op">));</span></span>
 <span id="cb1-562"><a href="#cb1-562" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-563"><a href="#cb1-563" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-564"><a href="#cb1-564" aria-hidden="true" tabindex="-1"></a>    _cached_view_state <span class="op">=</span> _state<span class="op">-&gt;</span>viewState<span class="op">();</span></span>
-<span id="cb1-565"><a href="#cb1-565" aria-hidden="true" tabindex="-1"></a>    updateMatrices<span class="op">();</span></span>
-<span id="cb1-566"><a href="#cb1-566" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-567"><a href="#cb1-567" aria-hidden="true" tabindex="-1"></a>    <span class="co">// =========================================================================</span></span>
-<span id="cb1-568"><a href="#cb1-568" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Build LineBatchData from gathered trial data and upload to GPU</span></span>
-<span id="cb1-569"><a href="#cb1-569" aria-hidden="true" tabindex="-1"></a>    <span class="co">// =========================================================================</span></span>
-<span id="cb1-570"><a href="#cb1-570" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>int64_t<span class="op">&gt;</span> alignment_times<span class="op">;</span></span>
-<span id="cb1-571"><a href="#cb1-571" aria-hidden="true" tabindex="-1"></a>    alignment_times<span class="op">.</span>reserve<span class="op">(</span>num_trials<span class="op">);</span></span>
-<span id="cb1-572"><a href="#cb1-572" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> trial <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> trial <span class="op">&lt;</span> num_trials<span class="op">;</span> <span class="op">++</span>trial<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-573"><a href="#cb1-573" aria-hidden="true" tabindex="-1"></a>        alignment_times<span class="op">.</span>push_back<span class="op">(</span>gathered<span class="op">.</span>alignmentTimeAt<span class="op">(</span>trial<span class="op">));</span></span>
-<span id="cb1-574"><a href="#cb1-574" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-575"><a href="#cb1-575" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-576"><a href="#cb1-576" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Cache alignment times for relative→absolute time conversion on double-click</span></span>
-<span id="cb1-577"><a href="#cb1-577" aria-hidden="true" tabindex="-1"></a>    _cached_alignment_times <span class="op">=</span> alignment_times<span class="op">;</span></span>
-<span id="cb1-578"><a href="#cb1-578" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-579"><a href="#cb1-579" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Cache the series key for TimeFrame resolution on double-click</span></span>
-<span id="cb1-580"><a href="#cb1-580" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
-<span id="cb1-581"><a href="#cb1-581" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> series_names <span class="op">=</span> _state<span class="op">-&gt;</span>getPlotSeriesNames<span class="op">();</span></span>
-<span id="cb1-582"><a href="#cb1-582" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>series_names<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-583"><a href="#cb1-583" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> opts <span class="op">=</span> _state<span class="op">-&gt;</span>getPlotSeriesOptions<span class="op">(</span>series_names<span class="op">.</span>front<span class="op">());</span></span>
-<span id="cb1-584"><a href="#cb1-584" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>opts<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-585"><a href="#cb1-585" aria-hidden="true" tabindex="-1"></a>                _cached_series_key <span class="op">=</span> opts<span class="op">-&gt;</span>series_key<span class="op">;</span></span>
-<span id="cb1-586"><a href="#cb1-586" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-587"><a href="#cb1-587" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-588"><a href="#cb1-588" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-589"><a href="#cb1-589" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-590"><a href="#cb1-590" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> batch <span class="op">=</span> CorePlotting<span class="op">::</span>buildLineBatchFromGatherResult<span class="op">(</span>gathered<span class="op">);</span></span>
-<span id="cb1-591"><a href="#cb1-591" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-592"><a href="#cb1-592" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Restore selection mask from previous selection (if trials still match)</span></span>
-<span id="cb1-593"><a href="#cb1-593" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_selected_trial_indices<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-594"><a href="#cb1-594" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>unordered_set<span class="op">&lt;</span><span class="bu">std::</span>uint32_t<span class="op">&gt;</span> <span class="at">const</span> selected_set<span class="op">(</span></span>
-<span id="cb1-595"><a href="#cb1-595" aria-hidden="true" tabindex="-1"></a>                _selected_trial_indices<span class="op">.</span>begin<span class="op">(),</span> _selected_trial_indices<span class="op">.</span>end<span class="op">());</span></span>
-<span id="cb1-596"><a href="#cb1-596" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="bu">std::</span>uint32_t i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> batch<span class="op">.</span>numLines<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-597"><a href="#cb1-597" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>selected_set<span class="op">.</span>contains<span class="op">(</span>batch<span class="op">.</span>lines<span class="op">[</span>i<span class="op">].</span>trial_index<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-598"><a href="#cb1-598" aria-hidden="true" tabindex="-1"></a>                batch<span class="op">.</span>selection_mask<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb1-599"><a href="#cb1-599" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-600"><a href="#cb1-600" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-601"><a href="#cb1-601" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-602"><a href="#cb1-602" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-603"><a href="#cb1-603" aria-hidden="true" tabindex="-1"></a>    _line_store<span class="op">.</span>upload<span class="op">(</span>batch<span class="op">);</span></span>
-<span id="cb1-604"><a href="#cb1-604" aria-hidden="true" tabindex="-1"></a>    _line_renderer<span class="op">.</span>syncFromStore<span class="op">();</span></span>
-<span id="cb1-605"><a href="#cb1-605" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-606"><a href="#cb1-606" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Apply group colors after uploading new data</span></span>
-<span id="cb1-607"><a href="#cb1-607" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_group_manager <span class="op">&amp;&amp;</span> _state <span class="op">&amp;&amp;</span> _state<span class="op">-&gt;</span>colorByGroup<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-608"><a href="#cb1-608" aria-hidden="true" tabindex="-1"></a>        applyGroupColorsToLines<span class="op">();</span></span>
-<span id="cb1-609"><a href="#cb1-609" aria-hidden="true" tabindex="-1"></a>        _last_group_generation <span class="op">=</span> _group_manager<span class="op">-&gt;</span>generation<span class="op">();</span></span>
-<span id="cb1-610"><a href="#cb1-610" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-611"><a href="#cb1-611" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-612"><a href="#cb1-612" aria-hidden="true" tabindex="-1"></a>    _scene_renderer<span class="op">.</span>clearScene<span class="op">();</span></span>
-<span id="cb1-613"><a href="#cb1-613" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-614"><a href="#cb1-614" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-615"><a href="#cb1-615" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>updateMatrices<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-616"><a href="#cb1-616" aria-hidden="true" tabindex="-1"></a>    _projection_matrix <span class="op">=</span></span>
-<span id="cb1-617"><a href="#cb1-617" aria-hidden="true" tabindex="-1"></a>            Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>computeOrthoProjection<span class="op">(</span>_cached_view_state<span class="op">);</span></span>
-<span id="cb1-618"><a href="#cb1-618" aria-hidden="true" tabindex="-1"></a>    _view_matrix <span class="op">=</span> glm<span class="op">::</span>mat4<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">);</span></span>
-<span id="cb1-619"><a href="#cb1-619" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-620"><a href="#cb1-620" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-621"><a href="#cb1-621" aria-hidden="true" tabindex="-1"></a><span class="ex">QPointF</span> LinePlotOpenGLWidget<span class="op">::</span>screenToWorld<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-622"><a href="#cb1-622" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>screenToWorld<span class="op">(</span></span>
-<span id="cb1-623"><a href="#cb1-623" aria-hidden="true" tabindex="-1"></a>            _projection_matrix<span class="op">,</span> _widget_width<span class="op">,</span> _widget_height<span class="op">,</span> screen_pos<span class="op">);</span></span>
-<span id="cb1-624"><a href="#cb1-624" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-625"><a href="#cb1-625" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-626"><a href="#cb1-626" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>handlePanning<span class="op">(</span><span class="dt">int</span> delta_x<span class="op">,</span> <span class="dt">int</span> delta_y<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-627"><a href="#cb1-627" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_state<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-628"><a href="#cb1-628" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-629"><a href="#cb1-629" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-630"><a href="#cb1-630" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>handlePanning<span class="op">(</span></span>
-<span id="cb1-631"><a href="#cb1-631" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>_state<span class="op">,</span> _cached_view_state<span class="op">,</span> delta_x<span class="op">,</span> delta_y<span class="op">,</span> _widget_width<span class="op">,</span></span>
-<span id="cb1-632"><a href="#cb1-632" aria-hidden="true" tabindex="-1"></a>            _widget_height<span class="op">);</span></span>
-<span id="cb1-633"><a href="#cb1-633" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-634"><a href="#cb1-634" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-635"><a href="#cb1-635" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>handleZoom<span class="op">(</span><span class="dt">float</span> delta<span class="op">,</span> <span class="dt">bool</span> y_only<span class="op">,</span> <span class="dt">bool</span> both_axes<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-636"><a href="#cb1-636" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_state<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-637"><a href="#cb1-637" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-638"><a href="#cb1-638" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-639"><a href="#cb1-639" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-640"><a href="#cb1-640" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Use shared helper for zoom logic</span></span>
-<span id="cb1-641"><a href="#cb1-641" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>handleZoom<span class="op">(</span></span>
-<span id="cb1-642"><a href="#cb1-642" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>_state<span class="op">,</span> _cached_view_state<span class="op">,</span> delta<span class="op">,</span> y_only<span class="op">,</span> both_axes<span class="op">);</span></span>
-<span id="cb1-643"><a href="#cb1-643" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-644"><a href="#cb1-644" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-645"><a href="#cb1-645" aria-hidden="true" tabindex="-1"></a>GatherResult<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;</span> LinePlotOpenGLWidget<span class="op">::</span>gatherTrialData<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-646"><a href="#cb1-646" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_data_manager <span class="op">||</span> <span class="op">!</span>_state<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-647"><a href="#cb1-647" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> GatherResult<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;{};</span></span>
-<span id="cb1-648"><a href="#cb1-648" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-649"><a href="#cb1-649" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-650"><a href="#cb1-650" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get the first series key from the plot series</span></span>
-<span id="cb1-651"><a href="#cb1-651" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> series_names <span class="op">=</span> _state<span class="op">-&gt;</span>getPlotSeriesNames<span class="op">();</span></span>
-<span id="cb1-652"><a href="#cb1-652" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>series_names<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-653"><a href="#cb1-653" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> GatherResult<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;{};</span></span>
-<span id="cb1-654"><a href="#cb1-654" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-655"><a href="#cb1-655" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-656"><a href="#cb1-656" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get the first series's options</span></span>
-<span id="cb1-657"><a href="#cb1-657" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> series_options <span class="op">=</span> _state<span class="op">-&gt;</span>getPlotSeriesOptions<span class="op">(</span>series_names<span class="op">.</span>front<span class="op">());</span></span>
-<span id="cb1-658"><a href="#cb1-658" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>series_options <span class="op">||</span> series_options<span class="op">-&gt;</span>series_key<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-659"><a href="#cb1-659" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> GatherResult<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;{};</span></span>
-<span id="cb1-660"><a href="#cb1-660" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-661"><a href="#cb1-661" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-662"><a href="#cb1-662" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get alignment state</span></span>
-<span id="cb1-663"><a href="#cb1-663" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> alignment_state <span class="op">=</span> _state<span class="op">-&gt;</span>alignmentState<span class="op">();</span></span>
-<span id="cb1-664"><a href="#cb1-664" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>alignment_state<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-665"><a href="#cb1-665" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> GatherResult<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;{};</span></span>
-<span id="cb1-666"><a href="#cb1-666" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-667"><a href="#cb1-667" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-668"><a href="#cb1-668" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Use the PlotAlignmentGather API for AnalogTimeSeries</span></span>
-<span id="cb1-669"><a href="#cb1-669" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>createAlignedGatherResult<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;(</span></span>
-<span id="cb1-670"><a href="#cb1-670" aria-hidden="true" tabindex="-1"></a>            _data_manager<span class="op">,</span></span>
-<span id="cb1-671"><a href="#cb1-671" aria-hidden="true" tabindex="-1"></a>            series_options<span class="op">-&gt;</span>series_key<span class="op">,</span></span>
-<span id="cb1-672"><a href="#cb1-672" aria-hidden="true" tabindex="-1"></a>            alignment_state<span class="op">-&gt;</span>data<span class="op">());</span></span>
-<span id="cb1-673"><a href="#cb1-673" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-674"><a href="#cb1-674" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-675"><a href="#cb1-675" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
-<span id="cb1-676"><a href="#cb1-676" aria-hidden="true" tabindex="-1"></a><span class="co">// Selection</span></span>
-<span id="cb1-677"><a href="#cb1-677" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb1-564"><a href="#cb1-564" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>x_min <span class="op">&lt;</span> x_max<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-565"><a href="#cb1-565" aria-hidden="true" tabindex="-1"></a>        _state<span class="op">-&gt;</span>setXBounds<span class="op">(</span>x_min<span class="op">,</span> x_max<span class="op">);</span></span>
+<span id="cb1-566"><a href="#cb1-566" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-567"><a href="#cb1-567" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-568"><a href="#cb1-568" aria-hidden="true" tabindex="-1"></a>    _cached_view_state <span class="op">=</span> _state<span class="op">-&gt;</span>viewState<span class="op">();</span></span>
+<span id="cb1-569"><a href="#cb1-569" aria-hidden="true" tabindex="-1"></a>    updateMatrices<span class="op">();</span></span>
+<span id="cb1-570"><a href="#cb1-570" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-571"><a href="#cb1-571" aria-hidden="true" tabindex="-1"></a>    <span class="co">// =========================================================================</span></span>
+<span id="cb1-572"><a href="#cb1-572" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Build LineBatchData from gathered trial data and upload to GPU</span></span>
+<span id="cb1-573"><a href="#cb1-573" aria-hidden="true" tabindex="-1"></a>    <span class="co">// =========================================================================</span></span>
+<span id="cb1-574"><a href="#cb1-574" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>ClockTicks<span class="op">&gt;</span> alignment_times<span class="op">;</span></span>
+<span id="cb1-575"><a href="#cb1-575" aria-hidden="true" tabindex="-1"></a>    alignment_times<span class="op">.</span>reserve<span class="op">(</span>num_trials<span class="op">);</span></span>
+<span id="cb1-576"><a href="#cb1-576" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> trial <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> trial <span class="op">&lt;</span> num_trials<span class="op">;</span> <span class="op">++</span>trial<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-577"><a href="#cb1-577" aria-hidden="true" tabindex="-1"></a>        alignment_times<span class="op">.</span>push_back<span class="op">(</span>gathered<span class="op">.</span>alignmentTimeAt<span class="op">(</span>trial<span class="op">));</span></span>
+<span id="cb1-578"><a href="#cb1-578" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-579"><a href="#cb1-579" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-580"><a href="#cb1-580" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Cache alignment times for relative→absolute time conversion on double-click</span></span>
+<span id="cb1-581"><a href="#cb1-581" aria-hidden="true" tabindex="-1"></a>    _cached_alignment_times <span class="op">=</span> alignment_times<span class="op">;</span></span>
+<span id="cb1-582"><a href="#cb1-582" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-583"><a href="#cb1-583" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Cache the series key for TimeFrame resolution on double-click</span></span>
+<span id="cb1-584"><a href="#cb1-584" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb1-585"><a href="#cb1-585" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> series_names <span class="op">=</span> _state<span class="op">-&gt;</span>getPlotSeriesNames<span class="op">();</span></span>
+<span id="cb1-586"><a href="#cb1-586" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>series_names<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-587"><a href="#cb1-587" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> opts <span class="op">=</span> _state<span class="op">-&gt;</span>getPlotSeriesOptions<span class="op">(</span>series_names<span class="op">.</span>front<span class="op">());</span></span>
+<span id="cb1-588"><a href="#cb1-588" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>opts<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-589"><a href="#cb1-589" aria-hidden="true" tabindex="-1"></a>                _cached_series_key <span class="op">=</span> opts<span class="op">-&gt;</span>series_key<span class="op">;</span></span>
+<span id="cb1-590"><a href="#cb1-590" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-591"><a href="#cb1-591" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-592"><a href="#cb1-592" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-593"><a href="#cb1-593" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-594"><a href="#cb1-594" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> batch <span class="op">=</span> CorePlotting<span class="op">::</span>buildLineBatchFromGatherResult<span class="op">(</span>gathered<span class="op">);</span></span>
+<span id="cb1-595"><a href="#cb1-595" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-596"><a href="#cb1-596" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Restore selection mask from previous selection (if trials still match)</span></span>
+<span id="cb1-597"><a href="#cb1-597" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_selected_trial_indices<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-598"><a href="#cb1-598" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>unordered_set<span class="op">&lt;</span><span class="bu">std::</span>uint32_t<span class="op">&gt;</span> <span class="at">const</span> selected_set<span class="op">(</span></span>
+<span id="cb1-599"><a href="#cb1-599" aria-hidden="true" tabindex="-1"></a>                _selected_trial_indices<span class="op">.</span>begin<span class="op">(),</span> _selected_trial_indices<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb1-600"><a href="#cb1-600" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="bu">std::</span>uint32_t i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> batch<span class="op">.</span>numLines<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-601"><a href="#cb1-601" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>selected_set<span class="op">.</span>contains<span class="op">(</span>batch<span class="op">.</span>lines<span class="op">[</span>i<span class="op">].</span>trial_index<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-602"><a href="#cb1-602" aria-hidden="true" tabindex="-1"></a>                batch<span class="op">.</span>selection_mask<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-603"><a href="#cb1-603" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-604"><a href="#cb1-604" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-605"><a href="#cb1-605" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-606"><a href="#cb1-606" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-607"><a href="#cb1-607" aria-hidden="true" tabindex="-1"></a>    _line_store<span class="op">.</span>upload<span class="op">(</span>batch<span class="op">);</span></span>
+<span id="cb1-608"><a href="#cb1-608" aria-hidden="true" tabindex="-1"></a>    _line_renderer<span class="op">.</span>syncFromStore<span class="op">();</span></span>
+<span id="cb1-609"><a href="#cb1-609" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-610"><a href="#cb1-610" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Apply group colors after uploading new data</span></span>
+<span id="cb1-611"><a href="#cb1-611" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_group_manager <span class="op">&amp;&amp;</span> _state <span class="op">&amp;&amp;</span> _state<span class="op">-&gt;</span>colorByGroup<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-612"><a href="#cb1-612" aria-hidden="true" tabindex="-1"></a>        applyGroupColorsToLines<span class="op">();</span></span>
+<span id="cb1-613"><a href="#cb1-613" aria-hidden="true" tabindex="-1"></a>        _last_group_generation <span class="op">=</span> _group_manager<span class="op">-&gt;</span>generation<span class="op">();</span></span>
+<span id="cb1-614"><a href="#cb1-614" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-615"><a href="#cb1-615" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-616"><a href="#cb1-616" aria-hidden="true" tabindex="-1"></a>    _scene_renderer<span class="op">.</span>clearScene<span class="op">();</span></span>
+<span id="cb1-617"><a href="#cb1-617" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-618"><a href="#cb1-618" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-619"><a href="#cb1-619" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>updateMatrices<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-620"><a href="#cb1-620" aria-hidden="true" tabindex="-1"></a>    _projection_matrix <span class="op">=</span></span>
+<span id="cb1-621"><a href="#cb1-621" aria-hidden="true" tabindex="-1"></a>            Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>computeOrthoProjection<span class="op">(</span>_cached_view_state<span class="op">);</span></span>
+<span id="cb1-622"><a href="#cb1-622" aria-hidden="true" tabindex="-1"></a>    _view_matrix <span class="op">=</span> glm<span class="op">::</span>mat4<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">);</span></span>
+<span id="cb1-623"><a href="#cb1-623" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-624"><a href="#cb1-624" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-625"><a href="#cb1-625" aria-hidden="true" tabindex="-1"></a><span class="ex">QPointF</span> LinePlotOpenGLWidget<span class="op">::</span>screenToWorld<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb1-626"><a href="#cb1-626" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>screenToWorld<span class="op">(</span></span>
+<span id="cb1-627"><a href="#cb1-627" aria-hidden="true" tabindex="-1"></a>            _projection_matrix<span class="op">,</span> _widget_width<span class="op">,</span> _widget_height<span class="op">,</span> screen_pos<span class="op">);</span></span>
+<span id="cb1-628"><a href="#cb1-628" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-629"><a href="#cb1-629" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-630"><a href="#cb1-630" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>handlePanning<span class="op">(</span><span class="dt">int</span> delta_x<span class="op">,</span> <span class="dt">int</span> delta_y<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-631"><a href="#cb1-631" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-632"><a href="#cb1-632" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-633"><a href="#cb1-633" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-634"><a href="#cb1-634" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>handlePanning<span class="op">(</span></span>
+<span id="cb1-635"><a href="#cb1-635" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>_state<span class="op">,</span> _cached_view_state<span class="op">,</span> delta_x<span class="op">,</span> delta_y<span class="op">,</span> _widget_width<span class="op">,</span></span>
+<span id="cb1-636"><a href="#cb1-636" aria-hidden="true" tabindex="-1"></a>            _widget_height<span class="op">);</span></span>
+<span id="cb1-637"><a href="#cb1-637" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-638"><a href="#cb1-638" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-639"><a href="#cb1-639" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>handleZoom<span class="op">(</span><span class="dt">float</span> delta<span class="op">,</span> <span class="dt">bool</span> y_only<span class="op">,</span> <span class="dt">bool</span> both_axes<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-640"><a href="#cb1-640" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-641"><a href="#cb1-641" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-642"><a href="#cb1-642" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-643"><a href="#cb1-643" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-644"><a href="#cb1-644" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Use shared helper for zoom logic</span></span>
+<span id="cb1-645"><a href="#cb1-645" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>handleZoom<span class="op">(</span></span>
+<span id="cb1-646"><a href="#cb1-646" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>_state<span class="op">,</span> _cached_view_state<span class="op">,</span> delta<span class="op">,</span> y_only<span class="op">,</span> both_axes<span class="op">);</span></span>
+<span id="cb1-647"><a href="#cb1-647" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-648"><a href="#cb1-648" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-649"><a href="#cb1-649" aria-hidden="true" tabindex="-1"></a>GatherResult<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;</span> LinePlotOpenGLWidget<span class="op">::</span>gatherTrialData<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb1-650"><a href="#cb1-650" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_data_manager <span class="op">||</span> <span class="op">!</span>_state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-651"><a href="#cb1-651" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> GatherResult<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;{};</span></span>
+<span id="cb1-652"><a href="#cb1-652" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-653"><a href="#cb1-653" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-654"><a href="#cb1-654" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get the first series key from the plot series</span></span>
+<span id="cb1-655"><a href="#cb1-655" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> series_names <span class="op">=</span> _state<span class="op">-&gt;</span>getPlotSeriesNames<span class="op">();</span></span>
+<span id="cb1-656"><a href="#cb1-656" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>series_names<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-657"><a href="#cb1-657" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> GatherResult<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;{};</span></span>
+<span id="cb1-658"><a href="#cb1-658" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-659"><a href="#cb1-659" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-660"><a href="#cb1-660" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get the first series's options</span></span>
+<span id="cb1-661"><a href="#cb1-661" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> series_options <span class="op">=</span> _state<span class="op">-&gt;</span>getPlotSeriesOptions<span class="op">(</span>series_names<span class="op">.</span>front<span class="op">());</span></span>
+<span id="cb1-662"><a href="#cb1-662" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>series_options <span class="op">||</span> series_options<span class="op">-&gt;</span>series_key<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-663"><a href="#cb1-663" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> GatherResult<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;{};</span></span>
+<span id="cb1-664"><a href="#cb1-664" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-665"><a href="#cb1-665" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-666"><a href="#cb1-666" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get alignment state</span></span>
+<span id="cb1-667"><a href="#cb1-667" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> alignment_state <span class="op">=</span> _state<span class="op">-&gt;</span>alignmentState<span class="op">();</span></span>
+<span id="cb1-668"><a href="#cb1-668" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>alignment_state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-669"><a href="#cb1-669" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> GatherResult<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;{};</span></span>
+<span id="cb1-670"><a href="#cb1-670" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-671"><a href="#cb1-671" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-672"><a href="#cb1-672" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Use the PlotAlignmentGather API for AnalogTimeSeries</span></span>
+<span id="cb1-673"><a href="#cb1-673" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>createAlignedGatherResult<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;(</span></span>
+<span id="cb1-674"><a href="#cb1-674" aria-hidden="true" tabindex="-1"></a>            _data_manager<span class="op">,</span></span>
+<span id="cb1-675"><a href="#cb1-675" aria-hidden="true" tabindex="-1"></a>            series_options<span class="op">-&gt;</span>series_key<span class="op">,</span></span>
+<span id="cb1-676"><a href="#cb1-676" aria-hidden="true" tabindex="-1"></a>            alignment_state<span class="op">-&gt;</span>data<span class="op">());</span></span>
+<span id="cb1-677"><a href="#cb1-677" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-678"><a href="#cb1-678" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-679"><a href="#cb1-679" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>clearSelection<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-680"><a href="#cb1-680" aria-hidden="true" tabindex="-1"></a>    _selected_trial_indices<span class="op">.</span>clear<span class="op">();</span></span>
-<span id="cb1-681"><a href="#cb1-681" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-682"><a href="#cb1-682" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Clear selection mask on the GPU store</span></span>
-<span id="cb1-683"><a href="#cb1-683" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> cpu <span class="op">=</span> _line_store<span class="op">.</span>cpuData<span class="op">();</span></span>
-<span id="cb1-684"><a href="#cb1-684" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>cpu<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-685"><a href="#cb1-685" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>uint32_t<span class="op">&gt;</span> <span class="at">const</span> mask<span class="op">(</span>cpu<span class="op">.</span>numLines<span class="op">(),</span> <span class="dv">0</span><span class="op">);</span></span>
-<span id="cb1-686"><a href="#cb1-686" aria-hidden="true" tabindex="-1"></a>        _line_store<span class="op">.</span>updateSelectionMask<span class="op">(</span>mask<span class="op">);</span></span>
-<span id="cb1-687"><a href="#cb1-687" aria-hidden="true" tabindex="-1"></a>        _line_renderer<span class="op">.</span>syncFromStore<span class="op">();</span></span>
-<span id="cb1-688"><a href="#cb1-688" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-689"><a href="#cb1-689" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-690"><a href="#cb1-690" aria-hidden="true" tabindex="-1"></a>    <span class="ex">emit</span> trialsSelected<span class="op">(</span>_selected_trial_indices<span class="op">);</span></span>
-<span id="cb1-691"><a href="#cb1-691" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
-<span id="cb1-692"><a href="#cb1-692" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-679"><a href="#cb1-679" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb1-680"><a href="#cb1-680" aria-hidden="true" tabindex="-1"></a><span class="co">// Selection</span></span>
+<span id="cb1-681"><a href="#cb1-681" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb1-682"><a href="#cb1-682" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-683"><a href="#cb1-683" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>clearSelection<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-684"><a href="#cb1-684" aria-hidden="true" tabindex="-1"></a>    _selected_trial_indices<span class="op">.</span>clear<span class="op">();</span></span>
+<span id="cb1-685"><a href="#cb1-685" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-686"><a href="#cb1-686" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Clear selection mask on the GPU store</span></span>
+<span id="cb1-687"><a href="#cb1-687" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> cpu <span class="op">=</span> _line_store<span class="op">.</span>cpuData<span class="op">();</span></span>
+<span id="cb1-688"><a href="#cb1-688" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>cpu<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-689"><a href="#cb1-689" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>uint32_t<span class="op">&gt;</span> <span class="at">const</span> mask<span class="op">(</span>cpu<span class="op">.</span>numLines<span class="op">(),</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb1-690"><a href="#cb1-690" aria-hidden="true" tabindex="-1"></a>        _line_store<span class="op">.</span>updateSelectionMask<span class="op">(</span>mask<span class="op">);</span></span>
+<span id="cb1-691"><a href="#cb1-691" aria-hidden="true" tabindex="-1"></a>        _line_renderer<span class="op">.</span>syncFromStore<span class="op">();</span></span>
+<span id="cb1-692"><a href="#cb1-692" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-693"><a href="#cb1-693" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-694"><a href="#cb1-694" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>vec2 LinePlotOpenGLWidget<span class="op">::</span>screenToNDC<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-695"><a href="#cb1-695" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>screenToNDC<span class="op">(</span>screen_pos<span class="op">,</span> _widget_width<span class="op">,</span></span>
-<span id="cb1-696"><a href="#cb1-696" aria-hidden="true" tabindex="-1"></a>                                          _widget_height<span class="op">);</span></span>
-<span id="cb1-697"><a href="#cb1-697" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-698"><a href="#cb1-698" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-699"><a href="#cb1-699" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>startSelection<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">,</span> <span class="dt">bool</span> remove_mode<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-700"><a href="#cb1-700" aria-hidden="true" tabindex="-1"></a>    _is_selecting <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb1-701"><a href="#cb1-701" aria-hidden="true" tabindex="-1"></a>    _selection_remove_mode <span class="op">=</span> remove_mode<span class="op">;</span></span>
-<span id="cb1-702"><a href="#cb1-702" aria-hidden="true" tabindex="-1"></a>    _selection_start_ndc <span class="op">=</span> screenToNDC<span class="op">(</span>screen_pos<span class="op">);</span></span>
-<span id="cb1-703"><a href="#cb1-703" aria-hidden="true" tabindex="-1"></a>    _selection_end_ndc <span class="op">=</span> _selection_start_ndc<span class="op">;</span></span>
-<span id="cb1-704"><a href="#cb1-704" aria-hidden="true" tabindex="-1"></a>    _selection_start_screen <span class="op">=</span> screen_pos<span class="op">;</span></span>
-<span id="cb1-705"><a href="#cb1-705" aria-hidden="true" tabindex="-1"></a>    _selection_end_screen <span class="op">=</span> screen_pos<span class="op">;</span></span>
-<span id="cb1-706"><a href="#cb1-706" aria-hidden="true" tabindex="-1"></a>    setCursor<span class="op">(</span><span class="ex">Qt::CrossCursor</span><span class="op">);</span></span>
-<span id="cb1-707"><a href="#cb1-707" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
-<span id="cb1-708"><a href="#cb1-708" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-709"><a href="#cb1-709" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-710"><a href="#cb1-710" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>updateSelection<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-711"><a href="#cb1-711" aria-hidden="true" tabindex="-1"></a>    _selection_end_ndc <span class="op">=</span> screenToNDC<span class="op">(</span>screen_pos<span class="op">);</span></span>
-<span id="cb1-712"><a href="#cb1-712" aria-hidden="true" tabindex="-1"></a>    _selection_end_screen <span class="op">=</span> screen_pos<span class="op">;</span></span>
-<span id="cb1-713"><a href="#cb1-713" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
-<span id="cb1-714"><a href="#cb1-714" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-715"><a href="#cb1-715" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-716"><a href="#cb1-716" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>completeSelection<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-717"><a href="#cb1-717" aria-hidden="true" tabindex="-1"></a>    _is_selecting <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
-<span id="cb1-718"><a href="#cb1-718" aria-hidden="true" tabindex="-1"></a>    setCursor<span class="op">(</span><span class="ex">Qt::ArrowCursor</span><span class="op">);</span></span>
+<span id="cb1-694"><a href="#cb1-694" aria-hidden="true" tabindex="-1"></a>    <span class="ex">emit</span> trialsSelected<span class="op">(</span>_selected_trial_indices<span class="op">);</span></span>
+<span id="cb1-695"><a href="#cb1-695" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
+<span id="cb1-696"><a href="#cb1-696" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-697"><a href="#cb1-697" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-698"><a href="#cb1-698" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>vec2 LinePlotOpenGLWidget<span class="op">::</span>screenToNDC<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb1-699"><a href="#cb1-699" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>screenToNDC<span class="op">(</span>screen_pos<span class="op">,</span> _widget_width<span class="op">,</span></span>
+<span id="cb1-700"><a href="#cb1-700" aria-hidden="true" tabindex="-1"></a>                                          _widget_height<span class="op">);</span></span>
+<span id="cb1-701"><a href="#cb1-701" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-702"><a href="#cb1-702" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-703"><a href="#cb1-703" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>startSelection<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">,</span> <span class="dt">bool</span> remove_mode<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-704"><a href="#cb1-704" aria-hidden="true" tabindex="-1"></a>    _is_selecting <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-705"><a href="#cb1-705" aria-hidden="true" tabindex="-1"></a>    _selection_remove_mode <span class="op">=</span> remove_mode<span class="op">;</span></span>
+<span id="cb1-706"><a href="#cb1-706" aria-hidden="true" tabindex="-1"></a>    _selection_start_ndc <span class="op">=</span> screenToNDC<span class="op">(</span>screen_pos<span class="op">);</span></span>
+<span id="cb1-707"><a href="#cb1-707" aria-hidden="true" tabindex="-1"></a>    _selection_end_ndc <span class="op">=</span> _selection_start_ndc<span class="op">;</span></span>
+<span id="cb1-708"><a href="#cb1-708" aria-hidden="true" tabindex="-1"></a>    _selection_start_screen <span class="op">=</span> screen_pos<span class="op">;</span></span>
+<span id="cb1-709"><a href="#cb1-709" aria-hidden="true" tabindex="-1"></a>    _selection_end_screen <span class="op">=</span> screen_pos<span class="op">;</span></span>
+<span id="cb1-710"><a href="#cb1-710" aria-hidden="true" tabindex="-1"></a>    setCursor<span class="op">(</span><span class="ex">Qt::CrossCursor</span><span class="op">);</span></span>
+<span id="cb1-711"><a href="#cb1-711" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
+<span id="cb1-712"><a href="#cb1-712" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-713"><a href="#cb1-713" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-714"><a href="#cb1-714" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>updateSelection<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-715"><a href="#cb1-715" aria-hidden="true" tabindex="-1"></a>    _selection_end_ndc <span class="op">=</span> screenToNDC<span class="op">(</span>screen_pos<span class="op">);</span></span>
+<span id="cb1-716"><a href="#cb1-716" aria-hidden="true" tabindex="-1"></a>    _selection_end_screen <span class="op">=</span> screen_pos<span class="op">;</span></span>
+<span id="cb1-717"><a href="#cb1-717" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
+<span id="cb1-718"><a href="#cb1-718" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-719"><a href="#cb1-719" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-720"><a href="#cb1-720" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_intersector<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-721"><a href="#cb1-721" aria-hidden="true" tabindex="-1"></a>        update<span class="op">();</span></span>
-<span id="cb1-722"><a href="#cb1-722" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-723"><a href="#cb1-723" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-724"><a href="#cb1-724" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>CorePlotting<span class="op">::</span>LineBatchIndex<span class="op">&gt;</span> <span class="at">const</span> hit_indices <span class="op">=</span></span>
-<span id="cb1-725"><a href="#cb1-725" aria-hidden="true" tabindex="-1"></a>            Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>runLineSelectionIntersection<span class="op">(</span></span>
-<span id="cb1-726"><a href="#cb1-726" aria-hidden="true" tabindex="-1"></a>                    <span class="op">*</span>_intersector<span class="op">,</span> _line_store<span class="op">.</span>cpuData<span class="op">(),</span> _selection_start_ndc<span class="op">,</span></span>
-<span id="cb1-727"><a href="#cb1-727" aria-hidden="true" tabindex="-1"></a>                    _selection_end_ndc<span class="op">,</span> _projection_matrix<span class="op">,</span> _view_matrix<span class="op">);</span></span>
-<span id="cb1-728"><a href="#cb1-728" aria-hidden="true" tabindex="-1"></a>    applyIntersectionResults<span class="op">(</span>hit_indices<span class="op">,</span> _selection_remove_mode<span class="op">);</span></span>
-<span id="cb1-729"><a href="#cb1-729" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
-<span id="cb1-730"><a href="#cb1-730" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-731"><a href="#cb1-731" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-732"><a href="#cb1-732" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>applyIntersectionResults<span class="op">(</span></span>
-<span id="cb1-733"><a href="#cb1-733" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>CorePlotting<span class="op">::</span>LineBatchIndex<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> hit_indices<span class="op">,</span></span>
-<span id="cb1-734"><a href="#cb1-734" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> remove<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-735"><a href="#cb1-735" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> cpu <span class="op">=</span> _line_store<span class="op">.</span>cpuData<span class="op">();</span></span>
-<span id="cb1-736"><a href="#cb1-736" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-737"><a href="#cb1-737" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>remove<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-738"><a href="#cb1-738" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Remove mode: remove intersected trials from current selection</span></span>
-<span id="cb1-739"><a href="#cb1-739" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>unordered_set<span class="op">&lt;</span><span class="bu">std::</span>uint32_t<span class="op">&gt;</span> to_remove<span class="op">;</span></span>
-<span id="cb1-740"><a href="#cb1-740" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> idx<span class="op">:</span> hit_indices<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-741"><a href="#cb1-741" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>idx <span class="op">&lt;</span> cpu<span class="op">.</span>numLines<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-742"><a href="#cb1-742" aria-hidden="true" tabindex="-1"></a>                to_remove<span class="op">.</span>insert<span class="op">(</span>cpu<span class="op">.</span>lines<span class="op">[</span>idx<span class="op">].</span>trial_index<span class="op">);</span></span>
-<span id="cb1-743"><a href="#cb1-743" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-744"><a href="#cb1-744" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-745"><a href="#cb1-745" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>uint32_t<span class="op">&gt;</span> filtered<span class="op">;</span></span>
-<span id="cb1-746"><a href="#cb1-746" aria-hidden="true" tabindex="-1"></a>        filtered<span class="op">.</span>reserve<span class="op">(</span>_selected_trial_indices<span class="op">.</span>size<span class="op">());</span></span>
-<span id="cb1-747"><a href="#cb1-747" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> ti<span class="op">:</span> _selected_trial_indices<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-748"><a href="#cb1-748" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(!</span>to_remove<span class="op">.</span>contains<span class="op">(</span>ti<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-749"><a href="#cb1-749" aria-hidden="true" tabindex="-1"></a>                filtered<span class="op">.</span>push_back<span class="op">(</span>ti<span class="op">);</span></span>
-<span id="cb1-750"><a href="#cb1-750" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-751"><a href="#cb1-751" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-752"><a href="#cb1-752" aria-hidden="true" tabindex="-1"></a>        _selected_trial_indices <span class="op">=</span> <span class="bu">std::</span>move<span class="op">(</span>filtered<span class="op">);</span></span>
-<span id="cb1-753"><a href="#cb1-753" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
-<span id="cb1-754"><a href="#cb1-754" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Replace mode: set selection to exactly the intersected trials</span></span>
-<span id="cb1-755"><a href="#cb1-755" aria-hidden="true" tabindex="-1"></a>        _selected_trial_indices<span class="op">.</span>clear<span class="op">();</span></span>
-<span id="cb1-756"><a href="#cb1-756" aria-hidden="true" tabindex="-1"></a>        _selected_trial_indices<span class="op">.</span>reserve<span class="op">(</span>hit_indices<span class="op">.</span>size<span class="op">());</span></span>
-<span id="cb1-757"><a href="#cb1-757" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> idx<span class="op">:</span> hit_indices<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-758"><a href="#cb1-758" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>idx <span class="op">&lt;</span> cpu<span class="op">.</span>numLines<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-759"><a href="#cb1-759" aria-hidden="true" tabindex="-1"></a>                _selected_trial_indices<span class="op">.</span>push_back<span class="op">(</span>cpu<span class="op">.</span>lines<span class="op">[</span>idx<span class="op">].</span>trial_index<span class="op">);</span></span>
-<span id="cb1-760"><a href="#cb1-760" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-761"><a href="#cb1-761" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-762"><a href="#cb1-762" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-763"><a href="#cb1-763" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-764"><a href="#cb1-764" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Update selection mask on the store</span></span>
-<span id="cb1-765"><a href="#cb1-765" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>uint32_t<span class="op">&gt;</span> mask<span class="op">(</span>cpu<span class="op">.</span>numLines<span class="op">(),</span> <span class="dv">0</span><span class="op">);</span></span>
-<span id="cb1-766"><a href="#cb1-766" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span><span class="bu">std::</span>uint32_t<span class="op">&gt;</span> <span class="at">const</span> selected_set<span class="op">(</span></span>
-<span id="cb1-767"><a href="#cb1-767" aria-hidden="true" tabindex="-1"></a>            _selected_trial_indices<span class="op">.</span>begin<span class="op">(),</span> _selected_trial_indices<span class="op">.</span>end<span class="op">());</span></span>
-<span id="cb1-768"><a href="#cb1-768" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="bu">std::</span>uint32_t i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> cpu<span class="op">.</span>numLines<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-769"><a href="#cb1-769" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>selected_set<span class="op">.</span>contains<span class="op">(</span>cpu<span class="op">.</span>lines<span class="op">[</span>i<span class="op">].</span>trial_index<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-770"><a href="#cb1-770" aria-hidden="true" tabindex="-1"></a>            mask<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb1-771"><a href="#cb1-771" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-772"><a href="#cb1-772" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-773"><a href="#cb1-773" aria-hidden="true" tabindex="-1"></a>    _line_store<span class="op">.</span>updateSelectionMask<span class="op">(</span>mask<span class="op">);</span></span>
-<span id="cb1-774"><a href="#cb1-774" aria-hidden="true" tabindex="-1"></a>    _line_renderer<span class="op">.</span>syncFromStore<span class="op">();</span></span>
-<span id="cb1-775"><a href="#cb1-775" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-776"><a href="#cb1-776" aria-hidden="true" tabindex="-1"></a>    <span class="ex">emit</span> trialsSelected<span class="op">(</span>_selected_trial_indices<span class="op">);</span></span>
-<span id="cb1-777"><a href="#cb1-777" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-778"><a href="#cb1-778" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-779"><a href="#cb1-779" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>cancelSelection<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-780"><a href="#cb1-780" aria-hidden="true" tabindex="-1"></a>    _is_selecting <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
-<span id="cb1-781"><a href="#cb1-781" aria-hidden="true" tabindex="-1"></a>    setCursor<span class="op">(</span><span class="ex">Qt::ArrowCursor</span><span class="op">);</span></span>
-<span id="cb1-782"><a href="#cb1-782" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
-<span id="cb1-783"><a href="#cb1-783" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-784"><a href="#cb1-784" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-785"><a href="#cb1-785" aria-hidden="true" tabindex="-1"></a>CorePlotting<span class="op">::</span>Interaction<span class="op">::</span>GlyphPreview LinePlotOpenGLWidget<span class="op">::</span>buildSelectionPreview<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-786"><a href="#cb1-786" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>buildLineSelectionPreview<span class="op">(</span></span>
-<span id="cb1-787"><a href="#cb1-787" aria-hidden="true" tabindex="-1"></a>            _selection_start_screen<span class="op">,</span> _selection_end_screen<span class="op">,</span> _selection_remove_mode<span class="op">);</span></span>
-<span id="cb1-788"><a href="#cb1-788" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-789"><a href="#cb1-789" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-790"><a href="#cb1-790" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
-<span id="cb1-791"><a href="#cb1-791" aria-hidden="true" tabindex="-1"></a><span class="co">// Context Menu &amp; Group Management</span></span>
-<span id="cb1-792"><a href="#cb1-792" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb1-720"><a href="#cb1-720" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>completeSelection<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-721"><a href="#cb1-721" aria-hidden="true" tabindex="-1"></a>    _is_selecting <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-722"><a href="#cb1-722" aria-hidden="true" tabindex="-1"></a>    setCursor<span class="op">(</span><span class="ex">Qt::ArrowCursor</span><span class="op">);</span></span>
+<span id="cb1-723"><a href="#cb1-723" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-724"><a href="#cb1-724" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_intersector<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-725"><a href="#cb1-725" aria-hidden="true" tabindex="-1"></a>        update<span class="op">();</span></span>
+<span id="cb1-726"><a href="#cb1-726" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-727"><a href="#cb1-727" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-728"><a href="#cb1-728" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>CorePlotting<span class="op">::</span>LineBatchIndex<span class="op">&gt;</span> <span class="at">const</span> hit_indices <span class="op">=</span></span>
+<span id="cb1-729"><a href="#cb1-729" aria-hidden="true" tabindex="-1"></a>            Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>runLineSelectionIntersection<span class="op">(</span></span>
+<span id="cb1-730"><a href="#cb1-730" aria-hidden="true" tabindex="-1"></a>                    <span class="op">*</span>_intersector<span class="op">,</span> _line_store<span class="op">.</span>cpuData<span class="op">(),</span> _selection_start_ndc<span class="op">,</span></span>
+<span id="cb1-731"><a href="#cb1-731" aria-hidden="true" tabindex="-1"></a>                    _selection_end_ndc<span class="op">,</span> _projection_matrix<span class="op">,</span> _view_matrix<span class="op">);</span></span>
+<span id="cb1-732"><a href="#cb1-732" aria-hidden="true" tabindex="-1"></a>    applyIntersectionResults<span class="op">(</span>hit_indices<span class="op">,</span> _selection_remove_mode<span class="op">);</span></span>
+<span id="cb1-733"><a href="#cb1-733" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
+<span id="cb1-734"><a href="#cb1-734" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-735"><a href="#cb1-735" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-736"><a href="#cb1-736" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>applyIntersectionResults<span class="op">(</span></span>
+<span id="cb1-737"><a href="#cb1-737" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>CorePlotting<span class="op">::</span>LineBatchIndex<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> hit_indices<span class="op">,</span></span>
+<span id="cb1-738"><a href="#cb1-738" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> remove<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-739"><a href="#cb1-739" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> cpu <span class="op">=</span> _line_store<span class="op">.</span>cpuData<span class="op">();</span></span>
+<span id="cb1-740"><a href="#cb1-740" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-741"><a href="#cb1-741" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>remove<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-742"><a href="#cb1-742" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Remove mode: remove intersected trials from current selection</span></span>
+<span id="cb1-743"><a href="#cb1-743" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>unordered_set<span class="op">&lt;</span><span class="bu">std::</span>uint32_t<span class="op">&gt;</span> to_remove<span class="op">;</span></span>
+<span id="cb1-744"><a href="#cb1-744" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> idx<span class="op">:</span> hit_indices<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-745"><a href="#cb1-745" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>idx <span class="op">&lt;</span> cpu<span class="op">.</span>numLines<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-746"><a href="#cb1-746" aria-hidden="true" tabindex="-1"></a>                to_remove<span class="op">.</span>insert<span class="op">(</span>cpu<span class="op">.</span>lines<span class="op">[</span>idx<span class="op">].</span>trial_index<span class="op">);</span></span>
+<span id="cb1-747"><a href="#cb1-747" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-748"><a href="#cb1-748" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-749"><a href="#cb1-749" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>uint32_t<span class="op">&gt;</span> filtered<span class="op">;</span></span>
+<span id="cb1-750"><a href="#cb1-750" aria-hidden="true" tabindex="-1"></a>        filtered<span class="op">.</span>reserve<span class="op">(</span>_selected_trial_indices<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb1-751"><a href="#cb1-751" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> ti<span class="op">:</span> _selected_trial_indices<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-752"><a href="#cb1-752" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(!</span>to_remove<span class="op">.</span>contains<span class="op">(</span>ti<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-753"><a href="#cb1-753" aria-hidden="true" tabindex="-1"></a>                filtered<span class="op">.</span>push_back<span class="op">(</span>ti<span class="op">);</span></span>
+<span id="cb1-754"><a href="#cb1-754" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-755"><a href="#cb1-755" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-756"><a href="#cb1-756" aria-hidden="true" tabindex="-1"></a>        _selected_trial_indices <span class="op">=</span> <span class="bu">std::</span>move<span class="op">(</span>filtered<span class="op">);</span></span>
+<span id="cb1-757"><a href="#cb1-757" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb1-758"><a href="#cb1-758" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Replace mode: set selection to exactly the intersected trials</span></span>
+<span id="cb1-759"><a href="#cb1-759" aria-hidden="true" tabindex="-1"></a>        _selected_trial_indices<span class="op">.</span>clear<span class="op">();</span></span>
+<span id="cb1-760"><a href="#cb1-760" aria-hidden="true" tabindex="-1"></a>        _selected_trial_indices<span class="op">.</span>reserve<span class="op">(</span>hit_indices<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb1-761"><a href="#cb1-761" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> idx<span class="op">:</span> hit_indices<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-762"><a href="#cb1-762" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>idx <span class="op">&lt;</span> cpu<span class="op">.</span>numLines<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-763"><a href="#cb1-763" aria-hidden="true" tabindex="-1"></a>                _selected_trial_indices<span class="op">.</span>push_back<span class="op">(</span>cpu<span class="op">.</span>lines<span class="op">[</span>idx<span class="op">].</span>trial_index<span class="op">);</span></span>
+<span id="cb1-764"><a href="#cb1-764" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-765"><a href="#cb1-765" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-766"><a href="#cb1-766" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-767"><a href="#cb1-767" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-768"><a href="#cb1-768" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Update selection mask on the store</span></span>
+<span id="cb1-769"><a href="#cb1-769" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>uint32_t<span class="op">&gt;</span> mask<span class="op">(</span>cpu<span class="op">.</span>numLines<span class="op">(),</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb1-770"><a href="#cb1-770" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span><span class="bu">std::</span>uint32_t<span class="op">&gt;</span> <span class="at">const</span> selected_set<span class="op">(</span></span>
+<span id="cb1-771"><a href="#cb1-771" aria-hidden="true" tabindex="-1"></a>            _selected_trial_indices<span class="op">.</span>begin<span class="op">(),</span> _selected_trial_indices<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb1-772"><a href="#cb1-772" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="bu">std::</span>uint32_t i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> cpu<span class="op">.</span>numLines<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-773"><a href="#cb1-773" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>selected_set<span class="op">.</span>contains<span class="op">(</span>cpu<span class="op">.</span>lines<span class="op">[</span>i<span class="op">].</span>trial_index<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-774"><a href="#cb1-774" aria-hidden="true" tabindex="-1"></a>            mask<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-775"><a href="#cb1-775" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-776"><a href="#cb1-776" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-777"><a href="#cb1-777" aria-hidden="true" tabindex="-1"></a>    _line_store<span class="op">.</span>updateSelectionMask<span class="op">(</span>mask<span class="op">);</span></span>
+<span id="cb1-778"><a href="#cb1-778" aria-hidden="true" tabindex="-1"></a>    _line_renderer<span class="op">.</span>syncFromStore<span class="op">();</span></span>
+<span id="cb1-779"><a href="#cb1-779" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-780"><a href="#cb1-780" aria-hidden="true" tabindex="-1"></a>    <span class="ex">emit</span> trialsSelected<span class="op">(</span>_selected_trial_indices<span class="op">);</span></span>
+<span id="cb1-781"><a href="#cb1-781" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-782"><a href="#cb1-782" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-783"><a href="#cb1-783" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>cancelSelection<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-784"><a href="#cb1-784" aria-hidden="true" tabindex="-1"></a>    _is_selecting <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-785"><a href="#cb1-785" aria-hidden="true" tabindex="-1"></a>    setCursor<span class="op">(</span><span class="ex">Qt::ArrowCursor</span><span class="op">);</span></span>
+<span id="cb1-786"><a href="#cb1-786" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
+<span id="cb1-787"><a href="#cb1-787" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-788"><a href="#cb1-788" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-789"><a href="#cb1-789" aria-hidden="true" tabindex="-1"></a>CorePlotting<span class="op">::</span>Interaction<span class="op">::</span>GlyphPreview LinePlotOpenGLWidget<span class="op">::</span>buildSelectionPreview<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb1-790"><a href="#cb1-790" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>buildLineSelectionPreview<span class="op">(</span></span>
+<span id="cb1-791"><a href="#cb1-791" aria-hidden="true" tabindex="-1"></a>            _selection_start_screen<span class="op">,</span> _selection_end_screen<span class="op">,</span> _selection_remove_mode<span class="op">);</span></span>
+<span id="cb1-792"><a href="#cb1-792" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-793"><a href="#cb1-793" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-794"><a href="#cb1-794" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>contextMenuEvent<span class="op">(</span><span class="ex">QContextMenuEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-795"><a href="#cb1-795" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_context_menu <span class="op">||</span> <span class="op">!</span>_group_manager<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-796"><a href="#cb1-796" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QOpenGLWidget::contextMenuEvent</span><span class="op">(</span>event<span class="op">);</span></span>
-<span id="cb1-797"><a href="#cb1-797" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-798"><a href="#cb1-798" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-799"><a href="#cb1-799" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-800"><a href="#cb1-800" aria-hidden="true" tabindex="-1"></a>    _group_menu_handler<span class="op">-&gt;</span>updateMenuState<span class="op">(</span>_context_menu<span class="op">);</span></span>
-<span id="cb1-801"><a href="#cb1-801" aria-hidden="true" tabindex="-1"></a>    _context_menu<span class="op">-&gt;</span>popup<span class="op">(</span>event<span class="op">-&gt;</span>globalPos<span class="op">());</span></span>
-<span id="cb1-802"><a href="#cb1-802" aria-hidden="true" tabindex="-1"></a>    event<span class="op">-&gt;</span>accept<span class="op">();</span></span>
-<span id="cb1-803"><a href="#cb1-803" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-804"><a href="#cb1-804" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-805"><a href="#cb1-805" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>createContextMenu<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-806"><a href="#cb1-806" aria-hidden="true" tabindex="-1"></a>    _context_menu <span class="op">=</span> <span class="kw">new</span> <span class="ex">QMenu</span><span class="op">(</span><span class="kw">this</span><span class="op">);</span></span>
-<span id="cb1-807"><a href="#cb1-807" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-808"><a href="#cb1-808" aria-hidden="true" tabindex="-1"></a>    _group_menu_handler <span class="op">=</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>GroupContextMenuHandler<span class="op">&gt;(</span><span class="kw">this</span><span class="op">);</span></span>
-<span id="cb1-809"><a href="#cb1-809" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-810"><a href="#cb1-810" aria-hidden="true" tabindex="-1"></a>    GroupContextMenuCallbacks callbacks<span class="op">;</span></span>
-<span id="cb1-811"><a href="#cb1-811" aria-hidden="true" tabindex="-1"></a>    callbacks<span class="op">.</span>getSelectedEntities <span class="op">=</span> <span class="op">[</span><span class="kw">this</span><span class="op">]()</span> <span class="op">{</span></span>
-<span id="cb1-812"><a href="#cb1-812" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> getSelectedEntities<span class="op">();</span></span>
-<span id="cb1-813"><a href="#cb1-813" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
-<span id="cb1-814"><a href="#cb1-814" aria-hidden="true" tabindex="-1"></a>    callbacks<span class="op">.</span>clearSelection <span class="op">=</span> <span class="op">[</span><span class="kw">this</span><span class="op">]()</span> <span class="op">{</span></span>
-<span id="cb1-815"><a href="#cb1-815" aria-hidden="true" tabindex="-1"></a>        clearSelection<span class="op">();</span></span>
-<span id="cb1-816"><a href="#cb1-816" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
-<span id="cb1-817"><a href="#cb1-817" aria-hidden="true" tabindex="-1"></a>    callbacks<span class="op">.</span>hasSelection <span class="op">=</span> <span class="op">[</span><span class="kw">this</span><span class="op">]()</span> <span class="op">{</span></span>
-<span id="cb1-818"><a href="#cb1-818" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">!</span>_selected_trial_indices<span class="op">.</span>empty<span class="op">();</span></span>
-<span id="cb1-819"><a href="#cb1-819" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
-<span id="cb1-820"><a href="#cb1-820" aria-hidden="true" tabindex="-1"></a>    callbacks<span class="op">.</span>onGroupOperationCompleted <span class="op">=</span> <span class="op">[</span><span class="kw">this</span><span class="op">]()</span> <span class="op">{</span></span>
-<span id="cb1-821"><a href="#cb1-821" aria-hidden="true" tabindex="-1"></a>        clearSelection<span class="op">();</span></span>
-<span id="cb1-822"><a href="#cb1-822" aria-hidden="true" tabindex="-1"></a>        _scene_dirty <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb1-823"><a href="#cb1-823" aria-hidden="true" tabindex="-1"></a>        update<span class="op">();</span></span>
-<span id="cb1-824"><a href="#cb1-824" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
-<span id="cb1-825"><a href="#cb1-825" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-826"><a href="#cb1-826" aria-hidden="true" tabindex="-1"></a>    _group_menu_handler<span class="op">-&gt;</span>setCallbacks<span class="op">(</span>callbacks<span class="op">);</span></span>
-<span id="cb1-827"><a href="#cb1-827" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-828"><a href="#cb1-828" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_group_manager<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-829"><a href="#cb1-829" aria-hidden="true" tabindex="-1"></a>        _group_menu_handler<span class="op">-&gt;</span>setGroupManager<span class="op">(</span>_group_manager<span class="op">);</span></span>
-<span id="cb1-830"><a href="#cb1-830" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-794"><a href="#cb1-794" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb1-795"><a href="#cb1-795" aria-hidden="true" tabindex="-1"></a><span class="co">// Context Menu &amp; Group Management</span></span>
+<span id="cb1-796"><a href="#cb1-796" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb1-797"><a href="#cb1-797" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-798"><a href="#cb1-798" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>contextMenuEvent<span class="op">(</span><span class="ex">QContextMenuEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-799"><a href="#cb1-799" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_context_menu <span class="op">||</span> <span class="op">!</span>_group_manager<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-800"><a href="#cb1-800" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QOpenGLWidget::contextMenuEvent</span><span class="op">(</span>event<span class="op">);</span></span>
+<span id="cb1-801"><a href="#cb1-801" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-802"><a href="#cb1-802" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-803"><a href="#cb1-803" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-804"><a href="#cb1-804" aria-hidden="true" tabindex="-1"></a>    _group_menu_handler<span class="op">-&gt;</span>updateMenuState<span class="op">(</span>_context_menu<span class="op">);</span></span>
+<span id="cb1-805"><a href="#cb1-805" aria-hidden="true" tabindex="-1"></a>    _context_menu<span class="op">-&gt;</span>popup<span class="op">(</span>event<span class="op">-&gt;</span>globalPos<span class="op">());</span></span>
+<span id="cb1-806"><a href="#cb1-806" aria-hidden="true" tabindex="-1"></a>    event<span class="op">-&gt;</span>accept<span class="op">();</span></span>
+<span id="cb1-807"><a href="#cb1-807" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-808"><a href="#cb1-808" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-809"><a href="#cb1-809" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>createContextMenu<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-810"><a href="#cb1-810" aria-hidden="true" tabindex="-1"></a>    _context_menu <span class="op">=</span> <span class="kw">new</span> <span class="ex">QMenu</span><span class="op">(</span><span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-811"><a href="#cb1-811" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-812"><a href="#cb1-812" aria-hidden="true" tabindex="-1"></a>    _group_menu_handler <span class="op">=</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>GroupContextMenuHandler<span class="op">&gt;(</span><span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-813"><a href="#cb1-813" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-814"><a href="#cb1-814" aria-hidden="true" tabindex="-1"></a>    GroupContextMenuCallbacks callbacks<span class="op">;</span></span>
+<span id="cb1-815"><a href="#cb1-815" aria-hidden="true" tabindex="-1"></a>    callbacks<span class="op">.</span>getSelectedEntities <span class="op">=</span> <span class="op">[</span><span class="kw">this</span><span class="op">]()</span> <span class="op">{</span></span>
+<span id="cb1-816"><a href="#cb1-816" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> getSelectedEntities<span class="op">();</span></span>
+<span id="cb1-817"><a href="#cb1-817" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb1-818"><a href="#cb1-818" aria-hidden="true" tabindex="-1"></a>    callbacks<span class="op">.</span>clearSelection <span class="op">=</span> <span class="op">[</span><span class="kw">this</span><span class="op">]()</span> <span class="op">{</span></span>
+<span id="cb1-819"><a href="#cb1-819" aria-hidden="true" tabindex="-1"></a>        clearSelection<span class="op">();</span></span>
+<span id="cb1-820"><a href="#cb1-820" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb1-821"><a href="#cb1-821" aria-hidden="true" tabindex="-1"></a>    callbacks<span class="op">.</span>hasSelection <span class="op">=</span> <span class="op">[</span><span class="kw">this</span><span class="op">]()</span> <span class="op">{</span></span>
+<span id="cb1-822"><a href="#cb1-822" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">!</span>_selected_trial_indices<span class="op">.</span>empty<span class="op">();</span></span>
+<span id="cb1-823"><a href="#cb1-823" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb1-824"><a href="#cb1-824" aria-hidden="true" tabindex="-1"></a>    callbacks<span class="op">.</span>onGroupOperationCompleted <span class="op">=</span> <span class="op">[</span><span class="kw">this</span><span class="op">]()</span> <span class="op">{</span></span>
+<span id="cb1-825"><a href="#cb1-825" aria-hidden="true" tabindex="-1"></a>        clearSelection<span class="op">();</span></span>
+<span id="cb1-826"><a href="#cb1-826" aria-hidden="true" tabindex="-1"></a>        _scene_dirty <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-827"><a href="#cb1-827" aria-hidden="true" tabindex="-1"></a>        update<span class="op">();</span></span>
+<span id="cb1-828"><a href="#cb1-828" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb1-829"><a href="#cb1-829" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-830"><a href="#cb1-830" aria-hidden="true" tabindex="-1"></a>    _group_menu_handler<span class="op">-&gt;</span>setCallbacks<span class="op">(</span>callbacks<span class="op">);</span></span>
 <span id="cb1-831"><a href="#cb1-831" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-832"><a href="#cb1-832" aria-hidden="true" tabindex="-1"></a>    _group_menu_handler<span class="op">-&gt;</span>setupGroupMenuSection<span class="op">(</span>_context_menu<span class="op">,</span> <span class="kw">true</span><span class="op">);</span></span>
-<span id="cb1-833"><a href="#cb1-833" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-834"><a href="#cb1-834" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> clear_action <span class="op">=</span> <span class="kw">new</span> <span class="ex">QAction</span><span class="op">(</span><span class="st">"Clear Selection"</span><span class="op">,</span> <span class="kw">this</span><span class="op">);</span></span>
-<span id="cb1-835"><a href="#cb1-835" aria-hidden="true" tabindex="-1"></a>    _context_menu<span class="op">-&gt;</span>addAction<span class="op">(</span>clear_action<span class="op">);</span></span>
-<span id="cb1-836"><a href="#cb1-836" aria-hidden="true" tabindex="-1"></a>    <span class="fu">connect</span><span class="op">(</span>clear_action<span class="op">,</span> <span class="op">&amp;</span><span class="ex">QAction::triggered</span><span class="op">,</span> <span class="kw">this</span><span class="op">,</span> <span class="op">[</span><span class="kw">this</span><span class="op">]()</span> <span class="op">{</span></span>
-<span id="cb1-837"><a href="#cb1-837" aria-hidden="true" tabindex="-1"></a>        clearSelection<span class="op">();</span></span>
-<span id="cb1-838"><a href="#cb1-838" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
-<span id="cb1-839"><a href="#cb1-839" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-840"><a href="#cb1-840" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-841"><a href="#cb1-841" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> LinePlotOpenGLWidget<span class="op">::</span>getSelectedEntities<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-842"><a href="#cb1-842" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> result<span class="op">;</span></span>
-<span id="cb1-843"><a href="#cb1-843" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> trial_idx<span class="op">:</span> _selected_trial_indices<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-844"><a href="#cb1-844" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> eid <span class="op">=</span> getEntityIdForTrial<span class="op">(</span>trial_idx<span class="op">);</span></span>
-<span id="cb1-845"><a href="#cb1-845" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>eid<span class="op">.</span>has_value<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-846"><a href="#cb1-846" aria-hidden="true" tabindex="-1"></a>            result<span class="op">.</span>insert<span class="op">(*</span>eid<span class="op">);</span></span>
-<span id="cb1-847"><a href="#cb1-847" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-848"><a href="#cb1-848" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-849"><a href="#cb1-849" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">;</span></span>
-<span id="cb1-850"><a href="#cb1-850" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-851"><a href="#cb1-851" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-852"><a href="#cb1-852" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> LinePlotOpenGLWidget<span class="op">::</span>getEntityIdForTrial<span class="op">(</span><span class="bu">std::</span>uint32_t trial_index<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-853"><a href="#cb1-853" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>trial_index <span class="op">&gt;=</span> _cached_alignment_times<span class="op">.</span>size<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-854"><a href="#cb1-854" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>nullopt<span class="op">;</span></span>
-<span id="cb1-855"><a href="#cb1-855" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-856"><a href="#cb1-856" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> EntityId<span class="op">{</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint64_t</span><span class="op">&gt;(</span>_cached_alignment_times<span class="op">[</span>trial_index<span class="op">])};</span></span>
-<span id="cb1-857"><a href="#cb1-857" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-858"><a href="#cb1-858" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-859"><a href="#cb1-859" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>applyGroupColorsToLines<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-860"><a href="#cb1-860" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_state <span class="op">||</span> <span class="op">!</span>_state<span class="op">-&gt;</span>colorByGroup<span class="op">()</span> <span class="op">||</span> <span class="op">!</span>_group_manager<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-861"><a href="#cb1-861" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-862"><a href="#cb1-862" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-863"><a href="#cb1-863" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-864"><a href="#cb1-864" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> cpu <span class="op">=</span> _line_store<span class="op">.</span>cpuData<span class="op">();</span></span>
-<span id="cb1-865"><a href="#cb1-865" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>cpu<span class="op">.</span>empty<span class="op">()</span> <span class="op">||</span> _cached_alignment_times<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-866"><a href="#cb1-866" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-867"><a href="#cb1-867" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-868"><a href="#cb1-868" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-869"><a href="#cb1-869" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Build per-line (0-based) color overrides</span></span>
-<span id="cb1-870"><a href="#cb1-870" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> num_lines <span class="op">=</span> cpu<span class="op">.</span>numLines<span class="op">();</span></span>
-<span id="cb1-871"><a href="#cb1-871" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>glm<span class="op">::</span>vec4<span class="op">&gt;</span> per_line_colors<span class="op">(</span>num_lines<span class="op">,</span> glm<span class="op">::</span>vec4<span class="op">{</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb1-832"><a href="#cb1-832" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_group_manager<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-833"><a href="#cb1-833" aria-hidden="true" tabindex="-1"></a>        _group_menu_handler<span class="op">-&gt;</span>setGroupManager<span class="op">(</span>_group_manager<span class="op">);</span></span>
+<span id="cb1-834"><a href="#cb1-834" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-835"><a href="#cb1-835" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-836"><a href="#cb1-836" aria-hidden="true" tabindex="-1"></a>    _group_menu_handler<span class="op">-&gt;</span>setupGroupMenuSection<span class="op">(</span>_context_menu<span class="op">,</span> <span class="kw">true</span><span class="op">);</span></span>
+<span id="cb1-837"><a href="#cb1-837" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-838"><a href="#cb1-838" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> clear_action <span class="op">=</span> <span class="kw">new</span> <span class="ex">QAction</span><span class="op">(</span><span class="st">"Clear Selection"</span><span class="op">,</span> <span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-839"><a href="#cb1-839" aria-hidden="true" tabindex="-1"></a>    _context_menu<span class="op">-&gt;</span>addAction<span class="op">(</span>clear_action<span class="op">);</span></span>
+<span id="cb1-840"><a href="#cb1-840" aria-hidden="true" tabindex="-1"></a>    <span class="fu">connect</span><span class="op">(</span>clear_action<span class="op">,</span> <span class="op">&amp;</span><span class="ex">QAction::triggered</span><span class="op">,</span> <span class="kw">this</span><span class="op">,</span> <span class="op">[</span><span class="kw">this</span><span class="op">]()</span> <span class="op">{</span></span>
+<span id="cb1-841"><a href="#cb1-841" aria-hidden="true" tabindex="-1"></a>        clearSelection<span class="op">();</span></span>
+<span id="cb1-842"><a href="#cb1-842" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb1-843"><a href="#cb1-843" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-844"><a href="#cb1-844" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-845"><a href="#cb1-845" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> LinePlotOpenGLWidget<span class="op">::</span>getSelectedEntities<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb1-846"><a href="#cb1-846" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> result<span class="op">;</span></span>
+<span id="cb1-847"><a href="#cb1-847" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> trial_idx<span class="op">:</span> _selected_trial_indices<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-848"><a href="#cb1-848" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> eid <span class="op">=</span> getEntityIdForTrial<span class="op">(</span>trial_idx<span class="op">);</span></span>
+<span id="cb1-849"><a href="#cb1-849" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>eid<span class="op">.</span>has_value<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-850"><a href="#cb1-850" aria-hidden="true" tabindex="-1"></a>            result<span class="op">.</span>insert<span class="op">(*</span>eid<span class="op">);</span></span>
+<span id="cb1-851"><a href="#cb1-851" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-852"><a href="#cb1-852" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-853"><a href="#cb1-853" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb1-854"><a href="#cb1-854" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-855"><a href="#cb1-855" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-856"><a href="#cb1-856" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> LinePlotOpenGLWidget<span class="op">::</span>getEntityIdForTrial<span class="op">(</span><span class="bu">std::</span>uint32_t trial_index<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb1-857"><a href="#cb1-857" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>trial_index <span class="op">&gt;=</span> _cached_alignment_times<span class="op">.</span>size<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-858"><a href="#cb1-858" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>nullopt<span class="op">;</span></span>
+<span id="cb1-859"><a href="#cb1-859" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-860"><a href="#cb1-860" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> EntityId<span class="op">{</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint64_t</span><span class="op">&gt;(</span>_cached_alignment_times<span class="op">[</span>trial_index<span class="op">].</span>getValue<span class="op">())};</span></span>
+<span id="cb1-861"><a href="#cb1-861" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-862"><a href="#cb1-862" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-863"><a href="#cb1-863" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>applyGroupColorsToLines<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-864"><a href="#cb1-864" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_state <span class="op">||</span> <span class="op">!</span>_state<span class="op">-&gt;</span>colorByGroup<span class="op">()</span> <span class="op">||</span> <span class="op">!</span>_group_manager<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-865"><a href="#cb1-865" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-866"><a href="#cb1-866" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-867"><a href="#cb1-867" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-868"><a href="#cb1-868" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> cpu <span class="op">=</span> _line_store<span class="op">.</span>cpuData<span class="op">();</span></span>
+<span id="cb1-869"><a href="#cb1-869" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>cpu<span class="op">.</span>empty<span class="op">()</span> <span class="op">||</span> _cached_alignment_times<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-870"><a href="#cb1-870" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-871"><a href="#cb1-871" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-872"><a href="#cb1-872" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-873"><a href="#cb1-873" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="bu">std::</span>uint32_t i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> num_lines<span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-874"><a href="#cb1-874" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> trial_index <span class="op">=</span> cpu<span class="op">.</span>lines<span class="op">[</span>i<span class="op">].</span>trial_index<span class="op">;</span></span>
-<span id="cb1-875"><a href="#cb1-875" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> entity_id <span class="op">=</span> getEntityIdForTrial<span class="op">(</span>trial_index<span class="op">);</span></span>
-<span id="cb1-876"><a href="#cb1-876" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>entity_id<span class="op">.</span>has_value<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-877"><a href="#cb1-877" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span><span class="op">;</span></span>
-<span id="cb1-878"><a href="#cb1-878" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-879"><a href="#cb1-879" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-880"><a href="#cb1-880" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> <span class="at">const</span> group_id <span class="op">=</span> _group_manager<span class="op">-&gt;</span>getEntityGroup<span class="op">(*</span>entity_id<span class="op">);</span></span>
-<span id="cb1-881"><a href="#cb1-881" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>group_id <span class="op">==</span> <span class="op">-</span><span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-882"><a href="#cb1-882" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span><span class="op">;</span><span class="co">// Not in any group — keep default color</span></span>
-<span id="cb1-883"><a href="#cb1-883" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-884"><a href="#cb1-884" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-885"><a href="#cb1-885" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QColor</span> <span class="at">const</span> group_color <span class="op">=</span> _group_manager<span class="op">-&gt;</span>getEntityColor<span class="op">(*</span>entity_id<span class="op">,</span> <span class="ex">QColor</span><span class="op">());</span></span>
-<span id="cb1-886"><a href="#cb1-886" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>group_color<span class="op">.</span>isValid<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-887"><a href="#cb1-887" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span><span class="op">;</span></span>
-<span id="cb1-888"><a href="#cb1-888" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-889"><a href="#cb1-889" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-890"><a href="#cb1-890" aria-hidden="true" tabindex="-1"></a>        per_line_colors<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> glm<span class="op">::</span>vec4<span class="op">(</span></span>
-<span id="cb1-891"><a href="#cb1-891" aria-hidden="true" tabindex="-1"></a>                <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>group_color<span class="op">.</span>redF<span class="op">()),</span></span>
-<span id="cb1-892"><a href="#cb1-892" aria-hidden="true" tabindex="-1"></a>                <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>group_color<span class="op">.</span>greenF<span class="op">()),</span></span>
-<span id="cb1-893"><a href="#cb1-893" aria-hidden="true" tabindex="-1"></a>                <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>group_color<span class="op">.</span>blueF<span class="op">()),</span></span>
-<span id="cb1-894"><a href="#cb1-894" aria-hidden="true" tabindex="-1"></a>                <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>group_color<span class="op">.</span>alphaF<span class="op">()));</span></span>
-<span id="cb1-895"><a href="#cb1-895" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-896"><a href="#cb1-896" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-897"><a href="#cb1-897" aria-hidden="true" tabindex="-1"></a>    _line_renderer<span class="op">.</span>updateLineColorOverrides<span class="op">(</span>per_line_colors<span class="op">);</span></span>
-<span id="cb1-898"><a href="#cb1-898" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-873"><a href="#cb1-873" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Build per-line (0-based) color overrides</span></span>
+<span id="cb1-874"><a href="#cb1-874" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> num_lines <span class="op">=</span> cpu<span class="op">.</span>numLines<span class="op">();</span></span>
+<span id="cb1-875"><a href="#cb1-875" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>glm<span class="op">::</span>vec4<span class="op">&gt;</span> per_line_colors<span class="op">(</span>num_lines<span class="op">,</span> glm<span class="op">::</span>vec4<span class="op">{</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb1-876"><a href="#cb1-876" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-877"><a href="#cb1-877" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="bu">std::</span>uint32_t i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> num_lines<span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-878"><a href="#cb1-878" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> trial_index <span class="op">=</span> cpu<span class="op">.</span>lines<span class="op">[</span>i<span class="op">].</span>trial_index<span class="op">;</span></span>
+<span id="cb1-879"><a href="#cb1-879" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> entity_id <span class="op">=</span> getEntityIdForTrial<span class="op">(</span>trial_index<span class="op">);</span></span>
+<span id="cb1-880"><a href="#cb1-880" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>entity_id<span class="op">.</span>has_value<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-881"><a href="#cb1-881" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span><span class="op">;</span></span>
+<span id="cb1-882"><a href="#cb1-882" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-883"><a href="#cb1-883" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-884"><a href="#cb1-884" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> <span class="at">const</span> group_id <span class="op">=</span> _group_manager<span class="op">-&gt;</span>getEntityGroup<span class="op">(*</span>entity_id<span class="op">);</span></span>
+<span id="cb1-885"><a href="#cb1-885" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>group_id <span class="op">==</span> <span class="op">-</span><span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-886"><a href="#cb1-886" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span><span class="op">;</span><span class="co">// Not in any group — keep default color</span></span>
+<span id="cb1-887"><a href="#cb1-887" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-888"><a href="#cb1-888" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-889"><a href="#cb1-889" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QColor</span> <span class="at">const</span> group_color <span class="op">=</span> _group_manager<span class="op">-&gt;</span>getEntityColor<span class="op">(*</span>entity_id<span class="op">,</span> <span class="ex">QColor</span><span class="op">());</span></span>
+<span id="cb1-890"><a href="#cb1-890" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>group_color<span class="op">.</span>isValid<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-891"><a href="#cb1-891" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span><span class="op">;</span></span>
+<span id="cb1-892"><a href="#cb1-892" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-893"><a href="#cb1-893" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-894"><a href="#cb1-894" aria-hidden="true" tabindex="-1"></a>        per_line_colors<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> glm<span class="op">::</span>vec4<span class="op">(</span></span>
+<span id="cb1-895"><a href="#cb1-895" aria-hidden="true" tabindex="-1"></a>                <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>group_color<span class="op">.</span>redF<span class="op">()),</span></span>
+<span id="cb1-896"><a href="#cb1-896" aria-hidden="true" tabindex="-1"></a>                <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>group_color<span class="op">.</span>greenF<span class="op">()),</span></span>
+<span id="cb1-897"><a href="#cb1-897" aria-hidden="true" tabindex="-1"></a>                <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>group_color<span class="op">.</span>blueF<span class="op">()),</span></span>
+<span id="cb1-898"><a href="#cb1-898" aria-hidden="true" tabindex="-1"></a>                <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>group_color<span class="op">.</span>alphaF<span class="op">()));</span></span>
+<span id="cb1-899"><a href="#cb1-899" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-900"><a href="#cb1-900" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-901"><a href="#cb1-901" aria-hidden="true" tabindex="-1"></a>    _line_renderer<span class="op">.</span>updateLineColorOverrides<span class="op">(</span>per_line_colors<span class="op">);</span></span>
+<span id="cb1-902"><a href="#cb1-902" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:57 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:38 +0000</p>
 
 
 </section>

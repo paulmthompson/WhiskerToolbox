@@ -1111,7 +1111,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-573"><a href="#cb10-573" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Convert to TimeFrameIntervals for row selector</span></span>
 <span id="cb10-574"><a href="#cb10-574" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameInterval<span class="op">&gt;</span> row_intervals<span class="op">;</span></span>
 <span id="cb10-575"><a href="#cb10-575" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="at">const</span> <span class="kw">auto</span><span class="op">&amp;</span> interval <span class="op">:</span> behavior_intervals<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb10-576"><a href="#cb10-576" aria-hidden="true" tabindex="-1"></a>            row_intervals<span class="op">.</span>emplace_back<span class="op">(</span>TimeFrameIndex<span class="op">(</span>interval<span class="op">.</span>start<span class="op">),</span> TimeFrameIndex<span class="op">(</span>interval<span class="op">.</span>end<span class="op">));</span></span>
+<span id="cb10-576"><a href="#cb10-576" aria-hidden="true" tabindex="-1"></a>            row_intervals<span class="op">.</span>push_back<span class="op">(</span>toTimeFrameInterval<span class="op">(</span>interval<span class="op">,</span> <span class="op">*</span>behavior_time_frame<span class="op">));</span></span>
 <span id="cb10-577"><a href="#cb10-577" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb10-578"><a href="#cb10-578" aria-hidden="true" tabindex="-1"></a>        </span>
 <span id="cb10-579"><a href="#cb10-579" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>row_intervals<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">4</span><span class="op">);</span></span>
@@ -1937,7 +1937,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-1399"><a href="#cb10-1399" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Convert to TimeFrameIntervals for row selector</span></span>
 <span id="cb10-1400"><a href="#cb10-1400" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameInterval<span class="op">&gt;</span> row_intervals<span class="op">;</span></span>
 <span id="cb10-1401"><a href="#cb10-1401" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="at">const</span> <span class="kw">auto</span><span class="op">&amp;</span> interval <span class="op">:</span> behavior_intervals<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb10-1402"><a href="#cb10-1402" aria-hidden="true" tabindex="-1"></a>            row_intervals<span class="op">.</span>emplace_back<span class="op">(</span>TimeFrameIndex<span class="op">(</span>interval<span class="op">.</span>start<span class="op">),</span> TimeFrameIndex<span class="op">(</span>interval<span class="op">.</span>end<span class="op">));</span></span>
+<span id="cb10-1402"><a href="#cb10-1402" aria-hidden="true" tabindex="-1"></a>            row_intervals<span class="op">.</span>push_back<span class="op">(</span>toTimeFrameInterval<span class="op">(</span>interval<span class="op">,</span> <span class="op">*</span>behavior_time_frame<span class="op">));</span></span>
 <span id="cb10-1403"><a href="#cb10-1403" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb10-1404"><a href="#cb10-1404" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-1405"><a href="#cb10-1405" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>row_intervals<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">4</span><span class="op">);</span></span>
@@ -2028,7 +2028,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-1490"><a href="#cb10-1490" aria-hidden="true" tabindex="-1"></a>        </span>
 <span id="cb10-1491"><a href="#cb10-1491" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameInterval<span class="op">&gt;</span> row_intervals<span class="op">;</span></span>
 <span id="cb10-1492"><a href="#cb10-1492" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="at">const</span> <span class="kw">auto</span><span class="op">&amp;</span> interval <span class="op">:</span> behavior_intervals<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb10-1493"><a href="#cb10-1493" aria-hidden="true" tabindex="-1"></a>            row_intervals<span class="op">.</span>emplace_back<span class="op">(</span>TimeFrameIndex<span class="op">(</span>interval<span class="op">.</span>start<span class="op">),</span> TimeFrameIndex<span class="op">(</span>interval<span class="op">.</span>end<span class="op">));</span></span>
+<span id="cb10-1493"><a href="#cb10-1493" aria-hidden="true" tabindex="-1"></a>            row_intervals<span class="op">.</span>push_back<span class="op">(</span>toTimeFrameInterval<span class="op">(</span>interval<span class="op">,</span> <span class="op">*</span>behavior_time_frame<span class="op">));</span></span>
 <span id="cb10-1494"><a href="#cb10-1494" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb10-1495"><a href="#cb10-1495" aria-hidden="true" tabindex="-1"></a>        </span>
 <span id="cb10-1496"><a href="#cb10-1496" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> row_selector <span class="op">=</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>IntervalSelector<span class="op">&gt;(</span>row_intervals<span class="op">,</span> behavior_time_frame<span class="op">);</span></span>
@@ -2266,7 +2266,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-1728"><a href="#cb10-1728" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb10-1729"><a href="#cb10-1729" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:54 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:35 +0000</p>
 
 
 </section>

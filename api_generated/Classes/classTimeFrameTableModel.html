@@ -434,7 +434,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classTimeFrameTableModel.html#function-settimevalues">setTimeValues</a></strong>(std::vector&lt; int &gt; const &amp; times, std::string const &amp; time_key, <a href="../../api_generated/Classes/classEntityRegistry.html">EntityRegistry</a> * registry)<br>Set the time values and associated entity information.</td>
+<td><strong><a href="../../api_generated/Classes/classTimeFrameTableModel.html#function-settimevalues">setTimeValues</a></strong>(std::vector&lt; <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> &gt; const &amp; times, std::string const &amp; time_key, <a href="../../api_generated/Classes/classEntityRegistry.html">EntityRegistry</a> * registry)<br>Set the time values and associated entity information.</td>
 </tr>
 <tr class="odd">
 <td>void</td>
@@ -449,11 +449,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classTimeFrameTableModel.html#function-cleargroupfilter">clearGroupFilter</a></strong>()</td>
 </tr>
 <tr class="even">
-<td>int64_t</td>
+<td><a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a></td>
 <td><strong><a href="../../api_generated/Classes/classTimeFrameTableModel.html#function-getindex">getIndex</a></strong>(int row) const</td>
 </tr>
 <tr class="odd">
-<td>int</td>
+<td><a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a></td>
 <td><strong><a href="../../api_generated/Classes/classTimeFrameTableModel.html#function-gettimevalue">getTimeValue</a></strong>(int row) const</td>
 </tr>
 <tr class="even">
@@ -524,14 +524,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-settimevalues" class="level3">
 <h3 class="anchored" data-anchor-id="function-settimevalues">function setTimeValues</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setTimeValues<span class="op">(</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> times<span class="op">,</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> ClockTicks <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> times<span class="op">,</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> time_key<span class="op">,</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    EntityRegistry <span class="op">*</span> registry</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Set the time values and associated entity information.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>times</strong> Vector of time values (index in vector = <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>)</li>
+<li><strong>times</strong> Vector of time values (<a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a>)</li>
 <li><strong>time_key</strong> The <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> key (used for <a href="../../api_generated/Classes/classEntityRegistry.html">EntityRegistry</a> lookups)</li>
 <li><strong>registry</strong> The <a href="../../api_generated/Classes/classEntityRegistry.html">EntityRegistry</a> for resolving EntityIds</li>
 </ul>
@@ -554,13 +554,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-getindex" class="level3">
 <h3 class="anchored" data-anchor-id="function-getindex">function getIndex</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">int64_t</span> getIndex<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> TimeFrameIndex getIndex<span class="op">(</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> row</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-gettimevalue" class="level3">
 <h3 class="anchored" data-anchor-id="function-gettimevalue">function getTimeValue</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">int</span> getTimeValue<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> ClockTicks getTimeValue<span class="op">(</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> row</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
@@ -591,7 +591,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> role <span class="op">=</span><span class="ex">Qt::DisplayRole</span></span>
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-27 at 20:05:51 +0000</p>
+<p>Updated on 2026-07-29 at 21:29:32 +0000</p>
 
 
 </section>

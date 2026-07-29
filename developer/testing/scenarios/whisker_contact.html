@@ -604,7 +604,11 @@ x[0] = \varepsilon[0],\quad x[t] = \phi\, x[t-1] + \varepsilon[t],\quad \varepsi
 </tr>
 <tr class="odd">
 <td><code>tests/TransformsV2/test_tensor_whisker_contact_scenario.cpp</code></td>
-<td>Cross-timeframe tensor integration</td>
+<td>Programmatic TransformsV2 column-provider / lazy tensor integration</td>
+</tr>
+<tr class="even">
+<td><code>tests/TensorDesign/test_tensor_whisker_contact_scenario.cpp</code></td>
+<td>TensorDesign JSON integration, including contact-aligned spike windows</td>
 </tr>
 </tbody>
 </table>
@@ -671,10 +675,10 @@ x[0] = \varepsilon[0],\quad x[t] = \phi\, x[t-1] + \varepsilon[t],\quad \varepsi
 <h2 class="anchored" data-anchor-id="example-tensor-per-contact-interval">Example: tensor per contact interval</h2>
 <section id="programmatic-assembly" class="level3">
 <h3 class="anchored" data-anchor-id="programmatic-assembly">Programmatic assembly</h3>
-<p><code>test_tensor_whisker_contact_scenario.cpp</code> builds a lazy tensor with:</p>
+<p>The TransformsV2 scenario test builds a lazy tensor programmatically with:</p>
 <ul>
 <li><strong>Rows</strong>: <code>Contact</code> intervals</li>
-<li><strong>Columns</strong>: mean <code>Curvature</code>, spike count in interval (cross-timeframe via <code>buildIntervalPipelineProvider</code>)</li>
+<li><strong>Columns</strong>: mean <code>Curvature</code>, spike count in interval</li>
 </ul>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>WhiskerContactTestFixture fixture<span class="op">(</span>cfg<span class="op">);</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> mean_provider <span class="op">=</span> buildIntervalPipelineProvider<span class="op">(</span></span>
@@ -685,7 +689,7 @@ x[0] = \varepsilon[0],\quad x[t] = \phi\, x[t-1] + \varepsilon[t],\quad \varepsi
 </section>
 <section id="json-design-specification" class="level3">
 <h3 class="anchored" data-anchor-id="json-design-specification">JSON design specification</h3>
-<p>The same tensor can be built from a <a href="../../../developer/TensorDesign/TensorDesignBuilder.html">TensorDesigner-compatible JSON envelope</a> using the Qt-free <code>TensorDesign</code> library:</p>
+<p>The TensorDesign scenario test builds the same feature set plus contact-aligned spike presence from a <a href="../../../developer/TensorDesign/TensorDesignBuilder.html">TensorDesigner-compatible JSON envelope</a> using the Qt-free <code>TensorDesign</code> library:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"tensor_key"</span><span class="fu">:</span> <span class="st">"contact_features"</span><span class="fu">,</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"row_source"</span><span class="fu">:</span> <span class="fu">{</span></span>
@@ -702,25 +706,28 @@ x[0] = \varepsilon[0],\quad x[t] = \phi\, x[t-1] + \varepsilon[t],\quad \varepsi
 <span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"spike_count"</span><span class="fu">,</span></span>
 <span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"Spikes"</span><span class="fu">,</span></span>
 <span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: [], </span><span class="ch">\"</span><span class="st">range_reduction</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">reduction_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">EventCount</span><span class="ch">\"</span><span class="st">}}"</span></span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"onset_spike_present"</span><span class="fu">,</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"Spikes"</span><span class="fu">,</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"row_pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: [{</span><span class="ch">\"</span><span class="st">step_id</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">contact_start</span><span class="ch">\"</span><span class="st">, </span><span class="ch">\"</span><span class="st">transform_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">IntervalToEvent</span><span class="ch">\"</span><span class="st">, </span><span class="ch">\"</span><span class="st">parameters</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">point</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">start</span><span class="ch">\"</span><span class="st">}}, {</span><span class="ch">\"</span><span class="st">step_id</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">onset_window</span><span class="ch">\"</span><span class="st">, </span><span class="ch">\"</span><span class="st">transform_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">EventToInterval</span><span class="ch">\"</span><span class="st">, </span><span class="ch">\"</span><span class="st">parameters</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">pre_expansion</span><span class="ch">\"</span><span class="st">: 0, </span><span class="ch">\"</span><span class="st">post_expansion</span><span class="ch">\"</span><span class="st">: 1}}]}"</span><span class="fu">,</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"pipeline_json"</span><span class="fu">:</span> <span class="st">"{</span><span class="ch">\"</span><span class="st">steps</span><span class="ch">\"</span><span class="st">: [], </span><span class="ch">\"</span><span class="st">range_reduction</span><span class="ch">\"</span><span class="st">: {</span><span class="ch">\"</span><span class="st">reduction_name</span><span class="ch">\"</span><span class="st">: </span><span class="ch">\"</span><span class="st">EventPresence</span><span class="ch">\"</span><span class="st">}}"</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TensorDesign/TensorDesignBuilder.hpp"</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>WhiskerContactTestFixture fixture<span class="op">(</span>cfg<span class="op">);</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> tensor <span class="op">=</span> Neuralyzer<span class="op">::</span>TensorDesign<span class="op">::</span>buildTensorFromDesignJson<span class="op">(</span>fixture<span class="op">.</span>dm<span class="op">(),</span> json<span class="op">);</span></span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>REQUIRE<span class="op">(</span>tensor<span class="op">.</span>has_value<span class="op">());</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Note that <code>pipeline_json</code> is an <strong>embedded JSON string</strong> (double-encoded in the outer file). Cross-timeframe spike counting works because interval gather resolves timebases automatically.</p>
-<p>For <strong>onset-aligned windows</strong> and <strong>per-column gather geometry</strong> (spike presence near onset, angle at onset, tuning-curve tables), see the planned <a href="../../../developer/TensorDesign/column_row_pipeline.html">column row pipeline design</a> and <a href="../../../developer/TensorDesign/column_row_pipeline_roadmap.html">roadmap</a>. That work is not implemented yet; current JSON always gathers over the full contact interval.</p>
+<p>Note that <code>pipeline_json</code> and <code>row_pipeline_json</code> are <strong>embedded JSON strings</strong> (double-encoded in the outer file). Cross-timeframe spike counting works because interval gather resolves timebases automatically. The <code>onset_spike_present</code> column keeps the tensor rows tied to the original <code>Contact</code> intervals while its <code>row_pipeline_json</code> converts each contact to a start event and expands that event into a one-frame prepared window before running the <code>EventPresence</code> reduction over <code>Spikes</code>.</p>
+<p>For future point-sampling and per-row normalization examples (angle at onset, trial-relative rasters, tuning-curve tables), see the <a href="../../../developer/TensorDesign/column_row_pipeline.html">column row pipeline design</a> and <a href="../../../developer/TensorDesign/column_row_pipeline_roadmap.html">roadmap</a>.</p>
 </section>
 </section>
 <section id="running-tests" class="level2">
 <h2 class="anchored" data-anchor-id="running-tests">Running tests</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> <span class="at">--preset</span> my-clang-release <span class="op">&gt;</span> build_log.txt <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">out/build/Clang/Release/bin/test_data_manager</span> <span class="st">"[whisker_contact]"</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">out/build/Clang/Release/tests/TransformsV2/test_TransformsV2</span> <span class="st">"[whisker_contact]"</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="ex">out/build/Clang/Release/bin/test_tensor_design</span> <span class="st">"[TensorDesign]"</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ctest</span> <span class="at">--preset</span> my-clang-release <span class="at">--output-on-failure</span> <span class="at">-R</span> <span class="st">"whisker_contact|Whisker contact scenario builds tensor from design JSON"</span> <span class="op">&gt;</span> test_log.txt <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Catch2 tags: <code>[whisker_contact]</code>, <code>[scenario]</code>, <code>[statistics]</code>, <code>[stochastic]</code>.</p>
 </section>
 <section id="future-extraction" class="level2">
