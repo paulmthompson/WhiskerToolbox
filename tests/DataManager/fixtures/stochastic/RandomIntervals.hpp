@@ -21,12 +21,12 @@
  * @pre mean_duration > 0
  * @pre mean_gap > 0
  */
-inline std::vector<Interval> generateRandomIntervals(
+inline std::vector<TimeFrameInterval> generateRandomIntervals(
         int num_samples,
         float mean_duration,
         float mean_gap,
         uint64_t seed) {
-    std::vector<Interval> intervals;
+    std::vector<TimeFrameInterval> intervals;
     if (num_samples <= 0) {
         return intervals;
     }
@@ -47,7 +47,7 @@ inline std::vector<Interval> generateRandomIntervals(
                 static_cast<int64_t>(num_samples) - 1);
 
         if (start < static_cast<int64_t>(num_samples)) {
-            intervals.push_back(Interval{start, end});
+            intervals.push_back(TimeFrameInterval{TimeFrameIndex(start), TimeFrameIndex(end)});
         }
 
         t += duration + gap_dist(rng);

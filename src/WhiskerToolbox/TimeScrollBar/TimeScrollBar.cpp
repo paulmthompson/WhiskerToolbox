@@ -226,7 +226,7 @@ void TimeScrollBar::_updateFrameLabels(int frame_num) {
 
     auto video_time = tf->getTimeAtIndex(TimeFrameIndex(frame_num));
 
-    ui->time_label->setText(QString::number(video_time));
+    ui->time_label->setText(QString::number(video_time.getValue()));
 
     // Update the spin box value without triggering valueChanged signal
     ui->frame_spinbox->blockSignals(true);

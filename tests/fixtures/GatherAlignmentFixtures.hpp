@@ -77,11 +77,11 @@ createEventSeries(std::vector<int64_t> const & times) {
  */
 [[nodiscard]] inline std::shared_ptr<DigitalIntervalSeries>
 createIntervalSeries(std::vector<std::pair<int64_t, int64_t>> const & intervals) {
-    std::vector<Interval> interval_vec;
+    std::vector<TimeFrameInterval> interval_vec;
     interval_vec.reserve(intervals.size());
     int64_t max_time = 0;
     for (auto const & [start, end]: intervals) {
-        interval_vec.push_back(Interval{start, end});
+        interval_vec.push_back(TimeFrameInterval{TimeFrameIndex(start), TimeFrameIndex(end)});
         max_time = std::max(max_time, end);
     }
     auto series = std::make_shared<DigitalIntervalSeries>(std::move(interval_vec));
@@ -106,37 +106,39 @@ inline constexpr int kSpikeSamplesPerEventIndex = 60;
         int64_t pre_window,
         int64_t post_window) {
     auto const time_frame = events->getTimeFrame();
-    std::vector<Interval> absolute_windows;
+    std::vector<ClockTicksInterval> absolute_windows;
     absolute_windows.reserve(events->size());
 
     for (auto const & event: events->view()) {
         auto const event_index = event.time();
-        auto const event_time = time_frame ? static_cast<int64_t>(time_frame->getTimeAtIndex(event_index))
-                                           : event_index.getValue();
-        absolute_windows.push_back(Interval{
-                event_time - pre_window,
-                event_time + post_window});
+        if (!time_frame) {
+            throw std::runtime_error("TimeFrame is null");
+        }
+        auto const event_time = time_frame->getTimeAtIndex(event_index);
+        absolute_windows.push_back(ClockTicksInterval{
+                ClockTicks(event_time - pre_window),
+                ClockTicks(event_time + post_window)});
     }
 
     std::vector<int> boundary_times;
     boundary_times.reserve(absolute_windows.size() * 2);
     for (auto const & window: absolute_windows) {
-        boundary_times.push_back(static_cast<int>(window.start));
-        boundary_times.push_back(static_cast<int>(window.end));
+        boundary_times.push_back(window.start.getValue());
+        boundary_times.push_back(window.end.getValue());
     }
 
     std::ranges::sort(boundary_times);
     auto const last_unique = std::ranges::unique(boundary_times);
     boundary_times.erase(last_unique.begin(), last_unique.end());
 
-    std::vector<Interval> windows;
+    std::vector<TimeFrameInterval> windows;
     windows.reserve(absolute_windows.size());
     for (auto const & window: absolute_windows) {
-        auto const start = std::ranges::lower_bound(boundary_times, static_cast<int>(window.start));
-        auto const end = std::ranges::lower_bound(boundary_times, static_cast<int>(window.end));
-        windows.push_back(Interval{
-                std::distance(boundary_times.begin(), start),
-                std::distance(boundary_times.begin(), end)});
+        auto const start = std::ranges::lower_bound(boundary_times, window.start.getValue());
+        auto const end = std::ranges::lower_bound(boundary_times, window.end.getValue());
+        windows.push_back(TimeFrameInterval{
+                TimeFrameIndex(std::distance(boundary_times.begin(), start)),
+                TimeFrameIndex(std::distance(boundary_times.begin(), end))});
     }
 
     return DigitalIntervalSeries::createOverlapping(
@@ -163,7 +165,7 @@ enum class TestIntervalAlignmentPoint {
     events->setTimeFrame(intervals->getTimeFrame());
 
     for (auto const & interval: intervals->view()) {
-        int64_t alignment_time = interval.interval.start;
+        TimeFrameIndex alignment_time = interval.interval.start;
         switch (point) {
             case TestIntervalAlignmentPoint::Start:
                 alignment_time = interval.interval.start;
@@ -175,7 +177,7 @@ enum class TestIntervalAlignmentPoint {
                 alignment_time = (interval.interval.start + interval.interval.end) / 2;
                 break;
         }
-        events->addEvent(TimeFrameIndex(alignment_time));
+        events->addEvent(alignment_time);
     }
 
     return events;

@@ -17,10 +17,10 @@
  * @see TimeSeriesConcepts.hpp for concept definitions
  */
 struct IntervalWithId {
-    Interval interval;
+    TimeFrameInterval interval;
     EntityId entity_id;
 
-    IntervalWithId(Interval const & interval_data, EntityId id)
+    IntervalWithId(TimeFrameInterval const & interval_data, EntityId id)
         : interval(interval_data),
           entity_id(id) {}
 
@@ -31,7 +31,7 @@ struct IntervalWithId {
      * @return TimeFrameIndex The interval start time
      */
     [[nodiscard]] constexpr TimeFrameIndex time() const noexcept { 
-        return TimeFrameIndex(interval.start); 
+        return interval.start; 
     }
 
     /**
@@ -44,7 +44,7 @@ struct IntervalWithId {
      * @brief Get the value of this interval (the Interval itself)
      * @return Interval const& The interval data
      */
-    [[nodiscard]] constexpr Interval const& value() const noexcept { return interval; }
+    [[nodiscard]] constexpr TimeFrameInterval const& value() const noexcept { return interval; }
 };
 
 #endif// BEHAVIORTOOLBOX_INTERVAL_WITH_ID_HPP

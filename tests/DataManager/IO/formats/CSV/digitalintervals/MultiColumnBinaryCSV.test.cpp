@@ -68,7 +68,7 @@ TEST_CASE("MultiColumnBinaryCSV - Load intervals from real file", "[DataManager]
     
     // First interval should start at 0
     if (!intervals.empty()) {
-        CHECK(intervals[0].value().start == 0);
+        CHECK(intervals[0].value().start == TimeFrameIndex(0));
     }
 }
 
@@ -97,7 +97,7 @@ TEST_CASE("MultiColumnBinaryCSV - Load TimeFrame from real file", "[DataManager]
         CHECK(result->getTotalFrameCount() > 0);
         
         // First time value should be 0 (0.0 * 14000)
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(0)) == 0);
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(0)) == ClockTicks(0));
     }
     
     SECTION("Check time progression") {
@@ -114,8 +114,8 @@ TEST_CASE("MultiColumnBinaryCSV - Load TimeFrame from real file", "[DataManager]
         
         if (result->getTotalFrameCount() >= 2) {
             // Time values should be increasing
-            int time0 = result->getTimeAtIndex(TimeFrameIndex(0));
-            int time1 = result->getTimeAtIndex(TimeFrameIndex(1));
+            ClockTicks time0 = result->getTimeAtIndex(TimeFrameIndex(0));
+            ClockTicks time1 = result->getTimeAtIndex(TimeFrameIndex(1));
             CHECK(time1 >= time0);
         }
     }

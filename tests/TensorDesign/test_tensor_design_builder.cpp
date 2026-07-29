@@ -75,10 +75,10 @@ void setDefaultIdentityTimeFrame(DataManager & dm, int64_t max_time) {
 
 std::shared_ptr<DigitalIntervalSeries> createIntervalSeries(
         std::vector<std::pair<int64_t, int64_t>> const & intervals) {
-    std::vector<Interval> vec;
+    std::vector<TimeFrameInterval> vec;
     vec.reserve(intervals.size());
     for (auto const & [start, end]: intervals) {
-        vec.emplace_back(Interval{start, end});
+        vec.emplace_back(TimeFrameInterval(TimeFrameIndex(start), TimeFrameIndex(end)));
     }
     return std::make_shared<DigitalIntervalSeries>(vec);
 }

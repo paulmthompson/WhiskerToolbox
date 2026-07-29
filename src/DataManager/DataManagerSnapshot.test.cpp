@@ -80,8 +80,8 @@ TEST_CASE("snapshotDataManager captures DigitalIntervalSeries",
     DataManager dm;
     dm.setData<DigitalIntervalSeries>("intervals", TimeKey("time"));
     auto ivs = dm.getData<DigitalIntervalSeries>("intervals");
-    ivs->addEvent(Interval{10, 20});
-    ivs->addEvent(Interval{30, 40});
+    ivs->addEvent(TimeFrameInterval{TimeFrameIndex(10), TimeFrameIndex(20)});
+    ivs->addEvent(TimeFrameInterval{TimeFrameIndex(30), TimeFrameIndex(40)});
 
     auto snap = snapshotDataManager(dm);
 

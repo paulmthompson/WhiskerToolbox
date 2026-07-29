@@ -105,9 +105,9 @@ std::shared_ptr<TensorData> createTestTensorOrdinal(
 
 std::shared_ptr<DigitalIntervalSeries> createTestDIS() {
     // Intervals: [10, 20), [30, 40)
-    std::vector<Interval> intervals;
-    intervals.push_back(Interval{int64_t{10}, int64_t{20}});
-    intervals.push_back(Interval{int64_t{30}, int64_t{40}});
+    std::vector<TimeFrameInterval> intervals;
+    intervals.push_back(TimeFrameInterval(TimeFrameIndex(10), TimeFrameIndex(20)));
+    intervals.push_back(TimeFrameInterval(TimeFrameIndex(30), TimeFrameIndex(40)));
     return std::make_shared<DigitalIntervalSeries>(intervals);
 }
 

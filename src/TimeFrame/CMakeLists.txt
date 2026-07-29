@@ -9,6 +9,7 @@ add_library(TimeFrame STATIC
     TimeIndexStorage.hpp
     TimeIndexStorage.cpp
     interval_data.hpp
+    ClockTicks.hpp
 )
 
 # Set up include directories

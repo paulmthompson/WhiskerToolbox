@@ -28,11 +28,9 @@ std::unordered_set<EntityId> getEntityIdsInRange(
         TimeFrameIndex start,
         TimeFrameIndex end) {
     std::unordered_set<EntityId> result;
-    int64_t const start_val = start.getValue();
-    int64_t const end_val = end.getValue();
     for (auto const & elem: data.view()) {
         // Overlap check: interval.start <= end && interval.end >= start
-        if (elem.interval.start <= end_val && elem.interval.end >= start_val) {
+        if (elem.interval.start <= end && elem.interval.end >= start) {
             result.insert(elem.id());
         }
     }

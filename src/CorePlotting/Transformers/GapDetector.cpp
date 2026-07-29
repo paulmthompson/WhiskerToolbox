@@ -64,8 +64,8 @@ RenderablePolyLineBatch GapDetector::transform(
     time_values.reserve(time_indices.size());
 
     for (auto const & idx: time_indices) {
-        int const time = time_frame.getTimeAtIndex(idx);
-        time_values.push_back(static_cast<float>(time));
+        ClockTicks const time = time_frame.getTimeAtIndex(idx);
+        time_values.push_back(static_cast<float>(time.getValue()));
     }
 
     // Transform using array version

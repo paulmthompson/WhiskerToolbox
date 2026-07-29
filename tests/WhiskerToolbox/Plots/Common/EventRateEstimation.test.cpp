@@ -98,8 +98,8 @@ TEST_CASE("createUnitGatherContext uses prepared event alignment metadata",
     REQUIRE(context->gathered.size() == 3);
     REQUIRE(context->gathered.windows() != nullptr);
     REQUIRE(context->gathered.alignmentPoints() != nullptr);
-    CHECK(context->gathered.alignmentTimeAt(0) == 50);
-    CHECK(context->gathered.alignmentTimeAt(1) == 200);
+    CHECK(context->gathered.alignmentTimeAt(0) == ClockTicks(50));
+    CHECK(context->gathered.alignmentTimeAt(1) == ClockTicks(200));
 }
 
 TEST_CASE("createUnitGatherContext uses prepared interval alignment metadata",
@@ -117,8 +117,8 @@ TEST_CASE("createUnitGatherContext uses prepared interval alignment metadata",
     REQUIRE(context->gathered.size() == 3);
     REQUIRE(context->gathered.windows() != nullptr);
     REQUIRE(context->gathered.alignmentPoints() != nullptr);
-    CHECK(context->gathered.alignmentTimeAt(0) == 100);
-    CHECK(context->gathered.alignmentTimeAt(1) == 250);
+    CHECK(context->gathered.alignmentTimeAt(0) == ClockTicks(100));
+    CHECK(context->gathered.alignmentTimeAt(1) == ClockTicks(250));
 }
 
 TEST_CASE("createUnitGatherContext applies paired overlap pruning",
@@ -136,7 +136,7 @@ TEST_CASE("createUnitGatherContext applies paired overlap pruning",
     REQUIRE(context->gathered.size() == 1);
     REQUIRE(context->gathered.windows() != nullptr);
     REQUIRE(context->gathered.alignmentPoints() != nullptr);
-    CHECK(context->gathered.alignmentTimeAt(0) == 50);
+    CHECK(context->gathered.alignmentTimeAt(0) == ClockTicks(50));
 }
 
 TEST_CASE("createUnitGatherContext preserves cross-timeframe event alignment",
@@ -164,9 +164,9 @@ TEST_CASE("createUnitGatherContext preserves cross-timeframe event alignment",
 
     REQUIRE(context.has_value());
     REQUIRE(context->gathered.size() == 1);
-    CHECK(context->gathered.intervalAt(0).start == 0);
-    CHECK(context->gathered.intervalAt(0).end == 120);
-    CHECK(context->gathered.alignmentTimeAt(0) == 60);
+    CHECK(context->gathered.intervalAt(0).start == TimeFrameIndex(0));
+    CHECK(context->gathered.intervalAt(0).end == TimeFrameIndex(120));
+    CHECK(context->gathered.alignmentTimeAt(0) == ClockTicks(60));
 }
 
 // =============================================================================

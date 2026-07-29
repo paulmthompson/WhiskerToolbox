@@ -377,8 +377,8 @@ void LinePlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
         // Convert to absolute time using the first trial's alignment time.
         // (All trials are overlaid, so we can't determine which trial was clicked.)
         if (!_cached_alignment_times.empty()) {
-            int64_t const alignment_time = _cached_alignment_times.front();
-            int64_t const absolute_time = alignment_time + static_cast<int64_t>(world.x());
+            ClockTicks const alignment_time = _cached_alignment_times.front();
+            int64_t const absolute_time = alignment_time.getValue() + static_cast<int64_t>(world.x());
             emit plotDoubleClicked(absolute_time, QString::fromStdString(_cached_series_key));
         }
     }
@@ -520,7 +520,7 @@ void LinePlotOpenGLWidget::rebuildScene() {
             continue;
         }
 
-        int64_t const alignment_time = gathered.alignmentTimeAt(trial);
+        ClockTicks const alignment_time = gathered.alignmentTimeAt(trial);
         auto trial_tf = trial_view->getTimeFrame();
 
         auto all_samples = trial_view->view();
@@ -539,10 +539,14 @@ void LinePlotOpenGLWidget::rebuildScene() {
             continue;
         }
 
-        int64_t const first_abs = trial_tf ? trial_tf->getTimeAtIndex(first_time) : first_time.getValue();
-        int64_t const last_abs = trial_tf ? trial_tf->getTimeAtIndex(last_time) : last_time.getValue();
-        auto const rel_start = static_cast<double>(first_abs - alignment_time);
-        auto const rel_end = static_cast<double>(last_abs - alignment_time);
+        if (!trial_tf) {
+            std::throw_with_nested(std::runtime_error("LinePlotOpenGLWidget: no TimeFrame"));
+        }
+
+        ClockTicks const first_abs = trial_tf->getTimeAtIndex(first_time);
+        ClockTicks const last_abs = trial_tf->getTimeAtIndex(last_time);
+        auto const rel_start = static_cast<double>((first_abs - alignment_time.getValue()).getValue());
+        auto const rel_end = static_cast<double>((last_abs - alignment_time.getValue()).getValue());
         x_min = std::min(x_min, rel_start);
         x_max = std::max(x_max, rel_end);
     }
@@ -567,7 +571,7 @@ void LinePlotOpenGLWidget::rebuildScene() {
     // =========================================================================
     // Build LineBatchData from gathered trial data and upload to GPU
     // =========================================================================
-    std::vector<std::int64_t> alignment_times;
+    std::vector<ClockTicks> alignment_times;
     alignment_times.reserve(num_trials);
     for (size_t trial = 0; trial < num_trials; ++trial) {
         alignment_times.push_back(gathered.alignmentTimeAt(trial));
@@ -853,7 +857,7 @@ std::optional<EntityId> LinePlotOpenGLWidget::getEntityIdForTrial(std::uint32_t 
     if (trial_index >= _cached_alignment_times.size()) {
         return std::nullopt;
     }
-    return EntityId{static_cast<uint64_t>(_cached_alignment_times[trial_index])};
+    return EntityId{static_cast<uint64_t>(_cached_alignment_times[trial_index].getValue())};
 }
 
 void LinePlotOpenGLWidget::applyGroupColorsToLines() {

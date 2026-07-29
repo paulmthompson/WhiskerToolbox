@@ -245,8 +245,8 @@ std::span<float const> AnalogTimeSeries::getDataInTimeFrameIndexRange(TimeFrameI
     auto end_time_value = source_timeFrame->getTimeAtIndex(end_time);
 
     // 2. Convert that time value to an index in the analog timeframe
-    auto target_start_index = _time_frame->getIndexAtTime(static_cast<float>(start_time_value), false);
-    auto target_end_index = _time_frame->getIndexAtTime(static_cast<float>(end_time_value));
+    auto target_start_index = _time_frame->getIndexAtTime(start_time_value, false);
+    auto target_end_index = _time_frame->getIndexAtTime(end_time_value);
 
     // 3. Use the converted indices to get the data in the target timeframe
     return getDataInTimeFrameIndexRange(target_start_index, target_end_index);
@@ -356,8 +356,8 @@ AnalogTimeSeries::TimeValueSpanPair AnalogTimeSeries::getTimeValueSpanInTimeFram
     auto end_time_value = source_timeFrame->getTimeAtIndex(end_time);
 
     // 2. Convert that time value to an index in the analog timeframe
-    auto target_start_index = _time_frame->getIndexAtTime(static_cast<float>(start_time_value), false);
-    auto target_end_index = _time_frame->getIndexAtTime(static_cast<float>(end_time_value));
+    auto target_start_index = _time_frame->getIndexAtTime(start_time_value, false);
+    auto target_end_index = _time_frame->getIndexAtTime(end_time_value);
 
     // 3. Use the converted indices to get the data in the target timeframe
     return getTimeValueSpanInTimeFrameIndexRange(target_start_index, target_end_index);

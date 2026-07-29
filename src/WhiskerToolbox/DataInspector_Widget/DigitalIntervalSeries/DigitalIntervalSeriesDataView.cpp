@@ -132,7 +132,7 @@ void DigitalIntervalSeriesDataView::_handleTableViewDoubleClicked(QModelIndex co
         if (index.column() != 0 && index.column() != 1) {
             return;
         }
-        int64_t const target_frame = (index.column() == 0) ? interval.start : interval.end;
+        TimeFrameIndex const target_frame = (index.column() == 0) ? interval.start : interval.end;
         emit frameSelected(TimePosition(target_frame, tf));
     }
 }
@@ -145,8 +145,8 @@ void DigitalIntervalSeriesDataView::_onGroupChanged() {
     updateView();
 }
 
-std::vector<Interval> DigitalIntervalSeriesDataView::getSelectedIntervals() const {
-    std::vector<Interval> selected_intervals;
+std::vector<TimeFrameInterval> DigitalIntervalSeriesDataView::getSelectedIntervals() const {
+    std::vector<TimeFrameInterval> selected_intervals;
     if (!_table_view || !_table_model) {
         return selected_intervals;
     }
@@ -154,7 +154,7 @@ std::vector<Interval> DigitalIntervalSeriesDataView::getSelectedIntervals() cons
     QModelIndexList const selected_indexes = _table_view->selectionModel()->selectedRows();
     for (QModelIndex const & index: selected_indexes) {
         if (index.isValid()) {
-            Interval const interval = _table_model->getInterval(index.row());
+            TimeFrameInterval const interval = _table_model->getInterval(index.row());
             selected_intervals.push_back(interval);
         }
     }

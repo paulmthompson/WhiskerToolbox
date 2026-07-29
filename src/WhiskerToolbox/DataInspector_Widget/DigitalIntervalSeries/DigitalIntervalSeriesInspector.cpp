@@ -147,7 +147,7 @@ void DigitalIntervalSeriesInspector::setDataView(DigitalIntervalSeriesDataView *
     }
 }
 
-void DigitalIntervalSeriesInspector::setSelectionProvider(std::function<std::vector<Interval>()> provider) {
+void DigitalIntervalSeriesInspector::setSelectionProvider(std::function<std::vector<TimeFrameInterval>()> provider) {
     _selection_provider = std::move(provider);
 }
 
@@ -412,7 +412,7 @@ void DigitalIntervalSeriesInspector::_flipIntervalButton() {
 }
 
 void DigitalIntervalSeriesInspector::_extendInterval() {
-    std::vector<Interval> const selected_intervals = _getSelectedIntervals();
+    std::vector<TimeFrameInterval> const selected_intervals = _getSelectedIntervals();
     if (selected_intervals.empty()) {
         std::cout << "Error: No intervals selected in the view panel." << std::endl;
         return;
@@ -427,11 +427,11 @@ void DigitalIntervalSeriesInspector::_extendInterval() {
     auto intervals = dataManager()->getData<DigitalIntervalSeries>(_active_key);
     if (!intervals) return;
 
-    for (Interval const & interval: selected_intervals) {
-        if (current_time < interval.start) {
-            intervals->addEvent(Interval{current_time, interval.end});
-        } else if (current_time > interval.end) {
-            intervals->addEvent(Interval{interval.start, current_time});
+    for (TimeFrameInterval const & interval: selected_intervals) {
+        if (TimeFrameIndex(current_time) < interval.start) {
+            intervals->addEvent(TimeFrameInterval{TimeFrameIndex(current_time), interval.end});
+        } else if (TimeFrameIndex(current_time) > interval.end) {
+            intervals->addEvent(TimeFrameInterval{interval.start, TimeFrameIndex(current_time)});
         } else {
             std::cout << "Error: Current frame is within the selected interval." << std::endl;
         }
@@ -450,7 +450,7 @@ void DigitalIntervalSeriesInspector::_onExportTypeChanged(int index) {
     _updateFilename();
 }
 
-std::vector<Interval> DigitalIntervalSeriesInspector::_getSelectedIntervals() {
+std::vector<TimeFrameInterval> DigitalIntervalSeriesInspector::_getSelectedIntervals() {
     if (_selection_provider) {
         return _selection_provider();
     }
@@ -458,7 +458,7 @@ std::vector<Interval> DigitalIntervalSeriesInspector::_getSelectedIntervals() {
 }
 
 void DigitalIntervalSeriesInspector::_moveIntervalsToTarget(std::string const & target_key) {
-    std::vector<Interval> const selected_intervals = _getSelectedIntervals();
+    std::vector<TimeFrameInterval> const selected_intervals = _getSelectedIntervals();
     if (selected_intervals.empty()) {
         std::cout << "No intervals selected to move." << std::endl;
         return;
@@ -473,15 +473,15 @@ void DigitalIntervalSeriesInspector::_moveIntervalsToTarget(std::string const & 
     }
 
     // Add intervals to target
-    for (Interval const & interval: selected_intervals) {
+    for (TimeFrameInterval const & interval: selected_intervals) {
         target_interval_data->addEvent(interval);
     }
 
     // Remove intervals from source
-    for (Interval const & interval: selected_intervals) {
+    for (TimeFrameInterval const & interval: selected_intervals) {
         // Remove each time point in the interval from source
-        for (int64_t time = interval.start; time <= interval.end; ++time) {
-            source_interval_data->setEventAtTime(TimeFrameIndex(time), false);
+        for (TimeFrameIndex time = interval.start; time <= interval.end; ++time) {
+            source_interval_data->setEventAtTime(time, false);
         }
     }
 
@@ -520,7 +520,7 @@ void DigitalIntervalSeriesInspector::_copyIntervalsToTarget(std::string const & 
 }
 
 void DigitalIntervalSeriesInspector::_mergeIntervalsButton() {
-    std::vector<Interval> selected_intervals = _getSelectedIntervals();
+    std::vector<TimeFrameInterval> selected_intervals = _getSelectedIntervals();
     if (selected_intervals.size() < 2) {
         std::cout << "Need at least 2 intervals selected to merge." << std::endl;
         return;
@@ -533,26 +533,26 @@ void DigitalIntervalSeriesInspector::_mergeIntervalsButton() {
     }
 
     // Find the overall range
-    int64_t min_start = selected_intervals[0].start;
-    int64_t max_end = selected_intervals[0].end;
+    TimeFrameIndex min_start = selected_intervals[0].start;
+    TimeFrameIndex max_end = selected_intervals[0].end;
 
-    for (Interval const & interval: selected_intervals) {
+    for (TimeFrameInterval const & interval: selected_intervals) {
         min_start = std::min(min_start, interval.start);
         max_end = std::max(max_end, interval.end);
     }
 
     // Remove all selected intervals first
-    for (Interval const & interval: selected_intervals) {
-        for (int64_t time = interval.start; time <= interval.end; ++time) {
-            interval_data->setEventAtTime(TimeFrameIndex(time), false);
+    for (TimeFrameInterval const & interval: selected_intervals) {
+        for (TimeFrameIndex time = interval.start; time <= interval.end; ++time) {
+            interval_data->setEventAtTime(time, false);
         }
     }
 
     // Add the merged interval
-    interval_data->addEvent(Interval{min_start, max_end});
+    interval_data->addEvent(TimeFrameInterval{min_start, max_end});
 
     std::cout << "Merged " << selected_intervals.size() << " intervals into range ["
-              << min_start << ", " << max_end << "]" << std::endl;
+              << min_start.getValue() << ", " << max_end.getValue() << "]" << std::endl;
 }
 
 void DigitalIntervalSeriesInspector::_updateStartFrameLabel(int64_t frame_number) {
@@ -640,7 +640,7 @@ void DigitalIntervalSeriesInspector::_updateFilename() {
 }
 
 void DigitalIntervalSeriesInspector::_deleteSelectedIntervals() {
-    std::vector<Interval> const selected_intervals = _getSelectedIntervals();
+    std::vector<TimeFrameInterval> const selected_intervals = _getSelectedIntervals();
     if (selected_intervals.empty()) {
         std::cout << "DigitalIntervalSeriesInspector: No intervals selected to delete." << std::endl;
         return;

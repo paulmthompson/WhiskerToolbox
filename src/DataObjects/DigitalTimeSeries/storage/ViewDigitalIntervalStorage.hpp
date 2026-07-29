@@ -54,7 +54,7 @@ public:
      * @see OwningDigitalIntervalStorage::getOverlappingRangeImpl()
      * @see LazyDigitalIntervalStorage::getOverlappingRangeImpl()
      */
-    void filterByOverlappingRange(int64_t start, int64_t end);
+    void filterByOverlappingRange(TimeFrameIndex start, TimeFrameIndex end);
 
     /**
      * @brief Filter by overlapping time range [start, end] using linear scan.
@@ -66,12 +66,12 @@ public:
      * @see filterByOverlappingRange()
      * @see OwningDigitalIntervalStorage::getOverlappingRangeImpl()
      */
-    void filterByOverlappingRangeLinear(int64_t start, int64_t end);
+    void filterByOverlappingRangeLinear(TimeFrameIndex start, TimeFrameIndex end);
 
     /**
      * @brief Filter by contained time range [start, end]
      */
-    void filterByContainedRange(int64_t start, int64_t end);
+    void filterByContainedRange(TimeFrameIndex start, TimeFrameIndex end);
 
     /**
      * @brief Filter by EntityId set
@@ -94,15 +94,15 @@ public:
 
     [[nodiscard]] size_t sizeImpl() const { return _indices.size(); }
 
-    [[nodiscard]] Interval const & getIntervalImpl(size_t idx) const;
+    [[nodiscard]] TimeFrameInterval const & getIntervalImpl(size_t idx) const;
 
     [[nodiscard]] EntityId getEntityIdImpl(size_t idx) const;
 
-    [[nodiscard]] std::optional<size_t> findByIntervalImpl(Interval const & interval) const;
+    [[nodiscard]] std::optional<size_t> findByIntervalImpl(TimeFrameInterval const & interval) const;
 
     [[nodiscard]] std::optional<size_t> findByEntityIdImpl(EntityId id) const;
 
-    [[nodiscard]] bool hasIntervalAtTimeImpl(int64_t time) const;
+    [[nodiscard]] bool hasIntervalAtTimeImpl(TimeFrameIndex time) const;
 
     /**
      * @brief Get index range of view-local indices overlapping [start, end].
@@ -116,9 +116,9 @@ public:
      * @see OwningDigitalIntervalStorage::getOverlappingRangeImpl()
      * @see LazyDigitalIntervalStorage::getOverlappingRangeImpl()
      */
-    [[nodiscard]] std::pair<size_t, size_t> getOverlappingRangeImpl(int64_t start, int64_t end) const;
+    [[nodiscard]] std::pair<size_t, size_t> getOverlappingRangeImpl(TimeFrameIndex start, TimeFrameIndex end) const;
 
-    [[nodiscard]] std::pair<size_t, size_t> getContainedRangeImpl(int64_t start, int64_t end) const;
+    [[nodiscard]] std::pair<size_t, size_t> getContainedRangeImpl(TimeFrameIndex start, TimeFrameIndex end) const;
 
     [[nodiscard]] DigitalIntervalStorageType getStorageTypeImpl() const {
         return DigitalIntervalStorageType::View;

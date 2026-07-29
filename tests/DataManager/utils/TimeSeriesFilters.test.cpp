@@ -83,9 +83,9 @@ TEST_CASE("TimeSeriesFilters - filterByTimeRange", "[filters][time][unit]") {
     
     SECTION("Filter IntervalWithId vector") {
         std::vector<IntervalWithId> intervals{
-            {Interval{100, 150}, EntityId(1)},
-            {Interval{200, 250}, EntityId(2)},
-            {Interval{300, 350}, EntityId(3)}
+            {TimeFrameInterval{TimeFrameIndex(100), TimeFrameIndex(150)}, EntityId(1)},
+            {TimeFrameInterval{TimeFrameIndex(200), TimeFrameIndex(250)}, EntityId(2)},
+            {TimeFrameInterval{TimeFrameIndex(300), TimeFrameIndex(350)}, EntityId(3)}
         };
         
         // Filter by start time (time() returns interval.start)
@@ -181,9 +181,9 @@ TEST_CASE("TimeSeriesFilters - filterByEntityIds", "[filters][entity][unit]") {
     
     SECTION("Filter IntervalWithId by EntityId set") {
         std::vector<IntervalWithId> intervals{
-            {Interval{100, 150}, EntityId(10)},
-            {Interval{200, 250}, EntityId(20)},
-            {Interval{300, 350}, EntityId(30)}
+            {TimeFrameInterval{TimeFrameIndex(100), TimeFrameIndex(150)}, EntityId(10)},
+            {TimeFrameInterval{TimeFrameIndex(200), TimeFrameIndex(250)}, EntityId(20)},
+            {TimeFrameInterval{TimeFrameIndex(300), TimeFrameIndex(350)}, EntityId(30)}
         };
         
         std::unordered_set<EntityId> selected{EntityId(10), EntityId(30)};
@@ -636,9 +636,9 @@ TEST_CASE("TimeSeriesFilters - Integration with DigitalIntervalSeries", "[filter
     
     SECTION("Filter DigitalIntervalSeries view by time") {
         auto series = std::make_shared<DigitalIntervalSeries>();
-        series->addEvent(Interval{100, 150});
-        series->addEvent(Interval{200, 250});
-        series->addEvent(Interval{300, 350});
+        series->addEvent(TimeFrameInterval{TimeFrameIndex(100), TimeFrameIndex(150)});
+        series->addEvent(TimeFrameInterval{TimeFrameIndex(200), TimeFrameIndex(250)});
+        series->addEvent(TimeFrameInterval{TimeFrameIndex(300), TimeFrameIndex(350)});
         
         // Filter by start time (time() returns interval.start)
         auto filtered = filterByTimeRange(series->view(), TimeFrameIndex(150), TimeFrameIndex(250));
@@ -646,8 +646,8 @@ TEST_CASE("TimeSeriesFilters - Integration with DigitalIntervalSeries", "[filter
         
         REQUIRE(result.size() == 1);
         REQUIRE(result[0].time() == TimeFrameIndex(200));
-        REQUIRE(result[0].value().start == 200);
-        REQUIRE(result[0].value().end == 250);
+        REQUIRE(result[0].value().start == TimeFrameIndex(200));
+        REQUIRE(result[0].value().end == TimeFrameIndex(250));
     }
 }
 

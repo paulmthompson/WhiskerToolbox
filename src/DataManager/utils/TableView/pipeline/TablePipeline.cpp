@@ -509,7 +509,7 @@ std::unique_ptr<IRowSelector> TablePipeline::createRowSelector(nlohmann::json co
                     int frame_count = timeFrame->getTotalFrameCount();
                     timestamps.reserve(static_cast<size_t>(frame_count));
                     for (int i = 0; i < frame_count; ++i) {
-                        timestamps.emplace_back(timeFrame->getTimeAtIndex(TimeFrameIndex(i)));
+                        timestamps.emplace_back(timeFrame->getTimeAtIndex(TimeFrameIndex(i)).getValue());
                     }
                 } else {
                     std::cerr << "TablePipeline: Cannot resolve timestamp source: " << source_key << std::endl;

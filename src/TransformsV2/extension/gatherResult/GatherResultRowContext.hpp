@@ -54,10 +54,10 @@ template<typename T>
     auto const original_index = gather.originalIndex(row_index);
 
     Neuralyzer::Transforms::V2::PipelineValueStore store;
-    store.set("alignment_time", alignment_time);
+    store.set("alignment_time", alignment_time.getValue());
     store.set("trial_index", static_cast<int64_t>(original_index));
-    store.set("trial_duration", interval.end - interval.start);
-    store.set("end_time", static_cast<int64_t>(interval.end));
+    store.set("trial_duration", (interval.end - interval.start).getValue());
+    store.set("end_time", interval.end.getValue());
     return store;
 }
 

@@ -113,7 +113,7 @@ void SynthesizerPreviewWidget::rebuildScene() {
 
     for (auto const & tv: _series->view()) {
         float const val = tv.value();
-        auto const x = static_cast<float>(time_frame->getTimeAtIndex(tv.time_frame_index));
+        auto const x = static_cast<float>(time_frame->getTimeAtIndex(tv.time_frame_index).getValue());
         y_min = std::min(y_min, val);
         y_max = std::max(y_max, val);
         x_min = std::min(x_min, x);

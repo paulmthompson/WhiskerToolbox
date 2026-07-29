@@ -93,7 +93,7 @@ EventPlotWidget::EventPlotWidget(std::shared_ptr<DataManager> data_manager,
                 // so we need to convert back to a TimeFrameIndex via the TimeFrame.
                 TimeFrameIndex frame_index(absolute_time);
                 if (time_frame) {
-                    frame_index = time_frame->getIndexAtTime(static_cast<float>(absolute_time));
+                    frame_index = time_frame->getIndexAtTime(ClockTicks(absolute_time));
                 }
                 emit timePositionSelected(TimePosition(frame_index, time_frame));
             });

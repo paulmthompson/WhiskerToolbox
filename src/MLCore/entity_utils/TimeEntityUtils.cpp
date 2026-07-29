@@ -51,10 +51,10 @@ std::vector<EntityId> intervalsToTimeEntities(
         DigitalIntervalSeries const & intervals,
         std::string const & time_key_str) {
     // Use a set to deduplicate overlapping intervals and produce sorted output
-    std::set<int64_t> all_times;
+    std::set<TimeFrameIndex> all_times;
 
     for (auto const & iv: intervals.view()) {
-        for (int64_t t = iv.interval.start; t <= iv.interval.end; ++t) {
+        for (TimeFrameIndex t = iv.interval.start; t <= iv.interval.end; ++t) {
             all_times.insert(t);
         }
     }
@@ -63,8 +63,8 @@ std::vector<EntityId> intervalsToTimeEntities(
     ids.reserve(all_times.size());
 
     TimeKey const key(time_key_str);
-    for (int64_t t: all_times) {
-        ids.push_back(dm.ensureTimeEntityId(key, TimeFrameIndex(t)));
+    for (TimeFrameIndex t: all_times) {
+        ids.push_back(dm.ensureTimeEntityId(key, t));
     }
     return ids;
 }
@@ -101,23 +101,23 @@ std::shared_ptr<DigitalIntervalSeries> timeEntitiesToIntervals(
     // Merge adjacent frames into intervals
     auto series = std::make_shared<DigitalIntervalSeries>();
 
-    int64_t interval_start = frame_indices[0].getValue();
-    int64_t interval_end = interval_start;
+    TimeFrameIndex interval_start = frame_indices[0];
+    TimeFrameIndex interval_end = interval_start;
 
     for (std::size_t i = 1; i < frame_indices.size(); ++i) {
-        int64_t const t = frame_indices[i].getValue();
-        if (t == interval_end + 1) {
+        TimeFrameIndex const t = frame_indices[i];
+        if (t == interval_end + TimeFrameIndex{1}) {
             // Extend current interval
             interval_end = t;
         } else {
             // Gap — flush and start new
-            series->addEvent(Interval{interval_start, interval_end});
+            series->addEvent(TimeFrameInterval{interval_start, interval_end});
             interval_start = t;
             interval_end = t;
         }
     }
     // Flush the final interval
-    series->addEvent(Interval{interval_start, interval_end});
+    series->addEvent(TimeFrameInterval{interval_start, interval_end});
 
     return series;
 }

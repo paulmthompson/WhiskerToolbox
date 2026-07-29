@@ -52,7 +52,7 @@ public:
      * @brief Get the interval at a flat index
      * @param idx Flat index in [0, size())
      */
-    [[nodiscard]] Interval const & getInterval(size_t idx) const {
+    [[nodiscard]] TimeFrameInterval const & getInterval(size_t idx) const {
         return static_cast<Derived const *>(this)->getIntervalImpl(idx);
     }
 
@@ -68,10 +68,10 @@ public:
 
     /**
      * @brief Find the index of an interval by its exact start/end times
-     * @param interval The exact Interval to find
+     * @param interval The exact TimeFrameInterval to find
      * @return Index of the interval, or std::nullopt if not found
      */
-    [[nodiscard]] std::optional<size_t> findByInterval(Interval const & interval) const {
+    [[nodiscard]] std::optional<size_t> findByInterval(TimeFrameInterval const & interval) const {
         return static_cast<Derived const *>(this)->findByIntervalImpl(interval);
     }
 
@@ -89,7 +89,7 @@ public:
      * @param time The time to check
      * @return true if any interval contains the time
      */
-    [[nodiscard]] bool hasIntervalAtTime(int64_t time) const {
+    [[nodiscard]] bool hasIntervalAtTime(TimeFrameIndex time) const {
         return static_cast<Derived const *>(this)->hasIntervalAtTimeImpl(time);
     }
 
@@ -105,7 +105,7 @@ public:
      *       @ref ViewDigitalIntervalStorage::getOverlappingRangeImpl(), and
      *       @ref LazyDigitalIntervalStorage::getOverlappingRangeImpl().
      */
-    [[nodiscard]] std::pair<size_t, size_t> getOverlappingRange(int64_t start, int64_t end) const {
+    [[nodiscard]] std::pair<size_t, size_t> getOverlappingRange(TimeFrameIndex start, TimeFrameIndex end) const {
         return static_cast<Derived const *>(this)->getOverlappingRangeImpl(start, end);
     }
 
@@ -117,7 +117,7 @@ public:
      * 
      * @note Returns intervals where interval.start >= start && interval.end <= end
      */
-    [[nodiscard]] std::pair<size_t, size_t> getContainedRange(int64_t start, int64_t end) const {
+    [[nodiscard]] std::pair<size_t, size_t> getContainedRange(TimeFrameIndex start, TimeFrameIndex end) const {
         return static_cast<Derived const *>(this)->getContainedRangeImpl(start, end);
     }
 

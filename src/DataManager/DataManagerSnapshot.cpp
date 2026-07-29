@@ -164,8 +164,8 @@ std::string contentHash(std::shared_ptr<DigitalIntervalSeries> const & d) {
     FnvHasher h;
     if (!d) return h.hexDigest();
     for (auto const & elem: d->view()) {
-        h.feedInt64(elem.value().start);
-        h.feedInt64(elem.value().end);
+        h.feedInt64(elem.value().start.getValue());
+        h.feedInt64(elem.value().end.getValue());
     }
     return h.hexDigest();
 }

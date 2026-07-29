@@ -91,10 +91,10 @@ std::shared_ptr<AnalogTimeSeries> createLinearAnalog(std::size_t num_samples) {
 
 std::shared_ptr<DigitalIntervalSeries> createIntervalSeries(
         std::vector<std::pair<int64_t, int64_t>> const & intervals) {
-    std::vector<Interval> vec;
+    std::vector<TimeFrameInterval> vec;
     vec.reserve(intervals.size());
     for (auto const & [s, e]: intervals) {
-        vec.push_back(Interval{s, e});
+        vec.push_back(TimeFrameInterval(TimeFrameIndex(s), TimeFrameIndex(e)));
     }
     auto series = std::make_shared<DigitalIntervalSeries>(vec);
     int64_t max_time = 0;
@@ -145,9 +145,9 @@ std::vector<TimeFrameIndex> makeRowTimes(std::vector<int64_t> const & ts) {
 TEST_CASE("IntervalCount — counts intervals in span", "[Phase1.3][IntervalReductions]") {
     // Build a span of 3 IntervalWithId elements
     std::vector<IntervalWithId> data{
-            IntervalWithId{Interval{10, 20}, EntityId{0}},
-            IntervalWithId{Interval{30, 50}, EntityId{1}},
-            IntervalWithId{Interval{60, 90}, EntityId{2}}};
+            IntervalWithId{TimeFrameInterval{TimeFrameIndex(10), TimeFrameIndex(20)}, EntityId{0}},
+            IntervalWithId{TimeFrameInterval{TimeFrameIndex(30), TimeFrameIndex(50)}, EntityId{1}},
+            IntervalWithId{TimeFrameInterval{TimeFrameIndex(60), TimeFrameIndex(90)}, EntityId{2}}};
     std::span<IntervalWithId const> const span{data};
 
     CHECK(intervalCount(span) == 3);
@@ -160,8 +160,8 @@ TEST_CASE("IntervalCount — empty span returns zero", "[Phase1.3][IntervalReduc
 
 TEST_CASE("IntervalStartExtract — returns start of first interval", "[Phase1.3][IntervalReductions]") {
     std::vector<IntervalWithId> data{
-            IntervalWithId{Interval{100, 200}, EntityId{0}},
-            IntervalWithId{Interval{300, 400}, EntityId{1}}};
+            IntervalWithId{TimeFrameInterval{TimeFrameIndex(100), TimeFrameIndex(200)}, EntityId{0}},
+            IntervalWithId{TimeFrameInterval{TimeFrameIndex(300), TimeFrameIndex(400)}, EntityId{1}}};
     std::span<IntervalWithId const> const span{data};
 
     CHECK_THAT(intervalStartExtract(span), WithinAbs(100.0f, 1e-5));
@@ -174,8 +174,8 @@ TEST_CASE("IntervalStartExtract — empty span returns NaN", "[Phase1.3][Interva
 
 TEST_CASE("IntervalEndExtract — returns end of first interval", "[Phase1.3][IntervalReductions]") {
     std::vector<IntervalWithId> data{
-            IntervalWithId{Interval{100, 200}, EntityId{0}},
-            IntervalWithId{Interval{300, 400}, EntityId{1}}};
+            IntervalWithId{TimeFrameInterval{TimeFrameIndex(100), TimeFrameIndex(200)}, EntityId{0}},
+            IntervalWithId{TimeFrameInterval{TimeFrameIndex(300), TimeFrameIndex(400)}, EntityId{1}}};
     std::span<IntervalWithId const> const span{data};
 
     CHECK_THAT(intervalEndExtract(span), WithinAbs(200.0f, 1e-5));
@@ -188,8 +188,8 @@ TEST_CASE("IntervalEndExtract — empty span returns NaN", "[Phase1.3][IntervalR
 
 TEST_CASE("IntervalSourceIndex — returns entity ID of first interval", "[Phase1.3][IntervalReductions]") {
     std::vector<IntervalWithId> data{
-            IntervalWithId{Interval{10, 20}, EntityId{42}},
-            IntervalWithId{Interval{30, 50}, EntityId{99}}};
+            IntervalWithId{TimeFrameInterval{TimeFrameIndex(10), TimeFrameIndex(20)}, EntityId{42}},
+            IntervalWithId{TimeFrameInterval{TimeFrameIndex(30), TimeFrameIndex(50)}, EntityId{99}}};
     std::span<IntervalWithId const> const span{data};
 
     CHECK(intervalSourceIndex(span) == 42);
@@ -202,7 +202,7 @@ TEST_CASE("IntervalSourceIndex — empty span returns -1", "[Phase1.3][IntervalR
 
 TEST_CASE("IntervalCount — single interval", "[Phase1.3][IntervalReductions]") {
     std::vector<IntervalWithId> data{
-            IntervalWithId{Interval{0, 100}, EntityId{5}}};
+            IntervalWithId{TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(100)}, EntityId{5}}};
     std::span<IntervalWithId const> const span{data};
 
     CHECK(intervalCount(span) == 1);

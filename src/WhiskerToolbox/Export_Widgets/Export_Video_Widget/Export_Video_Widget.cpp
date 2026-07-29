@@ -764,10 +764,10 @@ std::vector<float> Export_Video_Widget::_convertEventsToAudioTrack(int start_fra
             } else {
                 // Different time frames - convert index from series to master
                 // Get the time value at this index in the series time frame
-                int time_value_in_series = series_time_frame->getTimeAtIndex(event_index_in_series);
+                ClockTicks time_value_in_series = series_time_frame->getTimeAtIndex(event_index_in_series);
 
                 // Find the corresponding index in the master time frame with that time value
-                event_index_in_master = master_time_frame->getIndexAtTime(static_cast<float>(time_value_in_series), false);
+                event_index_in_master = master_time_frame->getIndexAtTime(time_value_in_series, false);
             }
 
             // Now convert from master frame index to audio sample index

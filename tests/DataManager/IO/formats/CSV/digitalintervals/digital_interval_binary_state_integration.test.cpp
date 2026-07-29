@@ -165,10 +165,10 @@ TEST_CASE("DigitalInterval Binary State - Single Column Loading",
         REQUIRE(loaded->size() == 2);
         
         auto intervals = loaded->view();
-        CHECK(intervals[0].value().start == 0);
-        CHECK(intervals[0].value().end == 2);
-        CHECK(intervals[1].value().start == 5);
-        CHECK(intervals[1].value().end == 6);
+        CHECK(intervals[0].value().start == TimeFrameIndex(0));
+        CHECK(intervals[0].value().end == TimeFrameIndex(2));
+        CHECK(intervals[1].value().start == TimeFrameIndex(5));
+        CHECK(intervals[1].value().end == TimeFrameIndex(6));
     }
     
     SECTION("All ones - single interval spanning entire data") {
@@ -203,8 +203,8 @@ TEST_CASE("DigitalInterval Binary State - Single Column Loading",
         REQUIRE(loaded->size() == 1);
         
         auto intervals = loaded->view();
-        CHECK(intervals[0].value().start == 0);
-        CHECK(intervals[0].value().end == 9);
+        CHECK(intervals[0].value().start == TimeFrameIndex(0));
+        CHECK(intervals[0].value().end == TimeFrameIndex(9));
     }
     
     SECTION("All zeros - no intervals") {
@@ -277,10 +277,10 @@ TEST_CASE("DigitalInterval Binary State - Single Column Loading",
         REQUIRE(loaded->size() == 2);
         
         auto intervals = loaded->view();
-        CHECK(intervals[0].value().start == 0);
-        CHECK(intervals[0].value().end == 1);
-        CHECK(intervals[1].value().start == 4);
-        CHECK(intervals[1].value().end == 5);
+        CHECK(intervals[0].value().start == TimeFrameIndex(0));
+        CHECK(intervals[0].value().end == TimeFrameIndex(1));
+        CHECK(intervals[1].value().start == TimeFrameIndex(4));
+        CHECK(intervals[1].value().end == TimeFrameIndex(5));
     }
 }
 
@@ -339,8 +339,8 @@ TEST_CASE("DigitalInterval Binary State - Batch Loading All Columns",
         
         // v0: one interval [0,4]
         REQUIRE(v0->size() == 1);
-        CHECK(v0->view()[0].value().start == 0);
-        CHECK(v0->view()[0].value().end == 4);
+        CHECK(v0->view()[0].value().start == TimeFrameIndex(0));
+        CHECK(v0->view()[0].value().end == TimeFrameIndex(4));
         
         // v1: four single-point intervals [0,0], [2,2], [4,4], [6,6]
         REQUIRE(v1->size() == 4);
@@ -389,7 +389,7 @@ TEST_CASE("DigitalInterval Binary State - Real Test Data (jun_test.dat)",
         REQUIRE(loaded->size() == 1);
         
         // First interval should start at 0
-        CHECK(loaded->view()[0].value().start == 0);
+        CHECK(loaded->view()[0].value().start == TimeFrameIndex(0));
     }
     
     SECTION("Load column v1 (all zeros)") {
@@ -548,8 +548,8 @@ TEST_CASE("DigitalInterval Binary State - Edge Cases",
         
         // Single row that is on should be one interval [0,0]
         REQUIRE(loaded->size() == 1);
-        CHECK(loaded->view()[0].value().start == 0);
-        CHECK(loaded->view()[0].value().end == 0);
+        CHECK(loaded->view()[0].value().start == TimeFrameIndex(0));
+        CHECK(loaded->view()[0].value().end == TimeFrameIndex(0));
     }
     
     SECTION("Single row - off") {
@@ -611,7 +611,7 @@ TEST_CASE("DigitalInterval Binary State - Edge Cases",
         
         // Should have one interval [2,3]
         REQUIRE(loaded->size() == 1);
-        CHECK(loaded->view()[0].value().start == 2);
-        CHECK(loaded->view()[0].value().end == 3);
+        CHECK(loaded->view()[0].value().start == TimeFrameIndex(2));
+        CHECK(loaded->view()[0].value().end == TimeFrameIndex(3));
     }
 }

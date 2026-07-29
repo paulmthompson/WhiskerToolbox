@@ -41,9 +41,9 @@ TEST_CASE("WhiskerContactScenario maps master to time frames", "[whisker_contact
     cfg.duration_sec = 1.0;
     auto const scenario = WhiskerContactScenario::generate(cfg);
 
-    REQUIRE(scenario.time_time->getTimeAtIndex(TimeFrameIndex(0)) == 0);
-    REQUIRE(scenario.time_time->getTimeAtIndex(TimeFrameIndex(1)) == 60);
-    REQUIRE(scenario.time_time->getTimeAtIndex(TimeFrameIndex(499)) == 29940);
+    REQUIRE(scenario.time_time->getTimeAtIndex(TimeFrameIndex(0)) == ClockTicks(0));
+    REQUIRE(scenario.time_time->getTimeAtIndex(TimeFrameIndex(1)) == ClockTicks(60));
+    REQUIRE(scenario.time_time->getTimeAtIndex(TimeFrameIndex(499)) == ClockTicks(29940));
 }
 
 TEST_CASE("WhiskerContactTestFixture populates DataManager", "[whisker_contact][fixture]") {

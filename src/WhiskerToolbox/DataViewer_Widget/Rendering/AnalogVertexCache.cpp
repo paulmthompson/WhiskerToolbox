@@ -157,7 +157,7 @@ void AnalogVertexCache::setVertices(std::vector<CachedAnalogVertex> const & vert
 
 std::vector<float> AnalogVertexCache::getVerticesForRange(TimeFrameIndex start,
                                                           TimeFrameIndex end,
-                                                          int64_t x_origin_master_absolute_time) const {
+                                                          ClockTicks x_origin_master_absolute_time) const {
     std::vector<float> result;
 
     if (!m_valid || m_vertices.empty()) {
@@ -179,7 +179,7 @@ std::vector<float> AnalogVertexCache::getVerticesForRange(TimeFrameIndex start,
             break;
         }
         double const rel_x =
-                static_cast<double>(v.x) - static_cast<double>(x_origin_master_absolute_time);
+                static_cast<double>(v.x - x_origin_master_absolute_time);
         result.push_back(static_cast<float>(rel_x));
         result.push_back(v.y);
     }

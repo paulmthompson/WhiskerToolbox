@@ -966,7 +966,7 @@ void DeepLearningPropertiesWidget::_onRunBatch() {
         std::vector<std::pair<int64_t, int64_t>> intervals;
         intervals.reserve(series->size());
         for (auto const & elem: series->view()) {
-            intervals.emplace_back(elem.interval.start, elem.interval.end);
+            intervals.emplace_back(elem.interval.start.getValue(), elem.interval.end.getValue());
         }
 
         _inference_controller->runBatchIntervals(

@@ -37,7 +37,7 @@ enum class IntervalOverlapOperation : std::uint8_t {
 * @return True if intervals overlap, false otherwise.
 */
 [[nodiscard]] bool intervalsOverlapInAbsoluteTime(TimeFrameInterval const & rowInterval,
-                                                  Interval const & columnInterval,
+                                                  TimeFrameInterval const & columnInterval,
                                                   TimeFrame const * sourceTimeFrame,
                                                   TimeFrame const * destinationTimeFrame);
 
@@ -54,7 +54,7 @@ enum class IntervalOverlapOperation : std::uint8_t {
 
         // Check if column interval contains the row interval
         // Column interval contains row interval if: colInterval.start <= rowInterval.start && rowInterval.end <= colInterval.end
-        if (colInterval.start <= rowInterval.start.getValue() && rowInterval.end.getValue() <= colInterval.end) {
+        if (colInterval.start <= rowInterval.start && rowInterval.end <= colInterval.end) {
             return static_cast<int64_t>(i);
         }
     }
@@ -214,12 +214,12 @@ public:
 
                 if (m_operation == IntervalOverlapOperation::AssignID_Start) {
                     // Convert into row time frame
-                    auto source_start_index = destinationTimeFrame->getIndexAtTime(static_cast<float>(source_start));
+                    auto source_start_index = destinationTimeFrame->getIndexAtTime(source_start);
                     results.push_back(static_cast<T>(source_start_index.getValue()));
                     entity_ids.push_back(matchedInterval.entity_id);
                 } else if (m_operation == IntervalOverlapOperation::AssignID_End) {
                     // Convert into row time frame
-                    auto source_end_index = destinationTimeFrame->getIndexAtTime(static_cast<float>(source_end));
+                    auto source_end_index = destinationTimeFrame->getIndexAtTime(source_end);
                     results.push_back(static_cast<T>(source_end_index.getValue()));
                     entity_ids.push_back(matchedInterval.entity_id);
                 } else {

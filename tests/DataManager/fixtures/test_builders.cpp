@@ -39,9 +39,9 @@ TEST_CASE("TimeFrameBuilder basic construction", "[fixtures][builders][timeframe
 
         REQUIRE(tf != nullptr);
         REQUIRE(tf->getTotalFrameCount() == 5);
-        REQUIRE(tf->getTimeAtIndex(TimeFrameIndex(0)) == 0);
-        REQUIRE(tf->getTimeAtIndex(TimeFrameIndex(1)) == 60);
-        REQUIRE(tf->getTimeAtIndex(TimeFrameIndex(4)) == 240);
+        REQUIRE(tf->getTimeAtIndex(TimeFrameIndex(0)) == ClockTicks(0));
+        REQUIRE(tf->getTimeAtIndex(TimeFrameIndex(1)) == ClockTicks(60));
+        REQUIRE(tf->getTimeAtIndex(TimeFrameIndex(4)) == ClockTicks(240));
     }
 }
 
@@ -222,7 +222,7 @@ TEST_CASE("DigitalTimeSeriesBuilder basic construction", "[fixtures][builders][d
         auto interval_view = intervals->getIntervalsInRange(TimeFrameIndex(0),
                                                             TimeFrameIndex(100),
                                                             *(intervals->getTimeFrame()));
-        std::vector<Interval> const interval_data(interval_view.begin(), interval_view.end());
+        std::vector<TimeFrameInterval> const interval_data(interval_view.begin(), interval_view.end());
         REQUIRE(interval_data.size() >= 2);
     }
 
@@ -237,7 +237,7 @@ TEST_CASE("DigitalTimeSeriesBuilder basic construction", "[fixtures][builders][d
         auto interval_view = intervals->getIntervalsInRange(TimeFrameIndex(0),
                                                             TimeFrameIndex(100),
                                                             *(intervals->getTimeFrame()));
-        std::vector<Interval> const interval_data(interval_view.begin(), interval_view.end());
+        std::vector<TimeFrameInterval> const interval_data(interval_view.begin(), interval_view.end());
         REQUIRE(!interval_data.empty());
     }
 }

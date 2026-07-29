@@ -7,6 +7,7 @@
 
 #include "Entity/EntityTypes.hpp"
 #include "SpatialIndex/QuadTree.hpp"
+#include "TimeFrame/ClockTicks.hpp"
 
 #include <glm/glm.hpp>
 
@@ -142,7 +143,7 @@ struct RenderableScene {
      * coordinates are expressed as @c (master_time - this_origin) for float precision.
      * Hit testing and interval metadata must add this value back to recover absolute time.
      */
-    int64_t time_axis_origin_master_absolute{0};
+    ClockTicks time_axis_origin_master_absolute{0};
 
     // Spatial index for hit testing
     // Built alongside geometry to ensure synchronization

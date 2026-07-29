@@ -173,12 +173,12 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         REQUIRE(result->size() == 2); // Two separate intervals
 
         // First interval: frames 0-4
-        REQUIRE(intervals[0].value().start == 0);
-        REQUIRE(intervals[0].value().end == 4);
+        REQUIRE(intervals[0].value().start == TimeFrameIndex(0));
+        REQUIRE(intervals[0].value().end == TimeFrameIndex(4));
 
         // Second interval: frames 10-14
-        REQUIRE(intervals[1].value().start == 10);
-        REQUIRE(intervals[1].value().end == 14);
+        REQUIRE(intervals[1].value().start == TimeFrameIndex(10));
+        REQUIRE(intervals[1].value().end == TimeFrameIndex(14));
     }
 
     SECTION("Track presence of Group B (discontinuous)") {
@@ -195,12 +195,12 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         REQUIRE(result->size() == 2); // Two separate intervals
 
         // First interval: frames 5-9
-        REQUIRE(intervals[0].value().start == 5);
-        REQUIRE(intervals[0].value().end == 9);
+        REQUIRE(intervals[0].value().start == TimeFrameIndex(5));
+        REQUIRE(intervals[0].value().end == TimeFrameIndex(9));
 
         // Second interval: frames 15-19
-        REQUIRE(intervals[1].value().start == 15);
-        REQUIRE(intervals[1].value().end == 19);
+        REQUIRE(intervals[1].value().start == TimeFrameIndex(15));
+        REQUIRE(intervals[1].value().end == TimeFrameIndex(19));
     }
 
     SECTION("Track presence of Group C (discontinuous)") {
@@ -217,12 +217,12 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         REQUIRE(result->size() == 2); // Two separate intervals
 
         // First interval: frames 5-9
-        REQUIRE(intervals[0].value().start == 5);
-        REQUIRE(intervals[0].value().end == 9);
+        REQUIRE(intervals[0].value().start == TimeFrameIndex(5));
+        REQUIRE(intervals[0].value().end == TimeFrameIndex(9));
 
         // Second interval: frames 20-24
-        REQUIRE(intervals[1].value().start == 20);
-        REQUIRE(intervals[1].value().end == 24);
+        REQUIRE(intervals[1].value().start == TimeFrameIndex(20));
+        REQUIRE(intervals[1].value().end == TimeFrameIndex(24));
     }
 }
 
@@ -244,12 +244,12 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         REQUIRE(result->size() == 2); // Two gaps
 
         // First gap: frames 5-9
-        REQUIRE(intervals[0].value().start == 5);
-        REQUIRE(intervals[0].value().end == 9);
+        REQUIRE(intervals[0].value().start == TimeFrameIndex(5));
+        REQUIRE(intervals[0].value().end == TimeFrameIndex(9));
 
         // Second gap: frames 15-24
-        REQUIRE(intervals[1].value().start == 15);
-        REQUIRE(intervals[1].value().end == 24);
+        REQUIRE(intervals[1].value().start == TimeFrameIndex(15));
+        REQUIRE(intervals[1].value().end == TimeFrameIndex(24));
     }
 
     SECTION("Track absence of Group B") {
@@ -266,15 +266,15 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         REQUIRE(result->size() == 3); // Three gaps
 
         // First gap: frames 0-4
-        REQUIRE(intervals[0].value().start == 0);
-        REQUIRE(intervals[0].value().end == 4);
+        REQUIRE(intervals[0].value().start == TimeFrameIndex(0));
+        REQUIRE(intervals[0].value().end == TimeFrameIndex(4));
 
         // Second gap: frames 10-14
-        REQUIRE(intervals[1].value().start == 10);
-        REQUIRE(intervals[1].value().end == 14);
+        REQUIRE(intervals[1].value().start == TimeFrameIndex(10));
+        REQUIRE(intervals[1].value().end == TimeFrameIndex(14));
         // Third gap: frames 20-24
-        REQUIRE(intervals[2].value().start == 20);
-        REQUIRE(intervals[2].value().end == 24);
+        REQUIRE(intervals[2].value().start == TimeFrameIndex(20));
+        REQUIRE(intervals[2].value().end == TimeFrameIndex(24));
     }
 }
 
@@ -349,8 +349,8 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         REQUIRE(result->size() == 1); // Should be merged into one
 
         // Merged interval: frames 0-14
-        REQUIRE(intervals[0].value().start == 0);
-        REQUIRE(intervals[0].value().end == 14);
+        REQUIRE(intervals[0].value().start == TimeFrameIndex(0));
+        REQUIRE(intervals[0].value().end == TimeFrameIndex(14));
     }
 
     SECTION("Do not merge intervals with gap_threshold = 4") {
@@ -383,8 +383,8 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         REQUIRE(result->size() == 1); // Should be merged
 
         // Merged interval: frames 5-19
-        REQUIRE(intervals[0].value().start == 5);
-        REQUIRE(intervals[0].value().end == 19);
+        REQUIRE(intervals[0].value().start == TimeFrameIndex(5));
+        REQUIRE(intervals[0].value().end == TimeFrameIndex(19));
     }
 }
 
@@ -408,8 +408,8 @@ TEST_CASE_METHOD(LineGroupToIntervalsTestFixture,
         // After merge: 5-24 (length 20)
         // After filter: length 20 passes
         REQUIRE(result->size() == 1);
-        REQUIRE(intervals[0].value().start == 5);
-        REQUIRE(intervals[0].value().end == 24);
+        REQUIRE(intervals[0].value().start == TimeFrameIndex(5));
+        REQUIRE(intervals[0].value().end == TimeFrameIndex(24));
     }
 
     SECTION("Merge then filter out") {

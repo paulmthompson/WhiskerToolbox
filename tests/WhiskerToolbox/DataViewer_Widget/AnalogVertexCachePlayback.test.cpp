@@ -41,7 +41,7 @@ TEST_CASE("AnalogVertexCache playback: sliding window matches reference batch", 
     DataViewerHelpers::AnalogBatchParams first{};
     first.start_time = TimeFrameIndex{0};
     first.end_time = TimeFrameIndex{100};
-    first.x_origin_master_absolute_time = static_cast<int64_t>(master->getTimeAtIndex(first.start_time));
+    first.x_origin_master_absolute_time = master->getTimeAtIndex(first.start_time);
     first.detect_gaps = false;
     first.min_max_decimation_bucket_count = 0;
 
@@ -51,7 +51,7 @@ TEST_CASE("AnalogVertexCache playback: sliding window matches reference batch", 
     DataViewerHelpers::AnalogBatchParams second{};
     second.start_time = TimeFrameIndex{25};
     second.end_time = TimeFrameIndex{125};
-    second.x_origin_master_absolute_time = static_cast<int64_t>(master->getTimeAtIndex(second.start_time));
+    second.x_origin_master_absolute_time = master->getTimeAtIndex(second.start_time);
     second.detect_gaps = false;
     second.min_max_decimation_bucket_count = 0;
 
@@ -93,7 +93,7 @@ TEST_CASE("AnalogVertexCache playback: large absolute times preserve visible sam
     DataViewerHelpers::AnalogBatchParams params{};
     params.start_time = TimeFrameIndex{128};
     params.end_time = TimeFrameIndex{228};
-    params.x_origin_master_absolute_time = static_cast<int64_t>(master->getTimeAtIndex(params.start_time));
+    params.x_origin_master_absolute_time = master->getTimeAtIndex(params.start_time);
     params.detect_gaps = false;
     params.min_max_decimation_bucket_count = 0;
 

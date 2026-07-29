@@ -25,7 +25,7 @@ class GroupManager;
  * @brief Row data for the interval table model
  */
 struct IntervalTableRow {
-    Interval interval;
+    TimeFrameInterval interval;
     EntityId entity_id;
     QString group_name;
 };
@@ -77,7 +77,7 @@ public:
      * @param row Row index
      * @return Interval data
      */
-    [[nodiscard]] Interval getInterval(int row) const;
+    [[nodiscard]] TimeFrameInterval getInterval(int row) const;
 
 private:
     std::vector<IntervalTableRow> _display_data;

@@ -33,17 +33,17 @@ std::shared_ptr<DigitalIntervalSeries> analogIntervalThreshold(
             params.missing_data_mode == AnalogIntervalThresholdParams::MissingDataMode::treat_as_zero;
     auto const direction = params.direction;
     
-    std::vector<Interval> intervals;
+    std::vector<TimeFrameInterval> intervals;
 
     // Variables to track interval state
     bool in_interval = false;
-    int64_t interval_start = 0;
+    TimeFrameIndex interval_start = TimeFrameIndex{0};
     double last_interval_end = -lockoutTime - 1.0;  // Initialize to allow first interval
-    int64_t last_valid_time = 0;  // Track the last time where we know the interval state
+    TimeFrameIndex last_valid_time = TimeFrameIndex{0};  // Track the last time where we know the interval state
 
-    auto addIntervalIfValid = [&intervals, minDuration](int64_t start, int64_t end) {
+    auto addIntervalIfValid = [&intervals, minDuration](TimeFrameIndex start, TimeFrameIndex end) {
         // Check if the interval meets the minimum duration requirement
-        if (static_cast<double>(end - start + 1) >= minDuration) {
+        if (static_cast<double>(end.getValue() - start.getValue() + 1) >= minDuration) {
             intervals.push_back({start, end});
         }
     };
@@ -95,7 +95,7 @@ std::shared_ptr<DigitalIntervalSeries> analogIntervalThreshold(
 
         // Initialize last_valid_time for first sample
         if (i == 0) {
-            last_valid_time = timestamps[i].getValue();
+            last_valid_time = timestamps[i];
         }
 
         // Handle missing data gaps if treating missing as zero
@@ -110,30 +110,30 @@ std::shared_ptr<DigitalIntervalSeries> analogIntervalThreshold(
                 if (in_interval && !zeroMeetsThreshold) {
                     // We're in an interval but zeros don't meet threshold - end the interval at the gap start
                     auto const gap_start = static_cast<int64_t>(prev_time);
-                    addIntervalIfValid(interval_start, gap_start);
+                    addIntervalIfValid(interval_start, TimeFrameIndex{gap_start});
                     last_interval_end = static_cast<double>(gap_start);
                     in_interval = false;
                 } else if (!in_interval && zeroMeetsThreshold) {
                     // We're not in an interval but zeros meet threshold - start interval in the gap
                     auto const gap_start = static_cast<int64_t>(prev_time + typical_time_step);
                     if (static_cast<double>(gap_start) - last_interval_end >= lockoutTime) {
-                        interval_start = gap_start;
+                        interval_start = TimeFrameIndex{gap_start};
                         in_interval = true;
                     }
                 }
 
                 // If we're in an interval and zeros meet threshold, update last_valid_time to end of gap
                 if (in_interval && zeroMeetsThreshold) {
-                    last_valid_time = static_cast<int64_t>(curr_time) - static_cast<int64_t>(typical_time_step);
+                    last_valid_time = TimeFrameIndex{static_cast<int64_t>(curr_time) - static_cast<int64_t>(typical_time_step)};
                 } else {
-                    last_valid_time = static_cast<int64_t>(prev_time);
+                    last_valid_time = TimeFrameIndex{static_cast<int64_t>(prev_time)};
                 }
             } else {
-                last_valid_time = static_cast<int64_t>(prev_time);
+                last_valid_time = TimeFrameIndex{static_cast<int64_t>(prev_time)};
             }
         } else {
             if (i > 0) {
-                last_valid_time = timestamps[i - 1].getValue();
+                last_valid_time = timestamps[i - 1];
             }
         }
 
@@ -142,24 +142,24 @@ std::shared_ptr<DigitalIntervalSeries> analogIntervalThreshold(
         if (threshold_met && !in_interval) {
             // Start of a new interval
             if (static_cast<double>(timestamps[i].getValue()) - last_interval_end >= lockoutTime) {
-                interval_start = timestamps[i].getValue();
+                interval_start = timestamps[i];
                 in_interval = true;
             }
         } else if (!threshold_met && in_interval) {
             // End of current interval
-            int64_t const interval_end = (i > 0) ? last_valid_time : interval_start;
+            TimeFrameIndex const interval_end = (i > 0) ? last_valid_time : interval_start;
             addIntervalIfValid(interval_start, interval_end);
-            last_interval_end = static_cast<double>(interval_end);
+            last_interval_end = static_cast<double>(interval_end.getValue());
             in_interval = false;
         }
 
         // Update last_valid_time to current timestamp
-        last_valid_time = timestamps[i].getValue();
+        last_valid_time = timestamps[i];
     }
 
     // Handle case where signal still meets threshold at the end
     if (in_interval) {
-        addIntervalIfValid(interval_start, timestamps.back().getValue());
+        addIntervalIfValid(interval_start, timestamps.back());
     }
 
     ctx.reportProgress(100);

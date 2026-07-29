@@ -18,8 +18,8 @@ namespace {
 using Neuralyzer::Transforms::V2::DigitalIntervalBooleanParams;
 
 /// Extract plain Interval values from a DigitalIntervalSeries view
-std::vector<Interval> extract_intervals(auto const & view_data) {
-    std::vector<Interval> result;
+std::vector<TimeFrameInterval> extract_intervals(auto const & view_data) {
+    std::vector<TimeFrameInterval> result;
     for (auto const & item: view_data) {
         result.push_back(item.value());
     }
@@ -27,17 +27,17 @@ std::vector<Interval> extract_intervals(auto const & view_data) {
 }
 
 /// Sort intervals by start time, then merge any overlapping/adjacent ones
-std::vector<Interval> sort_and_merge(std::vector<Interval> intervals) {
+std::vector<TimeFrameInterval> sort_and_merge(std::vector<TimeFrameInterval> intervals) {
     if (intervals.empty()) {
         return {};
     }
     std::sort(intervals.begin(), intervals.end(), [](auto const & a, auto const & b) {
         return a.start < b.start;
     });
-    std::vector<Interval> merged;
+    std::vector<TimeFrameInterval> merged;
     merged.push_back(intervals[0]);
     for (size_t i = 1; i < intervals.size(); ++i) {
-        if (intervals[i].start <= merged.back().end + 1) {
+        if (intervals[i].start <= merged.back().end + TimeFrameIndex{1}) {
             merged.back().end = std::max(merged.back().end, intervals[i].end);
         } else {
             merged.push_back(intervals[i]);
@@ -47,30 +47,30 @@ std::vector<Interval> sort_and_merge(std::vector<Interval> intervals) {
 }
 
 /// Compute NOT (gaps) of merged intervals within their bounding range
-std::vector<Interval> compute_not(std::vector<Interval> const & merged) {
+std::vector<TimeFrameInterval> compute_not(std::vector<TimeFrameInterval> const & merged) {
     if (merged.empty()) {
         return {};
     }
-    std::vector<Interval> result;
+    std::vector<TimeFrameInterval> result;
     for (size_t i = 1; i < merged.size(); ++i) {
-        if (merged[i].start > merged[i - 1].end + 1) {
-            result.push_back({merged[i - 1].end + 1, merged[i].start - 1});
+        if (merged[i].start > merged[i - 1].end + TimeFrameIndex{1}) {
+            result.push_back({merged[i - 1].end + TimeFrameIndex{1}, merged[i].start - TimeFrameIndex{1}});
         }
     }
     return result;
 }
 
 struct SweepEvent {
-    int64_t time;
+    TimeFrameIndex time;
     int8_t input_delta;
     int8_t other_delta;
 };
 
 /// Apply a binary boolean operation using sweep-line over interval endpoints.
 /// Complexity: O((n+m) log(n+m)) where n,m are interval counts.
-std::vector<Interval> sweep_line_boolean(
-        std::vector<Interval> const & input_intervals,
-        std::vector<Interval> const & other_intervals,
+std::vector<TimeFrameInterval> sweep_line_boolean(
+        std::vector<TimeFrameInterval> const & input_intervals,
+        std::vector<TimeFrameInterval> const & other_intervals,
         DigitalIntervalBooleanParams::Operation operation) {
 
     std::vector<SweepEvent> events;
@@ -78,11 +78,11 @@ std::vector<Interval> sweep_line_boolean(
 
     for (auto const & iv: input_intervals) {
         events.push_back({iv.start, +1, 0});
-        events.push_back({iv.end + 1, -1, 0});
+        events.push_back({iv.end + TimeFrameIndex{1}, -1, 0});
     }
     for (auto const & iv: other_intervals) {
         events.push_back({iv.start, 0, +1});
-        events.push_back({iv.end + 1, 0, -1});
+        events.push_back({iv.end + TimeFrameIndex{1}, 0, -1});
     }
 
     std::sort(events.begin(), events.end(), [](auto const & a, auto const & b) {
@@ -105,15 +105,15 @@ std::vector<Interval> sweep_line_boolean(
         return false;
     };
 
-    std::vector<Interval> result;
+    std::vector<TimeFrameInterval> result;
     int input_count = 0;
     int other_count = 0;
     bool prev_result = false;
-    int64_t interval_start = 0;
+    TimeFrameIndex interval_start = TimeFrameIndex{0};
 
     size_t i = 0;
     while (i < events.size()) {
-        int64_t const t = events[i].time;
+        TimeFrameIndex const t = events[i].time;
 
         // Process all events at the same timestamp
         while (i < events.size() && events[i].time == t) {
@@ -127,7 +127,7 @@ std::vector<Interval> sweep_line_boolean(
         if (current_result && !prev_result) {
             interval_start = t;
         } else if (!current_result && prev_result) {
-            result.push_back({interval_start, t - 1});
+            result.push_back({interval_start, t - TimeFrameIndex{1}});
         }
 
         prev_result = current_result;
@@ -173,16 +173,16 @@ std::shared_ptr<DigitalIntervalSeries> digitalIntervalBoolean(
     ctx.reportProgress(20);
 
     // Convert other_intervals to input timeframe if they differ
-    std::vector<Interval> converted_other_intervals;
+    std::vector<TimeFrameInterval> converted_other_intervals;
     if (input_timeframe && other_timeframe && input_timeframe != other_timeframe) {
         for (auto const & interval: other_view) {
             auto start_time = other_timeframe->getTimeAtIndex(TimeFrameIndex{interval.value().start});
             auto end_time = other_timeframe->getTimeAtIndex(TimeFrameIndex{interval.value().end});
 
-            auto converted_start = input_timeframe->getIndexAtTime(static_cast<float>(start_time), false);
-            auto converted_end = input_timeframe->getIndexAtTime(static_cast<float>(end_time), true);
+            auto converted_start = input_timeframe->getIndexAtTime(start_time, false);
+            auto converted_end = input_timeframe->getIndexAtTime(end_time, true);
 
-            converted_other_intervals.push_back({converted_start.getValue(), converted_end.getValue()});
+            converted_other_intervals.push_back({converted_start, converted_end});
         }
     } else {
         converted_other_intervals = extract_intervals(other_view);

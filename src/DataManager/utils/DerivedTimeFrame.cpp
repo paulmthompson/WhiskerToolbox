@@ -32,8 +32,8 @@ std::shared_ptr<TimeFrame> createDerivedTimeFrame(DerivedTimeFrameFromIntervalsO
                                              : TimeFrameIndex(interval.value().end);
 
         // Get the actual time value from the source timeframe at this index
-        int const time_value = options.source_timeframe->getTimeAtIndex(index);
-        derived_times.push_back(time_value);
+        ClockTicks const time_value = options.source_timeframe->getTimeAtIndex(index);
+        derived_times.push_back(time_value.getValue());
     }
 
     std::cout << "Created derived TimeFrame with " << derived_times.size()
@@ -96,7 +96,7 @@ std::shared_ptr<TimeFrame> createUpsampledTimeFrame(DerivedTimeFrameFromUpsampli
         std::vector<int> times;
         times.reserve(static_cast<size_t>(n));
         for (int i = 0; i < n; ++i) {
-            times.push_back(options.source_timeframe->getTimeAtIndex(TimeFrameIndex(i)));
+            times.push_back(options.source_timeframe->getTimeAtIndex(TimeFrameIndex(i)).getValue());
         }
         return std::make_shared<TimeFrame>(times);
     }
@@ -107,14 +107,14 @@ std::shared_ptr<TimeFrame> createUpsampledTimeFrame(DerivedTimeFrameFromUpsampli
     upsampled_times.reserve(output_size);
 
     for (int i = 0; i < n - 1; ++i) {
-        int const t_curr = options.source_timeframe->getTimeAtIndex(TimeFrameIndex(i));
-        int const t_next = options.source_timeframe->getTimeAtIndex(TimeFrameIndex(i + 1));
+        ClockTicks const t_curr = options.source_timeframe->getTimeAtIndex(TimeFrameIndex(i));
+        ClockTicks const t_next = options.source_timeframe->getTimeAtIndex(TimeFrameIndex(i + 1));
 
         for (int j = 0; j < factor; ++j) {
             // Linear interpolation: t_curr + j * (t_next - t_curr) / factor
             double const interpolated =
-                    static_cast<double>(t_curr) +
-                    static_cast<double>(j) * (static_cast<double>(t_next) - static_cast<double>(t_curr)) /
+                    static_cast<double>(t_curr.getValue()) +
+                    static_cast<double>(j) * (static_cast<double>(t_next.getValue()) - static_cast<double>(t_curr.getValue())) /
                             static_cast<double>(factor);
             upsampled_times.push_back(static_cast<int>(std::round(interpolated)));
         }
@@ -122,7 +122,7 @@ std::shared_ptr<TimeFrame> createUpsampledTimeFrame(DerivedTimeFrameFromUpsampli
 
     // Add the final time point
     upsampled_times.push_back(
-            options.source_timeframe->getTimeAtIndex(TimeFrameIndex(n - 1)));
+            options.source_timeframe->getTimeAtIndex(TimeFrameIndex(n - 1)).getValue());
 
     return std::make_shared<TimeFrame>(upsampled_times);
 }

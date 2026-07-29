@@ -15,7 +15,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 # Create TimeFrame test executable
 add_executable(test_timeframe
         test_timeframe_main.cpp
-        ${CMAKE_SOURCE_DIR}/src/TimeFrame/StrongTimeTypes.test.cpp
 )
 
 target_link_libraries(test_timeframe PRIVATE 

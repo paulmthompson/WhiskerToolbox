@@ -616,7 +616,7 @@ ClassificationPipelineResult runClassificationPipeline(
 
         if (cv_train_intervals && cv_train_intervals->size() > 1) {
             // Collect all training intervals
-            std::vector<Interval> all_train_ivs;
+            std::vector<TimeFrameInterval> all_train_ivs;
             all_train_ivs.reserve(cv_train_intervals->size());
             for (auto const & iwid: cv_train_intervals->view()) {
                 all_train_ivs.push_back(iwid.interval);
@@ -693,7 +693,7 @@ ClassificationPipelineResult runClassificationPipeline(
                 fold_test_cols.reserve(cv_labeled_times.size());
 
                 for (std::size_t i = 0; i < cv_labeled_times.size(); ++i) {
-                    auto const t = cv_labeled_times[i].getValue();
+                    auto const t = cv_labeled_times[i];
                     bool const in_held_out =
                             (t >= held_out_iv.start && t <= held_out_iv.end);
 
@@ -1329,8 +1329,8 @@ ClassificationPipelineResult runClassificationPipeline(
 
                 // Helper: check if time t falls within any of the sorted intervals
                 auto const isInIntervals =
-                        [](std::int64_t t,
-                           std::vector<Interval> const & sorted_ivs) -> bool {
+                        [](TimeFrameIndex t,
+                           std::vector<TimeFrameInterval> const & sorted_ivs) -> bool {
                     for (auto const & iv: sorted_ivs) {
                         if (t >= iv.start && t <= iv.end) {
                             return true;
@@ -1343,7 +1343,7 @@ ClassificationPipelineResult runClassificationPipeline(
                 };
 
                 // Build sorted training intervals (for partitioning)
-                std::vector<Interval> sorted_train_ivs;
+                std::vector<TimeFrameInterval> sorted_train_ivs;
                 if (!config.training_interval_key.empty()) {
                     auto training_intervals = dm.getData<DigitalIntervalSeries>(
                             config.training_interval_key);
@@ -1357,7 +1357,7 @@ ClassificationPipelineResult runClassificationPipeline(
                 }
 
                 // Build sorted validation intervals (for partitioning)
-                std::vector<Interval> sorted_val_ivs;
+                std::vector<TimeFrameInterval> sorted_val_ivs;
                 if (!config.validation_interval_key.empty()) {
                     auto validation_intervals = dm.getData<DigitalIntervalSeries>(
                             config.validation_interval_key);
@@ -1378,7 +1378,7 @@ ClassificationPipelineResult runClassificationPipeline(
                     val_indices.reserve(predict_row_times.size());
 
                     for (std::size_t i = 0; i < predict_row_times.size(); ++i) {
-                        auto const t = predict_row_times[i].getValue();
+                        auto const t = predict_row_times[i];
                         if (isInIntervals(t, sorted_train_ivs)) {
                             train_indices.push_back(static_cast<arma::uword>(i));
                         } else if (!sorted_val_ivs.empty() &&

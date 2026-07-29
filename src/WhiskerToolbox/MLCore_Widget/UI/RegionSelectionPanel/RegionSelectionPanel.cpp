@@ -292,7 +292,7 @@ void RegionSelectionPanel::_updateRegionInfo() {
     // Compute total frame count across all intervals
     int64_t total_frames = 0;
     for (auto const & iwid: series->view()) {
-        int64_t const span = iwid.interval.end - iwid.interval.start + 1;
+        int64_t const span = iwid.interval.end.getValue() - iwid.interval.start.getValue() + 1;
         if (span > 0) {
             total_frames += span;
         }

@@ -22,8 +22,8 @@ namespace {
     if (master_tf == nullptr) {
         return absolute_world_x - static_cast<float>(static_cast<int64_t>(view_state->x_min));
     }
-    int64_t const origin = static_cast<int64_t>(master_tf->getTimeAtIndex(
-            TimeFrameIndex{static_cast<int64_t>(view_state->x_min)}));
+    int64_t const origin = master_tf->getTimeAtIndex(
+            TimeFrameIndex{static_cast<int64_t>(view_state->x_min)}).getValue();
     return absolute_world_x - static_cast<float>(static_cast<double>(origin));
 }
 

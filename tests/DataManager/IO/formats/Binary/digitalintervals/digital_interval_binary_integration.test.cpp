@@ -339,10 +339,10 @@ TEST_CASE("DigitalInterval Binary Integration - Falling Edge Detection",
         REQUIRE(loaded->size() == 2);
         
         auto view = loaded->view();
-        REQUIRE(view[0].value().start == 20);
-        REQUIRE(view[0].value().end == 50);
-        REQUIRE(view[1].value().start == 60);
-        REQUIRE(view[1].value().end == 100);
+        REQUIRE(view[0].value().start == TimeFrameIndex(20));
+        REQUIRE(view[0].value().end == TimeFrameIndex(50));
+        REQUIRE(view[1].value().start == TimeFrameIndex(60));
+        REQUIRE(view[1].value().end == TimeFrameIndex(100));
     }
 }
 
@@ -503,8 +503,8 @@ TEST_CASE("DigitalInterval Binary Integration - Edge Cases",
         REQUIRE(loaded->size() == 1);
         
         auto view = loaded->view();
-        REQUIRE(view[0].value().start == 5);
-        REQUIRE(view[0].value().end == 45);
+        REQUIRE(view[0].value().start == TimeFrameIndex(5));
+        REQUIRE(view[0].value().end == TimeFrameIndex(45));
     }
     
     SECTION("Missing file handled gracefully") {

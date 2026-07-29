@@ -30,7 +30,7 @@ enum class DigitalIntervalStorageType {
  * @note Digital intervals are always sorted by start time.
  */
 struct DigitalIntervalStorageCache {
-    Interval const * intervals_ptr = nullptr;
+    TimeFrameInterval const * intervals_ptr = nullptr;
     EntityId const * entity_ids_ptr = nullptr;
     size_t cache_size = 0;
     bool is_contiguous = false;///< True if storage is contiguous (owning)
@@ -46,7 +46,7 @@ struct DigitalIntervalStorageCache {
     }
 
     // Convenience accessors for cached data
-    [[nodiscard]] Interval const & getInterval(size_t idx) const noexcept {
+    [[nodiscard]] TimeFrameInterval const & getInterval(size_t idx) const noexcept {
         return intervals_ptr[idx];
     }
 

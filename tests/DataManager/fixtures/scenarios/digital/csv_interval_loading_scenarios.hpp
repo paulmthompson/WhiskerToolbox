@@ -43,7 +43,7 @@ inline bool writeCSVTwoColumn(DigitalIntervalSeries const* intervals,
     
     // Write data rows
     for (auto const& interval : intervals->view()) {
-        file << interval.value().start << delimiter << interval.value().end << "\n";
+        file << interval.value().start.getValue() << delimiter << interval.value().end.getValue() << "\n";
     }
     
     return file.good();
@@ -77,7 +77,7 @@ inline bool writeCSVReversedColumns(DigitalIntervalSeries const* intervals,
     
     // Write data rows (end first, then start)
     for (auto const& interval : intervals->view()) {
-        file << interval.value().end << delimiter << interval.value().start << "\n";
+        file << interval.value().end.getValue() << delimiter << interval.value().start.getValue() << "\n";
     }
     
     return file.good();

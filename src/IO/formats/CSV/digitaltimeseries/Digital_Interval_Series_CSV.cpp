@@ -22,7 +22,10 @@ bool save(
         }
 
         for (auto const & interval: interval_data->view()) {
-            out << interval.value().start << opts.delimiter << interval.value().end << opts.line_delim;
+            out << interval.value().start.getValue()
+                << opts.delimiter
+                << interval.value().end.getValue()
+                << opts.line_delim;
         }
         return out.good();
     });
@@ -35,7 +38,7 @@ bool save(
 }
 
 
-std::vector<Interval> load_digital_series_from_csv(
+std::vector<TimeFrameInterval> load_digital_series_from_csv(
         std::string const & filename,
         char delimiter) {
     std::string csv_line;
@@ -48,7 +51,7 @@ std::vector<Interval> load_digital_series_from_csv(
         return {};
     }
 
-    auto output = std::vector<Interval>();
+    auto output = std::vector<TimeFrameInterval>();
     while (getline(myfile, csv_line)) {
         if (csv_line.empty()) continue;
 
@@ -66,7 +69,7 @@ std::vector<Interval> load_digital_series_from_csv(
             int64_t const start = std::stoll(start_str);
             int64_t const end = std::stoll(end_str);
 
-            output.emplace_back(Interval{start, end});
+            output.emplace_back(TimeFrameInterval{TimeFrameIndex(start), TimeFrameIndex(end)});
         } catch (std::exception const & e) {
             std::cerr << "Warning: Could not parse line: " << csv_line << " - " << e.what() << std::endl;
             continue;
@@ -76,7 +79,7 @@ std::vector<Interval> load_digital_series_from_csv(
     return output;
 }
 
-std::vector<Interval> load(CSVIntervalLoaderOptions const & options) {
+std::vector<TimeFrameInterval> load(CSVIntervalLoaderOptions const & options) {
     std::fstream file;
     file.open(options.filepath, std::fstream::in);
 
@@ -85,7 +88,7 @@ std::vector<Interval> load(CSVIntervalLoaderOptions const & options) {
         return {};
     }
 
-    std::vector<Interval> output;
+    std::vector<TimeFrameInterval> output;
     std::string line;
     bool first_line = true;
 
@@ -130,7 +133,7 @@ std::vector<Interval> load(CSVIntervalLoaderOptions const & options) {
                 continue;
             }
 
-            output.emplace_back(Interval{start, end});
+            output.emplace_back(TimeFrameInterval{TimeFrameIndex(start), TimeFrameIndex(end)});
         } catch (std::exception const & e) {
             std::cerr << "Warning: Failed to parse line: " << line << " - " << e.what() << std::endl;
             continue;

@@ -60,7 +60,7 @@ public:
 
     [[nodiscard]] size_t sizeImpl() const { return _num_elements; }
 
-    [[nodiscard]] Interval const & getIntervalImpl(size_t idx) const {
+    [[nodiscard]] TimeFrameInterval const & getIntervalImpl(size_t idx) const {
         auto const & element = _view[idx];
         if constexpr (requires { element.interval; }) {
             _cached_interval = element.interval;
@@ -83,10 +83,10 @@ public:
         }
     }
 
-    [[nodiscard]] std::optional<size_t> findByIntervalImpl(Interval const & interval) const {
+    [[nodiscard]] std::optional<size_t> findByIntervalImpl(TimeFrameInterval const & interval) const {
         // Linear search
         for (size_t i = 0; i < _num_elements; ++i) {
-            Interval const & iv = getIntervalImpl(i);
+            TimeFrameInterval const & iv = getIntervalImpl(i);
             if (iv.start == interval.start && iv.end == interval.end) {
                 return i;
             }
@@ -99,9 +99,9 @@ public:
         return it != _entity_id_to_index.end() ? std::optional{it->second} : std::nullopt;
     }
 
-    [[nodiscard]] bool hasIntervalAtTimeImpl(int64_t time) const {
+    [[nodiscard]] bool hasIntervalAtTimeImpl(TimeFrameIndex time) const {
         for (size_t i = 0; i < _num_elements; ++i) {
-            Interval const & interval = getIntervalImpl(i);
+            TimeFrameInterval const & interval = getIntervalImpl(i);
             if (interval.start <= time && time <= interval.end) {
                 return true;
             }
@@ -123,7 +123,7 @@ public:
      * @see OwningDigitalIntervalStorage::getOverlappingRangeImpl()
      * @see ViewDigitalIntervalStorage::getOverlappingRangeImpl()
      */
-    [[nodiscard]] std::pair<size_t, size_t> getOverlappingRangeImpl(int64_t start, int64_t end) const {
+    [[nodiscard]] std::pair<size_t, size_t> getOverlappingRangeImpl(TimeFrameIndex start, TimeFrameIndex end) const {
         if (_num_elements == 0 || start > end) {
             return {0, 0};
         }
@@ -133,7 +133,7 @@ public:
         size_t end_idx = 0;
 
         for (size_t i = 0; i < _num_elements; ++i) {
-            Interval const & interval = getIntervalImpl(i);
+            TimeFrameInterval const & interval = getIntervalImpl(i);
             if (interval.start <= end && interval.end >= start) {
                 start_idx = std::min(start_idx, i);
                 end_idx = std::max(end_idx, i + 1);
@@ -143,7 +143,7 @@ public:
         return start_idx <= end_idx ? std::pair{start_idx, end_idx} : std::pair<size_t, size_t>{0, 0};
     }
 
-    [[nodiscard]] std::pair<size_t, size_t> getContainedRangeImpl(int64_t start, int64_t end) const {
+    [[nodiscard]] std::pair<size_t, size_t> getContainedRangeImpl(TimeFrameIndex start, TimeFrameIndex end) const {
         if (_num_elements == 0 || start > end) {
             return {0, 0};
         }
@@ -153,7 +153,7 @@ public:
         size_t end_idx = 0;
 
         for (size_t i = 0; i < _num_elements; ++i) {
-            Interval const & interval = getIntervalImpl(i);
+            TimeFrameInterval const & interval = getIntervalImpl(i);
             if (interval.start >= start && interval.end <= end) {
                 start_idx = std::min(start_idx, i);
                 end_idx = std::max(end_idx, i + 1);
@@ -199,7 +199,8 @@ private:
     ViewType _view;
     size_t _num_elements;
     std::unordered_map<EntityId, size_t> _entity_id_to_index;
-    mutable Interval _cached_interval;// For returning reference from lazy access
+    mutable TimeFrameInterval _cached_interval{TimeFrameIndex{0}, TimeFrameIndex{0}};
+
 };
 
 #endif// LAZY_DIGITAL_INTERVAL_STORAGE_HPP

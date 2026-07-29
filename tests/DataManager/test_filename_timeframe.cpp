@@ -63,10 +63,10 @@ TEST_CASE("FilenameTimeFrame - Basic filename extraction", "[timeframe][filename
         REQUIRE(timeframe->getTotalFrameCount() == 4);
 
         // Values should be sorted: 1, 42, 123, 500
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(0)) == 1);
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(1)) == 42);
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(2)) == 123);
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(3)) == 500);
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(0)) == ClockTicks(1));
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(1)) == ClockTicks(42));
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(2)) == ClockTicks(123));
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(3)) == ClockTicks(500));
     }
 
     SECTION("Mixed file types with extension filtering") {
@@ -86,8 +86,8 @@ TEST_CASE("FilenameTimeFrame - Basic filename extraction", "[timeframe][filename
 
         REQUIRE(timeframe != nullptr);
         REQUIRE(timeframe->getTotalFrameCount() == 2);
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(0)) == 100);
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(1)) == 300);
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(0)) == ClockTicks(100));
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(1)) == ClockTicks(300));
     }
 
     SECTION("Complex filename pattern") {
@@ -106,9 +106,9 @@ TEST_CASE("FilenameTimeFrame - Basic filename extraction", "[timeframe][filename
 
         REQUIRE(timeframe != nullptr);
         REQUIRE(timeframe->getTotalFrameCount() == 3);
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(0)) == 1001);
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(1)) == 1050);
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(2)) == 2000);
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(0)) == ClockTicks(1001));
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(1)) == ClockTicks(1050));
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(2)) == ClockTicks(2000));
     }
 }
 
@@ -133,8 +133,8 @@ TEST_CASE("FilenameTimeFrame - Different creation modes", "[timeframe][filename]
         REQUIRE(timeframe != nullptr);
         REQUIRE(timeframe->getTotalFrameCount() == 4);
         // Should contain only the extracted values: 10, 25, 30, 50
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(0)) == 10);
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(3)) == 50);
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(0)) == ClockTicks(10));
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(3)) == ClockTicks(50));
     }
 
     SECTION("ZERO_TO_MAX mode") {
@@ -144,9 +144,9 @@ TEST_CASE("FilenameTimeFrame - Different creation modes", "[timeframe][filename]
         REQUIRE(timeframe != nullptr);
         REQUIRE(timeframe->getTotalFrameCount() == 51);// 0 to 50 inclusive
         // Should be a complete range from 0 to 50
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(0)) == 0);
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(10)) == 10);
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(50)) == 50);
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(0)) == ClockTicks(0));
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(10)) == ClockTicks(10));
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(50)) == ClockTicks(50));
     }
 
     SECTION("MIN_TO_MAX mode") {
@@ -156,9 +156,9 @@ TEST_CASE("FilenameTimeFrame - Different creation modes", "[timeframe][filename]
         REQUIRE(timeframe != nullptr);
         REQUIRE(timeframe->getTotalFrameCount() == 41);// 10 to 50 inclusive
         // Should be a complete range from 10 to 50
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(0)) == 10);
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(15)) == 25);
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(40)) == 50);
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(0)) == ClockTicks(10));
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(15)) == ClockTicks(25));
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(40)) == ClockTicks(50));
     }
 }
 
@@ -239,10 +239,10 @@ TEST_CASE("FilenameTimeFrame - Sorting behavior", "[timeframe][filename][sorting
         auto timeframe = createTimeFrameFromFilenames(options);
 
         REQUIRE(timeframe != nullptr);
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(0)) == 100);
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(1)) == 200);
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(2)) == 300);
-        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(3)) == 500);
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(0)) == ClockTicks(100));
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(1)) == ClockTicks(200));
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(2)) == ClockTicks(300));
+        REQUIRE(timeframe->getTimeAtIndex(TimeFrameIndex(3)) == ClockTicks(500));
     }
 
     SECTION("No sorting") {
@@ -254,7 +254,7 @@ TEST_CASE("FilenameTimeFrame - Sorting behavior", "[timeframe][filename][sorting
         // Just verify all values are present
         std::vector<int> found_values;
         for (int i = 0; i < timeframe->getTotalFrameCount(); ++i) {
-            found_values.push_back(timeframe->getTimeAtIndex(TimeFrameIndex(i)));
+            found_values.push_back(timeframe->getTimeAtIndex(TimeFrameIndex(i)).getValue());
         }
 
         REQUIRE(std::find(found_values.begin(), found_values.end(), 100) != found_values.end());

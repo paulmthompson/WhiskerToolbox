@@ -30,10 +30,10 @@ TEST_CASE("V1 Transform: Digital Interval Boolean - AND Operation",
 
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 2);
-        REQUIRE(result_intervals[0].value().start == 3);
-        REQUIRE(result_intervals[0].value().end == 5);
-        REQUIRE(result_intervals[1].value().start == 12);
-        REQUIRE(result_intervals[1].value().end == 15);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(3));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(5));
+        REQUIRE(result_intervals[1].value().start == TimeFrameIndex(12));
+        REQUIRE(result_intervals[1].value().end == TimeFrameIndex(15));
     }
 
     SECTION("AND - no overlap") {
@@ -54,8 +54,8 @@ TEST_CASE("V1 Transform: Digital Interval Boolean - AND Operation",
 
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 1);
-        REQUIRE(result_intervals[0].value().start == 1);
-        REQUIRE(result_intervals[0].value().end == 10);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(10));
     }
 
     SECTION("AND - one series subset of other") {
@@ -67,8 +67,8 @@ TEST_CASE("V1 Transform: Digital Interval Boolean - AND Operation",
 
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 1);
-        REQUIRE(result_intervals[0].value().start == 5);
-        REQUIRE(result_intervals[0].value().end == 15);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(5));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(15));
     }
 }
 
@@ -87,10 +87,10 @@ TEST_CASE("V1 Transform: Digital Interval Boolean - OR Operation",
 
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 2);
-        REQUIRE(result_intervals[0].value().start == 1);
-        REQUIRE(result_intervals[0].value().end == 5);
-        REQUIRE(result_intervals[1].value().start == 10);
-        REQUIRE(result_intervals[1].value().end == 15);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(5));
+        REQUIRE(result_intervals[1].value().start == TimeFrameIndex(10));
+        REQUIRE(result_intervals[1].value().end == TimeFrameIndex(15));
     }
 
     SECTION("OR - overlapping intervals merge") {
@@ -102,8 +102,8 @@ TEST_CASE("V1 Transform: Digital Interval Boolean - OR Operation",
 
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 1);
-        REQUIRE(result_intervals[0].value().start == 1);
-        REQUIRE(result_intervals[0].value().end == 15);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(15));
     }
 
     SECTION("OR - multiple intervals with gaps") {
@@ -115,12 +115,12 @@ TEST_CASE("V1 Transform: Digital Interval Boolean - OR Operation",
 
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 3);
-        REQUIRE(result_intervals[0].value().start == 1);
-        REQUIRE(result_intervals[0].value().end == 5);
-        REQUIRE(result_intervals[1].value().start == 8);
-        REQUIRE(result_intervals[1].value().end == 12);
-        REQUIRE(result_intervals[2].value().start == 15);
-        REQUIRE(result_intervals[2].value().end == 25);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(5));
+        REQUIRE(result_intervals[1].value().start == TimeFrameIndex(8));
+        REQUIRE(result_intervals[1].value().end == TimeFrameIndex(12));
+        REQUIRE(result_intervals[2].value().start == TimeFrameIndex(15));
+        REQUIRE(result_intervals[2].value().end == TimeFrameIndex(25));
     }
 }
 
@@ -139,10 +139,10 @@ TEST_CASE("V1 Transform: Digital Interval Boolean - XOR Operation",
 
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 2);
-        REQUIRE(result_intervals[0].value().start == 1);
-        REQUIRE(result_intervals[0].value().end == 5);
-        REQUIRE(result_intervals[1].value().start == 10);
-        REQUIRE(result_intervals[1].value().end == 15);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(5));
+        REQUIRE(result_intervals[1].value().start == TimeFrameIndex(10));
+        REQUIRE(result_intervals[1].value().end == TimeFrameIndex(15));
     }
 
     SECTION("XOR - partial overlap excludes overlap") {
@@ -154,10 +154,10 @@ TEST_CASE("V1 Transform: Digital Interval Boolean - XOR Operation",
 
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 2);
-        REQUIRE(result_intervals[0].value().start == 1);
-        REQUIRE(result_intervals[0].value().end == 4);
-        REQUIRE(result_intervals[1].value().start == 11);
-        REQUIRE(result_intervals[1].value().end == 15);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(4));
+        REQUIRE(result_intervals[1].value().start == TimeFrameIndex(11));
+        REQUIRE(result_intervals[1].value().end == TimeFrameIndex(15));
     }
 
     SECTION("XOR - complete overlap results in nothing") {
@@ -178,12 +178,12 @@ TEST_CASE("V1 Transform: Digital Interval Boolean - XOR Operation",
 
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 3);
-        REQUIRE(result_intervals[0].value().start == 1);
-        REQUIRE(result_intervals[0].value().end == 2);
-        REQUIRE(result_intervals[1].value().start == 6);
-        REQUIRE(result_intervals[1].value().end == 9);
-        REQUIRE(result_intervals[2].value().start == 13);
-        REQUIRE(result_intervals[2].value().end == 15);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(2));
+        REQUIRE(result_intervals[1].value().start == TimeFrameIndex(6));
+        REQUIRE(result_intervals[1].value().end == TimeFrameIndex(9));
+        REQUIRE(result_intervals[2].value().start == TimeFrameIndex(13));
+        REQUIRE(result_intervals[2].value().end == TimeFrameIndex(15));
     }
 }
 
@@ -210,8 +210,8 @@ TEST_CASE("V1 Transform: Digital Interval Boolean - NOT Operation",
 
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 1);
-        REQUIRE(result_intervals[0].value().start == 6);
-        REQUIRE(result_intervals[0].value().end == 9);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(6));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(9));
     }
 
     SECTION("NOT - multiple gaps") {
@@ -222,10 +222,10 @@ TEST_CASE("V1 Transform: Digital Interval Boolean - NOT Operation",
 
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 2);
-        REQUIRE(result_intervals[0].value().start == 4);
-        REQUIRE(result_intervals[0].value().end == 4);
-        REQUIRE(result_intervals[1].value().start == 8);
-        REQUIRE(result_intervals[1].value().end == 8);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(4));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(4));
+        REQUIRE(result_intervals[1].value().start == TimeFrameIndex(8));
+        REQUIRE(result_intervals[1].value().end == TimeFrameIndex(8));
     }
 }
 
@@ -244,8 +244,8 @@ TEST_CASE("V1 Transform: Digital Interval Boolean - AND_NOT Operation",
 
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 1);
-        REQUIRE(result_intervals[0].value().start == 1);
-        REQUIRE(result_intervals[0].value().end == 4);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(4));
     }
 
     SECTION("AND_NOT - no overlap keeps input") {
@@ -257,8 +257,8 @@ TEST_CASE("V1 Transform: Digital Interval Boolean - AND_NOT Operation",
 
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 1);
-        REQUIRE(result_intervals[0].value().start == 1);
-        REQUIRE(result_intervals[0].value().end == 5);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(5));
     }
 
     SECTION("AND_NOT - complete overlap removes everything") {
@@ -279,12 +279,12 @@ TEST_CASE("V1 Transform: Digital Interval Boolean - AND_NOT Operation",
 
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 3);
-        REQUIRE(result_intervals[0].value().start == 1);
-        REQUIRE(result_intervals[0].value().end == 4);
-        REQUIRE(result_intervals[1].value().start == 9);
-        REQUIRE(result_intervals[1].value().end == 11);
-        REQUIRE(result_intervals[2].value().start == 16);
-        REQUIRE(result_intervals[2].value().end == 20);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(4));
+        REQUIRE(result_intervals[1].value().start == TimeFrameIndex(9));
+        REQUIRE(result_intervals[1].value().end == TimeFrameIndex(11));
+        REQUIRE(result_intervals[2].value().start == TimeFrameIndex(16));
+        REQUIRE(result_intervals[2].value().end == TimeFrameIndex(20));
     }
 }
 
@@ -371,8 +371,8 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - Class Tests", "[
     }
 
     SECTION("Execute with valid data - AND operation") {
-        std::vector<Interval> input_intervals = {{1, 10}};
-        std::vector<Interval> other_intervals = {{5, 15}};
+        std::vector<TimeFrameInterval> input_intervals = {TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(10))};
+        std::vector<TimeFrameInterval> other_intervals = {TimeFrameInterval(TimeFrameIndex(5), TimeFrameIndex(15))};
         
         auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
         auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
@@ -389,12 +389,12 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - Class Tests", "[
 
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 1);
-        REQUIRE(result_intervals[0].value().start == 5);
-        REQUIRE(result_intervals[0].value().end == 10);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(5));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(10));
     }
 
     SECTION("Execute with default parameters") {
-        std::vector<Interval> input_intervals = {{1, 10}};
+        std::vector<TimeFrameInterval> input_intervals = {TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(10))};
         auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
         
         variant = input_dis;
@@ -424,8 +424,8 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - Edge Cases and E
     BooleanParams params;
 
     SECTION("Empty input series") {
-        std::vector<Interval> input_intervals = {};
-        std::vector<Interval> other_intervals = {{1, 10}};
+        std::vector<TimeFrameInterval> input_intervals = {};
+        std::vector<TimeFrameInterval> other_intervals = {TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(10))};
         
         auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
         auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
@@ -440,8 +440,8 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - Edge Cases and E
     }
 
     SECTION("Both series empty") {
-        std::vector<Interval> input_intervals = {};
-        std::vector<Interval> other_intervals = {};
+        std::vector<TimeFrameInterval> input_intervals = {};
+        std::vector<TimeFrameInterval> other_intervals = {};
         
         auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
         auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
@@ -463,7 +463,7 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - Edge Cases and E
     }
 
     SECTION("Null other_series for AND") {
-        std::vector<Interval> input_intervals = {{1, 10}};
+        std::vector<TimeFrameInterval> input_intervals = {TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(10))};
         auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
 
         params.operation = BooleanParams::BooleanOperation::AND;
@@ -475,7 +475,7 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - Edge Cases and E
     }
 
     SECTION("NOT with empty series") {
-        std::vector<Interval> input_intervals = {};
+        std::vector<TimeFrameInterval> input_intervals = {};
         auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
 
         params.operation = BooleanParams::BooleanOperation::NOT;
@@ -490,8 +490,8 @@ TEST_CASE("Progress Callback", "[transforms][digital_interval_boolean][progress]
     BooleanParams params;
     
     SECTION("Progress callback is invoked") {
-        std::vector<Interval> input_intervals = {{1, 100}};
-        std::vector<Interval> other_intervals = {{50, 150}};
+        std::vector<TimeFrameInterval> input_intervals = {TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(100))};
+        std::vector<TimeFrameInterval> other_intervals = {TimeFrameInterval(TimeFrameIndex(50), TimeFrameIndex(150))};
         
         auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
         auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
@@ -526,12 +526,12 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - TimeFrame Conver
         auto other_timeframe = std::make_shared<TimeFrame>(other_times);
         
         // Input intervals in indices: (2,5) means times 2-5ms
-        std::vector<Interval> input_intervals = {{2, 5}};
+        std::vector<TimeFrameInterval> input_intervals = {TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(5))};
         auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
         input_dis->setTimeFrame(input_timeframe);
         
         // Other intervals in indices: (1,3) means indices 1-3, which are times 2-6ms
-        std::vector<Interval> other_intervals = {{1, 3}};
+        std::vector<TimeFrameInterval> other_intervals = {TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(3))};
         auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
         other_dis->setTimeFrame(other_timeframe);
         
@@ -546,8 +546,8 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - TimeFrame Conver
         REQUIRE(result->size() == 1);
         
         // Input (2,5) AND Other (2,6) in input timeframe = (2,5)
-        REQUIRE(result_intervals[0].value().start == 2);
-        REQUIRE(result_intervals[0].value().end == 5);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(2));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(5));
     }
     
     SECTION("AND operation with downsampling (input has lower sampling rate)") {
@@ -560,12 +560,12 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - TimeFrame Conver
         auto other_timeframe = std::make_shared<TimeFrame>(other_times);
         
         // Input intervals in indices: (1,3) means times 2-6ms
-        std::vector<Interval> input_intervals = {{1, 3}};
+        std::vector<TimeFrameInterval> input_intervals = {TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(3))};
         auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
         input_dis->setTimeFrame(input_timeframe);
         
         // Other intervals in indices: (3,7) means times 3-7ms
-        std::vector<Interval> other_intervals = {{3, 7}};
+        std::vector<TimeFrameInterval> other_intervals = {TimeFrameInterval(TimeFrameIndex(3), TimeFrameIndex(7))};
         auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
         other_dis->setTimeFrame(other_timeframe);
         
@@ -584,8 +584,8 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - TimeFrame Conver
         // After conversion, other becomes (2,3) in input timeframe = times [4, 6]ms
         // (because 3ms converts to index 2 at time 4ms, and 7ms converts to index 3 at time 6ms)
         // AND result: overlap of [2, 4, 6]ms and [4, 6]ms = [4, 6]ms = indices (2,3)
-        REQUIRE(result_intervals[0].value().start == 2);
-        REQUIRE(result_intervals[0].value().end == 3);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(2));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(3));
     }
     
     SECTION("OR operation with different sampling rates") {
@@ -598,12 +598,12 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - TimeFrame Conver
         auto other_timeframe = std::make_shared<TimeFrame>(other_times);
         
         // Input: (1,3) = times 1-3ms
-        std::vector<Interval> input_intervals = {{1, 3}};
+        std::vector<TimeFrameInterval> input_intervals = {TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(3))};
         auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
         input_dis->setTimeFrame(input_timeframe);
         
         // Other: (2,3) = indices 2-3 = times 6-9ms
-        std::vector<Interval> other_intervals = {{2, 3}};
+        std::vector<TimeFrameInterval> other_intervals = {TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(3))};
         auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
         other_dis->setTimeFrame(other_timeframe);
         
@@ -618,10 +618,10 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - TimeFrame Conver
         // Should have two separate intervals since they don't overlap
         REQUIRE(result->size() == 2);
         
-        REQUIRE(result_intervals[0].value().start == 1);
-        REQUIRE(result_intervals[0].value().end == 3);
-        REQUIRE(result_intervals[1].value().start == 6);
-        REQUIRE(result_intervals[1].value().end == 9);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(1));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(3));
+        REQUIRE(result_intervals[1].value().start == TimeFrameIndex(6));
+        REQUIRE(result_intervals[1].value().end == TimeFrameIndex(9));
     }
     
     SECTION("XOR operation with different sampling rates") {
@@ -634,12 +634,12 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - TimeFrame Conver
         auto other_timeframe = std::make_shared<TimeFrame>(other_times);
         
         // Input: (2,7) = times 2-7ms
-        std::vector<Interval> input_intervals = {{2, 7}};
+        std::vector<TimeFrameInterval> input_intervals = {TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(7))};
         auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
         input_dis->setTimeFrame(input_timeframe);
         
         // Other: (2,4) = indices 2-4 = times 4-8ms
-        std::vector<Interval> other_intervals = {{2, 4}};
+        std::vector<TimeFrameInterval> other_intervals = {TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(4))};
         auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
         other_dis->setTimeFrame(other_timeframe);
         
@@ -655,21 +655,21 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - TimeFrame Conver
         REQUIRE(result->size() == 2);
         
         // (2,7) XOR (4,8) = (2,3) and (8,8)
-        REQUIRE(result_intervals[0].value().start == 2);
-        REQUIRE(result_intervals[0].value().end == 3);
-        REQUIRE(result_intervals[1].value().start == 8);
-        REQUIRE(result_intervals[1].value().end == 8);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(2));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(3));
+        REQUIRE(result_intervals[1].value().start == TimeFrameIndex(8));
+        REQUIRE(result_intervals[1].value().end == TimeFrameIndex(8));
     }
     
     SECTION("Same TimeFrame object - no conversion needed") {
         std::vector<int> times = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         auto timeframe = std::make_shared<TimeFrame>(times);
         
-        std::vector<Interval> input_intervals = {{2, 5}};
+        std::vector<TimeFrameInterval> input_intervals = {TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(5))};
         auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
         input_dis->setTimeFrame(timeframe);
         
-        std::vector<Interval> other_intervals = {{4, 7}};
+        std::vector<TimeFrameInterval> other_intervals = {TimeFrameInterval(TimeFrameIndex(4), TimeFrameIndex(7))};
         auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
         other_dis->setTimeFrame(timeframe);
         
@@ -683,15 +683,15 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - TimeFrame Conver
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 1);
         
-        REQUIRE(result_intervals[0].value().start == 4);
-        REQUIRE(result_intervals[0].value().end == 5);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(4));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(5));
     }
     
     SECTION("No TimeFrame - indices used directly") {
-        std::vector<Interval> input_intervals = {{2, 5}};
+        std::vector<TimeFrameInterval> input_intervals = {TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(5))};
         auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
         
-        std::vector<Interval> other_intervals = {{4, 7}};
+        std::vector<TimeFrameInterval> other_intervals = {TimeFrameInterval(TimeFrameIndex(4), TimeFrameIndex(7))};
         auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
         
         params.operation = BooleanParams::BooleanOperation::AND;
@@ -704,15 +704,15 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - TimeFrame Conver
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 1);
         
-        REQUIRE(result_intervals[0].value().start == 4);
-        REQUIRE(result_intervals[0].value().end == 5);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(4));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(5));
     }
     
     SECTION("NOT operation preserves input TimeFrame") {
         std::vector<int> times = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         auto timeframe = std::make_shared<TimeFrame>(times);
         
-        std::vector<Interval> input_intervals = {{2, 4}, {7, 9}};
+        std::vector<TimeFrameInterval> input_intervals = {TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(4)), TimeFrameInterval(TimeFrameIndex(7), TimeFrameIndex(9))};
         auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
         input_dis->setTimeFrame(timeframe);
         
@@ -725,8 +725,8 @@ TEST_CASE("Data Transform: Digital Interval Boolean Transform - TimeFrame Conver
         auto const & result_intervals = result->view();
         REQUIRE(result->size() == 1);
         
-        REQUIRE(result_intervals[0].value().start == 5);
-        REQUIRE(result_intervals[0].value().end == 6);
+        REQUIRE(result_intervals[0].value().start == TimeFrameIndex(5));
+        REQUIRE(result_intervals[0].value().end == TimeFrameIndex(6));
     }
 }
 
@@ -762,8 +762,8 @@ TEST_CASE("Data Transform: Digital Interval Boolean - JSON pipeline", "[transfor
     // Input: (1,10), (20,30)
     // Other: (5,15), (25,35)
     // Expected AND result: (5,10), (25,30)
-    std::vector<Interval> input_intervals = {{1, 10}, {20, 30}};
-    std::vector<Interval> other_intervals = {{5, 15}, {25, 35}};
+    std::vector<TimeFrameInterval> input_intervals = {TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(10)), TimeFrameInterval(TimeFrameIndex(20), TimeFrameIndex(30))};
+    std::vector<TimeFrameInterval> other_intervals = {TimeFrameInterval(TimeFrameIndex(5), TimeFrameIndex(15)), TimeFrameInterval(TimeFrameIndex(25), TimeFrameIndex(35))};
     
     auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
     input_dis->setTimeFrame(time_frame);
@@ -785,10 +785,10 @@ TEST_CASE("Data Transform: Digital Interval Boolean - JSON pipeline", "[transfor
     REQUIRE(result_series->size() == 2);
 
     // Verify AND operation result
-    REQUIRE(result_intervals[0].value().start == 5);
-    REQUIRE(result_intervals[0].value().end == 10);
-    REQUIRE(result_intervals[1].value().start == 25);
-    REQUIRE(result_intervals[1].value().end == 30);
+    REQUIRE(result_intervals[0].value().start == TimeFrameIndex(5));
+    REQUIRE(result_intervals[0].value().end == TimeFrameIndex(10));
+    REQUIRE(result_intervals[1].value().start == TimeFrameIndex(25));
+    REQUIRE(result_intervals[1].value().end == TimeFrameIndex(30));
 }
 
 TEST_CASE("Data Transform: Digital Interval Boolean - load_data_from_json_config", "[transforms][digital_interval_boolean][json_config]") {
@@ -802,8 +802,8 @@ TEST_CASE("Data Transform: Digital Interval Boolean - load_data_from_json_config
     // Create test interval data in code
     // Input: (1,10), (20,30)
     // Other: (5,15), (25,35)
-    std::vector<Interval> input_intervals = {{1, 10}, {20, 30}};
-    std::vector<Interval> other_intervals = {{5, 15}, {25, 35}};
+    std::vector<TimeFrameInterval> input_intervals = {TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(10)), TimeFrameInterval(TimeFrameIndex(20), TimeFrameIndex(30))};
+    std::vector<TimeFrameInterval> other_intervals = {TimeFrameInterval(TimeFrameIndex(5), TimeFrameIndex(15)), TimeFrameInterval(TimeFrameIndex(25), TimeFrameIndex(35))};
     
     auto input_dis = std::make_shared<DigitalIntervalSeries>(input_intervals);
     auto other_dis = std::make_shared<DigitalIntervalSeries>(other_intervals);
@@ -902,52 +902,52 @@ TEST_CASE("Data Transform: Digital Interval Boolean - load_data_from_json_config
     REQUIRE(and_result != nullptr);
     auto const & and_intervals = and_result->view();
     REQUIRE(and_result->size() == 2);
-    REQUIRE(and_intervals[0].value().start == 5);
-    REQUIRE(and_intervals[0].value().end == 10);
-    REQUIRE(and_intervals[1].value().start == 25);
-    REQUIRE(and_intervals[1].value().end == 30);
+    REQUIRE(and_intervals[0].value().start == TimeFrameIndex(5));
+    REQUIRE(and_intervals[0].value().end == TimeFrameIndex(10));
+    REQUIRE(and_intervals[1].value().start == TimeFrameIndex(25));
+    REQUIRE(and_intervals[1].value().end == TimeFrameIndex(30));
     
     // Verify OR result: (1,15), (20,35)
     auto or_result = dm.getData<DigitalIntervalSeries>("or_result");
     REQUIRE(or_result != nullptr);
     auto const & or_intervals = or_result->view();
     REQUIRE(or_result->size() == 2);
-    REQUIRE(or_intervals[0].value().start == 1);
-    REQUIRE(or_intervals[0].value().end == 15);
-    REQUIRE(or_intervals[1].value().start == 20);
-    REQUIRE(or_intervals[1].value().end == 35);
+    REQUIRE(or_intervals[0].value().start == TimeFrameIndex(1));
+    REQUIRE(or_intervals[0].value().end == TimeFrameIndex(15));
+    REQUIRE(or_intervals[1].value().start == TimeFrameIndex(20));
+    REQUIRE(or_intervals[1].value().end == TimeFrameIndex(35));
     
     // Verify XOR result: (1,4), (11,15), (20,24), (31,35)
     auto xor_result = dm.getData<DigitalIntervalSeries>("xor_result");
     REQUIRE(xor_result != nullptr);
     auto const & xor_intervals = xor_result->view();
     REQUIRE(xor_result->size() == 4);
-    REQUIRE(xor_intervals[0].value().start == 1);
-    REQUIRE(xor_intervals[0].value().end == 4);
-    REQUIRE(xor_intervals[1].value().start == 11);
-    REQUIRE(xor_intervals[1].value().end == 15);
-    REQUIRE(xor_intervals[2].value().start == 20);
-    REQUIRE(xor_intervals[2].value().end == 24);
-    REQUIRE(xor_intervals[3].value().start == 31);
-    REQUIRE(xor_intervals[3].value().end == 35);
+    REQUIRE(xor_intervals[0].value().start == TimeFrameIndex(1));
+    REQUIRE(xor_intervals[0].value().end == TimeFrameIndex(4));
+    REQUIRE(xor_intervals[1].value().start == TimeFrameIndex(11));
+    REQUIRE(xor_intervals[1].value().end == TimeFrameIndex(15));
+    REQUIRE(xor_intervals[2].value().start == TimeFrameIndex(20));
+    REQUIRE(xor_intervals[2].value().end == TimeFrameIndex(24));
+    REQUIRE(xor_intervals[3].value().start == TimeFrameIndex(31));
+    REQUIRE(xor_intervals[3].value().end == TimeFrameIndex(35));
     
     // Verify NOT result: (11,19)
     auto not_result = dm.getData<DigitalIntervalSeries>("not_result");
     REQUIRE(not_result != nullptr);
     auto const & not_intervals = not_result->view();
     REQUIRE(not_result->size() == 1);
-    REQUIRE(not_intervals[0].value().start == 11);
-    REQUIRE(not_intervals[0].value().end == 19);
+    REQUIRE(not_intervals[0].value().start == TimeFrameIndex(11));
+    REQUIRE(not_intervals[0].value().end == TimeFrameIndex(19));
     
     // Verify AND_NOT result: (1,4), (20,24)
     auto and_not_result = dm.getData<DigitalIntervalSeries>("and_not_result");
     REQUIRE(and_not_result != nullptr);
     auto const & and_not_intervals = and_not_result->view();
     REQUIRE(and_not_result->size() == 2);
-    REQUIRE(and_not_intervals[0].value().start == 1);
-    REQUIRE(and_not_intervals[0].value().end == 4);
-    REQUIRE(and_not_intervals[1].value().start == 20);
-    REQUIRE(and_not_intervals[1].value().end == 24);
+    REQUIRE(and_not_intervals[0].value().start == TimeFrameIndex(1));
+    REQUIRE(and_not_intervals[0].value().end == TimeFrameIndex(4));
+    REQUIRE(and_not_intervals[1].value().start == TimeFrameIndex(20));
+    REQUIRE(and_not_intervals[1].value().end == TimeFrameIndex(24));
     
     // Cleanup
     try {

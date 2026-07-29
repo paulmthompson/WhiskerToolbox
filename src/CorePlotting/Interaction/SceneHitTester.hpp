@@ -180,7 +180,7 @@ public:
             float world_x,
             float world_y,
             LayoutResponse const & layout,
-            int64_t master_time_axis_origin_absolute = 0) const;
+            ClockTicks master_time_axis_origin_absolute = ClockTicks(0)) const;
 
 private:
     HitTestConfig _config;

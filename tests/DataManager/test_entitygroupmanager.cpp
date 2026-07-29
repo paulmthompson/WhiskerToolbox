@@ -675,11 +675,11 @@ TEST_CASE("EntityGroupManager Integration - DigitalIntervalSeries Entity Lookup"
         auto interval_data = std::make_shared<DigitalIntervalSeries>();
 
         // Add test intervals at different times
-        interval_data->addEvent(Interval{100, 200});  // Index 0: 100ms duration from t=100 to t=200
-        interval_data->addEvent(Interval{300, 350});  // Index 1: 50ms duration from t=300 to t=350
-        interval_data->addEvent(Interval{500, 800});  // Index 2: 300ms duration from t=500 to t=800
-        interval_data->addEvent(Interval{1000, 1100});// Index 3: 100ms duration from t=1000 to t=1100
-        interval_data->addEvent(Interval{1200, 1300});// Index 4: 100ms duration from t=1200 to t=1300
+        interval_data->addEvent(TimeFrameInterval{TimeFrameIndex(100), TimeFrameIndex(200)});  // Index 0: 100ms duration from t=100 to t=200
+        interval_data->addEvent(TimeFrameInterval{TimeFrameIndex(300), TimeFrameIndex(350)});  // Index 1: 50ms duration from t=300 to t=350
+        interval_data->addEvent(TimeFrameInterval{TimeFrameIndex(500), TimeFrameIndex(800)});  // Index 2: 300ms duration from t=500 to t=800
+        interval_data->addEvent(TimeFrameInterval{TimeFrameIndex(1000), TimeFrameIndex(1100)});// Index 3: 100ms duration from t=1000 to t=1100
+        interval_data->addEvent(TimeFrameInterval{TimeFrameIndex(1200), TimeFrameIndex(1300)});// Index 4: 100ms duration from t=1200 to t=1300
 
         // Set up identity context before adding to DataManager
         interval_data->setIdentityContext("test_intervals", data_manager.getEntityRegistry());
@@ -710,12 +710,12 @@ TEST_CASE("EntityGroupManager Integration - DigitalIntervalSeries Entity Lookup"
         REQUIRE(third_interval.has_value());
         REQUIRE(last_interval.has_value());
 
-        REQUIRE(first_interval->start == 100);
-        REQUIRE(first_interval->end == 200);
-        REQUIRE(third_interval->start == 500);
-        REQUIRE(third_interval->end == 800);
-        REQUIRE(last_interval->start == 1200);
-        REQUIRE(last_interval->end == 1300);
+        REQUIRE(first_interval->start == TimeFrameIndex(100));
+        REQUIRE(first_interval->end == TimeFrameIndex(200));
+        REQUIRE(third_interval->start == TimeFrameIndex(500));
+        REQUIRE(third_interval->end == TimeFrameIndex(800));
+        REQUIRE(last_interval->start == TimeFrameIndex(1200));
+        REQUIRE(last_interval->end == TimeFrameIndex(1300));
 
         // Create groups using EntityGroupManager
         auto * group_manager = data_manager.getEntityGroupManager();
@@ -731,7 +731,7 @@ TEST_CASE("EntityGroupManager Integration - DigitalIntervalSeries Entity Lookup"
             auto interval = interval_data->getIntervalByEntityId(entity_id.id());
             REQUIRE(interval.has_value());
 
-            int64_t duration = interval->end - interval->start;
+            int64_t duration = interval->end.getValue() - interval->start.getValue();
             if (duration <= 100) {
                 short_entities.push_back(entity_id.id());
             } else {
@@ -756,7 +756,7 @@ TEST_CASE("EntityGroupManager Integration - DigitalIntervalSeries Entity Lookup"
             auto interval = interval_data->getIntervalByEntityId(entity_id);
             REQUIRE(interval.has_value());
 
-            int64_t duration = interval->end - interval->start;
+            int64_t duration = interval->end.getValue() - interval->start.getValue();
             REQUIRE(duration <= 100);
         }
 
@@ -769,7 +769,7 @@ TEST_CASE("EntityGroupManager Integration - DigitalIntervalSeries Entity Lookup"
             auto interval = interval_data->getIntervalByEntityId(entity_id);
             REQUIRE(interval.has_value());
 
-            int64_t duration = interval->end - interval->start;
+            int64_t duration = interval->end.getValue() - interval->start.getValue();
             REQUIRE(duration > 100);
         }
 
@@ -783,12 +783,12 @@ TEST_CASE("EntityGroupManager Integration - DigitalIntervalSeries Entity Lookup"
 
         // Verify batch results
         REQUIRE(batch_intervals[0].first == all_entity_ids[0].id());
-        REQUIRE(batch_intervals[0].second.start == 100);
-        REQUIRE(batch_intervals[0].second.end == 200);
+        REQUIRE(batch_intervals[0].second.start == TimeFrameIndex(100));
+        REQUIRE(batch_intervals[0].second.end == TimeFrameIndex(200));
 
         REQUIRE(batch_intervals[1].first == all_entity_ids[2].id());
-        REQUIRE(batch_intervals[1].second.start == 500);
-        REQUIRE(batch_intervals[1].second.end == 800);
+        REQUIRE(batch_intervals[1].second.start == TimeFrameIndex(500));
+        REQUIRE(batch_intervals[1].second.end == TimeFrameIndex(800));
 
         INFO("Successfully tested DigitalIntervalSeries entity lookup and group membership integration");
     }

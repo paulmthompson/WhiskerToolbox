@@ -166,5 +166,5 @@ TimeFrameIndex RaggedAnalogTimeSeries::_convertTimeIndex(TimeIndexAndFrame const
     auto time_value = time_index_and_frame.time_frame->getTimeAtIndex(time_index_and_frame.index);
     
     // 2. Convert that time value to an index in our timeframe
-    return _time_frame->getIndexAtTime(static_cast<float>(time_value), false);
+    return _time_frame->getIndexAtTime(time_value, false);
 }

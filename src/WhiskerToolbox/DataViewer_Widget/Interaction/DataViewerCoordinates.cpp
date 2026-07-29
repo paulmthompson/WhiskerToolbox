@@ -13,8 +13,8 @@ DataViewerCoordinates::DataViewerCoordinates(
           int64_t time_start = static_cast<int64_t>(view_state.x_min);
           int64_t time_end = static_cast<int64_t>(view_state.x_max);
           if (master_time_frame != nullptr) {
-              time_start = static_cast<int64_t>(master_time_frame->getTimeAtIndex(TimeFrameIndex{time_start}));
-              time_end = static_cast<int64_t>(master_time_frame->getTimeAtIndex(TimeFrameIndex{time_end}));
+              time_start = (master_time_frame->getTimeAtIndex(TimeFrameIndex{time_start})).getValue();
+              time_end = (master_time_frame->getTimeAtIndex(TimeFrameIndex{time_end})).getValue();
           }
           return CorePlotting::TimeAxisParams(time_start, time_end, width);
       }()),

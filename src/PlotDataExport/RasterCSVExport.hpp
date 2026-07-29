@@ -120,9 +120,8 @@ struct RasterExportMetadata {
             auto const alignment_time = gathered.alignmentTimeAt(trial);
 
             for (auto const & event: trial_view->view()) {
-                auto const abs_time = static_cast<int64_t>(
-                        s.time_frame->getTimeAtIndex(event.time()));
-                auto const relative_time = static_cast<double>(abs_time - alignment_time);
+                auto const abs_time = s.time_frame->getTimeAtIndex(event.time());
+                auto const relative_time = static_cast<double>((abs_time - alignment_time.getValue()).getValue());
 
                 out << trial << delimiter
                     << s.event_key << delimiter

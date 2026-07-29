@@ -93,11 +93,11 @@ std::shared_ptr<DigitalEventSeries> createEventSeries(std::vector<int64_t> const
  */
 std::shared_ptr<DigitalIntervalSeries> createIntervalSeries(
         std::vector<std::pair<int64_t, int64_t>> const & intervals) {
-    std::vector<Interval> interval_vec;
+    std::vector<TimeFrameInterval> interval_vec;
     interval_vec.reserve(intervals.size());
     int64_t max_time = 0;
     for (auto const & [start, end]: intervals) {
-        interval_vec.push_back(Interval{start, end});
+        interval_vec.push_back(TimeFrameInterval{TimeFrameIndex(start), TimeFrameIndex(end)});
         max_time = std::max(max_time, end);
     }
     auto series = std::make_shared<DigitalIntervalSeries>(interval_vec);

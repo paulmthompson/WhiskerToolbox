@@ -150,13 +150,14 @@ namespace {
 
         // t=0 reference for this trial (absolute time)
         auto const alignment_time =
-                static_cast<double>(gathered.alignmentTimeAt(trial_idx));
+                static_cast<double>(gathered.alignmentTimeAt(trial_idx).getValue());
 
+        if (!time_frame) {
+            std::throw_with_nested(std::runtime_error("binningEstimate: no TimeFrame"));
+        }
         for (auto const & event: trial_view->view()) {
-            double const event_abs = time_frame
-                                             ? static_cast<double>(
-                                                       time_frame->getTimeAtIndex(event.time()))
-                                             : static_cast<double>(event.time().getValue());
+            
+            double const event_abs = time_frame->getTimeAtIndex(event.time()).getValue();
 
             double const relative_time = event_abs - alignment_time;
 
@@ -220,13 +221,14 @@ namespace {
         std::vector<double> trial_hist(n_bins, 0.0);
 
         auto const alignment_time =
-                static_cast<double>(gathered.alignmentTimeAt(trial_idx));
+                static_cast<double>(gathered.alignmentTimeAt(trial_idx).getValue());
+
+        if (!time_frame) {
+            std::throw_with_nested(std::runtime_error("binningEstimateWithTrials: no TimeFrame"));
+        }
 
         for (auto const & event: trial_view->view()) {
-            double const event_abs = time_frame
-                                             ? static_cast<double>(
-                                                       time_frame->getTimeAtIndex(event.time()))
-                                             : static_cast<double>(event.time().getValue());
+            double const event_abs = time_frame->getTimeAtIndex(event.time()).getValue();
 
             double const relative_time = event_abs - alignment_time;
 

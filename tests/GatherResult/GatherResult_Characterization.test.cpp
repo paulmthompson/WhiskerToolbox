@@ -38,21 +38,21 @@ TEST_CASE("GatherResult - overlapping event windows preserve one row per event",
     REQUIRE(result.size() == 3);
 
     SECTION("Each event produces a distinct overlapping window") {
-        CHECK(result.intervalAt(0).start == 0);
-        CHECK(result.intervalAt(0).end == 20);
-        CHECK(result.intervalAt(1).start == 5);
-        CHECK(result.intervalAt(1).end == 25);
-        CHECK(result.intervalAt(2).start == 10);
-        CHECK(result.intervalAt(2).end == 30);
+        CHECK(result.intervalAt(0).start == TimeFrameIndex(0));
+        CHECK(result.intervalAt(0).end == TimeFrameIndex(20));
+        CHECK(result.intervalAt(1).start == TimeFrameIndex(5));
+        CHECK(result.intervalAt(1).end == TimeFrameIndex(25));
+        CHECK(result.intervalAt(2).start == TimeFrameIndex(10));
+        CHECK(result.intervalAt(2).end == TimeFrameIndex(30));
 
         CHECK(result.intervalAt(0).end > result.intervalAt(1).start);
         CHECK(result.intervalAt(1).end > result.intervalAt(2).start);
     }
 
     SECTION("Alignment times match original event indices") {
-        CHECK(result.alignmentTimeAt(0) == 10);
-        CHECK(result.alignmentTimeAt(1) == 15);
-        CHECK(result.alignmentTimeAt(2) == 20);
+        CHECK(result.alignmentTimeAt(0) == ClockTicks(10));
+        CHECK(result.alignmentTimeAt(1) == ClockTicks(15));
+        CHECK(result.alignmentTimeAt(2) == ClockTicks(20));
     }
 
     SECTION("Each trial gathers the expected spike subset") {
@@ -92,9 +92,9 @@ TEST_CASE("GatherResult - reorder preserves originalIndex and intervalAtReordere
     REQUIRE(gathered.size() == 3);
     CHECK_FALSE(gathered.isReordered());
 
-    int64_t const align_0 = gathered.alignmentTimeAt(0);
-    int64_t const align_1 = gathered.alignmentTimeAt(1);
-    int64_t const align_2 = gathered.alignmentTimeAt(2);
+    ClockTicks const align_0 = gathered.alignmentTimeAt(0);
+    ClockTicks const align_1 = gathered.alignmentTimeAt(1);
+    ClockTicks const align_2 = gathered.alignmentTimeAt(2);
 
     auto const interval_0 = gathered.intervalAt(0);
     auto const interval_1 = gathered.intervalAt(1);
@@ -161,10 +161,10 @@ TEST_CASE("GatherResult - centered event window alignment differs from window st
     auto result = gather(spikes, windows, alignment_events);
 
     REQUIRE(result.size() == 1);
-    CHECK(result.intervalAt(0).start == 50);
-    CHECK(result.intervalAt(0).end == 150);
-    CHECK(result.alignmentTimeAt(0) == 100);
-    CHECK(result.alignmentTimeAt(0) != static_cast<int64_t>(result.intervalAt(0).start));
+    CHECK(result.intervalAt(0).start == TimeFrameIndex(50));
+    CHECK(result.intervalAt(0).end == TimeFrameIndex(150));
+    CHECK(result.alignmentTimeAt(0) == ClockTicks(100));
+    CHECK(result.alignmentTimeAt(0).getValue() != result.intervalAt(0).start.getValue());
 }
 
 TEST_CASE("GatherResult - prepared windows use companion alignment events",
@@ -179,14 +179,14 @@ TEST_CASE("GatherResult - prepared windows use companion alignment events",
     REQUIRE(result.windows() == windows);
     REQUIRE(result.alignmentPoints() == alignment_events);
 
-    CHECK(result.intervalAt(0) == Interval{0, 20});
-    CHECK(result.intervalAt(1) == Interval{5, 25});
-    CHECK(result.intervalAt(2) == Interval{10, 30});
+    CHECK(result.intervalAt(0) == TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(20)});
+    CHECK(result.intervalAt(1) == TimeFrameInterval{TimeFrameIndex(5), TimeFrameIndex(25)});
+    CHECK(result.intervalAt(2) == TimeFrameInterval{TimeFrameIndex(10), TimeFrameIndex(30)});
 
-    CHECK(result.alignmentTimeAt(0) == 10);
-    CHECK(result.alignmentTimeAt(1) == 15);
-    CHECK(result.alignmentTimeAt(2) == 20);
-    CHECK(result.alignmentTimeAt(0) != static_cast<int64_t>(result.intervalAt(0).start));
+    CHECK(result.alignmentTimeAt(0) == ClockTicks(10));
+    CHECK(result.alignmentTimeAt(1) == ClockTicks(15));
+    CHECK(result.alignmentTimeAt(2) == ClockTicks(20));
+    CHECK(result.alignmentTimeAt(0).getValue() != result.intervalAt(0).start.getValue());
 }
 
 TEST_CASE("GatherResult - prepared metadata survives reorder and materialize",
@@ -207,9 +207,9 @@ TEST_CASE("GatherResult - prepared metadata survives reorder and materialize",
     CHECK(reordered.intervalAtReordered(0) == gathered.intervalAt(2));
     CHECK(reordered.intervalAtReordered(1) == gathered.intervalAt(0));
     CHECK(reordered.intervalAtReordered(2) == gathered.intervalAt(1));
-    CHECK(reordered.alignmentTimeAt(0) == 20);
-    CHECK(reordered.alignmentTimeAt(1) == 10);
-    CHECK(reordered.alignmentTimeAt(2) == 15);
+    CHECK(reordered.alignmentTimeAt(0) == ClockTicks(20));
+    CHECK(reordered.alignmentTimeAt(1) == ClockTicks(10));
+    CHECK(reordered.alignmentTimeAt(2) == ClockTicks(15));
 
     auto materialized = reordered.materialize();
     REQUIRE(materialized.size() == reordered.size());
@@ -217,7 +217,7 @@ TEST_CASE("GatherResult - prepared metadata survives reorder and materialize",
     CHECK(materialized.alignmentPoints() == alignment_events);
     CHECK(materialized.originalIndex(0) == 2);
     CHECK(materialized.intervalAtReordered(0) == gathered.intervalAt(2));
-    CHECK(materialized.alignmentTimeAt(0) == 20);
+    CHECK(materialized.alignmentTimeAt(0) == ClockTicks(20));
 }
 
 TEST_CASE("GatherResult - prepared alignment point count must match windows",

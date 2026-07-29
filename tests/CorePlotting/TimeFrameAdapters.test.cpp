@@ -68,11 +68,11 @@ TEST_CASE("ToAbsoluteTimeAdapter - pair<TimeFrameIndex, float>", "[TimeFrameAdap
         ToAbsoluteTimeAdapter adapter(tf.get());
         
         auto result = adapter(std::pair{TimeFrameIndex{0}, 1.5f});
-        REQUIRE(result.time == 0);
+        REQUIRE(result.time == ClockTicks(0));
         REQUIRE(result.value == 1.5f);
         
         result = adapter(std::pair{TimeFrameIndex{5}, -2.5f});
-        REQUIRE(result.time == 50);
+        REQUIRE(result.time == ClockTicks(50));
         REQUIRE(result.value == -2.5f);
     }
     
@@ -88,7 +88,7 @@ TEST_CASE("ToAbsoluteTimeAdapter - pair<TimeFrameIndex, float>", "[TimeFrameAdap
         std::vector<float> values;
         
         for (auto const& [time, value] : data | toAbsoluteTime(tf.get())) {
-            times.push_back(time);
+            times.push_back(time.getValue());
             values.push_back(value);
         }
         
@@ -109,7 +109,7 @@ TEST_CASE("ToAbsoluteTimeAdapter - pair<TimeFrameIndex, float>", "[TimeFrameAdap
         for (auto const& [time, value] : data 
                 | std::views::filter([](auto const& p) { return p.second > 0; })
                 | toAbsoluteTime(tf.get())) {
-            positive_times.push_back(time);
+            positive_times.push_back(time.getValue());
         }
         
         REQUIRE(positive_times == std::vector<int>{0, 20});
@@ -122,14 +122,14 @@ TEST_CASE("ToAbsoluteTimeAdapter - bare TimeFrameIndex", "[TimeFrameAdapters]") 
     SECTION("Single element transformation") {
         ToAbsoluteTimeAdapter adapter(tf.get());
         
-        int result = adapter(TimeFrameIndex{0});
-        REQUIRE(result == 0);
+        ClockTicks result = adapter(TimeFrameIndex{0});
+        REQUIRE(result == ClockTicks(0));
         
         result = adapter(TimeFrameIndex{5});
-        REQUIRE(result == 50);
+        REQUIRE(result == ClockTicks(50));
         
         result = adapter(TimeFrameIndex{9});
-        REQUIRE(result == 90);
+        REQUIRE(result == ClockTicks(90));
     }
     
     SECTION("Range transformation with pipe operator") {
@@ -141,8 +141,8 @@ TEST_CASE("ToAbsoluteTimeAdapter - bare TimeFrameIndex", "[TimeFrameAdapters]") 
         };
         
         std::vector<int> times;
-        for (int time : indices | toAbsoluteTime(tf.get())) {
-            times.push_back(time);
+        for (ClockTicks time : indices | toAbsoluteTime(tf.get())) {
+            times.push_back(time.getValue());
         }
         
         REQUIRE(times == std::vector<int>{0, 20, 50, 90});
@@ -158,7 +158,7 @@ TEST_CASE("ToAbsoluteTimeAdapter - EventWithId-like types", "[TimeFrameAdapters]
         TestEventWithId event{TimeFrameIndex{3}, EntityId{42}};
         auto result = adapter(event);
         
-        REQUIRE(result.time == 30);
+        REQUIRE(result.time == ClockTicks(30));
         REQUIRE(result.entity_id == EntityId{42});
     }
     
@@ -172,8 +172,8 @@ TEST_CASE("ToAbsoluteTimeAdapter - EventWithId-like types", "[TimeFrameAdapters]
         std::vector<int> times;
         std::vector<EntityId> ids;
         
-        for (auto const& result : events | toAbsoluteTime(tf.get())) {
-            times.push_back(result.time);
+        for (auto const & result : events | toAbsoluteTime(tf.get())) {
+            times.push_back(result.time.getValue());
             ids.push_back(result.entity_id);
         }
         
@@ -191,8 +191,8 @@ TEST_CASE("ToAbsoluteTimeAdapter - Interval types", "[TimeFrameAdapters]") {
         Interval interval{2, 5};  // indices 2-5 → times 20-50
         auto result = adapter(interval);
         
-        REQUIRE(result.start == 20);
-        REQUIRE(result.end == 50);
+        REQUIRE(result.start == ClockTicks(20));
+        REQUIRE(result.end == ClockTicks(50));
     }
     
     SECTION("IntervalWithId") {
@@ -201,8 +201,8 @@ TEST_CASE("ToAbsoluteTimeAdapter - Interval types", "[TimeFrameAdapters]") {
         TestIntervalWithId interval_with_id{Interval{1, 3}, EntityId{999}};
         auto result = adapter(interval_with_id);
         
-        REQUIRE(result.start == 10);
-        REQUIRE(result.end == 30);
+        REQUIRE(result.start == ClockTicks(10));
+        REQUIRE(result.end == ClockTicks(30));
         REQUIRE(result.entity_id == EntityId{999});
     }
     
@@ -219,12 +219,12 @@ TEST_CASE("ToAbsoluteTimeAdapter - Interval types", "[TimeFrameAdapters]") {
         }
         
         REQUIRE(results.size() == 3);
-        REQUIRE(results[0].start == 0);
-        REQUIRE(results[0].end == 20);
-        REQUIRE(results[1].start == 30);
-        REQUIRE(results[1].end == 50);
-        REQUIRE(results[2].start == 60);
-        REQUIRE(results[2].end == 90);
+        REQUIRE(results[0].start == ClockTicks(0));
+        REQUIRE(results[0].end == ClockTicks(20));
+        REQUIRE(results[1].start == ClockTicks(30));
+        REQUIRE(results[1].end == ClockTicks(50));
+        REQUIRE(results[2].start == ClockTicks(60));
+        REQUIRE(results[2].end == ClockTicks(90));
     }
 }
 
@@ -242,8 +242,8 @@ TEST_CASE("ToAbsoluteTimeAdapter - Non-uniform TimeFrame", "[TimeFrameAdapters]"
         };
         
         std::vector<int> times;
-        for (int time : indices | toAbsoluteTime(tf.get())) {
-            times.push_back(time);
+        for (ClockTicks time : indices | toAbsoluteTime(tf.get())) {
+            times.push_back(time.getValue());
         }
         
         REQUIRE(times == std::vector<int>{0, 5, 15, 30, 50, 75});
@@ -258,33 +258,29 @@ TEST_CASE("toTimeFrameIndex - Linear TimeFrame", "[TimeFrameAdapters]") {
     auto tf = createLinearTimeFrame(10);  // [0, 10, 20, ..., 90]
     
     SECTION("Exact matches") {
-        REQUIRE(toTimeFrameIndex(0, tf.get()) == TimeFrameIndex{0});
-        REQUIRE(toTimeFrameIndex(10, tf.get()) == TimeFrameIndex{1});
-        REQUIRE(toTimeFrameIndex(50, tf.get()) == TimeFrameIndex{5});
-        REQUIRE(toTimeFrameIndex(90, tf.get()) == TimeFrameIndex{9});
+        REQUIRE(toTimeFrameIndex(ClockTicks(0), tf.get()) == TimeFrameIndex{0});
+        REQUIRE(toTimeFrameIndex(ClockTicks(10), tf.get()) == TimeFrameIndex{1});
+        REQUIRE(toTimeFrameIndex(ClockTicks(50), tf.get()) == TimeFrameIndex{5});
+        REQUIRE(toTimeFrameIndex(ClockTicks(90), tf.get()) == TimeFrameIndex{9});
     }
     
     SECTION("Between values - preceding") {
         // 15 is between index 1 (time 10) and index 2 (time 20)
         // Should return closest, which depends on TimeFrame implementation
-        auto idx = toTimeFrameIndex(15, tf.get(), true);
+        auto idx = toTimeFrameIndex(ClockTicks(15), tf.get(), true);
         REQUIRE((idx == TimeFrameIndex{1} || idx == TimeFrameIndex{2}));
     }
     
-    SECTION("Float input") {
-        REQUIRE(toTimeFrameIndex(0.0f, tf.get()) == TimeFrameIndex{0});
-        REQUIRE(toTimeFrameIndex(50.0f, tf.get()) == TimeFrameIndex{5});
-    }
 }
 
 TEST_CASE("toTimeFrameIndex - Non-uniform TimeFrame", "[TimeFrameAdapters]") {
     auto tf = createNonUniformTimeFrame(6);  // [0, 5, 15, 30, 50, 75]
     
     SECTION("Exact matches") {
-        REQUIRE(toTimeFrameIndex(0, tf.get()) == TimeFrameIndex{0});
-        REQUIRE(toTimeFrameIndex(5, tf.get()) == TimeFrameIndex{1});
-        REQUIRE(toTimeFrameIndex(15, tf.get()) == TimeFrameIndex{2});
-        REQUIRE(toTimeFrameIndex(30, tf.get()) == TimeFrameIndex{3});
+        REQUIRE(toTimeFrameIndex(ClockTicks(0), tf.get()) == TimeFrameIndex{0});
+        REQUIRE(toTimeFrameIndex(ClockTicks(5), tf.get()) == TimeFrameIndex{1});
+        REQUIRE(toTimeFrameIndex(ClockTicks(15), tf.get()) == TimeFrameIndex{2});
+        REQUIRE(toTimeFrameIndex(ClockTicks(30), tf.get()) == TimeFrameIndex{3});
     }
 }
 
@@ -297,21 +293,21 @@ TEST_CASE("TimeFrameConverter - Bidirectional conversion", "[TimeFrameAdapters]"
     TimeFrameConverter converter(tf.get());
     
     SECTION("Forward conversion") {
-        REQUIRE(converter.toAbsolute(TimeFrameIndex{0}) == 0);
-        REQUIRE(converter.toAbsolute(TimeFrameIndex{5}) == 50);
-        REQUIRE(converter.toAbsolute(TimeFrameIndex{9}) == 90);
+        REQUIRE(converter.toAbsolute(TimeFrameIndex{0}) == ClockTicks(0));
+        REQUIRE(converter.toAbsolute(TimeFrameIndex{5}) == ClockTicks(50));
+        REQUIRE(converter.toAbsolute(TimeFrameIndex{9}) == ClockTicks(90));
     }
     
     SECTION("Inverse conversion") {
-        REQUIRE(converter.toIndex(0) == TimeFrameIndex{0});
-        REQUIRE(converter.toIndex(50) == TimeFrameIndex{5});
-        REQUIRE(converter.toIndex(90) == TimeFrameIndex{9});
+        REQUIRE(converter.toIndex(ClockTicks(0)) == TimeFrameIndex{0});
+        REQUIRE(converter.toIndex(ClockTicks(50)) == TimeFrameIndex{5});
+        REQUIRE(converter.toIndex(ClockTicks(90)) == TimeFrameIndex{9});
     }
     
     SECTION("Round-trip: index → absolute → index") {
         for (int i = 0; i < 10; ++i) {
             TimeFrameIndex original{i};
-            int absolute = converter.toAbsolute(original);
+            ClockTicks absolute = converter.toAbsolute(original);
             TimeFrameIndex round_trip = converter.toIndex(absolute);
             REQUIRE(round_trip == original);
         }
@@ -325,7 +321,7 @@ TEST_CASE("TimeFrameConverter - Bidirectional conversion", "[TimeFrameAdapters]"
         
         std::vector<int> times;
         for (auto const& [time, value] : data | converter.adapter()) {
-            times.push_back(time);
+            times.push_back(time.getValue());
         }
         
         REQUIRE(times == std::vector<int>{0, 30});
@@ -443,7 +439,7 @@ TEST_CASE("Chaining adapters", "[TimeFrameAdapters]") {
         for (auto const& [time, val] : data 
                 | toTargetFrame(source_tf.get(), master_tf.get())
                 | toAbsoluteTime(master_tf.get())) {
-            absolute_times.push_back(time);
+            absolute_times.push_back(time.getValue());
             values.push_back(val);
         }
         
@@ -465,7 +461,7 @@ TEST_CASE("Edge cases", "[TimeFrameAdapters]") {
         std::vector<TimeFrameIndex> empty;
         
         int count = 0;
-        for ([[maybe_unused]] int time : empty | toAbsoluteTime(tf.get())) {
+        for ([[maybe_unused]] ClockTicks time : empty | toAbsoluteTime(tf.get())) {
             ++count;
         }
         
@@ -476,8 +472,8 @@ TEST_CASE("Edge cases", "[TimeFrameAdapters]") {
         std::vector<TimeFrameIndex> single = {TimeFrameIndex{2}};
         
         std::vector<int> times;
-        for (int time : single | toAbsoluteTime(tf.get())) {
-            times.push_back(time);
+        for (ClockTicks time : single | toAbsoluteTime(tf.get())) {
+            times.push_back(time.getValue());
         }
         
         REQUIRE(times == std::vector<int>{20});

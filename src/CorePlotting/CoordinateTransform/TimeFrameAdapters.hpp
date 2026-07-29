@@ -72,10 +72,10 @@ concept IsInterval = requires(T t) {
  */
 template<typename ValueType>
 struct AbsoluteTimeValue {
-    int time;       ///< Absolute time from TimeFrame
+    ClockTicks time;       ///< Absolute time from TimeFrame
     ValueType value;///< Original value (unchanged)
 
-    AbsoluteTimeValue(int t, ValueType v)
+    AbsoluteTimeValue(ClockTicks t, ValueType v)
         : time(t),
           value(std::move(v)) {}
 };
@@ -84,10 +84,10 @@ struct AbsoluteTimeValue {
  * @brief Result of transforming an event to absolute time
  */
 struct AbsoluteTimeEvent {
-    int time;          ///< Absolute time from TimeFrame
+    ClockTicks time;          ///< Absolute time from TimeFrame
     EntityId entity_id;///< Entity ID (if present)
 
-    AbsoluteTimeEvent(int t, EntityId id = EntityId{0})
+    AbsoluteTimeEvent(ClockTicks t, EntityId id = EntityId{0})
         : time(t),
           entity_id(id) {}
 };
@@ -96,11 +96,11 @@ struct AbsoluteTimeEvent {
  * @brief Result of transforming an interval to absolute time
  */
 struct AbsoluteTimeInterval {
-    int start;         ///< Absolute start time
-    int end;           ///< Absolute end time
+    ClockTicks start;         ///< Absolute start time
+    ClockTicks end;           ///< Absolute end time
     EntityId entity_id;///< Entity ID (if present)
 
-    AbsoluteTimeInterval(int s, int e, EntityId id = EntityId{0})
+    AbsoluteTimeInterval(ClockTicks s, ClockTicks e, EntityId id = EntityId{0})
         : start(s),
           end(e),
           entity_id(id) {}
@@ -151,14 +151,14 @@ public:
         requires TimeIndexValuePair<T>
     auto operator()(T const & item) const {
         auto const & [idx, value] = item;
-        int const abs_time = _time_frame->getTimeAtIndex(idx);
+        ClockTicks const abs_time = _time_frame->getTimeAtIndex(idx);
         return AbsoluteTimeValue<std::decay_t<decltype(value)>>{abs_time, value};
     }
 
     /**
      * @brief Transform bare TimeFrameIndex to int
      */
-    int operator()(TimeFrameIndex const & item) const {
+    ClockTicks operator()(TimeFrameIndex const & item) const {
         return _time_frame->getTimeAtIndex(item);
     }
 
@@ -168,7 +168,7 @@ public:
     template<typename T>
         requires HasEventTime<T>
     auto operator()(T const & item) const {
-        int const abs_time = _time_frame->getTimeAtIndex(item.event_time);
+        ClockTicks const abs_time = _time_frame->getTimeAtIndex(item.event_time);
         if constexpr (requires { item.entity_id; }) {
             return AbsoluteTimeEvent{abs_time, item.entity_id};
         } else {
@@ -182,8 +182,8 @@ public:
     template<typename T>
         requires HasInterval<T>
     auto operator()(T const & item) const {
-        int const abs_start = _time_frame->getTimeAtIndex(TimeFrameIndex{item.interval.start});
-        int const abs_end = _time_frame->getTimeAtIndex(TimeFrameIndex{item.interval.end});
+        ClockTicks const abs_start = _time_frame->getTimeAtIndex(TimeFrameIndex{item.interval.start});
+        ClockTicks const abs_end = _time_frame->getTimeAtIndex(TimeFrameIndex{item.interval.end});
         if constexpr (requires { item.entity_id; }) {
             return AbsoluteTimeInterval{abs_start, abs_end, item.entity_id};
         } else {
@@ -197,8 +197,8 @@ public:
      * Non-template overload for the concrete Interval type
      */
     AbsoluteTimeInterval operator()(Interval const & item) const {
-        int const abs_start = _time_frame->getTimeAtIndex(TimeFrameIndex{item.start});
-        int const abs_end = _time_frame->getTimeAtIndex(TimeFrameIndex{item.end});
+        ClockTicks const abs_start = _time_frame->getTimeAtIndex(TimeFrameIndex{item.start});
+        ClockTicks const abs_end = _time_frame->getTimeAtIndex(TimeFrameIndex{item.end});
         return AbsoluteTimeInterval{abs_start, abs_end};
     }
 
@@ -206,8 +206,8 @@ public:
      * @brief Transform TimeFrameInterval to AbsoluteTimeInterval
      */
     AbsoluteTimeInterval operator()(TimeFrameInterval const & item) const {
-        int const abs_start = _time_frame->getTimeAtIndex(item.start);
-        int const abs_end = _time_frame->getTimeAtIndex(item.end);
+        ClockTicks const abs_start = _time_frame->getTimeAtIndex(item.start);
+        ClockTicks const abs_end = _time_frame->getTimeAtIndex(item.end);
         return AbsoluteTimeInterval{abs_start, abs_end};
     }
 
@@ -230,7 +230,7 @@ public:
     friend auto operator|(R && range, ToAbsoluteTimeAdapter const & adapter) {
         return std::forward<R>(range) | std::views::transform([tf = adapter._time_frame](auto const & item) {
                    auto const & [idx, value] = item;
-                   int const abs_time = tf->getTimeAtIndex(idx);
+                   ClockTicks const abs_time = tf->getTimeAtIndex(idx);
                    return AbsoluteTimeValue<std::decay_t<decltype(value)>>{abs_time, value};
                });
     }
@@ -242,8 +242,8 @@ public:
         requires std::same_as<std::ranges::range_value_t<R>, Interval>
     friend auto operator|(R && range, ToAbsoluteTimeAdapter const & adapter) {
         return std::forward<R>(range) | std::views::transform([tf = adapter._time_frame](Interval const & item) {
-                   int const abs_start = tf->getTimeAtIndex(TimeFrameIndex{item.start});
-                   int const abs_end = tf->getTimeAtIndex(TimeFrameIndex{item.end});
+                   ClockTicks const abs_start = tf->getTimeAtIndex(TimeFrameIndex{item.start});
+                   ClockTicks const abs_end = tf->getTimeAtIndex(TimeFrameIndex{item.end});
                    return AbsoluteTimeInterval{abs_start, abs_end};
                });
     }
@@ -255,8 +255,8 @@ public:
         requires std::same_as<std::ranges::range_value_t<R>, TimeFrameInterval>
     friend auto operator|(R && range, ToAbsoluteTimeAdapter const & adapter) {
         return std::forward<R>(range) | std::views::transform([tf = adapter._time_frame](TimeFrameInterval const & item) {
-                   int const abs_start = tf->getTimeAtIndex(item.start);
-                   int const abs_end = tf->getTimeAtIndex(item.end);
+                   ClockTicks const abs_start = tf->getTimeAtIndex(item.start);
+                   ClockTicks const abs_end = tf->getTimeAtIndex(item.end);
                    return AbsoluteTimeInterval{abs_start, abs_end};
                });
     }
@@ -268,7 +268,7 @@ public:
         requires HasEventTime<std::ranges::range_value_t<R>>
     friend auto operator|(R && range, ToAbsoluteTimeAdapter const & adapter) {
         return std::forward<R>(range) | std::views::transform([tf = adapter._time_frame](auto const & item) {
-                   int const abs_time = tf->getTimeAtIndex(item.event_time);
+                   ClockTicks const abs_time = tf->getTimeAtIndex(item.event_time);
                    if constexpr (requires { item.entity_id; }) {
                        return AbsoluteTimeEvent{abs_time, item.entity_id};
                    } else {
@@ -284,8 +284,8 @@ public:
         requires HasInterval<std::ranges::range_value_t<R>>
     friend auto operator|(R && range, ToAbsoluteTimeAdapter const & adapter) {
         return std::forward<R>(range) | std::views::transform([tf = adapter._time_frame](auto const & item) {
-                   int const abs_start = tf->getTimeAtIndex(TimeFrameIndex{item.interval.start});
-                   int const abs_end = tf->getTimeAtIndex(TimeFrameIndex{item.interval.end});
+                   ClockTicks const abs_start = tf->getTimeAtIndex(TimeFrameIndex{item.interval.start});
+                   ClockTicks const abs_end = tf->getTimeAtIndex(TimeFrameIndex{item.interval.end});
                    if constexpr (requires { item.entity_id; }) {
                        return AbsoluteTimeInterval{abs_start, abs_end, item.entity_id};
                    } else {
@@ -341,12 +341,8 @@ inline ToAbsoluteTimeAdapter toAbsoluteTime(TimeFrame const * tf) {
  * // Now idx can be used to query data or display to user
  * ```
  */
-inline TimeFrameIndex toTimeFrameIndex(float absolute_time, TimeFrame const * tf, bool preceding = true) {
+inline TimeFrameIndex toTimeFrameIndex(ClockTicks absolute_time, TimeFrame const * tf, bool preceding = true) {
     return tf->getIndexAtTime(absolute_time, preceding);
-}
-
-inline TimeFrameIndex toTimeFrameIndex(int absolute_time, TimeFrame const * tf, bool preceding = true) {
-    return tf->getIndexAtTime(static_cast<float>(absolute_time), preceding);
 }
 
 // ============================================================================
@@ -384,19 +380,15 @@ public:
     /**
      * @brief Convert TimeFrameIndex to absolute time
      */
-    [[nodiscard]] int toAbsolute(TimeFrameIndex idx) const {
+    [[nodiscard]] ClockTicks toAbsolute(TimeFrameIndex idx) const {
         return _time_frame->getTimeAtIndex(idx);
     }
 
     /**
      * @brief Convert absolute time to TimeFrameIndex
      */
-    [[nodiscard]] TimeFrameIndex toIndex(float absolute_time, bool preceding = true) const {
+    [[nodiscard]] TimeFrameIndex toIndex(ClockTicks absolute_time, bool preceding = true) const {
         return _time_frame->getIndexAtTime(absolute_time, preceding);
-    }
-
-    [[nodiscard]] TimeFrameIndex toIndex(int absolute_time, bool preceding = true) const {
-        return _time_frame->getIndexAtTime(static_cast<float>(absolute_time), preceding);
     }
 
     /**
@@ -454,8 +446,8 @@ inline TimeFrameIndex convertTimeFrameIndex(
     }
 
     // Convert through absolute time
-    int const absolute_time = source_tf->getTimeAtIndex(source_index);
-    return target_tf->getIndexAtTime(static_cast<float>(absolute_time), preceding);
+    ClockTicks const absolute_time = source_tf->getTimeAtIndex(source_index);
+    return target_tf->getIndexAtTime(absolute_time, preceding);
 }
 
 /**

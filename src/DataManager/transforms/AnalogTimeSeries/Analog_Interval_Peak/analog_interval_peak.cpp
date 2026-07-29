@@ -50,7 +50,7 @@ std::shared_ptr<DigitalEventSeries> find_interval_peaks(
 
     // Build search ranges based on search mode
     // Note: intervals are in their own TimeFrameIndex coordinate system
-    std::vector<std::pair<int64_t, int64_t>> search_ranges;
+    std::vector<std::pair<TimeFrameIndex, TimeFrameIndex>> search_ranges;
     
     if (intervalPeakParams.search_mode == IntervalPeakParams::SearchMode::WITHIN_INTERVALS) {
         // Search within each interval: [start, end]
@@ -62,7 +62,7 @@ std::shared_ptr<DigitalEventSeries> find_interval_peaks(
         // Search between interval starts: [start_i, start_{i+1})
         for (size_t i = 0; i < num_intervals - 1; ++i) {
             search_ranges.emplace_back(intervals_view[i].value().start, 
-                                      intervals_view[i + 1].value().start - 1);
+                                      intervals_view[i + 1].value().start - TimeFrameIndex{1});
         }
         // For the last interval, search from its start to its end
         auto const last_interval = intervals_view[num_intervals - 1].value();

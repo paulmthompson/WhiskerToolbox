@@ -62,10 +62,10 @@ std::shared_ptr<DigitalEventSeries> createTestEventSeries(std::string const & ke
  */
 std::shared_ptr<DigitalIntervalSeries> createTestIntervalSeries(std::string const & key)
 {
-    std::vector<Interval> intervals = {
-        Interval{100, 200},
-        Interval{300, 400},
-        Interval{500, 600}
+    std::vector<TimeFrameInterval> intervals = {
+        TimeFrameInterval(TimeFrameIndex(100), TimeFrameIndex(200)),
+        TimeFrameInterval(TimeFrameIndex(300), TimeFrameIndex(400)),
+        TimeFrameInterval(TimeFrameIndex(500), TimeFrameIndex(600))
     };
     return std::make_shared<DigitalIntervalSeries>(intervals);
 }

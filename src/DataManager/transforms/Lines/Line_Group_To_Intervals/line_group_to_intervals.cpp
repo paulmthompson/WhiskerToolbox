@@ -18,12 +18,12 @@ namespace {  // NOLINT(cert-dcl59-cpp)
      * @param gap_threshold Maximum gap size to merge across
      * @return Merged intervals
      */
-    std::vector<Interval> mergeIntervals(std::vector<Interval> const & intervals, int gap_threshold) {
+    std::vector<TimeFrameInterval> mergeIntervals(std::vector<TimeFrameInterval> const & intervals, int gap_threshold) {
         if (intervals.empty()) {
             return {};
         }
 
-        std::vector<Interval> merged;
+        std::vector<TimeFrameInterval> merged;
         merged.reserve(intervals.size());
         merged.push_back(intervals[0]);
 
@@ -32,7 +32,7 @@ namespace {  // NOLINT(cert-dcl59-cpp)
             auto const & current = intervals[i];
 
             // Check if current interval is within gap_threshold of the last one
-            int64_t const gap = current.start - last.end;
+            int64_t const gap = current.start.getValue() - last.end.getValue();
             if (gap <= gap_threshold) {
                 // Merge by extending the last interval
                 last.end = current.end;
@@ -52,16 +52,16 @@ namespace {  // NOLINT(cert-dcl59-cpp)
      * @param min_length Minimum interval length (inclusive)
      * @return Filtered intervals
      */
-    std::vector<Interval> filterByLength(std::vector<Interval> const & intervals, int min_length) {
+    std::vector<TimeFrameInterval> filterByLength(std::vector<TimeFrameInterval> const & intervals, int min_length) {
         if (min_length <= 1) {
             return intervals; // No filtering needed
         }
 
-        std::vector<Interval> filtered;
+        std::vector<TimeFrameInterval> filtered;
         filtered.reserve(intervals.size());
 
         for (auto const & interval : intervals) {
-            int64_t const length = interval.end - interval.start + 1; // Inclusive length
+            int64_t const length = interval.end.getValue() - interval.start.getValue() + 1; // Inclusive length
             if (length >= min_length) {
                 filtered.push_back(interval);
             }
@@ -162,30 +162,30 @@ std::shared_ptr<DigitalIntervalSeries> lineGroupToIntervals(
     progressCallback(70);
 
     // Build intervals from consecutive active frames
-    std::vector<Interval> intervals;
+    std::vector<TimeFrameInterval> intervals;
     intervals.reserve(all_times.size() / 2); // Rough estimate
 
-    int64_t interval_start = -1;
+    TimeFrameIndex interval_start = TimeFrameIndex{-1};
     for (size_t i = 0; i < all_times.size(); ++i) {
         if (frame_active[i]) {
-            if (interval_start == -1) {
+            if (interval_start == TimeFrameIndex{-1}) {
                 // Start new interval
-                interval_start = all_times[i].getValue();
+                interval_start = all_times[i];
             }
         } else {
-            if (interval_start != -1) {
+            if (interval_start != TimeFrameIndex{-1}) {
                 // End current interval
-                int64_t const interval_end = all_times[i - 1].getValue();
-                intervals.push_back(Interval{interval_start, interval_end});
-                interval_start = -1;
+                TimeFrameIndex const interval_end = all_times[i - 1];
+                intervals.push_back(TimeFrameInterval{interval_start, interval_end});
+                interval_start = TimeFrameIndex{-1};
             }
         }
     }
 
     // Handle case where last frame is active
-    if (interval_start != -1) {
-        int64_t const interval_end = all_times.back().getValue();
-        intervals.push_back(Interval{interval_start, interval_end});
+    if (interval_start != TimeFrameIndex{-1}) {
+        TimeFrameIndex const interval_end = all_times.back();
+        intervals.push_back(TimeFrameInterval{interval_start, interval_end});
     }
 
     progressCallback(80);

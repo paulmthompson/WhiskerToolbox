@@ -54,9 +54,9 @@ TEST_CASE("UpsampleTimeFrame creates upsampled TimeFrame", "[commands][UpsampleT
     auto const output_tf = dm->getTime(TimeKey("camera_time_4x"));
     REQUIRE(output_tf != nullptr);
     REQUIRE(output_tf->getTotalFrameCount() == 9);
-    CHECK(output_tf->getTimeAtIndex(TimeFrameIndex(0)) == 0);
-    CHECK(output_tf->getTimeAtIndex(TimeFrameIndex(4)) == 60);
-    CHECK(output_tf->getTimeAtIndex(TimeFrameIndex(8)) == 120);
+    CHECK(output_tf->getTimeAtIndex(TimeFrameIndex(0)) == ClockTicks(0));
+    CHECK(output_tf->getTimeAtIndex(TimeFrameIndex(4)) == ClockTicks(60));
+    CHECK(output_tf->getTimeAtIndex(TimeFrameIndex(8)) == ClockTicks(120));
 }
 
 TEST_CASE("UpsampleTimeFrame errors when source TimeFrame is missing", "[commands][UpsampleTimeFrame]") {
@@ -112,7 +112,7 @@ TEST_CASE("UpsampleTimeFrame overwrite replaces existing output key", "[commands
     auto const output_tf = dm->getTime(TimeKey("camera_time_2x"));
     REQUIRE(output_tf != nullptr);
     REQUIRE(output_tf->getTotalFrameCount() == 3);
-    CHECK(output_tf->getTimeAtIndex(TimeFrameIndex(1)) == 150);
+    CHECK(output_tf->getTimeAtIndex(TimeFrameIndex(1)) == ClockTicks(150));
 }
 
 TEST_CASE("UpsampleTimeFrame errors on invalid factor", "[commands][UpsampleTimeFrame]") {

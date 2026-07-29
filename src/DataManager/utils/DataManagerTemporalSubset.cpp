@@ -96,8 +96,8 @@ createTemporalSubsetImpl(DataTypeVariant const & source,
                 } else if constexpr (std::is_same_v<T, DigitalIntervalSeries>) {
                     return DigitalIntervalSeries::createView(
                             ptr,
-                            interval.start.getValue(),
-                            interval.end.getValue());
+                            interval.start,
+                            interval.end);
                 } else if constexpr (std::is_same_v<T, MaskData>) {
                     return createRaggedTemporalSubset<MaskData, Mask2D>(ptr, interval);
                 } else if constexpr (std::is_same_v<T, LineData>) {

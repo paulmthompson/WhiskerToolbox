@@ -18,10 +18,10 @@ namespace {
 
 std::shared_ptr<DigitalIntervalSeries> makeIntervalSeries(
         std::vector<std::pair<int64_t, int64_t>> const & intervals) {
-    std::vector<Interval> interval_data;
+    std::vector<TimeFrameInterval> interval_data;
     interval_data.reserve(intervals.size());
     for (auto const & [start, end]: intervals) {
-        interval_data.push_back(Interval{start, end});
+        interval_data.push_back(TimeFrameInterval{TimeFrameIndex(start), TimeFrameIndex(end)});
     }
     return DigitalIntervalSeries::createOverlapping(std::move(interval_data));
 }

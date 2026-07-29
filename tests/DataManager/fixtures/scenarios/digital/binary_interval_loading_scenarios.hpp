@@ -50,8 +50,8 @@ inline bool writeBinaryUint16(DigitalIntervalSeries const* intervals,
     // Set bits during intervals
     uint16_t const mask = static_cast<uint16_t>(1u << channel);
     for (auto const& interval : intervals->view()) {
-        auto start = static_cast<size_t>(interval.value().start);
-        auto end = static_cast<size_t>(interval.value().end);
+        auto start = static_cast<size_t>(interval.value().start.getValue());
+        auto end = static_cast<size_t>(interval.value().end.getValue());
         
         // Clamp to valid range
         if (start >= total_samples) continue;
@@ -105,8 +105,8 @@ inline bool writeBinaryUint16MultiChannel(
         uint16_t const mask = static_cast<uint16_t>(1u << channel);
         
         for (auto const& interval : intervals->view()) {
-            auto start = static_cast<size_t>(interval.value().start);
-            auto end = static_cast<size_t>(interval.value().end);
+            auto start = static_cast<size_t>(interval.value().start.getValue());
+            auto end = static_cast<size_t>(interval.value().end.getValue());
             
             if (start >= total_samples) continue;
             if (end > total_samples) end = total_samples;
@@ -146,8 +146,8 @@ inline bool writeBinaryUint8(DigitalIntervalSeries const* intervals,
     
     uint8_t const mask = static_cast<uint8_t>(1u << channel);
     for (auto const& interval : intervals->view()) {
-        auto start = static_cast<size_t>(interval.value().start);
-        auto end = static_cast<size_t>(interval.value().end);
+        auto start = static_cast<size_t>(interval.value().start.getValue());
+        auto end = static_cast<size_t>(interval.value().end.getValue());
         
         if (start >= total_samples) continue;
         if (end > total_samples) end = total_samples;

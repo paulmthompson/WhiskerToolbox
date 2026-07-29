@@ -80,7 +80,7 @@ std::shared_ptr<DigitalIntervalSeries> buildIntervalsForClass(
         if (predictions[j] != class_index) {
             // Flush any open interval
             if (interval_start.has_value()) {
-                series->addEvent(Interval{*interval_start, *interval_end});
+                series->addEvent(TimeFrameInterval{TimeFrameIndex{*interval_start}, TimeFrameIndex{*interval_end}});
                 interval_start.reset();
                 interval_end.reset();
             }
@@ -98,7 +98,7 @@ std::shared_ptr<DigitalIntervalSeries> buildIntervalsForClass(
             interval_end = t;
         } else {
             // Gap — flush and start new
-            series->addEvent(Interval{*interval_start, *interval_end});
+            series->addEvent(TimeFrameInterval{TimeFrameIndex{*interval_start}, TimeFrameIndex{*interval_end}});
             interval_start = t;
             interval_end = t;
         }
@@ -106,7 +106,7 @@ std::shared_ptr<DigitalIntervalSeries> buildIntervalsForClass(
 
     // Flush final interval
     if (interval_start.has_value()) {
-        series->addEvent(Interval{*interval_start, *interval_end});
+        series->addEvent(TimeFrameInterval{TimeFrameIndex{*interval_start}, TimeFrameIndex{*interval_end}});
     }
 
     return series;

@@ -61,10 +61,10 @@ static_assert(TimeSeriesElement<IntervalWithId>,
     "IntervalWithId must satisfy TimeSeriesElement concept");
 static_assert(EntityElement<IntervalWithId>,
     "IntervalWithId must satisfy EntityElement concept");
-static_assert(ValueElement<IntervalWithId, Interval const&>,
-    "IntervalWithId must satisfy ValueElement<Interval const&> concept");
-static_assert(FullElement<IntervalWithId, Interval const&>,
-    "IntervalWithId must satisfy FullElement<Interval const&> concept");
+static_assert(ValueElement<IntervalWithId, TimeFrameInterval const&>,
+    "IntervalWithId must satisfy ValueElement<TimeFrameInterval const&> concept");
+static_assert(FullElement<IntervalWithId, TimeFrameInterval const&>,
+    "IntervalWithId must satisfy FullElement<TimeFrameInterval const&> concept");
 
 // ========== RaggedElement<Line2D> (RaggedTimeSeries<Line2D>) ==========
 static_assert(TimeSeriesElement<RaggedTimeSeries<Line2D>::RaggedElement>,
@@ -129,16 +129,16 @@ TEST_CASE("TimeSeriesConcepts - Utility Functions", "[concepts][timeseries][unit
     }
     
     SECTION("getTime and getEntityId extract from IntervalWithId") {
-        Interval interval{100, 200};
-        IntervalWithId iwid{interval, EntityId(99)};
+        TimeFrameInterval interval{TimeFrameIndex(100), TimeFrameIndex(200)};
+        IntervalWithId iwid{TimeFrameInterval(TimeFrameIndex(100), TimeFrameIndex(200)), EntityId(99)};
         
         // time() returns start of interval
         REQUIRE(getTime(iwid) == TimeFrameIndex(100));
         REQUIRE(getEntityId(iwid) == EntityId(99));
         REQUIRE(iwid.time() == TimeFrameIndex(100));
         REQUIRE(iwid.id() == EntityId(99));
-        REQUIRE(iwid.value().start == 100);
-        REQUIRE(iwid.value().end == 200);
+        REQUIRE(iwid.value().start == TimeFrameIndex(100));
+        REQUIRE(iwid.value().end == TimeFrameIndex(200));
     }
     
     SECTION("isInTimeRange checks time bounds") {

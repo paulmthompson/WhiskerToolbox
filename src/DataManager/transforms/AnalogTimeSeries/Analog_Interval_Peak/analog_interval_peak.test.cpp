@@ -173,7 +173,7 @@ TEST_CASE("Data Transform: Analog Interval Peak - Edge Cases", "[transforms][ana
     }
 
     SECTION("Null analog time series") {
-        std::vector<Interval> intervals = {{0, 10}};
+        std::vector<TimeFrameInterval> intervals = {{TimeFrameIndex(0), TimeFrameIndex(10)}};
         auto dis_with_data = std::make_shared<DigitalIntervalSeries>(intervals);
 
         params.peak_type = IntervalPeakParams::PeakType::MAXIMUM;

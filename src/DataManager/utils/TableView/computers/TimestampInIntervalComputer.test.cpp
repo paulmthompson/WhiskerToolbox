@@ -218,9 +218,9 @@ TEST_CASE("DM - TV - TimestampInIntervalComputer Basic Functionality", "[Timesta
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
         // Create intervals: [1,3] and [6,8]
-        std::vector<Interval> intervals = {
-                {1, 3},// Interval 0: time 1-3
-                {6, 8} // Interval 1: time 6-8
+        std::vector<TimeFrameInterval> intervals = {
+                TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(3)),// Interval 0: time 1-3
+                TimeFrameInterval(TimeFrameIndex(6), TimeFrameIndex(8)) // Interval 1: time 6-8
         };
 
         auto intervalSeries = std::make_shared<DigitalIntervalSeries>(intervals);
@@ -254,7 +254,7 @@ TEST_CASE("DM - TV - TimestampInIntervalComputer Basic Functionality", "[Timesta
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
         // Create interval: [2,4]
-        std::vector<Interval> intervals = {{2, 4}};
+        std::vector<TimeFrameInterval> intervals = {TimeFrameInterval(TimeFrameIndex(2), TimeFrameIndex(4))};
 
         auto intervalSeries = std::make_shared<DigitalIntervalSeries>(intervals);
         intervalSeries->setTimeFrame(timeFrame);
@@ -283,7 +283,7 @@ TEST_CASE("DM - TV - TimestampInIntervalComputer Basic Functionality", "[Timesta
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
         // Create empty intervals
-        std::vector<Interval> intervals;
+        std::vector<TimeFrameInterval> intervals;
         auto intervalSeries = std::make_shared<DigitalIntervalSeries>(intervals);
         intervalSeries->setTimeFrame(timeFrame);
 
@@ -308,10 +308,10 @@ TEST_CASE("DM - TV - TimestampInIntervalComputer Basic Functionality", "[Timesta
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
         // Create overlapping intervals: [1,4], [3,6], [5,8]
-        std::vector<Interval> intervals = {
-                {1, 4},// Interval 0
-                {3, 6},// Interval 1 (overlaps with 0)
-                {5, 8} // Interval 2 (overlaps with 1)
+        std::vector<TimeFrameInterval> intervals = {
+                TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(4)),// Interval 0
+                TimeFrameInterval(TimeFrameIndex(3), TimeFrameIndex(6)),// Interval 1 (overlaps with 0)
+                TimeFrameInterval(TimeFrameIndex(5), TimeFrameIndex(8)) // Interval 2 (overlaps with 1)
         };
 
         auto intervalSeries = std::make_shared<DigitalIntervalSeries>(intervals);
@@ -356,7 +356,7 @@ TEST_CASE("DM - TV - TimestampInIntervalComputer Error Handling", "[TimestampInI
         std::vector<int> timeValues = {0, 1, 2, 3, 4, 5};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
-        std::vector<Interval> intervals = {{1, 3}};
+        std::vector<TimeFrameInterval> intervals = {TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(3))};
         auto intervalSeries = std::make_shared<DigitalIntervalSeries>(intervals);
         intervalSeries->setTimeFrame(timeFrame);
 
@@ -378,7 +378,7 @@ TEST_CASE("DM - TV - TimestampInIntervalComputer Dependency Tracking", "[Timesta
         std::vector<int> timeValues = {0, 1, 2};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
-        std::vector<Interval> intervals = {{0, 1}};
+        std::vector<TimeFrameInterval> intervals = {TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(1))};
         auto intervalSeries = std::make_shared<DigitalIntervalSeries>(intervals);
         intervalSeries->setTimeFrame(timeFrame);
 
@@ -394,7 +394,7 @@ TEST_CASE("DM - TV - TimestampInIntervalComputer Dependency Tracking", "[Timesta
         std::vector<int> timeValues = {0, 1, 2};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
-        std::vector<Interval> intervals = {{0, 1}};
+        std::vector<TimeFrameInterval> intervals = {TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(1))};
         auto intervalSeries = std::make_shared<DigitalIntervalSeries>(intervals);
         intervalSeries->setTimeFrame(timeFrame);
 
@@ -898,8 +898,8 @@ TEST_CASE("TimestampInIntervalComputer basic integration", "[TimestampInInterval
 
     // Create digital interval series: [2,4] and [7,8]
     auto dis = std::make_shared<DigitalIntervalSeries>();
-    dis->addEvent(Interval{2, 4});
-    dis->addEvent(Interval{7, 8});
+    dis->addEvent(TimeFrameInterval{TimeFrameIndex(2), TimeFrameIndex(4)});
+    dis->addEvent(TimeFrameInterval{TimeFrameIndex(7), TimeFrameIndex(8)});
     dm.setData<DigitalIntervalSeries>("Intervals", dis, TimeKey("cam"));
 
     auto dme = std::make_shared<DataManagerExtension>(dm);
@@ -935,8 +935,8 @@ TEST_CASE("TimestampInIntervalComputer via registry", "[TimestampInIntervalCompu
     dm.setTime(TimeKey("cam"), tf, true);
 
     auto dis = std::make_shared<DigitalIntervalSeries>();
-    dis->addEvent(Interval{0, 2});
-    dis->addEvent(Interval{4, 5});
+    dis->addEvent(TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(2)});
+    dis->addEvent(TimeFrameInterval{TimeFrameIndex(4), TimeFrameIndex(5)});
     dm.setData<DigitalIntervalSeries>("DInt", dis, TimeKey("cam"));
 
     auto dme = std::make_shared<DataManagerExtension>(dm);

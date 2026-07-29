@@ -19,11 +19,11 @@
  * @brief Hash specialization for Interval to allow use in unordered containers
  */
 template<>
-struct std::hash<Interval> {
-    size_t operator()(Interval const & interval) const noexcept {
+struct std::hash<TimeFrameInterval> {
+    size_t operator()(TimeFrameInterval const & interval) const noexcept {
         // Combine start and end using a simple hash combination
-        size_t h1 = std::hash<int64_t>{}(interval.start);
-        size_t h2 = std::hash<int64_t>{}(interval.end);
+        size_t h1 = std::hash<int64_t>{}(interval.start.getValue());
+        size_t h2 = std::hash<int64_t>{}(interval.end.getValue());
         return h1 ^ (h2 << 1);
     }
 };
@@ -65,7 +65,7 @@ public:
     [[nodiscard]] size_t size() const { return _impl->size(); }
     [[nodiscard]] bool empty() const { return _impl->size() == 0; }
 
-    [[nodiscard]] Interval const & getInterval(size_t idx) const {
+    [[nodiscard]] TimeFrameInterval const & getInterval(size_t idx) const {
         return _impl->getInterval(idx);
     }
 
@@ -73,7 +73,7 @@ public:
         return _impl->getEntityId(idx);
     }
 
-    [[nodiscard]] std::optional<size_t> findByInterval(Interval const & interval) const {
+    [[nodiscard]] std::optional<size_t> findByInterval(TimeFrameInterval const & interval) const {
         return _impl->findByInterval(interval);
     }
 
@@ -81,15 +81,15 @@ public:
         return _impl->findByEntityId(id);
     }
 
-    [[nodiscard]] bool hasIntervalAtTime(int64_t time) const {
+    [[nodiscard]] bool hasIntervalAtTime(TimeFrameIndex time) const {
         return _impl->hasIntervalAtTime(time);
     }
 
-    [[nodiscard]] std::pair<size_t, size_t> getOverlappingRange(int64_t start, int64_t end) const {
+    [[nodiscard]] std::pair<size_t, size_t> getOverlappingRange(TimeFrameIndex start, TimeFrameIndex end) const {
         return _impl->getOverlappingRange(start, end);
     }
 
-    [[nodiscard]] std::pair<size_t, size_t> getContainedRange(int64_t start, int64_t end) const {
+    [[nodiscard]] std::pair<size_t, size_t> getContainedRange(TimeFrameIndex start, TimeFrameIndex end) const {
         return _impl->getContainedRange(start, end);
     }
 
@@ -113,11 +113,11 @@ public:
 
     // ========== Mutation Operations ==========
 
-    bool addInterval(Interval const & interval, EntityId entity_id) {
+    bool addInterval(TimeFrameInterval const & interval, EntityId entity_id) {
         return _impl->addInterval(interval, entity_id);
     }
 
-    bool removeInterval(Interval const & interval) {
+    bool removeInterval(TimeFrameInterval const & interval) {
         return _impl->removeInterval(interval);
     }
 
@@ -180,19 +180,19 @@ private:
         virtual ~StorageConcept() = default;
 
         virtual size_t size() const = 0;
-        virtual Interval const & getInterval(size_t idx) const = 0;
+        virtual TimeFrameInterval const & getInterval(size_t idx) const = 0;
         virtual EntityId getEntityId(size_t idx) const = 0;
-        virtual std::optional<size_t> findByInterval(Interval const & interval) const = 0;
+        virtual std::optional<size_t> findByInterval(TimeFrameInterval const & interval) const = 0;
         virtual std::optional<size_t> findByEntityId(EntityId id) const = 0;
-        virtual bool hasIntervalAtTime(int64_t time) const = 0;
-        virtual std::pair<size_t, size_t> getOverlappingRange(int64_t start, int64_t end) const = 0;
-        virtual std::pair<size_t, size_t> getContainedRange(int64_t start, int64_t end) const = 0;
+        virtual bool hasIntervalAtTime(TimeFrameIndex time) const = 0;
+        virtual std::pair<size_t, size_t> getOverlappingRange(TimeFrameIndex start, TimeFrameIndex end) const = 0;
+        virtual std::pair<size_t, size_t> getContainedRange(TimeFrameIndex start, TimeFrameIndex end) const = 0;
         virtual DigitalIntervalStorageType getStorageType() const = 0;
         virtual DigitalIntervalStorageCache tryGetCache() const = 0;
 
         // Mutation
-        virtual bool addInterval(Interval const & interval, EntityId entity_id) = 0;
-        virtual bool removeInterval(Interval const & interval) = 0;
+        virtual bool addInterval(TimeFrameInterval const & interval, EntityId entity_id) = 0;
+        virtual bool removeInterval(TimeFrameInterval const & interval) = 0;
         virtual bool removeByEntityId(EntityId id) = 0;
         virtual void reserve(size_t capacity) = 0;
         virtual void clear() = 0;
@@ -208,7 +208,7 @@ private:
 
         size_t size() const override { return _storage.size(); }
 
-        Interval const & getInterval(size_t idx) const override {
+        TimeFrameInterval const & getInterval(size_t idx) const override {
             return _storage.getInterval(idx);
         }
 
@@ -216,7 +216,7 @@ private:
             return _storage.getEntityId(idx);
         }
 
-        std::optional<size_t> findByInterval(Interval const & interval) const override {
+        std::optional<size_t> findByInterval(TimeFrameInterval const & interval) const override {
             return _storage.findByInterval(interval);
         }
 
@@ -224,15 +224,15 @@ private:
             return _storage.findByEntityId(id);
         }
 
-        bool hasIntervalAtTime(int64_t time) const override {
+        bool hasIntervalAtTime(TimeFrameIndex time) const override {
             return _storage.hasIntervalAtTime(time);
         }
 
-        std::pair<size_t, size_t> getOverlappingRange(int64_t start, int64_t end) const override {
+        std::pair<size_t, size_t> getOverlappingRange(TimeFrameIndex start, TimeFrameIndex end) const override {
             return _storage.getOverlappingRange(start, end);
         }
 
-        std::pair<size_t, size_t> getContainedRange(int64_t start, int64_t end) const override {
+        std::pair<size_t, size_t> getContainedRange(TimeFrameIndex start, TimeFrameIndex end) const override {
             return _storage.getContainedRange(start, end);
         }
 
@@ -249,7 +249,7 @@ private:
         }
 
         // Mutation - only for OwningDigitalIntervalStorage
-        bool addInterval(Interval const & interval, EntityId entity_id) override {
+        bool addInterval(TimeFrameInterval const & interval, EntityId entity_id) override {
             if constexpr (requires { _storage.addInterval(interval, entity_id); }) {
                 return _storage.addInterval(interval, entity_id);
             } else {
@@ -257,7 +257,7 @@ private:
             }
         }
 
-        bool removeInterval(Interval const & interval) override {
+        bool removeInterval(TimeFrameInterval const & interval) override {
             if constexpr (requires { _storage.removeInterval(interval); }) {
                 return _storage.removeInterval(interval);
             } else {

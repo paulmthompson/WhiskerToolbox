@@ -43,7 +43,7 @@ std::shared_ptr<DigitalIntervalSeries> makeIntervals(
         std::initializer_list<std::pair<int64_t, int64_t>> intervals) {
     auto series = std::make_shared<DigitalIntervalSeries>();
     for (auto const & [start, end]: intervals) {
-        series->addEvent(Interval{start, end});
+        series->addEvent(TimeFrameInterval{TimeFrameIndex(start), TimeFrameIndex(end)});
     }
     return series;
 }

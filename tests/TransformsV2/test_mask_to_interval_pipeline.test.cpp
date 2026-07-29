@@ -252,12 +252,12 @@ TEST_CASE_METHOD(MaskToIntervalPipelineFixture,
             REQUIRE(intervals->size() == 2);
             
             // First interval: index 2 to index 4
-            REQUIRE(interval_list[0].value().start == 2);
-            REQUIRE(interval_list[0].value().end == 4);
+            REQUIRE(interval_list[0].value().start == TimeFrameIndex(2));
+            REQUIRE(interval_list[0].value().end == TimeFrameIndex(4));
             
             // Second interval: index 7 to index 8
-            REQUIRE(interval_list[1].value().start == 7);
-            REQUIRE(interval_list[1].value().end == 8);
+            REQUIRE(interval_list[1].value().start == TimeFrameIndex(7));
+            REQUIRE(interval_list[1].value().end == TimeFrameIndex(8));
         }
     }
 
@@ -312,11 +312,11 @@ TEST_CASE_METHOD(MaskToIntervalPipelineFixture,
         // So intervals: [3] (just index 3) and [7-8]
         REQUIRE(intervals->size() == 2);
         
-        REQUIRE(interval_list[0].value().start == 3);
-        REQUIRE(interval_list[0].value().end == 3);
+        REQUIRE(interval_list[0].value().start == TimeFrameIndex(3));
+        REQUIRE(interval_list[0].value().end == TimeFrameIndex(3));
         
-        REQUIRE(interval_list[1].value().start == 7);
-        REQUIRE(interval_list[1].value().end == 8);
+        REQUIRE(interval_list[1].value().start == TimeFrameIndex(7));
+        REQUIRE(interval_list[1].value().end == TimeFrameIndex(8));
     }
 
     SECTION("Execute pipeline with min_duration filter") {
@@ -368,8 +368,8 @@ TEST_CASE_METHOD(MaskToIntervalPipelineFixture,
         // Second interval [7-8]: 8 - 7 + 1 = 2 indices
         // With min_duration=3, only first interval passes
         REQUIRE(intervals->size() == 1);
-        REQUIRE(interval_list[0].value().start == 2);
-        REQUIRE(interval_list[0].value().end == 4);
+        REQUIRE(interval_list[0].value().start == TimeFrameIndex(2));
+        REQUIRE(interval_list[0].value().end == TimeFrameIndex(4));
     }
 }
 

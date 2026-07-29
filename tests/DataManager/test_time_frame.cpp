@@ -150,11 +150,11 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         REQUIRE(dm.setTime(TimeKey("camera"), camera_timeframe));
         
         // Create behavior intervals at camera resolution (frame indices)
-        std::vector<Interval> behavior_intervals = {
-            {5, 15},    // Frames 5-15: grooming behavior
-            {25, 35},   // Frames 25-35: locomotion
-            {50, 65},   // Frames 50-65: rearing
-            {80, 90}    // Frames 80-90: exploration
+        std::vector<TimeFrameInterval> behavior_intervals = {
+            {TimeFrameIndex(5), TimeFrameIndex(15)},    // Frames 5-15: grooming behavior
+            {TimeFrameIndex(25), TimeFrameIndex(35)},   // Frames 25-35: locomotion
+            {TimeFrameIndex(50), TimeFrameIndex(65)},   // Frames 50-65: rearing
+            {TimeFrameIndex(80), TimeFrameIndex(90)}    // Frames 80-90: exploration
         };
         
         auto interval_series = std::make_shared<DigitalIntervalSeries>(behavior_intervals);
@@ -248,7 +248,11 @@ TEST_CASE("Multi-TimeFrame Integration Tests", "[integration][timeframe]") {
         dm.setData<DigitalEventSeries>("spikes", spike_series, TimeKey("master"));
         
         // 3. Behavior intervals at camera rate
-        std::vector<Interval> behavior_intervals = {{10, 20}, {40, 60}, {80, 95}};
+        std::vector<TimeFrameInterval> behavior_intervals = {
+            {TimeFrameIndex(10), TimeFrameIndex(20)}, 
+            {TimeFrameIndex(40), TimeFrameIndex(60)}, 
+            {TimeFrameIndex(80), TimeFrameIndex(95)}
+        };
         auto behavior_series = std::make_shared<DigitalIntervalSeries>(behavior_intervals);
         dm.setData<DigitalIntervalSeries>("behavior", behavior_series, TimeKey("camera"));
         

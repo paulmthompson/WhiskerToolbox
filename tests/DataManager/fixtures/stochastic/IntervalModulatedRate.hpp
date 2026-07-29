@@ -17,13 +17,13 @@
 
 namespace interval_modulated_rate_detail {
 
-inline bool isInInterval(Interval const & interval, int64_t frame_index) {
+inline bool isInInterval(TimeFrameInterval const & interval, TimeFrameIndex frame_index) {
     return frame_index >= interval.start && frame_index <= interval.end;
 }
 
-inline std::optional<Interval> findContainingInterval(
-        std::span<Interval const> intervals,
-        int64_t frame_index) {
+inline std::optional<TimeFrameInterval> findContainingInterval(
+        std::span<TimeFrameInterval const> intervals,
+        TimeFrameIndex frame_index) {
     for (auto const & interval: intervals) {
         if (isInInterval(interval, frame_index)) {
             return interval;
@@ -54,7 +54,7 @@ inline std::vector<float> buildSpikeRate(
         std::size_t time_frame_count,
         int samples_per_time_frame,
         std::span<float const> curvature,
-        std::span<Interval const> contact_intervals,
+        std::span<TimeFrameInterval const> contact_intervals,
         float baseline_rate,
         float contact_rate_boost,
         float curvature_onset_rate_scale,
@@ -71,7 +71,7 @@ inline std::vector<float> buildSpikeRate(
         }
 
         auto const containing = interval_modulated_rate_detail::findContainingInterval(
-                contact_intervals, time_frame);
+                contact_intervals, TimeFrameIndex(time_frame));
         if (!containing.has_value()) {
             continue;
         }
@@ -79,11 +79,11 @@ inline std::vector<float> buildSpikeRate(
         rate[m] += contact_rate_boost;
 
         auto const onset_frame = containing->start;
-        auto const master_onset = static_cast<std::size_t>(onset_frame) * static_cast<std::size_t>(samples_per_time_frame);
+        auto const master_onset = static_cast<std::size_t>(onset_frame.getValue()) * static_cast<std::size_t>(samples_per_time_frame);
         auto const in_onset_window = m >= master_onset && m < master_onset + static_cast<std::size_t>(onset_window_master_samples);
 
-        if (in_onset_window && static_cast<std::size_t>(onset_frame) < curvature.size()) {
-            float const kappa_onset = std::max(0.0f, curvature[static_cast<std::size_t>(onset_frame)]);
+        if (in_onset_window && static_cast<std::size_t>(onset_frame.getValue()) < curvature.size()) {
+            float const kappa_onset = std::max(0.0f, curvature[static_cast<std::size_t>(onset_frame.getValue())]);
             rate[m] += curvature_onset_rate_scale * kappa_onset;
         }
     }

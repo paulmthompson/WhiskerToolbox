@@ -85,14 +85,14 @@ namespace {
  * @note Per project convention, @c getTimeAtIndex values are comparable across
  *       @c TimeFrame instances for the same instant; only indices differ between frames.
  */
-[[nodiscard]] inline int64_t physicalTimeAtDataIndex(
+[[nodiscard]] inline ClockTicks physicalTimeAtDataIndex(
         TimeFrame const * data_time_frame,
         TimeFrame const & query_time_frame,
         TimeFrameIndex index_into_data_frame) {
     if (data_time_frame != nullptr) {
-        return static_cast<int64_t>(data_time_frame->getTimeAtIndex(index_into_data_frame));
+        return data_time_frame->getTimeAtIndex(index_into_data_frame);
     }
-    return static_cast<int64_t>(query_time_frame.getTimeAtIndex(index_into_data_frame));
+    return query_time_frame.getTimeAtIndex(index_into_data_frame);
 }
 
 }// namespace
@@ -126,7 +126,7 @@ namespace {
     float const y_center = layout.y_transform.offset;
 
     return series.view() | std::views::transform([&time_frame, y_center](auto const & event_with_id) {
-               float x = static_cast<float>(time_frame.getTimeAtIndex(event_with_id.event_time));
+               float x = static_cast<float>(time_frame.getTimeAtIndex(event_with_id.event_time).getValue());
                return MappedElement{x, y_center, event_with_id.entity_id};
            });
 }
@@ -157,14 +157,14 @@ namespace {
         TimeFrame const & query_time_frame,
         TimeFrameIndex start_time,
         TimeFrameIndex end_time,
-        int64_t x_origin_time = 0) {
+        ClockTicks x_origin_time = ClockTicks(0)) {
     float const y_center = layout.y_transform.offset;
     auto const * series_tf = series.getTimeFrame().get();
 
     // views::all on an rvalue vector creates an owning_view
     return series.viewInRange(start_time, end_time, query_time_frame) |
            std::views::transform([series_tf, y_center, x_origin_time, &query_time_frame](auto const & event) {
-               int64_t const abs_time = physicalTimeAtDataIndex(series_tf, query_time_frame, event.event_time);
+               ClockTicks const abs_time = physicalTimeAtDataIndex(series_tf, query_time_frame, event.event_time);
                float const x = static_cast<float>(abs_time - x_origin_time);
                return MappedElement{x, y_center, event.entity_id};
            });
@@ -201,9 +201,9 @@ namespace {
 
     return series.view() | std::views::transform([&time_frame, y_bottom, height](auto const & interval_with_id) {
                float x_start = static_cast<float>(
-                       time_frame.getTimeAtIndex(TimeFrameIndex{interval_with_id.interval.start}));
+                       time_frame.getTimeAtIndex(TimeFrameIndex{interval_with_id.interval.start}).getValue());
                float x_end = static_cast<float>(
-                       time_frame.getTimeAtIndex(TimeFrameIndex{interval_with_id.interval.end}));
+                       time_frame.getTimeAtIndex(TimeFrameIndex{interval_with_id.interval.end}).getValue());
                float width = x_end - x_start;
                return MappedRectElement{x_start, y_bottom, width, height, interval_with_id.entity_id};
            });
@@ -233,13 +233,13 @@ namespace {
         TimeFrame const & query_time_frame,
         TimeFrameIndex start_time,
         TimeFrameIndex end_time,
-        int64_t x_origin_time = 0) {
+        ClockTicks x_origin_time = ClockTicks(0)) {
     float const y_center = layout.y_transform.offset;
     float const height = layout.y_transform.gain * 2.0f;// gain is half-height
     float const y_bottom = y_center - height / 2.0f;
 
-    float const start_time_f = static_cast<float>(static_cast<int64_t>(query_time_frame.getTimeAtIndex(start_time)) - x_origin_time);
-    float const end_time_f = static_cast<float>(static_cast<int64_t>(query_time_frame.getTimeAtIndex(end_time)) - x_origin_time);
+    float const start_time_f = static_cast<float>((query_time_frame.getTimeAtIndex(start_time) - x_origin_time.getValue()).getValue());
+    float const end_time_f = static_cast<float>((query_time_frame.getTimeAtIndex(end_time) - x_origin_time.getValue()).getValue());
 
     auto const * series_tf = series.getTimeFrame().get();
 
@@ -247,8 +247,8 @@ namespace {
     return series.viewInRange(start_time, end_time, query_time_frame) | std::views::transform([series_tf, y_bottom, height, start_time_f, end_time_f, x_origin_time, &query_time_frame](auto const & interval_with_id) {
                auto const xa = physicalTimeAtDataIndex(series_tf, query_time_frame, TimeFrameIndex{interval_with_id.interval.start});
                auto const xb = physicalTimeAtDataIndex(series_tf, query_time_frame, TimeFrameIndex{interval_with_id.interval.end});
-               auto x_start = static_cast<float>(static_cast<double>(xa) - static_cast<double>(x_origin_time));
-               auto x_end = static_cast<float>(static_cast<double>(xb) - static_cast<double>(x_origin_time));
+               auto x_start = static_cast<float>((xa - x_origin_time.getValue()).getValue());
+               auto x_end = static_cast<float>((xb - x_origin_time.getValue()).getValue());
 
                // Clip to visible range
                x_start = std::max(x_start, start_time_f);
@@ -299,14 +299,14 @@ namespace {
         float y_scale,
         TimeFrameIndex start_time,
         TimeFrameIndex end_time,
-        int64_t x_origin_time = 0) {
+        ClockTicks x_origin_time = ClockTicks(0)) {
     float const y_offset = layout.y_transform.offset;
     auto const * series_tf = series.getTimeFrame().get();
 
     // Use cross-timeframe query: start_time/end_time are in query_time_frame coordinates
     return series.getTimeValueRangeInTimeFrameIndexRange(start_time, end_time, query_time_frame) | std::views::transform([series_tf, y_scale, y_offset, x_origin_time, &query_time_frame](auto const & tv_point) {
-               int64_t const abs_time = physicalTimeAtDataIndex(series_tf, query_time_frame, tv_point.time_frame_index);
-               float const x = static_cast<float>(static_cast<double>(abs_time) - static_cast<double>(x_origin_time));
+               ClockTicks const abs_time = physicalTimeAtDataIndex(series_tf, query_time_frame, tv_point.time_frame_index);
+               float const x = static_cast<float>(abs_time - x_origin_time);
                float y = tv_point.value() * y_scale + y_offset;
                return MappedVertex{x, y};
            });
@@ -334,7 +334,7 @@ namespace {
     float const y_offset = layout.y_transform.offset;
 
     return series.view() | std::views::transform([&time_frame, y_scale, y_offset](auto const & tv_point) {
-               float x = static_cast<float>(time_frame.getTimeAtIndex(tv_point.time_frame_index));
+               float x = static_cast<float>(time_frame.getTimeAtIndex(tv_point.time_frame_index).getValue());
                float y = tv_point.value() * y_scale + y_offset;
                return MappedVertex{x, y};
            });
@@ -364,14 +364,14 @@ namespace {
         float y_scale,
         TimeFrameIndex start_time,
         TimeFrameIndex end_time,
-        int64_t x_origin_time = 0) {
+        ClockTicks x_origin_time = ClockTicks(0)) {
     float const y_offset = layout.y_transform.offset;
     auto const * series_tf = series.getTimeFrame().get();
 
     // Use cross-timeframe query: start_time/end_time are in query_time_frame coordinates
     return series.getTimeValueRangeInTimeFrameIndexRange(start_time, end_time, query_time_frame) | std::views::transform([series_tf, y_scale, y_offset, x_origin_time, &query_time_frame](auto const & tv_point) {
-               int64_t const abs_time = physicalTimeAtDataIndex(series_tf, query_time_frame, tv_point.time_frame_index);
-               float const x = static_cast<float>(static_cast<double>(abs_time) - static_cast<double>(x_origin_time));
+               ClockTicks const abs_time = physicalTimeAtDataIndex(series_tf, query_time_frame, tv_point.time_frame_index);
+               float const x = static_cast<float>(static_cast<double>(abs_time.getValue()) - static_cast<double>(x_origin_time.getValue()));
                float y = tv_point.value() * y_scale + y_offset;
                return MappedAnalogVertex{x, y, tv_point.time_frame_index.getValue()};
            });

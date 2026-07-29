@@ -68,7 +68,7 @@ LineBatchData buildLineBatchFromLineData(
 // ── buildLineBatchFromGatherResult ─────────────────────────────────────
 
 LineBatchData buildLineBatchFromGatherResult(GatherResult<AnalogTimeSeries> const & gathered) {
-    std::vector<std::int64_t> alignment_times;
+    std::vector<ClockTicks> alignment_times;
     alignment_times.reserve(gathered.size());
     for (std::size_t trial = 0; trial < gathered.size(); ++trial) {
         alignment_times.push_back(gathered.alignmentTimeAt(trial));
@@ -79,7 +79,7 @@ LineBatchData buildLineBatchFromGatherResult(GatherResult<AnalogTimeSeries> cons
 
 LineBatchData buildLineBatchFromGatherResult(
         GatherResult<AnalogTimeSeries> const & gathered,
-        std::vector<std::int64_t> const & alignment_times) {
+        std::vector<ClockTicks> const & alignment_times) {
     LineBatchData batch;
     batch.canvas_width = 1.0f;
     batch.canvas_height = 1.0f;
@@ -96,8 +96,8 @@ LineBatchData buildLineBatchFromGatherResult(
         std::uint32_t const first_seg = batch.numSegments();
         std::uint32_t seg_count = 0;
 
-        std::int64_t const align =
-                trial < alignment_times.size() ? alignment_times[trial] : 0;
+        ClockTicks const align =
+                trial < alignment_times.size() ? alignment_times[trial] : ClockTicks(0);
 
         // Iterate time-value pairs via the lazy view
         auto trial_view = series->view();
@@ -112,11 +112,13 @@ LineBatchData buildLineBatchFromGatherResult(
         std::vector<XY> pts;
         pts.reserve(series->getNumSamples());
 
+        if (!trial_tf) {
+            throw std::runtime_error("LineBatchBuilder::buildLineBatchFromGatherResult: trial time frame must be non-null");
+        }
+
         for (auto tvp: trial_view) {
-            int64_t const time_abs = trial_tf
-                                       ? trial_tf->getTimeAtIndex(tvp.time())
-                                       : tvp.time().getValue();
-            auto const x = static_cast<float>(time_abs - align);
+            ClockTicks const time_abs = trial_tf->getTimeAtIndex(tvp.time());
+            auto const x = static_cast<float>(time_abs.getValue() - align.getValue());
             float const y = tvp.value();
             pts.push_back({x, y});
         }

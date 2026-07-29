@@ -118,7 +118,7 @@ std::unique_ptr<QuadTree<EntityId>> buildCombinedEventIndex(
     
     for (auto const& [series, layout] : series_layouts) {
         for (auto const& event : series->view()) {
-            float x = static_cast<float>(time_frame.getTimeAtIndex(event.event_time));
+            float x = static_cast<float>(time_frame.getTimeAtIndex(event.event_time).getValue());
             float y = layout->y_transform.offset;
             tree->insert(x, y, event.entity_id);
         }
@@ -140,7 +140,7 @@ std::unique_ptr<QuadTree<EntityId>> buildStackedEventIndex(
     float y = layout.y_transform.offset;
     
     for (auto const& event : series.view()) {
-        float x = static_cast<float>(time_frame.getTimeAtIndex(event.event_time));
+        float x = static_cast<float>(time_frame.getTimeAtIndex(event.event_time).getValue());
         tree->insert(x, y, event.entity_id);
     }
     
@@ -159,8 +159,8 @@ RenderableScene createIntervalScene(
     RenderableRectangleBatch batch;
     
     for (auto const& interval : intervals.view()) {
-        float x_start = static_cast<float>(time_frame.getTimeAtIndex(TimeFrameIndex{interval.interval.start}));
-        float x_end = static_cast<float>(time_frame.getTimeAtIndex(TimeFrameIndex{interval.interval.end}));
+        float x_start = static_cast<float>(time_frame.getTimeAtIndex(TimeFrameIndex{interval.interval.start}).getValue());
+        float x_end = static_cast<float>(time_frame.getTimeAtIndex(TimeFrameIndex{interval.interval.end}).getValue());
         float width = x_end - x_start;
         // y_transform: offset=center, gain=half_height
         float height = layout.y_transform.gain * 2.0f;

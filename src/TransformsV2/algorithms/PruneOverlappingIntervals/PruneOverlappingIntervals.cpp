@@ -37,7 +37,7 @@ std::shared_ptr<DigitalIntervalSeries> makeEmptyResult(std::shared_ptr<TimeFrame
  *
  * @pre intervals is sorted by start time in ascending order
  */
-[[nodiscard]] std::vector<size_t> pruneOverlappingIntervalIndices(std::vector<Interval> const & intervals) {
+[[nodiscard]] std::vector<size_t> pruneOverlappingIntervalIndices(std::vector<TimeFrameInterval> const & intervals) {
     std::vector<size_t> kept_indices;
 
     if (intervals.empty()) {
@@ -47,10 +47,10 @@ std::shared_ptr<DigitalIntervalSeries> makeEmptyResult(std::shared_ptr<TimeFrame
     kept_indices.reserve(intervals.size());
     kept_indices.push_back(0);
 
-    int64_t last_kept_end = intervals[0].end;
+    TimeFrameIndex last_kept_end = intervals[0].end;
 
     for (size_t i = 1; i < intervals.size(); ++i) {
-        int64_t const current_start = intervals[i].start;
+        TimeFrameIndex const current_start = intervals[i].start;
         if (current_start > last_kept_end) {
             kept_indices.push_back(i);
             last_kept_end = intervals[i].end;
@@ -75,7 +75,7 @@ std::shared_ptr<DigitalIntervalSeries> pruneOverlappingIntervals(
         return makeEmptyResult(time_frame);
     }
 
-    std::vector<Interval> intervals;
+    std::vector<TimeFrameInterval> intervals;
     intervals.reserve(input.size());
     for (auto const & interval_with_id: input.view()) {
         intervals.push_back(interval_with_id.interval);
@@ -83,7 +83,7 @@ std::shared_ptr<DigitalIntervalSeries> pruneOverlappingIntervals(
 
     auto const kept_indices = pruneOverlappingIntervalIndices(intervals);
 
-    std::vector<Interval> kept_intervals;
+    std::vector<TimeFrameInterval> kept_intervals;
     kept_intervals.reserve(kept_indices.size());
 
     std::size_t const total_intervals = kept_indices.size();

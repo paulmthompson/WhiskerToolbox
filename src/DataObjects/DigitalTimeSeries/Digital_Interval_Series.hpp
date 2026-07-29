@@ -175,7 +175,7 @@ public:
      * 
      * @param digital_vector Vector of intervals (will be sorted)
      */
-    explicit DigitalIntervalSeries(std::vector<Interval> digital_vector);
+    explicit DigitalIntervalSeries(std::vector<TimeFrameInterval> digital_vector);
 
     /**
      * @brief Constructor from float pairs (legacy support)
@@ -231,10 +231,10 @@ public:
                                    TimeFrameIndex stop_index,
                                    TimeFrame const & source_time_frame) const {
         auto time_range = _getConvertedTimeRange(start_index, stop_index, source_time_frame);
-        int64_t const range_start = time_range.first;
-        int64_t const range_stop = time_range.second;
+        TimeFrameIndex const range_start = time_range.first;
+        TimeFrameIndex const range_stop = time_range.second;
         return std::views::iota(size_t{0}, size()) | std::views::filter([this, range_start, range_stop](size_t idx) {
-                   Interval const interval = _storage.getInterval(idx);
+                   TimeFrameInterval const interval = _storage.getInterval(idx);
                    // Overlapping: interval.start <= stop_time && interval.end >= start_time
                    return interval.start <= range_stop && interval.end >= range_start;
                }) |
@@ -255,10 +255,10 @@ public:
                                             TimeFrameIndex stop_index,
                                             TimeFrame const & source_time_frame) const {
         auto time_range = _getConvertedTimeRange(start_index, stop_index, source_time_frame);
-        int64_t const range_start = time_range.first;
-        int64_t const range_stop = time_range.second;
+        TimeFrameIndex const range_start = time_range.first;
+        TimeFrameIndex const range_stop = time_range.second;
         return std::views::iota(size_t{0}, size()) | std::views::filter([this, range_start, range_stop](size_t idx) {
-                   Interval const interval = _storage.getInterval(idx);
+                   TimeFrameInterval const interval = _storage.getInterval(idx);
                    return interval.start <= range_stop && interval.end >= range_start;
                }) |
                std::views::transform([this](size_t idx) {
@@ -280,7 +280,7 @@ public:
 
     // ========== Setters ==========
 
-    void addEvent(Interval new_interval);
+    void addEvent(TimeFrameInterval new_interval);
 
     void addEvent(TimeFrameIndex start, TimeFrameIndex end);
 
@@ -292,7 +292,7 @@ public:
      * @param interval The interval to remove
      * @return True if the interval was found and removed, false otherwise
      */
-    bool removeInterval(Interval const & interval);
+    bool removeInterval(TimeFrameInterval const & interval);
 
     /**
      * @brief Remove multiple intervals from the series
@@ -300,7 +300,7 @@ public:
      * @param intervals The intervals to remove
      * @return The number of intervals that were successfully removed
      */
-    size_t removeIntervals(std::vector<Interval> const & intervals);
+    size_t removeIntervals(std::vector<TimeFrameInterval> const & intervals);
 
     template<typename T, typename B>
     void setEventsAtTimes(std::vector<T> times, std::vector<B> events) {
@@ -418,12 +418,12 @@ public:
             TimeFrameIndex stop_time,
             TimeFrame const & source_timeframe) const {
         if (&source_timeframe == _time_frame.get()) {
-            return _getIntervalsInRange<mode>(start_time.getValue(), stop_time.getValue());
+            return _getIntervalsInRange<mode>(start_time, stop_time);
         }
 
         // If either timeframe is null, fall back to original behavior
         if (!_time_frame.get()) {
-            return _getIntervalsInRange<mode>(start_time.getValue(), stop_time.getValue());
+            return _getIntervalsInRange<mode>(start_time, stop_time);
         }
 
         // Use helper function for time frame conversion
@@ -431,7 +431,7 @@ public:
                                                                              stop_time,
                                                                              source_timeframe,
                                                                              *_time_frame);
-        return _getIntervalsInRange<mode>(target_start_index.getValue(), target_stop_index.getValue());
+        return _getIntervalsInRange<mode>(target_start_index, target_stop_index);
     }
 
     // ========== Time Frame ==========
@@ -468,7 +468,7 @@ public:
      * @param entity_id The EntityId to look up
      * @return Optional containing the interval data if found, std::nullopt otherwise
      */
-    [[nodiscard]] std::optional<Interval> getIntervalByEntityId(EntityId entity_id) const;
+    [[nodiscard]] std::optional<TimeFrameInterval> getIntervalByEntityId(EntityId entity_id) const;
 
     /**
      * @brief Get all intervals that match the given EntityIds.
@@ -479,7 +479,7 @@ public:
      * @param entity_ids Vector of EntityIds to look up
      * @return Vector of pairs containing {EntityId, Interval} for found entities
      */
-    [[nodiscard]] std::vector<std::pair<EntityId, Interval>> getIntervalsByEntityIds(std::vector<EntityId> const & entity_ids) const;
+    [[nodiscard]] std::vector<std::pair<EntityId, TimeFrameInterval>> getIntervalsByEntityIds(std::vector<EntityId> const & entity_ids) const;
 
     // ========== Storage Type Queries ==========
 
@@ -514,7 +514,7 @@ public:
      * @return Shared pointer to new owning series with Overlapping layout
      */
     [[nodiscard]] static std::shared_ptr<DigitalIntervalSeries> createOverlapping(
-            std::vector<Interval> intervals,
+            std::vector<TimeFrameInterval> intervals,
             std::shared_ptr<TimeFrame> time_frame = nullptr);
 
     /**
@@ -529,8 +529,8 @@ public:
      */
     [[nodiscard]] static std::shared_ptr<DigitalIntervalSeries> createView(
             std::shared_ptr<DigitalIntervalSeries const> const & source,
-            int64_t start,
-            int64_t end);
+            TimeFrameIndex start,
+            TimeFrameIndex end);
 
     /**
      * @brief Create a view of this series filtered by EntityIds
@@ -630,7 +630,7 @@ private:
      * @return The merged interval if storage changed, std::nullopt if the new interval
      *         was fully contained in an existing interval (no-op).
      */
-    std::optional<Interval> _addEventInternal(Interval new_interval);
+    std::optional<TimeFrameInterval> _addEventInternal(TimeFrameInterval new_interval);
     void _setEventAtTimeInternal(TimeFrameIndex time, bool event);
     void _removeEventAtTimeInternal(TimeFrameIndex time);
 
@@ -648,13 +648,13 @@ private:
      */
     template<RangeMode mode = RangeMode::CONTAINED>
     auto _getIntervalsInRange(
-            int64_t start_time,
-            int64_t stop_time) const {
+            TimeFrameIndex start_time,
+            TimeFrameIndex stop_time) const {
 
         if constexpr (mode == RangeMode::CONTAINED) {
             // Direct storage access like DigitalEventSeries - returns by value
             return std::views::iota(size_t{0}, _storage.size()) | std::views::filter([this, start_time, stop_time](size_t idx) {
-                       Interval const interval = _storage.getInterval(idx);
+                       TimeFrameInterval const interval = _storage.getInterval(idx);
                        return interval.start >= start_time && interval.end <= stop_time;
                    }) |
                    std::views::transform([this](size_t idx) {
@@ -662,7 +662,7 @@ private:
                    });
         } else if constexpr (mode == RangeMode::OVERLAPPING) {
             return std::views::iota(size_t{0}, _storage.size()) | std::views::filter([this, start_time, stop_time](size_t idx) {
-                       Interval const interval = _storage.getInterval(idx);
+                       TimeFrameInterval const interval = _storage.getInterval(idx);
                        return interval.start <= stop_time && interval.end >= start_time;
                    }) |
                    std::views::transform([this](size_t idx) {
@@ -677,14 +677,14 @@ private:
     }
 
     // Helper method to handle clipping intervals at range boundaries
-    std::vector<Interval> _getIntervalsAsVectorClipped(
-            int64_t start_time,
-            int64_t stop_time) const {
+    std::vector<TimeFrameInterval> _getIntervalsAsVectorClipped(
+            TimeFrameIndex start_time,
+            TimeFrameIndex stop_time) const {
 
-        std::vector<Interval> result;
+        std::vector<TimeFrameInterval> result;
 
         for (size_t i = 0; i < _storage.size(); ++i) {
-            Interval const interval = _storage.getInterval(i);
+            TimeFrameInterval const interval = _storage.getInterval(i);
 
             // Skip if not overlapping
             if (interval.end < start_time || interval.start > stop_time)
@@ -692,7 +692,7 @@ private:
 
             // Create a new clipped interval based on original interval values
             // but clipped at the transformed boundaries
-            int64_t clipped_start = interval.start;
+            TimeFrameIndex clipped_start = interval.start;
             if (clipped_start < start_time) {
                 // Binary search or interpolation to find the original value
                 // that transforms to start_time would be ideal here
@@ -701,13 +701,13 @@ private:
                     clipped_start++;
             }
 
-            int64_t clipped_end = interval.end;
+            TimeFrameIndex clipped_end = interval.end;
             if (clipped_end > stop_time) {
                 while (clipped_end > interval.start && clipped_end > stop_time)
-                    clipped_end--;
+                    clipped_end = clipped_end - TimeFrameIndex{1};
             }
 
-            result.push_back(Interval{clipped_start, clipped_end});
+            result.push_back(TimeFrameInterval{clipped_start, clipped_end});
         }
 
         return result;
@@ -721,9 +721,11 @@ private:
      * 
      * @param start_index Start time index
      * @param stop_index Stop time index
-     * @return std::pair<int64_t, int64_t> Start and stop time values
+     * @return std::pair<ClockTicks, ClockTicks> Start and stop time values
+     * 
+     * @throw std::runtime_error if no time frame is set
      */
-    [[nodiscard]] std::pair<int64_t, int64_t> _getTimeRangeFromIndices(
+    [[nodiscard]] std::pair<ClockTicks, ClockTicks> _getTimeRangeFromIndices(
             TimeFrameIndex start_index,
             TimeFrameIndex stop_index) const;
 
@@ -735,20 +737,20 @@ private:
      * @param start_index Start time index in source_time_frame
      * @param stop_index Stop time index in source_time_frame
      * @param source_time_frame The time frame the indices are expressed in
-     * @return Pair of (start_time, stop_time) as int64_t values for internal use
+     * @return Pair of (start_time, stop_time) as TimeFrameIndex values for internal use
      */
-    [[nodiscard]] std::pair<int64_t, int64_t> _getConvertedTimeRange(
+    [[nodiscard]] std::pair<TimeFrameIndex, TimeFrameIndex> _getConvertedTimeRange(
             TimeFrameIndex start_index,
             TimeFrameIndex stop_index,
             TimeFrame const & source_time_frame) const {
         // Fast path: same time frame or no conversion needed
         if (&source_time_frame == _time_frame.get() || !_time_frame.get()) {
-            return {start_index.getValue(), stop_index.getValue()};
+            return {start_index, stop_index};
         }
         // Convert to our time frame
         auto [target_start, target_stop] = convertTimeFrameRange(
                 start_index, stop_index, source_time_frame, *_time_frame);
-        return {target_start.getValue(), target_stop.getValue()};
+        return {target_start, target_stop};
     }
 
     /**
@@ -758,16 +760,16 @@ private:
      * @param source_time_frame The time frame the index is expressed in
      * @return int64_t time value for internal use
      */
-    [[nodiscard]] int64_t _getConvertedTime(
+    [[nodiscard]] TimeFrameIndex _getConvertedTime(
             TimeFrameIndex time_index,
             TimeFrame const & source_time_frame) const {
         if (&source_time_frame == _time_frame.get() || !_time_frame.get()) {
-            return time_index.getValue();
+            return time_index;
         }
         // Convert using the same logic as range conversion
         auto [target, _] = convertTimeFrameRange(
                 time_index, time_index, source_time_frame, *_time_frame);
-        return target.getValue();
+        return target;
     }
 
     /**
@@ -776,9 +778,9 @@ private:
      * @param time The time value to check (already in internal coordinates)
      * @return true if any interval contains the time
      */
-    [[nodiscard]] bool _hasIntervalAtTime(int64_t time) const {
+    [[nodiscard]] bool _hasIntervalAtTime(TimeFrameIndex time) const {
         for (size_t i = 0; i < _storage.size(); ++i) {
-            Interval const & interval = _storage.getInterval(i);
+            TimeFrameInterval const & interval = _storage.getInterval(i);
             if (interval.start <= time && time <= interval.end) {
                 return true;
             }

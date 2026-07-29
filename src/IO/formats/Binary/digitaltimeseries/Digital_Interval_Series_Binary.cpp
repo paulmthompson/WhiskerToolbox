@@ -10,7 +10,7 @@
 namespace {
     // Helper function to load and extract intervals based on data type
     template<typename T>
-    std::vector<Interval> loadIntervalsFromBinary(BinaryIntervalLoaderOptions const & options) {
+    std::vector<TimeFrameInterval> loadIntervalsFromBinary(BinaryIntervalLoaderOptions const & options) {
         // Set up binary loading options
         Loader::BinaryAnalogOptions binary_opts;
         binary_opts.file_path = options.filepath;
@@ -35,12 +35,12 @@ namespace {
         auto interval_pairs = Loader::extractIntervals(digital_data, options.transition_type);
         
         // Convert to Interval objects
-        std::vector<Interval> intervals;
+        std::vector<TimeFrameInterval> intervals;
         intervals.reserve(interval_pairs.size());
         for (auto const & pair : interval_pairs) {
-            intervals.emplace_back(Interval{
-                static_cast<int64_t>(pair.first), 
-                static_cast<int64_t>(pair.second)
+            intervals.emplace_back(TimeFrameInterval{
+                TimeFrameIndex{static_cast<int64_t>(pair.first)}, 
+                TimeFrameIndex{static_cast<int64_t>(pair.second)}
             });
         }
         
@@ -48,7 +48,7 @@ namespace {
     }
 }
 
-std::vector<Interval> load(BinaryIntervalLoaderOptions const & options) {
+std::vector<TimeFrameInterval> load(BinaryIntervalLoaderOptions const & options) {
     // Validate options
     if (options.filepath.empty()) {
         std::cerr << "Error: Filepath cannot be empty" << std::endl;

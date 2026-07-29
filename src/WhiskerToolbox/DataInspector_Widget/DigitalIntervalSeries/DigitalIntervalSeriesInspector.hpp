@@ -92,7 +92,7 @@ public:
      * @brief Set a callback function to get selected intervals from the view panel
      * @param provider Function that returns currently selected intervals
      */
-    void setSelectionProvider(std::function<std::vector<Interval>()> provider);
+    void setSelectionProvider(std::function<std::vector<TimeFrameInterval>()> provider);
 
     /**
      * @brief Connect to the application keymap manager for configurable shortcuts
@@ -112,14 +112,14 @@ private:
     bool _interval_epoch{false};
     int64_t _interval_start{0};
     int64_t _interval_end{0};// Track both start and end for bidirectional support
-    std::function<std::vector<Interval>()> _selection_provider;
+    std::function<std::vector<TimeFrameInterval>()> _selection_provider;
 
     void _connectSignals();
 
     void _calculateIntervals();
     void _assignCallbacks();
 
-    std::vector<Interval> _getSelectedIntervals();
+    std::vector<TimeFrameInterval> _getSelectedIntervals();
 
     /**
      * @brief Update the start frame label display

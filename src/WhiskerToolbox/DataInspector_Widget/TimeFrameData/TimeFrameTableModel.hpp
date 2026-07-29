@@ -19,6 +19,7 @@
 
 #include "Entity/EntityRegistry.hpp"
 #include "Entity/EntityTypes.hpp"
+#include "TimeFrame/ClockTicks.hpp"
 
 #include <QAbstractTableModel>
 
@@ -28,10 +29,10 @@
 class GroupManager;
 
 struct TimeFrameTableRow {
-    int64_t index;       ///< TimeFrameIndex value
-    int time_value;      ///< Absolute time at this index
-    EntityId entity_id;  ///< EntityId for this time entry
-    QString group_name;  ///< Name of the group this entry belongs to
+    TimeFrameIndex index; ///< TimeFrameIndex value
+    ClockTicks time_value;///< Absolute time at this index
+    EntityId entity_id;   ///< EntityId for this time entry
+    QString group_name;   ///< Name of the group this entry belongs to
 };
 
 class TimeFrameTableModel : public QAbstractTableModel {
@@ -51,11 +52,11 @@ public:
 
     /**
      * @brief Set the time values and associated entity information
-     * @param times Vector of time values (index in vector = TimeFrameIndex)
+     * @param times Vector of time values (ClockTicks)
      * @param time_key The TimeFrame key (used for EntityRegistry lookups)
      * @param registry The EntityRegistry for resolving EntityIds
      */
-    void setTimeValues(std::vector<int> const & times,
+    void setTimeValues(std::vector<ClockTicks> const & times,
                        std::string const & time_key,
                        EntityRegistry * registry);
 
@@ -63,14 +64,14 @@ public:
     void setGroupFilter(int group_id);
     void clearGroupFilter();
 
-    [[nodiscard]] int64_t getIndex(int row) const {
+    [[nodiscard]] TimeFrameIndex getIndex(int row) const {
         if (row >= 0 && row < static_cast<int>(_display_data.size())) {
             return _display_data[static_cast<size_t>(row)].index;
         }
-        return -1;
+        return TimeFrameIndex(-1);
     }
 
-    [[nodiscard]] int getTimeValue(int row) const {
+    [[nodiscard]] ClockTicks getTimeValue(int row) const {
         return _display_data.at(static_cast<size_t>(row)).time_value;
     }
 
@@ -97,7 +98,7 @@ public:
         auto const & row_data = _display_data[row];
         switch (index.column()) {
             case IndexColumn:
-                return QVariant::fromValue(static_cast<qlonglong>(row_data.index));
+                return QVariant::fromValue(static_cast<qlonglong>(row_data.index.getValue()));
             case TimeColumn:
                 return QVariant::fromValue(row_data.time_value);
             case GroupColumn:
@@ -133,4 +134,4 @@ private:
     int _filtered_group_id{-1};
 };
 
-#endif // TIMEFRAME_TABLE_MODEL_HPP
+#endif// TIMEFRAME_TABLE_MODEL_HPP

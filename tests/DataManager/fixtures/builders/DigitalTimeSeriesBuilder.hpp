@@ -117,7 +117,7 @@ public:
      * @param end Interval end time
      */
     DigitalIntervalSeriesBuilder & withInterval(int start, int end) {
-        m_intervals.emplace_back(start, end);
+        m_intervals.emplace_back(TimeFrameIndex(start), TimeFrameIndex(end));
         return *this;
     }
 
@@ -127,7 +127,7 @@ public:
      * @param end Interval end time
      */
     DigitalIntervalSeriesBuilder & withInterval(TimeFrameIndex start, TimeFrameIndex end) {
-        m_intervals.emplace_back(start.getValue(), end.getValue());
+        m_intervals.emplace_back(start, end);
         return *this;
     }
 
@@ -135,7 +135,7 @@ public:
      * @brief Add multiple intervals
      * @param intervals Vector of intervals
      */
-    DigitalIntervalSeriesBuilder & withIntervals(std::vector<Interval> const & intervals) {
+    DigitalIntervalSeriesBuilder & withIntervals(std::vector<TimeFrameInterval> const & intervals) {
         m_intervals.insert(m_intervals.end(), intervals.begin(), intervals.end());
         return *this;
     }
@@ -151,7 +151,7 @@ public:
         m_intervals.clear();
         int current = start;
         while (current + interval_duration <= end) {
-            m_intervals.emplace_back(current, current + interval_duration);
+            m_intervals.emplace_back(TimeFrameIndex(current), TimeFrameIndex(current + interval_duration));
             current += interval_duration + gap;
         }
         return *this;
@@ -165,14 +165,14 @@ public:
         auto series = std::make_shared<DigitalIntervalSeries>(m_intervals);
         int64_t max_time = 0;
         for (auto const & interval: m_intervals) {
-            max_time = std::max(max_time, interval.end);
+            max_time = std::max(max_time, interval.end.getValue());
         }
         series->setTimeFrame(makeDigitalBuilderIdentityTimeFrame(max_time));
         return series;
     }
 
 private:
-    std::vector<Interval> m_intervals;
+    std::vector<TimeFrameInterval> m_intervals;
 };
 
 #endif// DIGITAL_TIME_SERIES_BUILDER_HPP

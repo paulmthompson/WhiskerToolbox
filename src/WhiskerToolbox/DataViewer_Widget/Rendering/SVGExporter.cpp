@@ -2,6 +2,7 @@
 
 #include "Core/DataViewerState.hpp"
 #include "Core/DataViewerStateData.hpp"
+#include "DataViewerViewWindow.hpp"
 #include "OpenGLWidget.hpp"
 #include "SceneBuildingHelpers.hpp"
 #include "TransformComposers.hpp"
@@ -23,31 +24,6 @@
 #include <cstdint>
 #include <iostream>
 #include <memory>
-
-namespace {
-
-[[nodiscard]] int64_t masterAbsoluteTimeAtIndex(
-        std::shared_ptr<TimeFrame> const & master_tf,
-        TimeFrameIndex const idx) {
-    if (!master_tf) {
-        return 0;
-    }
-    return static_cast<int64_t>(master_tf->getTimeAtIndex(idx));
-}
-
-[[nodiscard]] int64_t masterAbsoluteTimeSpanForOrtho(
-        std::shared_ptr<TimeFrame> const & master_tf,
-        TimeFrameIndex const start,
-        TimeFrameIndex const end) {
-    if (!master_tf) {
-        return std::max<int64_t>(end.getValue() - start.getValue(), 1);
-    }
-    auto const t0 = static_cast<int64_t>(master_tf->getTimeAtIndex(start));
-    auto const t1 = static_cast<int64_t>(master_tf->getTimeAtIndex(end));
-    return std::max<int64_t>(t1 - t0, 1);
-}
-
-}// namespace
 
 SVGExporter::SVGExporter(OpenGLWidget * gl_widget)
     : gl_widget_(gl_widget) {
@@ -112,8 +88,7 @@ CorePlotting::RenderableScene SVGExporter::buildScene(
     auto const view_state = gl_widget_->getViewState();
     auto const * state = gl_widget_->state();
     auto const mtf = gl_widget_->getMasterTimeFrame();
-    int64_t const span = masterAbsoluteTimeSpanForOrtho(mtf, master_window_start, master_window_end);
-    auto const local_end_time = TimeFrameIndex(span);
+    ClockTicks const span = DataViewer::viewSpanMasterAbsolute(mtf, master_window_start, master_window_end);
 
     // Fold y_zoom and y_pan into projection via effective viewport
     auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
@@ -121,8 +96,9 @@ CorePlotting::RenderableScene SVGExporter::buildScene(
     // View matrix is identity — pan and zoom fully handled by projection
     scene.view_matrix = glm::mat4(1.0f);
     scene.projection_matrix = CorePlotting::getAnalogProjectionMatrix(
-            TimeFrameIndex{0}, local_end_time, eff.y_min, eff.y_max);
-    scene.time_axis_origin_master_absolute = masterAbsoluteTimeAtIndex(mtf, master_window_start);
+            0.0f, static_cast<float>(span.getValue()), eff.y_min, eff.y_max);
+    scene.time_axis_origin_master_absolute =
+            DataViewer::viewOriginMasterAbsoluteAtIndex(mtf, master_window_start);
 
     // 1. Build interval batches (rendered as background)
     auto const & interval_series_map = gl_widget_->getDigitalIntervalSeriesMap();
@@ -238,7 +214,8 @@ CorePlotting::RenderablePolyLineBatch SVGExporter::buildAnalogBatch(
     batch_params.start_time = master_window_start;
     batch_params.end_time = master_window_end;
     if (auto const mtf = gl_widget_->getMasterTimeFrame()) {
-        batch_params.x_origin_master_absolute_time = masterAbsoluteTimeAtIndex(mtf, master_window_start);
+        batch_params.x_origin_master_absolute_time =
+                DataViewer::viewOriginMasterAbsoluteAtIndex(mtf, master_window_start);
     }
     batch_params.color = color;
     batch_params.thickness = options.get_line_thickness();
@@ -309,7 +286,8 @@ CorePlotting::RenderableGlyphBatch SVGExporter::buildEventBatch(
     batch_params.start_time = master_window_start;
     batch_params.end_time = master_window_end;
     if (auto const mtf = gl_widget_->getMasterTimeFrame()) {
-        batch_params.x_origin_master_absolute_time = masterAbsoluteTimeAtIndex(mtf, master_window_start);
+        batch_params.x_origin_master_absolute_time =
+                DataViewer::viewOriginMasterAbsoluteAtIndex(mtf, master_window_start);
     }
     batch_params.color = color;
     batch_params.glyph_size = DataViewer::computeEventGlyphSize(
@@ -370,7 +348,8 @@ CorePlotting::RenderableRectangleBatch SVGExporter::buildEventBoxBatch(
     batch_params.start_time = master_window_start;
     batch_params.end_time = master_window_end;
     if (auto const mtf = gl_widget_->getMasterTimeFrame()) {
-        batch_params.x_origin_master_absolute_time = masterAbsoluteTimeAtIndex(mtf, master_window_start);
+        batch_params.x_origin_master_absolute_time =
+                DataViewer::viewOriginMasterAbsoluteAtIndex(mtf, master_window_start);
     }
     batch_params.color = color;
 
@@ -418,7 +397,8 @@ CorePlotting::RenderableRectangleBatch SVGExporter::buildIntervalBatch(
     batch_params.start_time = master_window_start;
     batch_params.end_time = master_window_end;
     if (auto const mtf = gl_widget_->getMasterTimeFrame()) {
-        batch_params.x_origin_master_absolute_time = masterAbsoluteTimeAtIndex(mtf, master_window_start);
+        batch_params.x_origin_master_absolute_time =
+                DataViewer::viewOriginMasterAbsoluteAtIndex(mtf, master_window_start);
     }
     batch_params.color = color;
 

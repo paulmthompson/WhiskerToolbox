@@ -50,7 +50,7 @@ struct BinaryIntervalLoaderOptions {
  * @param options Configuration options for loading
  * @return Vector of Interval objects loaded from the binary file
  */
-DATAMANAGERIO_EXPORT std::vector<Interval> load(BinaryIntervalLoaderOptions const & options);
+DATAMANAGERIO_EXPORT std::vector<TimeFrameInterval> load(BinaryIntervalLoaderOptions const & options);
 
 /**
  * @brief Load digital interval series data into a DigitalIntervalSeries object

@@ -442,11 +442,11 @@ void EventPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
             // The alignment time is the absolute time of t=0 for this trial
             if (trial_index >= 0 &&
                 static_cast<size_t>(trial_index) < _cached_alignment_times.size()) {
-                int64_t const alignment_time = _cached_alignment_times[trial_index];
-                int64_t const absolute_time = alignment_time + static_cast<int64_t>(relative_time);
+                ClockTicks const alignment_time = _cached_alignment_times[trial_index];
+                int64_t const absolute_time = alignment_time.getValue() + static_cast<int64_t>(relative_time);
 
                 spdlog::debug("[EventPlotGL] doubleClick time: alignmentTime={} absoluteTime={}",
-                              alignment_time, absolute_time);
+                              alignment_time.getValue(), absolute_time);
 
                 // Resolve the data key from the hit's event name
                 // hit->second encodes the event name via the scene key
@@ -695,7 +695,7 @@ void EventPlotOpenGLWidget::rebuildScene() {
             auto const * trial_layout = _layout_response.findLayout(layout_key);
             if (!trial_layout) continue;
 
-            auto ref_abs_time = static_cast<int>(sd.gathered.alignmentTimeAt(trial));
+            auto ref_abs_time = static_cast<int>(sd.gathered.alignmentTimeAt(trial).getValue());
 
             auto mapped = CorePlotting::RasterMapper::mapEventsInWindow(
                     *trial_view,
@@ -991,18 +991,22 @@ std::vector<size_t> EventPlotOpenGLWidget::computeSortIndices(
 
             for (size_t i = 0; i < num_trials; ++i) {
                 auto const & trial_view = gathered[i];
-                int64_t const alignment_time_abs = gathered.alignmentTimeAt(i);
+                ClockTicks const alignment_time_abs = gathered.alignmentTimeAt(i);
 
                 double first_positive_latency = std::numeric_limits<double>::infinity();
 
                 if (trial_view) {
                     auto trial_tf = trial_view->getTimeFrame();
+
+                    if (!trial_tf) {
+                        std::throw_with_nested(std::runtime_error("Trial view has no time frame"));
+                    }
+
+
                     for (auto const & event: trial_view->view()) {
-                        int64_t const event_time_abs = trial_tf
-                                                               ? trial_tf->getTimeAtIndex(event.time())
-                                                               : event.time().getValue();
+                        ClockTicks const event_time_abs = trial_tf->getTimeAtIndex(event.time());
                         // Relative time (positive = after alignment)
-                        auto const relative_time = static_cast<double>(event_time_abs - alignment_time_abs);
+                        auto const relative_time = static_cast<double>((event_time_abs - alignment_time_abs.getValue()).getValue());
                         if (relative_time >= 0.0 && relative_time < first_positive_latency) {
                             first_positive_latency = relative_time;
                             break;// Events are time-ordered, so first positive is the answer
@@ -1033,18 +1037,21 @@ std::vector<size_t> EventPlotOpenGLWidget::computeSortIndices(
 
             for (size_t i = 0; i < num_trials; ++i) {
                 auto const & trial_view = gathered[i];
-                int64_t const alignment_time_abs = gathered.alignmentTimeAt(i);
+                ClockTicks const alignment_time_abs = gathered.alignmentTimeAt(i);
 
                 double second_positive_latency = std::numeric_limits<double>::infinity();
                 int positive_count = 0;
 
                 if (trial_view) {
                     auto trial_tf = trial_view->getTimeFrame();
+
+                    if (!trial_tf) {
+                        std::throw_with_nested(std::runtime_error("Trial view has no time frame"));
+                    }
+
                     for (auto const & event: trial_view->view()) {
-                        int64_t const event_time_abs = trial_tf
-                                                               ? trial_tf->getTimeAtIndex(event.time())
-                                                               : event.time().getValue();
-                        auto const relative_time = static_cast<double>(event_time_abs - alignment_time_abs);
+                        ClockTicks const event_time_abs = trial_tf->getTimeAtIndex(event.time());
+                        auto const relative_time = static_cast<double>((event_time_abs - alignment_time_abs.getValue()).getValue());
                         if (relative_time >= 0.0) {
                             ++positive_count;
                             if (positive_count == 2) {
@@ -1074,9 +1081,9 @@ std::vector<size_t> EventPlotOpenGLWidget::computeSortIndices(
             intervals[0] = std::numeric_limits<double>::infinity();
 
             for (size_t i = 1; i < num_trials; ++i) {
-                int64_t const curr = gathered.alignmentTimeAt(i);
-                int64_t const prev = gathered.alignmentTimeAt(i - 1);
-                intervals[i] = static_cast<double>(curr - prev);
+                ClockTicks const curr = gathered.alignmentTimeAt(i);
+                ClockTicks const prev = gathered.alignmentTimeAt(i - 1);
+                intervals[i] = static_cast<double>((curr - prev.getValue()).getValue());
             }
 
             std::stable_sort(sort_indices.begin(), sort_indices.end(),

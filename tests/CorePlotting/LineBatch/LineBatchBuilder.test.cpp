@@ -160,7 +160,7 @@ TEST_CASE("buildLineBatchFromGatherResult — basic topology", "[CorePlotting][L
     REQUIRE(gathered.size() == 2);
 
     // Alignment times at interval starts
-    std::vector<std::int64_t> const align = {10, 50};
+    std::vector<ClockTicks> const align = {ClockTicks(10), ClockTicks(50)};// TODO: fix this
 
     auto batch = buildLineBatchFromGatherResult(gathered, align);
 
@@ -220,7 +220,7 @@ TEST_CASE("buildLineBatchFromGatherResult — empty gather", "[CorePlotting][Lin
 
     auto gathered = gather(analog, intervals);
 
-    std::vector<std::int64_t> const align = {100};
+    std::vector<ClockTicks> const align = {ClockTicks(100)};// TODO: fix this
     auto batch = buildLineBatchFromGatherResult(gathered, align);
 
     // The gathered trial may exist but have < 2 samples → line skipped

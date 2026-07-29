@@ -5,24 +5,27 @@
 #include <iostream>
 
 TimeFrame::TimeFrame(std::vector<int> const & times) {
-    _times = times;
+    _times.reserve(times.size());
+    for (int time: times) {
+        _times.emplace_back(time);
+    }
     _total_frame_count = static_cast<int>(times.size());
 }
 
-int TimeFrame::getTimeAtIndex(TimeFrameIndex index) const {
+ClockTicks TimeFrame::getTimeAtIndex(TimeFrameIndex index) const {
     if (index < TimeFrameIndex(0) || static_cast<size_t>(index.getValue()) >= _times.size()) {
         std::cout << "Index " << index.getValue() << " out of range" << " for time frame of size " << _times.size() << std::endl;
-        return 0;
+        return ClockTicks(0);
     }
-    return _times[static_cast<size_t>(index.getValue())];
+    return ClockTicks(_times[static_cast<size_t>(index.getValue())]);
 }
 
-TimeFrameIndex TimeFrame::getIndexAtTime(float time, bool preceding) const {
+TimeFrameIndex TimeFrame::getIndexAtTime(ClockTicks time, bool preceding) const {
     // Binary search to find the index closest to the given time
     auto it = std::lower_bound(_times.begin(), _times.end(), time);
 
     // If exact match found
-    if (it != _times.end() && static_cast<float>(*it) == time) {
+    if (it != _times.end() && ClockTicks(*it) == time) {
         return TimeFrameIndex(std::distance(_times.begin(), it));
     }
 
@@ -40,7 +43,7 @@ TimeFrameIndex TimeFrame::getIndexAtTime(float time, bool preceding) const {
     // If preceding is false, we would return the next time point
     if (preceding) {
         auto prev = it - 1;
-        if (std::abs(static_cast<float>(*prev) - time) <= std::abs(static_cast<float>(*it) - time)) {
+        if (std::abs(ClockTicks(*prev) - time) <= std::abs(ClockTicks(*it) - time)) {
             return TimeFrameIndex(std::distance(_times.begin(), prev));
         } else {
             return TimeFrameIndex(std::distance(_times.begin(), it));
@@ -72,8 +75,8 @@ std::pair<TimeFrameIndex, TimeFrameIndex> convertTimeFrameRange(
     auto stop_time_value = from_time_frame.getTimeAtIndex(stop_index);
 
     // Convert to indices in the target timeframe
-    auto target_start_index = to_time_frame.getIndexAtTime(static_cast<float>(start_time_value), false);
-    auto target_stop_index = to_time_frame.getIndexAtTime(static_cast<float>(stop_time_value));
+    auto target_start_index = to_time_frame.getIndexAtTime(start_time_value, false);
+    auto target_stop_index = to_time_frame.getIndexAtTime(stop_time_value);
 
     return {target_start_index, target_stop_index};
 }
@@ -88,7 +91,7 @@ TimeFrameIndex convert_time_index(TimeFrameIndex const time,
         return time;
     }
     auto const time_value = source_timeframe->getTimeAtIndex(time);
-    auto const target_index = target_timeframe->getIndexAtTime(static_cast<float>(time_value));
+    auto const target_index = target_timeframe->getIndexAtTime(time_value);
     return target_index;
 }
 

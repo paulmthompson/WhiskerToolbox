@@ -41,7 +41,7 @@ std::shared_ptr<DigitalEventSeries> analogIntervalPeak(
     auto interval_timeframe = intervals.getTimeFrame();
 
     // Build search ranges based on search mode
-    std::vector<std::pair<int64_t, int64_t>> search_ranges;
+    std::vector<std::pair<TimeFrameIndex, TimeFrameIndex>> search_ranges;
 
     if (params.search_mode == AnalogIntervalPeakParams::SearchMode::within_intervals) {
         // Search within each interval: [start, end]
@@ -52,7 +52,7 @@ std::shared_ptr<DigitalEventSeries> analogIntervalPeak(
         // Search between interval starts: [start_i, start_{i+1})
         for (size_t i = 0; i < intervals.size() - 1; ++i) {
             search_ranges.emplace_back(interval_data[i].value().start,
-                                       interval_data[i + 1].value().start - 1);
+                                       interval_data[i + 1].value().start - TimeFrameIndex{1});
         }
         // For the last interval, search from its start to its end
         if (!interval_data.empty()) {

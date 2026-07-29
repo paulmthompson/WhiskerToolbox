@@ -50,7 +50,7 @@ DataTypeVariant generateRandomIntervals(RandomIntervalsParams const & params) {
             1.0 / static_cast<double>(params.mean_gap));
 
     auto const n = static_cast<double>(params.num_samples);
-    std::vector<Interval> intervals;
+    std::vector<TimeFrameInterval> intervals;
 
     // Start with a gap before the first interval
     double t = gap_dist(rng);
@@ -62,7 +62,8 @@ DataTypeVariant generateRandomIntervals(RandomIntervalsParams const & params) {
                 static_cast<int64_t>(n) - 1);
 
         if (start < static_cast<int64_t>(n)) {
-            intervals.push_back(Interval{start, end});
+            intervals.push_back(TimeFrameInterval{TimeFrameIndex{static_cast<int64_t>(start)},
+                                                  TimeFrameIndex{static_cast<int64_t>(end)}});
         }
 
         t += duration + gap_dist(rng);

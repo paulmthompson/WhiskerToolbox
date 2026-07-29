@@ -23,14 +23,14 @@ namespace Neuralyzer::Transforms::V2::Examples {
  * @param point Which point within the interval to use
  * @return Event time as int64_t TimeFrameIndex value
  */
-int64_t eventTimeForInterval(Interval const & interval, IntervalEventPoint point) {
+TimeFrameIndex eventTimeForInterval(TimeFrameInterval const & interval, IntervalEventPoint point) {
     switch (point) {
         case IntervalEventPoint::start:
             return interval.start;
         case IntervalEventPoint::end:
             return interval.end;
         case IntervalEventPoint::center:
-            return (interval.start + interval.end) / 2;
+            return TimeFrameIndex{(interval.start.getValue() + interval.end.getValue()) / 2};
     }
     return interval.start;
 }

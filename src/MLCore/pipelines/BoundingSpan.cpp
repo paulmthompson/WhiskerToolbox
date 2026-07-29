@@ -23,8 +23,8 @@ std::optional<BoundingSpan> computeIntervalBounds(
     auto max_val = std::numeric_limits<int64_t>::min();
 
     for (auto const & iwid: intervals.view()) {
-        min_val = std::min(min_val, iwid.interval.start);
-        max_val = std::max(max_val, iwid.interval.end);
+        min_val = std::min(min_val, iwid.interval.start.getValue());
+        max_val = std::max(max_val, iwid.interval.end.getValue());
     }
 
     return BoundingSpan{TimeFrameIndex(min_val), TimeFrameIndex(max_val)};
@@ -90,7 +90,7 @@ FilteredPredictions filterPredictionsToIntervals(
                    "probabilities columns must match times size");
 
     // Collect all intervals into a sorted vector for efficient lookup
-    std::vector<Interval> sorted_intervals;
+    std::vector<TimeFrameInterval> sorted_intervals;
     sorted_intervals.reserve(intervals.size());
     for (auto const & iwid: intervals.view()) {
         sorted_intervals.push_back(iwid.interval);
@@ -102,7 +102,7 @@ FilteredPredictions filterPredictionsToIntervals(
     keep_indices.reserve(times.size());
 
     for (std::size_t i = 0; i < times.size(); ++i) {
-        auto const t = times[i].getValue();
+        auto const t = times[i];
         for (auto const & iv: sorted_intervals) {
             if (t >= iv.start && t <= iv.end) {
                 keep_indices.push_back(static_cast<arma::uword>(i));
@@ -149,7 +149,7 @@ FilteredTrainingRows filterTrainingRowsToIntervals(
     assert(labels.n_elem == times.size() && "labels size must match times size");
 
     // Collect all intervals into a sorted vector for efficient lookup
-    std::vector<Interval> sorted_intervals;
+    std::vector<TimeFrameInterval> sorted_intervals;
     sorted_intervals.reserve(intervals.size());
     for (auto const & iwid: intervals.view()) {
         sorted_intervals.push_back(iwid.interval);
@@ -161,7 +161,7 @@ FilteredTrainingRows filterTrainingRowsToIntervals(
     keep_indices.reserve(times.size());
 
     for (std::size_t i = 0; i < times.size(); ++i) {
-        auto const t = times[i].getValue();
+        auto const t = times[i];
         for (auto const & iv: sorted_intervals) {
             if (t >= iv.start && t <= iv.end) {
                 keep_indices.push_back(static_cast<arma::uword>(i));

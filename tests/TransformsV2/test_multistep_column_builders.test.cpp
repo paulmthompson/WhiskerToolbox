@@ -85,10 +85,10 @@ std::shared_ptr<AnalogTimeSeries> createAnalogWithValues(std::vector<float> cons
 
 std::shared_ptr<DigitalIntervalSeries> createIntervalSeries(
         std::vector<std::pair<int64_t, int64_t>> const & intervals) {
-    std::vector<Interval> vec;
+    std::vector<TimeFrameInterval> vec;
     vec.reserve(intervals.size());
     for (auto const & [s, e]: intervals) {
-        vec.push_back(Interval{s, e});
+        vec.push_back(TimeFrameInterval(TimeFrameIndex(s), TimeFrameIndex(e)));
     }
     auto series = std::make_shared<DigitalIntervalSeries>(vec);
     int64_t max_time = 0;

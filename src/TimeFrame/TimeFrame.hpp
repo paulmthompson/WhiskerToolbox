@@ -1,6 +1,7 @@
 #ifndef TIMEFRAME_HPP
 #define TIMEFRAME_HPP
 
+#include "ClockTicks.hpp"
 #include "TimeFrameIndex.hpp"
 
 #include <memory>
@@ -14,15 +15,15 @@ public:
 
     [[nodiscard]] int getTotalFrameCount() const { return _total_frame_count; };
 
-    [[nodiscard]] int getTimeAtIndex(TimeFrameIndex index) const;
+    [[nodiscard]] ClockTicks getTimeAtIndex(TimeFrameIndex index) const;
 
-    [[nodiscard]] TimeFrameIndex getIndexAtTime(float time, bool preceding = true) const;
+    [[nodiscard]] TimeFrameIndex getIndexAtTime(ClockTicks time, bool preceding = true) const;
 
     [[nodiscard]] int checkFrameInbounds(int frame_id) const;
 
 protected:
 private:
-    std::vector<int> _times;
+    std::vector<ClockTicks> _times;
     int _total_frame_count{0};
 };
 

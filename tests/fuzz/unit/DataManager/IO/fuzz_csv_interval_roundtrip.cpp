@@ -34,7 +34,7 @@ void FuzzCsvIntervalRoundTrip(
     }
 
     // Build non-overlapping intervals from fuzzed inputs
-    std::vector<Interval> intervals;
+    std::vector<TimeFrameInterval> intervals;
     auto const count = std::min(start_times.size(), durations.size());
 
     // Sort starts and ensure non-overlapping by using cumulative offsets
@@ -50,7 +50,7 @@ void FuzzCsvIntervalRoundTrip(
         int64_t const dur = std::max(static_cast<int64_t>(std::abs(durations[i])), int64_t{1});
         int64_t const end = start + dur;
 
-        intervals.emplace_back(Interval{start, end});
+        intervals.emplace_back(TimeFrameInterval{TimeFrameIndex(start), TimeFrameIndex(end)});
         next_valid_start = end + 2;// gap of at least 2 to avoid adjacency issues
     }
 
@@ -134,7 +134,7 @@ void FuzzCsvIntervalRoundTripDelimiter(
     }
 
     // Build non-overlapping intervals
-    std::vector<Interval> intervals;
+    std::vector<TimeFrameInterval> intervals;
     auto const count = std::min(start_times.size(), durations.size());
 
     std::vector<int> sorted_starts(start_times.begin(),
@@ -149,7 +149,7 @@ void FuzzCsvIntervalRoundTripDelimiter(
         int64_t const dur = std::max(static_cast<int64_t>(std::abs(durations[i])), int64_t{1});
         int64_t const end = start + dur;
 
-        intervals.emplace_back(Interval{start, end});
+        intervals.emplace_back(TimeFrameInterval{TimeFrameIndex(start), TimeFrameIndex(end)});
         next_valid_start = end + 2;
     }
 

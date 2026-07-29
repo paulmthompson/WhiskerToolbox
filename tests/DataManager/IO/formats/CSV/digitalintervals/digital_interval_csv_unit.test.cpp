@@ -47,12 +47,12 @@ public:
 
 protected:
     void createTestIntervalData() {
-        std::vector<Interval> const test_intervals = {
-                Interval{10, 25},
-                Interval{50, 75},
-                Interval{100, 150},
-                Interval{200, 220},
-                Interval{300, 350}};
+        std::vector<TimeFrameInterval> const test_intervals = {
+                TimeFrameInterval(TimeFrameIndex(10), TimeFrameIndex(25)),
+                TimeFrameInterval(TimeFrameIndex(50), TimeFrameIndex(75)),
+                TimeFrameInterval(TimeFrameIndex(100), TimeFrameIndex(150)),
+                TimeFrameInterval(TimeFrameIndex(200), TimeFrameIndex(220)),
+                TimeFrameInterval(TimeFrameIndex(300), TimeFrameIndex(350))};
 
         original_interval_data = std::make_shared<DigitalIntervalSeries>(test_intervals);
     }
@@ -220,8 +220,8 @@ TEST_CASE_METHOD(DigitalIntervalCSVUnitTestFixture,
 
         auto loaded_intervals = load(load_opts);
         REQUIRE(loaded_intervals.size() == 3);
-        REQUIRE(loaded_intervals[0].start == 10);
-        REQUIRE(loaded_intervals[0].end == 25);
+        REQUIRE(loaded_intervals[0].start == TimeFrameIndex(10));
+        REQUIRE(loaded_intervals[0].end == TimeFrameIndex(25));
     }
 
     SECTION("Load with custom column ordering (end first, start second)") {
@@ -241,12 +241,12 @@ TEST_CASE_METHOD(DigitalIntervalCSVUnitTestFixture,
         auto loaded_intervals = load(load_opts);
         REQUIRE(loaded_intervals.size() == 3);
 
-        REQUIRE(loaded_intervals[0].start == 10);
-        REQUIRE(loaded_intervals[0].end == 25);
-        REQUIRE(loaded_intervals[1].start == 50);
-        REQUIRE(loaded_intervals[1].end == 75);
-        REQUIRE(loaded_intervals[2].start == 100);
-        REQUIRE(loaded_intervals[2].end == 150);
+        REQUIRE(loaded_intervals[0].start == TimeFrameIndex(10));
+        REQUIRE(loaded_intervals[0].end == TimeFrameIndex(25));
+        REQUIRE(loaded_intervals[1].start == TimeFrameIndex(50));
+        REQUIRE(loaded_intervals[1].end == TimeFrameIndex(75));
+        REQUIRE(loaded_intervals[2].start == TimeFrameIndex(100));
+        REQUIRE(loaded_intervals[2].end == TimeFrameIndex(150));
     }
 
     SECTION("Load with semicolon delimiter") {
@@ -263,8 +263,8 @@ TEST_CASE_METHOD(DigitalIntervalCSVUnitTestFixture,
 
         auto loaded_intervals = load(load_opts);
         REQUIRE(loaded_intervals.size() == 2);
-        REQUIRE(loaded_intervals[0].start == 10);
-        REQUIRE(loaded_intervals[0].end == 25);
+        REQUIRE(loaded_intervals[0].start == TimeFrameIndex(10));
+        REQUIRE(loaded_intervals[0].end == TimeFrameIndex(25));
     }
 }
 
@@ -286,12 +286,12 @@ TEST_CASE_METHOD(DigitalIntervalCSVUnitTestFixture,
         auto loaded_intervals = load_digital_series_from_csv(legacy_path.string(), ' ');
 
         REQUIRE(loaded_intervals.size() == 3);
-        REQUIRE(loaded_intervals[0].start == 10);
-        REQUIRE(loaded_intervals[0].end == 25);
-        REQUIRE(loaded_intervals[1].start == 50);
-        REQUIRE(loaded_intervals[1].end == 75);
-        REQUIRE(loaded_intervals[2].start == 100);
-        REQUIRE(loaded_intervals[2].end == 150);
+        REQUIRE(loaded_intervals[0].start == TimeFrameIndex(10));
+        REQUIRE(loaded_intervals[0].end == TimeFrameIndex(25));
+        REQUIRE(loaded_intervals[1].start == TimeFrameIndex(50));
+        REQUIRE(loaded_intervals[1].end == TimeFrameIndex(75));
+        REQUIRE(loaded_intervals[2].start == TimeFrameIndex(100));
+        REQUIRE(loaded_intervals[2].end == TimeFrameIndex(150));
     }
 
     SECTION("Load comma-delimited file") {
@@ -304,8 +304,8 @@ TEST_CASE_METHOD(DigitalIntervalCSVUnitTestFixture,
         auto loaded_intervals = load_digital_series_from_csv(legacy_path.string(), ',');
 
         REQUIRE(loaded_intervals.size() == 2);
-        REQUIRE(loaded_intervals[0].start == 10);
-        REQUIRE(loaded_intervals[0].end == 25);
+        REQUIRE(loaded_intervals[0].start == TimeFrameIndex(10));
+        REQUIRE(loaded_intervals[0].end == TimeFrameIndex(25));
     }
 }
 
@@ -337,8 +337,8 @@ TEST_CASE_METHOD(DigitalIntervalCSVUnitTestFixture,
 
         // Only the valid interval should be loaded
         REQUIRE(loaded_intervals.size() == 1);
-        REQUIRE(loaded_intervals[0].start == 200);
-        REQUIRE(loaded_intervals[0].end == 250);
+        REQUIRE(loaded_intervals[0].start == TimeFrameIndex(200));
+        REQUIRE(loaded_intervals[0].end == TimeFrameIndex(250));
     }
 
     SECTION("Empty file returns empty vector") {

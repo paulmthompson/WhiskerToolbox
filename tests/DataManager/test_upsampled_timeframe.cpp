@@ -26,15 +26,15 @@ TEST_CASE("createUpsampledTimeFrame basic upsampling", "[timeframe][upsampling]"
         REQUIRE(result != nullptr);
         REQUIRE(result->getTotalFrameCount() == 9);
 
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(0)) == 0);
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(1)) == 15);
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(2)) == 30);
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(3)) == 45);
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(4)) == 60);
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(5)) == 75);
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(6)) == 90);
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(7)) == 105);
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(8)) == 120);
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(0)) == ClockTicks(0));
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(1)) == ClockTicks(15));
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(2)) == ClockTicks(30));
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(3)) == ClockTicks(45));
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(4)) == ClockTicks(60));
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(5)) == ClockTicks(75));
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(6)) == ClockTicks(90));
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(7)) == ClockTicks(105));
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(8)) == ClockTicks(120));
     }
 
     SECTION("Factor 2 with two entries") {
@@ -50,9 +50,9 @@ TEST_CASE("createUpsampledTimeFrame basic upsampling", "[timeframe][upsampling]"
         REQUIRE(result != nullptr);
         REQUIRE(result->getTotalFrameCount() == 3);
 
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(0)) == 100);
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(1)) == 150);
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(2)) == 200);
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(0)) == ClockTicks(100));
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(1)) == ClockTicks(150));
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(2)) == ClockTicks(200));
     }
 
     SECTION("Original time points are preserved at correct indices") {
@@ -69,10 +69,10 @@ TEST_CASE("createUpsampledTimeFrame basic upsampling", "[timeframe][upsampling]"
         REQUIRE(result != nullptr);
         REQUIRE(result->getTotalFrameCount() == 10);
 
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(0)) == 10);
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(3)) == 70);
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(6)) == 130);
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(9)) == 190);
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(0)) == ClockTicks(10));
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(3)) == ClockTicks(70));
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(6)) == ClockTicks(130));
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(9)) == ClockTicks(190));
     }
 }
 
@@ -92,10 +92,10 @@ TEST_CASE("createUpsampledTimeFrame rounding behavior", "[timeframe][upsampling]
         REQUIRE(result != nullptr);
         REQUIRE(result->getTotalFrameCount() == 4);
 
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(0)) == 0);
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(1)) == 33);
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(2)) == 67);
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(3)) == 100);
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(0)) == ClockTicks(0));
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(1)) == ClockTicks(33));
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(2)) == ClockTicks(67));
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(3)) == ClockTicks(100));
     }
 }
 
@@ -112,9 +112,9 @@ TEST_CASE("createUpsampledTimeFrame identity factor", "[timeframe][upsampling]")
         REQUIRE(result != nullptr);
         REQUIRE(result->getTotalFrameCount() == 3);
 
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(0)) == 0);
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(1)) == 60);
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(2)) == 120);
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(0)) == ClockTicks(0));
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(1)) == ClockTicks(60));
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(2)) == ClockTicks(120));
     }
 }
 
@@ -142,7 +142,7 @@ TEST_CASE("createUpsampledTimeFrame edge cases", "[timeframe][upsampling]") {
         auto result = createUpsampledTimeFrame(opts);
         REQUIRE(result != nullptr);
         REQUIRE(result->getTotalFrameCount() == 1);
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(0)) == 42);
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(0)) == ClockTicks(42));
     }
 
     SECTION("Null source returns nullptr") {
@@ -208,14 +208,14 @@ TEST_CASE("createUpsampledTimeFrame realistic scenario", "[timeframe][upsampling
         REQUIRE(result->getTotalFrameCount() == 17);
 
         // Check first and last
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(0)) == 0);
-        CHECK(result->getTimeAtIndex(TimeFrameIndex(16)) == 240);
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(0)) == ClockTicks(0));
+        CHECK(result->getTimeAtIndex(TimeFrameIndex(16)) == ClockTicks(240));
 
         // Check spacing is uniform (15 ticks between each)
         for (int i = 0; i < 16; ++i) {
-            int const t_curr = result->getTimeAtIndex(TimeFrameIndex(i));
-            int const t_next = result->getTimeAtIndex(TimeFrameIndex(i + 1));
-            CHECK(t_next - t_curr == 15);
+            ClockTicks const t_curr = result->getTimeAtIndex(TimeFrameIndex(i));
+            ClockTicks const t_next = result->getTimeAtIndex(TimeFrameIndex(i + 1));
+            CHECK(t_next.getValue() - t_curr.getValue() == 15);
         }
     }
 }

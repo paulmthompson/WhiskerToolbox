@@ -12,7 +12,7 @@ bool intervalsOverlap(TimeFrameInterval const & a, TimeFrameInterval const & b) 
 }
 
 bool intervalsOverlapInAbsoluteTime(TimeFrameInterval const & rowInterval,
-                                    Interval const & columnInterval,
+                                    TimeFrameInterval const & columnInterval,
                                     TimeFrame const * sourceTimeFrame,
                                     TimeFrame const * destinationTimeFrame) {
     // Convert row interval to absolute time coordinates

@@ -171,7 +171,7 @@ private:
     uint64_t _last_group_generation{0};
 
     // --- Cached alignment data (for relative → absolute time conversion) ---
-    std::vector<std::int64_t> _cached_alignment_times;
+    std::vector<ClockTicks> _cached_alignment_times;
     std::string _cached_series_key;
 
     int _widget_width{1};

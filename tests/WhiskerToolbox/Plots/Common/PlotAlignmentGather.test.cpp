@@ -93,8 +93,8 @@ TEST_CASE("gatherWithEventAlignment - basic functionality", "[PlotAlignmentGathe
 
     SECTION("Alignment times are event times, not window starts") {
         // alignmentTimeAt should return 100 and 200, not 50 and 150
-        CHECK(result.alignmentTimeAt(0) == 100);
-        CHECK(result.alignmentTimeAt(1) == 200);
+        CHECK(result.alignmentTimeAt(0) == ClockTicks(100));
+        CHECK(result.alignmentTimeAt(1) == ClockTicks(200));
     }
 }
 
@@ -113,7 +113,7 @@ TEST_CASE("gatherWithEventAlignment - asymmetric window", "[PlotAlignmentGather]
     CHECK(result[0]->size() == 3);
 
     // Alignment time is still the event time
-    CHECK(result.alignmentTimeAt(0) == 100);
+    CHECK(result.alignmentTimeAt(0) == ClockTicks(100));
 }
 
 TEST_CASE("gatherWithEventAlignment - null inputs return empty", "[PlotAlignmentGather]") {
@@ -147,15 +147,15 @@ TEST_CASE("gatherWithIntervalAlignment - start alignment", "[PlotAlignmentGather
     REQUIRE(result.alignmentPoints() != nullptr);
 
     SECTION("Alignment times are interval starts") {
-        CHECK(result.alignmentTimeAt(0) == 0);
-        CHECK(result.alignmentTimeAt(1) == 150);
+        CHECK(result.alignmentTimeAt(0) == ClockTicks(0));
+        CHECK(result.alignmentTimeAt(1) == ClockTicks(150));
     }
 
     SECTION("Interval bounds are preserved") {
-        CHECK(result.intervalAt(0).start == 0);
-        CHECK(result.intervalAt(0).end == 100);
-        CHECK(result.intervalAt(1).start == 150);
-        CHECK(result.intervalAt(1).end == 250);
+        CHECK(result.intervalAt(0).start == TimeFrameIndex(0));
+        CHECK(result.intervalAt(0).end == TimeFrameIndex(100));
+        CHECK(result.intervalAt(1).start == TimeFrameIndex(150));
+        CHECK(result.intervalAt(1).end == TimeFrameIndex(250));
     }
 }
 
@@ -168,8 +168,8 @@ TEST_CASE("gatherWithIntervalAlignment - end alignment", "[PlotAlignmentGather]"
     REQUIRE(result.size() == 2);
 
     SECTION("Alignment times are interval ends") {
-        CHECK(result.alignmentTimeAt(0) == 100);
-        CHECK(result.alignmentTimeAt(1) == 250);
+        CHECK(result.alignmentTimeAt(0) == ClockTicks(100));
+        CHECK(result.alignmentTimeAt(1) == ClockTicks(250));
     }
 }
 
@@ -182,8 +182,8 @@ TEST_CASE("gatherWithIntervalAlignment - center alignment", "[PlotAlignmentGathe
     REQUIRE(result.size() == 2);
 
     SECTION("Alignment times are interval centers") {
-        CHECK(result.alignmentTimeAt(0) == 50); // (0 + 100) / 2
-        CHECK(result.alignmentTimeAt(1) == 200);// (100 + 300) / 2
+        CHECK(result.alignmentTimeAt(0) == ClockTicks(50)); // (0 + 100) / 2
+        CHECK(result.alignmentTimeAt(1) == ClockTicks(200));// (100 + 300) / 2
     }
 }
 
@@ -272,9 +272,9 @@ TEST_CASE("createAlignedGatherResult - with interval alignment", "[PlotAlignment
     }
 
     SECTION("Alignment times are interval starts") {
-        CHECK(result.alignmentTimeAt(0) == 0);
-        CHECK(result.alignmentTimeAt(1) == 150);
-        CHECK(result.alignmentTimeAt(2) == 300);
+        CHECK(result.alignmentTimeAt(0) == ClockTicks(0));
+        CHECK(result.alignmentTimeAt(1) == ClockTicks(150));
+        CHECK(result.alignmentTimeAt(2) == ClockTicks(300));
     }
 }
 
@@ -292,9 +292,9 @@ TEST_CASE("createAlignedGatherResult - with event alignment", "[PlotAlignmentGat
     REQUIRE(result.alignmentPoints() != nullptr);
 
     SECTION("Alignment times are event times, not window starts") {
-        CHECK(result.alignmentTimeAt(0) == 50);
-        CHECK(result.alignmentTimeAt(1) == 200);
-        CHECK(result.alignmentTimeAt(2) == 350);
+        CHECK(result.alignmentTimeAt(0) == ClockTicks(50));
+        CHECK(result.alignmentTimeAt(1) == ClockTicks(200));
+        CHECK(result.alignmentTimeAt(2) == ClockTicks(350));
     }
 
     SECTION("Windows are centered on events") {
@@ -316,9 +316,9 @@ TEST_CASE("createAlignedGatherResult - with end alignment", "[PlotAlignmentGathe
     REQUIRE(result.size() == 3);
 
     SECTION("Alignment times are interval ends") {
-        CHECK(result.alignmentTimeAt(0) == 100);
-        CHECK(result.alignmentTimeAt(1) == 250);
-        CHECK(result.alignmentTimeAt(2) == 400);
+        CHECK(result.alignmentTimeAt(0) == ClockTicks(100));
+        CHECK(result.alignmentTimeAt(1) == ClockTicks(250));
+        CHECK(result.alignmentTimeAt(2) == ClockTicks(400));
     }
 }
 
@@ -359,8 +359,8 @@ TEST_CASE("GatherResult::alignmentTimeAt - basic usage", "[GatherResult][PlotAli
     REQUIRE(result.size() == 2);
 
     SECTION("Falls back to interval start when no alignment times stored") {
-        CHECK(result.alignmentTimeAt(0) == 0);
-        CHECK(result.alignmentTimeAt(1) == 30);
+        CHECK(result.alignmentTimeAt(0) == ClockTicks(0));
+        CHECK(result.alignmentTimeAt(1) == ClockTicks(30));
     }
 
     SECTION("Throws on out of bounds") {
@@ -378,8 +378,8 @@ TEST_CASE("GatherResult::alignmentTimeAt - with prepared alignment windows", "[G
 
     SECTION("Returns alignment time from adapter, not interval start") {
         // Event times are 100 and 200, windows are [50, 150] and [150, 250]
-        CHECK(result.alignmentTimeAt(0) == 100);// Not 50
-        CHECK(result.alignmentTimeAt(1) == 200);// Not 150
+        CHECK(result.alignmentTimeAt(0) == ClockTicks(100));// Not 50
+        CHECK(result.alignmentTimeAt(1) == ClockTicks(200));// Not 150
     }
 }
 
@@ -388,13 +388,13 @@ TEST_CASE("GatherResult::alignmentTimeAt - with prepared alignment windows", "[G
 // =============================================================================
 
 TEST_CASE("pruneOverlappingAlignmentTimes - empty input", "[PlotAlignmentGather][overlap]") {
-    std::vector<int64_t> const times;
+    std::vector<ClockTicks> const times;
     auto kept = pruneOverlappingAlignmentTimes(times, 50, 50);
     CHECK(kept.empty());
 }
 
 TEST_CASE("pruneOverlappingAlignmentTimes - single event always kept", "[PlotAlignmentGather][overlap]") {
-    std::vector<int64_t> const times = {100};
+    std::vector<ClockTicks> const times = {ClockTicks(100)};
     auto kept = pruneOverlappingAlignmentTimes(times, 50, 50);
     REQUIRE(kept.size() == 1);
     CHECK(kept[0] == 0);
@@ -402,7 +402,7 @@ TEST_CASE("pruneOverlappingAlignmentTimes - single event always kept", "[PlotAli
 
 TEST_CASE("pruneOverlappingAlignmentTimes - well-separated events all kept", "[PlotAlignmentGather][overlap]") {
     // Events at 100, 300, 500 with window ±50 → windows [50,150], [250,350], [450,550]
-    std::vector<int64_t> const times = {100, 300, 500};
+    std::vector<ClockTicks> const times = {ClockTicks(100), ClockTicks(300), ClockTicks(500)};
     auto kept = pruneOverlappingAlignmentTimes(times, 50, 50);
     REQUIRE(kept.size() == 3);
     CHECK(kept[0] == 0);
@@ -414,7 +414,7 @@ TEST_CASE("pruneOverlappingAlignmentTimes - overlapping events pruned", "[PlotAl
     // Events at 100, 120, 300 with window ±50
     // Window 0: [50, 150], Window 1: [70, 170] → overlap → prune index 1
     // Window 2: [250, 350] → no overlap with 0 → keep
-    std::vector<int64_t> const times = {100, 120, 300};
+    std::vector<ClockTicks> const times = {ClockTicks(100), ClockTicks(120), ClockTicks(300)};
     auto kept = pruneOverlappingAlignmentTimes(times, 50, 50);
     REQUIRE(kept.size() == 2);
     CHECK(kept[0] == 0);
@@ -424,7 +424,7 @@ TEST_CASE("pruneOverlappingAlignmentTimes - overlapping events pruned", "[PlotAl
 TEST_CASE("pruneOverlappingAlignmentTimes - all overlapping except first", "[PlotAlignmentGather][overlap]") {
     // Events at 100, 110, 120, 130 with window ±50
     // All overlap with event at 100 → only first kept
-    std::vector<int64_t> const times = {100, 110, 120, 130};
+    std::vector<ClockTicks> const times = {ClockTicks(100), ClockTicks(110), ClockTicks(120), ClockTicks(130)};
     auto kept = pruneOverlappingAlignmentTimes(times, 50, 50);
     REQUIRE(kept.size() == 1);
     CHECK(kept[0] == 0);
@@ -435,7 +435,7 @@ TEST_CASE("pruneOverlappingAlignmentTimes - chain pruning", "[PlotAlignmentGathe
     // Window 0: [-50, 50], Window 1: [30, 130] → overlap → prune 1
     // Window 2: [110, 210] → no overlap with 0 → keep
     // Window 3: [190, 290] → overlap with 2 → prune 3
-    std::vector<int64_t> const times = {0, 80, 160, 240};
+    std::vector<ClockTicks> const times = {ClockTicks(0), ClockTicks(80), ClockTicks(160), ClockTicks(240)};
     auto kept = pruneOverlappingAlignmentTimes(times, 50, 50);
     REQUIRE(kept.size() == 2);
     CHECK(kept[0] == 0);
@@ -445,7 +445,7 @@ TEST_CASE("pruneOverlappingAlignmentTimes - chain pruning", "[PlotAlignmentGathe
 TEST_CASE("pruneOverlappingAlignmentTimes - asymmetric window", "[PlotAlignmentGather][overlap]") {
     // Events at 100, 200 with pre=30, post=80 → total window = 110
     // Window 0: [70, 180], Window 1: [170, 280] → overlap (180 > 170) → prune 1
-    std::vector<int64_t> const times = {100, 200};
+    std::vector<ClockTicks> const times = {ClockTicks(100), ClockTicks(200)};
     auto kept = pruneOverlappingAlignmentTimes(times, 30, 80);
     REQUIRE(kept.size() == 1);
     CHECK(kept[0] == 0);
@@ -454,7 +454,7 @@ TEST_CASE("pruneOverlappingAlignmentTimes - asymmetric window", "[PlotAlignmentG
 TEST_CASE("pruneOverlappingAlignmentTimes - exactly touching is overlapping", "[PlotAlignmentGather][overlap]") {
     // Events at 0, 100 with window ±50 → windows [-50, 50] and [50, 150]
     // last_kept_end = 0+50=50, current_start = 100-50=50, 50 > 50 is false → pruned
-    std::vector<int64_t> const times = {0, 100};
+    std::vector<ClockTicks> const times = {ClockTicks(0), ClockTicks(100)};
     auto kept = pruneOverlappingAlignmentTimes(times, 50, 50);
     REQUIRE(kept.size() == 1);
     CHECK(kept[0] == 0);
@@ -465,14 +465,14 @@ TEST_CASE("pruneOverlappingAlignmentTimes - sorted input required", "[PlotAlignm
     // Verify correct behavior with pre-sorted input:
     // 100, 200, 300 with window ±40 → windows [60,140], [160,240], [260,340]
     // Gap between windows: 160-140=20>0, 260-240=20>0 → all kept
-    std::vector<int64_t> const times = {100, 200, 300};
+    std::vector<ClockTicks> const times = {ClockTicks(100), ClockTicks(200), ClockTicks(300)};
     auto kept = pruneOverlappingAlignmentTimes(times, 40, 40);
     REQUIRE(kept.size() == 3);
 }
 
 TEST_CASE("pruneOverlappingAlignmentTimes - window size sensitivity", "[PlotAlignmentGather][overlap]") {
     // Events at 100, 200 → gap is 100
-    std::vector<int64_t> const times = {100, 200};
+    std::vector<ClockTicks> const times = {ClockTicks(100), ClockTicks(200)};
 
     SECTION("Small window - no overlap") {
         // ±40 → windows [60,140], [160,240] → gap of 20 → no overlap
@@ -495,33 +495,33 @@ TEST_CASE("extractAlignmentTimes - from DigitalEventSeries", "[PlotAlignmentGath
     auto events = createEventSeries({10, 50, 200});
     auto times = extractAlignmentTimes(*events);
     REQUIRE(times.size() == 3);
-    CHECK(times[0] == 10);
-    CHECK(times[1] == 50);
-    CHECK(times[2] == 200);
+    CHECK(times[0] == ClockTicks(10));
+    CHECK(times[1] == ClockTicks(50));
+    CHECK(times[2] == ClockTicks(200));
 }
 
 TEST_CASE("extractAlignmentTimes - from DigitalIntervalSeries with Start", "[PlotAlignmentGather][overlap]") {
     auto intervals = createIntervalSeries({{10, 50}, {100, 200}});
     auto times = extractAlignmentTimes(*intervals, AlignmentPoint::Start);
     REQUIRE(times.size() == 2);
-    CHECK(times[0] == 10);
-    CHECK(times[1] == 100);
+    CHECK(times[0] == ClockTicks(10));
+    CHECK(times[1] == ClockTicks(100));
 }
 
 TEST_CASE("extractAlignmentTimes - from DigitalIntervalSeries with End", "[PlotAlignmentGather][overlap]") {
     auto intervals = createIntervalSeries({{10, 50}, {100, 200}});
     auto times = extractAlignmentTimes(*intervals, AlignmentPoint::End);
     REQUIRE(times.size() == 2);
-    CHECK(times[0] == 50);
-    CHECK(times[1] == 200);
+    CHECK(times[0] == ClockTicks(50));
+    CHECK(times[1] == ClockTicks(200));
 }
 
 TEST_CASE("extractAlignmentTimes - from DigitalIntervalSeries with Center", "[PlotAlignmentGather][overlap]") {
     auto intervals = createIntervalSeries({{0, 100}, {100, 300}});
     auto times = extractAlignmentTimes(*intervals, AlignmentPoint::Center);
     REQUIRE(times.size() == 2);
-    CHECK(times[0] == 50);
-    CHECK(times[1] == 200);
+    CHECK(times[0] == ClockTicks(50));
+    CHECK(times[1] == ClockTicks(200));
 }
 
 // =============================================================================
@@ -651,7 +651,7 @@ TEST_CASE("createAlignedGatherResult - prevent_overlap reduces trials", "[PlotAl
     auto result = createAlignedGatherResult<DigitalEventSeries>(dm, "spikes", align_data);
     // Only first event (50) should survive
     CHECK(result.size() == 1);
-    CHECK(result.alignmentTimeAt(0) == 50);
+    CHECK(result.alignmentTimeAt(0) == ClockTicks(50));
 }
 
 TEST_CASE("createAlignedGatherResult - prevent_overlap false keeps all trials", "[PlotAlignmentGather][overlap]") {
@@ -684,14 +684,14 @@ TEST_CASE("gatherWithEventAlignment - cross-timeframe spikes and alignment event
     auto result = gatherWithEventAlignment(spikes, alignment_events, 60.0, 60.0);
 
     REQUIRE(result.size() == 1);
-    CHECK(result.intervalAt(0).start == 0);
-    CHECK(result.intervalAt(0).end == 120);
-    CHECK(result.alignmentTimeAt(0) == 60);
+    CHECK(result.intervalAt(0).start == TimeFrameIndex(0));
+    CHECK(result.intervalAt(0).end == TimeFrameIndex(120));
+    CHECK(result.alignmentTimeAt(0) == ClockTicks(60));
 
     REQUIRE(result[0]->size() == 3);
     std::vector<int64_t> normalized;
     for (auto const & event: result[0]->view()) {
-        normalized.push_back(event.time().getValue() - result.alignmentTimeAt(0));
+        normalized.push_back(event.time().getValue() - result.alignmentTimeAt(0).getValue());
     }
     CHECK(normalized == std::vector<int64_t>{-6, 0, 6});
 }
@@ -712,8 +712,8 @@ TEST_CASE("gatherWithIntervalAlignment - cross-timeframe interval and source",
     REQUIRE(result.size() == 2);
 
     SECTION("Alignment times are absolute source-coordinate times") {
-        CHECK(result.alignmentTimeAt(0) == 0);
-        CHECK(result.alignmentTimeAt(1) == 1000);
+        CHECK(result.alignmentTimeAt(0) == ClockTicks(0));
+        CHECK(result.alignmentTimeAt(1) == ClockTicks(1000));
     }
 
     SECTION("Each trial gathers spikes from the converted interval bounds") {
@@ -758,8 +758,8 @@ TEST_CASE("createAlignedGatherResult - cross-timeframe event alignment",
     auto result = createAlignedGatherResult<DigitalEventSeries>(dm, "spikes", align_data);
 
     REQUIRE(result.size() == 1);
-    CHECK(result.intervalAt(0).start == 0);
-    CHECK(result.intervalAt(0).end == 120);
-    CHECK(result.alignmentTimeAt(0) == 60);
+    CHECK(result.intervalAt(0).start == TimeFrameIndex(0));
+    CHECK(result.intervalAt(0).end == TimeFrameIndex(120));
+    CHECK(result.alignmentTimeAt(0) == ClockTicks(60));
     REQUIRE(result[0]->size() == 3);
 }

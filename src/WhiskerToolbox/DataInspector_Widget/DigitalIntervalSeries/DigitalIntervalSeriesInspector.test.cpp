@@ -228,8 +228,8 @@ TEST_CASE("DigitalIntervalSeriesInspector data manipulation", "[DigitalIntervalS
         REQUIRE(intervals != nullptr);
         REQUIRE(intervals->size() == 1);
         auto interval_view = intervals->view();
-        REQUIRE(interval_view[0].value().start == 50);
-        REQUIRE(interval_view[0].value().end == 60);
+        REQUIRE(interval_view[0].value().start == TimeFrameIndex(50));
+        REQUIRE(interval_view[0].value().end == TimeFrameIndex(60));
     }
 
     SECTION("Remove interval button removes interval at current time") {
@@ -379,12 +379,12 @@ TEST_CASE("DigitalIntervalSeriesInspector saves data from DataManager", "[Digita
 
         auto loaded_intervals = load(load_opts);
         REQUIRE(loaded_intervals.size() == 3);
-        REQUIRE(loaded_intervals[0].start == 10);
-        REQUIRE(loaded_intervals[0].end == 20);
-        REQUIRE(loaded_intervals[1].start == 30);
-        REQUIRE(loaded_intervals[1].end == 40);
-        REQUIRE(loaded_intervals[2].start == 50);
-        REQUIRE(loaded_intervals[2].end == 60);
+        REQUIRE(loaded_intervals[0].start == TimeFrameIndex(10));
+        REQUIRE(loaded_intervals[0].end == TimeFrameIndex(20));
+        REQUIRE(loaded_intervals[1].start == TimeFrameIndex(30));
+        REQUIRE(loaded_intervals[1].end == TimeFrameIndex(40));
+        REQUIRE(loaded_intervals[2].start == TimeFrameIndex(50));
+        REQUIRE(loaded_intervals[2].end == TimeFrameIndex(60));
 
         cleanupTempDir(temp_dir);
     }
@@ -503,12 +503,12 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
         REQUIRE(model->rowCount(QModelIndex()) == 2);
         REQUIRE(model->columnCount(QModelIndex()) == 4);
 
-        Interval const interval0 = model->getInterval(0);
-        Interval const interval1 = model->getInterval(1);
-        REQUIRE(interval0.start == 10);
-        REQUIRE(interval0.end == 20);
-        REQUIRE(interval1.start == 30);
-        REQUIRE(interval1.end == 40);
+        TimeFrameInterval const interval0 = model->getInterval(0);
+        TimeFrameInterval const interval1 = model->getInterval(1);
+        REQUIRE(interval0.start == TimeFrameIndex(10));
+        REQUIRE(interval0.end == TimeFrameIndex(20));
+        REQUIRE(interval1.start == TimeFrameIndex(30));
+        REQUIRE(interval1.end == TimeFrameIndex(40));
 
         REQUIRE(model->data(model->index(0, 2), Qt::DisplayRole).toLongLong() == 11);
         REQUIRE(model->data(model->index(1, 2), Qt::DisplayRole).toLongLong() == 11);
@@ -547,9 +547,9 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
 
         // Verify table model is automatically updated
         REQUIRE(model->rowCount(QModelIndex()) == 2);
-        Interval const interval1 = model->getInterval(1);
-        REQUIRE(interval1.start == 30);
-        REQUIRE(interval1.end == 40);
+        TimeFrameInterval const interval1 = model->getInterval(1);
+        REQUIRE(interval1.start == TimeFrameIndex(30));
+        REQUIRE(interval1.end == TimeFrameIndex(40));
     }
 
     SECTION("Table model updates when interval is removed externally") {
@@ -581,15 +581,15 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
         REQUIRE(model->rowCount(QModelIndex()) == 2);
 
         // Remove an interval externally
-        Interval const to_remove{10, 20};
+        TimeFrameInterval const to_remove{TimeFrameIndex(10), TimeFrameIndex(20)};
         interval_series->removeInterval(to_remove);
         QCoreApplication::processEvents();
 
         // Verify table model is automatically updated
         REQUIRE(model->rowCount(QModelIndex()) == 1);
-        Interval const remaining = model->getInterval(0);
-        REQUIRE(remaining.start == 30);
-        REQUIRE(remaining.end == 40);
+        TimeFrameInterval const remaining = model->getInterval(0);
+        REQUIRE(remaining.start == TimeFrameIndex(30));
+        REQUIRE(remaining.end == TimeFrameIndex(40));
     }
 
     SECTION("Table model updates when multiple intervals are added externally") {
@@ -633,10 +633,10 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
 
         // Verify all intervals are in the table model
         REQUIRE(model->rowCount(QModelIndex()) == 4);
-        REQUIRE(model->getInterval(0).start == 10);
-        REQUIRE(model->getInterval(1).start == 30);
-        REQUIRE(model->getInterval(2).start == 50);
-        REQUIRE(model->getInterval(3).start == 70);
+        REQUIRE(model->getInterval(0).start == TimeFrameIndex(10));
+        REQUIRE(model->getInterval(1).start == TimeFrameIndex(30));
+        REQUIRE(model->getInterval(2).start == TimeFrameIndex(50));
+        REQUIRE(model->getInterval(3).start == TimeFrameIndex(70));
     }
 
     SECTION("Table model updates when active key changes") {
@@ -677,8 +677,8 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
 
         // Verify table model reflects new data
         REQUIRE(model->rowCount(QModelIndex()) == 2);
-        REQUIRE(model->getInterval(0).start == 30);
-        REQUIRE(model->getInterval(1).start == 50);
+        REQUIRE(model->getInterval(0).start == TimeFrameIndex(30));
+        REQUIRE(model->getInterval(1).start == TimeFrameIndex(50));
     }
 }
 
@@ -738,10 +738,10 @@ TEST_CASE("DigitalIntervalSeriesInspector selection mechanism", "[DigitalInterva
         bool found_first = false;
         bool found_third = false;
         for (auto const & interval: selected) {
-            if (interval.start == 10 && interval.end == 20) {
+            if (interval.start == TimeFrameIndex(10) && interval.end == TimeFrameIndex(20)) {
                 found_first = true;
             }
-            if (interval.start == 50 && interval.end == 60) {
+            if (interval.start == TimeFrameIndex(50) && interval.end == TimeFrameIndex(60)) {
                 found_third = true;
             }
         }
@@ -810,8 +810,8 @@ TEST_CASE("DigitalIntervalSeriesInspector selection mechanism", "[DigitalInterva
         auto interval_view = interval_series->view();
         bool found_merged = false;
         for (auto const & interval_with_id: interval_view) {
-            Interval const & interval = interval_with_id.value();
-            if (interval.start == 10 && interval.end == 40) {
+            TimeFrameInterval const & interval = interval_with_id.value();
+            if (interval.start == TimeFrameIndex(10) && interval.end == TimeFrameIndex(40)) {
                 found_merged = true;
                 break;
             }
@@ -860,8 +860,8 @@ TEST_CASE("DigitalIntervalSeriesInspector selection mechanism", "[DigitalInterva
         // by verifying that getSelectedIntervals works correctly
         auto selected = view.getSelectedIntervals();
         REQUIRE(selected.size() == 1);
-        REQUIRE(selected[0].start == 30);
-        REQUIRE(selected[0].end == 40);
+        REQUIRE(selected[0].start == TimeFrameIndex(30));
+        REQUIRE(selected[0].end == TimeFrameIndex(40));
     }
 
     SECTION("Extend interval uses selection from view") {
@@ -911,8 +911,8 @@ TEST_CASE("DigitalIntervalSeriesInspector selection mechanism", "[DigitalInterva
         auto interval_view = interval_series->view();
         bool found_extended = false;
         for (auto const & interval_with_id: interval_view) {
-            Interval const & interval = interval_with_id.value();
-            if (interval.start == 10 && interval.end == 70) {
+            TimeFrameInterval const & interval = interval_with_id.value();
+            if (interval.start == TimeFrameIndex(10) && interval.end == TimeFrameIndex(70)) {
                 found_extended = true;
                 break;
             }
@@ -1112,8 +1112,8 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
         REQUIRE(intervals != nullptr);
         REQUIRE(intervals->size() == 1);
         auto interval_view = intervals->view();
-        REQUIRE(interval_view[0].value().start == 100);
-        REQUIRE(interval_view[0].value().end == 200);
+        REQUIRE(interval_view[0].value().start == TimeFrameIndex(100));
+        REQUIRE(interval_view[0].value().end == TimeFrameIndex(200));
     }
 
     SECTION("Bidirectional interval creation - reverse order") {
@@ -1156,8 +1156,8 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
         REQUIRE(intervals != nullptr);
         REQUIRE(intervals->size() == 1);
         auto interval_view = intervals->view();
-        REQUIRE(interval_view[0].value().start == 150);
-        REQUIRE(interval_view[0].value().end == 300);
+        REQUIRE(interval_view[0].value().start == TimeFrameIndex(150));
+        REQUIRE(interval_view[0].value().end == TimeFrameIndex(300));
     }
 
     SECTION("Cancel interval creation via button") {

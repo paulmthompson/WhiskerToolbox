@@ -230,7 +230,7 @@ private:
     std::unique_ptr<Neuralyzer::Plots::PlotTooltipManager> _tooltip_mgr;
 
     // Cached alignment times for relative→absolute time conversion
-    std::vector<int64_t> _cached_alignment_times;///< Per-trial alignment times (absolute)
+    std::vector<ClockTicks> _cached_alignment_times;///< Per-trial alignment times (absolute)
 
     // Widget dimensions
     int _widget_width{1};

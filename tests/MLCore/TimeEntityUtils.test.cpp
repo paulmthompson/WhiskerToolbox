@@ -76,7 +76,7 @@ std::vector<std::pair<int64_t, int64_t>> collectIntervals(
 {
     std::vector<std::pair<int64_t, int64_t>> result;
     for (auto iv : series.view()) {
-        result.emplace_back(iv.interval.start, iv.interval.end);
+        result.emplace_back(iv.interval.start.getValue(), iv.interval.end.getValue());
     }
     return result;
 }

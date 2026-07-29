@@ -61,7 +61,7 @@ HitTestResult SceneHitTester::queryQuadTree(
 
         // Create an event hit result
         float const abs_x = static_cast<float>(
-                static_cast<double>(nearest->x) + static_cast<double>(scene.time_axis_origin_master_absolute));
+                static_cast<double>(nearest->x) + static_cast<double>(scene.time_axis_origin_master_absolute.getValue()));
         return HitTestResult::eventHit(
                 series_key,
                 nearest->data,// QuadTree<EntityId> stores EntityId in .data
@@ -115,7 +115,7 @@ HitTestResult SceneHitTester::queryIntervals(
                     entity_id = batch.entity_ids[i];
                 }
 
-                int64_t const origin = scene.time_axis_origin_master_absolute;
+                int64_t const origin = scene.time_axis_origin_master_absolute.getValue();
                 auto const to_abs = [origin](float x) {
                     return origin + static_cast<int64_t>(std::llround(static_cast<double>(x)));
                 };
@@ -170,7 +170,7 @@ HitTestResult SceneHitTester::findIntervalEdgeByEntityId(
             float const left_edge = rect_x;
             float const right_edge = rect_x + rect_w;
 
-            int64_t const origin = scene.time_axis_origin_master_absolute;
+            int64_t const origin = scene.time_axis_origin_master_absolute.getValue();
             auto const to_abs = [origin](float x) {
                 return origin + static_cast<int64_t>(std::llround(static_cast<double>(x)));
             };
@@ -215,12 +215,12 @@ HitTestResult SceneHitTester::querySeriesRegion(
         float world_x,
         float world_y,
         LayoutResponse const & layout,
-        int64_t const master_time_axis_origin_absolute) const {
+        ClockTicks const master_time_axis_origin_absolute) const {
     auto series_result = findSeriesAtWorldY(world_y, layout);
 
     if (series_result.has_value()) {
         float const absolute_world_x = static_cast<float>(
-                static_cast<double>(world_x) + static_cast<double>(master_time_axis_origin_absolute));
+                static_cast<double>(world_x) + static_cast<double>(master_time_axis_origin_absolute.getValue()));
         return HitTestResult::analogSeriesHit(
                 series_result->series_key,
                 absolute_world_x,

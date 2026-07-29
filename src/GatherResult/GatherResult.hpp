@@ -185,16 +185,16 @@ using element_type_of_t = typename element_type_of<T>::type;
 /**
  * @brief Convert an interval from one TimeFrame coordinate system to another.
  *
- * @param interval Interval expressed in @p from_time_frame indices
+ * @param interval TimeFrameInterval expressed in @p from_time_frame indices
  * @param from_time_frame TimeFrame that owns @p interval coordinates
  * @param to_time_frame TimeFrame used by the source data being queried
- * @return Interval expressed in @p to_time_frame indices
+ * @return TimeFrameInterval expressed in @p to_time_frame indices
  *
  * @pre @p from_time_frame and @p to_time_frame are valid TimeFrame references.
  * @post Returned bounds are expressed in @p to_time_frame coordinates.
  */
-[[nodiscard]] inline Interval convertIntervalToTimeFrame(
-        Interval const & interval,
+[[nodiscard]] inline TimeFrameInterval convertIntervalToTimeFrame(
+        TimeFrameInterval const & interval,
         TimeFrame const & from_time_frame,
         TimeFrame const & to_time_frame) {
     auto [converted_start, converted_end] = convertTimeFrameRange(
@@ -202,7 +202,7 @@ using element_type_of_t = typename element_type_of<T>::type;
             TimeFrameIndex(interval.end),
             from_time_frame,
             to_time_frame);
-    return Interval{converted_start.getValue(), converted_end.getValue()};
+    return TimeFrameInterval{converted_start, converted_end};
 }
 
 /**
@@ -216,8 +216,8 @@ using element_type_of_t = typename element_type_of<T>::type;
  * @pre Prepared gather windows and source data must both carry non-null TimeFrames.
  * @post Returned bounds are expressed in the source data TimeFrame.
  */
-[[nodiscard]] inline Interval convertPreparedWindowToSourceInterval(
-        Interval const & interval,
+[[nodiscard]] inline TimeFrameInterval convertPreparedWindowToSourceInterval(
+        TimeFrameInterval const & interval,
         std::shared_ptr<TimeFrame> const & interval_time_frame,
         std::shared_ptr<TimeFrame> const & source_time_frame) {
     assert(interval_time_frame && "convertPreparedWindowToSourceInterval: interval TimeFrame must not be null");
@@ -466,7 +466,7 @@ public:
     /**
      * @brief Get the alignment intervals used to create views
      */
-    [[nodiscard]] std::vector<Interval> const & intervals() const { return _query_intervals; }
+    [[nodiscard]] std::vector<TimeFrameInterval> const & intervals() const { return _query_intervals; }
 
     /**
      * @brief Get the prepared gather-window series used to define rows.
@@ -495,7 +495,7 @@ public:
      * @return The Interval at index i
      * @throws std::out_of_range if i >= size()
      */
-    [[nodiscard]] Interval intervalAt(size_type i) const {
+    [[nodiscard]] TimeFrameInterval intervalAt(size_type i) const {
         if (i >= _query_intervals.size()) {
             throw std::out_of_range("GatherResult::intervalAt: index out of range");
         }
@@ -514,10 +514,10 @@ public:
      * the source-query interval start as a fallback.
      *
      * @param i Index of the trial
-     * @return Alignment time for trial i
+     * @return Alignment time for trial i as ClockTicks
      * @throws std::out_of_range if i >= size()
      */
-    [[nodiscard]] int64_t alignmentTimeAt(size_type i) const {
+    [[nodiscard]] ClockTicks alignmentTimeAt(size_type i) const {
         if (i >= size()) {
             throw std::out_of_range("GatherResult::alignmentTimeAt: index out of range");
         }
@@ -531,7 +531,13 @@ public:
         if (orig_idx >= _query_intervals.size()) {
             throw std::out_of_range("GatherResult::alignmentTimeAt: no alignment metadata for row");
         }
-        return _query_intervals[orig_idx].start;
+
+        // Use the time frame from the query interval
+        auto const time_frame = _source->getTimeFrame();
+        if (!time_frame) {
+            throw std::runtime_error("GatherResult::alignmentTimeAt: query interval time frame must be non-null");
+        }
+        return time_frame->getTimeAtIndex(_query_intervals[orig_idx].start);
     }
 
     // ========== Convenience Methods ==========
@@ -578,14 +584,15 @@ public:
      * @example
      * @code
      * auto results = raster.transformWithInterval(
-     *     [](auto const& trial, Interval const& interval) {
-     *         return std::make_pair(trial->size(), interval.end - interval.start);
+     *     [](auto const& trial, TimeFrameInterval const& interval) {
+     *         return std::make_pair(trial->size(),
+     *                                interval.end.getValue() - interval.start.getValue());
      *     });
      * @endcode
      */
     template<typename F>
     [[nodiscard]] auto transformWithInterval(F && func) const {
-        using ResultType = std::invoke_result_t<F, value_type const &, Interval const &>;
+        using ResultType = std::invoke_result_t<F, value_type const &, TimeFrameInterval const &>;
         std::vector<ResultType> results;
         results.reserve(_views.size());
 
@@ -708,7 +715,7 @@ public:
      * @param reordered_idx Index in the (possibly reordered) result
      * @return The Interval for the original trial at this position
      */
-    [[nodiscard]] Interval intervalAtReordered(size_type reordered_idx) const {
+    [[nodiscard]] TimeFrameInterval intervalAtReordered(size_type reordered_idx) const {
         return intervalAt(originalIndex(reordered_idx));
     }
 
@@ -751,9 +758,9 @@ private:
      * @pre @p windows may be null.
      * @post Returns empty metadata when @p windows is null.
      */
-    [[nodiscard]] static std::vector<Interval> _queryIntervalsFromWindows(
+    [[nodiscard]] static std::vector<TimeFrameInterval> _queryIntervalsFromWindows(
             std::shared_ptr<DigitalIntervalSeries const> const & windows) {
-        std::vector<Interval> intervals;
+        std::vector<TimeFrameInterval> intervals;
         if (!windows) {
             return intervals;
         }
@@ -800,11 +807,11 @@ private:
         requires Neuralyzer::Gather::ViewableDataType<U>
     static std::shared_ptr<U> _createRowForQueryInterval(
             std::shared_ptr<U> const & source,
-            Interval const & query_interval) {
+            TimeFrameInterval const & query_interval) {
         return U::createView(
                 source,
-                TimeFrameIndex(query_interval.start),
-                TimeFrameIndex(query_interval.end));
+                query_interval.start,
+                query_interval.end);
     }
 
     /**
@@ -818,7 +825,7 @@ private:
                  (!Neuralyzer::Gather::ViewableDataType<U>)
     static std::shared_ptr<U> _createRowForQueryInterval(
             std::shared_ptr<U> const & source,
-            Interval const & query_interval) {
+            TimeFrameInterval const & query_interval) {
         return U::createView(source, query_interval.start, query_interval.end);
     }
 
@@ -834,10 +841,10 @@ private:
                  (!Neuralyzer::Gather::ViewableDataTypeInt64<U>)
     static std::shared_ptr<U> _createRowForQueryInterval(
             std::shared_ptr<U> const & source,
-            Interval const & query_interval) {
+            TimeFrameInterval const & query_interval) {
         auto copy = std::make_shared<U>(source->createTimeRangeCopy(
-                TimeFrameIndex(query_interval.start),
-                TimeFrameIndex(query_interval.end)));
+                query_interval.start,
+                query_interval.end));
         copy->setTimeFrame(source->getTimeFrame());
         copy->setImageSize(source->getImageSize());
         return copy;
@@ -885,7 +892,7 @@ private:
      * @pre `_alignment_points` must be non-null and `original_idx` must be in range.
      * @post Returned time is expressed in physical time units when the alignment series has a TimeFrame.
      */
-    [[nodiscard]] int64_t _alignmentTimeFromCompanionEvent(size_type original_idx) const {
+    [[nodiscard]] ClockTicks _alignmentTimeFromCompanionEvent(size_type original_idx) const {
         assert(_alignment_points && "GatherResult::alignmentTimeAt: alignment points must exist");
         assert(original_idx < _alignment_points->size() &&
                "GatherResult::alignmentTimeAt: row index must be in range");
@@ -894,13 +901,16 @@ private:
         auto const alignment_time = alignment_view[original_idx].time();
         auto const alignment_tf = _alignment_points->getTimeFrame();
 
-        return alignment_tf ? alignment_tf->getTimeAtIndex(alignment_time) : alignment_time.getValue();
+        if (!alignment_tf) {
+            throw std::runtime_error("GatherResult::_alignmentTimeFromCompanionEvent: alignment time frame must be non-null");
+        }
+        return alignment_tf->getTimeAtIndex(alignment_time);
     }
 
     std::shared_ptr<T> _source;
     std::shared_ptr<DigitalIntervalSeries const> _windows;
     std::shared_ptr<DigitalEventSeries const> _alignment_points;
-    std::vector<Interval> _query_intervals;// Source-coordinate intervals used for row creation
+    std::vector<TimeFrameInterval> _query_intervals;// Source-coordinate intervals used for row creation
     std::vector<value_type> _views;
     std::vector<size_type> _reorder_indices;// Maps reordered position → original index
 };

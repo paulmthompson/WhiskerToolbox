@@ -60,4 +60,14 @@ private:
     int64_t value;
 };
 
-#endif // TIME_FRAME_INDEX_HPP
+[[nodiscard]] constexpr TimeFrameIndex operator*(TimeFrameIndex idx, int64_t scale) {
+    return TimeFrameIndex(idx.getValue() * scale);
+}
+[[nodiscard]] constexpr TimeFrameIndex operator*(int64_t scale, TimeFrameIndex idx) {
+    return idx * scale;
+}
+[[nodiscard]] constexpr TimeFrameIndex operator/(TimeFrameIndex idx, int64_t divisor) {
+    return TimeFrameIndex(idx.getValue() / divisor);
+}
+
+#endif// TIME_FRAME_INDEX_HPP

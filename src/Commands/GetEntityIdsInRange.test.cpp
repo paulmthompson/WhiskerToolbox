@@ -151,9 +151,9 @@ TEST_CASE("getEntityIdsInRange with DigitalIntervalSeries returns overlapping in
     EntityRegistry registry;
     DigitalIntervalSeries intervals;
     intervals.setIdentityContext("test_intervals", &registry);
-    intervals.addEvent(Interval{10, 20});
-    intervals.addEvent(Interval{30, 40});
-    intervals.addEvent(Interval{50, 60});
+    intervals.addEvent(TimeFrameInterval{TimeFrameIndex(10), TimeFrameIndex(20)});
+    intervals.addEvent(TimeFrameInterval{TimeFrameIndex(30), TimeFrameIndex(40)});
+    intervals.addEvent(TimeFrameInterval{TimeFrameIndex(50), TimeFrameIndex(60)});
 
     SECTION("all intervals overlap range") {
         auto ids = getEntityIdsInRange(intervals, TimeFrameIndex(0), TimeFrameIndex(100));

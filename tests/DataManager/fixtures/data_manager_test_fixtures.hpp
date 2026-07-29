@@ -285,12 +285,12 @@ private:
      */
     void createTestDigitalIntervalSeries() {
         // Create intervals
-        std::vector<Interval> intervals = {
-            {1, 3},
-            {5, 7},
-            {9, 11},
-            {13, 15},
-            {17, 19}
+        std::vector<TimeFrameInterval> intervals = {
+            {TimeFrameIndex(1), TimeFrameIndex(3)},
+            {TimeFrameIndex(5), TimeFrameIndex(7)},
+            {TimeFrameIndex(9), TimeFrameIndex(11)},
+            {TimeFrameIndex(13), TimeFrameIndex(15)},
+            {TimeFrameIndex(17), TimeFrameIndex(19)}
         };
         
         // Create DigitalIntervalSeries
@@ -300,12 +300,12 @@ private:
         m_data_manager->setData<DigitalIntervalSeries>("test_intervals", interval_series, TimeKey("time"));
         
         // Create a second interval series with overlapping intervals
-        std::vector<Interval> intervals_2 = {
-            {0, 2},
-            {2, 4},
-            {4, 6},
-            {6, 8},
-            {8, 10}
+        std::vector<TimeFrameInterval> intervals_2 = {
+            {TimeFrameIndex(0), TimeFrameIndex(2)},
+            {TimeFrameIndex(2), TimeFrameIndex(4)},
+            {TimeFrameIndex(4), TimeFrameIndex(6)},
+            {TimeFrameIndex(6), TimeFrameIndex(8)},
+            {TimeFrameIndex(8), TimeFrameIndex(10)}
         };
         
         auto interval_series_2 = std::make_shared<DigitalIntervalSeries>(intervals_2);
@@ -440,12 +440,12 @@ private:
      */
     void createRandomDigitalIntervalSeries() {
         std::uniform_real_distribution<float> time_dist(0.0f, 100.0f);
-        std::vector<Interval> intervals;
+        std::vector<TimeFrameInterval> intervals;
         
         for (int i = 0; i < 10; ++i) {
             float start = time_dist(*m_random_engine);
             float end = start + time_dist(*m_random_engine) + 1.0f; // Ensure end > start
-            intervals.emplace_back(start, end);
+            intervals.emplace_back(TimeFrameIndex(start), TimeFrameIndex(end));
         }
         
         auto interval_series = std::make_shared<DigitalIntervalSeries>(intervals);

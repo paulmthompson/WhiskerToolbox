@@ -204,9 +204,9 @@ std::unique_ptr<IRowSelector> PaginatedTableModel::createRowSelectorFromSource(Q
                     // Determine the reference point (beginning or end of interval)
                     int64_t reference_point;
                     if (use_beginning) {
-                        reference_point = interval.value().start;
+                        reference_point = interval.value().start.getValue();
                     } else {
-                        reference_point = interval.value().end;
+                        reference_point = interval.value().end.getValue();
                     }
 
                     // Create a new interval around the reference point

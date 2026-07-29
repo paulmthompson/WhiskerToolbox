@@ -61,7 +61,7 @@ public:
      * @brief Get the currently selected intervals from the table view
      * @return Vector of selected intervals
      */
-    [[nodiscard]] std::vector<Interval> getSelectedIntervals() const;
+    [[nodiscard]] std::vector<TimeFrameInterval> getSelectedIntervals() const;
 
     /**
      * @brief Get the selected EntityIds from the table

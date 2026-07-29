@@ -80,6 +80,11 @@ glm::mat4 getAnalogViewMatrix(ViewProjectionParams const & params);
  * @param y_max Maximum Y coordinate in data space
  * @return Projection transformation matrix
  */
+glm::mat4 getAnalogProjectionMatrix(float x_min,
+                                    float x_max,
+                                    float y_min,
+                                    float y_max);
+
 glm::mat4 getAnalogProjectionMatrix(TimeFrameIndex start_time_index,
                                     TimeFrameIndex end_time_index,
                                     float y_min,

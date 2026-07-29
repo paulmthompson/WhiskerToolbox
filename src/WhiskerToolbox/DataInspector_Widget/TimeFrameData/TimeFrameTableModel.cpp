@@ -2,24 +2,23 @@
 
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
-void TimeFrameTableModel::setTimeValues(std::vector<int> const & times,
-                                         std::string const & time_key,
-                                         EntityRegistry * registry) {
+void TimeFrameTableModel::setTimeValues(std::vector<ClockTicks> const & times,
+                                        std::string const & time_key,
+                                        EntityRegistry * registry) {
     beginResetModel();
     _all_data.clear();
 
     for (size_t i = 0; i < times.size(); ++i) {
-        TimeFrameTableRow row;
-        row.index = static_cast<int64_t>(i);
-        row.time_value = times[i];
-        row.entity_id = EntityId(0);
-        row.group_name = QStringLiteral("No Group");
+        TimeFrameTableRow row{TimeFrameIndex(static_cast<int64_t>(i)),
+                              times[i],
+                              EntityId(0),
+                              QStringLiteral("No Group")};
 
         // Look up EntityId for this time entry
         if (registry && !time_key.empty()) {
             row.entity_id = registry->ensureId(
-                time_key, EntityKind::TimeEntity,
-                TimeFrameIndex(static_cast<int64_t>(i)), 0);
+                    time_key, EntityKind::TimeEntity,
+                    TimeFrameIndex(static_cast<int64_t>(i)), 0);
 
             if (_group_manager && row.entity_id != EntityId(0)) {
                 int group_id = _group_manager->getEntityGroup(row.entity_id);
@@ -59,7 +58,7 @@ void TimeFrameTableModel::_applyGroupFilter() {
     if (_filtered_group_id == -1) {
         _display_data = _all_data;
     } else {
-        for (auto const & row : _all_data) {
+        for (auto const & row: _all_data) {
             if (_group_manager && row.entity_id != EntityId(0)) {
                 int entity_group_id = _group_manager->getEntityGroup(row.entity_id);
                 if (entity_group_id == _filtered_group_id) {

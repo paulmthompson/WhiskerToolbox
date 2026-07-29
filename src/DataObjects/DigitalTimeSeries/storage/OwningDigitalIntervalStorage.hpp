@@ -35,13 +35,13 @@ public:
     /**
      * @brief Construct from existing interval vector (will sort)
      */
-    explicit OwningDigitalIntervalStorage(std::vector<Interval> intervals);
+    explicit OwningDigitalIntervalStorage(std::vector<TimeFrameInterval> intervals);
 
     /**
      * @brief Construct from existing interval and entity ID vectors
      * @note Both vectors must be the same size
      */
-    OwningDigitalIntervalStorage(std::vector<Interval> intervals, std::vector<EntityId> entity_ids);
+    OwningDigitalIntervalStorage(std::vector<TimeFrameInterval> intervals, std::vector<EntityId> entity_ids);
 
     // ========== Modification ==========
 
@@ -54,13 +54,13 @@ public:
      * @param entity_id The EntityId for this interval
      * @return true if added, false if duplicate
      */
-    bool addInterval(Interval const & interval, EntityId entity_id);
+    bool addInterval(TimeFrameInterval const & interval, EntityId entity_id);
 
     /**
      * @brief Remove an interval by exact match
      * @return true if removed, false if not found
      */
-    bool removeInterval(Interval const & interval);
+    bool removeInterval(TimeFrameInterval const & interval);
 
     /**
      * @brief Remove an interval by EntityId
@@ -91,7 +91,7 @@ public:
     /**
      * @brief Set interval at a specific index (does not re-sort)
      */
-    void setInterval(size_t idx, Interval interval);
+    void setInterval(size_t idx, TimeFrameInterval interval);
 
     /**
      * @brief Remove interval at a specific index
@@ -129,17 +129,17 @@ public:
 
     [[nodiscard]] size_t sizeImpl() const { return _intervals.size(); }
 
-    [[nodiscard]] Interval const & getIntervalImpl(size_t idx) const { return _intervals[idx]; }
+    [[nodiscard]] TimeFrameInterval const & getIntervalImpl(size_t idx) const { return _intervals[idx]; }
 
     [[nodiscard]] EntityId getEntityIdImpl(size_t idx) const {
         return idx < _entity_ids.size() ? _entity_ids[idx] : EntityId{0};
     }
 
-    [[nodiscard]] std::optional<size_t> findByIntervalImpl(Interval const & interval) const;
+    [[nodiscard]] std::optional<size_t> findByIntervalImpl(TimeFrameInterval const & interval) const;
 
     [[nodiscard]] std::optional<size_t> findByEntityIdImpl(EntityId id) const;
 
-    [[nodiscard]] bool hasIntervalAtTimeImpl(int64_t time) const;
+    [[nodiscard]] bool hasIntervalAtTimeImpl(TimeFrameIndex time) const;
 
     /**
      * @brief Get index range of intervals overlapping [start, end].
@@ -154,9 +154,9 @@ public:
      * @see ViewDigitalIntervalStorage::getOverlappingRangeImpl()
      * @see LazyDigitalIntervalStorage::getOverlappingRangeImpl()
      */
-    [[nodiscard]] std::pair<size_t, size_t> getOverlappingRangeImpl(int64_t start, int64_t end) const;
+    [[nodiscard]] std::pair<size_t, size_t> getOverlappingRangeImpl(TimeFrameIndex start, TimeFrameIndex end) const;
 
-    [[nodiscard]] std::pair<size_t, size_t> getContainedRangeImpl(int64_t start, int64_t end) const;
+    [[nodiscard]] std::pair<size_t, size_t> getContainedRangeImpl(TimeFrameIndex start, TimeFrameIndex end) const;
 
     [[nodiscard]] DigitalIntervalStorageType getStorageTypeImpl() const {
         return DigitalIntervalStorageType::Owning;
@@ -179,10 +179,10 @@ public:
 
     // ========== Direct Array Access ==========
 
-    [[nodiscard]] std::vector<Interval> const & intervals() const { return _intervals; }
+    [[nodiscard]] std::vector<TimeFrameInterval> const & intervals() const { return _intervals; }
     [[nodiscard]] std::vector<EntityId> const & entityIds() const { return _entity_ids; }
 
-    [[nodiscard]] std::span<Interval const> intervalsSpan() const { return _intervals; }
+    [[nodiscard]] std::span<TimeFrameInterval const> intervalsSpan() const { return _intervals; }
     [[nodiscard]] std::span<EntityId const> entityIdsSpan() const { return _entity_ids; }
 
 private:
@@ -197,7 +197,7 @@ private:
         }
     }
 
-    std::vector<Interval> _intervals;
+    std::vector<TimeFrameInterval> _intervals;
     std::vector<EntityId> _entity_ids;
     std::unordered_map<EntityId, size_t> _entity_id_to_index;
     bool _assume_disjoint_intervals{true};

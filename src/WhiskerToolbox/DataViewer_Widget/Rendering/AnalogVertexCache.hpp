@@ -52,7 +52,7 @@ namespace DataViewer {
  * @brief A cached vertex with time index for range tracking
  */
 struct CachedAnalogVertex {
-    int64_t x;              ///< Absolute physical time (same scalar space as @c TimeFrame::getTimeAtIndex); view-relative X is computed on extract
+    ClockTicks x;              ///< Absolute physical time (same scalar space as @c TimeFrame::getTimeAtIndex); view-relative X is computed on extract
     float y;                ///< Data value
     TimeFrameIndex time_idx;///< Series @c TimeFrameIndex for cache range bookkeeping
 };
@@ -318,7 +318,7 @@ public:
      *
      * @param start Start of range to extract (inclusive)
      * @param end End of range to extract (exclusive)
-     * @param x_origin_master_absolute_time Physical time at the current view's left edge
+     * @param x_origin_master_absolute_time Absolute physical time at the current view's left edge
      *        (same as @c AnalogBatchParams::x_origin_master_absolute_time)
      * @return Flat vertex array [x0,y0,x1,y1,...], or empty if range not cached
      *
@@ -338,7 +338,7 @@ public:
      */
     [[nodiscard]] std::vector<float> getVerticesForRange(TimeFrameIndex start,
                                                          TimeFrameIndex end,
-                                                         int64_t x_origin_master_absolute_time) const;
+                                                         ClockTicks x_origin_master_absolute_time) const;
 
     /**
      * @brief Get statistics about cache usage

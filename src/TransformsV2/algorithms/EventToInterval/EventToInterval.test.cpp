@@ -56,9 +56,9 @@ TEST_CASE("V2 Container Transform: Event To Interval - Algorithm",
 
         REQUIRE(result != nullptr);
         REQUIRE(result->size() == 1);
-        auto const & interval = result->view()[0].value();
-        REQUIRE(interval.start == 95);
-        REQUIRE(interval.end == 105);
+        auto const interval = result->view()[0].value();
+        REQUIRE(interval.start == TimeFrameIndex(95));
+        REQUIRE(interval.end == TimeFrameIndex(105));
         REQUIRE(result->layout() == IntervalLayout::Overlapping);
     }
 
@@ -73,9 +73,9 @@ TEST_CASE("V2 Container Transform: Event To Interval - Algorithm",
 
         REQUIRE(result != nullptr);
         REQUIRE(result->size() == 1);
-        auto const & interval = result->view()[0].value();
-        REQUIRE(interval.start == 50);
-        REQUIRE(interval.end == 50);
+        auto const interval = result->view()[0].value();
+        REQUIRE(interval.start == TimeFrameIndex(50));
+        REQUIRE(interval.end == TimeFrameIndex(50));
     }
 
     SECTION("Overlapping windows are preserved") {
@@ -91,12 +91,12 @@ TEST_CASE("V2 Container Transform: Event To Interval - Algorithm",
         REQUIRE(result->size() == 2);
         REQUIRE(result->layout() == IntervalLayout::Overlapping);
 
-        auto const & first = result->view()[0].value();
-        auto const & second = result->view()[1].value();
-        REQUIRE(first.start == 95);
-        REQUIRE(first.end == 105);
-        REQUIRE(second.start == 97);
-        REQUIRE(second.end == 107);
+        auto const first = result->view()[0].value();
+        auto const second = result->view()[1].value();
+        REQUIRE(first.start == TimeFrameIndex(95));
+        REQUIRE(first.end == TimeFrameIndex(105));
+        REQUIRE(second.start == TimeFrameIndex(97));
+        REQUIRE(second.end == TimeFrameIndex(107));
     }
 
     SECTION("Asymmetric pre/post expansion") {
@@ -110,9 +110,9 @@ TEST_CASE("V2 Container Transform: Event To Interval - Algorithm",
 
         REQUIRE(result != nullptr);
         REQUIRE(result->size() == 1);
-        auto const & interval = result->view()[0].value();
-        REQUIRE(interval.start == 190);
-        REQUIRE(interval.end == 230);
+        auto const interval = result->view()[0].value();
+        REQUIRE(interval.start == TimeFrameIndex(190));
+        REQUIRE(interval.end == TimeFrameIndex(230));
     }
 
     SECTION("TimeFrame is preserved from input") {
@@ -157,10 +157,10 @@ TEST_CASE("V2 Container Transform: Event To Interval - Registry",
 
     REQUIRE(result != nullptr);
     REQUIRE(result->size() == 2);
-    REQUIRE(result->view()[0].value().start == 90);
-    REQUIRE(result->view()[0].value().end == 120);
-    REQUIRE(result->view()[1].value().start == 190);
-    REQUIRE(result->view()[1].value().end == 220);
+    REQUIRE(result->view()[0].value().start == TimeFrameIndex(90));
+    REQUIRE(result->view()[0].value().end == TimeFrameIndex(120));
+    REQUIRE(result->view()[1].value().start == TimeFrameIndex(190));
+    REQUIRE(result->view()[1].value().end == TimeFrameIndex(220));
 }
 
 TEST_CASE("V2 Container Transform: Event To Interval - JSON Parameters",

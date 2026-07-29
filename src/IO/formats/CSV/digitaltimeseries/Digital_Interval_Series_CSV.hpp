@@ -11,7 +11,7 @@
 
 class DigitalIntervalSeries;
 
-DATAMANAGERIO_EXPORT std::vector<Interval> load_digital_series_from_csv(std::string const & filename, char delimiter = ' ');
+DATAMANAGERIO_EXPORT std::vector<TimeFrameInterval> load_digital_series_from_csv(std::string const & filename, char delimiter = ' ');
 
 /**
  * @struct CSVIntervalLoaderOptions
@@ -49,7 +49,7 @@ struct CSVIntervalLoaderOptions {
  * @param options Configuration options for loading
  * @return Vector of Interval objects loaded from the CSV file
  */
-DATAMANAGERIO_EXPORT std::vector<Interval> load(CSVIntervalLoaderOptions const & options);
+DATAMANAGERIO_EXPORT std::vector<TimeFrameInterval> load(CSVIntervalLoaderOptions const & options);
 
 template<>
 struct ParameterUIHints<CSVIntervalLoaderOptions> {

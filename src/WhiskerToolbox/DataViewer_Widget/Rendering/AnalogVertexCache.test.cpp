@@ -38,7 +38,7 @@ TEST_CASE("AnalogVertexCache: setVertices", "[AnalogVertexCache]") {
     std::vector<CachedAnalogVertex> vertices;
     vertices.reserve(50);
     for (int i = 0; i < 50; ++i) {
-        vertices.push_back({i, static_cast<float>(i * 2), TimeFrameIndex{i}});
+        vertices.push_back({ClockTicks(i), static_cast<float>(i * 2), TimeFrameIndex{i}});
     }
 
     cache.setVertices(vertices, TimeFrameIndex{0}, TimeFrameIndex{50});
@@ -56,7 +56,7 @@ TEST_CASE("AnalogVertexCache: covers", "[AnalogVertexCache]") {
     std::vector<CachedAnalogVertex> vertices;
     vertices.reserve(50);
     for (int i = 10; i < 60; ++i) {
-        vertices.push_back({i, static_cast<float>(i * 2), TimeFrameIndex{i}});
+        vertices.push_back({ClockTicks(i), static_cast<float>(i * 2), TimeFrameIndex{i}});
     }
     cache.setVertices(vertices, TimeFrameIndex{10}, TimeFrameIndex{60});
 
@@ -89,7 +89,7 @@ TEST_CASE("AnalogVertexCache: needsUpdate", "[AnalogVertexCache]") {
     SECTION("Populated cache") {
         std::vector<CachedAnalogVertex> vertices;
         for (int i = 10; i < 60; ++i) {
-            vertices.push_back({i, static_cast<float>(i * 2), TimeFrameIndex{i}});
+            vertices.push_back({ClockTicks(i), static_cast<float>(i * 2), TimeFrameIndex{i}});
         }
         cache.setVertices(vertices, TimeFrameIndex{10}, TimeFrameIndex{60});
 
@@ -113,7 +113,7 @@ TEST_CASE("AnalogVertexCache: getMissingRanges", "[AnalogVertexCache]") {
 
     std::vector<CachedAnalogVertex> vertices;
     for (int i = 20; i < 80; ++i) {
-        vertices.push_back({i, static_cast<float>(i * 2), TimeFrameIndex{i}});
+        vertices.push_back({ClockTicks(i), static_cast<float>(i * 2), TimeFrameIndex{i}});
     }
     cache.setVertices(vertices, TimeFrameIndex{20}, TimeFrameIndex{80});
 
@@ -155,14 +155,14 @@ TEST_CASE("AnalogVertexCache: appendVertices", "[AnalogVertexCache]") {
     std::vector<CachedAnalogVertex> initial;
     initial.reserve(50);
     for (int i = 0; i < 50; ++i) {
-        initial.push_back({i, static_cast<float>(i * 2), TimeFrameIndex{i}});
+        initial.push_back({ClockTicks(i), static_cast<float>(i * 2), TimeFrameIndex{i}});
     }
     cache.setVertices(initial, TimeFrameIndex{0}, TimeFrameIndex{50});
 
     // Append more vertices
     std::vector<CachedAnalogVertex> append;
     for (int i = 50; i < 60; ++i) {
-        append.push_back({i, static_cast<float>(i * 2), TimeFrameIndex{i}});
+        append.push_back({ClockTicks(i), static_cast<float>(i * 2), TimeFrameIndex{i}});
     }
 
     cache.appendVertices(append, TimeFrameIndex{0});
@@ -179,14 +179,14 @@ TEST_CASE("AnalogVertexCache: prependVertices", "[AnalogVertexCache]") {
     // Initial vertices
     std::vector<CachedAnalogVertex> initial;
     for (int i = 50; i < 100; ++i) {
-        initial.push_back({i, static_cast<float>(i * 2), TimeFrameIndex{i}});
+        initial.push_back({ClockTicks(i), static_cast<float>(i * 2), TimeFrameIndex{i}});
     }
     cache.setVertices(initial, TimeFrameIndex{50}, TimeFrameIndex{100});
 
     // Prepend more vertices
     std::vector<CachedAnalogVertex> prepend;
     for (int i = 40; i < 50; ++i) {
-        prepend.push_back({i, static_cast<float>(i * 2), TimeFrameIndex{i}});
+        prepend.push_back({ClockTicks(i), static_cast<float>(i * 2), TimeFrameIndex{i}});
     }
     cache.prependVertices(prepend, TimeFrameIndex{40});
 
@@ -202,12 +202,12 @@ TEST_CASE("AnalogVertexCache: getVerticesForRange", "[AnalogVertexCache]") {
     std::vector<CachedAnalogVertex> vertices;
     vertices.reserve(10);
     for (int i = 0; i < 10; ++i) {
-        vertices.push_back({i, static_cast<float>(i * 10), TimeFrameIndex{i}});
+        vertices.push_back({ClockTicks(i), static_cast<float>(i * 10), TimeFrameIndex{i}});
     }
     cache.setVertices(vertices, TimeFrameIndex{0}, TimeFrameIndex{10});
 
     SECTION("Extract full range") {
-        auto flat = cache.getVerticesForRange(TimeFrameIndex{0}, TimeFrameIndex{10}, 0);
+        auto flat = cache.getVerticesForRange(TimeFrameIndex{0}, TimeFrameIndex{10}, ClockTicks(0));
         REQUIRE(flat.size() == 20);// 10 vertices * 2 floats each
 
         // Check first vertex
@@ -220,7 +220,7 @@ TEST_CASE("AnalogVertexCache: getVerticesForRange", "[AnalogVertexCache]") {
     }
 
     SECTION("Extract partial range") {
-        auto flat = cache.getVerticesForRange(TimeFrameIndex{2}, TimeFrameIndex{5}, 0);
+        auto flat = cache.getVerticesForRange(TimeFrameIndex{2}, TimeFrameIndex{5}, ClockTicks(0));
         REQUIRE(flat.size() == 6);// 3 vertices * 2 floats
 
         // Check first vertex (index 2)
@@ -233,7 +233,7 @@ TEST_CASE("AnalogVertexCache: getVerticesForRange", "[AnalogVertexCache]") {
     }
 
     SECTION("Uncached range returns empty") {
-        auto flat = cache.getVerticesForRange(TimeFrameIndex{100}, TimeFrameIndex{200}, 0);
+        auto flat = cache.getVerticesForRange(TimeFrameIndex{100}, TimeFrameIndex{200}, ClockTicks(0));
         CHECK(flat.empty());
     }
 
@@ -243,11 +243,11 @@ TEST_CASE("AnalogVertexCache: getVerticesForRange", "[AnalogVertexCache]") {
         mapped.reserve(5);
         for (int i = 0; i < 5; ++i) {
             int64_t const physical_x = 1000 + static_cast<int64_t>(i) * 2;
-            mapped.push_back({physical_x, static_cast<float>(i + 1), TimeFrameIndex{i}});
+            mapped.push_back({ClockTicks(physical_x), static_cast<float>(i + 1), TimeFrameIndex{i}});
         }
         cache.setVertices(mapped, TimeFrameIndex{0}, TimeFrameIndex{5});
 
-        auto flat = cache.getVerticesForRange(TimeFrameIndex{0}, TimeFrameIndex{5}, 1000);
+        auto flat = cache.getVerticesForRange(TimeFrameIndex{0}, TimeFrameIndex{5}, ClockTicks(1000));
         REQUIRE(flat.size() == 10);
         CHECK_THAT(flat[0], WithinAbs(0.0f, 0.001f));
         CHECK_THAT(flat[1], WithinAbs(1.0f, 0.001f));
@@ -263,7 +263,7 @@ TEST_CASE("AnalogVertexCache: invalidate", "[AnalogVertexCache]") {
     std::vector<CachedAnalogVertex> vertices;
     vertices.reserve(50);
     for (int i = 0; i < 50; ++i) {
-        vertices.push_back({i, static_cast<float>(i * 2), TimeFrameIndex{i}});
+        vertices.push_back({ClockTicks(i), static_cast<float>(i * 2), TimeFrameIndex{i}});
     }
     cache.setVertices(vertices, TimeFrameIndex{0}, TimeFrameIndex{50});
 
@@ -285,7 +285,7 @@ TEST_CASE("AnalogVertexCache: capacity overflow", "[AnalogVertexCache]") {
     std::vector<CachedAnalogVertex> initial;
     initial.reserve(50);
     for (int i = 0; i < 50; ++i) {
-        initial.push_back({i, static_cast<float>(i * 2), TimeFrameIndex{i}});
+        initial.push_back({ClockTicks(i), static_cast<float>(i * 2), TimeFrameIndex{i}});
     }
     cache.setVertices(initial, TimeFrameIndex{0}, TimeFrameIndex{50});
 
@@ -294,7 +294,7 @@ TEST_CASE("AnalogVertexCache: capacity overflow", "[AnalogVertexCache]") {
     // Append more - should push out old ones
     std::vector<CachedAnalogVertex> append;
     for (int i = 50; i < 60; ++i) {
-        append.push_back({i, static_cast<float>(i * 2), TimeFrameIndex{i}});
+        append.push_back({ClockTicks(i), static_cast<float>(i * 2), TimeFrameIndex{i}});
     }
     cache.appendVertices(append, TimeFrameIndex{0});
 
@@ -315,7 +315,7 @@ TEST_CASE("AnalogVertexCache: setVertices with zero-capacity does not crash", "[
     cache.initialize(0);
 
     std::vector<CachedAnalogVertex> vertices;
-    vertices.push_back({1454, 13.72f, TimeFrameIndex{0}});
+    vertices.push_back({ClockTicks(1454), 13.72f, TimeFrameIndex{0}});
 
     // Must not crash
     cache.setVertices(vertices, TimeFrameIndex{0}, TimeFrameIndex{0});

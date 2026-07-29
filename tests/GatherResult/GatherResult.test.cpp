@@ -59,11 +59,11 @@ std::shared_ptr<DigitalEventSeries> createEventSeries(std::vector<int64_t> const
  */
 std::shared_ptr<DigitalIntervalSeries> createIntervalSeries(
         std::vector<std::pair<int64_t, int64_t>> const & intervals) {
-    std::vector<Interval> interval_vec;
+    std::vector<TimeFrameInterval> interval_vec;
     interval_vec.reserve(intervals.size());
     int64_t max_time = 0;
     for (auto const & [start, end]: intervals) {
-        interval_vec.push_back(Interval{start, end});
+        interval_vec.push_back(TimeFrameInterval(TimeFrameIndex(start), TimeFrameIndex(end)));
         max_time = std::max(max_time, end);
     }
     auto series = std::make_shared<DigitalIntervalSeries>(interval_vec);
@@ -117,7 +117,7 @@ TEST_CASE("GatherResult - Gather DigitalEventSeries by intervals", "[GatherResul
 
     auto gather_intervals = result.intervals();
 
-    REQUIRE(gather_intervals == std::vector<Interval>{{0, 20}, {30, 50}});
+    REQUIRE(gather_intervals == std::vector<TimeFrameInterval>{{TimeFrameIndex(0), TimeFrameIndex(20)}, {TimeFrameIndex(30), TimeFrameIndex(50)}});
 
     SECTION("First view contains events in [0, 20]") {
         auto const & view = result[0];
@@ -184,8 +184,8 @@ TEST_CASE("GatherResult - transformWithInterval() provides interval access", "[G
     auto result = gather(events, intervals);
 
     auto results = result.transformWithInterval(
-            [](auto const & view, Interval const & interval) {
-                return std::make_pair(view->size(), interval.end - interval.start);
+            [](auto const & view, TimeFrameInterval const & interval) {
+                return std::make_pair(view->size(), interval.end.getValue() - interval.start.getValue());
             });
 
     REQUIRE(results.size() == 2);
@@ -201,10 +201,10 @@ TEST_CASE("GatherResult - intervalAt() returns correct intervals", "[GatherResul
 
     auto result = gather(events, intervals);
 
-    CHECK(result.intervalAt(0).start == 0);
-    CHECK(result.intervalAt(0).end == 15);
-    CHECK(result.intervalAt(1).start == 25);
-    CHECK(result.intervalAt(1).end == 35);
+    CHECK(result.intervalAt(0).start == TimeFrameIndex(0));
+    CHECK(result.intervalAt(0).end == TimeFrameIndex(15));
+    CHECK(result.intervalAt(1).start == TimeFrameIndex(25));
+    CHECK(result.intervalAt(1).end == TimeFrameIndex(35));
 
     CHECK_THROWS_AS(result.intervalAt(2), std::out_of_range);
 }
@@ -302,10 +302,10 @@ TEST_CASE("GatherResult - fromRows stores row DataObjects with optional metadata
     CHECK(result[1] == rows[1]);
     CHECK(result.windows() == windows);
     CHECK(result.alignmentPoints() == alignment_events);
-    CHECK(result.intervalAt(0) == Interval{10, 20});
-    CHECK(result.intervalAt(1) == Interval{30, 40});
-    CHECK(result.alignmentTimeAt(0) == 15);
-    CHECK(result.alignmentTimeAt(1) == 35);
+    CHECK(result.intervalAt(0) == TimeFrameInterval{TimeFrameIndex(10), TimeFrameIndex(20)});
+    CHECK(result.intervalAt(1) == TimeFrameInterval{TimeFrameIndex(30), TimeFrameIndex(40)});
+    CHECK(result.alignmentTimeAt(0) == ClockTicks(15));
+    CHECK(result.alignmentTimeAt(1) == ClockTicks(35));
 }
 
 TEST_CASE("GatherResult - fromRows validates rows and metadata",
@@ -438,15 +438,15 @@ TEST_CASE("GatherResult - Normalize spike times with event alignment", "[GatherR
     REQUIRE(result[0]->size() == 3);
 
     SECTION("Alignment time is stored correctly") {
-        CHECK(result.alignmentTimeAt(0) == 15);
+        CHECK(result.alignmentTimeAt(0) == ClockTicks(15));
     }
 
     SECTION("Normalized spike times are relative to alignment") {
-        int64_t const alignment_time = result.alignmentTimeAt(0);
+        ClockTicks const alignment_time = result.alignmentTimeAt(0);
 
         std::vector<int64_t> normalized_times;
         for (auto const & event: result[0]->view()) {
-            int64_t const normalized = event.time().getValue() - alignment_time;
+            int64_t const normalized = event.time().getValue() - alignment_time.getValue();
             normalized_times.push_back(normalized);
         }
 
@@ -472,15 +472,15 @@ TEST_CASE("GatherResult - Normalize spike times with interval start alignment", 
     REQUIRE(result[0]->size() == 3);
 
     SECTION("Alignment time is interval start") {
-        CHECK(result.alignmentTimeAt(0) == 0);
+        CHECK(result.alignmentTimeAt(0) == ClockTicks(0));
     }
 
     SECTION("Normalized spike times are relative to interval start") {
-        int64_t const alignment_time = result.alignmentTimeAt(0);
+        ClockTicks const alignment_time = result.alignmentTimeAt(0);
 
         std::vector<int64_t> normalized_times;
         for (auto const & event: result[0]->view()) {
-            normalized_times.push_back(event.time().getValue() - alignment_time);
+            normalized_times.push_back(event.time().getValue() - alignment_time.getValue());
         }
 
         // Aligned to 0: 10-0=10, 20-0=20, 30-0=30
@@ -504,15 +504,15 @@ TEST_CASE("GatherResult - Normalize spike times with interval end alignment", "[
     REQUIRE(result.size() == 1);
 
     SECTION("Alignment time is interval end") {
-        CHECK(result.alignmentTimeAt(0) == 40);
+        CHECK(result.alignmentTimeAt(0) == ClockTicks(40));
     }
 
     SECTION("Normalized spike times are relative to interval end") {
-        int64_t const alignment_time = result.alignmentTimeAt(0);
+        ClockTicks const alignment_time = result.alignmentTimeAt(0);
 
         std::vector<int64_t> normalized_times;
         for (auto const & event: result[0]->view()) {
-            normalized_times.push_back(event.time().getValue() - alignment_time);
+            normalized_times.push_back(event.time().getValue() - alignment_time.getValue());
         }
 
         // Aligned to 40: 10-40=-30, 20-40=-20, 30-40=-10
@@ -536,15 +536,15 @@ TEST_CASE("GatherResult - Normalize spike times with interval center alignment",
     REQUIRE(result.size() == 1);
 
     SECTION("Alignment time is interval center") {
-        CHECK(result.alignmentTimeAt(0) == 20);// (0 + 40) / 2
+        CHECK(result.alignmentTimeAt(0) == ClockTicks(20));// (0 + 40) / 2
     }
 
     SECTION("Normalized spike times are relative to center") {
-        int64_t const alignment_time = result.alignmentTimeAt(0);
+        ClockTicks const alignment_time = result.alignmentTimeAt(0);
 
         std::vector<int64_t> normalized_times;
         for (auto const & event: result[0]->view()) {
-            normalized_times.push_back(event.time().getValue() - alignment_time);
+            normalized_times.push_back(event.time().getValue() - alignment_time.getValue());
         }
 
         // Aligned to 20: 10-20=-10, 20-20=0, 30-20=10
@@ -570,15 +570,15 @@ TEST_CASE("GatherResult - Multiple trials with alignment normalization", "[Gathe
     REQUIRE(result.size() == 2);
 
     SECTION("Each trial has correct alignment time") {
-        CHECK(result.alignmentTimeAt(0) == 10);
-        CHECK(result.alignmentTimeAt(1) == 110);
+        CHECK(result.alignmentTimeAt(0) == ClockTicks(10));
+        CHECK(result.alignmentTimeAt(1) == ClockTicks(110));
     }
 
     SECTION("Trial 1: normalized times") {
-        int64_t const alignment = result.alignmentTimeAt(0);
+        ClockTicks const alignment = result.alignmentTimeAt(0);
         std::vector<int64_t> normalized;
         for (auto const & event: result[0]->view()) {
-            normalized.push_back(event.time().getValue() - alignment);
+            normalized.push_back(event.time().getValue() - alignment.getValue());
         }
         // 5-10=-5, 10-10=0, 15-10=5
         REQUIRE(normalized.size() == 3);
@@ -588,10 +588,10 @@ TEST_CASE("GatherResult - Multiple trials with alignment normalization", "[Gathe
     }
 
     SECTION("Trial 2: normalized times") {
-        int64_t const alignment = result.alignmentTimeAt(1);
+        ClockTicks const alignment = result.alignmentTimeAt(1);
         std::vector<int64_t> normalized;
         for (auto const & event: result[1]->view()) {
-            normalized.push_back(event.time().getValue() - alignment);
+            normalized.push_back(event.time().getValue() - alignment.getValue());
         }
         // 105-110=-5, 110-110=0, 115-110=5
         REQUIRE(normalized.size() == 3);
@@ -654,9 +654,9 @@ TEST_CASE("GatherResult - Automatic cross-timeframe conversion (30kHz spikes, 50
     alignment_events->setTimeFrame(event_timeframe);
 
     SECTION("Verify TimeFrame mapping") {
-        CHECK(event_timeframe->getTimeAtIndex(TimeFrameIndex(0)) == 0);
-        CHECK(event_timeframe->getTimeAtIndex(TimeFrameIndex(1)) == 60);
-        CHECK(event_timeframe->getTimeAtIndex(TimeFrameIndex(2)) == 120);
+        CHECK(event_timeframe->getTimeAtIndex(TimeFrameIndex(0)) == ClockTicks(0));
+        CHECK(event_timeframe->getTimeAtIndex(TimeFrameIndex(1)) == ClockTicks(60));
+        CHECK(event_timeframe->getTimeAtIndex(TimeFrameIndex(2)) == ClockTicks(120));
     }
 
     SECTION("Automatic alignment using cross-timeframe conversion") {
@@ -669,11 +669,11 @@ TEST_CASE("GatherResult - Automatic cross-timeframe conversion (30kHz spikes, 50
         REQUIRE(result.size() == 1);
 
         // Interval should be [0, 120] at 30kHz
-        CHECK(result.intervalAt(0).start == 0);
-        CHECK(result.intervalAt(0).end == 120);
+        CHECK(result.intervalAt(0).start == TimeFrameIndex(0));
+        CHECK(result.intervalAt(0).end == TimeFrameIndex(120));
 
         // Alignment time is absolute time (60)
-        CHECK(result.alignmentTimeAt(0) == 60);
+        CHECK(result.alignmentTimeAt(0) == ClockTicks(60));
 
         // All spikes should be in range [0, 120]
         REQUIRE(result[0]->size() == 3);
@@ -681,7 +681,7 @@ TEST_CASE("GatherResult - Automatic cross-timeframe conversion (30kHz spikes, 50
         // Normalized spike times: 54-60=-6, 60-60=0, 66-60=6
         std::vector<int64_t> normalized;
         for (auto const & event: result[0]->view()) {
-            normalized.push_back(event.time().getValue() - result.alignmentTimeAt(0));
+            normalized.push_back(event.time().getValue() - result.alignmentTimeAt(0).getValue());
         }
 
         REQUIRE(normalized.size() == 3);
@@ -717,23 +717,23 @@ TEST_CASE("GatherResult - Automatic cross-timeframe with multiple trials", "[Gat
 
     SECTION("Intervals are converted to 30kHz") {
         // Trial 1: alignment abs time = 60, window ±60 → [0, 120]
-        CHECK(result.intervalAt(0).start == 0);
-        CHECK(result.intervalAt(0).end == 120);
+        CHECK(result.intervalAt(0).start == TimeFrameIndex(0));
+        CHECK(result.intervalAt(0).end == TimeFrameIndex(120));
 
         // Trial 2: alignment abs time = 180, window ±60 → [120, 240]
-        CHECK(result.intervalAt(1).start == 120);
-        CHECK(result.intervalAt(1).end == 240);
+        CHECK(result.intervalAt(1).start == TimeFrameIndex(120));
+        CHECK(result.intervalAt(1).end == TimeFrameIndex(240));
     }
 
     SECTION("Alignment times are absolute time") {
-        CHECK(result.alignmentTimeAt(0) == 60); // 500Hz index 1 → abs time 60
-        CHECK(result.alignmentTimeAt(1) == 180);// 500Hz index 3 → abs time 180
+        CHECK(result.alignmentTimeAt(0) == ClockTicks(60)); // 500Hz index 1 → abs time 60
+        CHECK(result.alignmentTimeAt(1) == ClockTicks(180));// 500Hz index 3 → abs time 180
     }
 
     SECTION("Trial 1: normalized times") {
         std::vector<int64_t> normalized;
         for (auto const & event: result[0]->view()) {
-            normalized.push_back(event.time().getValue() - result.alignmentTimeAt(0));
+            normalized.push_back(event.time().getValue() - result.alignmentTimeAt(0).getValue());
         }
         // 50-60=-10, 60-60=0, 70-60=10
         REQUIRE(normalized.size() == 3);
@@ -745,7 +745,7 @@ TEST_CASE("GatherResult - Automatic cross-timeframe with multiple trials", "[Gat
     SECTION("Trial 2: normalized times") {
         std::vector<int64_t> normalized;
         for (auto const & event: result[1]->view()) {
-            normalized.push_back(event.time().getValue() - result.alignmentTimeAt(1));
+            normalized.push_back(event.time().getValue() - result.alignmentTimeAt(1).getValue());
         }
         // 170-180=-10, 180-180=0, 190-180=10
         REQUIRE(normalized.size() == 3);
@@ -771,11 +771,11 @@ TEST_CASE("GatherResult - Same TimeFrame does no conversion", "[GatherResult][al
     REQUIRE(result.size() == 1);
 
     // Interval should be unchanged: [5, 25]
-    CHECK(result.intervalAt(0).start == 5);
-    CHECK(result.intervalAt(0).end == 25);
+    CHECK(result.intervalAt(0).start == TimeFrameIndex(5));
+    CHECK(result.intervalAt(0).end == TimeFrameIndex(25));
 
     // Alignment time unchanged
-    CHECK(result.alignmentTimeAt(0) == 15);
+    CHECK(result.alignmentTimeAt(0) == ClockTicks(15));
 
     // All 3 spikes should be included
     REQUIRE(result[0]->size() == 3);
@@ -796,8 +796,8 @@ TEST_CASE("GatherResult - DigitalIntervalSeries path converts cross-timeframe wi
 
     REQUIRE(result.size() == 1);
     auto const query_interval = result.intervalAt(0);
-    CHECK(query_interval.start == 60);
-    CHECK(query_interval.end == 120);
+    CHECK(query_interval.start == TimeFrameIndex(60));
+    CHECK(query_interval.end == TimeFrameIndex(120));
     REQUIRE(result[0]->size() == 3);
 
     std::vector<int64_t> gathered_times;
@@ -811,7 +811,7 @@ TEST_CASE("GatherResult - DigitalIntervalSeries path rejects missing interval Ti
           "[GatherResult][timeframe][migration][phase2]") {
     auto spikes = createEventSeries({10, 20, 30});
     auto intervals = std::make_shared<DigitalIntervalSeries>(
-            std::vector<Interval>{{0, 20}});
+            std::vector<TimeFrameInterval>{{TimeFrameIndex(0), TimeFrameIndex(20)}});
 
     CHECK_THROWS_AS(gather(spikes, intervals), std::invalid_argument);
 }
@@ -837,11 +837,11 @@ TEST_CASE("GatherResult - Asymmetric window with automatic cross-timeframe", "[G
     auto result = gather(spikes, windows, alignment_events);
 
     REQUIRE(result.size() == 1);
-    CHECK(result.alignmentTimeAt(0) == 6000);
+    CHECK(result.alignmentTimeAt(0) == ClockTicks(6000));
 
     // Window in 30kHz: [6000-900, 6000+3000] = [5100, 9000]
-    CHECK(result.intervalAt(0).start == 5100);
-    CHECK(result.intervalAt(0).end == 9000);
+    CHECK(result.intervalAt(0).start == TimeFrameIndex(5100));
+    CHECK(result.intervalAt(0).end == TimeFrameIndex(9000));
 
     // Spikes in range: 5100, 5500, 6000, 6500, 8000, 8500
     REQUIRE(result[0]->size() == 6);
@@ -849,7 +849,7 @@ TEST_CASE("GatherResult - Asymmetric window with automatic cross-timeframe", "[G
     // Normalized times
     std::vector<int64_t> normalized;
     for (auto const & event: result[0]->view()) {
-        normalized.push_back(event.time().getValue() - result.alignmentTimeAt(0));
+        normalized.push_back(event.time().getValue() - result.alignmentTimeAt(0).getValue());
     }
 
     // 5100-6000=-900 (start of pre-window)
@@ -901,23 +901,23 @@ TEST_CASE("GatherResult - Events before alignment produce negative relative time
     REQUIRE(result.size() == 3);
 
     SECTION("alignment times match the alignment events") {
-        CHECK(result.alignmentTimeAt(0) == 11);
-        CHECK(result.alignmentTimeAt(1) == 21);
-        CHECK(result.alignmentTimeAt(2) == 31);
+        CHECK(result.alignmentTimeAt(0) == ClockTicks(11));
+        CHECK(result.alignmentTimeAt(1) == ClockTicks(21));
+        CHECK(result.alignmentTimeAt(2) == ClockTicks(31));
     }
 
     SECTION("intervals are correct windows around alignment events") {
         // [11-5, 11+5] = [6, 16]
-        CHECK(result.intervalAt(0).start == 6);
-        CHECK(result.intervalAt(0).end == 16);
+        CHECK(result.intervalAt(0).start == TimeFrameIndex(6));
+        CHECK(result.intervalAt(0).end == TimeFrameIndex(16));
 
         // [21-5, 21+5] = [16, 26]
-        CHECK(result.intervalAt(1).start == 16);
-        CHECK(result.intervalAt(1).end == 26);
+        CHECK(result.intervalAt(1).start == TimeFrameIndex(16));
+        CHECK(result.intervalAt(1).end == TimeFrameIndex(26));
 
         // [31-5, 31+5] = [26, 36]
-        CHECK(result.intervalAt(2).start == 26);
-        CHECK(result.intervalAt(2).end == 36);
+        CHECK(result.intervalAt(2).start == TimeFrameIndex(26));
+        CHECK(result.intervalAt(2).end == TimeFrameIndex(36));
     }
 
     SECTION("gathered events store absolute (non-negative) TimeFrameIndex values") {
@@ -932,11 +932,11 @@ TEST_CASE("GatherResult - Events before alignment produce negative relative time
 
     SECTION("normalized times are negative (-1) for each trial") {
         for (size_t trial = 0; trial < result.size(); ++trial) {
-            int64_t const alignment = result.alignmentTimeAt(trial);
+            ClockTicks const alignment = result.alignmentTimeAt(trial);
             REQUIRE(result[trial]->size() == 1);
 
             for (auto const & event: result[trial]->view()) {
-                int64_t const relative = event.time().getValue() - alignment;
+                int64_t const relative = event.time().getValue() - alignment.getValue();
                 CHECK(relative == -1);
             }
         }
@@ -959,12 +959,12 @@ TEST_CASE("GatherResult - Mixed pre-and-post alignment events",
 
     SECTION("Trial 0 has pre, on, and post alignment events") {
         REQUIRE(result[0]->size() == 3);
-        int64_t const alignment = result.alignmentTimeAt(0);// 10
+        ClockTicks const alignment = result.alignmentTimeAt(0);// 10
 
         std::vector<int64_t> normalized;
         for (auto const & event: result[0]->view()) {
             CHECK(event.time().getValue() >= 0);// absolute is non-negative
-            normalized.push_back(event.time().getValue() - alignment);
+            normalized.push_back(event.time().getValue() - alignment.getValue());
         }
 
         // 8-10=-2, 10-10=0, 12-10=2
@@ -976,12 +976,12 @@ TEST_CASE("GatherResult - Mixed pre-and-post alignment events",
 
     SECTION("Trial 1 has pre, on, and post alignment events") {
         REQUIRE(result[1]->size() == 3);
-        int64_t const alignment = result.alignmentTimeAt(1);// 20
+        ClockTicks const alignment = result.alignmentTimeAt(1);// 20
 
         std::vector<int64_t> normalized;
         for (auto const & event: result[1]->view()) {
             CHECK(event.time().getValue() >= 0);// absolute is non-negative
-            normalized.push_back(event.time().getValue() - alignment);
+            normalized.push_back(event.time().getValue() - alignment.getValue());
         }
 
         // 18-20=-2, 20-20=0, 22-20=2
@@ -1005,14 +1005,14 @@ TEST_CASE("GatherResult - All events before alignment event",
 
     REQUIRE(result.size() == 1);
     REQUIRE(result[0]->size() == 5);
-    CHECK(result.alignmentTimeAt(0) == 100);
+    CHECK(result.alignmentTimeAt(0) == ClockTicks(100));
 
     SECTION("all normalized times are negative") {
         for (auto const & event: result[0]->view()) {
             int64_t const abs_time = event.time().getValue();
             CHECK(abs_time >= 0);// stored as non-negative
 
-            int64_t const relative = abs_time - result.alignmentTimeAt(0);
+            int64_t const relative = abs_time - result.alignmentTimeAt(0).getValue();
             CHECK(relative < 0);// all events are before alignment
         }
     }
@@ -1020,7 +1020,7 @@ TEST_CASE("GatherResult - All events before alignment event",
     SECTION("specific negative values are correct") {
         std::vector<int64_t> normalized;
         for (auto const & event: result[0]->view()) {
-            normalized.push_back(event.time().getValue() - result.alignmentTimeAt(0));
+            normalized.push_back(event.time().getValue() - result.alignmentTimeAt(0).getValue());
         }
         // 95-100=-5, 96-100=-4, 97-100=-3, 98-100=-2, 99-100=-1
         REQUIRE(normalized.size() == 5);
@@ -1052,13 +1052,13 @@ TEST_CASE("GatherResult reorder preserves alignment times",
     REQUIRE(gathered.size() == 3);
 
     // Record alignment times before reorder
-    int64_t const align_0 = gathered.alignmentTimeAt(0);// event at t=10
-    int64_t const align_1 = gathered.alignmentTimeAt(1);// event at t=20
-    int64_t const align_2 = gathered.alignmentTimeAt(2);// event at t=30
+    ClockTicks const align_0 = gathered.alignmentTimeAt(0);// event at t=10
+    ClockTicks const align_1 = gathered.alignmentTimeAt(1);// event at t=20
+    ClockTicks const align_2 = gathered.alignmentTimeAt(2);// event at t=30
 
-    CHECK(align_0 == 10);
-    CHECK(align_1 == 20);
-    CHECK(align_2 == 30);
+    CHECK(align_0 == ClockTicks(10));
+    CHECK(align_1 == ClockTicks(20));
+    CHECK(align_2 == ClockTicks(30));
 
     SECTION("reverse order") {
         auto reordered = gathered.reorder({2, 1, 0});

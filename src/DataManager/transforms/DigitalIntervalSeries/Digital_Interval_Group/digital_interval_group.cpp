@@ -36,11 +36,11 @@ std::shared_ptr<DigitalIntervalSeries> group_intervals(
     }
 
     // Create a copy and sort by start time to ensure proper ordering
-    std::vector<Interval> sorted_intervals;
+    std::vector<TimeFrameInterval> sorted_intervals;
     for (auto const & interval_with_id : intervals) {
         sorted_intervals.push_back(interval_with_id.value());
     }
-    std::sort(sorted_intervals.begin(), sorted_intervals.end(), [](Interval const & a, Interval const & b) {
+    std::sort(sorted_intervals.begin(), sorted_intervals.end(), [](TimeFrameInterval const & a, TimeFrameInterval const & b) {
         return a.start < b.start;
     });
 
@@ -48,12 +48,12 @@ std::shared_ptr<DigitalIntervalSeries> group_intervals(
         progressCallback(20);
     }
 
-    std::vector<Interval> grouped_intervals;
+    std::vector<TimeFrameInterval> grouped_intervals;
     auto const max_spacing = static_cast<int64_t>(groupParams.maxSpacing);
 
     // Start with the first interval
     if (!sorted_intervals.empty()) {
-        Interval current_group = sorted_intervals[0];
+        TimeFrameInterval current_group = sorted_intervals[0];
 
         for (size_t i = 1; i < sorted_intervals.size(); ++i) {
             if (progressCallback && i % 100 == 0) {
@@ -61,10 +61,10 @@ std::shared_ptr<DigitalIntervalSeries> group_intervals(
                 progressCallback(progress);
             }
 
-            Interval const & next_interval = sorted_intervals[i];
+            TimeFrameInterval const & next_interval = sorted_intervals[i];
 
             // Calculate gap between current group end and next interval start
-            int64_t const gap = next_interval.start - current_group.end - 1;
+            int64_t const gap = next_interval.start.getValue() - current_group.end.getValue() - 1;
 
             if (gap <= max_spacing) {
                 // Group them by extending the current group to include the next interval

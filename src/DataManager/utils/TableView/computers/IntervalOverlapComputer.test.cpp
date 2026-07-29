@@ -221,10 +221,10 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
         auto colTimeFrame = std::make_shared<TimeFrame>(colTimeValues);
 
         // Create column intervals (source intervals)
-        std::vector<Interval> columnIntervals = {
-                {0, 1},// Interval 0: time 0-1
-                {3, 5},// Interval 1: time 3-5
-                {7, 9} // Interval 2: time 7-9
+        std::vector<TimeFrameInterval> columnIntervals = {
+                TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(1)),// Interval 0: time 0-1
+                TimeFrameInterval(TimeFrameIndex(3), TimeFrameIndex(5)),// Interval 1: time 3-5
+                TimeFrameInterval(TimeFrameIndex(7), TimeFrameIndex(9)) // Interval 2: time 7-9
         };
 
         auto intervalSource = std::make_shared<DigitalIntervalSeries>(columnIntervals);
@@ -265,11 +265,11 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
         auto colTimeFrame = std::make_shared<TimeFrame>(colTimeValues);
 
         // Create column intervals with some overlaps
-        std::vector<Interval> columnIntervals = {
-                {0, 2},// Interval 0: time 0-2
-                {1, 3},// Interval 1: time 1-3 (overlaps with interval 0)
-                {5, 7},// Interval 2: time 5-7
-                {6, 8} // Interval 3: time 6-8 (overlaps with interval 2)
+        std::vector<TimeFrameInterval> columnIntervals = {
+                TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(2)),// Interval 0: time 0-2
+                TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(3)),// Interval 1: time 1-3 (overlaps with interval 0)
+                TimeFrameInterval(TimeFrameIndex(5), TimeFrameIndex(7)),// Interval 2: time 5-7
+                TimeFrameInterval(TimeFrameIndex(6), TimeFrameIndex(8)) // Interval 3: time 6-8 (overlaps with interval 2)
         };
 
         auto intervalSource = std::make_shared<DigitalIntervalSeries>(columnIntervals);
@@ -309,7 +309,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
         // Create empty column intervals
-        std::vector<Interval> columnIntervals;
+        std::vector<TimeFrameInterval> columnIntervals;
         auto intervalSource = std::make_shared<DigitalIntervalSeries>(columnIntervals);
         intervalSource->setTimeFrame(timeFrame);
 
@@ -349,8 +349,8 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
         // Create single column interval
-        std::vector<Interval> columnIntervals = {
-                {1, 3}// Single interval: time 1-3
+        std::vector<TimeFrameInterval> columnIntervals = {
+                TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(3))// Single interval: time 1-3
         };
 
         auto intervalSource = std::make_shared<DigitalIntervalSeries>(columnIntervals);
@@ -386,9 +386,9 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Basic Functionality", "[IntervalOve
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
         // Create column intervals - identical intervals are deduplicated
-        std::vector<Interval> columnIntervals = {
-                {1, 3},// Interval 0
-                {1, 3} // Duplicate - will be deduplicated
+        std::vector<TimeFrameInterval> columnIntervals = {
+                TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(3)),// Interval 0
+                TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(3)) // Duplicate - will be deduplicated
         };
 
         auto intervalSource = std::make_shared<DigitalIntervalSeries>(columnIntervals);
@@ -420,7 +420,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Error Handling", "[IntervalOverlapC
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
         // Create column intervals
-        std::vector<Interval> columnIntervals = {{1, 3}};
+        std::vector<TimeFrameInterval> columnIntervals = {TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(3))};
         auto intervalSource = std::make_shared<DigitalIntervalSeries>(columnIntervals);
         intervalSource->setTimeFrame(timeFrame);
 
@@ -446,7 +446,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Template Types", "[IntervalOverlapC
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
         // Create column intervals
-        std::vector<Interval> columnIntervals = {{1, 3}};
+        std::vector<TimeFrameInterval> columnIntervals = {TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(3))};
         auto intervalSource = std::make_shared<DigitalIntervalSeries>(columnIntervals);
         intervalSource->setTimeFrame(timeFrame);
 
@@ -483,7 +483,7 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Dependency Tracking", "[IntervalOve
         std::vector<int> timeValues = {0, 1, 2};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
-        std::vector<Interval> columnIntervals = {{0, 1}};
+        std::vector<TimeFrameInterval> columnIntervals = {TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(1))};
         auto intervalSource = std::make_shared<DigitalIntervalSeries>(columnIntervals);
         intervalSource->setTimeFrame(timeFrame);
 
@@ -508,11 +508,11 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Complex Scenarios", "[IntervalOverl
         auto colTimeFrame = std::make_shared<TimeFrame>(colTimeValues);
 
         // Create column intervals
-        std::vector<Interval> columnIntervals = {
-                {0, 2},// Interval 0: time 0-10
-                {1, 4},// Interval 1: time 5-20 (overlaps with interval 0)
-                {3, 6},// Interval 2: time 15-30 (overlaps with interval 1)
-                {8, 10}// Interval 3: time 40-50
+        std::vector<TimeFrameInterval> columnIntervals = {
+                TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(2)),// Interval 0: time 0-10
+                TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(4)),// Interval 1: time 5-20 (overlaps with interval 0)
+                TimeFrameInterval(TimeFrameIndex(3), TimeFrameIndex(6)),// Interval 2: time 15-30 (overlaps with interval 1)
+                TimeFrameInterval(TimeFrameIndex(8), TimeFrameIndex(10))// Interval 3: time 40-50
         };
 
         auto intervalSource = std::make_shared<DigitalIntervalSeries>(columnIntervals);
@@ -586,11 +586,11 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Utility Functions", "[IntervalOverl
     SECTION("findContainingInterval function") {
         TimeFrameInterval rowInterval(TimeFrameIndex(2), TimeFrameIndex(4));
 
-        std::vector<Interval> columnIntervals = {
-                {0, 1},// Interval 0: doesn't contain row interval
-                {1, 5},// Interval 1: contains row interval
-                {3, 7},// Interval 2: overlaps but doesn't fully contain
-                {6, 8} // Interval 3: doesn't contain row interval
+        std::vector<TimeFrameInterval> columnIntervals = {
+                TimeFrameInterval(TimeFrameIndex(0), TimeFrameIndex(1)),// Interval 0: doesn't contain row interval
+                TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(5)),// Interval 1: contains row interval
+                TimeFrameInterval(TimeFrameIndex(3), TimeFrameIndex(7)),// Interval 2: overlaps but doesn't fully contain
+                TimeFrameInterval(TimeFrameIndex(6), TimeFrameIndex(8)) // Interval 3: doesn't contain row interval
         };
 
         auto result = findContainingInterval(rowInterval, columnIntervals);
@@ -600,24 +600,6 @@ TEST_CASE("DM - TV - IntervalOverlapComputer Utility Functions", "[IntervalOverl
         REQUIRE(result >= -1);// -1 means no containing interval found
     }
 
-    /*
-    SECTION("countOverlappingIntervals function") {
-        TimeFrameInterval rowInterval(TimeFrameIndex(2), TimeFrameIndex(4));
-        
-        std::vector<Interval> columnIntervals = {
-            {0, 1},   // Interval 0: doesn't overlap
-            {1, 3},   // Interval 1: overlaps
-            {3, 5},   // Interval 2: overlaps
-            {6, 8}    // Interval 3: doesn't overlap
-        };
-        
-        auto result = countOverlappingIntervals(rowInterval, columnIntervals);
-        
-        // Should count overlapping intervals
-        REQUIRE(result >= 0);
-        REQUIRE(result <= static_cast<int64_t>(columnIntervals.size()));
-    }
-        */
 }
 
 TEST_CASE_METHOD(IntervalOverlapTestFixture, "DM - TV - IntervalOverlapComputer with DataManager fixture", "[IntervalOverlapComputer][DataManager][Fixture]") {

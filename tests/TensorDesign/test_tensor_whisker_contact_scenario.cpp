@@ -74,7 +74,7 @@ std::string whiskerContactDesignJson(
  */
 [[nodiscard]] float expectedOnsetSpikePresence(
         WhiskerContactScenario const & scenario,
-        Interval const & contact_interval) {
+        TimeFrameInterval const & contact_interval) {
     auto const time_frame = scenario.contact->getTimeFrame();
     if (!time_frame) {
         throw std::runtime_error("expected contact TimeFrame");
@@ -82,7 +82,7 @@ std::string whiskerContactDesignJson(
 
     auto const onset_events = scenario.spikes->viewInRange(
             TimeFrameIndex(contact_interval.start),
-            TimeFrameIndex(contact_interval.start + 1),
+            TimeFrameIndex(contact_interval.start.getValue() + 1),
             *time_frame);
 
     for ([[maybe_unused]] auto const & event: onset_events) {

@@ -72,7 +72,7 @@ TEST_CASE("RandomIntervals produces intervals with expected mean duration", "[st
 
     double sum = 0.0;
     for (auto const & interval: intervals) {
-        sum += static_cast<double>(interval.end - interval.start + 1);
+        sum += static_cast<double>(interval.end.getValue() - interval.start.getValue() + 1);
     }
     double const mean = sum / static_cast<double>(intervals.size());
     REQUIRE(mean == Catch::Approx(10.0).margin(4.0));
@@ -80,7 +80,7 @@ TEST_CASE("RandomIntervals produces intervals with expected mean duration", "[st
 
 TEST_CASE("IntervalModulatedRate boosts rate during contact", "[stochastic][rate]") {
     std::vector<float> curvature(100, 0.0f);
-    std::vector<Interval> intervals = {Interval{10, 20}};
+    std::vector<TimeFrameInterval> intervals = {TimeFrameInterval{TimeFrameIndex(10), TimeFrameIndex(20)}};
 
     auto const baseline_only = buildSpikeRate(
             6000, 100, 60, curvature, intervals, 0.001f, 0.0f, 0.0f, 60);

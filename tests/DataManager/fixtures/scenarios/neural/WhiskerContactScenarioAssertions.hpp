@@ -102,7 +102,7 @@ inline double computeSpearmanCorrelation(
 
 inline bool isTimeFrameInContact(
         DigitalIntervalSeries const & contact,
-        int64_t time_frame_index) {
+        TimeFrameIndex time_frame_index) {
     for (auto interval: contact.view()) {
         auto const value = interval.value();
         if (time_frame_index >= value.start && time_frame_index <= value.end) {
@@ -140,7 +140,7 @@ inline bool assertContactDuration(
     double sum = 0.0;
     for (auto interval: contact.view()) {
         auto const value = interval.value();
-        sum += static_cast<double>(value.end - value.start + 1);
+        sum += static_cast<double>(value.end.getValue() - value.start.getValue() + 1);
     }
     double const mean = sum / static_cast<double>(contact.size());
     return std::abs(mean - static_cast<double>(expected)) <= static_cast<double>(tolerance);
@@ -163,7 +163,7 @@ inline bool assertSpikeRateElevatedDuringContact(
     for (auto event: scenario.spikes->view()) {
         auto const master_idx = event.time().getValue();
         auto const time_frame = master_idx / samples_per_frame;
-        if (isTimeFrameInContact(*scenario.contact, time_frame)) {
+        if (isTimeFrameInContact(*scenario.contact, TimeFrameIndex(time_frame))) {
             ++spikes_in_contact;
         } else {
             ++spikes_outside_contact;
@@ -172,7 +172,7 @@ inline bool assertSpikeRateElevatedDuringContact(
 
     for (std::size_t m = 0; m < cfg.masterSampleCount(); ++m) {
         auto const time_frame = static_cast<int64_t>(m / static_cast<std::size_t>(samples_per_frame));
-        if (isTimeFrameInContact(*scenario.contact, time_frame)) {
+        if (isTimeFrameInContact(*scenario.contact, TimeFrameIndex(time_frame))) {
             ++contact_master_samples;
         } else {
             ++non_contact_master_samples;
@@ -207,7 +207,7 @@ inline bool assertCurvatureOnsetModulation(
 
     for (auto interval: scenario.contact->view()) {
         auto const value = interval.value();
-        auto const onset_frame = value.start;
+        auto const onset_frame = value.start.getValue();
         if (static_cast<std::size_t>(onset_frame) >= curvature.size()) {
             continue;
         }

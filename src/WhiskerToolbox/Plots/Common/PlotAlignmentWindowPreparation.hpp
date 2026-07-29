@@ -162,13 +162,18 @@ toIntervalEventPoint(AlignmentPoint point) noexcept {
  * @return Absolute-time values in event row order.
  * @post If the series has no TimeFrame, raw event indices are returned.
  */
-[[nodiscard]] inline std::vector<int64_t> extractAlignmentTimes(DigitalEventSeries const & events) {
-    std::vector<int64_t> times;
+[[nodiscard]] inline std::vector<ClockTicks> extractAlignmentTimes(DigitalEventSeries const & events) {
+    std::vector<ClockTicks> times;
     times.reserve(events.size());
 
     auto const time_frame = events.getTimeFrame();
+
+    if (!time_frame) {
+        std::throw_with_nested(std::runtime_error("extractAlignmentTimes: no TimeFrame"));
+    }
+
     for (auto const & event: events.view()) {
-        times.push_back(time_frame ? time_frame->getTimeAtIndex(event.time()) : event.time().getValue());
+        times.push_back(time_frame->getTimeAtIndex(event.time()));
     }
     return times;
 }
@@ -181,16 +186,19 @@ toIntervalEventPoint(AlignmentPoint point) noexcept {
  * @return Absolute-time values in interval row order.
  * @post If the series has no TimeFrame, raw interval indices are returned.
  */
-[[nodiscard]] inline std::vector<int64_t> extractAlignmentTimes(
+[[nodiscard]] inline std::vector<ClockTicks> extractAlignmentTimes(
         DigitalIntervalSeries const & intervals,
         AlignmentPoint align) {
-    std::vector<int64_t> times;
+    std::vector<ClockTicks> times;
     times.reserve(intervals.size());
 
     auto const time_frame = intervals.getTimeFrame();
+    if (!time_frame) {
+        std::throw_with_nested(std::runtime_error("extractAlignmentTimes: no TimeFrame"));
+    }
     for (auto const & interval_with_id: intervals.view()) {
         auto const & interval = interval_with_id.interval;
-        int64_t index{};
+        TimeFrameIndex index{0};
         switch (align) {
             case AlignmentPoint::End:
                 index = interval.end;
@@ -203,7 +211,7 @@ toIntervalEventPoint(AlignmentPoint point) noexcept {
                 index = interval.start;
                 break;
         }
-        times.push_back(time_frame ? time_frame->getTimeAtIndex(TimeFrameIndex(index)) : index);
+        times.push_back(time_frame->getTimeAtIndex(index));
     }
     return times;
 }
@@ -220,7 +228,7 @@ toIntervalEventPoint(AlignmentPoint point) noexcept {
  * @post Touching windows are treated as overlapping.
  */
 [[nodiscard]] inline std::vector<size_t> pruneOverlappingAlignmentTimes(
-        std::vector<int64_t> const & alignment_times,
+        std::vector<ClockTicks> const & alignment_times,
         int64_t pre_window,
         int64_t post_window) {
     std::vector<size_t> kept_indices;
@@ -232,10 +240,10 @@ toIntervalEventPoint(AlignmentPoint point) noexcept {
     kept_indices.reserve(alignment_times.size());
     kept_indices.push_back(0);
 
-    int64_t last_kept_end = alignment_times[0] + post_window;
+    ClockTicks last_kept_end = alignment_times[0] + post_window;
 
     for (size_t i = 1; i < alignment_times.size(); ++i) {
-        int64_t const current_start = alignment_times[i] - pre_window;
+        ClockTicks const current_start = alignment_times[i] - pre_window;
         if (current_start > last_kept_end) {
             kept_indices.push_back(i);
             last_kept_end = alignment_times[i] + post_window;
@@ -291,7 +299,7 @@ toIntervalEventPoint(AlignmentPoint point) noexcept {
         std::vector<size_t> const & kept_indices) {
     assert(source && "createFilteredIntervalSeries: source must not be null");
 
-    std::vector<Interval> kept_intervals;
+    std::vector<TimeFrameInterval> kept_intervals;
     kept_intervals.reserve(kept_indices.size());
 
     size_t index = 0;
@@ -319,21 +327,21 @@ toIntervalEventPoint(AlignmentPoint point) noexcept {
  * @return Interval expressed in target_time_frame indices.
  * @post The start uses the next index at/after the window start; the end uses the nearest preceding index.
  */
-[[nodiscard]] inline Interval physicalWindowToInterval(
-        int64_t alignment_time,
+[[nodiscard]] inline TimeFrameInterval physicalWindowToInterval(
+        ClockTicks alignment_time,
         int64_t pre_window,
         int64_t post_window,
         std::shared_ptr<TimeFrame> const & target_time_frame) {
-    int64_t const start_time = alignment_time - pre_window;
-    int64_t const end_time = alignment_time + post_window;
+    ClockTicks const start_time = alignment_time - pre_window;
+    ClockTicks const end_time = alignment_time + post_window;
 
     if (!target_time_frame) {
-        return Interval{start_time, end_time};
+        std::throw_with_nested(std::runtime_error("physicalWindowToInterval: no TimeFrame"));
     }
 
-    return Interval{
-            target_time_frame->getIndexAtTime(static_cast<float>(start_time), false).getValue(),
-            target_time_frame->getIndexAtTime(static_cast<float>(end_time)).getValue()};
+    return TimeFrameInterval{
+            target_time_frame->getIndexAtTime(start_time, false),
+            target_time_frame->getIndexAtTime(end_time, false)};
 }
 
 /**
@@ -354,14 +362,15 @@ toIntervalEventPoint(AlignmentPoint point) noexcept {
         std::shared_ptr<TimeFrame> const & window_time_frame) {
     assert(alignment_events && "createWindowsAroundEvents: alignment_events must not be null");
 
-    std::vector<Interval> intervals;
+    std::vector<TimeFrameInterval> intervals;
     intervals.reserve(alignment_events->size());
 
     auto const alignment_time_frame = alignment_events->getTimeFrame();
+    if (!alignment_time_frame) {
+        std::throw_with_nested(std::runtime_error("createWindowsAroundEvents: no TimeFrame"));
+    }
     for (auto const & event: alignment_events->view()) {
-        int64_t const alignment_time = alignment_time_frame
-                                               ? alignment_time_frame->getTimeAtIndex(event.time())
-                                               : event.time().getValue();
+        ClockTicks const alignment_time = alignment_time_frame->getTimeAtIndex(event.time());
         intervals.push_back(physicalWindowToInterval(
                 alignment_time,
                 pre_window,
@@ -381,7 +390,7 @@ toIntervalEventPoint(AlignmentPoint point) noexcept {
  * @post Touching windows are treated as overlapping.
  */
 [[nodiscard]] inline std::vector<size_t> keptWindowIndices(DigitalIntervalSeries const & windows) {
-    std::vector<Interval> intervals;
+    std::vector<TimeFrameInterval> intervals;
     intervals.reserve(windows.size());
     for (auto const & window: windows.view()) {
         intervals.push_back(window.interval);
@@ -395,9 +404,9 @@ toIntervalEventPoint(AlignmentPoint point) noexcept {
     kept_indices.reserve(intervals.size());
     kept_indices.push_back(0);
 
-    int64_t last_kept_end = intervals[0].end;
+    TimeFrameIndex last_kept_end = intervals[0].end;
     for (size_t i = 1; i < intervals.size(); ++i) {
-        int64_t const current_start = intervals[i].start;
+        TimeFrameIndex const current_start = intervals[i].start;
         if (current_start > last_kept_end) {
             kept_indices.push_back(i);
             last_kept_end = intervals[i].end;

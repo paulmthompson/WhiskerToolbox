@@ -102,9 +102,9 @@ TEST_CASE("extractTimeIndices - DigitalIntervalSeries", "[TimeIndexExtractor][Di
 
     SECTION("Returns interval start times") {
         auto intervals = std::make_shared<DigitalIntervalSeries>();
-        intervals->addEvent(Interval{100, 200});
-        intervals->addEvent(Interval{300, 400});
-        intervals->addEvent(Interval{500, 600});
+        intervals->addEvent(TimeFrameInterval{TimeFrameIndex(100), TimeFrameIndex(200)});
+        intervals->addEvent(TimeFrameInterval{TimeFrameIndex(300), TimeFrameIndex(400)});
+        intervals->addEvent(TimeFrameInterval{TimeFrameIndex(500), TimeFrameIndex(600)});
         dm->setData<DigitalIntervalSeries>("intervals_key", intervals, TimeKey("time"));
 
         auto result = extractTimeIndices(*dm, "intervals_key");

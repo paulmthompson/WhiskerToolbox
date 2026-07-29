@@ -857,12 +857,12 @@ TEST_CASE("SincInterpolation output aligns with createUpsampledTimeFrame",
 
     SECTION("First time value matches original first time") {
         // The upsampled TimeFrame's first entry should be the original first time
-        REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(0)) == source_times[0]);
+        REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(0)).getValue() == source_times[0]);
     }
 
     SECTION("Last time value matches original last time") {
         // The upsampled TimeFrame's last entry should be the original last time
-        REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(expected_count - 1)) == source_times.back());
+        REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(expected_count - 1)).getValue() == source_times.back());
     }
 
     SECTION("Original sample positions in upsampled TimeFrame match source") {
@@ -870,7 +870,7 @@ TEST_CASE("SincInterpolation output aligns with createUpsampledTimeFrame",
         for (int i = 0; i < n; ++i) {
             int const upsampled_idx = i * factor;
             INFO("Original index " << i << " → upsampled index " << upsampled_idx);
-            REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(upsampled_idx)) == source_times[static_cast<size_t>(i)]);
+            REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(upsampled_idx)).getValue() == source_times[static_cast<size_t>(i)]);
         }
     }
 
@@ -953,13 +953,13 @@ TEST_CASE("SincInterpolation output aligns with createUpsampledTimeFrame",
         REQUIRE(static_cast<int>(sinc_output->getNumSamples()) == jittery_expected);
 
         // First and last entries must match original first and last times
-        REQUIRE(jittery_upsampled->getTimeAtIndex(TimeFrameIndex(0)) == jittery_times[0]);
-        REQUIRE(jittery_upsampled->getTimeAtIndex(TimeFrameIndex(jittery_expected - 1)) == jittery_times.back());
+        REQUIRE(jittery_upsampled->getTimeAtIndex(TimeFrameIndex(0)).getValue() == jittery_times[0]);
+        REQUIRE(jittery_upsampled->getTimeAtIndex(TimeFrameIndex(jittery_expected - 1)).getValue() == jittery_times.back());
 
         // Original positions must match
         for (int i = 0; i < static_cast<int>(jittery_times.size()); ++i) {
             int const idx = i * factor;
-            REQUIRE(jittery_upsampled->getTimeAtIndex(TimeFrameIndex(idx)) == jittery_times[static_cast<size_t>(i)]);
+            REQUIRE(jittery_upsampled->getTimeAtIndex(TimeFrameIndex(idx)).getValue() == jittery_times[static_cast<size_t>(i)]);
         }
     }
 }
@@ -995,24 +995,24 @@ TEST_CASE("SincInterpolation with offset TimeFrame mirrors widget workflow",
 
     // Verify the upsampled TimeFrame clock values are correct
     // First must be 500, last must be 900
-    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(0)) == 500);
-    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(expected_count - 1)) == 900);
+    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(0)).getValue() == 500);
+    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(expected_count - 1)).getValue() == 900);
 
     // Original positions must map to exact source clock values
     for (int i = 0; i < n; ++i) {
         int const idx = i * factor;
         INFO("Source index " << i << " → upsampled index " << idx
                              << ", expected clock " << source_times[static_cast<size_t>(i)]);
-        REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(idx)) == source_times[static_cast<size_t>(i)]);
+        REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(idx)).getValue() == source_times[static_cast<size_t>(i)]);
     }
 
     // Interpolated positions should have correct intermediate clock values
     // Between 500 and 600, step = 100/4 = 25: expect 500, 525, 550, 575, 600
-    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(0)) == 500);
-    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(1)) == 525);
-    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(2)) == 550);
-    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(3)) == 575);
-    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(4)) == 600);
+    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(0)) == ClockTicks(500));
+    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(1)) == ClockTicks(525));
+    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(2)) == ClockTicks(550));
+    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(3)) == ClockTicks(575));
+    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(4)) == ClockTicks(600));
 
     // Step 2: create input signal and sinc-interpolate via loadPipelineFromJson + executePipeline
     // (this is the exact code path the TransformsV2 widget uses)
@@ -1055,26 +1055,26 @@ TEST_CASE("SincInterpolation with offset TimeFrame mirrors widget workflow",
     auto const out = sinc_output->getAnalogTimeSeries();
     for (int i = 0; i < n; ++i) {
         int const idx = i * factor;
-        int const clock = upsampled_tf->getTimeAtIndex(TimeFrameIndex(idx));
+        ClockTicks const clock = upsampled_tf->getTimeAtIndex(TimeFrameIndex(idx));
         INFO("Original sample " << i << ": value=" << signal[static_cast<size_t>(i)]
                                 << " at upsampled index " << idx
-                                << " (clock=" << clock << ")");
+                                << " (clock=" << clock.getValue() << ")");
         // Value must match original
         REQUIRE_THAT(out[static_cast<size_t>(idx)],
                      Catch::Matchers::WithinAbs(static_cast<double>(signal[static_cast<size_t>(i)]), 1e-6));
         // Clock must match source TimeFrame
-        REQUIRE(clock == source_times[static_cast<size_t>(i)]);
+        REQUIRE(clock.getValue() == source_times[static_cast<size_t>(i)]);
     }
 
     // Verify first output value is at the first source clock time (500), not at 0
     REQUIRE_THAT(out[0],
                  Catch::Matchers::WithinAbs(static_cast<double>(signal[0]), 1e-6));
-    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(0)) == 500);
+    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(0)).getValue() == 500);
 
     // Verify last output value is at the last source clock time (900)
     REQUIRE_THAT(out[static_cast<size_t>(expected_count - 1)],
                  Catch::Matchers::WithinAbs(static_cast<double>(signal.back()), 1e-6));
-    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(expected_count - 1)) == 900);
+    REQUIRE(upsampled_tf->getTimeAtIndex(TimeFrameIndex(expected_count - 1)).getValue() == 900);
 
     // Verify monotonicity of interpolated values (linear ramp → should be monotonically increasing)
     for (size_t i = 1; i < out.size(); ++i) {

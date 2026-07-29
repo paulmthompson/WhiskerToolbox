@@ -45,12 +45,13 @@ DataTypeVariant generateRegularIntervals(RegularIntervalsParams const & params) 
     auto const off = static_cast<int64_t>(params.off_duration);
     int64_t const period = on + off;
 
-    std::vector<Interval> intervals;
+    std::vector<TimeFrameInterval> intervals;
     int64_t t = offset;
     while (t < n) {
         int64_t const start = t;
         int64_t const end = std::min(t + on - 1, n - 1);
-        intervals.push_back(Interval{start, end});
+        intervals.push_back(TimeFrameInterval{TimeFrameIndex{static_cast<int64_t>(start)},
+                                              TimeFrameIndex{static_cast<int64_t>(end)}});
         t += period;
     }
 

@@ -49,9 +49,9 @@ CommandContext makeContextWithIntervals(std::string const & key) {
     dm->setData<DigitalIntervalSeries>(key, TimeKey("time"));
 
     auto intervals = dm->getData<DigitalIntervalSeries>(key);
-    intervals->addEvent(Interval{100, 150});
-    intervals->addEvent(Interval{200, 250});
-    intervals->addEvent(Interval{300, 350});
+    intervals->addEvent(TimeFrameInterval{TimeFrameIndex(100), TimeFrameIndex(150)});
+    intervals->addEvent(TimeFrameInterval{TimeFrameIndex(200), TimeFrameIndex(250)});
+    intervals->addEvent(TimeFrameInterval{TimeFrameIndex(300), TimeFrameIndex(350)});
 
     CommandContext ctx;
     ctx.data_manager = dm;
@@ -134,19 +134,19 @@ TEST_CASE("SaveData round-trips DigitalIntervalSeries through CSV",
 
     // Verify all original intervals are present
     std::sort(loaded_intervals.begin(), loaded_intervals.end(),
-              [](Interval const & a, Interval const & b) {
+              [](TimeFrameInterval const & a, TimeFrameInterval const & b) {
                   if (a.start == b.start) {
                       return a.end < b.end;
                   }
                   return a.start < b.start;
               });
 
-    REQUIRE(loaded_intervals[0].start == 100);
-    REQUIRE(loaded_intervals[0].end == 150);
-    REQUIRE(loaded_intervals[1].start == 200);
-    REQUIRE(loaded_intervals[1].end == 250);
-    REQUIRE(loaded_intervals[2].start == 300);
-    REQUIRE(loaded_intervals[2].end == 350);
+    REQUIRE(loaded_intervals[0].start == TimeFrameIndex(100));
+    REQUIRE(loaded_intervals[0].end == TimeFrameIndex(150));
+    REQUIRE(loaded_intervals[1].start == TimeFrameIndex(200));
+    REQUIRE(loaded_intervals[1].end == TimeFrameIndex(250));
+    REQUIRE(loaded_intervals[2].start == TimeFrameIndex(300));
+    REQUIRE(loaded_intervals[2].end == TimeFrameIndex(350));
 
     cleanupTempDir(temp_dir);
 }

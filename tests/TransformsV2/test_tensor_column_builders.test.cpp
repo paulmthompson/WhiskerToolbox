@@ -98,10 +98,10 @@ std::shared_ptr<AnalogTimeSeries> createLinearAnalog(std::size_t num_samples) {
  */
 std::shared_ptr<DigitalIntervalSeries> createIntervalSeries(
         std::vector<std::pair<int64_t, int64_t>> const & intervals) {
-    std::vector<Interval> vec;
+    std::vector<TimeFrameInterval> vec;
     vec.reserve(intervals.size());
     for (auto const & [s, e]: intervals) {
-        vec.push_back(Interval{s, e});
+        vec.push_back(TimeFrameInterval(TimeFrameIndex(s), TimeFrameIndex(e)));
     }
     auto series = std::make_shared<DigitalIntervalSeries>(vec);
     int64_t max_time = 0;
@@ -325,16 +325,16 @@ TEST_CASE("resolveIntervalGatherWindows executes DigitalIntervalSeries row pipel
     REQUIRE(resolved->size() == intervals->size());
     REQUIRE(resolved->layout() == IntervalLayout::Overlapping);
 
-    std::vector<Interval> windows;
+    std::vector<TimeFrameInterval> windows;
     for (auto const & interval_with_id: resolved->view()) {
         windows.push_back(interval_with_id.interval);
     }
 
     REQUIRE(windows.size() == 2);
-    CHECK(windows[0].start == 8);
-    CHECK(windows[0].end == 13);
-    CHECK(windows[1].start == 48);
-    CHECK(windows[1].end == 53);
+    CHECK(windows[0].start == TimeFrameIndex(8));
+    CHECK(windows[0].end == TimeFrameIndex(13));
+    CHECK(windows[1].start == TimeFrameIndex(48));
+    CHECK(windows[1].end == TimeFrameIndex(53));
 }
 
 TEST_CASE("resolveIntervalGatherWindows preserves overlapping output windows",
@@ -347,16 +347,16 @@ TEST_CASE("resolveIntervalGatherWindows preserves overlapping output windows",
     REQUIRE(resolved->size() == intervals->size());
     REQUIRE(resolved->layout() == IntervalLayout::Overlapping);
 
-    std::vector<Interval> windows;
+    std::vector<TimeFrameInterval> windows;
     for (auto const & interval_with_id: resolved->view()) {
         windows.push_back(interval_with_id.interval);
     }
 
     REQUIRE(windows.size() == 2);
-    CHECK(windows[0].start == 5);
-    CHECK(windows[0].end == 15);
-    CHECK(windows[1].start == 7);
-    CHECK(windows[1].end == 17);
+    CHECK(windows[0].start == TimeFrameIndex(5));
+    CHECK(windows[0].end == TimeFrameIndex(15));
+    CHECK(windows[1].start == TimeFrameIndex(7));
+    CHECK(windows[1].end == TimeFrameIndex(17));
 }
 
 TEST_CASE("resolveIntervalGatherWindows rejects row-count-changing pipelines",

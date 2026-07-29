@@ -58,7 +58,7 @@ template<typename Element>
     if (intervals.empty()) {
         return std::numeric_limits<float>::quiet_NaN();
     }
-    return static_cast<float>(intervals.front().value().start);
+    return static_cast<float>(intervals.front().value().start.getValue());
 }
 
 /**
@@ -74,7 +74,7 @@ template<typename Element>
     if (intervals.empty()) {
         return std::numeric_limits<float>::quiet_NaN();
     }
-    return static_cast<float>(intervals.front().value().end);
+    return static_cast<float>(intervals.front().value().end.getValue());
 }
 
 /**

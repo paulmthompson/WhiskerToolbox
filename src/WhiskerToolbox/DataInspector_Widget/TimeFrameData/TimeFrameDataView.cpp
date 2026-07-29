@@ -60,7 +60,7 @@ void TimeFrameDataView::updateView() {
 
     // Build the time values vector by iterating through all indices
     auto const total = timeframe->getTotalFrameCount();
-    std::vector<int> times;
+    std::vector<ClockTicks> times;
     times.reserve(static_cast<size_t>(total));
     for (int i = 0; i < total; ++i) {
         times.push_back(timeframe->getTimeAtIndex(TimeFrameIndex(i)));

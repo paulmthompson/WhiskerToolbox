@@ -37,7 +37,7 @@ std::pair<std::vector<bool>, ColumnEntityIds> TimestampInIntervalComputer::compu
         auto intervals = m_source->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(t, t, *tf);
         bool inside = false;
         for (auto const & iv : intervals) {
-            if (is_contained(iv, t.getValue())) { inside = true; break; }
+            if (is_contained(iv, t)) { inside = true; break; }
         }
         result[i] = inside;
     }

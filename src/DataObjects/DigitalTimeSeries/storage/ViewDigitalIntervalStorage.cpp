@@ -21,7 +21,7 @@ void ViewDigitalIntervalStorage::setAllIndices() {
     _rebuildLocalIndices();
 }
 
-void ViewDigitalIntervalStorage::filterByOverlappingRange(int64_t start, int64_t end) {
+void ViewDigitalIntervalStorage::filterByOverlappingRange(TimeFrameIndex start, TimeFrameIndex end) {
     if (_source->assumeDisjointIntervals()) {
         auto [src_start, src_end] = _source->getOverlappingRange(start, end);
 
@@ -39,11 +39,11 @@ void ViewDigitalIntervalStorage::filterByOverlappingRange(int64_t start, int64_t
     _rebuildLocalIndices();
 }
 
-void ViewDigitalIntervalStorage::filterByOverlappingRangeLinear(int64_t start, int64_t end) {
+void ViewDigitalIntervalStorage::filterByOverlappingRangeLinear(TimeFrameIndex start, TimeFrameIndex end) {
     _indices.clear();
 
     for (size_t i = 0; i < _source->size(); ++i) {
-        Interval const & interval = _source->getInterval(i);
+        TimeFrameInterval const & interval = _source->getInterval(i);
         if (interval.start <= end && interval.end >= start) {
             _indices.push_back(i);
         }
@@ -52,7 +52,7 @@ void ViewDigitalIntervalStorage::filterByOverlappingRangeLinear(int64_t start, i
     _rebuildLocalIndices();
 }
 
-void ViewDigitalIntervalStorage::filterByContainedRange(int64_t start, int64_t end) {
+void ViewDigitalIntervalStorage::filterByContainedRange(TimeFrameIndex start, TimeFrameIndex end) {
     auto [src_start, src_end] = _source->getContainedRange(start, end);
 
     _indices.clear();
@@ -81,7 +81,7 @@ std::shared_ptr<OwningDigitalIntervalStorage const> ViewDigitalIntervalStorage::
     return _source;
 }
 
-Interval const & ViewDigitalIntervalStorage::getIntervalImpl(size_t idx) const {
+TimeFrameInterval const & ViewDigitalIntervalStorage::getIntervalImpl(size_t idx) const {
     return _source->getInterval(_indices[idx]);
 }
 
@@ -89,10 +89,10 @@ EntityId ViewDigitalIntervalStorage::getEntityIdImpl(size_t idx) const {
     return _source->getEntityId(_indices[idx]);
 }
 
-std::optional<size_t> ViewDigitalIntervalStorage::findByIntervalImpl(Interval const & interval) const {
+std::optional<size_t> ViewDigitalIntervalStorage::findByIntervalImpl(TimeFrameInterval const & interval) const {
     // Linear search through view indices
     for (size_t i = 0; i < _indices.size(); ++i) {
-        Interval const & src_interval = _source->getInterval(_indices[i]);
+        TimeFrameInterval const & src_interval = _source->getInterval(_indices[i]);
         if (src_interval.start == interval.start && src_interval.end == interval.end) {
             return i;
         }
@@ -105,14 +105,14 @@ std::optional<size_t> ViewDigitalIntervalStorage::findByEntityIdImpl(EntityId id
     return it != _local_entity_id_to_index.end() ? std::optional{it->second} : std::nullopt;
 }
 
-bool ViewDigitalIntervalStorage::hasIntervalAtTimeImpl(int64_t time) const {
+bool ViewDigitalIntervalStorage::hasIntervalAtTimeImpl(TimeFrameIndex time) const {
     return std::ranges::any_of(_indices, [this, time](size_t idx) {
-        Interval const & interval = _source->getInterval(idx);
+        TimeFrameInterval const & interval = _source->getInterval(idx);
         return interval.start <= time && time <= interval.end;
     });
 }
 
-std::pair<size_t, size_t> ViewDigitalIntervalStorage::getOverlappingRangeImpl(int64_t start, int64_t end) const {
+std::pair<size_t, size_t> ViewDigitalIntervalStorage::getOverlappingRangeImpl(TimeFrameIndex start, TimeFrameIndex end) const {
     if (_indices.empty() || start > end) {
         return {0, 0};
     }
@@ -121,7 +121,7 @@ std::pair<size_t, size_t> ViewDigitalIntervalStorage::getOverlappingRangeImpl(in
         size_t start_idx = _indices.size();
         size_t end_idx = 0;
         for (size_t i = 0; i < _indices.size(); ++i) {
-            Interval const & interval = _source->getInterval(_indices[i]);
+            TimeFrameInterval const & interval = _source->getInterval(_indices[i]);
             if (interval.start <= end && interval.end >= start) {
                 start_idx = std::min(start_idx, i);
                 end_idx = std::max(end_idx, i + 1);
@@ -149,7 +149,7 @@ std::pair<size_t, size_t> ViewDigitalIntervalStorage::getOverlappingRangeImpl(in
     return {start_idx, end_idx};
 }
 
-std::pair<size_t, size_t> ViewDigitalIntervalStorage::getContainedRangeImpl(int64_t start, int64_t end) const {
+std::pair<size_t, size_t> ViewDigitalIntervalStorage::getContainedRangeImpl(TimeFrameIndex start, TimeFrameIndex end) const {
     if (_indices.empty() || start > end) {
         return {0, 0};
     }
@@ -159,7 +159,7 @@ std::pair<size_t, size_t> ViewDigitalIntervalStorage::getContainedRangeImpl(int6
     size_t end_idx = 0;
 
     for (size_t i = 0; i < _indices.size(); ++i) {
-        Interval const & interval = _source->getInterval(_indices[i]);
+        TimeFrameInterval const & interval = _source->getInterval(_indices[i]);
         if (interval.start >= start && interval.end <= end) {
             start_idx = std::min(start_idx, i);
             end_idx = std::max(end_idx, i + 1);

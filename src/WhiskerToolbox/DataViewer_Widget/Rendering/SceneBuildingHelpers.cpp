@@ -42,14 +42,14 @@ namespace {
  * @pre @p query_time_frame is the coordinate system used for the range query.
  * @post Returns an integer physical time comparable with @p query_time_frame coordinates.
  */
-[[nodiscard]] int64_t physicalTimeAtDataIndex(
+[[nodiscard]] ClockTicks physicalTimeAtDataIndex(
         TimeFrame const * data_time_frame,
         TimeFrame const & query_time_frame,
         TimeFrameIndex const index_into_data_frame) {
     if (data_time_frame != nullptr) {
-        return static_cast<int64_t>(data_time_frame->getTimeAtIndex(index_into_data_frame));
+        return data_time_frame->getTimeAtIndex(index_into_data_frame);
     }
-    return static_cast<int64_t>(query_time_frame.getTimeAtIndex(index_into_data_frame));
+    return query_time_frame.getTimeAtIndex(index_into_data_frame);
 }
 
 }// anonymous namespace

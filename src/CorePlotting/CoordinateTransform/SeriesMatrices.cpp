@@ -123,12 +123,12 @@ glm::mat4 getAnalogViewMatrix(ViewProjectionParams const & params) {
     return View;
 }
 
-glm::mat4 getAnalogProjectionMatrix(TimeFrameIndex start_time_index,
-                                    TimeFrameIndex end_time_index,
+glm::mat4 getAnalogProjectionMatrix(float x_min,
+                                    float x_max,
                                     float y_min,
                                     float y_max) {
-    float left = static_cast<float>(start_time_index.getValue());
-    float right = static_cast<float>(end_time_index.getValue());
+    float left = x_min;
+    float right = x_max;
     float bottom = y_min;
     float top = y_max;
 
@@ -140,6 +140,17 @@ glm::mat4 getAnalogProjectionMatrix(TimeFrameIndex start_time_index,
 
     // Final validation
     return validateMatrix(Projection, "AnalogProjection");
+}
+
+glm::mat4 getAnalogProjectionMatrix(TimeFrameIndex start_time_index,
+                                    TimeFrameIndex end_time_index,
+                                    float y_min,
+                                    float y_max) {
+    return getAnalogProjectionMatrix(
+            static_cast<float>(start_time_index.getValue()),
+            static_cast<float>(end_time_index.getValue()),
+            y_min,
+            y_max);
 }
 
 // ============================================================================

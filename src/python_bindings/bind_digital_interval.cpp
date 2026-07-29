@@ -14,12 +14,12 @@ void init_digital_interval(py::module_ & m) {
         "Series of time intervals (start, end pairs)")
         // --- Constructors ---
         .def(py::init<>(), "Construct an empty interval series")
-        .def(py::init<std::vector<Interval>>(), py::arg("intervals"),
-             "Construct from a vector of Interval objects")
+        .def(py::init<std::vector<TimeFrameInterval>>(), py::arg("intervals"),
+             "Construct from a vector of TimeFrameInterval objects")
 
         // --- Mutation ---
         .def("addEvent",
-            static_cast<void (DigitalIntervalSeries::*)(Interval)>(
+            static_cast<void (DigitalIntervalSeries::*)(TimeFrameInterval)>(
                 &DigitalIntervalSeries::addEvent),
             py::arg("interval"),
             "Add an interval")
@@ -29,8 +29,8 @@ void init_digital_interval(py::module_ & m) {
             py::arg("start"), py::arg("end"),
             "Add an interval from start and end indices")
         .def("addInterval",
-            [](DigitalIntervalSeries & self, int64_t start, int64_t end) {
-                self.addEvent(TimeFrameIndex(start), TimeFrameIndex(end));
+            [](DigitalIntervalSeries & self, TimeFrameIndex start, TimeFrameIndex end) {
+                self.addEvent(start, end);
             },
             py::arg("start"), py::arg("end"),
             "Add an interval from integer start and end")
@@ -52,7 +52,7 @@ void init_digital_interval(py::module_ & m) {
         // --- Iteration / bulk access ---
         .def("toList",
             [](DigitalIntervalSeries const & self) {
-                std::vector<Interval> result;
+                std::vector<TimeFrameInterval> result;
                 for (auto const & iv : self.view()) {
                     result.push_back(iv.value());
                 }

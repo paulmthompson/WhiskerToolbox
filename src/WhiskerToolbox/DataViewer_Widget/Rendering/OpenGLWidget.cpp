@@ -3,6 +3,7 @@
 #include "Core/DataViewerStateData.hpp"
 #include "Core/LayoutRequestBuilder.hpp"
 #include "Core/TimeSeriesDataStore.hpp"
+#include "DataViewerViewWindow.hpp"
 #include "Interaction/DataViewerCoordinates.hpp"
 #include "Interaction/DataViewerSelectionManager.hpp"
 #include "Interaction/DataViewerTooltipController.hpp"
@@ -51,32 +52,6 @@
 #include <iostream>
 #include <ranges>
 #include <unordered_map>
-
-namespace {
-
-[[nodiscard]] int64_t masterAbsoluteTimeAtViewStart(
-        std::shared_ptr<TimeFrame> const & master_tf,
-        CorePlotting::ViewStateData const & vs) {
-    if (!master_tf) {
-        return 0;
-    }
-    return static_cast<int64_t>(master_tf->getTimeAtIndex(
-            TimeFrameIndex{static_cast<int64_t>(vs.x_min)}));
-}
-
-[[nodiscard]] int64_t masterAbsoluteTimeSpanForOrtho(
-        std::shared_ptr<TimeFrame> const & master_tf,
-        TimeFrameIndex const start,
-        TimeFrameIndex const end) {
-    if (!master_tf) {
-        return std::max<int64_t>(end.getValue() - start.getValue(), 1);
-    }
-    auto const t0 = static_cast<int64_t>(master_tf->getTimeAtIndex(start));
-    auto const t1 = static_cast<int64_t>(master_tf->getTimeAtIndex(end));
-    return std::max<int64_t>(t1 - t0, 1);
-}
-
-}// namespace
 
 OpenGLWidget::OpenGLWidget(QWidget * parent)
     : QOpenGLWidget(parent),
@@ -977,8 +952,8 @@ void OpenGLWidget::handleInteractionCompleted(CorePlotting::Interaction::DataCoo
             end_series = interval_coords.end;
         } else {
             // Convert master time coordinates to series time frame indices
-            start_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(interval_coords.start)).getValue();
-            end_series = series->getTimeFrame()->getIndexAtTime(static_cast<float>(interval_coords.end)).getValue();
+            start_series = series->getTimeFrame()->getIndexAtTime(ClockTicks(interval_coords.start)).getValue();
+            end_series = series->getTimeFrame()->getIndexAtTime(ClockTicks(interval_coords.end)).getValue();
         }
 
         // Ensure proper ordering
@@ -998,11 +973,12 @@ void OpenGLWidget::handleInteractionCompleted(CorePlotting::Interaction::DataCoo
             auto original_interval = series->getIntervalByEntityId(*coords.entity_id);
             if (original_interval.has_value()) {
                 // Remove the original interval
-                for (int64_t time = original_interval->start; time <= original_interval->end; ++time) {
+                for (TimeFrameIndex time = original_interval->start; time <= original_interval->end; time++) {
                     series->setEventAtTime(TimeFrameIndex(time), false);
                 }
 
-                std::cout << "Modified interval [" << original_interval->start << ", " << original_interval->end
+                std::cout << "Modified interval [" << original_interval->start.getValue() << ", "
+                          << original_interval->end.getValue()
                           << "] -> [" << start_series << ", " << end_series << "] for series "
                           << coords.series_key << std::endl;
             }
@@ -1017,8 +993,8 @@ void OpenGLWidget::handleInteractionCompleted(CorePlotting::Interaction::DataCoo
                                              *series->getTimeFrame());
 
         for (auto const & interval_with_id: intervals) {
-            if (interval_with_id.interval.start == start_series &&
-                interval_with_id.interval.end == end_series) {
+            if (interval_with_id.interval.start == TimeFrameIndex(start_series) &&
+                interval_with_id.interval.end == TimeFrameIndex(end_series)) {
                 clearEntitySelection();
                 selectEntity(interval_with_id.entity_id);
                 emit entitySelectionChanged(interval_with_id.entity_id, true);
@@ -1063,8 +1039,8 @@ std::optional<std::pair<std::string, std::string>> OpenGLWidget::findSeriesAtPos
     DataViewer::DataViewerCoordinates const coords(_state->viewState(), width(), height(), _master_time_frame.get());
     float const world_y = coords.canvasYToWorldY(canvas_y);
     float const world_x = coords.canvasXToWorldX(canvas_x);
-    int64_t const origin_abs = masterAbsoluteTimeAtViewStart(_master_time_frame, _state->viewState());
-    float const local_world_x = world_x - static_cast<float>(static_cast<double>(origin_abs));
+    ClockTicks const origin_abs = DataViewer::viewOriginMasterAbsolute(_master_time_frame, _state->viewState());
+    float const local_world_x = world_x - static_cast<float>(origin_abs.getValue());
 
     // First try full hit test if we have a cached scene with spatial index
     // This can identify specific discrete elements (events, points)
@@ -1175,35 +1151,41 @@ void OpenGLWidget::renderWithSceneRenderer() {
 }
 
 void OpenGLWidget::updateMatrices() {
+    if (!_master_time_frame) {
+        return;
+    }
+
     auto const & view_state = _state->viewState();
     auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
     auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
-    int64_t const span = masterAbsoluteTimeSpanForOrtho(_master_time_frame, start_time, end_time);
-    auto const local_end_time = TimeFrameIndex(span);
+    ClockTicks const span = DataViewer::viewSpanMasterAbsolute(_master_time_frame, start_time, end_time);
 
     // Fold both y_zoom and y_pan into the projection matrix via effective viewport
     auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
 
     _cached_projection_matrix = CorePlotting::getAnalogProjectionMatrix(
-            TimeFrameIndex{0}, local_end_time, eff.y_min, eff.y_max);
+            0.0f, static_cast<float>(span.getValue()), eff.y_min, eff.y_max);
 
     // View matrix is identity — pan and zoom are fully handled by the projection
     _cached_view_matrix = glm::mat4(1.0f);
 }
 
 void OpenGLWidget::rebuildScene() {
+    if (!_master_time_frame) {
+        return;
+    }
+
     auto const & view_state = _state->viewState();
     auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
     auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
-    int64_t const span = masterAbsoluteTimeSpanForOrtho(_master_time_frame, start_time, end_time);
-    auto const local_end_time = TimeFrameIndex(span);
+    ClockTicks const span = DataViewer::viewSpanMasterAbsolute(_master_time_frame, start_time, end_time);
 
     // Fold y_zoom and y_pan into projection via effective viewport
     auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
 
     // Shared projection matrix (time range + zoomed/panned Y to NDC)
     glm::mat4 const projection = CorePlotting::getAnalogProjectionMatrix(
-            TimeFrameIndex{0}, local_end_time, eff.y_min, eff.y_max);
+            0.0f, static_cast<float>(span.getValue()), eff.y_min, eff.y_max);
 
     // View matrix is identity — pan and zoom fully handled by projection
     glm::mat4 const view = glm::mat4(1.0f);
@@ -1213,7 +1195,7 @@ void OpenGLWidget::rebuildScene() {
     BoundingBox const scene_bounds(
             0.0f,                                // min_x
             static_cast<float>(view_state.y_min),// min_y
-            static_cast<float>(span),            // max_x (master-clock span)
+            static_cast<float>(span.getValue()), // max_x (master-clock span)
             static_cast<float>(view_state.y_max) // max_y
     );
 
@@ -1234,7 +1216,7 @@ void OpenGLWidget::rebuildScene() {
     // Build the scene (this also builds spatial index for discrete elements)
     _cache_state.scene = builder.build();
     _cache_state.scene.time_axis_origin_master_absolute =
-            masterAbsoluteTimeAtViewStart(_master_time_frame, view_state);
+            DataViewer::viewOriginMasterAbsolute(_master_time_frame, view_state);
     _cache_state.scene_dirty = false;
 
     auto t_build = std::chrono::steady_clock::now();
@@ -1314,7 +1296,7 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
     auto const & view_state = _state->viewState();
     auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
     auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
-    int64_t const x_origin_master_abs = masterAbsoluteTimeAtViewStart(_master_time_frame, view_state);
+    ClockTicks const x_origin_master_abs = DataViewer::viewOriginMasterAbsolute(_master_time_frame, view_state);
 
     // Effective viewport Y range (accounting for pan and zoom) for visibility culling
     auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
@@ -1423,7 +1405,7 @@ void OpenGLWidget::addEventBatchesToBuilder(CorePlotting::SceneBuilder & builder
     auto const & view_state = _state->viewState();
     auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
     auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
-    int64_t const x_origin_master_abs = masterAbsoluteTimeAtViewStart(_master_time_frame, view_state);
+    ClockTicks const x_origin_master_abs = DataViewer::viewOriginMasterAbsolute(_master_time_frame, view_state);
 
     // Effective viewport Y range (accounting for pan and zoom) for visibility culling
     auto const eff = CorePlotting::computeEffectiveYViewport(view_state);
@@ -1542,7 +1524,7 @@ void OpenGLWidget::addIntervalBatchesToBuilder(CorePlotting::SceneBuilder & buil
     auto const & view_state = _state->viewState();
     auto const start_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_min));
     auto const end_time = TimeFrameIndex(static_cast<int64_t>(view_state.x_max));
-    int64_t const x_origin_master_abs = masterAbsoluteTimeAtViewStart(_master_time_frame, view_state);
+    ClockTicks const x_origin_master_abs = DataViewer::viewOriginMasterAbsolute(_master_time_frame, view_state);
 
     // Effective viewport Y range (accounting for pan and zoom) for visibility culling
     auto const eff = CorePlotting::computeEffectiveYViewport(view_state);

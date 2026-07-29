@@ -193,12 +193,11 @@ PSTHPlotOpenGLWidget::HistogramExportBundle PSTHPlotOpenGLWidget::collectHistogr
                 continue;
             }
 
-            int64_t const alignment_time = gathered.alignmentTimeAt(trial_idx);
-            int const alignment_time_abs = static_cast<int>(alignment_time);
+            ClockTicks const alignment_time = gathered.alignmentTimeAt(trial_idx);
 
             for (auto const & event_with_id: trial_view->view()) {
-                int const event_time_abs = time_frame->getTimeAtIndex(event_with_id.event_time);
-                auto const relative_time = static_cast<double>(event_time_abs - alignment_time_abs);
+                ClockTicks const event_time_abs = time_frame->getTimeAtIndex(event_with_id.event_time);
+                auto const relative_time = static_cast<double>((event_time_abs - alignment_time.getValue()).getValue());
 
                 if (relative_time < -half_window || relative_time >= half_window) {
                     continue;
@@ -496,8 +495,7 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
 
             // Get the alignment time for this trial (center point)
             // alignmentTimeAt() returns absolute time directly
-            int64_t const alignment_time = gathered.alignmentTimeAt(trial_idx);
-            int const alignment_time_abs = static_cast<int>(alignment_time);
+            ClockTicks const alignment_time = gathered.alignmentTimeAt(trial_idx);
 
             // Iterate over events in this trial view
             for (auto const & event_with_id: trial_view->view()) {
@@ -505,11 +503,11 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
                 TimeFrameIndex const event_time_idx = event_with_id.event_time;
 
                 // Convert event time index to absolute time
-                int const event_time_abs = time_frame->getTimeAtIndex(event_time_idx);
+                ClockTicks const event_time_abs = time_frame->getTimeAtIndex(event_time_idx);
 
                 // Calculate relative time (normalized by alignment event)
                 // This gives us the time relative to the alignment point (t=0)
-                auto const relative_time = static_cast<double>(event_time_abs - alignment_time_abs);
+                auto const relative_time = static_cast<double>((event_time_abs - alignment_time.getValue()).getValue());
 
                 // Only include events within the window
                 if (relative_time < -half_window || relative_time >= half_window) {

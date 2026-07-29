@@ -86,13 +86,13 @@ public:
 
             switch (m_property) {
                 case IntervalProperty::Start:
-                    results.push_back(static_cast<T>(this_interval.interval.start));
+                    results.push_back(static_cast<T>(this_interval.interval.start.getValue()));
                     break;
                 case IntervalProperty::End:
-                    results.push_back(static_cast<T>(this_interval.interval.end));
+                    results.push_back(static_cast<T>(this_interval.interval.end.getValue()));
                     break;
                 case IntervalProperty::Duration:
-                    results.push_back(static_cast<T>(this_interval.interval.end - this_interval.interval.start));
+                    results.push_back(static_cast<T>(this_interval.interval.end.getValue() - this_interval.interval.start.getValue()));
                     break;
                 default:
                     throw std::runtime_error("Unknown IntervalProperty");

@@ -1,6 +1,7 @@
 #ifndef INTERVAL_DATA_HPP
 #define INTERVAL_DATA_HPP
 
+#include "TimeFrame/ClockTicks.hpp"
 #include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <cstdint>
@@ -17,6 +18,7 @@ struct IntervalT {
 // Type aliases for backwards compatibility and common types
 using Interval = IntervalT<int64_t>;
 using TimeFrameInterval = IntervalT<TimeFrameIndex>;
+using ClockTicksInterval = IntervalT<ClockTicks>;
 
 template<typename T>
 inline bool operator<(IntervalT<T> const & a, IntervalT<T> const & b) {
@@ -55,7 +57,6 @@ template bool is_contiguous(TimeFrameInterval const & a, TimeFrameInterval const
 template bool is_contained(TimeFrameInterval const & a, TimeFrameInterval const & b);
 template bool is_contained(TimeFrameInterval const & a, TimeFrameIndex const time);
 template bool operator<(TimeFrameInterval const & a, TimeFrameInterval const & b);
-
 
 
 #endif//INTERVAL_DATA_HPP

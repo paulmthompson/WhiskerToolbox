@@ -129,13 +129,13 @@ ColumnProviderFn buildIntervalPropertyProvider(
         for (auto const & iv: ivals->view()) {
             switch (property) {
                 case IntervalProperty::Start:
-                    result.push_back(static_cast<float>(iv.interval.start));
+                    result.push_back(static_cast<float>(iv.interval.start.getValue()));
                     break;
                 case IntervalProperty::End:
-                    result.push_back(static_cast<float>(iv.interval.end));
+                    result.push_back(static_cast<float>(iv.interval.end.getValue()));
                     break;
                 case IntervalProperty::Duration:
-                    result.push_back(static_cast<float>(iv.interval.end - iv.interval.start));
+                    result.push_back(static_cast<float>(iv.interval.end.getValue() - iv.interval.start.getValue()));
                     break;
             }
         }

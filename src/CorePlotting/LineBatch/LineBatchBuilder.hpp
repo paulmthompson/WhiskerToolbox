@@ -13,6 +13,8 @@
 
 #include "LineBatchData.hpp"// LineBatchData
 
+#include "TimeFrame/ClockTicks.hpp"
+
 #include <cstdint>// int64_t
 #include <vector> // std::vector
 
@@ -71,7 +73,7 @@ namespace CorePlotting {
  */
 [[nodiscard]] LineBatchData buildLineBatchFromGatherResult(
         GatherResult<AnalogTimeSeries> const & gathered,
-        std::vector<std::int64_t> const & alignment_times);
+        std::vector<ClockTicks> const & alignment_times);
 
 }// namespace CorePlotting
 

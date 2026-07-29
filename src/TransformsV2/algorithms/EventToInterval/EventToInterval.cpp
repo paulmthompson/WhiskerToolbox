@@ -33,7 +33,7 @@ std::shared_ptr<DigitalIntervalSeries> eventToInterval(
     int64_t const pre = params.pre_expansion.getValue();
     int64_t const post = params.post_expansion.getValue();
 
-    std::vector<Interval> intervals;
+    std::vector<TimeFrameInterval> intervals;
     intervals.reserve(input.size());
 
     std::size_t const total_events = input.size();
@@ -46,10 +46,10 @@ std::shared_ptr<DigitalIntervalSeries> eventToInterval(
             return DigitalIntervalSeries::createOverlapping({}, time_frame);
         }
 
-        int64_t const event_index = event.time().getValue();
-        intervals.push_back(Interval{
-                event_index - pre,
-                event_index + post});
+        TimeFrameIndex const event_index = event.time();
+        intervals.push_back(TimeFrameInterval{
+                event_index - TimeFrameIndex{pre},
+                event_index + TimeFrameIndex{post}});
 
         ++processed;
         if (processed % 100 == 0 || processed == total_events) {
