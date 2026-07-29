@@ -1,6 +1,8 @@
 #ifndef COREPLOTTING_COORDINATETRANSFORM_INVERSETRANSFORM_HPP
 #define COREPLOTTING_COORDINATETRANSFORM_INVERSETRANSFORM_HPP
 
+#include "TimeFrame/ClockTicks.hpp"
+
 #include <glm/glm.hpp>
 
 #include <cmath>
@@ -23,13 +25,13 @@ namespace CorePlotting {
  * - Canvas: Pixel coordinates with origin at top-left, Y increasing downward
  * - NDC: Normalized Device Coordinates [-1, 1] × [-1, 1]
  * - World: Plotting space (X = time, Y = data value or layout position)
- * - Data: Native data space (TimeFrameIndex, raw analog values)
+ * - Data: Native data space (ClockTicks for time, raw analog values for Y)
  * 
  * **Typical Usage**:
  * 1. User clicks at canvas (px, py)
  * 2. canvasToNDC() → (ndc_x, ndc_y)
  * 3. ndcToWorld() with inverse VP matrices → (world_x, world_y)
- * 4. worldXToTimeIndex() → TimeFrameIndex for X
+ * 4. worldXToClockTicks() → ClockTicks for X
  * 5. worldYToDataY() with inverse LayoutTransform → data Y value
  */
 
@@ -145,28 +147,29 @@ namespace CorePlotting {
 // ============================================================================
 
 /**
- * @brief Convert world X coordinate to TimeFrameIndex
- * 
- * For time-series plots, world X is typically absolute time (from TimeFrame).
- * This function performs simple rounding to the nearest integer index.
- * 
- * @param world_x World X coordinate (time)
- * @return TimeFrameIndex value (integer)
+ * @brief Convert world X coordinate to clock ticks
+ *
+ * World X is continuous plot space along the time axis. For time-series plots
+ * this is physical time expressed as a float (absolute or view-local depending
+ * on the caller's projection). This rounds to the nearest integer tick.
+ *
+ * @param world_x World X coordinate (time axis)
+ * @return Nearest ClockTicks value
  */
-[[nodiscard]] inline int64_t worldXToTimeIndex(float world_x) {
-    return static_cast<int64_t>(std::round(world_x));
+[[nodiscard]] inline ClockTicks worldXToClockTicks(float world_x) {
+    return ClockTicks(static_cast<int64_t>(std::llround(static_cast<double>(world_x))));
 }
 
 /**
- * @brief Convert TimeFrameIndex to world X coordinate
- * 
- * Trivial conversion for consistency.
- * 
- * @param time_index TimeFrameIndex value
+ * @brief Convert clock ticks to world X coordinate
+ *
+ * Trivial conversion for consistency when placing geometry in plot space.
+ *
+ * @param ticks Physical time as clock ticks
  * @return World X coordinate
  */
-[[nodiscard]] inline float timeIndexToWorldX(int64_t time_index) {
-    return static_cast<float>(time_index);
+[[nodiscard]] inline float clockTicksToWorldX(ClockTicks ticks) {
+    return static_cast<float>(static_cast<double>(ticks.getValue()));
 }
 
 /**
@@ -199,10 +202,10 @@ namespace CorePlotting {
  * @brief Result of canvas to data coordinate conversion
  */
 struct CanvasToDataResult {
-    int64_t time_index{0};///< X as TimeFrameIndex
-    float data_y{0.0f};   ///< Y in data space
-    float world_x{0.0f};  ///< Intermediate world X (for reference)
-    float world_y{0.0f};  ///< Intermediate world Y (for reference)
+    ClockTicks clock_ticks{0};///< X as physical clock ticks
+    float data_y{0.0f};       ///< Y in data space
+    float world_x{0.0f};      ///< Intermediate world X (for reference)
+    float world_y{0.0f};      ///< Intermediate world Y (for reference)
 };
 
 /**

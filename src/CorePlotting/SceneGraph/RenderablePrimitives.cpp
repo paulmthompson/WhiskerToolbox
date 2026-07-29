@@ -78,13 +78,13 @@ Interaction::DataCoordinates::IntervalCoords RenderableScene::previewToIntervalC
     glm::vec2 const right_world = canvasToWorld(
             right_canvas, 0.0f, viewport_width, viewport_height);
 
-    // Convert world X to time indices
-    int64_t const start_time = worldXToTimeIndex(left_world.x);
-    int64_t const end_time = worldXToTimeIndex(right_world.x);
+    // Convert world X to clock ticks
+    ClockTicks const start_ticks = worldXToClockTicks(left_world.x);
+    ClockTicks const end_ticks = worldXToClockTicks(right_world.x);
 
     // Ensure start <= end
-    result.start = std::min(start_time, end_time);
-    result.end = std::max(start_time, end_time);
+    result.start = std::min(start_ticks, end_ticks).getValue();
+    result.end = std::max(start_ticks, end_ticks).getValue();
 
     return result;
 }

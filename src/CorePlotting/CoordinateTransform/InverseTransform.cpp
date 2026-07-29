@@ -134,7 +134,7 @@ CanvasToDataResult canvasToData(
     result.world_y = world.y;
 
     // World → Data
-    result.time_index = worldXToTimeIndex(world.x);
+    result.clock_ticks = worldXToClockTicks(world.x);
     result.data_y = worldYToDataY(world.y, y_transform);
 
     return result;
