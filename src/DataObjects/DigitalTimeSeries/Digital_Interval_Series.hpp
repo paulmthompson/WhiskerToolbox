@@ -311,36 +311,6 @@ public:
         notifyObservers();
     }
 
-    /*
-    template<typename T>
-    void createIntervalsFromBool(std::vector<T> const & bool_vector) {
-        // Clear existing storage and rebuild
-        auto * owning = _storage.tryGetMutableOwning();
-        if (owning) {
-            owning->clear();
-        }
-
-        bool in_interval = false;
-        int start = 0;
-        for (size_t i = 0; i < bool_vector.size(); ++i) {
-            if (bool_vector[i] && !in_interval) {
-                start = static_cast<int>(i);
-                in_interval = true;
-            } else if (!bool_vector[i] && in_interval) {
-                if (owning) {
-                    owning->addInterval(Interval{start, static_cast<int64_t>(i - 1)}, EntityId{0});
-                }
-                in_interval = false;
-            }
-        }
-        if (in_interval && owning) {
-            owning->addInterval(Interval{start, static_cast<int64_t>(bool_vector.size() - 1)}, EntityId{0});
-        }
-
-        _cacheOptimizationPointers();
-        notifyObservers();
-    }
-    */
     // ========== Entity-Based Bulk Operations ==========
 
     /**
@@ -468,7 +438,7 @@ public:
      * @param entity_id The EntityId to look up
      * @return Optional containing the interval data if found, std::nullopt otherwise
      */
-    [[nodiscard]] std::optional<TimeFrameInterval> getIntervalByEntityId(EntityId entity_id) const;
+    [[nodiscard]] std::optional<ClockTicksInterval> getIntervalByEntityId(EntityId entity_id) const;
 
     /**
      * @brief Get all intervals that match the given EntityIds.
@@ -479,7 +449,7 @@ public:
      * @param entity_ids Vector of EntityIds to look up
      * @return Vector of pairs containing {EntityId, Interval} for found entities
      */
-    [[nodiscard]] std::vector<std::pair<EntityId, TimeFrameInterval>> getIntervalsByEntityIds(std::vector<EntityId> const & entity_ids) const;
+    [[nodiscard]] std::vector<std::pair<EntityId, ClockTicksInterval>> getIntervalsByEntityIds(std::vector<EntityId> const & entity_ids) const;
 
     // ========== Storage Type Queries ==========
 

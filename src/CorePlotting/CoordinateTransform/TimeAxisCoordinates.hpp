@@ -42,17 +42,6 @@ struct TimeAxisParams {
           viewport_width_px(width) {}
 
     /**
-     * @brief Construct from integer tick values (convenience for tests and legacy paths)
-     * @param start Start time in absolute clock ticks
-     * @param end End time in absolute clock ticks
-     * @param width Viewport width in pixels
-     */
-    TimeAxisParams(int64_t start, int64_t end, int width)
-        : time_start(ClockTicks(start)),
-          time_end(ClockTicks(end)),
-          viewport_width_px(width) {}
-
-    /**
      * @brief Get the time span of the visible range in clock ticks
      * @return @c time_end - @c time_start
      */

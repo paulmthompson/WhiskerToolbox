@@ -336,7 +336,7 @@ std::size_t DigitalIntervalSeries::copyByEntityIds(
 
 // ========== Entity Lookup Methods ==========
 
-std::optional<TimeFrameInterval> DigitalIntervalSeries::getIntervalByEntityId(EntityId entity_id) const {
+std::optional<ClockTicksInterval> DigitalIntervalSeries::getIntervalByEntityId(EntityId entity_id) const {
     if (!_identity_registry) {
         return std::nullopt;
     }
@@ -347,14 +347,18 @@ std::optional<TimeFrameInterval> DigitalIntervalSeries::getIntervalByEntityId(En
     }
 
     if (auto const idx = _storage.findByEntityId(entity_id)) {
-        return _storage.getInterval(*idx);
+        TimeFrameInterval interval = _storage.getInterval(*idx);
+        ClockTicks start = _time_frame->getTimeAtIndex(interval.start);
+        ClockTicks end = _time_frame->getTimeAtIndex(interval.end);
+
+        return ClockTicksInterval{start, end};
     }
 
     return std::nullopt;
 }
 
-std::vector<std::pair<EntityId, TimeFrameInterval>> DigitalIntervalSeries::getIntervalsByEntityIds(std::vector<EntityId> const & entity_ids) const {
-    std::vector<std::pair<EntityId, TimeFrameInterval>> result;
+std::vector<std::pair<EntityId, ClockTicksInterval>> DigitalIntervalSeries::getIntervalsByEntityIds(std::vector<EntityId> const & entity_ids) const {
+    std::vector<std::pair<EntityId, ClockTicksInterval>> result;
     result.reserve(entity_ids.size());
 
     for (EntityId const entity_id: entity_ids) {

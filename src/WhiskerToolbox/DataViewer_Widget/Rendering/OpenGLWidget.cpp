@@ -981,7 +981,11 @@ void OpenGLWidget::handleInteractionCompleted(CorePlotting::Interaction::DataCoo
             auto original_interval = series->getIntervalByEntityId(*coords.entity_id);
             if (original_interval.has_value()) {
                 // Remove the original interval
-                for (TimeFrameIndex time = original_interval->start; time <= original_interval->end; time++) {
+
+                auto start_time_idx = series->getTimeFrame()->getIndexAtTime(original_interval->start);
+                auto end_time_idx = series->getTimeFrame()->getIndexAtTime(original_interval->end);
+
+                for (TimeFrameIndex time = start_time_idx; time <= end_time_idx; time++) {
                     series->setEventAtTime(TimeFrameIndex(time), false);
                 }
 

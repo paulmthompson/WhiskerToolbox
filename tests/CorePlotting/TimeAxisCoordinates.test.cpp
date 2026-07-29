@@ -17,7 +17,7 @@ TEST_CASE("TimeAxisParams construction", "[CorePlotting][TimeAxisCoordinates]") 
     }
     
     SECTION("Explicit value constructor") {
-        TimeAxisParams params(100, 500, 800);
+        TimeAxisParams params(ClockTicks(100), ClockTicks(500), 800);
         REQUIRE(params.time_start.getValue() == 100);
         REQUIRE(params.time_end.getValue() == 500);
         REQUIRE(params.viewport_width_px == 800);
@@ -39,14 +39,14 @@ TEST_CASE("TimeAxisParams construction", "[CorePlotting][TimeAxisCoordinates]") 
     }
     
     SECTION("getTimeSpan") {
-        TimeAxisParams params(100, 500, 800);
+        TimeAxisParams params(ClockTicks(100), ClockTicks(500), 800);
         REQUIRE(params.getTimeSpan() == 400);
     }
 }
 
 TEST_CASE("canvasXToTime conversion", "[CorePlotting][TimeAxisCoordinates]") {
     SECTION("Simple range [0, 1000] with 800px canvas") {
-        TimeAxisParams params(0, 1000, 800);
+        TimeAxisParams params(ClockTicks(0), ClockTicks(1000), 800);
         
         // Left edge -> time 0
         REQUIRE_THAT(canvasXToTime(0.0f, params), WithinAbs(0.0f, 0.001f));
@@ -62,7 +62,7 @@ TEST_CASE("canvasXToTime conversion", "[CorePlotting][TimeAxisCoordinates]") {
     }
     
     SECTION("Offset range [100, 200]") {
-        TimeAxisParams params(100, 200, 500);
+        TimeAxisParams params(ClockTicks(100), ClockTicks(200), 500);
         
         // Left edge -> time 100
         REQUIRE_THAT(canvasXToTime(0.0f, params), WithinAbs(100.0f, 0.001f));
@@ -76,7 +76,7 @@ TEST_CASE("canvasXToTime conversion", "[CorePlotting][TimeAxisCoordinates]") {
     
     SECTION("Zoomed in range") {
         // Zoomed into [500, 600] of a larger dataset
-        TimeAxisParams params(500, 600, 1000);
+        TimeAxisParams params(ClockTicks(500), ClockTicks(600), 1000);
         
         REQUIRE_THAT(canvasXToTime(0.0f, params), WithinAbs(500.0f, 0.001f));
         REQUIRE_THAT(canvasXToTime(1000.0f, params), WithinAbs(600.0f, 0.001f));
@@ -84,13 +84,13 @@ TEST_CASE("canvasXToTime conversion", "[CorePlotting][TimeAxisCoordinates]") {
     }
     
     SECTION("Negative values - canvas position before left edge") {
-        TimeAxisParams params(0, 1000, 800);
+        TimeAxisParams params(ClockTicks(0), ClockTicks(1000), 800);
         // -100 pixels should give negative time
         REQUIRE_THAT(canvasXToTime(-100.0f, params), WithinAbs(-125.0f, 0.001f));
     }
     
     SECTION("Edge case: zero width viewport") {
-        TimeAxisParams params(0, 1000, 0);
+        TimeAxisParams params(ClockTicks(0), ClockTicks(1000), 0);
         // Should return time_start to avoid division by zero
         REQUIRE_THAT(canvasXToTime(100.0f, params), WithinAbs(0.0f, 0.001f));
     }
@@ -98,7 +98,7 @@ TEST_CASE("canvasXToTime conversion", "[CorePlotting][TimeAxisCoordinates]") {
 
 TEST_CASE("timeToCanvasX conversion", "[CorePlotting][TimeAxisCoordinates]") {
     SECTION("Simple range [0, 1000] with 800px canvas") {
-        TimeAxisParams params(0, 1000, 800);
+        TimeAxisParams params(ClockTicks(0), ClockTicks(1000), 800);
         
         // time 0 -> left edge
         REQUIRE_THAT(timeToCanvasX(0.0f, params), WithinAbs(0.0f, 0.001f));
@@ -111,7 +111,7 @@ TEST_CASE("timeToCanvasX conversion", "[CorePlotting][TimeAxisCoordinates]") {
     }
     
     SECTION("Offset range [100, 200]") {
-        TimeAxisParams params(100, 200, 500);
+        TimeAxisParams params(ClockTicks(100), ClockTicks(200), 500);
         
         REQUIRE_THAT(timeToCanvasX(100.0f, params), WithinAbs(0.0f, 0.001f));
         REQUIRE_THAT(timeToCanvasX(200.0f, params), WithinAbs(500.0f, 0.001f));
@@ -119,7 +119,7 @@ TEST_CASE("timeToCanvasX conversion", "[CorePlotting][TimeAxisCoordinates]") {
     }
     
     SECTION("Time outside visible range") {
-        TimeAxisParams params(100, 200, 500);
+        TimeAxisParams params(ClockTicks(100), ClockTicks(200), 500);
         
         // Before visible range -> negative X
         REQUIRE_THAT(timeToCanvasX(50.0f, params), WithinAbs(-250.0f, 0.001f));
@@ -129,14 +129,14 @@ TEST_CASE("timeToCanvasX conversion", "[CorePlotting][TimeAxisCoordinates]") {
     }
     
     SECTION("Edge case: zero time span") {
-        TimeAxisParams params(100, 100, 500);
+        TimeAxisParams params(ClockTicks(100), ClockTicks(100), 500);
         // Should return 0 to avoid division by zero
         REQUIRE_THAT(timeToCanvasX(100.0f, params), WithinAbs(0.0f, 0.001f));
     }
 }
 
 TEST_CASE("Round-trip conversions canvasX <-> time", "[CorePlotting][TimeAxisCoordinates]") {
-    TimeAxisParams params(0, 1000, 800);
+    TimeAxisParams params(ClockTicks(0), ClockTicks(1000), 800);
     
     SECTION("canvas -> time -> canvas") {
         for (float x : {0.0f, 100.0f, 400.0f, 800.0f}) {
@@ -157,7 +157,7 @@ TEST_CASE("Round-trip conversions canvasX <-> time", "[CorePlotting][TimeAxisCoo
 
 TEST_CASE("timeToNDC conversion", "[CorePlotting][TimeAxisCoordinates]") {
     SECTION("Basic range mapping") {
-        TimeAxisParams params(100, 200, 800); // viewport width ignored for NDC
+        TimeAxisParams params(ClockTicks(100), ClockTicks(200), 800); // viewport width ignored for NDC
         
         // Start of range -> -1
         REQUIRE_THAT(timeToNDC(100.0f, params), WithinAbs(-1.0f, 0.001f));
@@ -176,7 +176,7 @@ TEST_CASE("timeToNDC conversion", "[CorePlotting][TimeAxisCoordinates]") {
     }
     
     SECTION("Time outside visible range") {
-        TimeAxisParams params(100, 200, 800);
+        TimeAxisParams params(ClockTicks(100), ClockTicks(200), 800);
         
         // Before range
         REQUIRE_THAT(timeToNDC(50.0f, params), WithinAbs(-2.0f, 0.001f));
@@ -186,14 +186,14 @@ TEST_CASE("timeToNDC conversion", "[CorePlotting][TimeAxisCoordinates]") {
     }
     
     SECTION("Edge case: zero time span") {
-        TimeAxisParams params(100, 100, 800);
+        TimeAxisParams params(ClockTicks(100), ClockTicks(100), 800);
         REQUIRE_THAT(timeToNDC(100.0f, params), WithinAbs(0.0f, 0.001f));
     }
 }
 
 TEST_CASE("ndcToTime conversion", "[CorePlotting][TimeAxisCoordinates]") {
     SECTION("Basic range mapping") {
-        TimeAxisParams params(100, 200, 800);
+        TimeAxisParams params(ClockTicks(100), ClockTicks(200), 800);
         
         // -1 -> start of range
         REQUIRE_THAT(ndcToTime(-1.0f, params), WithinAbs(100.0f, 0.001f));
@@ -207,7 +207,7 @@ TEST_CASE("ndcToTime conversion", "[CorePlotting][TimeAxisCoordinates]") {
 }
 
 TEST_CASE("Round-trip NDC conversions", "[CorePlotting][TimeAxisCoordinates]") {
-    TimeAxisParams params(100, 200, 800);
+    TimeAxisParams params(ClockTicks(100), ClockTicks(200), 800);
     
     SECTION("time -> NDC -> time") {
         for (float t : {100.0f, 125.0f, 150.0f, 175.0f, 200.0f}) {
@@ -228,7 +228,7 @@ TEST_CASE("Round-trip NDC conversions", "[CorePlotting][TimeAxisCoordinates]") {
 
 TEST_CASE("pixelsPerTimeUnit and timeUnitsPerPixel", "[CorePlotting][TimeAxisCoordinates]") {
     SECTION("Basic calculation") {
-        TimeAxisParams params(0, 100, 500); // 100 time units over 500 pixels
+        TimeAxisParams params(ClockTicks(0), ClockTicks(100), 500); // 100 time units over 500 pixels
         
         // 500 pixels / 100 time units = 5 pixels per time unit
         REQUIRE_THAT(pixelsPerTimeUnit(params), WithinAbs(5.0f, 0.001f));
@@ -238,7 +238,7 @@ TEST_CASE("pixelsPerTimeUnit and timeUnitsPerPixel", "[CorePlotting][TimeAxisCoo
     }
     
     SECTION("Zoomed in (fewer time units over same pixels)") {
-        TimeAxisParams params(500, 510, 500); // 10 time units over 500 pixels
+        TimeAxisParams params(ClockTicks(500), ClockTicks(510), 500); // 10 time units over 500 pixels
         
         // 500 pixels / 10 time units = 50 pixels per time unit
         REQUIRE_THAT(pixelsPerTimeUnit(params), WithinAbs(50.0f, 0.001f));
@@ -248,7 +248,7 @@ TEST_CASE("pixelsPerTimeUnit and timeUnitsPerPixel", "[CorePlotting][TimeAxisCoo
     }
     
     SECTION("Zoomed out (more time units over same pixels)") {
-        TimeAxisParams params(0, 10000, 500); // 10000 time units over 500 pixels
+        TimeAxisParams params(ClockTicks(0), ClockTicks(10000), 500); // 10000 time units over 500 pixels
         
         // 500 pixels / 10000 time units = 0.05 pixels per time unit
         REQUIRE_THAT(pixelsPerTimeUnit(params), WithinAbs(0.05f, 0.001f));
@@ -258,7 +258,7 @@ TEST_CASE("pixelsPerTimeUnit and timeUnitsPerPixel", "[CorePlotting][TimeAxisCoo
     }
     
     SECTION("Inverse relationship") {
-        TimeAxisParams params(0, 1000, 800);
+        TimeAxisParams params(ClockTicks(0), ClockTicks(1000), 800);
         
         float ppt = pixelsPerTimeUnit(params);
         float tpp = timeUnitsPerPixel(params);
@@ -269,11 +269,11 @@ TEST_CASE("pixelsPerTimeUnit and timeUnitsPerPixel", "[CorePlotting][TimeAxisCoo
     
     SECTION("Edge cases") {
         // Zero time span
-        TimeAxisParams zero_span(100, 100, 500);
+        TimeAxisParams zero_span(ClockTicks(100), ClockTicks(100), 500);
         REQUIRE_THAT(pixelsPerTimeUnit(zero_span), WithinAbs(0.0f, 0.001f));
         
         // Zero viewport width
-        TimeAxisParams zero_width(0, 100, 0);
+        TimeAxisParams zero_width(ClockTicks(0), ClockTicks(100), 0);
         REQUIRE_THAT(timeUnitsPerPixel(zero_width), WithinAbs(0.0f, 0.001f));
     }
 }
@@ -298,7 +298,7 @@ TEST_CASE("Practical scenario: mouse hover conversion", "[CorePlotting][TimeAxis
     // - Canvas width is 1200 pixels
     // - Mouse is at pixel 600 (center of canvas)
     
-    TimeAxisParams params(1000, 2000, 1200);
+    TimeAxisParams params(ClockTicks(1000), ClockTicks(2000), 1200);
     
     float mouse_x = 600.0f;
     float hover_time = canvasXToTime(mouse_x, params);
@@ -315,7 +315,7 @@ TEST_CASE("Practical scenario: hit tolerance calculation", "[CorePlotting][TimeA
     // Scenario: User clicks within 5 pixels of an event
     // We need to convert "5 pixel tolerance" to time tolerance
     
-    TimeAxisParams params(0, 1000, 800);
+    TimeAxisParams params(ClockTicks(0), ClockTicks(1000), 800);
     
     float pixel_tolerance = 5.0f;
     float time_tolerance = pixel_tolerance * timeUnitsPerPixel(params);

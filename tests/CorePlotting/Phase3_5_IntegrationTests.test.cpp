@@ -483,7 +483,7 @@ TEST_CASE("Scenario 4: Screen → World → Hit → Verify coordinates",
     
     SECTION("TimeAxisParams converts screen X to time correctly") {
         // Setup: 800px wide canvas, time range [0, 1000]
-        TimeAxisParams params(0, 1000, 800);
+        TimeAxisParams params(ClockTicks(0), ClockTicks(1000), 800);
         
         // Middle of canvas (x=400) should map to time=500
         float time = canvasXToTime(400.0f, params);
@@ -499,7 +499,7 @@ TEST_CASE("Scenario 4: Screen → World → Hit → Verify coordinates",
     }
     
     SECTION("Time to canvas X round-trip") {
-        TimeAxisParams params(0, 1000, 800);
+        TimeAxisParams params(ClockTicks(0), ClockTicks(1000), 800);
         
         // Convert time 500 to canvas X
         float canvas_x = timeToCanvasX(500.0f, params);

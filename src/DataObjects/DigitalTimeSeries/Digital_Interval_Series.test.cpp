@@ -10,6 +10,13 @@ TEST_CASE("DigitalIntervalSeries - interval entity identity uses start and end",
     DigitalIntervalSeries series;
     series.setIdentityContext("test_intervals", &registry);
 
+    std::vector<int> times;
+    for (int i: std::views::iota(0, 1000)) {
+        times.push_back(i);
+    }
+    auto timeframe = std::make_shared<TimeFrame>(times);
+    series.setTimeFrame(timeframe);
+
     series.addEvent(TimeFrameInterval{TimeFrameIndex(100), TimeFrameIndex(200)});
     series.rebuildAllEntityIds();
 
@@ -31,8 +38,8 @@ TEST_CASE("DigitalIntervalSeries - interval entity identity uses start and end",
 
         REQUIRE(series.size() == 1);
         REQUIRE(series.view()[0].id() == original_id);
-        REQUIRE(series.getIntervalByEntityId(original_id)->start == TimeFrameIndex(100));
-        REQUIRE(series.getIntervalByEntityId(original_id)->end == TimeFrameIndex(200));
+        REQUIRE(series.getIntervalByEntityId(original_id)->start == ClockTicks(100));
+        REQUIRE(series.getIntervalByEntityId(original_id)->end == ClockTicks(200));
     }
 
     SECTION("registry descriptor stores interval end in local_index") {
@@ -49,6 +56,13 @@ TEST_CASE("DigitalIntervalSeries - extend preserves EntityId",
     EntityRegistry registry;
     DigitalIntervalSeries series;
     series.setIdentityContext("test_intervals", &registry);
+
+    std::vector<int> times;
+    for (int i: std::views::iota(0, 1000)) {
+        times.push_back(i);
+    }
+    auto timeframe = std::make_shared<TimeFrame>(times);
+    series.setTimeFrame(timeframe);
 
     series.addEvent(TimeFrameInterval{TimeFrameIndex(100), TimeFrameIndex(200)});
     series.rebuildAllEntityIds();
@@ -69,8 +83,8 @@ TEST_CASE("DigitalIntervalSeries - extend preserves EntityId",
 
     auto interval = series.getIntervalByEntityId(original_id);
     REQUIRE(interval.has_value());
-    REQUIRE(interval->start == TimeFrameIndex(100));
-    REQUIRE(interval->end == TimeFrameIndex(250));
+    REQUIRE(interval->start == ClockTicks(100));
+    REQUIRE(interval->end == ClockTicks(250));
 }
 
 TEST_CASE("DigitalIntervalSeries - merge inherits earliest-start EntityId",

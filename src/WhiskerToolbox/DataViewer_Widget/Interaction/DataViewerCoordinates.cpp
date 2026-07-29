@@ -18,8 +18,8 @@ DataViewerCoordinates::DataViewerCoordinates(
                       width);
           }
           return CorePlotting::TimeAxisParams(
-                  static_cast<int64_t>(view_state.x_min),
-                  static_cast<int64_t>(view_state.x_max),
+                  ClockTicks(static_cast<int64_t>(view_state.x_min)),
+                  ClockTicks(static_cast<int64_t>(view_state.x_max)),
                   width);
       }()),
       _y_params([&]() {
