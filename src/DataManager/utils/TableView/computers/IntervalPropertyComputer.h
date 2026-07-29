@@ -19,9 +19,9 @@ class DigitalIntervalSeries;
  * @brief Enumeration of operations that can be performed on interval properties.
  */
 enum class IntervalProperty : std::uint8_t {
-    Start,  ///< Returns the start time/index of the interval
-    End,    ///< Returns the end time/index of the interval
-    Duration///< Returns the duration (end - start) of the interval
+    Start,   ///< Returns the interval start in absolute clock ticks
+    End,     ///< Returns the interval end in absolute clock ticks
+    Duration ///< Returns the duration in clock ticks (end - start)
 };
 
 /**

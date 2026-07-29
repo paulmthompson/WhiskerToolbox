@@ -241,14 +241,9 @@ namespace {
     float const start_time_f = static_cast<float>((query_time_frame.getTimeAtIndex(start_time) - x_origin_time.getValue()).getValue());
     float const end_time_f = static_cast<float>((query_time_frame.getTimeAtIndex(end_time) - x_origin_time.getValue()).getValue());
 
-    auto const * series_tf = series.getTimeFrame().get();
-
-    // views::all on an rvalue vector creates an owning_view
-    return series.viewInRange(start_time, end_time, query_time_frame) | std::views::transform([series_tf, y_bottom, height, start_time_f, end_time_f, x_origin_time, &query_time_frame](auto const & interval_with_id) {
-               auto const xa = physicalTimeAtDataIndex(series_tf, query_time_frame, TimeFrameIndex{interval_with_id.interval.start});
-               auto const xb = physicalTimeAtDataIndex(series_tf, query_time_frame, TimeFrameIndex{interval_with_id.interval.end});
-               auto x_start = static_cast<float>((xa - x_origin_time.getValue()).getValue());
-               auto x_end = static_cast<float>((xb - x_origin_time.getValue()).getValue());
+    return series.viewInRange(start_time, end_time, query_time_frame) | std::views::transform([y_bottom, height, start_time_f, end_time_f, x_origin_time](auto const & interval_with_id) {
+               auto x_start = static_cast<float>((interval_with_id.interval.start - x_origin_time.getValue()).getValue());
+               auto x_end = static_cast<float>((interval_with_id.interval.end - x_origin_time.getValue()).getValue());
 
                // Clip to visible range
                x_start = std::max(x_start, start_time_f);

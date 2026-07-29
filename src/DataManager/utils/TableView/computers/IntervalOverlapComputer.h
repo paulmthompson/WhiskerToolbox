@@ -86,21 +86,20 @@ enum class IntervalOverlapOperation : std::uint8_t {
 /**
 * @brief Counts the number of column intervals that overlap with the given row interval and returns their EntityIDs.
 * @param rowInterval The row interval to check overlaps for.
-* @param columnIntervalsWithIds The column intervals with their EntityIDs to check against.
-* @param sourceTimeFrame The timeframe for the column intervals.
+* @param columnIntervalsWithIds Column intervals with EntityIds in absolute clock ticks.
 * @param destinationTimeFrame The timeframe for the row interval.
 * @return Pair of count and vector of EntityIDs of overlapping intervals.
 * @note Takes range by forwarding reference because filter_view/transform_view cache begin() internally
 */
 [[nodiscard]] std::pair<int64_t, std::vector<EntityId>> countOverlappingIntervalsWithIds(TimeFrameInterval const & rowInterval,
                                                                                          std::ranges::range auto && columnIntervalsWithIds,
-                                                                                         TimeFrame const * sourceTimeFrame,
-                                                                                         TimeFrame const * destinationTimeFrame) {
+                                                                                         TimeFrame const & destinationTimeFrame) {
+    auto const rowTicks = toClockTicksInterval(rowInterval, destinationTimeFrame);
     int64_t count = 0;
     std::vector<EntityId> overlappingEntityIds;
 
     for (auto const & colIntervalWithId: columnIntervalsWithIds) {
-        if (intervalsOverlapInAbsoluteTime(rowInterval, colIntervalWithId.interval, sourceTimeFrame, destinationTimeFrame)) {
+        if (is_overlapping(rowTicks, colIntervalWithId.interval)) {
             ++count;
             overlappingEntityIds.push_back(colIntervalWithId.entity_id);
         }
@@ -155,7 +154,6 @@ public:
 
         auto rowIntervals = plan.getIntervals();
         auto destinationTimeFrame = plan.getTimeFrame();
-        auto sourceTimeFrame = m_source->getTimeFrame();
 
         std::vector<T> results;
         results.reserve(rowIntervals.size());
@@ -171,7 +169,7 @@ public:
                 auto columnIntervalsView = m_source->viewInRange(TimeFrameIndex(0),
                                                                  rowInterval.end,
                                                                  *destinationTimeFrame);
-                std::vector<IntervalWithId> columnIntervalsWithIds;
+                std::vector<ClockTicksIntervalWithId> columnIntervalsWithIds;
                 for (auto && interval: columnIntervalsView) {
                     columnIntervalsWithIds.push_back(interval);
                 }
@@ -182,19 +180,13 @@ public:
                     continue;
                 }
 
-                // Find the first column interval that overlaps with the row interval
-                // by converting to absolute time and checking overlap
-                auto destination_start = destinationTimeFrame->getTimeAtIndex(rowInterval.start);
-                auto destination_end = destinationTimeFrame->getTimeAtIndex(rowInterval.end);
+                auto const rowTicks = toClockTicksInterval(rowInterval, *destinationTimeFrame);
 
                 bool found = false;
                 size_t found_idx = 0;
                 for (size_t i = 0; i < columnIntervalsWithIds.size(); ++i) {
                     auto const & colInterval = columnIntervalsWithIds[i];
-                    auto source_start = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(colInterval.interval.start));
-                    auto source_end = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(colInterval.interval.end));
-
-                    if (source_start <= destination_end && destination_start <= source_end) {
+                    if (is_overlapping(rowTicks, colInterval.interval)) {
                         found = true;
                         found_idx = i;
                         break;// Take the first overlapping interval
@@ -208,17 +200,13 @@ public:
                 }
 
                 auto const & matchedInterval = columnIntervalsWithIds[found_idx];
-                auto source_start = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(matchedInterval.interval.start));
-                auto source_end = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(matchedInterval.interval.end));
 
                 if (m_operation == IntervalOverlapOperation::AssignID_Start) {
-                    // Convert into row time frame
-                    auto source_start_index = destinationTimeFrame->getIndexAtTime(source_start);
+                    auto source_start_index = destinationTimeFrame->getIndexAtTime(matchedInterval.interval.start);
                     results.push_back(static_cast<T>(source_start_index.getValue()));
                     entity_ids.push_back(matchedInterval.entity_id);
                 } else if (m_operation == IntervalOverlapOperation::AssignID_End) {
-                    // Convert into row time frame
-                    auto source_end_index = destinationTimeFrame->getIndexAtTime(source_end);
+                    auto source_end_index = destinationTimeFrame->getIndexAtTime(matchedInterval.interval.end);
                     results.push_back(static_cast<T>(source_end_index.getValue()));
                     entity_ids.push_back(matchedInterval.entity_id);
                 } else {
@@ -241,8 +229,7 @@ public:
 
                 auto [count, overlappingEntityIds] = countOverlappingIntervalsWithIds(rowInterval,
                                                                                       columnIntervalsWithIds,
-                                                                                      sourceTimeFrame.get(),
-                                                                                      destinationTimeFrame.get());
+                                                                                      *destinationTimeFrame);
 
                 results.push_back(static_cast<T>(count));
                 entity_ids.push_back(overlappingEntityIds);

@@ -206,6 +206,30 @@ TEST_CASE("DigitalIntervalSeries - Range-based access", "[DataManager]") {
         REQUIRE(collected[0].start == ClockTicks(40));
         REQUIRE(collected[0].end == ClockTicks(45));
     }
+
+    SECTION("viewIntervalsInRange returns ClockTicksInterval overlapping range") {
+        auto range = dis.viewIntervalsInRange(TimeFrameIndex(5), TimeFrameIndex(35), *timeframe);
+
+        std::vector<ClockTicksInterval> collected(range.begin(), range.end());
+        REQUIRE(collected.size() == 3);
+        REQUIRE(collected[0].start == ClockTicks(0));
+        REQUIRE(collected[0].end == ClockTicks(10));
+        REQUIRE(collected[1].start == ClockTicks(15));
+        REQUIRE(collected[1].end == ClockTicks(25));
+        REQUIRE(collected[2].start == ClockTicks(30));
+        REQUIRE(collected[2].end == ClockTicks(40));
+    }
+
+    SECTION("viewInRange returns ClockTicksIntervalWithId overlapping range") {
+        auto range = dis.viewInRange(TimeFrameIndex(5), TimeFrameIndex(35), *timeframe);
+
+        std::vector<ClockTicksIntervalWithId> collected(range.begin(), range.end());
+        REQUIRE(collected.size() == 3);
+        REQUIRE(collected[0].interval.start == ClockTicks(0));
+        REQUIRE(collected[0].interval.end == ClockTicks(10));
+        REQUIRE(collected[1].interval.start == ClockTicks(15));
+        REQUIRE(collected[2].interval.start == ClockTicks(30));
+    }
 }
 
 // =============================================================================

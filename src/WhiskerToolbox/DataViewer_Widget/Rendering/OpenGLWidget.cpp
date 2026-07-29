@@ -1004,9 +1004,11 @@ void OpenGLWidget::handleInteractionCompleted(CorePlotting::Interaction::DataCoo
                                              TimeFrameIndex(end_series),
                                              *series->getTimeFrame());
 
+        auto const expected_start = series->getTimeFrame()->getTimeAtIndex(TimeFrameIndex(start_series));
+        auto const expected_end = series->getTimeFrame()->getTimeAtIndex(TimeFrameIndex(end_series));
         for (auto const & interval_with_id: intervals) {
-            if (interval_with_id.interval.start == TimeFrameIndex(start_series) &&
-                interval_with_id.interval.end == TimeFrameIndex(end_series)) {
+            if (interval_with_id.interval.start == expected_start &&
+                interval_with_id.interval.end == expected_end) {
                 clearEntitySelection();
                 selectEntity(interval_with_id.entity_id);
                 emit entitySelectionChanged(interval_with_id.entity_id, true);

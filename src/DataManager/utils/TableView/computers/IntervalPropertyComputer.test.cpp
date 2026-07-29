@@ -551,14 +551,14 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Template Types", "[IntervalPropert
         std::vector<int> timeValues = {0, 5, 10, 15, 20, 25};
         auto timeFrame = std::make_shared<TimeFrame>(timeValues);
 
-        // Create source intervals
-        std::vector<TimeFrameInterval> sourceIntervals = {TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(4))}; // Duration = 3
+        // Interval [1,4] spans clock ticks [5, 20] on this timeframe
+        std::vector<TimeFrameInterval> sourceIntervals = {TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(4))};
         auto intervalSource = std::make_shared<DigitalIntervalSeries>(sourceIntervals);
         intervalSource->setTimeFrame(timeFrame);
 
         // Create row intervals that match the source intervals exactly
         std::vector<TimeFrameInterval> rowIntervals = {
-                TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(4))// Start=1, End=4, Duration=3
+                TimeFrameInterval(TimeFrameIndex(1), TimeFrameIndex(4))
         };
 
         ExecutionPlan plan(rowIntervals, timeFrame);
@@ -569,7 +569,7 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Template Types", "[IntervalPropert
                                                       "TestIntervals");
         auto [intResults, entity_ids] = intComputer.compute(plan);
         REQUIRE(intResults.size() == 1);
-        REQUIRE(intResults[0] == 3);
+        REQUIRE(intResults[0] == 15);
 
         // Test with float
         IntervalPropertyComputer<float> floatComputer(intervalSource,
@@ -577,7 +577,7 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Template Types", "[IntervalPropert
                                                       "TestIntervals");
         auto [floatResults, floatEntity_ids] = floatComputer.compute(plan);
         REQUIRE(floatResults.size() == 1);
-        REQUIRE(floatResults[0] == Catch::Approx(3.0f));
+        REQUIRE(floatResults[0] == Catch::Approx(15.0f));
 
         // Test with double
         IntervalPropertyComputer<double> doubleComputer(intervalSource,
@@ -585,7 +585,7 @@ TEST_CASE("DM - TV - IntervalPropertyComputer Template Types", "[IntervalPropert
                                                         "TestIntervals");
         auto [doubleResults, doubleEntity_ids] = doubleComputer.compute(plan);
         REQUIRE(doubleResults.size() == 1);
-        REQUIRE(doubleResults[0] == Catch::Approx(3.0));
+        REQUIRE(doubleResults[0] == Catch::Approx(15.0));
     }
 }
 

@@ -223,47 +223,45 @@ public:
      * @param start_index Start time index (inclusive)
      * @param stop_index Stop time index (inclusive)
      * @param source_time_frame The time frame that start_index/stop_index are expressed in
-     * @return Lazy view of IntervalWithId objects in the range
-     * 
-     * @note If source_time_frame matches the series' time frame, no conversion occurs
-     * @note If the series has no time frame set, indices are used directly
+     * @return Lazy view of ClockTicksIntervalWithId objects overlapping the range
+     *
+     * @pre series time frame must be set (@ref getTimeFrame() non-null)
      */
     [[nodiscard]] auto viewInRange(TimeFrameIndex start_index,
                                    TimeFrameIndex stop_index,
                                    TimeFrame const & source_time_frame) const {
-        auto time_range = _getConvertedTimeRange(start_index, stop_index, source_time_frame);
-        TimeFrameIndex const range_start = time_range.first;
-        TimeFrameIndex const range_stop = time_range.second;
-        return std::views::iota(size_t{0}, size()) | std::views::filter([this, range_start, range_stop](size_t idx) {
-                   TimeFrameInterval const interval = _storage.getInterval(idx);
-                   // Overlapping: interval.start <= stop_time && interval.end >= start_time
-                   return interval.start <= range_stop && interval.end >= range_start;
-               }) |
-               std::views::transform([this](size_t idx) {
-                   return IntervalWithId(_storage.getInterval(idx), _storage.getEntityId(idx));
+        assert(_time_frame != nullptr && "viewInRange requires series time frame");
+        auto const time_range = _getConvertedTimeRange(start_index, stop_index, source_time_frame);
+        TimeFrame const * time_frame = _time_frame.get();
+        auto const [lo, hi] = _storage.getOverlappingRange(time_range.first, time_range.second);
+        return std::views::iota(lo, hi) |
+               std::views::transform([this, time_frame](size_t idx) {
+                   return ClockTicksIntervalWithId(
+                           toClockTicksInterval(_storage.getInterval(idx), *time_frame),
+                           _storage.getEntityId(idx));
                });
     }
 
     /**
-     * @brief Get just the Interval values in a range as a lazy view
-     * 
+     * @brief Get overlapping intervals in a range as a lazy view of clock-tick intervals.
+     *
+     * @pre series time frame must be set (@ref getTimeFrame() non-null)
+     *
      * @param start_index Start time index (inclusive)
      * @param stop_index Stop time index (inclusive)
      * @param source_time_frame The time frame that start_index/stop_index are expressed in
-     * @return Lazy view of Interval values in the range
+     * @return Lazy view of ClockTicksInterval values overlapping the range
      */
     [[nodiscard]] auto viewIntervalsInRange(TimeFrameIndex start_index,
                                             TimeFrameIndex stop_index,
                                             TimeFrame const & source_time_frame) const {
-        auto time_range = _getConvertedTimeRange(start_index, stop_index, source_time_frame);
-        TimeFrameIndex const range_start = time_range.first;
-        TimeFrameIndex const range_stop = time_range.second;
-        return std::views::iota(size_t{0}, size()) | std::views::filter([this, range_start, range_stop](size_t idx) {
-                   TimeFrameInterval const interval = _storage.getInterval(idx);
-                   return interval.start <= range_stop && interval.end >= range_start;
-               }) |
-               std::views::transform([this](size_t idx) {
-                   return _storage.getInterval(idx);
+        assert(_time_frame != nullptr && "viewIntervalsInRange requires series time frame");
+        auto const time_range = _getConvertedTimeRange(start_index, stop_index, source_time_frame);
+        TimeFrame const * time_frame = _time_frame.get();
+        auto const [lo, hi] = _storage.getOverlappingRange(time_range.first, time_range.second);
+        return std::views::iota(lo, hi) |
+               std::views::transform([this, time_frame](size_t idx) {
+                   return toClockTicksInterval(_storage.getInterval(idx), *time_frame);
                });
     }
 

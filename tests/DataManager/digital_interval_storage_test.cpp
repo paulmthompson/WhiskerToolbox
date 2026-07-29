@@ -1036,15 +1036,15 @@ TEST_CASE("DigitalIntervalSeries viewInRange() works with all storage backends",
 
         auto range = series.viewInRange(TimeFrameIndex{25}, TimeFrameIndex{55}, *tf);
 
-        std::vector<TimeFrameInterval> collected;
+        std::vector<ClockTicksInterval> collected;
         for (auto const & element: range) {
             collected.push_back(element.interval);
         }
 
         // Should include intervals overlapping [25,55]: [30,40], [50,60]
         REQUIRE(collected.size() == 2);
-        CHECK(collected[0].start == TimeFrameIndex{30});
-        CHECK(collected[1].start == TimeFrameIndex{50});
+        CHECK(collected[0].start == ClockTicks{30});
+        CHECK(collected[1].start == ClockTicks{50});
     }
 
     SECTION("View storage - viewInRange()") {
@@ -1061,16 +1061,16 @@ TEST_CASE("DigitalIntervalSeries viewInRange() works with all storage backends",
 
         auto range = view_series->viewInRange(TimeFrameIndex{35}, TimeFrameIndex{75}, *tf);
 
-        std::vector<TimeFrameInterval> collected;
+        std::vector<ClockTicksInterval> collected;
         for (auto const & element: range) {
             collected.push_back(element.interval);
         }
 
         // [30,40] overlaps at end, [50,60] fully inside, [70,80] overlaps at start
         REQUIRE(collected.size() == 3);
-        CHECK(collected[0].start == TimeFrameIndex{30});
-        CHECK(collected[1].start == TimeFrameIndex{50});
-        CHECK(collected[2].start == TimeFrameIndex{70});
+        CHECK(collected[0].start == ClockTicks{30});
+        CHECK(collected[1].start == ClockTicks{50});
+        CHECK(collected[2].start == ClockTicks{70});
     }
 
     SECTION("Lazy storage - viewInRange()") {
@@ -1088,14 +1088,14 @@ TEST_CASE("DigitalIntervalSeries viewInRange() works with all storage backends",
 
         auto range = lazy_series->viewInRange(TimeFrameIndex{45}, TimeFrameIndex{65}, *tf);
 
-        std::vector<TimeFrameInterval> collected;
+        std::vector<ClockTicksInterval> collected;
         for (auto const & element: range) {
             collected.push_back(element.interval);
         }
 
         // Should include [50,60] which overlaps [45,65]
         REQUIRE(collected.size() == 1);
-        CHECK(collected[0].start == TimeFrameIndex{50});
+        CHECK(collected[0].start == ClockTicks{50});
     }
 }
 
@@ -1352,7 +1352,7 @@ TEST_CASE("DigitalIntervalSeries TimeFrame conversion in viewInRange()", "[Digit
         // Query in tf_a coordinates
         auto range = series.viewInRange(TimeFrameIndex{2}, TimeFrameIndex{6}, *tf_a);
 
-        std::vector<TimeFrameInterval> collected;
+        std::vector<ClockTicksInterval> collected;
         for (auto const & e: range) {
             collected.push_back(e.interval);
         }
@@ -1371,12 +1371,14 @@ TEST_CASE("DigitalIntervalSeries TimeFrame conversion in viewInRange()", "[Digit
         // So querying [4, 8] in tf_b should find our interval
         auto range = series.viewInRange(TimeFrameIndex{4}, TimeFrameIndex{8}, *tf_b);
 
-        std::vector<TimeFrameInterval> collected;
+        std::vector<ClockTicksInterval> collected;
         for (auto const & e: range) {
             collected.push_back(e.interval);
         }
 
-        // The conversion should find interval [2,4] from tf_a
+        // The conversion should find interval [20,40] in clock ticks
         CHECK(collected.size() >= 1);
+        CHECK(collected[0].start == ClockTicks{20});
+        CHECK(collected[0].end == ClockTicks{40});
     }
 }
