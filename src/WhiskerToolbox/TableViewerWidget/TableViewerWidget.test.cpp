@@ -112,7 +112,7 @@ protected:
 
         std::vector<TimeFrameInterval> row_intervals;
         for (auto const & interval: behavior_intervals) {
-            row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+            row_intervals.push_back(toTimeFrameInterval(interval, *behavior_time_frame));
         }
 
         auto row_selector = std::make_unique<IntervalSelector>(row_intervals, behavior_time_frame);
@@ -207,7 +207,7 @@ protected:
 
         std::vector<TimeFrameInterval> row_intervals;
         for (auto const & interval: behavior_intervals) {
-            row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+            row_intervals.push_back(toTimeFrameInterval(interval, *behavior_time_frame));
         }
 
         return std::make_unique<IntervalSelector>(row_intervals, behavior_time_frame);

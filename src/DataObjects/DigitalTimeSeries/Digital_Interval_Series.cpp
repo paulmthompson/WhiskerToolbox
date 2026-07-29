@@ -348,10 +348,7 @@ std::optional<ClockTicksInterval> DigitalIntervalSeries::getIntervalByEntityId(E
 
     if (auto const idx = _storage.findByEntityId(entity_id)) {
         TimeFrameInterval interval = _storage.getInterval(*idx);
-        ClockTicks start = _time_frame->getTimeAtIndex(interval.start);
-        ClockTicks end = _time_frame->getTimeAtIndex(interval.end);
-
-        return ClockTicksInterval{start, end};
+        return toClockTicksInterval(interval, *_time_frame);
     }
 
     return std::nullopt;
@@ -384,6 +381,19 @@ std::pair<ClockTicks, ClockTicks> DigitalIntervalSeries::_getTimeRangeFromIndice
         // We should never get here
         throw std::runtime_error("No time frame set for DigitalIntervalSeries");
     }
+}
+
+std::vector<ClockTicksInterval> DigitalIntervalSeries::_getClockTicksIntervalsClipped(
+        TimeFrameIndex start_time,
+        TimeFrameIndex stop_time) const {
+    TimeFrame const * time_frame = _time_frame.get();
+    assert(time_frame != nullptr && "_getClockTicksIntervalsClipped requires series time frame");
+
+    std::vector<ClockTicksInterval> result;
+    for (TimeFrameInterval const & interval: _getIntervalsAsVectorClipped(start_time, stop_time)) {
+        result.push_back(toClockTicksInterval(interval, *time_frame));
+    }
+    return result;
 }
 
 int find_closest_preceding_event(DigitalIntervalSeries * digital_series, TimeFrameIndex time) {

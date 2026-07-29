@@ -64,19 +64,18 @@ enum class IntervalOverlapOperation : std::uint8_t {
 /**
 * @brief Counts the number of column intervals that overlap with the given row interval.
 * @param rowInterval The row interval to check overlaps for.
-* @param columnIntervals The column intervals to check against.
-* @param sourceTimeFrame The timeframe for the column intervals.
+* @param columnIntervals Column intervals in absolute clock ticks.
 * @param destinationTimeFrame The timeframe for the row interval.
 * @return Number of overlapping column intervals.
 */
 [[nodiscard]] int64_t countOverlappingIntervals(TimeFrameInterval const & rowInterval,
                                                 std::ranges::range auto && columnIntervals,
-                                                TimeFrame const * sourceTimeFrame,
-                                                TimeFrame const * destinationTimeFrame) {
+                                                TimeFrame const & destinationTimeFrame) {
+    auto const rowTicks = toClockTicksInterval(rowInterval, destinationTimeFrame);
     int64_t count = 0;
 
-    for (auto colInterval: columnIntervals) {
-        if (intervalsOverlapInAbsoluteTime(rowInterval, colInterval, sourceTimeFrame, destinationTimeFrame)) {
+    for (auto const & colInterval: columnIntervals) {
+        if (is_overlapping(rowTicks, colInterval)) {
             ++count;
         }
     }
@@ -173,7 +172,7 @@ public:
                                                                  rowInterval.end,
                                                                  *destinationTimeFrame);
                 std::vector<IntervalWithId> columnIntervalsWithIds;
-                for (auto&& interval : columnIntervalsView) {
+                for (auto && interval: columnIntervalsView) {
                     columnIntervalsWithIds.push_back(interval);
                 }
 
@@ -187,18 +186,18 @@ public:
                 // by converting to absolute time and checking overlap
                 auto destination_start = destinationTimeFrame->getTimeAtIndex(rowInterval.start);
                 auto destination_end = destinationTimeFrame->getTimeAtIndex(rowInterval.end);
-                
+
                 bool found = false;
                 size_t found_idx = 0;
                 for (size_t i = 0; i < columnIntervalsWithIds.size(); ++i) {
-                    auto const& colInterval = columnIntervalsWithIds[i];
+                    auto const & colInterval = columnIntervalsWithIds[i];
                     auto source_start = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(colInterval.interval.start));
                     auto source_end = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(colInterval.interval.end));
-                    
+
                     if (source_start <= destination_end && destination_start <= source_end) {
                         found = true;
                         found_idx = i;
-                        break;  // Take the first overlapping interval
+                        break;// Take the first overlapping interval
                     }
                 }
 
@@ -208,7 +207,7 @@ public:
                     continue;
                 }
 
-                auto const& matchedInterval = columnIntervalsWithIds[found_idx];
+                auto const & matchedInterval = columnIntervalsWithIds[found_idx];
                 auto source_start = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(matchedInterval.interval.start));
                 auto source_end = sourceTimeFrame->getTimeAtIndex(TimeFrameIndex(matchedInterval.interval.end));
 

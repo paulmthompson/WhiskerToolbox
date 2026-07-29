@@ -290,7 +290,7 @@ TEST_CASE_METHOD(AnalogSliceGathererTestFixture,
 
         std::vector<TimeFrameInterval> row_intervals;
         for (auto const & iv : raw) {
-            row_intervals.emplace_back(TimeFrameIndex(iv.start), TimeFrameIndex(iv.end));
+            row_intervals.push_back(toTimeFrameInterval(iv, *behavior_tf));
         }
         REQUIRE(row_intervals.size() == 3);
 

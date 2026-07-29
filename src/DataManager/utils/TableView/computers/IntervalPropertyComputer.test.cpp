@@ -629,7 +629,7 @@ TEST_CASE_METHOD(IntervalPropertyTestFixture, "DM - TV - IntervalPropertyCompute
         // Convert to TimeFrameIntervals for row selector
         std::vector<TimeFrameInterval> row_intervals;
         for (auto const & interval: behavior_intervals) {
-            row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+            row_intervals.push_back(toTimeFrameInterval(interval, *behavior_time_frame));
         }
 
         REQUIRE(row_intervals.size() == 5);
@@ -716,7 +716,7 @@ TEST_CASE_METHOD(IntervalPropertyTestFixture, "DM - TV - IntervalPropertyCompute
         // Convert to TimeFrameIntervals for row selector
         std::vector<TimeFrameInterval> row_intervals;
         for (auto const & interval: neural_intervals) {
-            row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+            row_intervals.push_back(toTimeFrameInterval(interval, *neural_time_frame));
         }
 
         REQUIRE(row_intervals.size() == 4);
@@ -786,7 +786,7 @@ TEST_CASE_METHOD(IntervalPropertyTestFixture, "DM - TV - IntervalPropertyCompute
         // Convert to TimeFrameIntervals for row selector
         std::vector<TimeFrameInterval> row_intervals;
         for (auto const & interval: behavior_intervals) {
-            row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+            row_intervals.push_back(toTimeFrameInterval(interval, *behavior_time_frame));
         }
 
         REQUIRE(row_intervals.size() == 5);

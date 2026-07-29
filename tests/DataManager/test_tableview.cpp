@@ -203,7 +203,7 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
         // Convert to TimeFrameIntervals for the selector
         std::vector<TimeFrameInterval> timeFrameIntervals;
         for (auto const & interval: rowIntervals) {
-            timeFrameIntervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+            timeFrameIntervals.push_back(toTimeFrameInterval(interval, *timeFrame1));
         }
         REQUIRE(timeFrameIntervals.size() == 3);
 
@@ -341,7 +341,7 @@ TEST_CASE("TableView Different TimeFrames Test", "[TableView][TimeFrame]") {
         // Convert to TimeFrameIntervals for the selector
         std::vector<TimeFrameInterval> timeFrameIntervals;
         for (auto const & interval: rowIntervals) {
-            timeFrameIntervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+            timeFrameIntervals.push_back(toTimeFrameInterval(interval, *fineTimeFrame));
         }
 
         REQUIRE(timeFrameIntervals.size() == 3);

@@ -1,7 +1,7 @@
 #include "TimestampInIntervalComputer.h"
 
-#include "TimeFrame/interval_data.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "TimeFrame/interval_data.hpp"
 
 #include <stdexcept>
 
@@ -18,13 +18,13 @@ std::pair<std::vector<bool>, ColumnEntityIds> TimestampInIntervalComputer::compu
     std::vector<TimeFrameIndex> times;
     if (!plan.getRows().empty()) {
         times.reserve(plan.getRows().size());
-        for (auto const & r : plan.getRows()) times.push_back(r.timeIndex);
+        for (auto const & r: plan.getRows()) times.push_back(r.timeIndex);
     } else if (plan.hasIndices()) {
         times = plan.getIndices();
     } else if (plan.hasIntervals()) {
         auto const & itvs = plan.getIntervals();
         times.reserve(itvs.size());
-        for (auto const & iv : itvs) times.push_back(iv.start);
+        for (auto const & iv: itvs) times.push_back(iv.start);
     } else {
         throw std::runtime_error("TimestampInIntervalComputer: plan has no indices/rows/intervals");
     }
@@ -33,16 +33,18 @@ std::pair<std::vector<bool>, ColumnEntityIds> TimestampInIntervalComputer::compu
 
     // Query intervals per timestamp using adapter timeframe conversion
     for (size_t i = 0; i < times.size(); ++i) {
-        TimeFrameIndex t = times[i];
+        TimeFrameIndex const t = times[i];
+        ClockTicks const time_ticks = tf->getTimeAtIndex(t);
         auto intervals = m_source->getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(t, t, *tf);
         bool inside = false;
-        for (auto const & iv : intervals) {
-            if (is_contained(iv, t)) { inside = true; break; }
+        for (auto const & iv: intervals) {
+            if (is_contained(iv, time_ticks)) {
+                inside = true;
+                break;
+            }
         }
         result[i] = inside;
     }
 
     return {result, std::monostate{}};
 }
-
-

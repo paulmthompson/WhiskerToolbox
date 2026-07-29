@@ -222,7 +222,10 @@ TEST_CASE("DigitalTimeSeriesBuilder basic construction", "[fixtures][builders][d
         auto interval_view = intervals->getIntervalsInRange(TimeFrameIndex(0),
                                                             TimeFrameIndex(100),
                                                             *(intervals->getTimeFrame()));
-        std::vector<TimeFrameInterval> const interval_data(interval_view.begin(), interval_view.end());
+        std::vector<TimeFrameInterval> interval_data;
+        for (auto const & iv : interval_view) {
+            interval_data.push_back(toTimeFrameInterval(iv, *(intervals->getTimeFrame())));
+        }
         REQUIRE(interval_data.size() >= 2);
     }
 
@@ -237,7 +240,10 @@ TEST_CASE("DigitalTimeSeriesBuilder basic construction", "[fixtures][builders][d
         auto interval_view = intervals->getIntervalsInRange(TimeFrameIndex(0),
                                                             TimeFrameIndex(100),
                                                             *(intervals->getTimeFrame()));
-        std::vector<TimeFrameInterval> const interval_data(interval_view.begin(), interval_view.end());
+        std::vector<TimeFrameInterval> interval_data;
+        for (auto const & iv : interval_view) {
+            interval_data.push_back(toTimeFrameInterval(iv, *(intervals->getTimeFrame())));
+        }
         REQUIRE(!interval_data.empty());
     }
 }

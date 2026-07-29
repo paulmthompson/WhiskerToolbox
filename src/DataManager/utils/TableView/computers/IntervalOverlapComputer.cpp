@@ -41,7 +41,7 @@ std::pair<std::vector<size_t>, ColumnEntityIds> IntervalOverlapComputer<size_t>:
 
     auto rowIntervals = plan.getIntervals();
     auto destinationTimeFrame = plan.getTimeFrame();
-    auto sourceTimeFrame = m_source->getTimeFrame();
+    (void) m_source->getTimeFrame();
 
     std::vector<size_t> results;
     results.reserve(rowIntervals.size());
@@ -62,8 +62,7 @@ std::pair<std::vector<size_t>, ColumnEntityIds> IntervalOverlapComputer<size_t>:
     for (auto const & rowInterval: rowIntervals) {
         int64_t count = countOverlappingIntervals(rowInterval,
                                                   columnIntervals,
-                                                  sourceTimeFrame.get(),
-                                                  destinationTimeFrame.get());
+                                                  *destinationTimeFrame);
         results.push_back(static_cast<size_t>(count));
     }
 

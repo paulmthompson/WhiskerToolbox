@@ -140,18 +140,71 @@ TEST_CASE("DigitalIntervalSeries - Range-based access", "[DataManager]") {
                                                                                             TimeFrameIndex(35),
                                                                                             *timeframe);
 
-        std::vector<TimeFrameInterval> collected;
+        std::vector<ClockTicksInterval> collected;
         for (auto const & interval: range) {
             collected.push_back(interval);
         }
 
         REQUIRE(collected.size() == 3);
-        REQUIRE(collected[0].start == TimeFrameIndex(0));
-        REQUIRE(collected[0].end == TimeFrameIndex(10));
-        REQUIRE(collected[1].start == TimeFrameIndex(15));
-        REQUIRE(collected[1].end == TimeFrameIndex(25));
-        REQUIRE(collected[2].start == TimeFrameIndex(30));
-        REQUIRE(collected[2].end == TimeFrameIndex(40));
+        REQUIRE(collected[0].start == timeframe->getTimeAtIndex(TimeFrameIndex(0)));
+        REQUIRE(collected[0].end == timeframe->getTimeAtIndex(TimeFrameIndex(10)));
+        REQUIRE(collected[1].start == timeframe->getTimeAtIndex(TimeFrameIndex(15)));
+        REQUIRE(collected[1].end == timeframe->getTimeAtIndex(TimeFrameIndex(25)));
+        REQUIRE(collected[2].start == timeframe->getTimeAtIndex(TimeFrameIndex(30)));
+        REQUIRE(collected[2].end == timeframe->getTimeAtIndex(TimeFrameIndex(40)));
+    }
+
+    SECTION("CONTAINED mode returns only fully contained intervals") {
+        auto range = dis.getIntervalsInRange<DigitalIntervalSeries::RangeMode::CONTAINED>(
+                TimeFrameIndex(12), TimeFrameIndex(28), *timeframe);
+
+        std::vector<ClockTicksInterval> collected(range.begin(), range.end());
+        REQUIRE(collected.size() == 1);
+        REQUIRE(collected[0].start == timeframe->getTimeAtIndex(TimeFrameIndex(15)));
+        REQUIRE(collected[0].end == timeframe->getTimeAtIndex(TimeFrameIndex(25)));
+    }
+
+    SECTION("CLIP mode returns clipped clock-tick intervals") {
+        auto clipped = dis.getIntervalsInRange<DigitalIntervalSeries::RangeMode::CLIP>(
+                TimeFrameIndex(5), TimeFrameIndex(32), *timeframe);
+
+        REQUIRE(clipped.size() == 3);
+        REQUIRE(clipped[0].start == timeframe->getTimeAtIndex(TimeFrameIndex(5)));
+        REQUIRE(clipped[0].end == timeframe->getTimeAtIndex(TimeFrameIndex(10)));
+        REQUIRE(clipped[2].start == timeframe->getTimeAtIndex(TimeFrameIndex(30)));
+        REQUIRE(clipped[2].end == timeframe->getTimeAtIndex(TimeFrameIndex(32)));
+    }
+
+    SECTION("Cross-timeframe query returns absolute clock ticks") {
+        std::vector<int> sparse_times{0, 10, 20, 30, 40, 50};
+        auto query_timeframe = std::make_shared<TimeFrame>(sparse_times);
+
+        // Query indices 1..2 map to clock ticks [10, 20], excluding [30, 40].
+        auto range = dis.getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
+                TimeFrameIndex(1), TimeFrameIndex(2), *query_timeframe);
+
+        std::vector<ClockTicksInterval> collected(range.begin(), range.end());
+        REQUIRE(collected.size() == 2);
+        REQUIRE(collected[0].start == ClockTicks(0));
+        REQUIRE(collected[0].end == ClockTicks(10));
+        REQUIRE(collected[1].start == ClockTicks(15));
+        REQUIRE(collected[1].end == ClockTicks(25));
+    }
+
+    SECTION("Storage bounds skip intervals outside query range") {
+        DigitalIntervalSeries large_dis;
+        large_dis.setTimeFrame(timeframe);
+        for (int i = 0; i < 200; i += 20) {
+            large_dis.addEvent(TimeFrameIndex(i), TimeFrameIndex(i + 5));
+        }
+
+        auto range = large_dis.getIntervalsInRange<DigitalIntervalSeries::RangeMode::OVERLAPPING>(
+                TimeFrameIndex(38), TimeFrameIndex(42), *timeframe);
+
+        std::vector<ClockTicksInterval> collected(range.begin(), range.end());
+        REQUIRE(collected.size() == 1);
+        REQUIRE(collected[0].start == ClockTicks(40));
+        REQUIRE(collected[0].end == ClockTicks(45));
     }
 }
 
@@ -310,8 +363,8 @@ TEST_CASE("DigitalIntervalSeries - IntervalLayout", "[DataManager][interval][lay
 
     SECTION("createView time filter includes all overlapping intervals") {
         auto overlapping = DigitalIntervalSeries::createOverlapping(
-                {TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(100)}, 
-                TimeFrameInterval{TimeFrameIndex(50), TimeFrameIndex(60)}});
+                {TimeFrameInterval{TimeFrameIndex(0), TimeFrameIndex(100)},
+                 TimeFrameInterval{TimeFrameIndex(50), TimeFrameIndex(60)}});
         auto shared = std::const_pointer_cast<DigitalIntervalSeries const>(overlapping);
         auto filtered = DigitalIntervalSeries::createView(shared, TimeFrameIndex(62), TimeFrameIndex(65));
         REQUIRE(filtered->size() == 1);

@@ -67,6 +67,7 @@
 #include "TypeTraits/DataTypeTraits.hpp"
 #include "storage/DigitalIntervalStorage.hpp"
 
+#include <cassert>
 #include <cstdint>
 #include <memory>       // std::shared_ptr
 #include <optional>     // std::optional
@@ -371,15 +372,17 @@ public:
 
     /**
      * @brief Get intervals in a time range with TimeFrame conversion
-     * 
-     * @deprecated For OVERLAPPING mode, prefer viewInRange() or viewIntervalsInRange() 
+     *
+     * @deprecated For OVERLAPPING mode, prefer viewInRange() or viewIntervalsInRange()
      *             which provide lazy evaluation.
-     * 
+     *
+     * @pre series time frame must be set (@ref getTimeFrame() non-null)
+     *
      * @tparam mode RangeMode::CONTAINED (default), OVERLAPPING, or CLIP
      * @param start_time Start time index in source_timeframe
      * @param stop_time Stop time index in source_timeframe
      * @param source_timeframe TimeFrame the indices are expressed in
-     * @return Lazy view of Interval objects (or vector for CLIP mode)
+     * @return Lazy view of ClockTicksInterval objects (or vector for CLIP mode)
      * @see viewIntervalsInRange for preferred alternative
      */
     template<RangeMode mode = RangeMode::CONTAINED>
@@ -387,21 +390,24 @@ public:
             TimeFrameIndex start_time,
             TimeFrameIndex stop_time,
             TimeFrame const & source_timeframe) const {
-        if (&source_timeframe == _time_frame.get()) {
-            return _getIntervalsInRange<mode>(start_time, stop_time);
+        assert(_time_frame != nullptr && "getIntervalsInRange requires series time frame");
+
+        TimeFrameIndex query_start = start_time;
+        TimeFrameIndex query_stop = stop_time;
+        if (&source_timeframe != _time_frame.get()) {
+            auto converted = convertTimeFrameRange(start_time,
+                                                   stop_time,
+                                                   source_timeframe,
+                                                   *_time_frame);
+            query_start = converted.first;
+            query_stop = converted.second;
         }
 
-        // If either timeframe is null, fall back to original behavior
-        if (!_time_frame.get()) {
-            return _getIntervalsInRange<mode>(start_time, stop_time);
+        if constexpr (mode == RangeMode::CLIP) {
+            return _getClockTicksIntervalsClipped(query_start, query_stop);
+        } else {
+            return _getIntervalsInRangeLazy<mode>(query_start, query_stop);
         }
-
-        // Use helper function for time frame conversion
-        auto [target_start_index, target_stop_index] = convertTimeFrameRange(start_time,
-                                                                             stop_time,
-                                                                             source_timeframe,
-                                                                             *_time_frame);
-        return _getIntervalsInRange<mode>(target_start_index, target_stop_index);
     }
 
     // ========== Time Frame ==========
@@ -605,46 +611,39 @@ private:
     void _removeEventAtTimeInternal(TimeFrameIndex time);
 
     /**
-     * @brief Get intervals in a time range with configurable boundary handling
-     * 
-     * @deprecated For OVERLAPPING mode, prefer viewInRange() or viewIntervalsInRange() 
-     *             which provide lazy evaluation with TimeFrame support.
-     * 
-     * @tparam mode RangeMode::CONTAINED (default), OVERLAPPING, or CLIP
-     * @param start_time Start time value
-     * @param stop_time Stop time value
-     * @return Lazy view of Interval objects (or vector for CLIP mode)
-     * @see viewIntervalsInRange for TimeFrame-aware alternative
+     * @brief Lazy range of clock-tick intervals for CONTAINED or OVERLAPPING queries.
+     *
+     * @pre @ref getTimeFrame() must be non-null
+     * @tparam mode RangeMode::CONTAINED or RangeMode::OVERLAPPING
      */
-    template<RangeMode mode = RangeMode::CONTAINED>
-    auto _getIntervalsInRange(
+    template<RangeMode mode>
+    auto _getIntervalsInRangeLazy(
             TimeFrameIndex start_time,
             TimeFrameIndex stop_time) const {
+        static_assert(mode == RangeMode::CONTAINED || mode == RangeMode::OVERLAPPING,
+                      "_getIntervalsInRangeLazy supports CONTAINED and OVERLAPPING only");
 
-        if constexpr (mode == RangeMode::CONTAINED) {
-            // Direct storage access like DigitalEventSeries - returns by value
-            return std::views::iota(size_t{0}, _storage.size()) | std::views::filter([this, start_time, stop_time](size_t idx) {
-                       TimeFrameInterval const interval = _storage.getInterval(idx);
-                       return interval.start >= start_time && interval.end <= stop_time;
-                   }) |
-                   std::views::transform([this](size_t idx) {
-                       return _storage.getInterval(idx);
-                   });
-        } else if constexpr (mode == RangeMode::OVERLAPPING) {
-            return std::views::iota(size_t{0}, _storage.size()) | std::views::filter([this, start_time, stop_time](size_t idx) {
-                       TimeFrameInterval const interval = _storage.getInterval(idx);
-                       return interval.start <= stop_time && interval.end >= start_time;
-                   }) |
-                   std::views::transform([this](size_t idx) {
-                       return _storage.getInterval(idx);
-                   });
-        } else if constexpr (mode == RangeMode::CLIP) {
-            // For CLIP mode, we return a vector since we need to modify intervals
-            return _getIntervalsAsVectorClipped(start_time, stop_time);
-        } else {
-            return std::views::empty<Interval>;
-        }
+        TimeFrame const * time_frame = _time_frame.get();
+        assert(time_frame != nullptr && "_getIntervalsInRangeLazy requires series time frame");
+
+        auto const [lo, hi] = (mode == RangeMode::OVERLAPPING)
+                                      ? _storage.getOverlappingRange(start_time, stop_time)
+                                      : _storage.getContainedRange(start_time, stop_time);
+
+        return std::views::iota(lo, hi) |
+               std::views::transform([this, time_frame](size_t idx) {
+                   return toClockTicksInterval(_storage.getInterval(idx), *time_frame);
+               });
     }
+
+    /**
+     * @brief Materialized clipped intervals in clock-tick space.
+     *
+     * @pre @ref getTimeFrame() must be non-null
+     */
+    [[nodiscard]] std::vector<ClockTicksInterval> _getClockTicksIntervalsClipped(
+            TimeFrameIndex start_time,
+            TimeFrameIndex stop_time) const;
 
     // Helper method to handle clipping intervals at range boundaries
     std::vector<TimeFrameInterval> _getIntervalsAsVectorClipped(

@@ -632,7 +632,7 @@ TEST_CASE_METHOD(EventInIntervalTestFixture, "DM - TV - EventInIntervalComputer 
         // Convert to TimeFrameIntervals for row selector
         std::vector<TimeFrameInterval> row_intervals;
         for (const auto& interval : behavior_intervals) {
-            row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+            row_intervals.push_back(toTimeFrameInterval(interval, *behavior_time_frame));
         }
         
         REQUIRE(row_intervals.size() == 4);
@@ -1458,7 +1458,7 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         // Convert to TimeFrameIntervals for row selector
         std::vector<TimeFrameInterval> row_intervals;
         for (const auto& interval : behavior_intervals) {
-            row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+            row_intervals.push_back(toTimeFrameInterval(interval, *behavior_time_frame));
         }
 
         REQUIRE(row_intervals.size() == 4);
@@ -1549,7 +1549,7 @@ TEST_CASE_METHOD(EventTableRegistryTestFixture, "DM - TV - EventInIntervalComput
         
         std::vector<TimeFrameInterval> row_intervals;
         for (const auto& interval : behavior_intervals) {
-            row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+            row_intervals.push_back(toTimeFrameInterval(interval, *behavior_time_frame));
         }
         
         auto row_selector = std::make_unique<IntervalSelector>(row_intervals, behavior_time_frame);

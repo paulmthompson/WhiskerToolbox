@@ -511,7 +511,7 @@ TEST_CASE_METHOD(IntervalReductionTestFixture, "DM - TV - IntervalReductionCompu
         // Convert to TimeFrameIntervals for row selector
         std::vector<TimeFrameInterval> row_intervals;
         for (auto const & interval: behavior_intervals) {
-            row_intervals.emplace_back(TimeFrameIndex(interval.start), TimeFrameIndex(interval.end));
+            row_intervals.push_back(toTimeFrameInterval(interval, *behavior_time_frame));
         }
 
         REQUIRE(row_intervals.size() == 4);
