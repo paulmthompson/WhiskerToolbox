@@ -751,11 +751,19 @@ void OpenGLWidget::drawGridLines() {
         return;// Grid lines are disabled or renderer not ready
     }
 
-    // Configure grid
+    // Configure grid in view-local world X (matches projection [0, span_ticks])
     auto const & view = _state->viewState();
     PlottingOpenGL::GridConfig grid_config;
-    grid_config.time_start = static_cast<int64_t>(view.x_min);
-    grid_config.time_end = static_cast<int64_t>(view.x_max);
+    if (_master_time_frame) {
+        auto const start_time = TimeFrameIndex(static_cast<int64_t>(view.x_min));
+        auto const end_time = TimeFrameIndex(static_cast<int64_t>(view.x_max));
+        ClockTicks const span = DataViewer::viewSpanMasterAbsolute(_master_time_frame, start_time, end_time);
+        grid_config.time_start = 0;
+        grid_config.time_end = span.getValue();
+    } else {
+        grid_config.time_start = static_cast<int64_t>(view.x_min);
+        grid_config.time_end = static_cast<int64_t>(view.x_max);
+    }
     grid_config.spacing = grid.spacing;
     grid_config.y_min = static_cast<float>(view.y_min);
     grid_config.y_max = static_cast<float>(view.y_max);

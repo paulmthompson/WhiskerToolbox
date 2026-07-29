@@ -4,48 +4,48 @@ namespace CorePlotting {
 
 float canvasXToTime(float canvas_x, TimeAxisParams const & params) {
     if (params.viewport_width_px <= 0) {
-        return static_cast<float>(params.time_start);
+        return static_cast<float>(params.time_start.getValue());
     }
 
     float const normalized_x = canvas_x / static_cast<float>(params.viewport_width_px);
-    float const time_span = static_cast<float>(params.time_end - params.time_start);
+    float const time_span = static_cast<float>(params.getTimeSpan());
 
-    return static_cast<float>(params.time_start) + normalized_x * time_span;
+    return static_cast<float>(params.time_start.getValue()) + normalized_x * time_span;
 }
 
 float timeToCanvasX(float time, TimeAxisParams const & params) {
-    float const time_span = static_cast<float>(params.time_end - params.time_start);
+    float const time_span = static_cast<float>(params.getTimeSpan());
 
     if (time_span <= 0.0f) {
         return 0.0f;
     }
 
-    float const normalized_x = (time - static_cast<float>(params.time_start)) / time_span;
+    float const normalized_x = (time - static_cast<float>(params.time_start.getValue())) / time_span;
     return normalized_x * static_cast<float>(params.viewport_width_px);
 }
 
 float timeToNDC(float time, TimeAxisParams const & params) {
-    float const time_span = static_cast<float>(params.time_end - params.time_start);
+    float const time_span = static_cast<float>(params.getTimeSpan());
 
     if (time_span <= 0.0f) {
         return 0.0f;
     }
 
     // Map [time_start, time_end] to [-1, +1]
-    float const normalized = (time - static_cast<float>(params.time_start)) / time_span;
+    float const normalized = (time - static_cast<float>(params.time_start.getValue())) / time_span;
     return 2.0f * normalized - 1.0f;
 }
 
 float ndcToTime(float ndc_x, TimeAxisParams const & params) {
     // Map [-1, +1] to [time_start, time_end]
     float const normalized = (ndc_x + 1.0f) / 2.0f;
-    float const time_span = static_cast<float>(params.time_end - params.time_start);
+    float const time_span = static_cast<float>(params.getTimeSpan());
 
-    return static_cast<float>(params.time_start) + normalized * time_span;
+    return static_cast<float>(params.time_start.getValue()) + normalized * time_span;
 }
 
 float pixelsPerTimeUnit(TimeAxisParams const & params) {
-    float const time_span = static_cast<float>(params.time_end - params.time_start);
+    float const time_span = static_cast<float>(params.getTimeSpan());
 
     if (time_span <= 0.0f) {
         return 0.0f;
@@ -59,7 +59,7 @@ float timeUnitsPerPixel(TimeAxisParams const & params) {
         return 0.0f;
     }
 
-    float const time_span = static_cast<float>(params.time_end - params.time_start);
+    float const time_span = static_cast<float>(params.getTimeSpan());
     return time_span / static_cast<float>(params.viewport_width_px);
 }
 

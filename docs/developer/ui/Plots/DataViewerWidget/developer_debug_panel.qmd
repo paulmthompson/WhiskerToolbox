@@ -84,11 +84,11 @@ The panel is organized into collapsible sections:
 
 | Field | Source | Why Useful |
 |-------|--------|------------|
-| Time window | `TimeSeriesViewState::time_start / time_end` | Verify visible range |
-| Visible duration | `time_end - time_start` | Quick sanity check |
-| Y bounds (effective) | `y_min + vertical_pan_offset`, `y_max + vertical_pan_offset` | Debug Y pan/zoom (#227) |
-| `vertical_pan_offset` | `TimeSeriesViewState` | Track Y panning state |
-| `global_y_scale` | `TimeSeriesViewState` | Combined Y-axis scale factor (merged from `global_zoom` + `global_vertical_scale`) |
+| Time window | `DataViewerState::timeStart() / timeEnd()` (`ViewStateData::x_min / x_max`) | Verify visible range |
+| Visible duration | `timeEnd() - timeStart()` | Quick sanity check |
+| Y bounds (effective) | `computeEffectiveYViewport(view)` | Debug Y pan/zoom (#227) |
+| `y_pan` | `ViewStateData::y_pan` | Track Y panning state |
+| `y_zoom` | `ViewStateData::y_zoom` | Combined Y-axis zoom factor |
 | Widget pixel size | `OpenGLWidget::size()` | Verify actual render target |
 | Aspect ratio | `width / height` | Detect layout compression |
 

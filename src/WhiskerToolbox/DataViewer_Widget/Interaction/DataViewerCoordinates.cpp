@@ -10,13 +10,17 @@ DataViewerCoordinates::DataViewerCoordinates(
         int width, int height,
         TimeFrame const * master_time_frame)
     : _time_params([&]() {
-          int64_t time_start = static_cast<int64_t>(view_state.x_min);
-          int64_t time_end = static_cast<int64_t>(view_state.x_max);
           if (master_time_frame != nullptr) {
-              time_start = (master_time_frame->getTimeAtIndex(TimeFrameIndex{time_start})).getValue();
-              time_end = (master_time_frame->getTimeAtIndex(TimeFrameIndex{time_end})).getValue();
+              return CorePlotting::makeTimeAxisParams(
+                      TimeFrameIndex{static_cast<int64_t>(view_state.x_min)},
+                      TimeFrameIndex{static_cast<int64_t>(view_state.x_max)},
+                      *master_time_frame,
+                      width);
           }
-          return CorePlotting::TimeAxisParams(time_start, time_end, width);
+          return CorePlotting::TimeAxisParams(
+                  static_cast<int64_t>(view_state.x_min),
+                  static_cast<int64_t>(view_state.x_max),
+                  width);
       }()),
       _y_params([&]() {
           auto const eff = CorePlotting::computeEffectiveYViewport(view_state);

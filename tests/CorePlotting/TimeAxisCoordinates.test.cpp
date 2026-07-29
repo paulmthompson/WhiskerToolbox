@@ -2,6 +2,7 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include "CorePlotting/CoordinateTransform/TimeAxisCoordinates.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 using namespace CorePlotting;
 using Catch::Matchers::WithinAbs;
@@ -10,24 +11,30 @@ using Catch::Matchers::WithinRel;
 TEST_CASE("TimeAxisParams construction", "[CorePlotting][TimeAxisCoordinates]") {
     SECTION("Default constructor") {
         TimeAxisParams params;
-        REQUIRE(params.time_start == 0);
-        REQUIRE(params.time_end == 0);
+        REQUIRE(params.time_start.getValue() == 0);
+        REQUIRE(params.time_end.getValue() == 0);
         REQUIRE(params.viewport_width_px == 1);
     }
     
     SECTION("Explicit value constructor") {
         TimeAxisParams params(100, 500, 800);
-        REQUIRE(params.time_start == 100);
-        REQUIRE(params.time_end == 500);
+        REQUIRE(params.time_start.getValue() == 100);
+        REQUIRE(params.time_end.getValue() == 500);
         REQUIRE(params.viewport_width_px == 800);
     }
-    
-    SECTION("TimeSeriesViewState constructor") {
-        TimeSeriesViewState view_state;
-        view_state.setTimeRange(100, 500);
-        TimeAxisParams params(view_state, 800);
-        REQUIRE(params.time_start == 100);
-        REQUIRE(params.time_end == 500);
+
+    SECTION("makeTimeAxisParams from master TimeFrameIndex window") {
+
+        std::vector<int> times;
+
+        for (int i = 0; i <= 500; ++i) {
+            times.push_back(i * 2);
+        }
+        auto tf = std::make_shared<TimeFrame>(times);
+
+        auto const params = makeTimeAxisParams(TimeFrameIndex{100}, TimeFrameIndex{500}, *tf, 800);
+        REQUIRE(params.time_start.getValue() == 200);
+        REQUIRE(params.time_end.getValue() == 1000);
         REQUIRE(params.viewport_width_px == 800);
     }
     
@@ -272,12 +279,16 @@ TEST_CASE("pixelsPerTimeUnit and timeUnitsPerPixel", "[CorePlotting][TimeAxisCoo
 }
 
 TEST_CASE("makeTimeAxisParams helper", "[CorePlotting][TimeAxisCoordinates]") {
-    TimeSeriesViewState view_state;
-    view_state.setTimeRange(100, 500);
-    auto params = makeTimeAxisParams(view_state, 800);
-    
-    REQUIRE(params.time_start == 100);
-    REQUIRE(params.time_end == 500);
+    std::vector<int> times;
+
+    for (int i = 0; i <= 500; ++i) {
+        times.push_back(i);
+    }
+    auto tf = std::make_shared<TimeFrame>(times);
+    auto params = makeTimeAxisParams(TimeFrameIndex{100}, TimeFrameIndex{500}, *tf, 800);
+
+    REQUIRE(params.time_start.getValue() == 100);
+    REQUIRE(params.time_end.getValue() == 500);
     REQUIRE(params.viewport_width_px == 800);
 }
 

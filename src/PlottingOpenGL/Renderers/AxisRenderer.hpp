@@ -34,8 +34,8 @@
  * renderer.renderAxis(axis_config, view, projection);
  * 
  * GridConfig grid_config;
- * grid_config.time_start = view_state.time_start;
- * grid_config.time_end = view_state.time_end;
+ * grid_config.time_start = 0;           // view-local world X (tick span mode)
+ * grid_config.time_end = span_ticks;
  * grid_config.spacing = 100;
  * grid_config.y_min = view_state.y_min;
  * grid_config.y_max = view_state.y_max;
@@ -79,8 +79,8 @@ struct AxisConfig {
  * @note Stage 2 TODO: Move to CorePlotting scene graph as GridDescription
  */
 struct GridConfig {
-    int64_t time_start{0};          ///< Start of visible time range
-    int64_t time_end{1000};         ///< End of visible time range
+    int64_t time_start{0};          ///< Start of visible time range (world X, typically view-local ticks)
+    int64_t time_end{1000};         ///< End of visible time range (world X)
     int64_t spacing{100};           ///< Spacing between grid lines (in time units)
     float y_min{-1.0f};             ///< Y coordinate of bottom of grid lines
     float y_max{1.0f};              ///< Y coordinate of top of grid lines

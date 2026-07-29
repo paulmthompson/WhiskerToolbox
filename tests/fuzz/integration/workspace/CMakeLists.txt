@@ -232,7 +232,7 @@ target_link_libraries(fuzz_real_widget_roundtrip
         qt6advanceddocking
         # DataManager (needed by real widget state constructors)
         DataManager
-        # CorePlotting (needed by DataViewerStateData — TimeSeriesViewState, SeriesStyle)
+        # CorePlotting (needed by DataViewerStateData — ViewStateData, SeriesStyle)
         CorePlotting
         # TensorData (transitive dep: CorePlotting → TransformsV2 → TensorData)
         WhiskerToolbox::TensorData

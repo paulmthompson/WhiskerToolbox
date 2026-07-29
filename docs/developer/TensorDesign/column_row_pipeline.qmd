@@ -129,14 +129,14 @@ GatherResult -> TensorDesign or TransformPipeline execution
 | Row descriptor | Original row source | Contact start/end metadata |
 | Gather windows | `row_pipeline_json` output or identity row source | Trial window or onset window around contact `i` |
 | Sample times | `row_pipeline_json` output, when sampling | Contact onset event for row `i` |
-| Iterable binding values | DataManager object or row-pipeline output | Normalization event for raster/PSTH row `i` |
+| Iterable binding values | DataManager object or row-pipeline output | `TimePosition` for raster/PSTH row `i` |
 | Feature value | `pipeline_json` over gathered source rows | Spike presence, mean curvature, angle sample |
 
 Prepared windows should be represented as `DigitalIntervalSeries`. Per-row sample times should be represented as `DigitalEventSeries`. These are normal DataObjects, not tensor-specific side channels.
 
 When a column needs to normalize gathered data relative to a marker that is not the gather window start, that marker should be supplied through `PipelineValueStore` parameter binding for `pipeline_json`, not encoded as a second output of `row_pipeline_json`.
 
-For example, a spike raster column may gather spikes inside each trial window, then run a normalize-time transform with the contact onset event for that row supplied through the value store.
+For example, a spike raster column may gather spikes inside each trial window, then run a normalize-time transform with the contact onset event for that row supplied through the value store as a `TimePosition`.
 
 ## Transform Composition
 
@@ -311,7 +311,6 @@ Example:
   "pipeline_value_bindings": [
     {
       "source_key": "ContactOnset",
-      "element": "physical_time",
       "store_key": "row_alignment_time"
     }
   ],
@@ -403,13 +402,124 @@ This is intentionally similar to `PipelineLibrary`: list entries, load JSON, sav
 
 TransformsV2 already has the mechanism needed to inject runtime values into a `TransformPipeline`: `PipelineValueStore` plus parameter bindings loaded from pipeline JSON. GatherResult previously used this mechanism through TransformsV2 gather extension helpers such as `buildGatherRowStore()`.
 
-The row-pipeline refactor should reuse that mechanism rather than adding TensorData-specific context plumbing. The missing piece is an iterable binding layer owned by TransformsV2 or the TensorColumnBuilders/TransformsV2 integration:
+The row-pipeline refactor should reuse that mechanism rather than adding TensorData-specific context plumbing. The missing piece is an iterable binding layer owned by TransformsV2 or the TensorColumnBuilders/TransformsV2 integration.
+
+The core contract is:
 
 1. A column recipe or pipeline descriptor identifies an iterable context source.
 2. The source is a DataObject in `DataManager` or a DataObject produced by a row TransformPipeline.
 3. The source has one row-aligned element per tensor row.
-4. For row `i`, the iterable binding extracts element `i` and writes one or more values into `PipelineValueStore` under declared keys.
+4. For row `i`, the iterable binding converts element `i` into the DataObject's default binding value and writes it into `PipelineValueStore` under the declared key.
 5. `pipeline_json` parameter bindings map those store keys onto transform parameters.
+
+This is conceptually equivalent to how the GatherResult extension previously created a per-row store, but the values are no longer limited to GatherResult metadata. Any row-aligned iterable DataObject can supply bound values.
+
+Binding declarations should live on `ColumnRecipe`, beside `pipeline_json`. They should not be embedded in `PipelineDescriptor`, because the descriptor should remain a reusable transform pipeline that does not know about DataManager keys, tensor rows, or external iterable sources. All pipeline-valued fields, including `row_pipeline_json`, `source_pipeline_json`, and `pipeline_json`, should use the same `PipelineDescriptor` schema.
+
+### Binding Source Options
+
+There are two useful source forms.
+
+Direct DataManager source:
+
+```json
+{
+  "source_key": "ContactOnset",
+  "store_key": "row_alignment_time"
+}
+```
+
+DataManager source plus transform pipeline:
+
+```json
+{
+  "source_key": "Contact",
+  "source_pipeline_json": "{\"steps\": [{\"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}]}",
+  "store_key": "row_alignment_time"
+}
+```
+
+The second form covers the case where the iterable does not already exist as a DataManager object. The implicit default is identity: if `source_pipeline_json` is omitted or empty, use the DataObject referenced by `source_key` directly.
+
+This keeps every binding grounded in a DataManager key while still allowing the iterable to be derived. It also makes testing straightforward: a direct-key test and a key-plus-transform test should produce the same `PipelineValueStore` values when the derived object is equivalent to a precomputed object.
+
+### Binding Value Semantics
+
+The user should not need to specify an extractor for the initial Phase 5 use case. Instead, each supported DataObject type should define a default binding value for one row element.
+
+Initial support should be deliberately narrow:
+
+| Source DataObject | Row element | Default binding value |
+|---|---|---|
+| `DigitalEventSeries` | Event row `i` | `TimePosition{event_time, event_series.getTimeFrame()}` |
+
+If a caller needs interval start, end, or center as the bound value, it should first derive a `DigitalEventSeries` with `IntervalToEvent`. This avoids requiring users to choose coordinate extractors and keeps start/end/center selection in the TransformPipeline where it already belongs.
+
+The project already has temporal coordinate carrier types in `TimeFrame/TimeFrame.hpp`:
+
+- `TimeIndexAndFrame`, which pairs a `TimeFrameIndex` with a non-owning `TimeFrame const *`.
+- `TimePosition`, which pairs a `TimeFrameIndex` with a `std::shared_ptr<TimeFrame>`.
+
+Phase 5 should reuse one of these instead of introducing a new temporal binding type. Because most DataObjects expose `std::shared_ptr<TimeFrame>` through `getTimeFrame()`, `TimePosition` is the likely first choice for `PipelineValueStore` storage and parameter binding.
+
+`NormalizeTime` should accept a bound temporal value such as `TimePosition` and perform its own conversion to the coordinate system needed for each input row. Legacy `int64_t` absolute-time bindings can remain supported if needed, but new row-iterable bindings should use the typed temporal value.
+
+### Execution Shape
+
+For a gathered source and one binding source:
+
+```text
+windows_i = row_pipeline(row_source)[i]
+row_i = gather(source_key, windows_i)
+
+iterable = source_pipeline(source_key_for_binding)
+store_i = buildGatherRowStore(gathered, i) or empty PipelineValueStore
+store_i[store_key] = defaultBindingValue(iterable, i)
+
+pipeline_i = pipeline_json with param_bindings applied from store_i
+value_i = execute/reduce pipeline_i(row_i)
+```
+
+`buildGatherRowStore()` may still be useful as a base store for generic row metadata such as `trial_index` and `trial_duration`, but TensorDesign should not depend on `GatherResult::alignmentTimeAt()` for normalization markers. Iterable bindings should override or add store keys explicitly.
+
+### Validation Rules
+
+Phase 5 should enforce these rules:
+
+- Binding source DataObject must exist or the binding source pipeline must produce a supported DataObject.
+- Binding source row count must equal the `GatherResult` row count.
+- `store_key` must be unique within the column and must not collide with base row-store keys; reject duplicates rather than silently overwriting.
+- Produced DataObject type must have a default binding value implementation.
+- Binding value construction must be deterministic and must not mutate the source object.
+- If row filtering is introduced later, filtering must be applied consistently to gather windows and binding sources.
+
+Failure should occur at provider construction when possible. If a lazy source can only be evaluated at provider invocation time, fail with a message that identifies the column, binding source, and store key.
+
+### Motivating Test Cases
+
+Phase 5 should have at least two tests using the raster/PSTH normalization pattern.
+
+Direct iterable source:
+
+```text
+row_source: Contact intervals
+source_key: Spikes
+row_pipeline_json: identity or trial window pipeline
+pipeline_value_bindings: ContactOnset DigitalEventSeries[i] -> TimePosition -> row_alignment_time
+pipeline_json: NormalizeTime(alignment_time bound to row_alignment_time) + event/bin reduction
+```
+
+Derived iterable source:
+
+```text
+row_source: Contact intervals
+source_key: Spikes
+row_pipeline_json: identity or trial window pipeline
+pipeline_value_bindings: Contact -> IntervalToEvent(start) -> TimePosition -> row_alignment_time
+pipeline_json: NormalizeTime(alignment_time bound to row_alignment_time) + event/bin reduction
+```
+
+Both tests should assert that normalized event times are relative to contact onset, not to the gather window start. They should also assert row-count mismatch rejection by using a binding source with one missing or extra event.
 
 Example binding shape, shown as design intent rather than final JSON:
 
@@ -419,7 +529,6 @@ Example binding shape, shown as design intent rather than final JSON:
   "pipeline_value_bindings": [
     {
       "source_key": "ContactOnset",
-      "element": "time",
       "store_key": "row_alignment_time"
     }
   ]
@@ -444,7 +553,7 @@ Conceptually:
 ```text
 row_pipeline_json: trial interval -> spike gather window
 gather:            Spikes + window_i -> spikes_i
-iterable binding:  ContactOnset[i] -> PipelineValueStore["row_alignment_time"]
+iterable binding:  ContactOnset[i] -> TimePosition -> PipelineValueStore["row_alignment_time"]
 pipeline_json:     NormalizeTime(spikes_i, row_alignment_time) -> PSTH/bin/reduction output
 ```
 

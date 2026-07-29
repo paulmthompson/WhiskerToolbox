@@ -59,9 +59,9 @@ graph TD
 
 The single source of truth for the camera.
 
--   **TimeSeriesViewState**: Used for scrolling time-series plots. Handles buffer scope (what time range is loaded) and view (pan/zoom).
+-   **ViewStateData**: Serializable camera state for time-series plots (`x_min`/`x_max` as master frame indices, Y bounds, zoom/pan). Used by DataViewer via `DataViewerState`.
 
--   **ViewState**: Used for spatial 2D plots.
+-   **ViewState**: Full runtime 2D camera (includes viewport pixels). Used for spatial 2D plots.
 
 ### LayoutTransform
 

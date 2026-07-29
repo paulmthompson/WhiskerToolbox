@@ -132,26 +132,41 @@ Exit criteria:
 
 Goal: supply per-row values to `pipeline_json` transforms through the existing TransformsV2 `PipelineValueStore` mechanism without making `row_pipeline_json` responsible for normalization markers.
 
+Motivating example: gather `Spikes` into one `DigitalEventSeries` per trial/contact interval, then execute a TransformPipeline containing `NormalizeTime` on each gathered row. The normalization time comes from a row-aligned `DigitalEventSeries`, such as `ContactOnset`, or from `Contact -> IntervalToEvent(start)`. The event for row `i` is written into `PipelineValueStore` as a `TimePosition` and bound to the `NormalizeTime` parameter for row `i`.
+
 Tasks:
 
 1. Define a JSON schema for iterable bindings from DataObjects into `PipelineValueStore` keys.
-2. Support iterable sources that are DataObjects in `DataManager` or outputs of a row TransformPipeline.
-3. Build one store value per tensor row from a row-aligned `DigitalEventSeries` or other supported iterable DataObject.
-4. Inject the current row's values into `PipelineValueStore` before applying `pipeline_json` parameter bindings.
-5. Verify a normalize-time transform uses the bound store value, not the gather window start.
-6. Add raster/PSTH-style tests where spikes are gathered in trial windows and normalized to a separate event per row.
+2. Support direct iterable sources from DataManager keys with implicit identity source pipeline.
+3. Support derived iterable sources from a DataManager key plus `source_pipeline_json`.
+4. Start with `DigitalEventSeries` binding into `PipelineValueStore` as `TimePosition` using the event's `TimeFrameIndex` and the series `TimeFrame`.
+5. Defer `DigitalIntervalSeries` binding. Use `IntervalToEvent` in `source_pipeline_json` for start/end/center selection.
+6. Build one store value per tensor row from the resolved iterable DataObject, constructing the source view once before row iteration.
+7. Merge iterable store values with any base row store from `buildGatherRowStore()` without relying on GatherResult alignment metadata.
+8. Inject the current row's values into `PipelineValueStore` before applying `pipeline_json` parameter bindings.
+9. Verify a normalize-time transform uses the bound store value, not the gather window start.
+10. Add raster/PSTH-style tests where spikes are gathered in trial windows and normalized to a separate event per row.
+11. Add row-count mismatch tests for both direct and derived iterable sources.
 
 Exit criteria:
 
 - Per-row transforms can consume a marker that is outside the gathered DataObject through parameter bindings.
 - Trial-relative transforms can consume correct marker times.
 - Iterable binding sources are explicit and row-count checked.
+- Direct-key iterable bindings and key-plus-pipeline iterable bindings are both covered by tests.
+- `NormalizeTime` accepts a `TimePosition` binding and converts using the supplied `TimeFrame`.
 
 Open implementation choices:
 
-- `pipeline_json` includes iterable binding declarations next to `steps`.
-- TensorDesign column recipes declare context input keys separately from source and row pipeline keys.
-- Existing `PipelineValueStore`, parameter bindings, and gather extension helpers are reused or generalized to bind iterable values per row.
+- Whether `PipelineValueStore` should store `TimePosition` directly or use `TimeIndexAndFrame` for non-owning contexts.
+- How long to keep legacy `int64_t` absolute-time bindings for `NormalizeTime`.
+- Existing `PipelineValueStore`, parameter bindings, and gather extension helpers should be reused or generalized to bind iterable values per row.
+
+Settled design choices:
+
+- Iterable binding declarations live on `ColumnRecipe`, beside `pipeline_json`.
+- `source_pipeline_json` uses the same `PipelineDescriptor` schema as `row_pipeline_json` and `pipeline_json`.
+- Iterable binding `store_key` values must not overwrite other keys; duplicates are rejected.
 
 ## Phase 6: Timestamp And Point Sampling
 

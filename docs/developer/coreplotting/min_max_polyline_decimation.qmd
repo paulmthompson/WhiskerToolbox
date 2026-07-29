@@ -1,0 +1,24 @@
+---
+title: "Min–max polyline decimation"
+format: html
+---
+
+## Overview
+
+`CorePlotting::decimatePolyLineBatchMinMax()` reduces the number of vertices in each line strip of a `RenderablePolyLineBatch` by **uniform x-binning** and keeping the **minimum and maximum y** in each bin (plus the first and last original vertices). This matches common oscilloscope-style downsampling for time series when the horizontal resolution is far smaller than the sample count.
+
+**Location:** `src/CorePlotting/LineDecimation/MinMaxPolylineDecimation.hpp` (declaration), `.cpp` (implementation).
+
+## Parameters
+
+- `MinMaxDecimationParams::bucket_count`: number of x-buckets along each line. **`0` disables** decimation (identity).
+- If a strip has at most `2 * bucket_count + 2` vertices, it is passed through unchanged.
+
+## Integration
+
+- **DataViewer** sets `AnalogBatchParams::min_max_decimation_bucket_count` from the widget width (clamped) when the per-series option `AnalogSeriesOptionsData::enable_min_max_line_decimation` is true. `DataViewerHelpers::buildAnalogSeriesBatchSimplified` / `buildAnalogSeriesBatchCached` call the decimator after vertices are assembled.
+- **PlottingOpenGL** and **PlottingSVG** consume the same `RenderablePolyLineBatch`; no renderer changes are required.
+
+## Degenerate x-span
+
+When the first and last x of a strip are equal (or nearly equal), bucketing falls back to **index-based** bins so vertical stacks of samples still decimate.

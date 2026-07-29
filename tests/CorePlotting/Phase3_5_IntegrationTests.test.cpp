@@ -26,7 +26,6 @@
 #include "CorePlotting/Mappers/RasterMapper.hpp"
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
-#include "CorePlotting/CoordinateTransform/TimeRange.hpp"
 #include "CorePlotting/CoordinateTransform/ViewState.hpp"
 #include "CorePlotting/CoordinateTransform/TimeAxisCoordinates.hpp"
 #include "CorePlotting/Interaction/SceneHitTester.hpp"

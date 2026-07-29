@@ -187,9 +187,9 @@ To support high-performance visualization (100k+ points) with smooth, responsive
 1. **ViewState** (Spatial):  
    * Standard 2D camera model (Zoom X/Y, Pan X/Y).  
    * Used for SpatialOverlay where the user navigates a 2D plane.  
-2. **TimeSeriesViewState** (Temporal):  
-   * **X-Axis (Time Window)**: Defined by start\_time and end\_time. Changing this window triggers a **buffer rebuild**, as it implies a change in the Level of Detail (LOD) or streaming new data chunks.  
-   * **Y-Axis (Visual)**: Handles standard zoom/pan via MVP matrices only. Changing vertical zoom does *not* require data regeneration.
+2. **ViewStateData** (Temporal scrolling plots):  
+   * **X-Axis (Time Window)**: `x_min` / `x_max` as master `TimeFrameIndex` in `ViewStateData`. Changing this window triggers a **buffer rebuild**.  
+   * **Y-Axis (Visual)**: `y_min` / `y_max`, `y_zoom`, `y_pan` via MVP matrices only. Changing vertical zoom does *not* require data regeneration.
 
 ### **Inverse Transforms**
 

@@ -43,7 +43,6 @@ set(COREPLOTTING_SOURCES
     CoordinateTransform/ViewState.cpp
     CoordinateTransform/ViewStateData.hpp
     CoordinateTransform/NumericSafety.hpp
-    CoordinateTransform/TimeRange.hpp
     CoordinateTransform/TimeAxisCoordinates.hpp
     CoordinateTransform/TimeAxisCoordinates.cpp
     CoordinateTransform/SeriesCoordinateQuery.hpp

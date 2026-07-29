@@ -2,7 +2,6 @@
 #define COREPLOTTING_COORDINATETRANSFORM_SERIESMATRICES_HPP
 
 #include "Layout/LayoutTransform.hpp"
-#include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -28,7 +27,7 @@ struct SeriesDataCache;
  *   - Global vertical panning via createViewMatrix()
  * 
  * **Projection Matrix**: Shared coordinate system mapping
- *   - Maps time indices to screen X coordinates
+ *   - Maps world X (clock ticks or view-local tick span) to screen X coordinates
  *   - Maps data space to screen Y coordinates
  *   - Enforces valid ranges to prevent NaN/Infinity
  * 
@@ -74,19 +73,14 @@ glm::mat4 getAnalogViewMatrix(ViewProjectionParams const & params);
  * Maps data coordinates to normalized device coordinates [-1, 1].
  * Includes robust validation to prevent OpenGL state corruption.
  *
- * @param start_time_index Start of visible time range
- * @param end_time_index End of visible time range  
+ * @param x_min Left X boundary in world coordinates (typically view-local tick origin)
+ * @param x_max Right X boundary in world coordinates (typically view-local tick span)
  * @param y_min Minimum Y coordinate in data space
  * @param y_max Maximum Y coordinate in data space
  * @return Projection transformation matrix
  */
 glm::mat4 getAnalogProjectionMatrix(float x_min,
                                     float x_max,
-                                    float y_min,
-                                    float y_max);
-
-glm::mat4 getAnalogProjectionMatrix(TimeFrameIndex start_time_index,
-                                    TimeFrameIndex end_time_index,
                                     float y_min,
                                     float y_max);
 
@@ -179,18 +173,18 @@ glm::mat4 validateMatrix(glm::mat4 const & matrix,
 
 /**
  * @brief Create standard time-series Projection matrix
- * 
- * Maps time range to X and viewport range to Y.
+ *
+ * Maps world X range to NDC X and viewport range to NDC Y.
  * Includes validation to prevent invalid matrices.
- * 
- * @param start_time Start of visible time range
- * @param end_time End of visible time range
+ *
+ * @param x_min Left X boundary in world coordinates
+ * @param x_max Right X boundary in world coordinates
  * @param y_min Bottom of viewport
  * @param y_max Top of viewport
  * @return Orthographic projection matrix
  */
-[[nodiscard]] glm::mat4 createProjectionMatrix(TimeFrameIndex start_time,
-                                               TimeFrameIndex end_time,
+[[nodiscard]] glm::mat4 createProjectionMatrix(float x_min,
+                                               float x_max,
                                                float y_min,
                                                float y_max);
 

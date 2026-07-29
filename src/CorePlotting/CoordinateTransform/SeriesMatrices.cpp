@@ -142,38 +142,15 @@ glm::mat4 getAnalogProjectionMatrix(float x_min,
     return validateMatrix(Projection, "AnalogProjection");
 }
 
-glm::mat4 getAnalogProjectionMatrix(TimeFrameIndex start_time_index,
-                                    TimeFrameIndex end_time_index,
-                                    float y_min,
-                                    float y_max) {
-    return getAnalogProjectionMatrix(
-            static_cast<float>(start_time_index.getValue()),
-            static_cast<float>(end_time_index.getValue()),
-            y_min,
-            y_max);
-}
-
 // ============================================================================
 // LayoutTransform-based API
 // ============================================================================
 
-glm::mat4 createProjectionMatrix(TimeFrameIndex start_time,
-                                 TimeFrameIndex end_time,
+glm::mat4 createProjectionMatrix(float x_min,
+                                 float x_max,
                                  float y_min,
                                  float y_max) {
-    float left = static_cast<float>(start_time.getValue());
-    float right = static_cast<float>(end_time.getValue());
-    float bottom = y_min;
-    float top = y_max;
-
-    // Validate and fix parameters
-    validateOrthoParams(left, right, bottom, top, "Projection");
-
-    // Create orthographic projection matrix
-    glm::mat4 Projection = glm::ortho(left, right, bottom, top);
-
-    // Final validation
-    return validateMatrix(Projection, "Projection");
+    return getAnalogProjectionMatrix(x_min, x_max, y_min, y_max);
 }
 
 }// namespace CorePlotting

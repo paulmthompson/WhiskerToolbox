@@ -50,8 +50,8 @@ protected:
     void paintGL() override;
 
 private:  
-    // 1\. View State: Manages Zoom/Pan and Time Window  
-    CorePlotting::TimeSeriesViewState \_view\_state;
+    // 1. View State: Manages zoom/pan and time window (ViewStateData in DataViewerState)
+    CorePlotting::ViewStateData _view_state;
 
     // 2\. Layout Engine: Calculates vertical positioning  
     CorePlotting::LayoutEngine \_layout\_engine;
@@ -238,7 +238,7 @@ For complex interactions like drawing intervals, delegate to CorePlotting::Inter
 # **7\. Checklist for New Widgets**
 
 * \[ \] **Data Storage**: Does the widget own the data, or reference a DataManager? (Ideally reference).  
-* \[ \] **View State**: Are you using TimeSeriesViewState for X-axis scrolling?  
+* \[ \] **View State**: Are you using `ViewStateData` (`x_min`/`x_max` as master `TimeFrameIndex`) for X-axis scrolling?  
 * \[ \] **Layout**: Are you using StackedLayoutStrategy (vertical channels) or RowLayoutStrategy (raster plots)?  
 * \[ \] **Mappers**: Are you using TimeSeriesMapper (absolute time) or RasterMapper (relative time)?  
 * \[ \] **Hit Testing**: Are you passing the RenderableScene to SceneHitTester for clicks?

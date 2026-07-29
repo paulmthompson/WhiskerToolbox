@@ -99,12 +99,12 @@ TEST_CASE("ViewMatrix", "[CorePlotting][SeriesMatrices]") {
 
 TEST_CASE("ProjectionMatrix", "[CorePlotting][SeriesMatrices]") {
     SECTION("Valid time range creates ortho matrix") {
-        TimeFrameIndex start(0);
-        TimeFrameIndex end(1000);
+        float x_min = 0.0f;
+        float x_max = 1000.0f;
         float y_min = -10.0f;
         float y_max = 10.0f;
-        
-        glm::mat4 P = getAnalogProjectionMatrix(start, end, y_min, y_max);
+
+        glm::mat4 P = getAnalogProjectionMatrix(x_min, x_max, y_min, y_max);
         
         // Should create valid orthographic projection
         REQUIRE(std::isfinite(P[0][0]));
@@ -114,12 +114,12 @@ TEST_CASE("ProjectionMatrix", "[CorePlotting][SeriesMatrices]") {
     }
     
     SECTION("Invalid parameters corrected gracefully") {
-        TimeFrameIndex start(100);
-        TimeFrameIndex end(100);  // Same as start (invalid)
+        float x_min = 100.0f;
+        float x_max = 100.0f;// Same as start (invalid)
         float y_min = 5.0f;
-        float y_max = -5.0f;  // Inverted (invalid)
-        
-        glm::mat4 P = getAnalogProjectionMatrix(start, end, y_min, y_max);
+        float y_max = -5.0f;// Inverted (invalid)
+
+        glm::mat4 P = getAnalogProjectionMatrix(x_min, x_max, y_min, y_max);
         
         // Should still produce valid matrix (with corrections)
         for (int i = 0; i < 4; ++i) {
@@ -186,10 +186,7 @@ TEST_CASE("createViewMatrix", "[CorePlotting][SeriesMatrices]") {
 
 TEST_CASE("createProjectionMatrix", "[CorePlotting][SeriesMatrices]") {
     SECTION("Valid parameters create ortho matrix") {
-        TimeFrameIndex start(0);
-        TimeFrameIndex end(1000);
-        
-        glm::mat4 P = createProjectionMatrix(start, end, -1.0f, 1.0f);
+        glm::mat4 P = createProjectionMatrix(0.0f, 1000.0f, -1.0f, 1.0f);
         
         // Check matrix is valid
         for (int i = 0; i < 4; ++i) {
