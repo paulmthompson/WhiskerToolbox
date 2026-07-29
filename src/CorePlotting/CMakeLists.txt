@@ -46,7 +46,6 @@ set(COREPLOTTING_SOURCES
     CoordinateTransform/TimeRange.hpp
     CoordinateTransform/TimeAxisCoordinates.hpp
     CoordinateTransform/TimeAxisCoordinates.cpp
-    CoordinateTransform/TimeFrameAdapters.hpp
     CoordinateTransform/SeriesCoordinateQuery.hpp
     CoordinateTransform/SeriesCoordinateQuery.cpp
     CoordinateTransform/SeriesMatrices.hpp
