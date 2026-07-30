@@ -9,7 +9,32 @@
 #include <iomanip>
 #include <iostream>
 #include <map>
+#include <numeric>
 #include <sstream>
+
+namespace {
+
+/**
+ * @brief Attach an identity TimeFrame so stored indices map to matching ClockTicks.
+ *
+ * CSV persistence stores TimeFrameIndex values; callers may use view() after load.
+ */
+void assignIdentityTimeFrameForStoredEvents(DigitalEventSeries & series) {
+    if (series.size() == 0) {
+        return;
+    }
+
+    int64_t max_index = 0;
+    for (std::size_t i = 0; i < series.size(); ++i) {
+        max_index = std::max(max_index, series.getStoredEvent(i).getValue());
+    }
+
+    std::vector<int> times(static_cast<std::size_t>(max_index + 1));
+    std::iota(times.begin(), times.end(), 0);
+    series.setTimeFrame(std::make_shared<TimeFrame>(times));
+}
+
+}// namespace
 
 std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventLoaderOptions const & options) {
     std::vector<std::shared_ptr<DigitalEventSeries>> result;
@@ -62,8 +87,8 @@ std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventLoaderOptions cons
 
         // Validate we have enough columns
         int const required_columns = std::max(options.event_column,
-                                        has_identifier_column ? options.identifier_column : -1) +
-                               1;
+                                              has_identifier_column ? options.identifier_column : -1) +
+                                     1;
         if (static_cast<int>(tokens.size()) < required_columns) {
             std::cerr << "Warning: Line has insufficient columns (expected at least "
                       << required_columns << ", got " << tokens.size() << "): " << line << std::endl;
@@ -110,6 +135,7 @@ std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventLoaderOptions cons
         for (auto const & [identifier, events]: events_by_identifier) {
             if (!events.empty()) {
                 auto series = std::make_shared<DigitalEventSeries>(events);
+                assignIdentityTimeFrameForStoredEvents(*series);
                 result.push_back(series);
                 std::cout << "Created event series '" << options.base_name << "_" << identifier
                           << "' with " << events.size() << " events" << std::endl;
@@ -122,6 +148,7 @@ std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventLoaderOptions cons
         // Single column case: create one series
         if (!single_events.empty()) {
             auto series = std::make_shared<DigitalEventSeries>(single_events);
+            assignIdentityTimeFrameForStoredEvents(*series);
             result.push_back(series);
             std::cout << "Created event series '" << options.base_name
                       << "' with " << single_events.size() << " events" << std::endl;
@@ -146,8 +173,8 @@ bool save(DigitalEventSeries const * event_data, CSVEventSaverOptions const & op
 
         out << std::fixed << std::setprecision(opts.precision);
 
-        for (auto const & event: event_data->view()) {
-            out << event.time().getValue() << opts.line_delim;
+        for (std::size_t i = 0; i < event_data->size(); ++i) {
+            out << event_data->getStoredEvent(i).getValue() << opts.line_delim;
         }
         return out.good();
     });

@@ -135,10 +135,9 @@ TEST_CASE("SaveData round-trips DigitalEventSeries through CSV",
     REQUIRE(loaded.size() == 3);
 
     // Verify all original event times are present
-    auto view = loaded.view();
     std::vector<int64_t> loaded_times;
-    for (auto const & event: view) {
-        loaded_times.push_back(event.time().getValue());
+    for (std::size_t i = 0; i < loaded.size(); ++i) {
+        loaded_times.push_back(loaded.getStoredEvent(i).getValue());
     }
     std::sort(loaded_times.begin(), loaded_times.end());
 

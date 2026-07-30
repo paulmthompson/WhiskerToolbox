@@ -201,7 +201,7 @@ template<std::ranges::input_range R>
  * Each element check is O(1) average due to hash set lookup.
  */
 template<std::ranges::input_range R>
-    requires EntityElement<std::ranges::range_value_t<R>>
+    requires EntityIdElement<std::ranges::range_value_t<R>>
 [[nodiscard]] constexpr auto filterByEntityIds(
         R && range,
         std::unordered_set<EntityId> const & entity_ids) {
@@ -222,7 +222,7 @@ template<std::ranges::input_range R>
  * @return A lazy view of elements with the specified EntityId
  */
 template<std::ranges::input_range R>
-    requires EntityElement<std::ranges::range_value_t<R>>
+    requires EntityIdElement<std::ranges::range_value_t<R>>
 [[nodiscard]] constexpr auto filterByEntityId(
         R && range,
         EntityId entity_id) {
@@ -452,7 +452,7 @@ template<std::ranges::input_range R>
  * @return A lazy view of EntityId values
  */
 template<std::ranges::input_range R>
-    requires EntityElement<std::ranges::range_value_t<R>>
+    requires EntityIdElement<std::ranges::range_value_t<R>>
 [[nodiscard]] constexpr auto extractEntityIds(R && range) {
     return std::forward<R>(range) | std::views::transform([](auto const & elem) {
                return elem.id();
@@ -469,7 +469,7 @@ template<std::ranges::input_range R>
  * @return std::unordered_set<EntityId> containing all unique EntityIds
  */
 template<std::ranges::input_range R>
-    requires EntityElement<std::ranges::range_value_t<R>>
+    requires EntityIdElement<std::ranges::range_value_t<R>>
 [[nodiscard]] std::unordered_set<EntityId> uniqueEntityIds(R && range) {
     std::unordered_set<EntityId> result;
     for (auto const & elem: range) {

@@ -196,7 +196,7 @@ PSTHPlotOpenGLWidget::HistogramExportBundle PSTHPlotOpenGLWidget::collectHistogr
             ClockTicks const alignment_time = gathered.alignmentTimeAt(trial_idx);
 
             for (auto const & event_with_id: trial_view->view()) {
-                ClockTicks const event_time_abs = time_frame->getTimeAtIndex(event_with_id.event_time);
+                ClockTicks const event_time_abs = event_with_id.event_time;
                 auto const relative_time = static_cast<double>((event_time_abs - alignment_time.getValue()).getValue());
 
                 if (relative_time < -half_window || relative_time >= half_window) {
@@ -499,11 +499,7 @@ void PSTHPlotOpenGLWidget::rebuildScene() {
 
             // Iterate over events in this trial view
             for (auto const & event_with_id: trial_view->view()) {
-                // Get event time as TimeFrameIndex
-                TimeFrameIndex const event_time_idx = event_with_id.event_time;
-
-                // Convert event time index to absolute time
-                ClockTicks const event_time_abs = time_frame->getTimeAtIndex(event_time_idx);
+                ClockTicks const event_time_abs = event_with_id.event_time;
 
                 // Calculate relative time (normalized by alignment event)
                 // This gives us the time relative to the alignment point (t=0)

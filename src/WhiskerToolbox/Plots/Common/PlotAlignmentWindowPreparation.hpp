@@ -173,7 +173,7 @@ toIntervalEventPoint(AlignmentPoint point) noexcept {
     }
 
     for (auto const & event: events.view()) {
-        times.push_back(time_frame->getTimeAtIndex(event.time()));
+        times.push_back(event.time());
     }
     return times;
 }
@@ -268,14 +268,8 @@ toIntervalEventPoint(AlignmentPoint point) noexcept {
     std::vector<TimeFrameIndex> kept_events;
     kept_events.reserve(kept_indices.size());
 
-    size_t index = 0;
-    size_t kept_pos = 0;
-    for (auto const & event: source->view()) {
-        if (kept_pos < kept_indices.size() && index == kept_indices[kept_pos]) {
-            kept_events.push_back(event.time());
-            ++kept_pos;
-        }
-        ++index;
+    for (size_t const index: kept_indices) {
+        kept_events.push_back(source->getStoredEvent(index));
     }
 
     auto filtered = std::make_shared<DigitalEventSeries>(std::move(kept_events));
@@ -362,7 +356,7 @@ toIntervalEventPoint(AlignmentPoint point) noexcept {
         std::throw_with_nested(std::runtime_error("createWindowsAroundEvents: no TimeFrame"));
     }
     for (auto const & event: alignment_events->view()) {
-        ClockTicks const alignment_time = alignment_time_frame->getTimeAtIndex(event.time());
+        ClockTicks const alignment_time = event.time();
         intervals.push_back(physicalWindowToInterval(
                 alignment_time,
                 pre_window,

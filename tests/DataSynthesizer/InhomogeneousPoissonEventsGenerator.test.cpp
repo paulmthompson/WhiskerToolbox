@@ -64,9 +64,10 @@ TEST_CASE("InhomogeneousPoissonEvents produces events within range",
                             R"({"rate_signal_key": "rate", "seed": 42})");
 
     REQUIRE(des->size() > 0);
-    for (auto event: des->view()) {
-        REQUIRE(event.time().getValue() >= 0);
-        REQUIRE(event.time().getValue() < 1000);
+    for (std::size_t i = 0; i < des->size(); ++i) {
+        auto const event_time = des->getStoredEvent(i).getValue();
+        REQUIRE(event_time >= 0);
+        REQUIRE(event_time < 1000);
     }
 }
 
@@ -77,9 +78,10 @@ TEST_CASE("InhomogeneousPoissonEvents events are sorted",
                             R"({"rate_signal_key": "rate", "seed": 42})");
 
     int64_t prev = -1;
-    for (auto event: des->view()) {
-        REQUIRE(event.time().getValue() > prev);
-        prev = event.time().getValue();
+    for (std::size_t i = 0; i < des->size(); ++i) {
+        auto const event_time = des->getStoredEvent(i).getValue();
+        REQUIRE(event_time > prev);
+        prev = event_time;
     }
 }
 
@@ -92,10 +94,8 @@ TEST_CASE("InhomogeneousPoissonEvents is deterministic with same seed",
                              R"({"rate_signal_key": "rate", "seed": 123})");
 
     REQUIRE(des1->size() == des2->size());
-    auto v1 = des1->view();
-    auto v2 = des2->view();
-    for (size_t i = 0; i < des1->size(); ++i) {
-        REQUIRE(v1[i].time() == v2[i].time());
+    for (std::size_t i = 0; i < des1->size(); ++i) {
+        REQUIRE(des1->getStoredEvent(i) == des2->getStoredEvent(i));
     }
 }
 
@@ -109,10 +109,8 @@ TEST_CASE("InhomogeneousPoissonEvents different seeds produce different output",
 
     bool differs = (des1->size() != des2->size());
     if (!differs) {
-        auto v1 = des1->view();
-        auto v2 = des2->view();
-        for (size_t i = 0; i < des1->size(); ++i) {
-            if (v1[i].time() != v2[i].time()) {
+        for (std::size_t i = 0; i < des1->size(); ++i) {
+            if (des1->getStoredEvent(i) != des2->getStoredEvent(i)) {
                 differs = true;
                 break;
             }
@@ -161,8 +159,8 @@ TEST_CASE("InhomogeneousPoissonEvents concentrates events in high-rate regions",
 
     // All events should be in the second half [500, 999]
     REQUIRE(des->size() > 0);
-    for (auto event: des->view()) {
-        REQUIRE(event.time().getValue() >= 500);
+    for (std::size_t i = 0; i < des->size(); ++i) {
+        REQUIRE(des->getStoredEvent(i).getValue() >= 500);
     }
 }
 

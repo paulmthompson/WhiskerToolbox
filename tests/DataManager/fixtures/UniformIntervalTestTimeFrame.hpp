@@ -3,13 +3,14 @@
 
 /**
  * @file UniformIntervalTestTimeFrame.hpp
- * @brief Shared identity TimeFrame helpers for DigitalIntervalSeries tests
+ * @brief Shared identity TimeFrame helpers for digital time-series tests
  *
  * Provides a uniform mapping TimeFrameIndex @f$i@f$ → ClockTicks @f$i@f$ so tests
  * can assert on @c view() results in clock-tick space while constructing data in
  * index space.
  */
 
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/ClockTicks.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -56,6 +57,21 @@ inline void assignUniformIntervalTestTimeFrame(
 
 inline void assignUniformIntervalTestTimeFrame(
         std::shared_ptr<DigitalIntervalSeries> const & series,
+        std::size_t frame_count = k_default_frame_count) {
+    if (series) {
+        assignUniformIntervalTestTimeFrame(*series, frame_count);
+    }
+}
+
+/// Attach a uniform identity TimeFrame so @c DigitalEventSeries::view() is valid.
+inline void assignUniformIntervalTestTimeFrame(
+        DigitalEventSeries & series,
+        std::size_t frame_count = k_default_frame_count) {
+    series.setTimeFrame(uniformIntervalTestTimeFrame(frame_count));
+}
+
+inline void assignUniformIntervalTestTimeFrame(
+        std::shared_ptr<DigitalEventSeries> const & series,
         std::size_t frame_count = k_default_frame_count) {
     if (series) {
         assignUniformIntervalTestTimeFrame(*series, frame_count);

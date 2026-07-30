@@ -6,11 +6,10 @@
 #include "transforms/AnalogTimeSeries/Analog_Event_Threshold/analog_event_threshold.hpp"
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
-#include "TimeFrame/StrongTimeTypes.hpp"
 
 #include <catch2/catch_test_macros.hpp>
-#include <catch2/matchers/catch_matchers_range_equals.hpp>
 
+#include <cstddef>
 #include <memory>
 #include <span>
 #include <vector>
@@ -48,13 +47,10 @@ inline ThresholdParams toThresholdParams(Case const& tc) {
 }
 
 inline void requireEventTimes(DigitalEventSeries const& events, std::span<int const> expected_times) {
-    std::vector<TimeFrameIndex> expected;
-    expected.reserve(expected_times.size());
-    for (int t : expected_times) {
-        expected.emplace_back(t);
+    REQUIRE(events.size() == expected_times.size());
+    for (std::size_t i = 0; i < expected_times.size(); ++i) {
+        REQUIRE(events.getStoredEvent(i).getValue() == expected_times[static_cast<std::size_t>(i)]);
     }
-    REQUIRE_THAT(events.view() | std::views::transform([](auto const& e) { return e.time(); }),
-                 Catch::Matchers::RangeEquals(expected));
 }
 
 } // namespace analog_event_threshold_test

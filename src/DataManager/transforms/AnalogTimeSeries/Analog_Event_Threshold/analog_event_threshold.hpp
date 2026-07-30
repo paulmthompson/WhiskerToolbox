@@ -42,7 +42,7 @@ std::shared_ptr<DigitalEventSeries> event_threshold(
 std::shared_ptr<DigitalEventSeries> event_threshold(
         AnalogTimeSeries const * analog_time_series,
         ThresholdParams const & thresholdParams,
-        ProgressCallback progressCallback);
+        const ProgressCallback& progressCallback);
 
 ///////////////////////////////////////////////////////////////////////////////
 

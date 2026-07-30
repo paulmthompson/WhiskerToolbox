@@ -148,11 +148,11 @@ float applyRangeReductionToOutput(
 
         } else if constexpr (std::is_same_v<T, DigitalEventSeries>) {
             // Materialize events into a vector and apply reduction.
-            std::vector<EventWithId> elements;
+            std::vector<ClockTicksWithId> elements;
             for (auto const & e: ptr->view()) {
                 elements.push_back(e);
             }
-            std::span<EventWithId const> const span{elements};
+            std::span<ClockTicksWithId const> const span{elements};
             std::any const input_any{span};
 
             std::any const params_to_use = reduction.params.has_value()
@@ -161,7 +161,7 @@ float applyRangeReductionToOutput(
 
             std::any const result = registry.executeErased(
                     reduction.reduction_name,
-                    typeid(EventWithId),
+                    typeid(ClockTicksWithId),
                     input_any,
                     params_to_use);
             return castReductionResult(result);

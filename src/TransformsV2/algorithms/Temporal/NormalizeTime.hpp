@@ -135,6 +135,19 @@ struct NormalizeTimeParamsV2 {
 }
 
 /**
+ * @brief Normalize a ClockTicks value to float (V2 - uses bound params)
+ *
+ * @param time Input clock-tick time to normalize
+ * @param params Parameters with alignment_time bound from store
+ * @return float The normalized time (time - alignment_time)
+ */
+[[nodiscard]] inline float normalizeClockTicksValueV2(
+        ClockTicks const & time,
+        NormalizeTimeParamsV2 const & params) {
+    return static_cast<float>(time.getValue() - params.alignment_time);
+}
+
+/**
  * @brief Normalize event time to float value (V2 - uses bound params)
  *
  * Convenience function for EventWithId that extracts time and normalizes.
@@ -145,6 +158,21 @@ struct NormalizeTimeParamsV2 {
  */
 [[nodiscard]] inline float normalizeEventTimeValueV2(
         EventWithId const & event,
+        NormalizeTimeParamsV2 const & params) {
+    return static_cast<float>(event.time().getValue() - params.alignment_time);
+}
+
+/**
+ * @brief Normalize clock-tick event time to float value (V2 - uses bound params)
+ *
+ * Convenience function for ClockTicksWithId that extracts time and normalizes.
+ *
+ * @param event Input event with absolute clock-tick time
+ * @param params Parameters with alignment_time bound from store
+ * @return float The normalized time (event.time() - alignment_time)
+ */
+[[nodiscard]] inline float normalizeClockTicksWithIdValueV2(
+        ClockTicksWithId const & event,
         NormalizeTimeParamsV2 const & params) {
     return static_cast<float>(event.time().getValue() - params.alignment_time);
 }

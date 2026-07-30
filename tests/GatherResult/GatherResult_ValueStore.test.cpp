@@ -133,6 +133,17 @@ std::string requireStoreJson(PipelineValueStore const & store, std::string const
     return *value;
 }
 
+/**
+ * @brief Build a pipeline that normalizes ClockTicksWithId event times via store bindings.
+ */
+TransformPipeline makeNormalizeClockTicksPipeline() {
+    TransformPipeline pipeline;
+    auto step = PipelineStep("NormalizeClockTicksValueV2", NormalizeTimeParamsV2{});
+    step.param_bindings = {{"alignment_time", "alignment_time"}};
+    pipeline.addStep(step);
+    return pipeline;
+}
+
 }// anonymous namespace
 
 // =============================================================================
@@ -265,11 +276,19 @@ TEST_CASE("NormalizeTimeParamsV2 - basic functionality", "[NormalizeTimeParamsV2
         CHECK_THAT(norm_time, WithinAbs(25.0f, 0.001f));
     }
 
-    SECTION("Event transform with params") {
+    SECTION("Clock-tick transform with params") {
         NormalizeTimeParamsV2 const params{.alignment_time = 50};
 
-        EventWithId const event{TimeFrameIndex{75}, EntityId{1}};
-        float norm_time = normalizeEventTimeValueV2(event, params);
+        ClockTicks const time{75};
+        float norm_time = normalizeClockTicksValueV2(time, params);
+        CHECK_THAT(norm_time, WithinAbs(25.0f, 0.001f));
+    }
+
+    SECTION("Clock-tick event transform with params") {
+        NormalizeTimeParamsV2 const params{.alignment_time = 50};
+
+        ClockTicksWithId const event{ClockTicks{75}, EntityId{1}};
+        float norm_time = normalizeClockTicksWithIdValueV2(event, params);
         CHECK_THAT(norm_time, WithinAbs(25.0f, 0.001f));
     }
 }
@@ -327,7 +346,7 @@ TEST_CASE("NormalizeTimeParamsV2 - parameter binding", "[NormalizeTimeParamsV2][
 TEST_CASE("bindValueProjectionV2 - basic usage", "[TransformPipeline][ValueStore][Phase3]") {
     V2TestFixture const fixture;
 
-    SECTION("Create factory from pipeline") {
+    SECTION("Create factory from pipeline (legacy EventWithId path)") {
         // Build pipeline with param bindings
         TransformPipeline pipeline;
 
@@ -348,6 +367,20 @@ TEST_CASE("bindValueProjectionV2 - basic usage", "[TransformPipeline][ValueStore
 
         // Test projection
         EventWithId const event{TimeFrameIndex{125}, EntityId{1}};
+        float norm_time = projection(event);
+        CHECK_THAT(norm_time, WithinAbs(25.0f, 0.001f));
+    }
+
+    SECTION("Create factory from pipeline (ClockTicksWithId gather path)") {
+        auto pipeline = makeNormalizeClockTicksPipeline();
+        auto factory = bindValueProjectionV2<ClockTicksWithId, float>(pipeline);
+
+        PipelineValueStore store;
+        store.set("alignment_time", int64_t{100});
+
+        auto projection = factory(store);
+
+        ClockTicksWithId const event{ClockTicks{125}, EntityId{1}};
         float norm_time = projection(event);
         CHECK_THAT(norm_time, WithinAbs(25.0f, 0.001f));
     }
@@ -402,14 +435,10 @@ TEST_CASE("GatherResult - project", "[GatherResult][ValueStore][Phase3]") {
     auto result = gather(events, intervals);
 
     SECTION("project creates per-trial projections") {
-        // Create pipeline with bindings
-        // Use NormalizeTimeValueV2 since bindValueProjectionV2 extracts .time() from EventWithId
-        TransformPipeline pipeline;
-        auto step = PipelineStep("NormalizeTimeValueV2", NormalizeTimeParamsV2{});
-        step.param_bindings = {{"alignment_time", "alignment_time"}};
-        pipeline.addStep(step);
+        // Create pipeline with bindings for gathered clock-tick events
+        auto pipeline = makeNormalizeClockTicksPipeline();
 
-        auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
+        auto factory = bindValueProjectionV2<ClockTicksWithId, float>(pipeline);
         auto projections = projectGatherRows(result, factory);
 
         REQUIRE(projections.size() == 3);
@@ -452,10 +481,10 @@ TEST_CASE("GatherResult extension - reduce and sort rows",
 
     auto result = gather(events, intervals);
 
-    ReducerFactoryV2<EventWithId, float> const first_latency_factory =
-            [](PipelineValueStore const & store) -> ReducerFn<EventWithId, float> {
+    ReducerFactoryV2<ClockTicksWithId, float> const first_latency_factory =
+            [](PipelineValueStore const & store) -> ReducerFn<ClockTicksWithId, float> {
         auto const alignment = store.getInt("alignment_time").value();
-        return [alignment](std::span<EventWithId const> events) -> float {
+        return [alignment](std::span<ClockTicksWithId const> events) -> float {
             if (events.empty()) {
                 return NAN;
             }
@@ -530,14 +559,10 @@ TEST_CASE("GatherResult - V2 raster plot workflow", "[GatherResult][ValueStore][
     auto raster = gather(spikes, trials);
     REQUIRE(raster.size() == 3);
 
-    // Build pipeline for time normalization using V2 pattern
-    // Use NormalizeTimeValueV2 since bindValueProjectionV2 extracts .time() from EventWithId
-    TransformPipeline pipeline;
-    auto step = PipelineStep("NormalizeTimeValueV2", NormalizeTimeParamsV2{});
-    step.param_bindings = {{"alignment_time", "alignment_time"}};
-    pipeline.addStep(step);
+    // Build pipeline for time normalization using V2 pattern (clock-tick gathered events)
+    auto pipeline = makeNormalizeClockTicksPipeline();
 
-    auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
+    auto factory = bindValueProjectionV2<ClockTicksWithId, float>(pipeline);
     auto projections = projectGatherRows(raster, factory);
 
     SECTION("Verify normalized times for raster plot") {
@@ -719,13 +744,10 @@ TEST_CASE("Prepared event windows with time normalization", "[GatherResult][Valu
 
     REQUIRE(raster.size() == 3);
 
-    // Build pipeline for normalization
-    TransformPipeline pipeline;
-    auto step = PipelineStep("NormalizeTimeValueV2", NormalizeTimeParamsV2{});
-    step.param_bindings = {{"alignment_time", "alignment_time"}};
-    pipeline.addStep(step);
+    // Build pipeline for normalization (clock-tick gathered events)
+    auto pipeline = makeNormalizeClockTicksPipeline();
 
-    auto factory = bindValueProjectionV2<EventWithId, float>(pipeline);
+    auto factory = bindValueProjectionV2<ClockTicksWithId, float>(pipeline);
     auto projections = projectGatherRows(raster, factory);
 
     SECTION("Each trial uses correct alignment time") {

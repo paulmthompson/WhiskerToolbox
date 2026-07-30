@@ -20,12 +20,14 @@ void EventTableModel::setEvents(DigitalEventSeries const * event_data) {
     _event_data_source = event_data;
 
     if (event_data) {
+        auto time_frame = event_data->getTimeFrame();
+
         for (auto const & event_with_id: event_data->view()) {
             QString group_name = "No Group";
-            EntityId eid = event_with_id.id();
+            EntityId const eid = event_with_id.id();
 
             if (_group_manager && eid != EntityId(0)) {
-                int group_id = _group_manager->getEntityGroup(eid);
+                int const group_id = _group_manager->getEntityGroup(eid);
                 if (group_id != -1) {
                     auto group = _group_manager->getGroup(group_id);
                     if (group.has_value()) {
@@ -34,8 +36,10 @@ void EventTableModel::setEvents(DigitalEventSeries const * event_data) {
                 }
             }
 
+            TimeFrameIndex const event_index =
+                    time_frame->getIndexAtTime(event_with_id.time(), false);
             _all_data.push_back(EventTableRow{
-                    .time = event_with_id.time(),
+                    .time = event_index,
                     .entity_id = eid,
                     .group_name = group_name});
         }

@@ -18,6 +18,7 @@
 #include "DigitalTimeSeries/storage/ViewDigitalEventStorage.hpp"
 #include "TimeFrame/ClockTicks.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "fixtures/UniformIntervalTestTimeFrame.hpp"
 
 #include <ranges>
 #include <unordered_set>
@@ -453,14 +454,15 @@ TEST_CASE("DigitalEventSeries with new storage", "[DigitalEventSeries]") {
         std::vector<TimeFrameIndex> events = {
                 TimeFrameIndex{30}, TimeFrameIndex{10}, TimeFrameIndex{20}};
         DigitalEventSeries series{events};
+        uniform_interval_test::assignUniformIntervalTestTimeFrame(series);
 
         CHECK(series.size() == 3);
 
         // Events should be sorted
         auto const & sorted = series.view();
-        CHECK(sorted[0].time() == TimeFrameIndex{10});
-        CHECK(sorted[1].time() == TimeFrameIndex{20});
-        CHECK(sorted[2].time() == TimeFrameIndex{30});
+        CHECK(sorted[0].time() == ClockTicks{10});
+        CHECK(sorted[1].time() == ClockTicks{20});
+        CHECK(sorted[2].time() == ClockTicks{30});
     }
 
     SECTION("Add and remove events") {
@@ -488,14 +490,15 @@ TEST_CASE("DigitalEventSeries with new storage", "[DigitalEventSeries]") {
     SECTION("Iterator access") {
         std::vector<TimeFrameIndex> events = {TimeFrameIndex{10}, TimeFrameIndex{20}};
         DigitalEventSeries series{events};
+        uniform_interval_test::assignUniformIntervalTestTimeFrame(series);
 
         auto view = series.view();
         CHECK(view.size() == 2);
 
         auto it = view.begin();
-        CHECK((*it).event_time == TimeFrameIndex{10});
+        CHECK((*it).event_time == ClockTicks{10});
         ++it;
-        CHECK((*it).event_time == TimeFrameIndex{20});
+        CHECK((*it).event_time == ClockTicks{20});
     }
 }
 
@@ -504,6 +507,7 @@ TEST_CASE("DigitalEventSeries view creation", "[DigitalEventSeries][view]") {
             TimeFrameIndex{10}, TimeFrameIndex{20}, TimeFrameIndex{30},
             TimeFrameIndex{40}, TimeFrameIndex{50}};
     auto source = std::make_shared<DigitalEventSeries>(events);
+    uniform_interval_test::assignUniformIntervalTestTimeFrame(source);
 
     SECTION("Create view by time range") {
         auto view_series = DigitalEventSeries::createView(source, TimeFrameIndex{15}, TimeFrameIndex{35});
@@ -512,15 +516,15 @@ TEST_CASE("DigitalEventSeries view creation", "[DigitalEventSeries][view]") {
         CHECK(view_series->isView());
 
         auto const & event_vec = view_series->view();
-        REQUIRE(event_vec[0].time() == TimeFrameIndex{20});
-        REQUIRE(event_vec[1].time() == TimeFrameIndex{30});
+        REQUIRE(event_vec[0].time() == ClockTicks{20});
+        REQUIRE(event_vec[1].time() == ClockTicks{30});
     }
 }
 
 TEST_CASE("DigitalEventSeries view creation with DataManager", "[DigitalEventSeries][view][entity]") {
     // Use DataManager to get proper EntityId registration
     auto data_manager = std::make_unique<DataManager>();
-    auto time_frame = std::make_shared<TimeFrame>(std::vector<int>{0, 10, 20, 30, 40, 50, 60});
+    auto time_frame = uniform_interval_test::uniformIntervalTestTimeFrame();
     data_manager->setTime(TimeKey("test_time"), time_frame);
 
     data_manager->setData<DigitalEventSeries>("source_events", TimeKey("test_time"));
@@ -555,9 +559,9 @@ TEST_CASE("DigitalEventSeries view creation with DataManager", "[DigitalEventSer
 
         // Verify the events are the right ones
         auto const & event_vec = view_series->view();
-        REQUIRE(event_vec[0].time() == TimeFrameIndex{10});
-        REQUIRE(event_vec[1].time() == TimeFrameIndex{30});
-        REQUIRE(event_vec[2].time() == TimeFrameIndex{50});
+        REQUIRE(event_vec[0].time() == ClockTicks{10});
+        REQUIRE(event_vec[1].time() == ClockTicks{30});
+        REQUIRE(event_vec[2].time() == ClockTicks{50});
     }
 }
 
@@ -565,6 +569,7 @@ TEST_CASE("DigitalEventSeries materialization", "[DigitalEventSeries][materializ
     std::vector<TimeFrameIndex> events = {
             TimeFrameIndex{10}, TimeFrameIndex{20}, TimeFrameIndex{30}};
     auto source = std::make_shared<DigitalEventSeries>(events);
+    uniform_interval_test::assignUniformIntervalTestTimeFrame(source);
 
     // Create view
     auto view_series = DigitalEventSeries::createView(source, TimeFrameIndex{15}, TimeFrameIndex{35});
@@ -579,8 +584,8 @@ TEST_CASE("DigitalEventSeries materialization", "[DigitalEventSeries][materializ
     // Content should be the same
     REQUIRE(materialized->size() == 2);
     auto const & events_mat = materialized->view();
-    REQUIRE(events_mat[0].time() == TimeFrameIndex{20});
-    REQUIRE(events_mat[1].time() == TimeFrameIndex{30});
+    REQUIRE(events_mat[0].time() == ClockTicks{20});
+    REQUIRE(events_mat[1].time() == ClockTicks{30});
 
     // Should now be mutable
     materialized->addEvent(TimeFrameIndex{25});
@@ -598,16 +603,19 @@ TEST_CASE("DigitalEventSeries lazy creation", "[DigitalEventSeries][lazy]") {
                     return EventWithId{TimeFrameIndex{e.event_time.getValue() * 2}, e.entity_id};
                 });
 
-    auto lazy_series = DigitalEventSeries::createFromView(view, data.size());
+    auto lazy_series = DigitalEventSeries::createFromView(
+            view,
+            data.size(),
+            uniform_interval_test::uniformIntervalTestTimeFrame());
 
     CHECK(lazy_series->size() == 3);
     CHECK(lazy_series->isLazy());
 
     // Access computes on demand
     auto const & events = lazy_series->view();
-    CHECK(events[0].time() == TimeFrameIndex{20});// 10 * 2
-    CHECK(events[1].time() == TimeFrameIndex{40});// 20 * 2
-    CHECK(events[2].time() == TimeFrameIndex{60});// 30 * 2
+    CHECK(events[0].time() == ClockTicks{20});// 10 * 2
+    CHECK(events[1].time() == ClockTicks{40});// 20 * 2
+    CHECK(events[2].time() == ClockTicks{60});// 30 * 2
 
     // Materialize lazy series
     auto materialized = lazy_series->materialize();
@@ -629,11 +637,15 @@ struct OwningBackend {
         std::vector<TimeFrameIndex> events = {
                 TimeFrameIndex{10}, TimeFrameIndex{20}, TimeFrameIndex{30},
                 TimeFrameIndex{40}, TimeFrameIndex{50}};
-        return std::make_shared<DigitalEventSeries>(events);
+        auto series = std::make_shared<DigitalEventSeries>(events);
+        uniform_interval_test::assignUniformIntervalTestTimeFrame(series);
+        return series;
     }
 
     static std::shared_ptr<DigitalEventSeries> createEmpty() {
-        return std::make_shared<DigitalEventSeries>();
+        auto series = std::make_shared<DigitalEventSeries>();
+        uniform_interval_test::assignUniformIntervalTestTimeFrame(series);
+        return series;
     }
 
     static constexpr bool is_mutable = true;
@@ -652,6 +664,7 @@ struct ViewBackend {
 
     static std::shared_ptr<DigitalEventSeries> createEmpty() {
         auto source = std::make_shared<DigitalEventSeries>();
+        uniform_interval_test::assignUniformIntervalTestTimeFrame(source);
         return DigitalEventSeries::createView(source, TimeFrameIndex{0}, TimeFrameIndex{100});
     }
 
@@ -677,7 +690,10 @@ struct LazyBackend {
                         return e;
                     });
 
-        return DigitalEventSeries::createFromView(view, data.size());
+        return DigitalEventSeries::createFromView(
+                view,
+                data.size(),
+                uniform_interval_test::uniformIntervalTestTimeFrame());
     }
 
     static std::shared_ptr<DigitalEventSeries> createEmpty() {
@@ -685,7 +701,10 @@ struct LazyBackend {
         auto view = empty_data | std::views::transform([](EventWithId const & e) {
                         return e;
                     });
-        return DigitalEventSeries::createFromView(view, 0);
+        return DigitalEventSeries::createFromView(
+                view,
+                0,
+                uniform_interval_test::uniformIntervalTestTimeFrame());
     }
 
     static constexpr bool is_mutable = false;
@@ -704,7 +723,7 @@ TEST_CASE("DigitalEventSeries::view() - Owning backend", "[DigitalEventSeries][i
     SECTION("view() returns correct EventWithId objects") {
         auto v = series->view();
 
-        std::vector<TimeFrameIndex> times;
+        std::vector<ClockTicks> times;
         std::vector<EntityId> ids;
 
         for (auto event: v) {
@@ -715,11 +734,11 @@ TEST_CASE("DigitalEventSeries::view() - Owning backend", "[DigitalEventSeries][i
         }
 
         REQUIRE(times.size() == 5);
-        CHECK(times[0] == TimeFrameIndex{10});
-        CHECK(times[1] == TimeFrameIndex{20});
-        CHECK(times[2] == TimeFrameIndex{30});
-        CHECK(times[3] == TimeFrameIndex{40});
-        CHECK(times[4] == TimeFrameIndex{50});
+        CHECK(times[0] == ClockTicks{10});
+        CHECK(times[1] == ClockTicks{20});
+        CHECK(times[2] == ClockTicks{30});
+        CHECK(times[3] == ClockTicks{40});
+        CHECK(times[4] == ClockTicks{50});
     }
 
     SECTION("view() supports range algorithms") {
@@ -730,10 +749,10 @@ TEST_CASE("DigitalEventSeries::view() - Owning backend", "[DigitalEventSeries][i
 
         // Find
         auto found = std::ranges::find_if(v, [](auto const & e) {
-            return e.time() == TimeFrameIndex{30};
+            return e.time() == ClockTicks{30};
         });
         REQUIRE(found != v.end());
-        CHECK((*found).time() == TimeFrameIndex{30});
+        CHECK((*found).time() == ClockTicks{30});
     }
 
     SECTION("view() is lazy (no allocation on creation)") {
@@ -741,7 +760,7 @@ TEST_CASE("DigitalEventSeries::view() - Owning backend", "[DigitalEventSeries][i
         auto v = series->view();
         // Only iterating should access storage
         auto first = *v.begin();
-        CHECK(first.time() == TimeFrameIndex{10});
+        CHECK(first.time() == ClockTicks{10});
     }
 }
 
@@ -751,14 +770,14 @@ TEST_CASE("DigitalEventSeries::view() - View backend", "[DigitalEventSeries][int
     SECTION("view() returns correct EventWithId objects") {
         auto v = series->view();
 
-        std::vector<TimeFrameIndex> times;
+        std::vector<ClockTicks> times;
         for (auto event: v) {
             times.push_back(event.time());
         }
 
         REQUIRE(times.size() == 5);
-        CHECK(times[0] == TimeFrameIndex{10});
-        CHECK(times[4] == TimeFrameIndex{50});
+        CHECK(times[0] == ClockTicks{10});
+        CHECK(times[4] == ClockTicks{50});
     }
 
     SECTION("view() supports range algorithms") {
@@ -773,14 +792,14 @@ TEST_CASE("DigitalEventSeries::view() - Lazy backend", "[DigitalEventSeries][int
     SECTION("view() returns correct EventWithId objects") {
         auto v = series->view();
 
-        std::vector<TimeFrameIndex> times;
+        std::vector<ClockTicks> times;
         for (auto event: v) {
             times.push_back(event.time());
         }
 
         REQUIRE(times.size() == 5);
-        CHECK(times[0] == TimeFrameIndex{10});
-        CHECK(times[4] == TimeFrameIndex{50});
+        CHECK(times[0] == ClockTicks{10});
+        CHECK(times[4] == ClockTicks{50});
     }
 
     SECTION("view() computes elements on demand") {
@@ -789,7 +808,7 @@ TEST_CASE("DigitalEventSeries::view() - Lazy backend", "[DigitalEventSeries][int
         // Access specific element without iterating all
         auto it = v.begin();
         std::advance(it, 2);
-        CHECK((*it).time() == TimeFrameIndex{30});
+        CHECK((*it).time() == ClockTicks{30});
     }
 }
 
@@ -882,9 +901,9 @@ TEST_CASE("DigitalEventSeries mutation - Owning backend", "[DigitalEventSeries][
         // Should be sorted
         auto v = series->view();
         auto it = v.begin();
-        CHECK((*it).time() == TimeFrameIndex{50});
+        CHECK((*it).time() == ClockTicks{50});
         ++it;
-        CHECK((*it).time() == TimeFrameIndex{100});
+        CHECK((*it).time() == ClockTicks{100});
     }
 
     SECTION("removeEvent works") {
@@ -997,7 +1016,7 @@ TEST_CASE("DigitalEventSeries::materialize() - All backends", "[DigitalEventSeri
         // All should have same events
         auto check_events = [](std::shared_ptr<DigitalEventSeries> s) {
             auto v = s->view();
-            std::vector<TimeFrameIndex> times;
+            std::vector<ClockTicks> times;
             for (auto e: v) { times.push_back(e.time()); }
             return times;
         };
@@ -1019,7 +1038,7 @@ TEST_CASE("DigitalEventSeries TimeFrame integration", "[DigitalEventSeries][inte
     auto time_frame = std::make_shared<TimeFrame>(std::vector<int>{0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100});
 
     SECTION("setTimeFrame and getTimeFrame") {
-        auto series = OwningBackend::create();
+        auto series = std::make_shared<DigitalEventSeries>();
         CHECK(series->getTimeFrame() == nullptr);
 
         series->setTimeFrame(time_frame);
@@ -1156,12 +1175,12 @@ TEST_CASE("DigitalEventSeries::createView by time range", "[DigitalEventSeries][
     SECTION("View reflects source data") {
         auto view_series = DigitalEventSeries::createView(source, TimeFrameIndex{0}, TimeFrameIndex{100});
 
-        std::vector<TimeFrameIndex> view_times;
+        std::vector<ClockTicks> view_times;
         for (auto e: view_series->view()) {
             view_times.push_back(e.time());
         }
 
-        std::vector<TimeFrameIndex> source_times;
+        std::vector<ClockTicks> source_times;
         for (auto e: source->view()) {
             source_times.push_back(e.time());
         }
@@ -1178,7 +1197,7 @@ TEST_CASE("DigitalEventSeries::createView by time range", "[DigitalEventSeries][
 TEST_CASE("DigitalEventSeries::createView by EntityIds", "[DigitalEventSeries][interface][factory][entity]") {
     // Need to use DataManager for proper entity IDs
     auto data_manager = std::make_unique<DataManager>();
-    auto time_frame = std::make_shared<TimeFrame>(std::vector<int>{0, 10, 20, 30, 40, 50, 60});
+    auto time_frame = uniform_interval_test::uniformIntervalTestTimeFrame();
     data_manager->setTime(TimeKey("test"), time_frame);
 
     data_manager->setData<DigitalEventSeries>("events", TimeKey("test"));
@@ -1199,13 +1218,13 @@ TEST_CASE("DigitalEventSeries::createView by EntityIds", "[DigitalEventSeries][i
         CHECK(view_series->isView());
         CHECK(view_series->size() == 2);
 
-        std::vector<TimeFrameIndex> times;
+        std::vector<ClockTicks> times;
         for (auto e: view_series->view()) {
             times.push_back(e.time());
         }
 
-        CHECK(times[0] == TimeFrameIndex{20});
-        CHECK(times[1] == TimeFrameIndex{40});
+        CHECK(times[0] == ClockTicks{20});
+        CHECK(times[1] == ClockTicks{40});
     }
 }
 
@@ -1219,8 +1238,8 @@ TEST_CASE("DigitalEventSeries legacy interface", "[DigitalEventSeries][interface
         auto const & vec = series->view();
 
         REQUIRE(series->size() == 5);
-        CHECK(vec[0].time() == TimeFrameIndex{10});
-        CHECK(vec[4].time() == TimeFrameIndex{50});
+        CHECK(vec[0].time() == ClockTicks{10});
+        CHECK(vec[4].time() == ClockTicks{50});
     }
 
     SECTION("getEventSeries returns sorted vector - View") {
@@ -1228,7 +1247,7 @@ TEST_CASE("DigitalEventSeries legacy interface", "[DigitalEventSeries][interface
         auto const & vec = series->view();
 
         REQUIRE(series->size() == 5);
-        CHECK(vec[0].time() == TimeFrameIndex{10});
+        CHECK(vec[0].time() == ClockTicks{10});
     }
 
     SECTION("getEventSeries returns sorted vector - Lazy") {
@@ -1236,6 +1255,6 @@ TEST_CASE("DigitalEventSeries legacy interface", "[DigitalEventSeries][interface
         auto const & vec = series->view();
 
         REQUIRE(series->size() == 5);
-        REQUIRE(vec[0].time() == TimeFrameIndex{10});
+        REQUIRE(vec[0].time() == ClockTicks{10});
     }
 }

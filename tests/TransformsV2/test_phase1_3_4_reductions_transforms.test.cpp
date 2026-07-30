@@ -34,6 +34,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "DigitalTimeSeries/EventWithId.hpp"
 #include "Tensors/RowDescriptor.hpp"
 #include "Tensors/TensorData.hpp"
 #include "Tensors/storage/LazyColumnTensorStorage.hpp"
@@ -216,23 +217,23 @@ TEST_CASE("IntervalCount — single interval", "[Phase1.3][IntervalReductions]")
 // =============================================================================
 
 TEST_CASE("EventPresence — returns 1 when events exist", "[Phase1.3][EventPresence]") {
-    std::vector<EventWithId> data{
-            EventWithId{TimeFrameIndex(10), EntityId{0}},
-            EventWithId{TimeFrameIndex(20), EntityId{0}}};
-    std::span<EventWithId const> const span{data};
+    std::vector<ClockTicksWithId> data{
+            ClockTicksWithId{ClockTicks{10}, EntityId{0}},
+            ClockTicksWithId{ClockTicks{20}, EntityId{0}}};
+    std::span<ClockTicksWithId const> const span{data};
 
     CHECK(eventPresence(span) == 1);
 }
 
 TEST_CASE("EventPresence — returns 0 when no events", "[Phase1.3][EventPresence]") {
-    std::span<EventWithId const> const empty;
+    std::span<ClockTicksWithId const> const empty;
     CHECK(eventPresence(empty) == 0);
 }
 
 TEST_CASE("EventPresence — single event returns 1", "[Phase1.3][EventPresence]") {
-    std::vector<EventWithId> data{
-            EventWithId{TimeFrameIndex(5), EntityId{0}}};
-    std::span<EventWithId const> const span{data};
+    std::vector<ClockTicksWithId> data{
+            ClockTicksWithId{ClockTicks{5}, EntityId{0}}};
+    std::span<ClockTicksWithId const> const span{data};
 
     CHECK(eventPresence(span) == 1);
 }

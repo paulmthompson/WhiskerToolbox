@@ -6,6 +6,7 @@
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "TimeFrame/ClockTicks.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/interval_data.hpp"
 
@@ -45,9 +46,9 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Maximum Within Intervals", "[tra
         REQUIRE(result->size() == 2);
 
         // First interval [0, 200] -> max at index 200 (value 5.0)
-        REQUIRE(events[0].time() == TimeFrameIndex(200.0));
+        REQUIRE(events[0].time() == ClockTicks(200.0));
         // Second interval [300, 500] -> max at index 300 (value 3.0)
-        REQUIRE(events[1].time() == TimeFrameIndex(300.0));
+        REQUIRE(events[1].time() == ClockTicks(300.0));
     }
 
     SECTION("Maximum detection with progress callback") {
@@ -77,8 +78,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Maximum Within Intervals", "[tra
 
         auto const & events = result->view();
         REQUIRE(result->size() == 2);
-        REQUIRE(events[0].time() == TimeFrameIndex(10.0));// max in [0,20] is at index 10
-        REQUIRE(events[1].time() == TimeFrameIndex(30.0));// max in [30,40] is at index 30
+        REQUIRE(events[0].time() == ClockTicks(10.0));// max in [0,20] is at index 10
+        REQUIRE(events[1].time() == ClockTicks(30.0));// max in [30,40] is at index 30
     }
 
     SECTION("Multiple intervals with varying peak locations") {
@@ -102,9 +103,9 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Maximum Within Intervals", "[tra
 
         auto const & events = result->view();
         REQUIRE(result->size() == 3);
-        REQUIRE(events[0].time() == TimeFrameIndex(10.0));// max in [0,20] is 9.0 at index 10
-        REQUIRE(events[1].time() == TimeFrameIndex(40.0));// max in [30,50] is 8.0 at index 40
-        REQUIRE(events[2].time() == TimeFrameIndex(70.0));// max in [60,80] is 10.0 at index 70
+        REQUIRE(events[0].time() == ClockTicks(10.0));// max in [0,20] is 9.0 at index 10
+        REQUIRE(events[1].time() == ClockTicks(40.0));// max in [30,50] is 8.0 at index 40
+        REQUIRE(events[2].time() == ClockTicks(70.0));// max in [60,80] is 10.0 at index 70
     }
 }
 
@@ -132,8 +133,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Minimum Within Intervals", "[tra
 
         auto const & events = result->view();
         REQUIRE(result->size() == 2);
-        REQUIRE(events[0].time() == TimeFrameIndex(200.0));// min in [0,200] is 1.0 at index 200
-        REQUIRE(events[1].time() == TimeFrameIndex(400.0));// min in [300,500] is 2.0 at index 400
+        REQUIRE(events[0].time() == ClockTicks(200.0));// min in [0,200] is 1.0 at index 200
+        REQUIRE(events[1].time() == ClockTicks(400.0));// min in [300,500] is 2.0 at index 400
     }
 
     SECTION("Minimum with negative values") {
@@ -157,8 +158,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Minimum Within Intervals", "[tra
 
         auto const & events = result->view();
         REQUIRE(result->size() == 2);
-        REQUIRE(events[0].time() == TimeFrameIndex(10.0));// min in [0,20] is -5.0 at index 10
-        REQUIRE(events[1].time() == TimeFrameIndex(30.0));// min in [20,40] is -3.0 at index 30
+        REQUIRE(events[0].time() == ClockTicks(10.0));// min in [0,20] is -5.0 at index 10
+        REQUIRE(events[1].time() == ClockTicks(30.0));// min in [20,40] is -3.0 at index 30
     }
 }
 
@@ -188,11 +189,11 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Between Interval Starts", "[tran
         REQUIRE(result->size() == 3);
 
         // Between start 0 and start 20 (indices 0-19): max is 2.0 at index 10
-        REQUIRE(events[0].time() == TimeFrameIndex(10.0));
+        REQUIRE(events[0].time() == ClockTicks(10.0));
         // Between start 20 and start 40 (indices 20-39): max is 8.0 at index 30
-        REQUIRE(events[1].time() == TimeFrameIndex(30.0));
+        REQUIRE(events[1].time() == ClockTicks(30.0));
         // Last interval: from start 40 to end 50 (indices 40-50): max is 10.0 at index 40
-        REQUIRE(events[2].time() == TimeFrameIndex(40.0));
+        REQUIRE(events[2].time() == ClockTicks(40.0));
     }
 
     SECTION("Minimum between interval starts") {
@@ -218,11 +219,11 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Between Interval Starts", "[tran
         REQUIRE(result->size() == 3);
 
         // Between 0 and 200: min is 2.0 at index 100
-        REQUIRE(events[0].time() == TimeFrameIndex(100.0));
+        REQUIRE(events[0].time() == ClockTicks(100.0));
         // Between 200 and 400: min is 3.0 at index 300
-        REQUIRE(events[1].time() == TimeFrameIndex(300.0));
+        REQUIRE(events[1].time() == ClockTicks(300.0));
         // Last from 400 to 500: min is 1.0 at index 500
-        REQUIRE(events[2].time() == TimeFrameIndex(500.0));
+        REQUIRE(events[2].time() == ClockTicks(500.0));
     }
 }
 
@@ -293,7 +294,7 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Edge Cases", "[transforms][v2][a
 
         auto const & events = result->view();
         REQUIRE(result->size() == 1);
-        REQUIRE(events[0].time() == TimeFrameIndex(10.0));
+        REQUIRE(events[0].time() == ClockTicks(10.0));
     }
 
     SECTION("Multiple intervals, some without data") {
@@ -318,8 +319,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Edge Cases", "[transforms][v2][a
         auto const & events = result->view();
         // Only intervals with data should produce events
         REQUIRE(result->size() == 2);
-        REQUIRE(events[0].time() == TimeFrameIndex(10.0));// max in [0,10] is 5.0 at index 10
-        REQUIRE(events[1].time() == TimeFrameIndex(20.0));// max in [10,20] is 8.0 at index 20
+        REQUIRE(events[0].time() == ClockTicks(10.0));// max in [0,10] is 5.0 at index 10
+        REQUIRE(events[1].time() == ClockTicks(20.0));// max in [10,20] is 8.0 at index 20
     }
 }
 
@@ -348,9 +349,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - TimeFrame Conversion", "[transfo
         auto const & events = result->view();
         REQUIRE(result->size() == 1);
 
-        // The interval [1, 3] in interval indices corresponds to analog indices with timeframe conversion
-        // Values at those indices: 5.0 and 2.0, max is 5.0 at index 1
-        REQUIRE(events[0].time() == TimeFrameIndex(1.0));
+        // Interval [1, 3] maps to analog indices [1, 2]; max 5.0 at analog index 1 -> ClockTicks(10)
+        REQUIRE(events[0].time() == ClockTicks(10.0));
     }
 
     SECTION("Same timeframe - no conversion needed") {
@@ -374,7 +374,7 @@ TEST_CASE("TransformsV2: Analog Interval Peak - TimeFrame Conversion", "[transfo
 
         auto const & events = result->view();
         REQUIRE(result->size() == 1);
-        REQUIRE(events[0].time() == TimeFrameIndex(1.0));// max in [0,2] is 9.0 at index 1
+        REQUIRE(events[0].time() == ClockTicks(10.0));// max in [0,2] is 9.0 at analog index 1
     }
 }
 
@@ -416,8 +416,8 @@ TEST_CASE("TransformsV2: Analog Interval Peak - Operation Interface", "[transfor
 
         auto const & events = result->view();
         REQUIRE(result->size() == 2);
-        REQUIRE(events.front().time() == TimeFrameIndex(10.0));
-        REQUIRE(events[1].time() == TimeFrameIndex(30.0));
+        REQUIRE(events.front().time() == ClockTicks(10.0));
+        REQUIRE(events[1].time() == ClockTicks(30.0));
     }
 
     SECTION("execute with progress callback") {

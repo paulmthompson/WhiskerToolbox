@@ -156,8 +156,7 @@ namespace {
             std::throw_with_nested(std::runtime_error("binningEstimate: no TimeFrame"));
         }
         for (auto const & event: trial_view->view()) {
-            
-            double const event_abs = time_frame->getTimeAtIndex(event.time()).getValue();
+            double const event_abs = static_cast<double>(event.time().getValue());
 
             double const relative_time = event_abs - alignment_time;
 
@@ -228,7 +227,7 @@ namespace {
         }
 
         for (auto const & event: trial_view->view()) {
-            double const event_abs = time_frame->getTimeAtIndex(event.time()).getValue();
+            double const event_abs = static_cast<double>(event.time().getValue());
 
             double const relative_time = event_abs - alignment_time;
 

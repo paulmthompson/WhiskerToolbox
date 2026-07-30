@@ -2,6 +2,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/EventWithId.hpp"
+#include "TimeFrame/ClockTicks.hpp"
 #include "algorithms/Temporal/NormalizeTime.hpp"
 #include "extension/ParameterBinding.hpp"
 #include "core/ElementRegistry.hpp"
@@ -122,6 +123,59 @@ auto const register_normalize_event_time_value_v2 = RegisterTransform<
                 .supports_cancellation = false});
 
 /**
+ * @brief Register NormalizeClockTicksValueV2 transform (value projection with bindings)
+ *
+ * Normalizes a ClockTicks value extracted from ClockTicksWithId via bindValueProjectionV2.
+ */
+auto const register_normalize_clock_ticks_value_v2 = RegisterTransform<
+        ClockTicks,
+        float,
+        NormalizeTimeParamsV2>(
+        "NormalizeClockTicksValueV2",
+        normalizeClockTicksValueV2,
+        TransformMetadata{
+                .name = "NormalizeClockTicksValueV2",
+                .description = "Compute normalized clock-tick time offset as float (V2 - uses param bindings)",
+                .category = "Temporal",
+                .input_type = typeid(ClockTicks),
+                .output_type = typeid(float),
+                .params_type = typeid(NormalizeTimeParamsV2),
+                .lineage_type = TransformLineageType::None,
+                .input_type_name = "ClockTicks",
+                .output_type_name = "float",
+                .params_type_name = "NormalizeTimeParamsV2",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = false});
+
+/**
+ * @brief Register NormalizeClockTicksWithIdValueV2 transform (value projection with bindings)
+ *
+ * Convenience transform for ClockTicksWithId that extracts clock-tick time and normalizes.
+ * Prefer NormalizeClockTicksValueV2 with bindValueProjectionV2<ClockTicksWithId, float>().
+ */
+auto const register_normalize_clock_ticks_with_id_value_v2 = RegisterTransform<
+        ClockTicksWithId,
+        float,
+        NormalizeTimeParamsV2>(
+        "NormalizeClockTicksWithIdValueV2",
+        normalizeClockTicksWithIdValueV2,
+        TransformMetadata{
+                .name = "NormalizeClockTicksWithIdValueV2",
+                .description = "Compute normalized clock-tick event time as float (V2 - uses param bindings)",
+                .category = "Temporal",
+                .input_type = typeid(ClockTicksWithId),
+                .output_type = typeid(float),
+                .params_type = typeid(NormalizeTimeParamsV2),
+                .lineage_type = TransformLineageType::None,
+                .input_type_name = "ClockTicksWithId",
+                .output_type_name = "float",
+                .params_type_name = "NormalizeTimeParamsV2",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = false});
+
+/**
  * @brief Register NormalizeSampleTimeValueV2 transform (value projection with bindings)
  *
  * V2 version for normalizing analog sample times.
@@ -166,6 +220,8 @@ void registerTemporalTransforms() {
     // Force instantiation of V2 registrations (param bindings)
     (void)register_normalize_time_value_v2;
     (void)register_normalize_event_time_value_v2;
+    (void)register_normalize_clock_ticks_value_v2;
+    (void)register_normalize_clock_ticks_with_id_value_v2;
     (void)register_normalize_sample_time_value_v2;
     (void)register_binding_applicator_v2;
 }

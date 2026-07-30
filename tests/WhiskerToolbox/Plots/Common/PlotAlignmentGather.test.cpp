@@ -724,13 +724,15 @@ TEST_CASE("gatherWithIntervalAlignment - cross-timeframe interval and source",
         for (auto const & event: result[0]->view()) {
             trial_0.push_back(event.time().getValue());
         }
-        CHECK(trial_0 == std::vector<int64_t>{50, 60, 70});
+        // Source indices {50, 60, 70} at 10 samples/index -> ClockTicks {500, 600, 700}
+        CHECK(trial_0 == std::vector<int64_t>{500, 600, 700});
 
         std::vector<int64_t> trial_1;
         for (auto const & event: result[1]->view()) {
             trial_1.push_back(event.time().getValue());
         }
-        CHECK(trial_1 == std::vector<int64_t>{170, 180, 190});
+        // Source indices {170, 180, 190} at 10 samples/index -> ClockTicks {1700, 1800, 1900}
+        CHECK(trial_1 == std::vector<int64_t>{1700, 1800, 1900});
     }
 }
 

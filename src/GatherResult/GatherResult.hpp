@@ -139,7 +139,7 @@ concept CopyableTimeRangeDataType = requires(
 /**
  * @brief Concept for types that define an element_type alias
  *
- * Data containers that expose their element type (e.g., EventWithId for DigitalEventSeries)
+ * Data containers that expose their element type (e.g., ClockTicksWithId for DigitalEventSeries)
  * satisfy this concept. This enables type-safe pipeline binding.
  */
 template<typename T>
@@ -151,7 +151,7 @@ concept HasElementType = requires {
  * @brief Helper to get element type from a data container
  *
  * Provides compile-time mapping from container types to their element types.
- * - DigitalEventSeries → EventWithId
+ * - DigitalEventSeries → ClockTicksWithId
  * - AnalogTimeSeries → AnalogTimeSeries::TimeValuePoint
  * - Types with element_type alias → T::element_type
  */
@@ -161,10 +161,10 @@ struct element_type_of {
     using type = typename T::element_type;
 };
 
-// Specialization: DigitalEventSeries uses EventWithId
+// Specialization: DigitalEventSeries uses ClockTicksWithId
 template<>
 struct element_type_of<DigitalEventSeries> {
-    using type = EventWithId;
+    using type = ClockTicksWithId;
 };
 
 // Specialization: AnalogTimeSeries uses TimeValuePoint
@@ -253,7 +253,7 @@ public:
     using const_iterator = typename std::vector<value_type>::const_iterator;
     using size_type = typename std::vector<value_type>::size_type;
 
-    /// Element type yielded by view iteration (e.g., EventWithId for DigitalEventSeries)
+    /// Element type yielded by view iteration (e.g., ClockTicksWithId for DigitalEventSeries)
     using element_type = Neuralyzer::Gather::element_type_of_t<T>;
 
     // ========== Constructors ==========
@@ -903,13 +903,7 @@ private:
                "GatherResult::alignmentTimeAt: row index must be in range");
 
         auto const alignment_view = _alignment_points->view();
-        auto const alignment_time = alignment_view[original_idx].time();
-        auto const alignment_tf = _alignment_points->getTimeFrame();
-
-        if (!alignment_tf) {
-            throw std::runtime_error("GatherResult::_alignmentTimeFromCompanionEvent: alignment time frame must be non-null");
-        }
-        return alignment_tf->getTimeAtIndex(alignment_time);
+        return alignment_view[original_idx].time();
     }
 
     std::shared_ptr<T> _source;

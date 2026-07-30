@@ -41,12 +41,12 @@ std::shared_ptr<DigitalIntervalSeries> eventToInterval(
 
     ctx.reportProgress(0);
 
-    for (auto const & event: input.view()) {
+    for (std::size_t i = 0; i < total_events; ++i) {
         if (processed % 100 == 0 && ctx.shouldCancel()) {
             return DigitalIntervalSeries::createOverlapping({}, time_frame);
         }
 
-        TimeFrameIndex const event_index = event.time();
+        TimeFrameIndex const event_index = input.getStoredEvent(i);
         intervals.push_back(TimeFrameInterval{
                 event_index - TimeFrameIndex{pre},
                 event_index + TimeFrameIndex{post}});

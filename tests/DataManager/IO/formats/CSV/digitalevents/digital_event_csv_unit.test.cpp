@@ -68,14 +68,11 @@ protected:
     }
 
     static void verifyEventEquality(DigitalEventSeries const & original,
-                             DigitalEventSeries const & loaded) {
+                                    DigitalEventSeries const & loaded) {
         REQUIRE(loaded.size() == original.size());
 
-        auto orig_view = original.view();
-        auto loaded_view = loaded.view();
-
-        for (size_t i = 0; i < original.size(); ++i) {
-            REQUIRE(loaded_view[i].time().getValue() == orig_view[i].time().getValue());
+        for (std::size_t i = 0; i < original.size(); ++i) {
+            REQUIRE(loaded.getStoredEvent(i) == original.getStoredEvent(i));
         }
     }
 

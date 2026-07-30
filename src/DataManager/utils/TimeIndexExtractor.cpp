@@ -9,8 +9,8 @@
 
 #include "TimeIndexExtractor.hpp"
 
-#include "DataManager/DataManager.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Lines/Line_Data.hpp"
@@ -40,8 +40,8 @@ TimeIndexResult extractTimeIndices(
             }
             std::vector<TimeFrameIndex> times;
             times.reserve(events->size());
-            for (auto const & ew : events->view()) {
-                times.push_back(ew.event_time);
+            for (size_t i = 0; i < events->size(); ++i) {
+                times.push_back(events->getStoredEvent(i));
             }
             return {std::move(times), events->getTimeFrame()};
         }
@@ -65,7 +65,7 @@ TimeIndexResult extractTimeIndices(
                 return {};
             }
             std::vector<TimeFrameIndex> times;
-            for (auto t : masks->getTimesWithData()) {
+            for (auto t: masks->getTimesWithData()) {
                 times.push_back(t);
             }
             return {std::move(times), masks->getTimeFrame()};
@@ -77,7 +77,7 @@ TimeIndexResult extractTimeIndices(
                 return {};
             }
             std::vector<TimeFrameIndex> times;
-            for (auto t : lines->getTimesWithData()) {
+            for (auto t: lines->getTimesWithData()) {
                 times.push_back(t);
             }
             return {std::move(times), lines->getTimeFrame()};
@@ -89,7 +89,7 @@ TimeIndexResult extractTimeIndices(
                 return {};
             }
             std::vector<TimeFrameIndex> times;
-            for (auto t : points->getTimesWithData()) {
+            for (auto t: points->getTimesWithData()) {
                 times.push_back(t);
             }
             return {std::move(times), points->getTimeFrame()};
@@ -105,5 +105,5 @@ TimeIndexResult extractTimeIndices(
             return {};
     }
 
-    return {}; // unreachable, but silences warnings
+    return {};// unreachable, but silences warnings
 }

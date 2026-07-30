@@ -235,7 +235,7 @@ TEST_CASE("DigitalEventSeriesInspector data manipulation", "[DigitalEventSeriesI
         REQUIRE(events != nullptr);
         REQUIRE(events->size() == 1);
         auto event_view = events->view();
-        REQUIRE(event_view[0].time() == TimeFrameIndex(50));
+        REQUIRE(event_view[0].time() == ClockTicks(50));
     }
 
     SECTION("Remove event button removes event at current time") {
@@ -285,8 +285,8 @@ TEST_CASE("DigitalEventSeriesInspector data manipulation", "[DigitalEventSeriesI
         REQUIRE(events != nullptr);
         REQUIRE(events->size() == 2);
         auto event_view = events->view();
-        REQUIRE(event_view[0].time() == TimeFrameIndex(10));
-        REQUIRE(event_view[1].time() == TimeFrameIndex(30));
+        REQUIRE(event_view[0].time() == ClockTicks(10));
+        REQUIRE(event_view[1].time() == ClockTicks(30));
     }
 
     SECTION("Remove event button does nothing if no event at current time") {
@@ -533,7 +533,7 @@ TEST_CASE("DigitalEventSeriesDataView table model updates on external data chang
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf,true);
 
         // Create event series with initial events
         std::vector<TimeFrameIndex> event_times = {
@@ -565,7 +565,7 @@ TEST_CASE("DigitalEventSeriesDataView table model updates on external data chang
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf,true);
 
         // Create event series with initial events
         std::vector<TimeFrameIndex> event_times = {
@@ -604,7 +604,7 @@ TEST_CASE("DigitalEventSeriesDataView table model updates on external data chang
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf,true);
 
         // Create event series with initial events
         std::vector<TimeFrameIndex> event_times = {
@@ -642,7 +642,7 @@ TEST_CASE("DigitalEventSeriesDataView table model updates on external data chang
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf,true);
 
         // Create event series with initial events
         std::vector<TimeFrameIndex> event_times = {TimeFrameIndex(10)};
@@ -689,7 +689,7 @@ TEST_CASE("DigitalEventSeriesDataView table model updates on external data chang
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf,true);
 
         // Create event series with initial events
         std::vector<TimeFrameIndex> event_times = {
@@ -733,7 +733,7 @@ TEST_CASE("DigitalEventSeriesDataView table model updates on external data chang
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf,true);
 
         // Create two event series
         std::vector<TimeFrameIndex> event_times_1 = {TimeFrameIndex(10), TimeFrameIndex(20)};
@@ -776,7 +776,7 @@ TEST_CASE("DigitalEventSeriesDataView table model updates on external data chang
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf,true);
 
         // Create event series with events at specific indices
         std::vector<TimeFrameIndex> event_times = {

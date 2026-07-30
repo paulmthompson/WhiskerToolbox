@@ -20,7 +20,7 @@ std::optional<EntityId> getEntityIdAtLocalIndex(
         std::size_t local_index) {
     auto ids_range = data->getEntityIdsAtTime(time);
     std::size_t idx = 0;
-    for (auto const id : ids_range) {
+    for (auto const id: ids_range) {
         if (idx == local_index) {
             return id;
         }
@@ -35,7 +35,7 @@ std::vector<EntityId> collectEntityIdsAtTime(
         std::shared_ptr<T> const & data,
         TimeFrameIndex time) {
     std::vector<EntityId> result;
-    for (auto const id : data->getEntityIdsAtTime(time)) {
+    for (auto const id: data->getEntityIdsAtTime(time)) {
         result.push_back(id);
     }
     return result;
@@ -45,7 +45,7 @@ std::vector<EntityId> collectEntityIdsAtTime(
 template<typename T>
 std::unordered_set<EntityId> extractEntityIdsFromRagged(std::shared_ptr<T> const & data) {
     std::unordered_set<EntityId> result;
-    for (auto const & [time, entity_id, data_ref] : data->flattened_data()) {
+    for (auto const & [time, entity_id, data_ref]: data->flattened_data()) {
         result.insert(entity_id);
     }
     return result;
@@ -56,7 +56,7 @@ template<typename T>
 std::unordered_set<EntityId> extractEntityIdsFromVector(std::shared_ptr<T> const & data) {
     auto const & ids = data->view();
     std::unordered_set<EntityId> result;
-    for (auto const & item : ids) {
+    for (auto const & item: ids) {
         result.insert(item.id());
     }
     return result;
@@ -66,7 +66,7 @@ std::unordered_set<EntityId> extractEntityIdsFromVector(std::shared_ptr<T> const
 template<typename T>
 std::size_t countElementsAtTime(std::shared_ptr<T> const & data, TimeFrameIndex time) {
     std::size_t count = 0;
-    for ([[maybe_unused]] auto const id : data->getEntityIdsAtTime(time)) {
+    for ([[maybe_unused]] auto const id: data->getEntityIdsAtTime(time)) {
         ++count;
     }
     return count;
@@ -115,10 +115,9 @@ std::vector<EntityId> DataManagerEntityDataSource::getEntityIds(
 
         case DM_DataType::DigitalEvent:
             if (auto data = _dm->getData<DigitalEventSeries>(data_key)) {
-                auto const & events = data->view();
-                for (auto const & event : events) {
-                    if (event.time() == time) {
-                        return {event.id()};
+                for (size_t i = 0; i < data->size(); ++i) {
+                    if (data->getStoredEvent(i) == time) {
+                        return {data->getStoredEntityId(i)};
                     }
                 }
             }
@@ -128,7 +127,7 @@ std::vector<EntityId> DataManagerEntityDataSource::getEntityIds(
             if (auto data = _dm->getData<DigitalIntervalSeries>(data_key)) {
                 auto const & intervals = data->view();
                 auto const * timeframe = data->getTimeFrame().get();
-                for (auto const & interval : intervals) {
+                for (auto const & interval: intervals) {
                     TimeFrameIndex const start = timeframe->getIndexAtTime(interval.value().start);
                     TimeFrameIndex const end = timeframe->getIndexAtTime(interval.value().end);
                     if (start <= time &&
@@ -183,10 +182,9 @@ std::vector<EntityId> DataManagerEntityDataSource::getAllEntityIdsAtTime(
         case DM_DataType::DigitalEvent:
             if (auto data = _dm->getData<DigitalEventSeries>(data_key)) {
                 std::vector<EntityId> result;
-                auto const & events = data->view();
-                for (auto const & event : events) {
-                    if (event.time() == time) {
-                        result.push_back(event.id());
+                for (size_t i = 0; i < data->size(); ++i) {
+                    if (data->getStoredEvent(i) == time) {
+                        result.push_back(data->getStoredEntityId(i));
                     }
                 }
                 return result;
@@ -198,7 +196,7 @@ std::vector<EntityId> DataManagerEntityDataSource::getAllEntityIdsAtTime(
                 std::vector<EntityId> result;
                 auto const & intervals = data->view();
                 ClockTicks const time_ticks = data->getTimeFrame()->getTimeAtIndex(time);
-                for (auto const & interval : intervals) {
+                for (auto const & interval: intervals) {
                     if (interval.value().start <= time_ticks &&
                         time_ticks <= interval.value().end) {
                         result.push_back(interval.id());
@@ -312,8 +310,8 @@ std::size_t DataManagerEntityDataSource::getElementCount(
         case DM_DataType::DigitalEvent:
             if (auto data = _dm->getData<DigitalEventSeries>(data_key)) {
                 std::size_t count = 0;
-                for (auto const & event : data->view()) {
-                    if (event.time() == time) {
+                for (size_t i = 0; i < data->size(); ++i) {
+                    if (data->getStoredEvent(i) == time) {
                         ++count;
                     }
                 }
@@ -325,7 +323,7 @@ std::size_t DataManagerEntityDataSource::getElementCount(
             if (auto data = _dm->getData<DigitalIntervalSeries>(data_key)) {
                 ClockTicks const time_ticks = data->getTimeFrame()->getTimeAtIndex(time);
                 std::size_t count = 0;
-                for (auto const & interval : data->view()) {
+                for (auto const & interval: data->view()) {
                     if (interval.value().start <= time_ticks && time_ticks <= interval.value().end) {
                         ++count;
                     }

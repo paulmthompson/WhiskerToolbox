@@ -12,6 +12,9 @@
  */
 
 #include "DigitalTimeSeries/EventWithId.hpp"
+#include "TransformsV2/algorithms/Temporal/NormalizeTime.hpp"
+#include "TransformsV2/algorithms/Temporal/RegisteredTemporalTransforms.hpp"
+#include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/PipelineValueStore/PipelineValueStore.hpp"
 #include "TransformsV2/extension/ValueProjectionTypes.hpp"
 
@@ -431,4 +434,23 @@ TEST_CASE("Value projection workflow - simulated trial analysis", "[ValueProject
             REQUIRE_THAT(t, WithinAbs(0.0f, 0.001f));
         }
     }
+}
+
+TEST_CASE("bindValueProjectionV2 - ClockTicksWithId gather path", "[ValueProjection][TransformPipeline]") {
+    Temporal::registerTemporalTransforms();
+
+    TransformPipeline pipeline;
+    auto step = PipelineStep("NormalizeClockTicksValueV2", NormalizeTimeParamsV2{});
+    step.param_bindings = {{"alignment_time", "alignment_time"}};
+    pipeline.addStep(step);
+
+    auto factory = bindValueProjectionV2<ClockTicksWithId, float>(pipeline);
+
+    PipelineValueStore store;
+    store.set("alignment_time", int64_t{200});
+
+    auto projection = factory(store);
+
+    ClockTicksWithId const event{ClockTicks{250}, EntityId{1}};
+    REQUIRE_THAT(projection(event), WithinAbs(50.0f, 0.001f));
 }

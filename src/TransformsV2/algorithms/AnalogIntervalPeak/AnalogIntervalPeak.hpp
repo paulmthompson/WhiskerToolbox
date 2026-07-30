@@ -69,7 +69,9 @@ struct AnalogIntervalPeakParams {
  * @param analog Analog time series to search for peaks
  * @param params Parameters controlling peak type and search mode
  * @param ctx Compute context for progress reporting and cancellation
- * @return Digital event series with peak timestamps (in interval coordinate system)
+ * @return Digital event series with peak timestamps stored as analog TimeFrameIndex
+ *         values. The implementation attaches the analog TimeFrame (when present) so
+ *         view() resolves ClockTicks correctly; see AnalogIntervalPeak.qmd.
  */
 std::shared_ptr<DigitalEventSeries> analogIntervalPeak(
         DigitalIntervalSeries const & intervals,

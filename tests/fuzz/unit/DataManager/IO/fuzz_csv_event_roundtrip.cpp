@@ -85,12 +85,9 @@ void FuzzCsvEventRoundTrip(std::vector<int> const & event_times) {
     // Compare: same event count
     ASSERT_EQ(loaded.size(), event_data->size());
 
-    // Compare: same event times (integer-based, should match exactly)
-    auto orig_view = event_data->view();
-    auto loaded_view = loaded.view();
-
-    for (size_t i = 0; i < event_data->size(); ++i) {
-        EXPECT_EQ(loaded_view[i].time().getValue(), orig_view[i].time().getValue())
+    // Compare: same stored event indices (CSV round-trips TimeFrameIndex values)
+    for (std::size_t i = 0; i < event_data->size(); ++i) {
+        EXPECT_EQ(loaded.getStoredEvent(i), event_data->getStoredEvent(i))
                 << "Event time mismatch at index " << i;
     }
 
@@ -171,11 +168,8 @@ void FuzzCsvEventRoundTripDelimiter(
     if (delimiter.size() == 1) {
         ASSERT_EQ(loaded.size(), event_data->size());
 
-        auto orig_view = event_data->view();
-        auto loaded_view = loaded.view();
-
-        for (size_t i = 0; i < event_data->size(); ++i) {
-            EXPECT_EQ(loaded_view[i].time().getValue(), orig_view[i].time().getValue())
+        for (std::size_t i = 0; i < event_data->size(); ++i) {
+            EXPECT_EQ(loaded.getStoredEvent(i), event_data->getStoredEvent(i))
                     << "Event time mismatch at index " << i;
         }
     }

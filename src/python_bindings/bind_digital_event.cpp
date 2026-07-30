@@ -3,7 +3,9 @@
 #include <pybind11/stl.h>
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "TimeFrame/ClockTicks.hpp"
 
+#include <cstddef>
 #include <string>
 #include <vector>
 
@@ -32,18 +34,35 @@ void init_digital_event(py::module_ & m) {
 
             // --- Iteration / bulk access ---
             .def("toList", [](DigitalEventSeries const & self) {
-                std::vector<TimeFrameIndex> result;
-                for (auto const & ev : self.view()) {
-                    result.push_back(ev.time());
+                std::vector<ClockTicks> result;
+                result.reserve(self.size());
+                if (auto const time_frame = self.getTimeFrame()) {
+                    for (std::size_t i = 0; i < self.size(); ++i) {
+                        result.push_back(time_frame->getTimeAtIndex(self.getStoredEvent(i)));
+                    }
+                } else {
+                    for (std::size_t i = 0; i < self.size(); ++i) {
+                        result.push_back(ClockTicks(self.getStoredEvent(i).getValue()));
+                    }
                 }
-                return result; }, "Get all event times as a list of TimeFrameIndex")
+                return result; }, "Get all event times as a list of ClockTicks")
 
             .def("toListWithIds", [](DigitalEventSeries const & self) {
                 py::list result;
-                for (auto const & ev : self.view()) {
-                    result.append(py::make_tuple(ev.time(), ev.id()));
+                if (auto const time_frame = self.getTimeFrame()) {
+                    for (std::size_t i = 0; i < self.size(); ++i) {
+                        result.append(py::make_tuple(
+                                time_frame->getTimeAtIndex(self.getStoredEvent(i)),
+                                self.getStoredEntityId(i)));
+                    }
+                } else {
+                    for (std::size_t i = 0; i < self.size(); ++i) {
+                        result.append(py::make_tuple(
+                                ClockTicks(self.getStoredEvent(i).getValue()),
+                                self.getStoredEntityId(i)));
+                    }
                 }
-                return result; }, "Get all events as a list of (TimeFrameIndex, EntityId) tuples")
+                return result; }, "Get all events as a list of (ClockTicks, EntityId) tuples")
 
             // --- TimeFrame ---
             .def("setTimeFrame", &DigitalEventSeries::setTimeFrame, py::arg("time_frame"))

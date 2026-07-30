@@ -60,7 +60,7 @@ namespace RasterMapper {
     float const y_center = layout.y_transform.offset;
 
     return series.view() | std::views::transform([&time_frame, y_center, ref_abs_time](auto const & event_with_id) {
-               ClockTicks abs_time = time_frame.getTimeAtIndex(event_with_id.event_time);
+               ClockTicks abs_time = event_with_id.event_time;
                float relative_time = static_cast<float>(abs_time.getValue() - ref_abs_time);
                return MappedElement{relative_time, y_center, event_with_id.entity_id};
            });
@@ -92,7 +92,7 @@ namespace RasterMapper {
 
     // Single transform that computes abs_time once, then filters and maps
     return series.view() | std::views::transform([&time_frame, y_center, ref_abs_time, window_start, window_end](auto const & event_with_id) -> std::optional<MappedElement> {
-               ClockTicks abs_time = time_frame.getTimeAtIndex(event_with_id.event_time);
+               ClockTicks abs_time = event_with_id.event_time;
                if (abs_time.getValue() < window_start || abs_time.getValue() > window_end) {
                    return std::nullopt;
                }

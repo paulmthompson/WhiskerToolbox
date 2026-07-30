@@ -117,7 +117,7 @@ std::unique_ptr<QuadTree<EntityId>> buildCombinedEventIndex(
     
     for (auto const& [series, layout] : series_layouts) {
         for (auto const& event : series->view()) {
-            float x = static_cast<float>(time_frame.getTimeAtIndex(event.event_time).getValue());
+            float x = static_cast<float>(event.event_time.getValue());
             float y = layout->y_transform.offset;
             tree->insert(x, y, event.entity_id);
         }
@@ -139,7 +139,7 @@ std::unique_ptr<QuadTree<EntityId>> buildStackedEventIndex(
     float y = layout.y_transform.offset;
     
     for (auto const& event : series.view()) {
-        float x = static_cast<float>(time_frame.getTimeAtIndex(event.event_time).getValue());
+        float x = static_cast<float>(event.event_time.getValue());
         tree->insert(x, y, event.entity_id);
     }
     

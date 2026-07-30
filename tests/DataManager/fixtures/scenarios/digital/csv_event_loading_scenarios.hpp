@@ -1,9 +1,9 @@
 #ifndef DIGITAL_EVENT_CSV_LOADING_SCENARIOS_HPP
 #define DIGITAL_EVENT_CSV_LOADING_SCENARIOS_HPP
 
-#include "fixtures/builders/DigitalTimeSeriesBuilder.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
+#include "fixtures/builders/DigitalTimeSeriesBuilder.hpp"
 
 #include <filesystem>
 #include <fstream>
@@ -25,26 +25,26 @@ namespace digital_event_scenarios {
  * @param header_text Header text if write_header is true
  * @return true if write succeeded
  */
-inline bool writeCSVSingleColumn(DigitalEventSeries const* events,
-                                 std::string const& filepath,
-                                 std::string const& delimiter = ",",
+inline bool writeCSVSingleColumn(DigitalEventSeries const * events,
+                                 std::string const & filepath,
+                                 std::string const & delimiter = ",",
                                  bool write_header = true,
-                                 std::string const& header_text = "Event") {
+                                 std::string const & header_text = "Event") {
     std::ofstream file(filepath);
     if (!file.is_open()) {
         return false;
     }
-    
+
     // Write header if requested
     if (write_header) {
         file << header_text << "\n";
     }
-    
+
     // Write data rows
-    for (auto const& event : events->view()) {
-        file << event.time().getValue() << "\n";
+    for (std::size_t i = 0; i < events->size(); ++i) {
+        file << events->getStoredEvent(i).getValue() << "\n";
     }
-    
+
     return file.good();
 }
 
@@ -56,9 +56,9 @@ inline bool writeCSVSingleColumn(DigitalEventSeries const* events,
  * @param delimiter Column delimiter (tab, semicolon, etc.)
  * @return true if write succeeded
  */
-inline bool writeCSVWithDelimiter(DigitalEventSeries const* events,
-                                  std::string const& filepath,
-                                  std::string const& delimiter) {
+inline bool writeCSVWithDelimiter(DigitalEventSeries const * events,
+                                  std::string const & filepath,
+                                  std::string const & delimiter) {
     return writeCSVSingleColumn(events, filepath, delimiter, true, "Event");
 }
 
@@ -70,9 +70,9 @@ inline bool writeCSVWithDelimiter(DigitalEventSeries const* events,
  * @param delimiter Column delimiter
  * @return true if write succeeded
  */
-inline bool writeCSVNoHeader(DigitalEventSeries const* events,
-                             std::string const& filepath,
-                             std::string const& delimiter = ",") {
+inline bool writeCSVNoHeader(DigitalEventSeries const * events,
+                             std::string const & filepath,
+                             std::string const & delimiter = ",") {
     return writeCSVSingleColumn(events, filepath, delimiter, false, "");
 }
 
@@ -89,16 +89,16 @@ inline bool writeCSVNoHeader(DigitalEventSeries const* events,
  * @param write_header Whether to write header row
  * @return true if write succeeded
  */
-inline bool writeCSVWithEventColumn(DigitalEventSeries const* events,
-                                    std::string const& filepath,
+inline bool writeCSVWithEventColumn(DigitalEventSeries const * events,
+                                    std::string const & filepath,
                                     int event_column_index,
-                                    std::string const& delimiter = ",",
+                                    std::string const & delimiter = ",",
                                     bool write_header = true) {
     std::ofstream file(filepath);
     if (!file.is_open()) {
         return false;
     }
-    
+
     // Write header if requested
     if (write_header) {
         for (int i = 0; i < event_column_index; ++i) {
@@ -110,21 +110,21 @@ inline bool writeCSVWithEventColumn(DigitalEventSeries const* events,
         }
         file << "\n";
     }
-    
+
     // Write data rows
     int row_id = 0;
-    for (auto const& event : events->view()) {
-        for (int i = 0; i < event_column_index; ++i) {
+    for (std::size_t i = 0; i < events->size(); ++i) {
+        for (int col = 0; col < event_column_index; ++col) {
             file << row_id << delimiter;
         }
-        file << event.time().getValue();
-        for (int i = event_column_index + 1; i < event_column_index + 2; ++i) {
+        file << events->getStoredEvent(i).getValue();
+        for (int col = event_column_index + 1; col < event_column_index + 2; ++col) {
             file << delimiter << row_id;
         }
         file << "\n";
         ++row_id;
     }
-    
+
     return file.good();
 }
 
@@ -141,27 +141,27 @@ inline bool writeCSVWithEventColumn(DigitalEventSeries const* events,
  * @return true if write succeeded
  */
 inline bool writeCSVWithIdentifiers(
-        std::vector<std::pair<std::string, std::shared_ptr<DigitalEventSeries>>> const& series_list,
-        std::string const& filepath,
-        std::string const& delimiter = ",",
+        std::vector<std::pair<std::string, std::shared_ptr<DigitalEventSeries>>> const & series_list,
+        std::string const & filepath,
+        std::string const & delimiter = ",",
         bool write_header = true) {
     std::ofstream file(filepath);
     if (!file.is_open()) {
         return false;
     }
-    
+
     // Write header if requested
     if (write_header) {
         file << "Event" << delimiter << "Identifier" << "\n";
     }
-    
+
     // Write data rows for all series
-    for (auto const& [identifier, events] : series_list) {
-        for (auto const& event : events->view()) {
-            file << event.time().getValue() << delimiter << identifier << "\n";
+    for (auto const & [identifier, events]: series_list) {
+        for (std::size_t i = 0; i < events->size(); ++i) {
+            file << events->getStoredEvent(i).getValue() << delimiter << identifier << "\n";
         }
     }
-    
+
     return file.good();
 }
 
@@ -176,8 +176,8 @@ inline bool writeCSVWithIdentifiers(
  */
 inline std::shared_ptr<DigitalEventSeries> simple_events() {
     return DigitalEventSeriesBuilder()
-        .withEvents({10, 50, 100, 200, 300})
-        .build();
+            .withEvents({10, 50, 100, 200, 300})
+            .build();
 }
 
 /**
@@ -187,8 +187,8 @@ inline std::shared_ptr<DigitalEventSeries> simple_events() {
  */
 inline std::shared_ptr<DigitalEventSeries> single_event() {
     return DigitalEventSeriesBuilder()
-        .withEvents({100})
-        .build();
+            .withEvents({100})
+            .build();
 }
 
 /**
@@ -199,8 +199,8 @@ inline std::shared_ptr<DigitalEventSeries> single_event() {
  */
 inline std::shared_ptr<DigitalEventSeries> regular_pattern_events() {
     return DigitalEventSeriesBuilder()
-        .withInterval(0, 90, 10)
-        .build();
+            .withInterval(0, 90, 10)
+            .build();
 }
 
 /**
@@ -210,8 +210,8 @@ inline std::shared_ptr<DigitalEventSeries> regular_pattern_events() {
  */
 inline std::shared_ptr<DigitalEventSeries> large_time_events() {
     return DigitalEventSeriesBuilder()
-        .withEvents({1000000, 2000000, 5000000, 10000000})
-        .build();
+            .withEvents({1000000, 2000000, 5000000, 10000000})
+            .build();
 }
 
 /**
@@ -221,8 +221,8 @@ inline std::shared_ptr<DigitalEventSeries> large_time_events() {
  */
 inline std::shared_ptr<DigitalEventSeries> dense_events() {
     return DigitalEventSeriesBuilder()
-        .withInterval(0, 5, 1)
-        .build();
+            .withInterval(0, 5, 1)
+            .build();
 }
 
 /**
@@ -232,8 +232,8 @@ inline std::shared_ptr<DigitalEventSeries> dense_events() {
  */
 inline std::shared_ptr<DigitalEventSeries> sparse_events() {
     return DigitalEventSeriesBuilder()
-        .withEvents({0, 1000, 5000, 10000, 50000})
-        .build();
+            .withEvents({0, 1000, 5000, 10000, 50000})
+            .build();
 }
 
 /**
@@ -243,8 +243,8 @@ inline std::shared_ptr<DigitalEventSeries> sparse_events() {
  */
 inline std::shared_ptr<DigitalEventSeries> many_events() {
     return DigitalEventSeriesBuilder()
-        .withInterval(0, 990, 10)
-        .build();
+            .withInterval(0, 990, 10)
+            .build();
 }
 
 /**
@@ -254,8 +254,8 @@ inline std::shared_ptr<DigitalEventSeries> many_events() {
  */
 inline std::shared_ptr<DigitalEventSeries> events_starting_at_zero() {
     return DigitalEventSeriesBuilder()
-        .withEvents({0, 10, 20, 30})
-        .build();
+            .withEvents({0, 10, 20, 30})
+            .build();
 }
 
 /**
@@ -263,26 +263,24 @@ inline std::shared_ptr<DigitalEventSeries> events_starting_at_zero() {
  * 
  * Returns a vector of (identifier, DigitalEventSeries) pairs
  */
-inline std::vector<std::pair<std::string, std::shared_ptr<DigitalEventSeries>>> 
+inline std::vector<std::pair<std::string, std::shared_ptr<DigitalEventSeries>>>
 multi_series_events() {
     return {
-        {"seriesA", DigitalEventSeriesBuilder().withEvents({10, 20, 30}).build()},
-        {"seriesB", DigitalEventSeriesBuilder().withEvents({15, 25, 35, 45}).build()},
-        {"seriesC", DigitalEventSeriesBuilder().withEvents({5, 50}).build()}
-    };
+            {"seriesA", DigitalEventSeriesBuilder().withEvents({10, 20, 30}).build()},
+            {"seriesB", DigitalEventSeriesBuilder().withEvents({15, 25, 35, 45}).build()},
+            {"seriesC", DigitalEventSeriesBuilder().withEvents({5, 50}).build()}};
 }
 
 /**
  * @brief Create two event series for simple batch loading tests
  */
-inline std::vector<std::pair<std::string, std::shared_ptr<DigitalEventSeries>>> 
+inline std::vector<std::pair<std::string, std::shared_ptr<DigitalEventSeries>>>
 two_series_events() {
     return {
-        {"type1", DigitalEventSeriesBuilder().withEvents({100, 200, 300}).build()},
-        {"type2", DigitalEventSeriesBuilder().withEvents({150, 250, 350, 450}).build()}
-    };
+            {"type1", DigitalEventSeriesBuilder().withEvents({100, 200, 300}).build()},
+            {"type2", DigitalEventSeriesBuilder().withEvents({150, 250, 350, 450}).build()}};
 }
 
-} // namespace digital_event_scenarios
+}// namespace digital_event_scenarios
 
-#endif // DIGITAL_EVENT_CSV_LOADING_SCENARIOS_HPP
+#endif// DIGITAL_EVENT_CSV_LOADING_SCENARIOS_HPP

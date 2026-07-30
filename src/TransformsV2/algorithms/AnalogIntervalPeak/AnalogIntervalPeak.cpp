@@ -125,7 +125,7 @@ std::shared_ptr<DigitalEventSeries> analogIntervalPeak(
         }
         TimeFrameIndex const peak_time_index = **time_iter;
 
-        // Add event at the peak timestamp (in interval series coordinate system)
+        // Peak indices are stored in the analog series coordinate system.
         peak_events.push_back(peak_time_index);
 
         // Report progress
@@ -135,8 +135,19 @@ std::shared_ptr<DigitalEventSeries> analogIntervalPeak(
         }
     }
 
-    // Create the event series
+    // Attach a TimeFrame so view() can resolve stored indices to ClockTicks.
+    //
+    // Peak events are stored as analog TimeFrameIndex values. ElementRegistry
+    // binary propagation would copy input1's (interval) TimeFrame, which is wrong
+    // when the analog and interval series use different time bases. Prefer the
+    // analog TimeFrame; fall back to the interval TimeFrame only when analog has none.
+    // DataManager::setData still owns the long-term TimeFrame assignment in production.
     auto event_series = std::make_shared<DigitalEventSeries>(peak_events);
+    if (auto analog_timeframe = analog.getTimeFrame()) {
+        event_series->setTimeFrame(analog_timeframe);
+    } else if (interval_timeframe) {
+        event_series->setTimeFrame(interval_timeframe);
+    }
 
     if (ctx.progress) {
         ctx.progress(100);

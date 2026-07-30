@@ -257,6 +257,14 @@ template<ClockTimeSeriesElement T>
 }
 
 /**
+ * @brief Concept for elements that expose an EntityId for filtering
+ */
+template<typename T>
+concept EntityIdElement = requires(T const & t) {
+    { t.id() } -> std::convertible_to<EntityId>;
+};
+
+/**
  * @brief Check if an element's EntityId is in a set
  * 
  * @tparam T Element type satisfying EntityElement
@@ -264,7 +272,7 @@ template<ClockTimeSeriesElement T>
  * @param ids Set of EntityIds to check against
  * @return true if element's EntityId is in the set
  */
-template<EntityElement T>
+template<EntityIdElement T>
 [[nodiscard]] bool isInEntitySet(
         T const & elem,
         std::unordered_set<EntityId> const & ids) {

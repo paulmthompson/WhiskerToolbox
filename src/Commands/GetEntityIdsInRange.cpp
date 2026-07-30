@@ -16,9 +16,10 @@ std::unordered_set<EntityId> getEntityIdsInRange(
         TimeFrameIndex start,
         TimeFrameIndex end) {
     std::unordered_set<EntityId> result;
-    for (auto const & event: data.view()) {
-        if (event.time() >= start && event.time() <= end) {
-            result.insert(event.id());
+    for (std::size_t i = 0; i < data.size(); ++i) {
+        TimeFrameIndex const event_time = data.getStoredEvent(i);
+        if (event_time >= start && event_time <= end) {
+            result.insert(data.getStoredEntityId(i));
         }
     }
     return result;

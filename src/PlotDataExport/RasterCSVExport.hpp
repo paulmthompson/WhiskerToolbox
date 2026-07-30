@@ -68,7 +68,7 @@ struct RasterExportMetadata {
  * Multiple event series are interleaved, distinguished by the event_key column.
  *
  * Relative time is computed as:
- *   time_frame->getTimeAtIndex(event.time()) - gathered.alignmentTimeAt(trial)
+ *   event.time() - gathered.alignmentTimeAt(trial)
  *
  * @pre All entries in @p series must have non-null gathered and time_frame pointers.
  *
@@ -120,7 +120,7 @@ struct RasterExportMetadata {
             auto const alignment_time = gathered.alignmentTimeAt(trial);
 
             for (auto const & event: trial_view->view()) {
-                auto const abs_time = s.time_frame->getTimeAtIndex(event.time());
+                auto const abs_time = event.time();
                 auto const relative_time = static_cast<double>((abs_time - alignment_time.getValue()).getValue());
 
                 out << trial << delimiter

@@ -114,10 +114,9 @@ inline constexpr int kSpikeSamplesPerEventIndex = 60;
         if (!time_frame) {
             throw std::runtime_error("TimeFrame is null");
         }
-        auto const event_time = time_frame->getTimeAtIndex(event_index);
         absolute_windows.push_back(ClockTicksInterval{
-                ClockTicks(event_time - pre_window),
-                ClockTicks(event_time + post_window)});
+                ClockTicks(event_index - pre_window),
+                ClockTicks(event_index + post_window)});
     }
 
     std::vector<int> boundary_times;

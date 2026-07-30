@@ -158,7 +158,6 @@ std::unique_ptr<IRowSelector> PaginatedTableModel::createRowSelectorFromSource(Q
                 return nullptr;
             }
 
-            auto events = event_series->view();
             auto timeframe_key = _data_manager->getTimeKey(source_name_str);
             auto timeframe_obj = _data_manager->getTime(timeframe_key);
             if (!timeframe_obj) {
@@ -166,10 +165,11 @@ std::unique_ptr<IRowSelector> PaginatedTableModel::createRowSelectorFromSource(Q
                 return nullptr;
             }
 
-            // Convert events to TimeFrameIndex
+            // Convert events to TimeFrameIndex from storage
             std::vector<TimeFrameIndex> timestamps;
-            for (auto const & event: events) {
-                timestamps.push_back(event.time());
+            timestamps.reserve(event_series->size());
+            for (std::size_t i = 0; i < event_series->size(); ++i) {
+                timestamps.push_back(event_series->getStoredEvent(i));
             }
 
             return std::make_unique<TimestampSelector>(std::move(timestamps), timeframe_obj);

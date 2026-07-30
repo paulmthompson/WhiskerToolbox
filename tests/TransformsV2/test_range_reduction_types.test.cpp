@@ -159,10 +159,10 @@ TEST_CASE("RangeReductionTypes - Metadata structure", "[transforms][v2][range_re
 TEST_CASE("RangeReductionTypes - Reduction execution", "[transforms][v2][range_reduction]") {
 
     SECTION("CountElements reduction") {
-        std::vector<EventWithId> events = {
-                EventWithId{TimeFrameIndex{100}, EntityId{1}},
-                EventWithId{TimeFrameIndex{200}, EntityId{2}},
-                EventWithId{TimeFrameIndex{300}, EntityId{3}},
+        std::vector<ClockTicksWithId> events = {
+                ClockTicksWithId{ClockTicks{100}, EntityId{1}},
+                ClockTicksWithId{ClockTicks{200}, EntityId{2}},
+                ClockTicksWithId{ClockTicks{300}, EntityId{3}},
         };
 
         CountElements counter;
@@ -171,7 +171,7 @@ TEST_CASE("RangeReductionTypes - Reduction execution", "[transforms][v2][range_r
     }
 
     SECTION("CountElements on empty range") {
-        std::vector<EventWithId> events;
+        std::vector<ClockTicksWithId> events;
 
         CountElements counter;
         int count = counter(events);
@@ -179,11 +179,11 @@ TEST_CASE("RangeReductionTypes - Reduction execution", "[transforms][v2][range_r
     }
 
     SECTION("FirstPositiveLatency with positive events") {
-        std::vector<EventWithId> events = {
-                EventWithId{TimeFrameIndex{-50}, EntityId{1}},
-                EventWithId{TimeFrameIndex{-10}, EntityId{2}},
-                EventWithId{TimeFrameIndex{25}, EntityId{3}},
-                EventWithId{TimeFrameIndex{100}, EntityId{4}},
+        std::vector<ClockTicksWithId> events = {
+                ClockTicksWithId{ClockTicks{-50}, EntityId{1}},
+                ClockTicksWithId{ClockTicks{-10}, EntityId{2}},
+                ClockTicksWithId{ClockTicks{25}, EntityId{3}},
+                ClockTicksWithId{ClockTicks{100}, EntityId{4}},
         };
 
         FirstPositiveLatency reducer;
@@ -194,9 +194,9 @@ TEST_CASE("RangeReductionTypes - Reduction execution", "[transforms][v2][range_r
     }
 
     SECTION("FirstPositiveLatency with no positive events") {
-        std::vector<EventWithId> events = {
-                EventWithId{TimeFrameIndex{-50}, EntityId{1}},
-                EventWithId{TimeFrameIndex{-10}, EntityId{2}},
+        std::vector<ClockTicksWithId> events = {
+                ClockTicksWithId{ClockTicks{-50}, EntityId{1}},
+                ClockTicksWithId{ClockTicks{-10}, EntityId{2}},
         };
 
         FirstPositiveLatency reducer;
@@ -207,10 +207,10 @@ TEST_CASE("RangeReductionTypes - Reduction execution", "[transforms][v2][range_r
     }
 
     SECTION("MaxValue reduction") {
-        std::vector<EventWithId> events = {
-                EventWithId{TimeFrameIndex{10}, EntityId{1}},
-                EventWithId{TimeFrameIndex{50}, EntityId{2}},
-                EventWithId{TimeFrameIndex{30}, EntityId{3}},
+        std::vector<ClockTicksWithId> events = {
+                ClockTicksWithId{ClockTicks{10}, EntityId{1}},
+                ClockTicksWithId{ClockTicks{50}, EntityId{2}},
+                ClockTicksWithId{ClockTicks{30}, EntityId{3}},
         };
 
         MaxValue reducer;

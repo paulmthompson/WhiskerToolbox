@@ -4,6 +4,7 @@
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
+#include "TimeFrame/ClockTicks.hpp"
 #include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <variant>
@@ -44,7 +45,8 @@ enum class TransformLineageType {
  * 
  * Includes:
  * - float: Scalar results (e.g., normalized times, areas) - first for default construction
- * - TimeFrameIndex: Fundamental time type for temporal transforms
+ * - TimeFrameIndex: Fundamental time type for temporal transforms (legacy index-space)
+ * - ClockTicks: Physical clock-tick time for temporal transforms
  * - Point2D<float>: 2D spatial points
  * - Line2D: Polylines/curves
  * - Mask2D: Binary masks
@@ -52,6 +54,7 @@ enum class TransformLineageType {
 using ElementVariant = std::variant<
     float,
     TimeFrameIndex,
+    ClockTicks,
     Point2D<float>,
     Line2D,
     Mask2D
@@ -66,6 +69,7 @@ using ElementVariant = std::variant<
 using BatchVariant = std::variant<
     std::vector<float>,
     std::vector<TimeFrameIndex>,
+    std::vector<ClockTicks>,
     std::vector<Point2D<float>>,
     std::vector<Line2D>,
     std::vector<Mask2D>

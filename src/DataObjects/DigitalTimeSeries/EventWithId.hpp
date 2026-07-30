@@ -45,16 +45,16 @@ struct EventWithId {
 /**
  * @brief Structure to hold a clock-tick event with its associated EntityID
  *
- * API-facing element type for range queries on DigitalEventSeries where event
- * times are expressed in absolute physical time (ClockTicks).
+ * API-facing element type for iteration and range queries on DigitalEventSeries
+ * where event times are expressed in absolute physical time (ClockTicks).
  *
- * @see EventWithId for index-based storage/iteration element type
+ * @see EventWithId for index-based storage element type
  */
-struct ClockTickWithId {
+struct ClockTicksWithId {
     ClockTicks event_time;
     EntityId entity_id;
 
-    ClockTickWithId(ClockTicks time, EntityId id)
+    ClockTicksWithId(ClockTicks time, EntityId id)
         : event_time(time),
           entity_id(id) {}
 

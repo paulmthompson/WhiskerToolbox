@@ -161,9 +161,7 @@ TEST_CASE("Data Transform: Analog Event Threshold - Error and Edge Cases",
         params.lockoutTime = 0.0;
 
         auto result_events = event_threshold(ats.get(), params);
-        std::vector<TimeFrameIndex> expected_events_neg;
-        REQUIRE_THAT(result_events->view() | std::views::transform([](auto e) { return e.time(); }),
-                     Catch::Matchers::RangeEquals(expected_events_neg));
+        REQUIRE(result_events->size() == 0);
     }
 
     SECTION("Unknown threshold direction (should return empty and log error)") {

@@ -33,11 +33,11 @@ using namespace Neuralyzer::Transforms::V2;
 /**
  * @brief Create test events with specified times
  */
-inline std::vector<EventWithId> makeEvents(std::vector<int> const & times) {
-    std::vector<EventWithId> events;
+inline std::vector<ClockTicksWithId> makeEvents(std::vector<int> const & times) {
+    std::vector<ClockTicksWithId> events;
     events.reserve(times.size());
     for (size_t i = 0; i < times.size(); ++i) {
-        events.emplace_back(TimeFrameIndex{times[i]}, EntityId{static_cast<uint64_t>(i + 1)});
+        events.emplace_back(ClockTicks{times[i]}, EntityId{static_cast<uint64_t>(i + 1)});
     }
     return events;
 }
@@ -62,19 +62,19 @@ inline std::vector<AnalogTimeSeries::TimeValuePoint> makePoints(
 TEST_CASE("EventCount - counts events correctly", "[RangeReductions][Event]") {
     SECTION("Multiple events") {
         auto events = makeEvents({-50, -10, 25, 100, 200});
-        auto span = std::span<EventWithId const>{events};
+        auto span = std::span<ClockTicksWithId const>{events};
         CHECK(eventCount(span) == 5);
     }
 
     SECTION("Single event") {
         auto events = makeEvents({42});
-        auto span = std::span<EventWithId const>{events};
+        auto span = std::span<ClockTicksWithId const>{events};
         CHECK(eventCount(span) == 1);
     }
 
     SECTION("Empty range") {
-        std::vector<EventWithId> events;
-        auto span = std::span<EventWithId const>{events};
+        std::vector<ClockTicksWithId> events;
+        auto span = std::span<ClockTicksWithId const>{events};
         CHECK(eventCount(span) == 0);
     }
 }
@@ -82,31 +82,31 @@ TEST_CASE("EventCount - counts events correctly", "[RangeReductions][Event]") {
 TEST_CASE("FirstPositiveLatency - finds first positive time", "[RangeReductions][Event]") {
     SECTION("Events spanning zero") {
         auto events = makeEvents({-50, -10, 25, 100, 200});
-        auto span = std::span<EventWithId const>{events};
+        auto span = std::span<ClockTicksWithId const>{events};
         CHECK_THAT(firstPositiveLatency(span), Catch::Matchers::WithinRel(25.0f, 0.001f));
     }
 
     SECTION("All negative") {
         auto events = makeEvents({-100, -50, -10});
-        auto span = std::span<EventWithId const>{events};
+        auto span = std::span<ClockTicksWithId const>{events};
         CHECK(std::isnan(firstPositiveLatency(span)));
     }
 
     SECTION("All positive") {
         auto events = makeEvents({10, 50, 100});
-        auto span = std::span<EventWithId const>{events};
+        auto span = std::span<ClockTicksWithId const>{events};
         CHECK_THAT(firstPositiveLatency(span), Catch::Matchers::WithinRel(10.0f, 0.001f));
     }
 
     SECTION("Empty range") {
-        std::vector<EventWithId> events;
-        auto span = std::span<EventWithId const>{events};
+        std::vector<ClockTicksWithId> events;
+        auto span = std::span<ClockTicksWithId const>{events};
         CHECK(std::isnan(firstPositiveLatency(span)));
     }
 
     SECTION("Event at exactly zero is not positive") {
         auto events = makeEvents({-10, 0, 10});
-        auto span = std::span<EventWithId const>{events};
+        auto span = std::span<ClockTicksWithId const>{events};
         CHECK_THAT(firstPositiveLatency(span), Catch::Matchers::WithinRel(10.0f, 0.001f));
     }
 }
@@ -114,25 +114,25 @@ TEST_CASE("FirstPositiveLatency - finds first positive time", "[RangeReductions]
 TEST_CASE("LastNegativeLatency - finds last negative time", "[RangeReductions][Event]") {
     SECTION("Events spanning zero") {
         auto events = makeEvents({-50, -10, 25, 100});
-        auto span = std::span<EventWithId const>{events};
+        auto span = std::span<ClockTicksWithId const>{events};
         CHECK_THAT(lastNegativeLatency(span), Catch::Matchers::WithinRel(-10.0f, 0.001f));
     }
 
     SECTION("All positive") {
         auto events = makeEvents({10, 50, 100});
-        auto span = std::span<EventWithId const>{events};
+        auto span = std::span<ClockTicksWithId const>{events};
         CHECK(std::isnan(lastNegativeLatency(span)));
     }
 
     SECTION("All negative") {
         auto events = makeEvents({-100, -50, -10});
-        auto span = std::span<EventWithId const>{events};
+        auto span = std::span<ClockTicksWithId const>{events};
         CHECK_THAT(lastNegativeLatency(span), Catch::Matchers::WithinRel(-10.0f, 0.001f));
     }
 
     SECTION("Empty range") {
-        std::vector<EventWithId> events;
-        auto span = std::span<EventWithId const>{events};
+        std::vector<ClockTicksWithId> events;
+        auto span = std::span<ClockTicksWithId const>{events};
         CHECK(std::isnan(lastNegativeLatency(span)));
     }
 }
@@ -141,14 +141,14 @@ TEST_CASE("EventCountInWindow - counts events in time window", "[RangeReductions
     auto events = makeEvents({-50, -10, 0, 25, 50, 100, 200});
 
     SECTION("Count positive events only") {
-        auto span = std::span<EventWithId const>{events};
+        auto span = std::span<ClockTicksWithId const>{events};
         TimeWindowParams params{.window_start = 0.0f, .window_end = 100.0f};
         // Events: 0, 25, 50 are in [0, 100)
         CHECK(eventCountInWindow(span, params) == 3);
     }
 
     SECTION("Count all events") {
-        auto span = std::span<EventWithId const>{events};
+        auto span = std::span<ClockTicksWithId const>{events};
         TimeWindowParams params{
                 .window_start = -100.0f,
                 .window_end = 300.0f};
@@ -156,7 +156,7 @@ TEST_CASE("EventCountInWindow - counts events in time window", "[RangeReductions
     }
 
     SECTION("Empty window") {
-        auto span = std::span<EventWithId const>{events};
+        auto span = std::span<ClockTicksWithId const>{events};
         TimeWindowParams params{.window_start = 300.0f, .window_end = 400.0f};
         CHECK(eventCountInWindow(span, params) == 0);
     }
@@ -165,27 +165,27 @@ TEST_CASE("EventCountInWindow - counts events in time window", "[RangeReductions
 TEST_CASE("MeanInterEventInterval - computes mean interval", "[RangeReductions][Event]") {
     SECTION("Regular intervals") {
         auto events = makeEvents({0, 10, 20, 30});
-        auto span = std::span<EventWithId const>{events};
+        auto span = std::span<ClockTicksWithId const>{events};
         // Intervals: 10, 10, 10 → mean = 10
         CHECK_THAT(meanInterEventInterval(span), Catch::Matchers::WithinRel(10.0f, 0.001f));
     }
 
     SECTION("Irregular intervals") {
         auto events = makeEvents({0, 10, 30, 60});
-        auto span = std::span<EventWithId const>{events};
+        auto span = std::span<ClockTicksWithId const>{events};
         // Intervals: 10, 20, 30 → mean = 20
         CHECK_THAT(meanInterEventInterval(span), Catch::Matchers::WithinRel(20.0f, 0.001f));
     }
 
     SECTION("Single event") {
         auto events = makeEvents({42});
-        auto span = std::span<EventWithId const>{events};
+        auto span = std::span<ClockTicksWithId const>{events};
         CHECK(std::isnan(meanInterEventInterval(span)));
     }
 
     SECTION("Empty range") {
-        std::vector<EventWithId> events;
-        auto span = std::span<EventWithId const>{events};
+        std::vector<ClockTicksWithId> events;
+        auto span = std::span<ClockTicksWithId const>{events};
         CHECK(std::isnan(meanInterEventInterval(span)));
     }
 }
@@ -193,20 +193,20 @@ TEST_CASE("MeanInterEventInterval - computes mean interval", "[RangeReductions][
 TEST_CASE("EventTimeSpan - computes time span", "[RangeReductions][Event]") {
     SECTION("Multiple events") {
         auto events = makeEvents({-50, 0, 100, 200});
-        auto span = std::span<EventWithId const>{events};
+        auto span = std::span<ClockTicksWithId const>{events};
         // Span: 200 - (-50) = 250
         CHECK_THAT(eventTimeSpan(span), Catch::Matchers::WithinRel(250.0f, 0.001f));
     }
 
     SECTION("Single event") {
         auto events = makeEvents({42});
-        auto span = std::span<EventWithId const>{events};
+        auto span = std::span<ClockTicksWithId const>{events};
         CHECK_THAT(eventTimeSpan(span), Catch::Matchers::WithinRel(0.0f, 0.001f));
     }
 
     SECTION("Empty range") {
-        std::vector<EventWithId> events;
-        auto span = std::span<EventWithId const>{events};
+        std::vector<ClockTicksWithId> events;
+        auto span = std::span<ClockTicksWithId const>{events};
         CHECK_THAT(eventTimeSpan(span), Catch::Matchers::WithinRel(0.0f, 0.001f));
     }
 }
@@ -485,7 +485,7 @@ TEST_CASE("Registry - Event reductions are registered", "[RangeReductions][Regis
         auto const * meta = registry.getMetadata("EventCount");
         REQUIRE(meta != nullptr);
         CHECK(meta->category == "Event Statistics");
-        CHECK(meta->input_type == std::type_index(typeid(EventWithId)));
+        CHECK(meta->input_type == std::type_index(typeid(ClockTicksWithId)));
         CHECK(meta->output_type == std::type_index(typeid(int)));
     }
 
@@ -529,8 +529,8 @@ TEST_CASE("Registry - Value reductions are registered", "[RangeReductions][Regis
 TEST_CASE("Registry - Discovery API works", "[RangeReductions][Registry]") {
     auto & registry = RangeReductionRegistry::instance();
 
-    SECTION("Get reductions for EventWithId") {
-        auto names = registry.getReductionsForInputType<EventWithId>();
+    SECTION("Get reductions for ClockTicksWithId") {
+        auto names = registry.getReductionsForInputType<ClockTicksWithId>();
         CHECK(!names.empty());
         CHECK(std::find(names.begin(), names.end(), "EventCount") != names.end());
         CHECK(std::find(names.begin(), names.end(), "FirstPositiveLatency") != names.end());
@@ -550,8 +550,8 @@ TEST_CASE("Registry - Type-safe execution works", "[RangeReductions][Registry]")
 
     SECTION("Execute EventCount") {
         auto events = makeEvents({-50, -10, 25, 100, 200});
-        auto span = std::span<EventWithId const>{events};
-        auto result = registry.execute<EventWithId, int, NoReductionParams>(
+        auto span = std::span<ClockTicksWithId const>{events};
+        auto result = registry.execute<ClockTicksWithId, int, NoReductionParams>(
                 "EventCount", span, NoReductionParams{});
         CHECK(result == 5);
     }
@@ -567,9 +567,9 @@ TEST_CASE("Registry - Type-safe execution works", "[RangeReductions][Registry]")
 
     SECTION("Execute parameterized reduction") {
         auto events = makeEvents({-50, -10, 0, 25, 50, 100});
-        auto span = std::span<EventWithId const>{events};
+        auto span = std::span<ClockTicksWithId const>{events};
         TimeWindowParams params{.window_start = 0.0f, .window_end = 100.0f};
-        auto result = registry.execute<EventWithId, int, TimeWindowParams>(
+        auto result = registry.execute<ClockTicksWithId, int, TimeWindowParams>(
                 "EventCountInWindow", span, params);
         CHECK(result == 3);// 0, 25, 50 are in [0, 100)
     }

@@ -126,7 +126,7 @@ namespace {
     float const y_center = layout.y_transform.offset;
 
     return series.view() | std::views::transform([&time_frame, y_center](auto const & event_with_id) {
-               float x = static_cast<float>(time_frame.getTimeAtIndex(event_with_id.event_time).getValue());
+               float x = static_cast<float>(event_with_id.event_time.getValue());
                return MappedElement{x, y_center, event_with_id.entity_id};
            });
 }

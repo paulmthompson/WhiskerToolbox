@@ -1,0 +1,76 @@
+---
+title: "AnalogIntervalPeak (TransformsV2)"
+---
+
+## Overview
+
+`AnalogIntervalPeak` finds the maximum or minimum analog sample within each
+interval (or between interval starts) and emits the peak times as a
+`DigitalEventSeries`.
+
+| Property | Value |
+|----------|-------|
+| Registry name | `AnalogIntervalPeak` |
+| Container signature | `(DigitalIntervalSeries, AnalogTimeSeries) → DigitalEventSeries` |
+| Category | Signal Processing / Time Series |
+
+Source files:
+
+| File | Role |
+|------|------|
+| `src/TransformsV2/algorithms/AnalogIntervalPeak/AnalogIntervalPeak.hpp` | Params + API |
+| `src/TransformsV2/algorithms/AnalogIntervalPeak/AnalogIntervalPeak.cpp` | Implementation |
+| `src/DataManager/transforms/AnalogTimeSeries/Analog_Interval_Peak/analog_interval_peak.cpp` | Legacy V1 operation |
+
+## TimeFrame handling
+
+Most transforms do **not** call `setTimeFrame` on their output. TimeFrame
+assignment is normally performed by `DataManager::setData` (or
+`ElementRegistry` propagation for single-input transforms).
+
+`AnalogIntervalPeak` is an exception. It explicitly attaches a TimeFrame on
+the output `DigitalEventSeries` because:
+
+1. **Stored events use analog indices.** Peak times written to storage are
+   `TimeFrameIndex` values from the analog series coordinate system.
+2. **Binary registry propagation uses input1 only.** `ElementRegistry`
+   copies the first input's TimeFrame (`DigitalIntervalSeries`). When analog
+   and interval series use different time bases, that would make `view()`
+   resolve the wrong `ClockTicks`.
+3. **The transform therefore prefers the analog TimeFrame**, falling back to
+   the interval TimeFrame only when analog has none.
+
+When committing results through the UI or `SynthesizeData`, still assign the
+output to the analog time key so `DataManager` and the transform agree on the
+time base.
+
+## Parameters
+
+```cpp
+struct AnalogIntervalPeakParams {
+    enum class PeakType { maximum, minimum };
+    enum class SearchMode { within_intervals, between_starts };
+
+    PeakType peak_type = PeakType::maximum;
+    SearchMode search_mode = SearchMode::within_intervals;
+};
+```
+
+## Usage
+
+### Registry execution
+
+```cpp
+auto result = ElementRegistry::instance().executeBinaryContainerTransform<
+    DigitalIntervalSeries,
+    AnalogTimeSeries,
+    DigitalEventSeries,
+    AnalogIntervalPeakParams>(
+    "AnalogIntervalPeak", intervals, analog, params);
+```
+
+## Related transforms
+
+- `AnalogEventThreshold` — threshold crossings on a single `AnalogTimeSeries`
+  (does not attach TimeFrame; single-input propagation applies)
+- `AnalogIntervalThreshold` — interval generation from analog threshold crossings

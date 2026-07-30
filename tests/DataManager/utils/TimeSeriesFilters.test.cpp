@@ -18,10 +18,12 @@
 #include "DigitalTimeSeries/EventWithId.hpp"
 #include "DigitalTimeSeries/IntervalWithId.hpp"
 #include "RaggedTimeSeries/RaggedTimeSeries.hpp"
+#include "TimeFrame/ClockTicks.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "utils/TimeSeriesConcepts.hpp"
 
 #include <catch2/catch_test_macros.hpp>
+#include <numeric>
 #include <ranges>
 #include <vector>
 
@@ -554,19 +556,23 @@ TEST_CASE("TimeSeriesFilters - Integration with DigitalEventSeries", "[filters][
 
     SECTION("Filter DigitalEventSeries view by time") {
         auto series = std::make_shared<DigitalEventSeries>();
+        std::vector<int> times(60);
+        std::iota(times.begin(), times.end(), 0);
+        series->setTimeFrame(std::make_shared<TimeFrame>(times));
+
         series->addEvent(TimeFrameIndex(10));
         series->addEvent(TimeFrameIndex(20));
         series->addEvent(TimeFrameIndex(30));
         series->addEvent(TimeFrameIndex(40));
         series->addEvent(TimeFrameIndex(50));
 
-        auto filtered = filterByTimeRange(series->view(), TimeFrameIndex(20), TimeFrameIndex(40));
+        auto filtered = filterByTimeRange(series->view(), ClockTicks(20), ClockTicks(40));
         auto result = materializeToVector(filtered);
 
         REQUIRE(result.size() == 3);
-        REQUIRE(result[0].time() == TimeFrameIndex(20));
-        REQUIRE(result[1].time() == TimeFrameIndex(30));
-        REQUIRE(result[2].time() == TimeFrameIndex(40));
+        REQUIRE(result[0].time() == ClockTicks(20));
+        REQUIRE(result[1].time() == ClockTicks(30));
+        REQUIRE(result[2].time() == ClockTicks(40));
     }
 
     SECTION("Filter DigitalEventSeries by EntityId") {
@@ -658,6 +664,10 @@ static_assert(!EntityElement<AnalogTimeSeries::TimeValuePoint>,
 // Verify that FlatElement does NOT satisfy EntityElement
 static_assert(!EntityElement<RaggedAnalogTimeSeries::FlatElement>,
               "FlatElement must NOT satisfy EntityElement - no EntityId filtering allowed");
+
+// Verify that ClockTicksWithId satisfies ClockEntityElement for view()-based filtering
+static_assert(ClockEntityElement<ClockTicksWithId>,
+              "ClockTicksWithId must satisfy ClockEntityElement - EntityId filtering allowed");
 
 // Verify that EventWithId DOES satisfy EntityElement
 static_assert(EntityElement<EventWithId>,

@@ -1004,7 +1004,7 @@ std::vector<size_t> EventPlotOpenGLWidget::computeSortIndices(
 
 
                     for (auto const & event: trial_view->view()) {
-                        ClockTicks const event_time_abs = trial_tf->getTimeAtIndex(event.time());
+                        ClockTicks const event_time_abs = event.time();
                         // Relative time (positive = after alignment)
                         auto const relative_time = static_cast<double>((event_time_abs - alignment_time_abs.getValue()).getValue());
                         if (relative_time >= 0.0 && relative_time < first_positive_latency) {
@@ -1050,7 +1050,7 @@ std::vector<size_t> EventPlotOpenGLWidget::computeSortIndices(
                     }
 
                     for (auto const & event: trial_view->view()) {
-                        ClockTicks const event_time_abs = trial_tf->getTimeAtIndex(event.time());
+                        ClockTicks const event_time_abs = event.time();
                         auto const relative_time = static_cast<double>((event_time_abs - alignment_time_abs.getValue()).getValue());
                         if (relative_time >= 0.0) {
                             ++positive_count;

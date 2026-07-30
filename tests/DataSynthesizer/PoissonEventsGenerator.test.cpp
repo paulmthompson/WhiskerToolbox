@@ -22,9 +22,10 @@ TEST_CASE("PoissonEvents produces events within range", "[PoissonEvents]") {
     auto des = runPoissonEvents(R"({"num_samples": 1000, "lambda": 0.1, "seed": 42})");
     REQUIRE(des->size() > 0);
 
-    for (auto event: des->view()) {
-        REQUIRE(event.time().getValue() >= 0);
-        REQUIRE(event.time().getValue() < 1000);
+    for (std::size_t i = 0; i < des->size(); ++i) {
+        auto const event_time = des->getStoredEvent(i).getValue();
+        REQUIRE(event_time >= 0);
+        REQUIRE(event_time < 1000);
     }
 }
 
@@ -32,9 +33,10 @@ TEST_CASE("PoissonEvents events are sorted", "[PoissonEvents]") {
     auto des = runPoissonEvents(R"({"num_samples": 1000, "lambda": 0.1, "seed": 42})");
 
     int64_t prev = -1;
-    for (auto event: des->view()) {
-        REQUIRE(event.time().getValue() > prev);
-        prev = event.time().getValue();
+    for (std::size_t i = 0; i < des->size(); ++i) {
+        auto const event_time = des->getStoredEvent(i).getValue();
+        REQUIRE(event_time > prev);
+        prev = event_time;
     }
 }
 
@@ -43,10 +45,8 @@ TEST_CASE("PoissonEvents is deterministic with the same seed", "[PoissonEvents]"
     auto des2 = runPoissonEvents(R"({"num_samples": 500, "lambda": 0.1, "seed": 123})");
 
     REQUIRE(des1->size() == des2->size());
-    auto v1 = des1->view();
-    auto v2 = des2->view();
-    for (size_t i = 0; i < des1->size(); ++i) {
-        REQUIRE(v1[i].time() == v2[i].time());
+    for (std::size_t i = 0; i < des1->size(); ++i) {
+        REQUIRE(des1->getStoredEvent(i) == des2->getStoredEvent(i));
     }
 }
 
@@ -57,10 +57,8 @@ TEST_CASE("PoissonEvents different seeds produce different output", "[PoissonEve
     // Size or event times should differ
     bool differs = (des1->size() != des2->size());
     if (!differs) {
-        auto v1 = des1->view();
-        auto v2 = des2->view();
-        for (size_t i = 0; i < des1->size(); ++i) {
-            if (v1[i].time() != v2[i].time()) {
+        for (std::size_t i = 0; i < des1->size(); ++i) {
+            if (des1->getStoredEvent(i) != des2->getStoredEvent(i)) {
                 differs = true;
                 break;
             }

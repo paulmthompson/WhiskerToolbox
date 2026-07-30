@@ -168,8 +168,8 @@ struct RowBuildContext {
         }
         ctx.num_rows = events->size();
         ctx.row_times.reserve(ctx.num_rows);
-        for (auto const & ew: events->view()) {
-            ctx.row_times.push_back(ew.event_time);
+        for (std::size_t i = 0; i < ctx.num_rows; ++i) {
+            ctx.row_times.push_back(events->getStoredEvent(i));
         }
 
         auto time_storage = TimeIndexStorageFactory::createFromTimeIndices(ctx.row_times);

@@ -30,11 +30,10 @@ TEST_CASE("RegularEvents events are evenly spaced without jitter", "[RegularEven
     // Events at 0, 25, 50, 75 => 4 events
     REQUIRE(des->size() == 4);
 
-    auto v = des->view();
-    REQUIRE(v[0].time().getValue() == 0);
-    REQUIRE(v[1].time().getValue() == 25);
-    REQUIRE(v[2].time().getValue() == 50);
-    REQUIRE(v[3].time().getValue() == 75);
+    REQUIRE(des->getStoredEvent(0).getValue() == 0);
+    REQUIRE(des->getStoredEvent(1).getValue() == 25);
+    REQUIRE(des->getStoredEvent(2).getValue() == 50);
+    REQUIRE(des->getStoredEvent(3).getValue() == 75);
 }
 
 TEST_CASE("RegularEvents events are within range", "[RegularEvents]") {
@@ -42,9 +41,10 @@ TEST_CASE("RegularEvents events are within range", "[RegularEvents]") {
             R"({"num_samples": 1000, "interval": 20, "jitter_stddev": 5.0, "seed": 42})");
     REQUIRE(des->size() > 0);
 
-    for (auto event: des->view()) {
-        REQUIRE(event.time().getValue() >= 0);
-        REQUIRE(event.time().getValue() < 1000);
+    for (std::size_t i = 0; i < des->size(); ++i) {
+        auto const event_time = des->getStoredEvent(i).getValue();
+        REQUIRE(event_time >= 0);
+        REQUIRE(event_time < 1000);
     }
 }
 
@@ -55,10 +55,8 @@ TEST_CASE("RegularEvents is deterministic with the same seed", "[RegularEvents]"
             R"({"num_samples": 500, "interval": 10, "jitter_stddev": 3.0, "seed": 123})");
 
     REQUIRE(des1->size() == des2->size());
-    auto v1 = des1->view();
-    auto v2 = des2->view();
-    for (size_t i = 0; i < des1->size(); ++i) {
-        REQUIRE(v1[i].time() == v2[i].time());
+    for (std::size_t i = 0; i < des1->size(); ++i) {
+        REQUIRE(des1->getStoredEvent(i) == des2->getStoredEvent(i));
     }
 }
 
@@ -69,13 +67,11 @@ TEST_CASE("RegularEvents jitter displaces events from grid positions", "[Regular
 
     // With jitter, at least some events should be displaced from the grid
     bool any_displaced = false;
-    auto v_no = des_no_jitter->view();
-    auto v_jit = des_jitter->view();
 
     // Sizes may differ due to deduplication, but check the grids differ
     if (des_no_jitter->size() == des_jitter->size()) {
-        for (size_t i = 0; i < des_no_jitter->size(); ++i) {
-            if (v_no[i].time() != v_jit[i].time()) {
+        for (std::size_t i = 0; i < des_no_jitter->size(); ++i) {
+            if (des_no_jitter->getStoredEvent(i) != des_jitter->getStoredEvent(i)) {
                 any_displaced = true;
                 break;
             }

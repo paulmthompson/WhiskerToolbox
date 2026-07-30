@@ -30,9 +30,9 @@ void registerEventRangeReductions() {
     auto & registry = RangeReductionRegistry::instance();
 
     // EventCount - stateless
-    registry.registerStatelessReduction<EventWithId, int>(
+    registry.registerStatelessReduction<ClockTicksWithId, int>(
             "EventCount",
-            [](std::span<EventWithId const> events) -> int {
+            [](std::span<ClockTicksWithId const> events) -> int {
                 return eventCount(events);
             },
             RangeReductionMetadata{
@@ -42,9 +42,9 @@ void registerEventRangeReductions() {
                     .requires_entity_element = true});
 
     // FirstPositiveLatency - stateless
-    registry.registerStatelessReduction<EventWithId, float>(
+    registry.registerStatelessReduction<ClockTicksWithId, float>(
             "FirstPositiveLatency",
-            [](std::span<EventWithId const> events) -> float {
+            [](std::span<ClockTicksWithId const> events) -> float {
                 return firstPositiveLatency(events);
             },
             RangeReductionMetadata{
@@ -54,9 +54,9 @@ void registerEventRangeReductions() {
                     .requires_entity_element = true});
 
     // LastNegativeLatency - stateless
-    registry.registerStatelessReduction<EventWithId, float>(
+    registry.registerStatelessReduction<ClockTicksWithId, float>(
             "LastNegativeLatency",
-            [](std::span<EventWithId const> events) -> float {
+            [](std::span<ClockTicksWithId const> events) -> float {
                 return lastNegativeLatency(events);
             },
             RangeReductionMetadata{
@@ -66,9 +66,9 @@ void registerEventRangeReductions() {
                     .requires_entity_element = true});
 
     // EventCountInWindow - parameterized
-    registry.registerReduction<EventWithId, int, TimeWindowParams>(
+    registry.registerReduction<ClockTicksWithId, int, TimeWindowParams>(
             "EventCountInWindow",
-            [](std::span<EventWithId const> events, TimeWindowParams const & params) -> int {
+            [](std::span<ClockTicksWithId const> events, TimeWindowParams const & params) -> int {
                 return eventCountInWindow(events, params);
             },
             RangeReductionMetadata{
@@ -78,9 +78,9 @@ void registerEventRangeReductions() {
                     .requires_entity_element = true});
 
     // MeanInterEventInterval - stateless
-    registry.registerStatelessReduction<EventWithId, float>(
+    registry.registerStatelessReduction<ClockTicksWithId, float>(
             "MeanInterEventInterval",
-            [](std::span<EventWithId const> events) -> float {
+            [](std::span<ClockTicksWithId const> events) -> float {
                 return meanInterEventInterval(events);
             },
             RangeReductionMetadata{
@@ -90,9 +90,9 @@ void registerEventRangeReductions() {
                     .requires_entity_element = true});
 
     // EventTimeSpan - stateless
-    registry.registerStatelessReduction<EventWithId, float>(
+    registry.registerStatelessReduction<ClockTicksWithId, float>(
             "EventTimeSpan",
-            [](std::span<EventWithId const> events) -> float {
+            [](std::span<ClockTicksWithId const> events) -> float {
                 return eventTimeSpan(events);
             },
             RangeReductionMetadata{
@@ -408,10 +408,10 @@ void registerIntervalRangeReductions() {
                     .requires_time_series_element = false,
                     .requires_entity_element = true});
 
-    // EventPresence - stateless (EventWithId input)
-    registry.registerStatelessReduction<EventWithId, int>(
+    // EventPresence - stateless (ClockTicksWithId input)
+    registry.registerStatelessReduction<ClockTicksWithId, int>(
             "EventPresence",
-            [](std::span<EventWithId const> events) -> int {
+            [](std::span<ClockTicksWithId const> events) -> int {
                 return eventPresence(events);
             },
             RangeReductionMetadata{
