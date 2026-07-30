@@ -36,7 +36,8 @@ std::type_index TypeIndexMapper::elementToContainer(std::type_index element_type
             {typeid(Mask2D), typeid(MaskData)},
             {typeid(Line2D), typeid(LineData)},
             {typeid(Point2D<float>), typeid(PointData)},
-            {typeid(float), typeid(RaggedAnalogTimeSeries)}};
+            {typeid(float), typeid(RaggedAnalogTimeSeries)},
+            {typeid(ClockTicks), typeid(DigitalEventSeries)}};
 
     auto const it = map.find(element_type);
     if (it != map.end()) {
@@ -52,7 +53,8 @@ std::type_index TypeIndexMapper::containerToElement(std::type_index container_ty
             {typeid(LineData), typeid(Line2D)},
             {typeid(PointData), typeid(Point2D<float>)},
             {typeid(AnalogTimeSeries), typeid(float)},
-            {typeid(RaggedAnalogTimeSeries), typeid(float)}};
+            {typeid(RaggedAnalogTimeSeries), typeid(float)},
+            {typeid(DigitalEventSeries), typeid(ClockTicks)}};
 
     auto const it = map.find(container_type);
     if (it != map.end()) {
