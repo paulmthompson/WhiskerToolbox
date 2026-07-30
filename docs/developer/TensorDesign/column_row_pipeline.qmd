@@ -47,6 +47,8 @@ Implemented today:
 - Empty or whitespace `row_pipeline_json` and explicit empty-step descriptors are treated as identity row geometry.
 - Non-identity interval-row pipelines may produce row-aligned `DigitalIntervalSeries` prepared windows.
 - TensorDesign verifies row-pipeline window output preserves the original row count.
+- Digital event/interval iteration exposes `ClockTicks` API-facing values, so cross-timeframe temporal math should happen in clock-tick coordinates rather than raw `TimeFrameIndex` coordinates.
+- `PipelineValueStore` can store `ClockTicks`, and `NormalizeTimeParamsV2::alignment_time` is a `ClockTicks` value.
 - `GatherResult` consumes prepared `DigitalIntervalSeries` windows and can hold companion alignment events, but TensorDesign should not rely on that metadata path for column transformations.
 - `GatherResult` converts prepared window bounds to the gathered source `TimeFrame` with `convertTimeFrameRange()`.
 - `DigitalIntervalSeries` supports `IntervalLayout::Overlapping` through `createOverlapping()`.
@@ -55,7 +57,7 @@ Implemented today:
 Not implemented yet:
 
 - `DigitalEventSeries` row-pipeline output dispatch for timestamp/sample columns.
-- A way to bind row-specific iterable values, such as one normalization event per row, into the column TransformPipeline's `PipelineValueStore`.
+- TensorDesign column recipe support for iterable bindings from row-aligned DataObjects into `PipelineValueStore`.
 - Replacement of the temporary `pipeline_json` `"offset"` sample-at-offset compatibility path.
 - Row-pipeline caching across columns.
 - Preset registry, bundled preset library, and preset expansion.
@@ -129,14 +131,14 @@ GatherResult -> TensorDesign or TransformPipeline execution
 | Row descriptor | Original row source | Contact start/end metadata |
 | Gather windows | `row_pipeline_json` output or identity row source | Trial window or onset window around contact `i` |
 | Sample times | `row_pipeline_json` output, when sampling | Contact onset event for row `i` |
-| Iterable binding values | DataManager object or row-pipeline output | `TimePosition` for raster/PSTH row `i` |
+| Iterable binding values | DataManager object or row-pipeline output | `ClockTicks` for raster/PSTH row `i` |
 | Feature value | `pipeline_json` over gathered source rows | Spike presence, mean curvature, angle sample |
 
 Prepared windows should be represented as `DigitalIntervalSeries`. Per-row sample times should be represented as `DigitalEventSeries`. These are normal DataObjects, not tensor-specific side channels.
 
 When a column needs to normalize gathered data relative to a marker that is not the gather window start, that marker should be supplied through `PipelineValueStore` parameter binding for `pipeline_json`, not encoded as a second output of `row_pipeline_json`.
 
-For example, a spike raster column may gather spikes inside each trial window, then run a normalize-time transform with the contact onset event for that row supplied through the value store as a `TimePosition`.
+For example, a spike raster column may gather spikes inside each trial window, then run a normalize-time transform with the contact onset event for that row supplied through the value store as `ClockTicks`.
 
 ## Transform Composition
 
@@ -451,18 +453,15 @@ Initial support should be deliberately narrow:
 
 | Source DataObject | Row element | Default binding value |
 |---|---|---|
-| `DigitalEventSeries` | Event row `i` | `TimePosition{event_time, event_series.getTimeFrame()}` |
+| `DigitalEventSeries` | `ClockTicksWithId` event row `i` | `event.time()` as `ClockTicks` |
 
 If a caller needs interval start, end, or center as the bound value, it should first derive a `DigitalEventSeries` with `IntervalToEvent`. This avoids requiring users to choose coordinate extractors and keeps start/end/center selection in the TransformPipeline where it already belongs.
 
-The project already has temporal coordinate carrier types in `TimeFrame/TimeFrame.hpp`:
+The ClockTicks refactor removes the need for binding declarations to carry `TimeFrame` pointers. `DigitalEventSeries::view()` and `DigitalIntervalSeries::view()` expose API-facing elements in clock ticks (`ClockTicksWithId` and `ClockTicksIntervalWithId`) while storage/persistence APIs can still expose `TimeFrameIndex` through explicit stored-value accessors.
 
-- `TimeIndexAndFrame`, which pairs a `TimeFrameIndex` with a non-owning `TimeFrame const *`.
-- `TimePosition`, which pairs a `TimeFrameIndex` with a `std::shared_ptr<TimeFrame>`.
+Phase 5 should therefore bind temporal iterable values as `ClockTicks`. `NormalizeTime` subtracts `ClockTicks`, not raw `TimeFrameIndex` values.
 
-Phase 5 should reuse one of these instead of introducing a new temporal binding type. Because most DataObjects expose `std::shared_ptr<TimeFrame>` through `getTimeFrame()`, `TimePosition` is the likely first choice for `PipelineValueStore` storage and parameter binding.
-
-`NormalizeTime` should accept a bound temporal value such as `TimePosition` and perform its own conversion to the coordinate system needed for each input row. Legacy `int64_t` absolute-time bindings can remain supported if needed, but new row-iterable bindings should use the typed temporal value.
+This also means `IntervalToEvent` and `EventToInterval` should compose in clock-tick coordinates at the API boundary. If a transform still uses `TimeFrameIndex` internally, that should be treated as an implementation detail hidden behind the DataObject view/storage boundary.
 
 ### Execution Shape
 
@@ -505,7 +504,7 @@ Direct iterable source:
 row_source: Contact intervals
 source_key: Spikes
 row_pipeline_json: identity or trial window pipeline
-pipeline_value_bindings: ContactOnset DigitalEventSeries[i] -> TimePosition -> row_alignment_time
+pipeline_value_bindings: ContactOnset DigitalEventSeries[i] -> ClockTicks -> row_alignment_time
 pipeline_json: NormalizeTime(alignment_time bound to row_alignment_time) + event/bin reduction
 ```
 
@@ -515,7 +514,7 @@ Derived iterable source:
 row_source: Contact intervals
 source_key: Spikes
 row_pipeline_json: identity or trial window pipeline
-pipeline_value_bindings: Contact -> IntervalToEvent(start) -> TimePosition -> row_alignment_time
+pipeline_value_bindings: Contact -> IntervalToEvent(start) -> ClockTicks -> row_alignment_time
 pipeline_json: NormalizeTime(alignment_time bound to row_alignment_time) + event/bin reduction
 ```
 
@@ -553,7 +552,7 @@ Conceptually:
 ```text
 row_pipeline_json: trial interval -> spike gather window
 gather:            Spikes + window_i -> spikes_i
-iterable binding:  ContactOnset[i] -> TimePosition -> PipelineValueStore["row_alignment_time"]
+iterable binding:  ContactOnset[i] -> ClockTicks -> PipelineValueStore["row_alignment_time"]
 pipeline_json:     NormalizeTime(spikes_i, row_alignment_time) -> PSTH/bin/reduction output
 ```
 
@@ -589,7 +588,7 @@ Window-producing transforms operate in their input DataObject's `TimeFrame`. The
 prepared window TimeFrame -> source DataObject TimeFrame
 ```
 
-Projection and trial-relative transforms should use values supplied through `PipelineValueStore` and existing TimeFrame primitives such as `convert_time_index()` or physical-time lookups.
+Projection and trial-relative transforms should use `ClockTicks` values supplied through `PipelineValueStore`. TimeFrame conversion should happen at DataObject boundaries, not in TensorDesign JSON.
 
 The row descriptor should continue to describe the original row source, not the per-column gather window. Per-column geometry is column metadata used to produce a value; it does not redefine tensor row identity.
 
@@ -629,8 +628,17 @@ Tensor row pipelines should use the same DataObject vocabulary for windows and e
 - What JSON schema should declare iterable bindings from DataObjects into `PipelineValueStore` keys?
 - Should row pipelines be allowed to use `additional_input_keys`, and if so should those keys be declared per column or at the tensor level?
 - Should identical row pipelines be cached across columns during one tensor build?
-- How should timestamp-only row-pipeline output choose between sampling, window expansion, or rejection?
+- How should `DigitalEventSeries` row-pipeline output choose between point sampling, window expansion, or rejection?
 - Should row filtering ever be supported, or should row pipelines always be required to preserve row count?
+
+Settled for Phase 5:
+
+- Temporal iterable values bind as `ClockTicks`.
+- `NormalizeTimeParamsV2::alignment_time` is `ClockTicks`.
+- `PipelineValueStore` supports `ClockTicks` storage and JSON binding through `ClockTicksReflector`.
+- Binding declarations live on `ColumnRecipe`, not inside `PipelineDescriptor`.
+- `source_pipeline_json` uses the same `PipelineDescriptor` schema as `row_pipeline_json` and `pipeline_json`.
+- Duplicate binding `store_key` values should be rejected rather than overwritten.
 
 ## Tests
 
