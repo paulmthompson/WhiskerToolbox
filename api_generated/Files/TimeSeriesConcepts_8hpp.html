@@ -577,18 +577,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-101"><a href="#cb2-101" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> time <span class="op">&gt;=</span> start <span class="op">&amp;&amp;</span> time <span class="op">&lt;=</span> end<span class="op">;</span></span>
 <span id="cb2-102"><a href="#cb2-102" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb2-103"><a href="#cb2-103" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-104"><a href="#cb2-104" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span>EntityElement T<span class="op">&gt;</span></span>
-<span id="cb2-105"><a href="#cb2-105" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> isInEntitySet<span class="op">(</span></span>
-<span id="cb2-106"><a href="#cb2-106" aria-hidden="true" tabindex="-1"></a>        T <span class="at">const</span> <span class="op">&amp;</span> elem<span class="op">,</span></span>
-<span id="cb2-107"><a href="#cb2-107" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> ids<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb2-108"><a href="#cb2-108" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ids<span class="op">.</span>contains<span class="op">(</span>elem<span class="op">.</span>id<span class="op">());</span></span>
-<span id="cb2-109"><a href="#cb2-109" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb2-110"><a href="#cb2-110" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-111"><a href="#cb2-111" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace Neuralyzer::Concepts</span></span>
-<span id="cb2-112"><a href="#cb2-112" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-113"><a href="#cb2-113" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// TIME_SERIES_CONCEPTS_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-104"><a href="#cb2-104" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb2-105"><a href="#cb2-105" aria-hidden="true" tabindex="-1"></a><span class="kw">concept</span> EntityIdElement <span class="op">=</span> <span class="kw">requires</span><span class="op">(</span>T <span class="at">const</span> <span class="op">&amp;</span> t<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-106"><a href="#cb2-106" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span> t<span class="op">.</span>id<span class="op">()</span> <span class="op">}</span> <span class="op">-&gt;</span> <span class="bu">std::</span>convertible_to<span class="op">&lt;</span>EntityId<span class="op">&gt;;</span></span>
+<span id="cb2-107"><a href="#cb2-107" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb2-108"><a href="#cb2-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-109"><a href="#cb2-109" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span>EntityIdElement T<span class="op">&gt;</span></span>
+<span id="cb2-110"><a href="#cb2-110" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> isInEntitySet<span class="op">(</span></span>
+<span id="cb2-111"><a href="#cb2-111" aria-hidden="true" tabindex="-1"></a>        T <span class="at">const</span> <span class="op">&amp;</span> elem<span class="op">,</span></span>
+<span id="cb2-112"><a href="#cb2-112" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> ids<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-113"><a href="#cb2-113" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ids<span class="op">.</span>contains<span class="op">(</span>elem<span class="op">.</span>id<span class="op">());</span></span>
+<span id="cb2-114"><a href="#cb2-114" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-115"><a href="#cb2-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-116"><a href="#cb2-116" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace Neuralyzer::Concepts</span></span>
+<span id="cb2-117"><a href="#cb2-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-118"><a href="#cb2-118" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// TIME_SERIES_CONCEPTS_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-29 at 21:29:36 +0000</p>
+<p>Updated on 2026-07-30 at 14:56:55 +0000</p>
 
 
 </section>

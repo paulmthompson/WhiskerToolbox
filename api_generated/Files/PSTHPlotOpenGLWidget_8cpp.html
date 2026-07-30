@@ -580,7 +580,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-196"><a href="#cb1-196" aria-hidden="true" tabindex="-1"></a>            ClockTicks <span class="at">const</span> alignment_time <span class="op">=</span> gathered<span class="op">.</span>alignmentTimeAt<span class="op">(</span>trial_idx<span class="op">);</span></span>
 <span id="cb1-197"><a href="#cb1-197" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-198"><a href="#cb1-198" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> event_with_id<span class="op">:</span> trial_view<span class="op">-&gt;</span>view<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-199"><a href="#cb1-199" aria-hidden="true" tabindex="-1"></a>                ClockTicks <span class="at">const</span> event_time_abs <span class="op">=</span> time_frame<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span>event_with_id<span class="op">.</span>event_time<span class="op">);</span></span>
+<span id="cb1-199"><a href="#cb1-199" aria-hidden="true" tabindex="-1"></a>                ClockTicks <span class="at">const</span> event_time_abs <span class="op">=</span> event_with_id<span class="op">.</span>event_time<span class="op">;</span></span>
 <span id="cb1-200"><a href="#cb1-200" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> <span class="at">const</span> relative_time <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;((</span>event_time_abs <span class="op">-</span> alignment_time<span class="op">.</span>getValue<span class="op">()).</span>getValue<span class="op">());</span></span>
 <span id="cb1-201"><a href="#cb1-201" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-202"><a href="#cb1-202" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(</span>relative_time <span class="op">&lt;</span> <span class="op">-</span>half_window <span class="op">||</span> relative_time <span class="op">&gt;=</span> half_window<span class="op">)</span> <span class="op">{</span></span>
@@ -882,159 +882,155 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-498"><a href="#cb1-498" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-499"><a href="#cb1-499" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Iterate over events in this trial view</span></span>
 <span id="cb1-500"><a href="#cb1-500" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> event_with_id<span class="op">:</span> trial_view<span class="op">-&gt;</span>view<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-501"><a href="#cb1-501" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Get event time as TimeFrameIndex</span></span>
-<span id="cb1-502"><a href="#cb1-502" aria-hidden="true" tabindex="-1"></a>                TimeFrameIndex <span class="at">const</span> event_time_idx <span class="op">=</span> event_with_id<span class="op">.</span>event_time<span class="op">;</span></span>
-<span id="cb1-503"><a href="#cb1-503" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-504"><a href="#cb1-504" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Convert event time index to absolute time</span></span>
-<span id="cb1-505"><a href="#cb1-505" aria-hidden="true" tabindex="-1"></a>                ClockTicks <span class="at">const</span> event_time_abs <span class="op">=</span> time_frame<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span>event_time_idx<span class="op">);</span></span>
+<span id="cb1-501"><a href="#cb1-501" aria-hidden="true" tabindex="-1"></a>                ClockTicks <span class="at">const</span> event_time_abs <span class="op">=</span> event_with_id<span class="op">.</span>event_time<span class="op">;</span></span>
+<span id="cb1-502"><a href="#cb1-502" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-503"><a href="#cb1-503" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Calculate relative time (normalized by alignment event)</span></span>
+<span id="cb1-504"><a href="#cb1-504" aria-hidden="true" tabindex="-1"></a>                <span class="co">// This gives us the time relative to the alignment point (t=0)</span></span>
+<span id="cb1-505"><a href="#cb1-505" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> <span class="at">const</span> relative_time <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;((</span>event_time_abs <span class="op">-</span> alignment_time<span class="op">.</span>getValue<span class="op">()).</span>getValue<span class="op">());</span></span>
 <span id="cb1-506"><a href="#cb1-506" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-507"><a href="#cb1-507" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Calculate relative time (normalized by alignment event)</span></span>
-<span id="cb1-508"><a href="#cb1-508" aria-hidden="true" tabindex="-1"></a>                <span class="co">// This gives us the time relative to the alignment point (t=0)</span></span>
-<span id="cb1-509"><a href="#cb1-509" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> <span class="at">const</span> relative_time <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;((</span>event_time_abs <span class="op">-</span> alignment_time<span class="op">.</span>getValue<span class="op">()).</span>getValue<span class="op">());</span></span>
-<span id="cb1-510"><a href="#cb1-510" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-511"><a href="#cb1-511" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Only include events within the window</span></span>
-<span id="cb1-512"><a href="#cb1-512" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(</span>relative_time <span class="op">&lt;</span> <span class="op">-</span>half_window <span class="op">||</span> relative_time <span class="op">&gt;=</span> half_window<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-513"><a href="#cb1-513" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">continue</span><span class="op">;</span></span>
-<span id="cb1-514"><a href="#cb1-514" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
-<span id="cb1-515"><a href="#cb1-515" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-516"><a href="#cb1-516" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Calculate which bin this event belongs to</span></span>
-<span id="cb1-517"><a href="#cb1-517" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Bin 0 corresponds to -half_window, bin (num_bins-1) corresponds to +half_window</span></span>
-<span id="cb1-518"><a href="#cb1-518" aria-hidden="true" tabindex="-1"></a>                <span class="dt">double</span> <span class="at">const</span> bin_position <span class="op">=</span> <span class="op">(</span>relative_time <span class="op">+</span> half_window<span class="op">)</span> <span class="op">/</span> bin_size<span class="op">;</span></span>
-<span id="cb1-519"><a href="#cb1-519" aria-hidden="true" tabindex="-1"></a>                <span class="dt">int</span> bin_index <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span><span class="bu">std::</span>floor<span class="op">(</span>bin_position<span class="op">));</span></span>
-<span id="cb1-520"><a href="#cb1-520" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-521"><a href="#cb1-521" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Clamp bin index to valid range</span></span>
-<span id="cb1-522"><a href="#cb1-522" aria-hidden="true" tabindex="-1"></a>                bin_index <span class="op">=</span> <span class="bu">std::</span>max<span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="bu">std::</span>min<span class="op">(</span>bin_index<span class="op">,</span> num_bins <span class="op">-</span> <span class="dv">1</span><span class="op">));</span></span>
+<span id="cb1-507"><a href="#cb1-507" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Only include events within the window</span></span>
+<span id="cb1-508"><a href="#cb1-508" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(</span>relative_time <span class="op">&lt;</span> <span class="op">-</span>half_window <span class="op">||</span> relative_time <span class="op">&gt;=</span> half_window<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-509"><a href="#cb1-509" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">continue</span><span class="op">;</span></span>
+<span id="cb1-510"><a href="#cb1-510" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb1-511"><a href="#cb1-511" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-512"><a href="#cb1-512" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Calculate which bin this event belongs to</span></span>
+<span id="cb1-513"><a href="#cb1-513" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Bin 0 corresponds to -half_window, bin (num_bins-1) corresponds to +half_window</span></span>
+<span id="cb1-514"><a href="#cb1-514" aria-hidden="true" tabindex="-1"></a>                <span class="dt">double</span> <span class="at">const</span> bin_position <span class="op">=</span> <span class="op">(</span>relative_time <span class="op">+</span> half_window<span class="op">)</span> <span class="op">/</span> bin_size<span class="op">;</span></span>
+<span id="cb1-515"><a href="#cb1-515" aria-hidden="true" tabindex="-1"></a>                <span class="dt">int</span> bin_index <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span><span class="bu">std::</span>floor<span class="op">(</span>bin_position<span class="op">));</span></span>
+<span id="cb1-516"><a href="#cb1-516" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-517"><a href="#cb1-517" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Clamp bin index to valid range</span></span>
+<span id="cb1-518"><a href="#cb1-518" aria-hidden="true" tabindex="-1"></a>                bin_index <span class="op">=</span> <span class="bu">std::</span>max<span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="bu">std::</span>min<span class="op">(</span>bin_index<span class="op">,</span> num_bins <span class="op">-</span> <span class="dv">1</span><span class="op">));</span></span>
+<span id="cb1-519"><a href="#cb1-519" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-520"><a href="#cb1-520" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Increment the count for this bin</span></span>
+<span id="cb1-521"><a href="#cb1-521" aria-hidden="true" tabindex="-1"></a>                histogram<span class="op">[</span>bin_index<span class="op">]</span> <span class="op">+=</span> <span class="fl">1.0</span><span class="op">;</span></span>
+<span id="cb1-522"><a href="#cb1-522" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
 <span id="cb1-523"><a href="#cb1-523" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-524"><a href="#cb1-524" aria-hidden="true" tabindex="-1"></a>                <span class="co">// Increment the count for this bin</span></span>
-<span id="cb1-525"><a href="#cb1-525" aria-hidden="true" tabindex="-1"></a>                histogram<span class="op">[</span>bin_index<span class="op">]</span> <span class="op">+=</span> <span class="fl">1.0</span><span class="op">;</span></span>
-<span id="cb1-526"><a href="#cb1-526" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-527"><a href="#cb1-527" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-528"><a href="#cb1-528" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Track total number of trials processed</span></span>
-<span id="cb1-529"><a href="#cb1-529" aria-hidden="true" tabindex="-1"></a>            total_trials<span class="op">++;</span></span>
-<span id="cb1-530"><a href="#cb1-530" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-531"><a href="#cb1-531" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-532"><a href="#cb1-532" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-533"><a href="#cb1-533" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Print histogram construction</span></span>
-<span id="cb1-534"><a href="#cb1-534" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qDebug</span><span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"PSTHPlotOpenGLWidget: Histogram constructed"</span><span class="op">;</span></span>
-<span id="cb1-535"><a href="#cb1-535" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qDebug</span><span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"  Window size:"</span> <span class="op">&lt;&lt;</span> window_size<span class="op">;</span></span>
-<span id="cb1-536"><a href="#cb1-536" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qDebug</span><span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"  Bin size:"</span> <span class="op">&lt;&lt;</span> bin_size<span class="op">;</span></span>
-<span id="cb1-537"><a href="#cb1-537" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qDebug</span><span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"  Number of bins:"</span> <span class="op">&lt;&lt;</span> num_bins<span class="op">;</span></span>
-<span id="cb1-538"><a href="#cb1-538" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qDebug</span><span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"  Bin range: ["</span> <span class="op">&lt;&lt;</span> <span class="op">-</span>half_window <span class="op">&lt;&lt;</span> <span class="st">":"</span> <span class="op">&lt;&lt;</span> bin_size <span class="op">&lt;&lt;</span> <span class="st">":"</span> <span class="op">&lt;&lt;</span> half_window <span class="op">&lt;&lt;</span> <span class="st">"]"</span><span class="op">;</span></span>
-<span id="cb1-539"><a href="#cb1-539" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-540"><a href="#cb1-540" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Print some statistics</span></span>
-<span id="cb1-541"><a href="#cb1-541" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> total_events <span class="op">=</span> <span class="fl">0.0</span><span class="op">;</span></span>
-<span id="cb1-542"><a href="#cb1-542" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> max_count <span class="op">=</span> <span class="fl">0.0</span><span class="op">;</span></span>
-<span id="cb1-543"><a href="#cb1-543" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">double</span> <span class="at">const</span> count<span class="op">:</span> histogram<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-544"><a href="#cb1-544" aria-hidden="true" tabindex="-1"></a>        total_events <span class="op">+=</span> count<span class="op">;</span></span>
-<span id="cb1-545"><a href="#cb1-545" aria-hidden="true" tabindex="-1"></a>        max_count <span class="op">=</span> <span class="bu">std::</span>max<span class="op">(</span>max_count<span class="op">,</span> count<span class="op">);</span></span>
-<span id="cb1-546"><a href="#cb1-546" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-547"><a href="#cb1-547" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qDebug</span><span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"  Total events:"</span> <span class="op">&lt;&lt;</span> total_events<span class="op">;</span></span>
-<span id="cb1-548"><a href="#cb1-548" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qDebug</span><span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"  Max bin count (raw):"</span> <span class="op">&lt;&lt;</span> max_count<span class="op">;</span></span>
-<span id="cb1-549"><a href="#cb1-549" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qDebug</span><span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"  Number of trials:"</span> <span class="op">&lt;&lt;</span> total_trials<span class="op">;</span></span>
-<span id="cb1-550"><a href="#cb1-550" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-551"><a href="#cb1-551" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Apply scaling/normalization using shared RateEstimate infrastructure</span></span>
-<span id="cb1-552"><a href="#cb1-552" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Build a RateEstimate from the histogram data</span></span>
-<span id="cb1-553"><a href="#cb1-553" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>RateEstimate rate_estimate<span class="op">;</span></span>
-<span id="cb1-554"><a href="#cb1-554" aria-hidden="true" tabindex="-1"></a>    rate_estimate<span class="op">.</span>values <span class="op">=</span> histogram<span class="op">;</span><span class="co">// Copy histogram counts</span></span>
-<span id="cb1-555"><a href="#cb1-555" aria-hidden="true" tabindex="-1"></a>    rate_estimate<span class="op">.</span>num_trials <span class="op">=</span> total_trials<span class="op">;</span></span>
-<span id="cb1-556"><a href="#cb1-556" aria-hidden="true" tabindex="-1"></a>    rate_estimate<span class="op">.</span>metadata<span class="op">.</span>sample_spacing <span class="op">=</span> bin_size<span class="op">;</span></span>
-<span id="cb1-557"><a href="#cb1-557" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-558"><a href="#cb1-558" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Build times vector (bin centers)</span></span>
-<span id="cb1-559"><a href="#cb1-559" aria-hidden="true" tabindex="-1"></a>    rate_estimate<span class="op">.</span>times<span class="op">.</span>reserve<span class="op">(</span>num_bins<span class="op">);</span></span>
-<span id="cb1-560"><a href="#cb1-560" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> num_bins<span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-561"><a href="#cb1-561" aria-hidden="true" tabindex="-1"></a>        <span class="dt">double</span> <span class="at">const</span> bin_center <span class="op">=</span> <span class="op">-</span>half_window <span class="op">+</span> <span class="op">(</span>i <span class="op">+</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">*</span> bin_size<span class="op">;</span></span>
-<span id="cb1-562"><a href="#cb1-562" aria-hidden="true" tabindex="-1"></a>        rate_estimate<span class="op">.</span>times<span class="op">.</span>push_back<span class="op">(</span>bin_center<span class="op">);</span></span>
-<span id="cb1-563"><a href="#cb1-563" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-564"><a href="#cb1-564" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-565"><a href="#cb1-565" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Apply scaling based on state's scaling mode</span></span>
-<span id="cb1-566"><a href="#cb1-566" aria-hidden="true" tabindex="-1"></a>    <span class="co">// time_units_per_second: assume time is in milliseconds (1000.0)</span></span>
-<span id="cb1-567"><a href="#cb1-567" aria-hidden="true" tabindex="-1"></a>    <span class="co">// </span><span class="al">TODO</span><span class="co">: Make this configurable or derive from TimeFrame</span></span>
-<span id="cb1-568"><a href="#cb1-568" aria-hidden="true" tabindex="-1"></a>    <span class="kw">constexpr</span> <span class="dt">double</span> time_units_per_second <span class="op">=</span> <span class="fl">1000.0</span><span class="op">;</span></span>
-<span id="cb1-569"><a href="#cb1-569" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> scaling_mode <span class="op">=</span> _state<span class="op">-&gt;</span>scaling<span class="op">();</span></span>
-<span id="cb1-570"><a href="#cb1-570" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>applyScaling<span class="op">(</span>rate_estimate<span class="op">,</span> scaling_mode<span class="op">,</span> time_units_per_second<span class="op">);</span></span>
-<span id="cb1-571"><a href="#cb1-571" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-572"><a href="#cb1-572" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Copy scaled values back to histogram</span></span>
-<span id="cb1-573"><a href="#cb1-573" aria-hidden="true" tabindex="-1"></a>    histogram <span class="op">=</span> rate_estimate<span class="op">.</span>values<span class="op">;</span></span>
-<span id="cb1-574"><a href="#cb1-574" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-575"><a href="#cb1-575" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Recompute max after scaling for Y-axis bounds</span></span>
-<span id="cb1-576"><a href="#cb1-576" aria-hidden="true" tabindex="-1"></a>    max_count <span class="op">=</span> <span class="fl">0.0</span><span class="op">;</span></span>
-<span id="cb1-577"><a href="#cb1-577" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">double</span> <span class="at">const</span> val<span class="op">:</span> histogram<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-578"><a href="#cb1-578" aria-hidden="true" tabindex="-1"></a>        max_count <span class="op">=</span> <span class="bu">std::</span>max<span class="op">(</span>max_count<span class="op">,</span> val<span class="op">);</span></span>
-<span id="cb1-579"><a href="#cb1-579" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-580"><a href="#cb1-580" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qDebug</span><span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"  Max bin value (scaled):"</span> <span class="op">&lt;&lt;</span> max_count<span class="op">;</span></span>
-<span id="cb1-581"><a href="#cb1-581" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qDebug</span><span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"  Scaling mode:"</span> <span class="op">&lt;&lt;</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>scaling_mode<span class="op">);</span></span>
-<span id="cb1-582"><a href="#cb1-582" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-583"><a href="#cb1-583" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Update y_max to match the maximum histogram value (with some padding).</span></span>
-<span id="cb1-584"><a href="#cb1-584" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Sync both vertical axis state and view_state Y bounds so y panning uses correct range.</span></span>
-<span id="cb1-585"><a href="#cb1-585" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_state <span class="op">&amp;&amp;</span> max_count <span class="op">&gt;</span> <span class="fl">0.0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-586"><a href="#cb1-586" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> vertical_axis_state <span class="op">=</span> _state<span class="op">-&gt;</span>verticalAxisState<span class="op">();</span></span>
-<span id="cb1-587"><a href="#cb1-587" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>vertical_axis_state<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-588"><a href="#cb1-588" aria-hidden="true" tabindex="-1"></a>            <span class="dt">double</span> <span class="at">const</span> new_y_max <span class="op">=</span> max_count <span class="op">*</span> <span class="fl">1.1</span><span class="op">;</span></span>
-<span id="cb1-589"><a href="#cb1-589" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="bu">std::</span>abs<span class="op">(</span>vertical_axis_state<span class="op">-&gt;</span>getYMax<span class="op">()</span> <span class="op">-</span> new_y_max<span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0.01</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-590"><a href="#cb1-590" aria-hidden="true" tabindex="-1"></a>                _updating_y_max_from_rebuild <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb1-591"><a href="#cb1-591" aria-hidden="true" tabindex="-1"></a>                vertical_axis_state<span class="op">-&gt;</span>setYMax<span class="op">(</span>new_y_max<span class="op">);</span></span>
-<span id="cb1-592"><a href="#cb1-592" aria-hidden="true" tabindex="-1"></a>                _state<span class="op">-&gt;</span>setYBounds<span class="op">(</span>vertical_axis_state<span class="op">-&gt;</span>getYMin<span class="op">(),</span></span>
-<span id="cb1-593"><a href="#cb1-593" aria-hidden="true" tabindex="-1"></a>                                   vertical_axis_state<span class="op">-&gt;</span>getYMax<span class="op">());</span></span>
-<span id="cb1-594"><a href="#cb1-594" aria-hidden="true" tabindex="-1"></a>                _updating_y_max_from_rebuild <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
-<span id="cb1-595"><a href="#cb1-595" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-596"><a href="#cb1-596" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-597"><a href="#cb1-597" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-598"><a href="#cb1-598" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-599"><a href="#cb1-599" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Store histogram data and upload scene for rendering</span></span>
-<span id="cb1-600"><a href="#cb1-600" aria-hidden="true" tabindex="-1"></a>    _histogram_data<span class="op">.</span>bin_start <span class="op">=</span> <span class="op">-</span>half_window<span class="op">;</span></span>
-<span id="cb1-601"><a href="#cb1-601" aria-hidden="true" tabindex="-1"></a>    _histogram_data<span class="op">.</span>bin_width <span class="op">=</span> bin_size<span class="op">;</span></span>
-<span id="cb1-602"><a href="#cb1-602" aria-hidden="true" tabindex="-1"></a>    _histogram_data<span class="op">.</span>counts <span class="op">=</span> histogram<span class="op">;</span></span>
-<span id="cb1-603"><a href="#cb1-603" aria-hidden="true" tabindex="-1"></a>    uploadHistogramScene<span class="op">();</span></span>
-<span id="cb1-604"><a href="#cb1-604" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-605"><a href="#cb1-605" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-606"><a href="#cb1-606" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> PSTHPlotOpenGLWidget<span class="op">::</span>uploadHistogramScene<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-607"><a href="#cb1-607" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_histogram_data<span class="op">.</span>counts<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-608"><a href="#cb1-608" aria-hidden="true" tabindex="-1"></a>        _scene <span class="op">=</span> CorePlotting<span class="op">::</span>RenderableScene<span class="op">{};</span></span>
-<span id="cb1-609"><a href="#cb1-609" aria-hidden="true" tabindex="-1"></a>        _scene_renderer<span class="op">.</span>clearScene<span class="op">();</span></span>
-<span id="cb1-610"><a href="#cb1-610" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-611"><a href="#cb1-611" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-612"><a href="#cb1-612" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-613"><a href="#cb1-613" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Choose display mode from state</span></span>
-<span id="cb1-614"><a href="#cb1-614" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> mode <span class="op">=</span> CorePlotting<span class="op">::</span>HistogramDisplayMode<span class="op">::</span>Bar<span class="op">;</span></span>
-<span id="cb1-615"><a href="#cb1-615" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_state <span class="op">&amp;&amp;</span> _state<span class="op">-&gt;</span>getStyle<span class="op">()</span> <span class="op">==</span> PSTHStyle<span class="op">::</span>Line<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-616"><a href="#cb1-616" aria-hidden="true" tabindex="-1"></a>        mode <span class="op">=</span> CorePlotting<span class="op">::</span>HistogramDisplayMode<span class="op">::</span>Line<span class="op">;</span></span>
-<span id="cb1-617"><a href="#cb1-617" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-618"><a href="#cb1-618" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-619"><a href="#cb1-619" aria-hidden="true" tabindex="-1"></a>    _scene <span class="op">=</span> CorePlotting<span class="op">::</span>HistogramMapper<span class="op">::</span>buildScene<span class="op">(</span></span>
-<span id="cb1-620"><a href="#cb1-620" aria-hidden="true" tabindex="-1"></a>            _histogram_data<span class="op">,</span> mode<span class="op">,</span> _histogram_style<span class="op">);</span></span>
-<span id="cb1-621"><a href="#cb1-621" aria-hidden="true" tabindex="-1"></a>    _scene_renderer<span class="op">.</span>uploadScene<span class="op">(</span>_scene<span class="op">);</span></span>
-<span id="cb1-622"><a href="#cb1-622" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-623"><a href="#cb1-623" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-624"><a href="#cb1-624" aria-hidden="true" tabindex="-1"></a><span class="ex">QPointF</span> PSTHPlotOpenGLWidget<span class="op">::</span>screenToWorld<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-625"><a href="#cb1-625" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>screenToWorld<span class="op">(</span></span>
-<span id="cb1-626"><a href="#cb1-626" aria-hidden="true" tabindex="-1"></a>            _projection_matrix<span class="op">,</span> _widget_width<span class="op">,</span> _widget_height<span class="op">,</span> screen_pos<span class="op">);</span></span>
-<span id="cb1-627"><a href="#cb1-627" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-628"><a href="#cb1-628" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-629"><a href="#cb1-629" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> PSTHPlotOpenGLWidget<span class="op">::</span>updateMatrices<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-630"><a href="#cb1-630" aria-hidden="true" tabindex="-1"></a>    _projection_matrix <span class="op">=</span></span>
-<span id="cb1-631"><a href="#cb1-631" aria-hidden="true" tabindex="-1"></a>            Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>computeOrthoProjection<span class="op">(</span>_cached_view_state<span class="op">);</span></span>
-<span id="cb1-632"><a href="#cb1-632" aria-hidden="true" tabindex="-1"></a>    _view_matrix <span class="op">=</span> glm<span class="op">::</span>mat4<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">);</span></span>
-<span id="cb1-633"><a href="#cb1-633" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-634"><a href="#cb1-634" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-635"><a href="#cb1-635" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> PSTHPlotOpenGLWidget<span class="op">::</span>handlePanning<span class="op">(</span><span class="dt">int</span> delta_x<span class="op">,</span> <span class="dt">int</span> delta_y<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-636"><a href="#cb1-636" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_state<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-637"><a href="#cb1-637" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-638"><a href="#cb1-638" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-639"><a href="#cb1-639" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>handlePanning<span class="op">(</span></span>
-<span id="cb1-640"><a href="#cb1-640" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>_state<span class="op">,</span> _cached_view_state<span class="op">,</span> delta_x<span class="op">,</span> delta_y<span class="op">,</span> _widget_width<span class="op">,</span></span>
-<span id="cb1-641"><a href="#cb1-641" aria-hidden="true" tabindex="-1"></a>            _widget_height<span class="op">);</span></span>
-<span id="cb1-642"><a href="#cb1-642" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-643"><a href="#cb1-643" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-644"><a href="#cb1-644" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> PSTHPlotOpenGLWidget<span class="op">::</span>handleZoom<span class="op">(</span><span class="dt">float</span> delta<span class="op">,</span> <span class="dt">bool</span> y_only<span class="op">,</span> <span class="dt">bool</span> both_axes<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-645"><a href="#cb1-645" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_state<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-646"><a href="#cb1-646" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-647"><a href="#cb1-647" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-648"><a href="#cb1-648" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-649"><a href="#cb1-649" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>handleZoom<span class="op">(</span></span>
-<span id="cb1-650"><a href="#cb1-650" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>_state<span class="op">,</span> _cached_view_state<span class="op">,</span> delta<span class="op">,</span> y_only<span class="op">,</span> both_axes<span class="op">);</span></span>
-<span id="cb1-651"><a href="#cb1-651" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-524"><a href="#cb1-524" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Track total number of trials processed</span></span>
+<span id="cb1-525"><a href="#cb1-525" aria-hidden="true" tabindex="-1"></a>            total_trials<span class="op">++;</span></span>
+<span id="cb1-526"><a href="#cb1-526" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-527"><a href="#cb1-527" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-528"><a href="#cb1-528" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-529"><a href="#cb1-529" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Print histogram construction</span></span>
+<span id="cb1-530"><a href="#cb1-530" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qDebug</span><span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"PSTHPlotOpenGLWidget: Histogram constructed"</span><span class="op">;</span></span>
+<span id="cb1-531"><a href="#cb1-531" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qDebug</span><span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"  Window size:"</span> <span class="op">&lt;&lt;</span> window_size<span class="op">;</span></span>
+<span id="cb1-532"><a href="#cb1-532" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qDebug</span><span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"  Bin size:"</span> <span class="op">&lt;&lt;</span> bin_size<span class="op">;</span></span>
+<span id="cb1-533"><a href="#cb1-533" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qDebug</span><span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"  Number of bins:"</span> <span class="op">&lt;&lt;</span> num_bins<span class="op">;</span></span>
+<span id="cb1-534"><a href="#cb1-534" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qDebug</span><span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"  Bin range: ["</span> <span class="op">&lt;&lt;</span> <span class="op">-</span>half_window <span class="op">&lt;&lt;</span> <span class="st">":"</span> <span class="op">&lt;&lt;</span> bin_size <span class="op">&lt;&lt;</span> <span class="st">":"</span> <span class="op">&lt;&lt;</span> half_window <span class="op">&lt;&lt;</span> <span class="st">"]"</span><span class="op">;</span></span>
+<span id="cb1-535"><a href="#cb1-535" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-536"><a href="#cb1-536" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Print some statistics</span></span>
+<span id="cb1-537"><a href="#cb1-537" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> total_events <span class="op">=</span> <span class="fl">0.0</span><span class="op">;</span></span>
+<span id="cb1-538"><a href="#cb1-538" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> max_count <span class="op">=</span> <span class="fl">0.0</span><span class="op">;</span></span>
+<span id="cb1-539"><a href="#cb1-539" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">double</span> <span class="at">const</span> count<span class="op">:</span> histogram<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-540"><a href="#cb1-540" aria-hidden="true" tabindex="-1"></a>        total_events <span class="op">+=</span> count<span class="op">;</span></span>
+<span id="cb1-541"><a href="#cb1-541" aria-hidden="true" tabindex="-1"></a>        max_count <span class="op">=</span> <span class="bu">std::</span>max<span class="op">(</span>max_count<span class="op">,</span> count<span class="op">);</span></span>
+<span id="cb1-542"><a href="#cb1-542" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-543"><a href="#cb1-543" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qDebug</span><span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"  Total events:"</span> <span class="op">&lt;&lt;</span> total_events<span class="op">;</span></span>
+<span id="cb1-544"><a href="#cb1-544" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qDebug</span><span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"  Max bin count (raw):"</span> <span class="op">&lt;&lt;</span> max_count<span class="op">;</span></span>
+<span id="cb1-545"><a href="#cb1-545" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qDebug</span><span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"  Number of trials:"</span> <span class="op">&lt;&lt;</span> total_trials<span class="op">;</span></span>
+<span id="cb1-546"><a href="#cb1-546" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-547"><a href="#cb1-547" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Apply scaling/normalization using shared RateEstimate infrastructure</span></span>
+<span id="cb1-548"><a href="#cb1-548" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Build a RateEstimate from the histogram data</span></span>
+<span id="cb1-549"><a href="#cb1-549" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>RateEstimate rate_estimate<span class="op">;</span></span>
+<span id="cb1-550"><a href="#cb1-550" aria-hidden="true" tabindex="-1"></a>    rate_estimate<span class="op">.</span>values <span class="op">=</span> histogram<span class="op">;</span><span class="co">// Copy histogram counts</span></span>
+<span id="cb1-551"><a href="#cb1-551" aria-hidden="true" tabindex="-1"></a>    rate_estimate<span class="op">.</span>num_trials <span class="op">=</span> total_trials<span class="op">;</span></span>
+<span id="cb1-552"><a href="#cb1-552" aria-hidden="true" tabindex="-1"></a>    rate_estimate<span class="op">.</span>metadata<span class="op">.</span>sample_spacing <span class="op">=</span> bin_size<span class="op">;</span></span>
+<span id="cb1-553"><a href="#cb1-553" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-554"><a href="#cb1-554" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Build times vector (bin centers)</span></span>
+<span id="cb1-555"><a href="#cb1-555" aria-hidden="true" tabindex="-1"></a>    rate_estimate<span class="op">.</span>times<span class="op">.</span>reserve<span class="op">(</span>num_bins<span class="op">);</span></span>
+<span id="cb1-556"><a href="#cb1-556" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> num_bins<span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-557"><a href="#cb1-557" aria-hidden="true" tabindex="-1"></a>        <span class="dt">double</span> <span class="at">const</span> bin_center <span class="op">=</span> <span class="op">-</span>half_window <span class="op">+</span> <span class="op">(</span>i <span class="op">+</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">*</span> bin_size<span class="op">;</span></span>
+<span id="cb1-558"><a href="#cb1-558" aria-hidden="true" tabindex="-1"></a>        rate_estimate<span class="op">.</span>times<span class="op">.</span>push_back<span class="op">(</span>bin_center<span class="op">);</span></span>
+<span id="cb1-559"><a href="#cb1-559" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-560"><a href="#cb1-560" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-561"><a href="#cb1-561" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Apply scaling based on state's scaling mode</span></span>
+<span id="cb1-562"><a href="#cb1-562" aria-hidden="true" tabindex="-1"></a>    <span class="co">// time_units_per_second: assume time is in milliseconds (1000.0)</span></span>
+<span id="cb1-563"><a href="#cb1-563" aria-hidden="true" tabindex="-1"></a>    <span class="co">// </span><span class="al">TODO</span><span class="co">: Make this configurable or derive from TimeFrame</span></span>
+<span id="cb1-564"><a href="#cb1-564" aria-hidden="true" tabindex="-1"></a>    <span class="kw">constexpr</span> <span class="dt">double</span> time_units_per_second <span class="op">=</span> <span class="fl">1000.0</span><span class="op">;</span></span>
+<span id="cb1-565"><a href="#cb1-565" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> scaling_mode <span class="op">=</span> _state<span class="op">-&gt;</span>scaling<span class="op">();</span></span>
+<span id="cb1-566"><a href="#cb1-566" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>applyScaling<span class="op">(</span>rate_estimate<span class="op">,</span> scaling_mode<span class="op">,</span> time_units_per_second<span class="op">);</span></span>
+<span id="cb1-567"><a href="#cb1-567" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-568"><a href="#cb1-568" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Copy scaled values back to histogram</span></span>
+<span id="cb1-569"><a href="#cb1-569" aria-hidden="true" tabindex="-1"></a>    histogram <span class="op">=</span> rate_estimate<span class="op">.</span>values<span class="op">;</span></span>
+<span id="cb1-570"><a href="#cb1-570" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-571"><a href="#cb1-571" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Recompute max after scaling for Y-axis bounds</span></span>
+<span id="cb1-572"><a href="#cb1-572" aria-hidden="true" tabindex="-1"></a>    max_count <span class="op">=</span> <span class="fl">0.0</span><span class="op">;</span></span>
+<span id="cb1-573"><a href="#cb1-573" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">double</span> <span class="at">const</span> val<span class="op">:</span> histogram<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-574"><a href="#cb1-574" aria-hidden="true" tabindex="-1"></a>        max_count <span class="op">=</span> <span class="bu">std::</span>max<span class="op">(</span>max_count<span class="op">,</span> val<span class="op">);</span></span>
+<span id="cb1-575"><a href="#cb1-575" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-576"><a href="#cb1-576" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qDebug</span><span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"  Max bin value (scaled):"</span> <span class="op">&lt;&lt;</span> max_count<span class="op">;</span></span>
+<span id="cb1-577"><a href="#cb1-577" aria-hidden="true" tabindex="-1"></a>    <span class="fu">qDebug</span><span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"  Scaling mode:"</span> <span class="op">&lt;&lt;</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>scaling_mode<span class="op">);</span></span>
+<span id="cb1-578"><a href="#cb1-578" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-579"><a href="#cb1-579" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Update y_max to match the maximum histogram value (with some padding).</span></span>
+<span id="cb1-580"><a href="#cb1-580" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Sync both vertical axis state and view_state Y bounds so y panning uses correct range.</span></span>
+<span id="cb1-581"><a href="#cb1-581" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_state <span class="op">&amp;&amp;</span> max_count <span class="op">&gt;</span> <span class="fl">0.0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-582"><a href="#cb1-582" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> vertical_axis_state <span class="op">=</span> _state<span class="op">-&gt;</span>verticalAxisState<span class="op">();</span></span>
+<span id="cb1-583"><a href="#cb1-583" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>vertical_axis_state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-584"><a href="#cb1-584" aria-hidden="true" tabindex="-1"></a>            <span class="dt">double</span> <span class="at">const</span> new_y_max <span class="op">=</span> max_count <span class="op">*</span> <span class="fl">1.1</span><span class="op">;</span></span>
+<span id="cb1-585"><a href="#cb1-585" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="bu">std::</span>abs<span class="op">(</span>vertical_axis_state<span class="op">-&gt;</span>getYMax<span class="op">()</span> <span class="op">-</span> new_y_max<span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0.01</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-586"><a href="#cb1-586" aria-hidden="true" tabindex="-1"></a>                _updating_y_max_from_rebuild <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-587"><a href="#cb1-587" aria-hidden="true" tabindex="-1"></a>                vertical_axis_state<span class="op">-&gt;</span>setYMax<span class="op">(</span>new_y_max<span class="op">);</span></span>
+<span id="cb1-588"><a href="#cb1-588" aria-hidden="true" tabindex="-1"></a>                _state<span class="op">-&gt;</span>setYBounds<span class="op">(</span>vertical_axis_state<span class="op">-&gt;</span>getYMin<span class="op">(),</span></span>
+<span id="cb1-589"><a href="#cb1-589" aria-hidden="true" tabindex="-1"></a>                                   vertical_axis_state<span class="op">-&gt;</span>getYMax<span class="op">());</span></span>
+<span id="cb1-590"><a href="#cb1-590" aria-hidden="true" tabindex="-1"></a>                _updating_y_max_from_rebuild <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-591"><a href="#cb1-591" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-592"><a href="#cb1-592" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-593"><a href="#cb1-593" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-594"><a href="#cb1-594" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-595"><a href="#cb1-595" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Store histogram data and upload scene for rendering</span></span>
+<span id="cb1-596"><a href="#cb1-596" aria-hidden="true" tabindex="-1"></a>    _histogram_data<span class="op">.</span>bin_start <span class="op">=</span> <span class="op">-</span>half_window<span class="op">;</span></span>
+<span id="cb1-597"><a href="#cb1-597" aria-hidden="true" tabindex="-1"></a>    _histogram_data<span class="op">.</span>bin_width <span class="op">=</span> bin_size<span class="op">;</span></span>
+<span id="cb1-598"><a href="#cb1-598" aria-hidden="true" tabindex="-1"></a>    _histogram_data<span class="op">.</span>counts <span class="op">=</span> histogram<span class="op">;</span></span>
+<span id="cb1-599"><a href="#cb1-599" aria-hidden="true" tabindex="-1"></a>    uploadHistogramScene<span class="op">();</span></span>
+<span id="cb1-600"><a href="#cb1-600" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-601"><a href="#cb1-601" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-602"><a href="#cb1-602" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> PSTHPlotOpenGLWidget<span class="op">::</span>uploadHistogramScene<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-603"><a href="#cb1-603" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_histogram_data<span class="op">.</span>counts<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-604"><a href="#cb1-604" aria-hidden="true" tabindex="-1"></a>        _scene <span class="op">=</span> CorePlotting<span class="op">::</span>RenderableScene<span class="op">{};</span></span>
+<span id="cb1-605"><a href="#cb1-605" aria-hidden="true" tabindex="-1"></a>        _scene_renderer<span class="op">.</span>clearScene<span class="op">();</span></span>
+<span id="cb1-606"><a href="#cb1-606" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-607"><a href="#cb1-607" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-608"><a href="#cb1-608" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-609"><a href="#cb1-609" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Choose display mode from state</span></span>
+<span id="cb1-610"><a href="#cb1-610" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> mode <span class="op">=</span> CorePlotting<span class="op">::</span>HistogramDisplayMode<span class="op">::</span>Bar<span class="op">;</span></span>
+<span id="cb1-611"><a href="#cb1-611" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_state <span class="op">&amp;&amp;</span> _state<span class="op">-&gt;</span>getStyle<span class="op">()</span> <span class="op">==</span> PSTHStyle<span class="op">::</span>Line<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-612"><a href="#cb1-612" aria-hidden="true" tabindex="-1"></a>        mode <span class="op">=</span> CorePlotting<span class="op">::</span>HistogramDisplayMode<span class="op">::</span>Line<span class="op">;</span></span>
+<span id="cb1-613"><a href="#cb1-613" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-614"><a href="#cb1-614" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-615"><a href="#cb1-615" aria-hidden="true" tabindex="-1"></a>    _scene <span class="op">=</span> CorePlotting<span class="op">::</span>HistogramMapper<span class="op">::</span>buildScene<span class="op">(</span></span>
+<span id="cb1-616"><a href="#cb1-616" aria-hidden="true" tabindex="-1"></a>            _histogram_data<span class="op">,</span> mode<span class="op">,</span> _histogram_style<span class="op">);</span></span>
+<span id="cb1-617"><a href="#cb1-617" aria-hidden="true" tabindex="-1"></a>    _scene_renderer<span class="op">.</span>uploadScene<span class="op">(</span>_scene<span class="op">);</span></span>
+<span id="cb1-618"><a href="#cb1-618" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-619"><a href="#cb1-619" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-620"><a href="#cb1-620" aria-hidden="true" tabindex="-1"></a><span class="ex">QPointF</span> PSTHPlotOpenGLWidget<span class="op">::</span>screenToWorld<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb1-621"><a href="#cb1-621" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>screenToWorld<span class="op">(</span></span>
+<span id="cb1-622"><a href="#cb1-622" aria-hidden="true" tabindex="-1"></a>            _projection_matrix<span class="op">,</span> _widget_width<span class="op">,</span> _widget_height<span class="op">,</span> screen_pos<span class="op">);</span></span>
+<span id="cb1-623"><a href="#cb1-623" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-624"><a href="#cb1-624" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-625"><a href="#cb1-625" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> PSTHPlotOpenGLWidget<span class="op">::</span>updateMatrices<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-626"><a href="#cb1-626" aria-hidden="true" tabindex="-1"></a>    _projection_matrix <span class="op">=</span></span>
+<span id="cb1-627"><a href="#cb1-627" aria-hidden="true" tabindex="-1"></a>            Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>computeOrthoProjection<span class="op">(</span>_cached_view_state<span class="op">);</span></span>
+<span id="cb1-628"><a href="#cb1-628" aria-hidden="true" tabindex="-1"></a>    _view_matrix <span class="op">=</span> glm<span class="op">::</span>mat4<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">);</span></span>
+<span id="cb1-629"><a href="#cb1-629" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-630"><a href="#cb1-630" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-631"><a href="#cb1-631" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> PSTHPlotOpenGLWidget<span class="op">::</span>handlePanning<span class="op">(</span><span class="dt">int</span> delta_x<span class="op">,</span> <span class="dt">int</span> delta_y<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-632"><a href="#cb1-632" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-633"><a href="#cb1-633" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-634"><a href="#cb1-634" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-635"><a href="#cb1-635" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>handlePanning<span class="op">(</span></span>
+<span id="cb1-636"><a href="#cb1-636" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>_state<span class="op">,</span> _cached_view_state<span class="op">,</span> delta_x<span class="op">,</span> delta_y<span class="op">,</span> _widget_width<span class="op">,</span></span>
+<span id="cb1-637"><a href="#cb1-637" aria-hidden="true" tabindex="-1"></a>            _widget_height<span class="op">);</span></span>
+<span id="cb1-638"><a href="#cb1-638" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-639"><a href="#cb1-639" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-640"><a href="#cb1-640" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> PSTHPlotOpenGLWidget<span class="op">::</span>handleZoom<span class="op">(</span><span class="dt">float</span> delta<span class="op">,</span> <span class="dt">bool</span> y_only<span class="op">,</span> <span class="dt">bool</span> both_axes<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-641"><a href="#cb1-641" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-642"><a href="#cb1-642" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-643"><a href="#cb1-643" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-644"><a href="#cb1-644" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-645"><a href="#cb1-645" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>handleZoom<span class="op">(</span></span>
+<span id="cb1-646"><a href="#cb1-646" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>_state<span class="op">,</span> _cached_view_state<span class="op">,</span> delta<span class="op">,</span> y_only<span class="op">,</span> both_axes<span class="op">);</span></span>
+<span id="cb1-647"><a href="#cb1-647" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-29 at 21:29:38 +0000</p>
+<p>Updated on 2026-07-30 at 14:56:57 +0000</p>
 
 
 </section>

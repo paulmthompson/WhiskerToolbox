@@ -497,23 +497,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>time<span class="op">.</span>getValue<span class="op">()</span> <span class="op">-</span> params<span class="op">.</span>alignment_time<span class="op">);</span></span>
 <span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="dt">float</span> normalizeEventTimeValueV2<span class="op">(</span></span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>        EventWithId <span class="at">const</span> <span class="op">&amp;</span> event<span class="op">,</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="dt">float</span> normalizeClockTicksValueV2<span class="op">(</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>        ClockTicks <span class="at">const</span> <span class="op">&amp;</span> time<span class="op">,</span></span>
 <span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>        NormalizeTimeParamsV2 <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>event<span class="op">.</span>time<span class="op">().</span>getValue<span class="op">()</span> <span class="op">-</span> params<span class="op">.</span>alignment_time<span class="op">);</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>time<span class="op">.</span>getValue<span class="op">()</span> <span class="op">-</span> params<span class="op">.</span>alignment_time<span class="op">);</span></span>
 <span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="dt">float</span> normalizeSampleTimeValueV2<span class="op">(</span></span>
-<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>        AnalogTimeSeries<span class="op">::</span>TimeValuePoint <span class="at">const</span> <span class="op">&amp;</span> sample<span class="op">,</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="dt">float</span> normalizeEventTimeValueV2<span class="op">(</span></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>        EventWithId <span class="at">const</span> <span class="op">&amp;</span> event<span class="op">,</span></span>
 <span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>        NormalizeTimeParamsV2 <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>sample<span class="op">.</span>time<span class="op">().</span>getValue<span class="op">()</span> <span class="op">-</span> params<span class="op">.</span>alignment_time<span class="op">);</span></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>event<span class="op">.</span>time<span class="op">().</span>getValue<span class="op">()</span> <span class="op">-</span> params<span class="op">.</span>alignment_time<span class="op">);</span></span>
 <span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace Neuralyzer::Transforms::V2</span></span>
-<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// NEURALYZER_V2_NORMALIZE_TIME_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="dt">float</span> normalizeClockTicksWithIdValueV2<span class="op">(</span></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>        ClockTicksWithId <span class="at">const</span> <span class="op">&amp;</span> event<span class="op">,</span></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>        NormalizeTimeParamsV2 <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>event<span class="op">.</span>time<span class="op">().</span>getValue<span class="op">()</span> <span class="op">-</span> params<span class="op">.</span>alignment_time<span class="op">);</span></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="kw">inline</span> <span class="dt">float</span> normalizeSampleTimeValueV2<span class="op">(</span></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>        AnalogTimeSeries<span class="op">::</span>TimeValuePoint <span class="at">const</span> <span class="op">&amp;</span> sample<span class="op">,</span></span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>        NormalizeTimeParamsV2 <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>sample<span class="op">.</span>time<span class="op">().</span>getValue<span class="op">()</span> <span class="op">-</span> params<span class="op">.</span>alignment_time<span class="op">);</span></span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace Neuralyzer::Transforms::V2</span></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// NEURALYZER_V2_NORMALIZE_TIME_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-29 at 21:29:37 +0000</p>
+<p>Updated on 2026-07-30 at 14:56:56 +0000</p>
 
 
 </section>

@@ -624,8 +624,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-164"><a href="#cb5-164" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb5-165"><a href="#cb5-165" aria-hidden="true" tabindex="-1"></a>        ctx<span class="op">.</span>num_rows <span class="op">=</span> events<span class="op">-&gt;</span>size<span class="op">();</span></span>
 <span id="cb5-166"><a href="#cb5-166" aria-hidden="true" tabindex="-1"></a>        ctx<span class="op">.</span>row_times<span class="op">.</span>reserve<span class="op">(</span>ctx<span class="op">.</span>num_rows<span class="op">);</span></span>
-<span id="cb5-167"><a href="#cb5-167" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> ew<span class="op">:</span> events<span class="op">-&gt;</span>view<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb5-168"><a href="#cb5-168" aria-hidden="true" tabindex="-1"></a>            ctx<span class="op">.</span>row_times<span class="op">.</span>push_back<span class="op">(</span>ew<span class="op">.</span>event_time<span class="op">);</span></span>
+<span id="cb5-167"><a href="#cb5-167" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="bu">std::</span>size_t i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> ctx<span class="op">.</span>num_rows<span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-168"><a href="#cb5-168" aria-hidden="true" tabindex="-1"></a>            ctx<span class="op">.</span>row_times<span class="op">.</span>push_back<span class="op">(</span>events<span class="op">-&gt;</span>getStoredEvent<span class="op">(</span>i<span class="op">));</span></span>
 <span id="cb5-169"><a href="#cb5-169" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb5-170"><a href="#cb5-170" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-171"><a href="#cb5-171" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> time_storage <span class="op">=</span> TimeIndexStorageFactory<span class="op">::</span>createFromTimeIndices<span class="op">(</span>ctx<span class="op">.</span>row_times<span class="op">);</span></span>
@@ -829,7 +829,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-369"><a href="#cb5-369" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-370"><a href="#cb5-370" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace Neuralyzer::TensorDesign</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-29 at 21:29:37 +0000</p>
+<p>Updated on 2026-07-30 at 14:56:56 +0000</p>
 
 
 </section>

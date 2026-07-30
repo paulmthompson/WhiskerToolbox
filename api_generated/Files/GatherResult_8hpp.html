@@ -628,10 +628,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> type <span class="op">=</span> <span class="kw">typename</span> T<span class="op">::</span><span class="dt">element_type</span><span class="op">;</span></span>
 <span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
 <span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a><span class="co">// Specialization: DigitalEventSeries uses EventWithId</span></span>
+<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a><span class="co">// Specialization: DigitalEventSeries uses ClockTicksWithId</span></span>
 <span id="cb5-64"><a href="#cb5-64" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;&gt;</span></span>
 <span id="cb5-65"><a href="#cb5-65" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> element_type_of<span class="op">&lt;</span>DigitalEventSeries<span class="op">&gt;</span> <span class="op">{</span></span>
-<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> type <span class="op">=</span> EventWithId<span class="op">;</span></span>
+<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a>    <span class="kw">using</span> type <span class="op">=</span> ClockTicksWithId<span class="op">;</span></span>
 <span id="cb5-67"><a href="#cb5-67" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
 <span id="cb5-68"><a href="#cb5-68" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-69"><a href="#cb5-69" aria-hidden="true" tabindex="-1"></a><span class="co">// Specialization: AnalogTimeSeries uses TimeValuePoint</span></span>
@@ -1066,48 +1066,42 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-498"><a href="#cb5-498" aria-hidden="true" tabindex="-1"></a>               <span class="st">"GatherResult::alignmentTimeAt: row index must be in range"</span><span class="op">);</span></span>
 <span id="cb5-499"><a href="#cb5-499" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-500"><a href="#cb5-500" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> alignment_view <span class="op">=</span> _alignment_points<span class="op">-&gt;</span>view<span class="op">();</span></span>
-<span id="cb5-501"><a href="#cb5-501" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> alignment_time <span class="op">=</span> alignment_view<span class="op">[</span>original_idx<span class="op">].</span>time<span class="op">();</span></span>
-<span id="cb5-502"><a href="#cb5-502" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> alignment_tf <span class="op">=</span> _alignment_points<span class="op">-&gt;</span>getTimeFrame<span class="op">();</span></span>
+<span id="cb5-501"><a href="#cb5-501" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> alignment_view<span class="op">[</span>original_idx<span class="op">].</span>time<span class="op">();</span></span>
+<span id="cb5-502"><a href="#cb5-502" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb5-503"><a href="#cb5-503" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-504"><a href="#cb5-504" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>alignment_tf<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-505"><a href="#cb5-505" aria-hidden="true" tabindex="-1"></a>            <span class="cf">throw</span> <span class="bu">std::</span>runtime_error<span class="op">(</span><span class="st">"GatherResult::_alignmentTimeFromCompanionEvent: alignment time frame must be non-null"</span><span class="op">);</span></span>
-<span id="cb5-506"><a href="#cb5-506" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb5-507"><a href="#cb5-507" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> alignment_tf<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span>alignment_time<span class="op">);</span></span>
-<span id="cb5-508"><a href="#cb5-508" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-509"><a href="#cb5-509" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-510"><a href="#cb5-510" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T<span class="op">&gt;</span> _source<span class="op">;</span></span>
-<span id="cb5-511"><a href="#cb5-511" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries <span class="at">const</span><span class="op">&gt;</span> _windows<span class="op">;</span></span>
-<span id="cb5-512"><a href="#cb5-512" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalEventSeries <span class="at">const</span><span class="op">&gt;</span> _alignment_points<span class="op">;</span></span>
-<span id="cb5-513"><a href="#cb5-513" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameInterval<span class="op">&gt;</span> _query_intervals<span class="op">;</span><span class="co">// Source-coordinate intervals used for row creation</span></span>
-<span id="cb5-514"><a href="#cb5-514" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">value_type</span><span class="op">&gt;</span> _views<span class="op">;</span></span>
-<span id="cb5-515"><a href="#cb5-515" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">size_type</span><span class="op">&gt;</span> _reorder_indices<span class="op">;</span><span class="co">// Maps reordered position → original index</span></span>
-<span id="cb5-516"><a href="#cb5-516" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb5-517"><a href="#cb5-517" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-518"><a href="#cb5-518" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
-<span id="cb5-519"><a href="#cb5-519" aria-hidden="true" tabindex="-1"></a><span class="co">// Free Function: gather()</span></span>
-<span id="cb5-520"><a href="#cb5-520" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
-<span id="cb5-521"><a href="#cb5-521" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-522"><a href="#cb5-522" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
-<span id="cb5-523"><a href="#cb5-523" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> GatherResult<span class="op">&lt;</span>T<span class="op">&gt;</span> gather<span class="op">(</span></span>
-<span id="cb5-524"><a href="#cb5-524" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T<span class="op">&gt;</span> source<span class="op">,</span></span>
-<span id="cb5-525"><a href="#cb5-525" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries <span class="at">const</span><span class="op">&gt;</span> windows<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-526"><a href="#cb5-526" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> GatherResult<span class="op">&lt;</span>T<span class="op">&gt;::</span>create<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>source<span class="op">),</span> <span class="bu">std::</span>move<span class="op">(</span>windows<span class="op">));</span></span>
-<span id="cb5-527"><a href="#cb5-527" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb5-528"><a href="#cb5-528" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-529"><a href="#cb5-529" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
-<span id="cb5-530"><a href="#cb5-530" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> GatherResult<span class="op">&lt;</span>T<span class="op">&gt;</span> gather<span class="op">(</span></span>
-<span id="cb5-531"><a href="#cb5-531" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T<span class="op">&gt;</span> source<span class="op">,</span></span>
-<span id="cb5-532"><a href="#cb5-532" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries <span class="at">const</span><span class="op">&gt;</span> windows<span class="op">,</span></span>
-<span id="cb5-533"><a href="#cb5-533" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalEventSeries <span class="at">const</span><span class="op">&gt;</span> alignment_points<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-534"><a href="#cb5-534" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> GatherResult<span class="op">&lt;</span>T<span class="op">&gt;::</span>create<span class="op">(</span></span>
-<span id="cb5-535"><a href="#cb5-535" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>move<span class="op">(</span>source<span class="op">),</span></span>
-<span id="cb5-536"><a href="#cb5-536" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>move<span class="op">(</span>windows<span class="op">),</span></span>
-<span id="cb5-537"><a href="#cb5-537" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>move<span class="op">(</span>alignment_points<span class="op">));</span></span>
-<span id="cb5-538"><a href="#cb5-538" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb5-539"><a href="#cb5-539" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-540"><a href="#cb5-540" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// GATHER_RESULT_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb5-504"><a href="#cb5-504" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T<span class="op">&gt;</span> _source<span class="op">;</span></span>
+<span id="cb5-505"><a href="#cb5-505" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries <span class="at">const</span><span class="op">&gt;</span> _windows<span class="op">;</span></span>
+<span id="cb5-506"><a href="#cb5-506" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalEventSeries <span class="at">const</span><span class="op">&gt;</span> _alignment_points<span class="op">;</span></span>
+<span id="cb5-507"><a href="#cb5-507" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameInterval<span class="op">&gt;</span> _query_intervals<span class="op">;</span><span class="co">// Source-coordinate intervals used for row creation</span></span>
+<span id="cb5-508"><a href="#cb5-508" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">value_type</span><span class="op">&gt;</span> _views<span class="op">;</span></span>
+<span id="cb5-509"><a href="#cb5-509" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">size_type</span><span class="op">&gt;</span> _reorder_indices<span class="op">;</span><span class="co">// Maps reordered position → original index</span></span>
+<span id="cb5-510"><a href="#cb5-510" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb5-511"><a href="#cb5-511" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-512"><a href="#cb5-512" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb5-513"><a href="#cb5-513" aria-hidden="true" tabindex="-1"></a><span class="co">// Free Function: gather()</span></span>
+<span id="cb5-514"><a href="#cb5-514" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb5-515"><a href="#cb5-515" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-516"><a href="#cb5-516" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb5-517"><a href="#cb5-517" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> GatherResult<span class="op">&lt;</span>T<span class="op">&gt;</span> gather<span class="op">(</span></span>
+<span id="cb5-518"><a href="#cb5-518" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T<span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb5-519"><a href="#cb5-519" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries <span class="at">const</span><span class="op">&gt;</span> windows<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-520"><a href="#cb5-520" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> GatherResult<span class="op">&lt;</span>T<span class="op">&gt;::</span>create<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>source<span class="op">),</span> <span class="bu">std::</span>move<span class="op">(</span>windows<span class="op">));</span></span>
+<span id="cb5-521"><a href="#cb5-521" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-522"><a href="#cb5-522" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-523"><a href="#cb5-523" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb5-524"><a href="#cb5-524" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> GatherResult<span class="op">&lt;</span>T<span class="op">&gt;</span> gather<span class="op">(</span></span>
+<span id="cb5-525"><a href="#cb5-525" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T<span class="op">&gt;</span> source<span class="op">,</span></span>
+<span id="cb5-526"><a href="#cb5-526" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries <span class="at">const</span><span class="op">&gt;</span> windows<span class="op">,</span></span>
+<span id="cb5-527"><a href="#cb5-527" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalEventSeries <span class="at">const</span><span class="op">&gt;</span> alignment_points<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb5-528"><a href="#cb5-528" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> GatherResult<span class="op">&lt;</span>T<span class="op">&gt;::</span>create<span class="op">(</span></span>
+<span id="cb5-529"><a href="#cb5-529" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>move<span class="op">(</span>source<span class="op">),</span></span>
+<span id="cb5-530"><a href="#cb5-530" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>move<span class="op">(</span>windows<span class="op">),</span></span>
+<span id="cb5-531"><a href="#cb5-531" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>move<span class="op">(</span>alignment_points<span class="op">));</span></span>
+<span id="cb5-532"><a href="#cb5-532" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb5-533"><a href="#cb5-533" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-534"><a href="#cb5-534" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// GATHER_RESULT_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-29 at 21:29:36 +0000</p>
+<p>Updated on 2026-07-30 at 14:56:55 +0000</p>
 
 
 </section>

@@ -362,6 +362,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-digitaleventseries" id="toc-function-digitaleventseries" class="nav-link" data-scroll-target="#function-digitaleventseries">function DigitalEventSeries</a></li>
   <li><a href="#function-digitaleventseries-1" id="toc-function-digitaleventseries-1" class="nav-link" data-scroll-target="#function-digitaleventseries-1">function DigitalEventSeries</a></li>
   <li><a href="#function-view" id="toc-function-view" class="nav-link" data-scroll-target="#function-view">function view</a></li>
+  <li><a href="#function-getstoredevent" id="toc-function-getstoredevent" class="nav-link" data-scroll-target="#function-getstoredevent">function getStoredEvent</a></li>
+  <li><a href="#function-getstoredentityid" id="toc-function-getstoredentityid" class="nav-link" data-scroll-target="#function-getstoredentityid">function getStoredEntityId</a></li>
   <li><a href="#function-addevent" id="toc-function-addevent" class="nav-link" data-scroll-target="#function-addevent">function addEvent</a></li>
   <li><a href="#function-removeevent" id="toc-function-removeevent" class="nav-link" data-scroll-target="#function-removeevent">function removeEvent</a></li>
   <li><a href="#function-size" id="toc-function-size" class="nav-link" data-scroll-target="#function-size">function size</a></li>
@@ -453,7 +455,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>auto</td>
-<td><strong><a href="../../api_generated/Classes/classDigitalEventSeries.html#function-view">view</a></strong>() const<br>Get a std::ranges compatible view of the series.</td>
+<td><strong><a href="../../api_generated/Classes/classDigitalEventSeries.html#function-view">view</a></strong>() const<br>Get a std::ranges compatible view of the series in absolute clock-tick time.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a></td>
+<td><strong><a href="../../api_generated/Classes/classDigitalEventSeries.html#function-getstoredevent">getStoredEvent</a></strong>(size_t index) const<br>Get the stored event time at a flat storage index in <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> space.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structEntityId.html">EntityId</a></td>
+<td><strong><a href="../../api_generated/Classes/classDigitalEventSeries.html#function-getstoredentityid">getStoredEntityId</a></strong>(size_t index) const<br>Get the stored <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> at a flat storage index.</td>
 </tr>
 <tr class="even">
 <td>void</td>
@@ -489,11 +499,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>auto</td>
-<td><strong><a href="../../api_generated/Classes/classDigitalEventSeries.html#function-viewinrange">viewInRange</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start_index, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> stop_index, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const &amp; source_time_frame) const<br>Get events in a time range as a lazy view of <a href="../../api_generated/Classes/structEventWithId.html">EventWithId</a> objects.</td>
+<td><strong><a href="../../api_generated/Classes/classDigitalEventSeries.html#function-viewinrange">viewInRange</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start_index, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> stop_index, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const &amp; source_time_frame) const<br>Get events in a time range as a lazy view of <a href="../../api_generated/Classes/structClockTicksWithId.html">ClockTicksWithId</a> objects.</td>
 </tr>
 <tr class="odd">
 <td>auto</td>
-<td><strong><a href="../../api_generated/Classes/classDigitalEventSeries.html#function-viewtimesinrange">viewTimesInRange</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start_index, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> stop_index, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const &amp; source_time_frame) const<br>Get just the <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> values in a range as a lazy view.</td>
+<td><strong><a href="../../api_generated/Classes/classDigitalEventSeries.html#function-viewtimesinrange">viewTimesInRange</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start_index, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> stop_index, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const &amp; source_time_frame) const<br>Get event times in a range as a lazy view of clock ticks.</td>
 </tr>
 <tr class="even">
 <td>void</td>
@@ -529,11 +539,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classDigitalEventSeries.html#function-createview">createView</a></strong>(const std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &gt; &amp; source, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end)<br>Create a view-based series filtering by time range.</td>
+<td><strong><a href="../../api_generated/Classes/classDigitalEventSeries.html#function-createview">createView</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &gt; const &amp; source, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end)<br>Create a view-based series filtering by time range.</td>
 </tr>
 <tr class="odd">
 <td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classDigitalEventSeries.html#function-createview">createView</a></strong>(const std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &gt; &amp; source, std::unordered_set&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt; const &amp; entity_ids)<br>Create a view-based series filtering by EntityIds.</td>
+<td><strong><a href="../../api_generated/Classes/classDigitalEventSeries.html#function-createview">createView</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> const &gt; const &amp; source, std::unordered_set&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt; const &amp; entity_ids)<br>Create a view-based series filtering by EntityIds.</td>
 </tr>
 <tr class="even">
 <td>template &lt;typename ViewType &gt; <br>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt;</td>
@@ -615,7 +625,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="primary-interface" class="level2">
 <h2 class="anchored" data-anchor-id="primary-interface">Primary Interface</h2>
 <ul>
-<li><strong><a href="../../api_generated/Classes/classDigitalEventSeries.html#function-view">view()</a></strong>: Returns a lazy range of <a href="../../api_generated/Classes/structEventWithId.html">EventWithId</a> objects for iteration</li>
+<li><strong><a href="../../api_generated/Classes/classDigitalEventSeries.html#function-view">view()</a></strong>: Returns a lazy range of <a href="../../api_generated/Classes/structClockTicksWithId.html">ClockTicksWithId</a> objects for iteration</li>
+<li><strong><a href="../../api_generated/Classes/classDigitalEventSeries.html#function-getstoredevent">getStoredEvent()</a></strong>: Returns index-space event time at storage index (save/export)</li>
 <li><strong><a href="../../api_generated/Classes/classDigitalEventSeries.html#function-viewinrange">viewInRange()</a></strong>: Returns events in a time range (requires <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> for conversion)</li>
 <li><strong><a href="../../api_generated/Classes/classDigitalEventSeries.html#function-addevent">addEvent()</a>/removeEvent()</strong>: Modify events (owning storage only)</li>
 <li><strong><a href="../../api_generated/Classes/classDigitalEventSeries.html#function-createview">createView()</a>/createFromView()</strong>: Create view/lazy backed series</li>
@@ -652,7 +663,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex<span class="op">{</span><span class="dv">50</span><span class="op">},</span> TimeFrameIndex<span class="op">{</span><span class="dv">150</span><span class="op">});</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Events are always sorted by time. Duplicate times are rejected.</p>
 <p>View and Lazy storage are read-only; mutations throw std::runtime_error.</p>
-<p><a href="../../api_generated/Classes/structEventWithId.html">EventWithId</a> for element accessors (time(), id(), value())</p>
+<p><a href="../../api_generated/Classes/structClockTicksWithId.html">ClockTicksWithId</a> for element accessors (time(), id(), value())</p>
 <p><a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> for time interval data</p>
 </section>
 <section id="public-functions-documentation" class="level2">
@@ -677,14 +688,41 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-view" class="level3">
 <h3 class="anchored" data-anchor-id="function-view">function view</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> view<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Get a std::ranges compatible view of the series.</p>
-<p>Returns a random-access view that synthesizes <a href="../../api_generated/Classes/structEventWithId.html">EventWithId</a> objects on demand. Uses cached pointers for fast-path iteration when storage is contiguous. Allows iterating over <a href="../../api_generated/Classes/structEventWithId.html">EventWithId</a> objects directly.</p>
+<p>Get a std::ranges compatible view of the series in absolute clock-tick time.</p>
+<p><strong>See</strong>: <a href="../../api_generated/Classes/classDigitalEventSeries.html#function-getstoredevent">getStoredEvent</a> for index-space access (save/export)</p>
+<p><strong>Precondition</strong>: series time frame must be set (<a href="../../api_generated/Classes/classDigitalEventSeries.html#function-gettimeframe">getTimeFrame()</a> non-null)</p>
+<p>Returns a random-access view that synthesizes <a href="../../api_generated/Classes/structClockTicksWithId.html">ClockTicksWithId</a> objects on demand.</p>
+</section>
+<section id="function-getstoredevent" class="level3">
+<h3 class="anchored" data-anchor-id="function-getstoredevent">function getStoredEvent</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> TimeFrameIndex getStoredEvent<span class="op">(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> index</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the stored event time at a flat storage index in <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> space.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>index</strong> Flat index in [0, <a href="../../api_generated/Classes/classDigitalEventSeries.html#function-size">size()</a>)</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> from internal storage</p>
+<p>Use for save/export and other persistence paths that must write index coordinates.</p>
+</section>
+<section id="function-getstoredentityid" class="level3">
+<h3 class="anchored" data-anchor-id="function-getstoredentityid">function getStoredEntityId</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> EntityId getStoredEntityId<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> index</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the stored <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> at a flat storage index.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>index</strong> Flat index in [0, <a href="../../api_generated/Classes/classDigitalEventSeries.html#function-size">size()</a>)</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> from internal storage</p>
 </section>
 <section id="function-addevent" class="level3">
 <h3 class="anchored" data-anchor-id="function-addevent">function addEvent</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> addEvent<span class="op">(</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex event_time</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> addEvent<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex event_time</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Add a new event at the specified time.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -698,9 +736,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-removeevent" class="level3">
 <h3 class="anchored" data-anchor-id="function-removeevent">function removeEvent</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> removeEvent<span class="op">(</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex event_time</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> removeEvent<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex event_time</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Remove an event at the specified time.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -714,17 +752,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-size" class="level3">
 <h3 class="anchored" data-anchor-id="function-size">function size</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">size_t</span> size<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">size_t</span> size<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the number of events in the series.</p>
 <p><strong>Return</strong>: Number of events</p>
 </section>
 <section id="function-addevent-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-addevent-1">function addEvent</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> addEvent<span class="op">(</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex event_time<span class="op">,</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    EntityId entity_id<span class="op">,</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> addEvent<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex event_time<span class="op">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    EntityId entity_id<span class="op">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Add a new event at the specified time with a specific <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -740,7 +778,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-clear" class="level3">
 <h3 class="anchored" data-anchor-id="function-clear">function clear</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clear<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clear<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Remove all events from the series.</p>
 <p><strong>Exceptions</strong>:</p>
 <ul>
@@ -749,11 +787,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-movebyentityids" class="level3">
 <h3 class="anchored" data-anchor-id="function-movebyentityids">function moveByEntityIds</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t moveByEntityIds<span class="op">(</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    DigitalEventSeries <span class="op">&amp;</span> target<span class="op">,</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids<span class="op">,</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t moveByEntityIds<span class="op">(</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    DigitalEventSeries <span class="op">&amp;</span> target<span class="op">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids<span class="op">,</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Move events with specific EntityIds to another <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -770,11 +808,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-copybyentityids" class="level3">
 <h3 class="anchored" data-anchor-id="function-copybyentityids">function copyByEntityIds</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t copyByEntityIds<span class="op">(</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    DigitalEventSeries <span class="op">&amp;</span> target<span class="op">,</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids<span class="op">,</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t copyByEntityIds<span class="op">(</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    DigitalEventSeries <span class="op">&amp;</span> target<span class="op">,</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids<span class="op">,</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Copy events with specific EntityIds to another <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -787,10 +825,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-deletebyentityids" class="level3">
 <h3 class="anchored" data-anchor-id="function-deletebyentityids">function deleteByEntityIds</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t deleteByEntityIds<span class="op">(</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids<span class="op">,</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t deleteByEntityIds<span class="op">(</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids<span class="op">,</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Delete events with specific EntityIds from this series.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -806,47 +844,44 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-viewinrange" class="level3">
 <h3 class="anchored" data-anchor-id="function-viewinrange">function viewInRange</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> viewInRange<span class="op">(</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start_index<span class="op">,</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex stop_index<span class="op">,</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">&amp;</span> source_time_frame</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Get events in a time range as a lazy view of <a href="../../api_generated/Classes/structEventWithId.html">EventWithId</a> objects.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> viewInRange<span class="op">(</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start_index<span class="op">,</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex stop_index<span class="op">,</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">&amp;</span> source_time_frame</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get events in a time range as a lazy view of <a href="../../api_generated/Classes/structClockTicksWithId.html">ClockTicksWithId</a> objects.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>start_index</strong> Start time index (inclusive)</li>
 <li><strong>stop_index</strong> Stop time index (inclusive)</li>
 <li><strong>source_time_frame</strong> The time frame that start_index/stop_index are expressed in</li>
 </ul>
-<p><strong>Return</strong>: Lazy view of <a href="../../api_generated/Classes/structEventWithId.html">EventWithId</a> objects in the range</p>
-<p><strong>Note</strong>:</p>
-<ul>
-<li>If source_time_frame matches the series’ time frame, no conversion occurs</li>
-<li>If the series has no time frame set, indices are used directly</li>
-</ul>
+<p><strong>Return</strong>: Lazy view of <a href="../../api_generated/Classes/structClockTicksWithId.html">ClockTicksWithId</a> objects in the range</p>
+<p><strong>Precondition</strong>: series time frame must be set (<a href="../../api_generated/Classes/classDigitalEventSeries.html#function-gettimeframe">getTimeFrame()</a> non-null)</p>
 <p>This is the primary range query interface. It requires a source <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> parameter to enable proper time conversion when the query time base differs from the series’ internal time base.</p>
 </section>
 <section id="function-viewtimesinrange" class="level3">
 <h3 class="anchored" data-anchor-id="function-viewtimesinrange">function viewTimesInRange</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> viewTimesInRange<span class="op">(</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start_index<span class="op">,</span></span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex stop_index<span class="op">,</span></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">&amp;</span> source_time_frame</span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Get just the <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> values in a range as a lazy view.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> viewTimesInRange<span class="op">(</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start_index<span class="op">,</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex stop_index<span class="op">,</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    TimeFrame <span class="at">const</span> <span class="op">&amp;</span> source_time_frame</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get event times in a range as a lazy view of clock ticks.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>start_index</strong> Start time index (inclusive)</li>
 <li><strong>stop_index</strong> Stop time index (inclusive)</li>
 <li><strong>source_time_frame</strong> The time frame that start_index/stop_index are expressed in</li>
 </ul>
-<p><strong>Return</strong>: Lazy view of <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> values in the range</p>
+<p><strong>Return</strong>: Lazy view of <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> values in the range</p>
+<p><strong>Precondition</strong>: series time frame must be set (<a href="../../api_generated/Classes/classDigitalEventSeries.html#function-gettimeframe">getTimeFrame()</a> non-null)</p>
 </section>
 <section id="function-settimeframe" class="level3">
 <h3 class="anchored" data-anchor-id="function-settimeframe">function setTimeFrame</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> setTimeFrame<span class="op">(</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> time_frame</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> setTimeFrame<span class="op">(</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> time_frame</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Set the time frame.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -855,16 +890,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-gettimeframe" class="level3">
 <h3 class="anchored" data-anchor-id="function-gettimeframe">function getTimeFrame</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> getTimeFrame<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> getTimeFrame<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the time frame.</p>
 <p><strong>Return</strong>: std::shared_ptr<timeframe> The current time frame</timeframe></p>
 </section>
 <section id="function-setidentitycontext" class="level3">
 <h3 class="anchored" data-anchor-id="function-setidentitycontext">function setIdentityContext</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> setIdentityContext<span class="op">(</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    EntityRegistry <span class="op">*</span> registry</span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> setIdentityContext<span class="op">(</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    EntityRegistry <span class="op">*</span> registry</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Set the identity context for automatic <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> assignment.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -875,39 +910,39 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-rebuildallentityids" class="level3">
 <h3 class="anchored" data-anchor-id="function-rebuildallentityids">function rebuildAllEntityIds</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> rebuildAllEntityIds<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> rebuildAllEntityIds<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Rebuild all EntityIds for existing events.</p>
 <p>Assigns new unique EntityIds to all events using the current identity context. Requires <a href="../../api_generated/Classes/classDigitalEventSeries.html#function-setidentitycontext">setIdentityContext()</a> to have been called first.</p>
 </section>
 <section id="function-isview" class="level3">
 <h3 class="anchored" data-anchor-id="function-isview">function isView</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> isView<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> isView<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Check if storage is a view (doesn’t own data)</p>
 </section>
 <section id="function-islazy" class="level3">
 <h3 class="anchored" data-anchor-id="function-islazy">function isLazy</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> isLazy<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> isLazy<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Check if storage is lazy-evaluated.</p>
 </section>
 <section id="function-getstoragetype" class="level3">
 <h3 class="anchored" data-anchor-id="function-getstoragetype">function getStorageType</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> DigitalEventStorageType getStorageType<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> DigitalEventStorageType getStorageType<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the underlying storage type.</p>
 </section>
 <section id="function-materialize" class="level3">
 <h3 class="anchored" data-anchor-id="function-materialize">function materialize</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> materialize<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> materialize<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Materialize a lazy or view series into owning storage.</p>
 <p><strong>Return</strong>: New series with owning storage containing all events</p>
 <p>Copies all events from the current storage into a new series with owning storage. Useful when lazy evaluation is no longer desirable.</p>
 </section>
 <section id="function-createview" class="level3">
 <h3 class="anchored" data-anchor-id="function-createview">function createView</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> createView<span class="op">(</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="at">const</span> <span class="op">&gt;</span> <span class="op">&amp;</span> source<span class="op">,</span></span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start<span class="op">,</span></span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> createView<span class="op">(</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="at">const</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">,</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start<span class="op">,</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create a view-based series filtering by time range.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -919,10 +954,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-createview-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-createview-1">function createView</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> createView<span class="op">(</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="at">const</span> <span class="op">&gt;</span> <span class="op">&amp;</span> source<span class="op">,</span></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> createView<span class="op">(</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="at">const</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">,</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> entity_ids</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create a view-based series filtering by EntityIds.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -933,12 +968,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-createfromview" class="level3">
 <h3 class="anchored" data-anchor-id="function-createfromview">function createFromView</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> ViewType <span class="op">&gt;</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> createFromView<span class="op">(</span></span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    ViewType view<span class="op">,</span></span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> num_elements<span class="op">,</span></span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> time_frame <span class="op">=</span><span class="kw">nullptr</span></span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> ViewType <span class="op">&gt;</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> createFromView<span class="op">(</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    ViewType view<span class="op">,</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> num_elements<span class="op">,</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> time_frame <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create a lazy-evaluated series from a transform view.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -952,7 +987,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Return</strong>: New series backed by lazy storage</p>
 <hr>
-<p>Updated on 2026-07-29 at 21:29:33 +0000</p>
+<p>Updated on 2026-07-30 at 14:56:53 +0000</p>
 
 
 </section>

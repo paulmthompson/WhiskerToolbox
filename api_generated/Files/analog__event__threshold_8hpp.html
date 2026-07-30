@@ -424,7 +424,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt;</td>
-<td><strong><a href="../../api_generated/Files/analog__event__threshold_8hpp.html#function-event-threshold">event_threshold</a></strong>(<a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> const * analog_time_series, <a href="../../api_generated/Classes/structThresholdParams.html">ThresholdParams</a> const &amp; thresholdParams, <a href="../../api_generated/Files/data__transforms_8hpp.html#using-progresscallback">ProgressCallback</a> progressCallback)<br>Detects events in an <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> based on a threshold, with progress reporting.</td>
+<td><strong><a href="../../api_generated/Files/analog__event__threshold_8hpp.html#function-event-threshold">event_threshold</a></strong>(<a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> const * analog_time_series, <a href="../../api_generated/Classes/structThresholdParams.html">ThresholdParams</a> const &amp; thresholdParams, const <a href="../../api_generated/Files/data__transforms_8hpp.html#using-progresscallback">ProgressCallback</a> &amp; progressCallback)<br>Detects events in an <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> based on a threshold, with progress reporting.</td>
 </tr>
 </tbody>
 </table>
@@ -450,7 +450,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> event_threshold<span class="op">(</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    AnalogTimeSeries <span class="at">const</span> <span class="op">*</span> analog_time_series<span class="op">,</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    ThresholdParams <span class="at">const</span> <span class="op">&amp;</span> thresholdParams<span class="op">,</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    ProgressCallback progressCallback</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> ProgressCallback <span class="op">&amp;</span> progressCallback</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Detects events in an <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> based on a threshold, with progress reporting.</p>
 <p><strong>Parameters</strong>:</p>
@@ -500,7 +500,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalEventSeries<span class="op">&gt;</span> event_threshold<span class="op">(</span></span>
 <span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        AnalogTimeSeries <span class="at">const</span> <span class="op">*</span> analog_time_series<span class="op">,</span></span>
 <span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>        ThresholdParams <span class="at">const</span> <span class="op">&amp;</span> thresholdParams<span class="op">,</span></span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>        ProgressCallback progressCallback<span class="op">);</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>        <span class="at">const</span> ProgressCallback<span class="op">&amp;</span> progressCallback<span class="op">);</span></span>
 <span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> EventThresholdOperation <span class="kw">final</span> <span class="op">:</span> <span class="kw">public</span> TransformOperation <span class="op">{</span></span>
@@ -524,7 +524,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">//NEURALYZER_ANALOG_EVENT_THRESHOLD_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-29 at 21:29:35 +0000</p>
+<p>Updated on 2026-07-30 at 14:56:54 +0000</p>
 
 
 </section>

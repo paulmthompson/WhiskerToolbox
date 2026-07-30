@@ -449,8 +449,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"AnalogTimeSeries/Analog_Time_Series.hpp"</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DigitalTimeSeries/Digital_Event_Series.hpp"</span></span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DigitalTimeSeries/Digital_Interval_Series.hpp"</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TimeFrame/interval_data.hpp"</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TimeFrame/TimeFrame.hpp"</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TimeFrame/TimeFrame.hpp"</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TimeFrame/interval_data.hpp"</span></span>
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"transforms/utils/variant_type_check.hpp"</span></span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;algorithm&gt;</span></span>
@@ -497,10 +497,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Build search ranges based on search mode</span></span>
 <span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Note: intervals are in their own TimeFrameIndex coordinate system</span></span>
 <span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>pair<span class="op">&lt;</span>TimeFrameIndex<span class="op">,</span> TimeFrameIndex<span class="op">&gt;&gt;</span> search_ranges<span class="op">;</span></span>
-<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>intervalPeakParams<span class="op">.</span>search_mode <span class="op">==</span> IntervalPeakParams<span class="op">::</span>SearchMode<span class="op">::</span>WITHIN_INTERVALS<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Search within each interval: [start, end]</span></span>
-<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> interval_with_id <span class="op">:</span> intervals_view<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> interval_with_id<span class="op">:</span> intervals_view<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>            <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> interval <span class="op">=</span> interval_with_id<span class="op">.</span>value<span class="op">();</span></span>
 <span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex <span class="at">const</span> start <span class="op">=</span> interval_timeframe<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span>interval<span class="op">.</span>start<span class="op">);</span></span>
 <span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex <span class="at">const</span> end <span class="op">=</span> interval_timeframe<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span>interval<span class="op">.</span>end<span class="op">);</span></span>
@@ -543,9 +543,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Get data and corresponding time indices in this range</span></span>
 <span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a>        <span class="co">// If interval_timeframe is set, pass it for automatic conversion</span></span>
-<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> time_value_pair <span class="op">=</span> interval_timeframe </span>
-<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a>            <span class="op">?</span> analog_time_series<span class="op">-&gt;</span>getTimeValueSpanInTimeFrameIndexRange<span class="op">(</span>start_index<span class="op">,</span> end_index<span class="op">,</span> interval_timeframe<span class="op">.</span>get<span class="op">())</span></span>
-<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a>            <span class="op">:</span> analog_time_series<span class="op">-&gt;</span>getTimeValueSpanInTimeFrameIndexRange<span class="op">(</span>start_index<span class="op">,</span> end_index<span class="op">);</span></span>
+<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> time_value_pair <span class="op">=</span> interval_timeframe</span>
+<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a>                                       <span class="op">?</span> analog_time_series<span class="op">-&gt;</span>getTimeValueSpanInTimeFrameIndexRange<span class="op">(</span>start_index<span class="op">,</span> end_index<span class="op">,</span> interval_timeframe<span class="op">.</span>get<span class="op">())</span></span>
+<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a>                                       <span class="op">:</span> analog_time_series<span class="op">-&gt;</span>getTimeValueSpanInTimeFrameIndexRange<span class="op">(</span>start_index<span class="op">,</span> end_index<span class="op">);</span></span>
 <span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> data_span <span class="op">=</span> time_value_pair<span class="op">.</span>values<span class="op">;</span></span>
 <span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>data_span<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
@@ -573,7 +573,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-127"><a href="#cb3-127" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb3-128"><a href="#cb3-128" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex <span class="at">const</span> peak_time_index <span class="op">=</span> <span class="op">**</span>time_iter<span class="op">;</span></span>
 <span id="cb3-129"><a href="#cb3-129" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-130"><a href="#cb3-130" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Add event at the peak timestamp (in interval series coordinate system)</span></span>
+<span id="cb3-130"><a href="#cb3-130" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Peak indices are stored in the analog series coordinate system.</span></span>
 <span id="cb3-131"><a href="#cb3-131" aria-hidden="true" tabindex="-1"></a>        peak_events<span class="op">.</span>push_back<span class="op">(</span>peak_time_index<span class="op">);</span></span>
 <span id="cb3-132"><a href="#cb3-132" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-133"><a href="#cb3-133" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Report progress</span></span>
@@ -583,77 +583,87 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-137"><a href="#cb3-137" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb3-138"><a href="#cb3-138" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb3-139"><a href="#cb3-139" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-140"><a href="#cb3-140" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create the event series</span></span>
-<span id="cb3-141"><a href="#cb3-141" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> event_series <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DigitalEventSeries<span class="op">&gt;(</span>peak_events<span class="op">);</span></span>
-<span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>progressCallback<span class="op">)</span> progressCallback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
-<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> event_series<span class="op">;</span></span>
-<span id="cb3-146"><a href="#cb3-146" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb3-147"><a href="#cb3-147" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-149"><a href="#cb3-149" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string AnalogIntervalPeakOperation<span class="op">::</span>getName<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb3-150"><a href="#cb3-150" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">"Interval Peak Detection"</span><span class="op">;</span></span>
-<span id="cb3-151"><a href="#cb3-151" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-140"><a href="#cb3-140" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Attach a TimeFrame so view() can resolve stored indices to ClockTicks.</span></span>
+<span id="cb3-141"><a href="#cb3-141" aria-hidden="true" tabindex="-1"></a>    <span class="co">//</span></span>
+<span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Peak events are stored as analog TimeFrameIndex values. Prefer the analog</span></span>
+<span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a>    <span class="co">// TimeFrame because stored indices live in that coordinate system; use the</span></span>
+<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a>    <span class="co">// interval TimeFrame only when analog has none. DataManager::setData owns</span></span>
+<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a>    <span class="co">// long-term TimeFrame assignment when the result is committed to a session.</span></span>
+<span id="cb3-146"><a href="#cb3-146" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> event_series <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DigitalEventSeries<span class="op">&gt;(</span>peak_events<span class="op">);</span></span>
+<span id="cb3-147"><a href="#cb3-147" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> analog_timeframe <span class="op">=</span> analog_time_series<span class="op">-&gt;</span>getTimeFrame<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a>        event_series<span class="op">-&gt;</span>setTimeFrame<span class="op">(</span>analog_timeframe<span class="op">);</span></span>
+<span id="cb3-149"><a href="#cb3-149" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="op">(</span>interval_timeframe<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-150"><a href="#cb3-150" aria-hidden="true" tabindex="-1"></a>        event_series<span class="op">-&gt;</span>setTimeFrame<span class="op">(</span>interval_timeframe<span class="op">);</span></span>
+<span id="cb3-151"><a href="#cb3-151" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb3-152"><a href="#cb3-152" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-153"><a href="#cb3-153" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>type_index AnalogIntervalPeakOperation<span class="op">::</span>getTargetInputTypeIndex<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb3-154"><a href="#cb3-154" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">typeid</span><span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;);</span></span>
-<span id="cb3-155"><a href="#cb3-155" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb3-156"><a href="#cb3-156" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-157"><a href="#cb3-157" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> AnalogIntervalPeakOperation<span class="op">::</span>canApply<span class="op">(</span>DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> dataVariant<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb3-158"><a href="#cb3-158" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> canApplyToType<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;(</span>dataVariant<span class="op">);</span></span>
-<span id="cb3-159"><a href="#cb3-159" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb3-160"><a href="#cb3-160" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-161"><a href="#cb3-161" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>TransformParametersBase<span class="op">&gt;</span> AnalogIntervalPeakOperation<span class="op">::</span>getDefaultParameters<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb3-162"><a href="#cb3-162" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>IntervalPeakParams<span class="op">&gt;();</span></span>
-<span id="cb3-163"><a href="#cb3-163" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb3-164"><a href="#cb3-164" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-165"><a href="#cb3-165" aria-hidden="true" tabindex="-1"></a>DataTypeVariant AnalogIntervalPeakOperation<span class="op">::</span>execute<span class="op">(</span></span>
-<span id="cb3-166"><a href="#cb3-166" aria-hidden="true" tabindex="-1"></a>        DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> dataVariant<span class="op">,</span></span>
-<span id="cb3-167"><a href="#cb3-167" aria-hidden="true" tabindex="-1"></a>        TransformParametersBase <span class="at">const</span> <span class="op">*</span> transformParameters<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-168"><a href="#cb3-168" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> execute<span class="op">(</span>dataVariant<span class="op">,</span> transformParameters<span class="op">,</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb3-153"><a href="#cb3-153" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>progressCallback<span class="op">)</span> progressCallback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
+<span id="cb3-154"><a href="#cb3-154" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-155"><a href="#cb3-155" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> event_series<span class="op">;</span></span>
+<span id="cb3-156"><a href="#cb3-156" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-157"><a href="#cb3-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-158"><a href="#cb3-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-159"><a href="#cb3-159" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string AnalogIntervalPeakOperation<span class="op">::</span>getName<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb3-160"><a href="#cb3-160" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">"Interval Peak Detection"</span><span class="op">;</span></span>
+<span id="cb3-161"><a href="#cb3-161" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-162"><a href="#cb3-162" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-163"><a href="#cb3-163" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>type_index AnalogIntervalPeakOperation<span class="op">::</span>getTargetInputTypeIndex<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb3-164"><a href="#cb3-164" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">typeid</span><span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;);</span></span>
+<span id="cb3-165"><a href="#cb3-165" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-166"><a href="#cb3-166" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-167"><a href="#cb3-167" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> AnalogIntervalPeakOperation<span class="op">::</span>canApply<span class="op">(</span>DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> dataVariant<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb3-168"><a href="#cb3-168" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> canApplyToType<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;(</span>dataVariant<span class="op">);</span></span>
 <span id="cb3-169"><a href="#cb3-169" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb3-170"><a href="#cb3-170" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-171"><a href="#cb3-171" aria-hidden="true" tabindex="-1"></a>DataTypeVariant AnalogIntervalPeakOperation<span class="op">::</span>execute<span class="op">(</span></span>
-<span id="cb3-172"><a href="#cb3-172" aria-hidden="true" tabindex="-1"></a>        DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> dataVariant<span class="op">,</span></span>
-<span id="cb3-173"><a href="#cb3-173" aria-hidden="true" tabindex="-1"></a>        TransformParametersBase <span class="at">const</span> <span class="op">*</span> transformParameters<span class="op">,</span></span>
-<span id="cb3-174"><a href="#cb3-174" aria-hidden="true" tabindex="-1"></a>        ProgressCallback progressCallback<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-175"><a href="#cb3-175" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-176"><a href="#cb3-176" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">*</span> ptr_ptr <span class="op">=</span> <span class="bu">std::</span>get_if<span class="op">&lt;</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;&gt;(&amp;</span>dataVariant<span class="op">);</span></span>
-<span id="cb3-177"><a href="#cb3-177" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-178"><a href="#cb3-178" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>ptr_ptr <span class="op">||</span> <span class="op">!(*</span>ptr_ptr<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb3-179"><a href="#cb3-179" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"AnalogIntervalPeakOperation::execute called with incompatible variant type or null data."</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
-<span id="cb3-180"><a href="#cb3-180" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>progressCallback<span class="op">)</span> progressCallback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
-<span id="cb3-181"><a href="#cb3-181" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
-<span id="cb3-182"><a href="#cb3-182" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-183"><a href="#cb3-183" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-184"><a href="#cb3-184" aria-hidden="true" tabindex="-1"></a>    AnalogTimeSeries <span class="at">const</span> <span class="op">*</span> analog_raw_ptr <span class="op">=</span> <span class="op">(*</span>ptr_ptr<span class="op">).</span>get<span class="op">();</span></span>
+<span id="cb3-171"><a href="#cb3-171" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>TransformParametersBase<span class="op">&gt;</span> AnalogIntervalPeakOperation<span class="op">::</span>getDefaultParameters<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb3-172"><a href="#cb3-172" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>IntervalPeakParams<span class="op">&gt;();</span></span>
+<span id="cb3-173"><a href="#cb3-173" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-174"><a href="#cb3-174" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-175"><a href="#cb3-175" aria-hidden="true" tabindex="-1"></a>DataTypeVariant AnalogIntervalPeakOperation<span class="op">::</span>execute<span class="op">(</span></span>
+<span id="cb3-176"><a href="#cb3-176" aria-hidden="true" tabindex="-1"></a>        DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> dataVariant<span class="op">,</span></span>
+<span id="cb3-177"><a href="#cb3-177" aria-hidden="true" tabindex="-1"></a>        TransformParametersBase <span class="at">const</span> <span class="op">*</span> transformParameters<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-178"><a href="#cb3-178" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> execute<span class="op">(</span>dataVariant<span class="op">,</span> transformParameters<span class="op">,</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb3-179"><a href="#cb3-179" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-180"><a href="#cb3-180" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-181"><a href="#cb3-181" aria-hidden="true" tabindex="-1"></a>DataTypeVariant AnalogIntervalPeakOperation<span class="op">::</span>execute<span class="op">(</span></span>
+<span id="cb3-182"><a href="#cb3-182" aria-hidden="true" tabindex="-1"></a>        DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> dataVariant<span class="op">,</span></span>
+<span id="cb3-183"><a href="#cb3-183" aria-hidden="true" tabindex="-1"></a>        TransformParametersBase <span class="at">const</span> <span class="op">*</span> transformParameters<span class="op">,</span></span>
+<span id="cb3-184"><a href="#cb3-184" aria-hidden="true" tabindex="-1"></a>        ProgressCallback progressCallback<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb3-185"><a href="#cb3-185" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-186"><a href="#cb3-186" aria-hidden="true" tabindex="-1"></a>    IntervalPeakParams currentParams<span class="op">;</span></span>
+<span id="cb3-186"><a href="#cb3-186" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">*</span> ptr_ptr <span class="op">=</span> <span class="bu">std::</span>get_if<span class="op">&lt;</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;&gt;(&amp;</span>dataVariant<span class="op">);</span></span>
 <span id="cb3-187"><a href="#cb3-187" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-188"><a href="#cb3-188" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>transformParameters <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-189"><a href="#cb3-189" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> <span class="op">*</span> specificParams <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>IntervalPeakParams <span class="at">const</span> <span class="op">*&gt;(</span>transformParameters<span class="op">);</span></span>
-<span id="cb3-190"><a href="#cb3-190" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-191"><a href="#cb3-191" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>specificParams<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-192"><a href="#cb3-192" aria-hidden="true" tabindex="-1"></a>            currentParams <span class="op">=</span> <span class="op">*</span>specificParams<span class="op">;</span></span>
-<span id="cb3-193"><a href="#cb3-193" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
-<span id="cb3-194"><a href="#cb3-194" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"Warning: AnalogIntervalPeakOperation received incompatible parameter type! Using default parameters."</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
-<span id="cb3-195"><a href="#cb3-195" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb3-196"><a href="#cb3-196" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-188"><a href="#cb3-188" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>ptr_ptr <span class="op">||</span> <span class="op">!(*</span>ptr_ptr<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb3-189"><a href="#cb3-189" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"AnalogIntervalPeakOperation::execute called with incompatible variant type or null data."</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb3-190"><a href="#cb3-190" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>progressCallback<span class="op">)</span> progressCallback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
+<span id="cb3-191"><a href="#cb3-191" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb3-192"><a href="#cb3-192" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-193"><a href="#cb3-193" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-194"><a href="#cb3-194" aria-hidden="true" tabindex="-1"></a>    AnalogTimeSeries <span class="at">const</span> <span class="op">*</span> analog_raw_ptr <span class="op">=</span> <span class="op">(*</span>ptr_ptr<span class="op">).</span>get<span class="op">();</span></span>
+<span id="cb3-195"><a href="#cb3-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-196"><a href="#cb3-196" aria-hidden="true" tabindex="-1"></a>    IntervalPeakParams currentParams<span class="op">;</span></span>
 <span id="cb3-197"><a href="#cb3-197" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-198"><a href="#cb3-198" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalEventSeries<span class="op">&gt;</span> result <span class="op">=</span> find_interval_peaks<span class="op">(</span></span>
-<span id="cb3-199"><a href="#cb3-199" aria-hidden="true" tabindex="-1"></a>            analog_raw_ptr<span class="op">,</span> currentParams<span class="op">,</span> progressCallback<span class="op">);</span></span>
+<span id="cb3-198"><a href="#cb3-198" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>transformParameters <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-199"><a href="#cb3-199" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> <span class="op">*</span> specificParams <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>IntervalPeakParams <span class="at">const</span> <span class="op">*&gt;(</span>transformParameters<span class="op">);</span></span>
 <span id="cb3-200"><a href="#cb3-200" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-201"><a href="#cb3-201" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>result<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-202"><a href="#cb3-202" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"AnalogIntervalPeakOperation::execute: 'find_interval_peaks' failed to produce a result."</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
-<span id="cb3-203"><a href="#cb3-203" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>progressCallback<span class="op">)</span> progressCallback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
-<span id="cb3-204"><a href="#cb3-204" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
-<span id="cb3-205"><a href="#cb3-205" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-206"><a href="#cb3-206" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-207"><a href="#cb3-207" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">;</span></span>
-<span id="cb3-208"><a href="#cb3-208" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-201"><a href="#cb3-201" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>specificParams<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-202"><a href="#cb3-202" aria-hidden="true" tabindex="-1"></a>            currentParams <span class="op">=</span> <span class="op">*</span>specificParams<span class="op">;</span></span>
+<span id="cb3-203"><a href="#cb3-203" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb3-204"><a href="#cb3-204" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"Warning: AnalogIntervalPeakOperation received incompatible parameter type! Using default parameters."</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb3-205"><a href="#cb3-205" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-206"><a href="#cb3-206" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-207"><a href="#cb3-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-208"><a href="#cb3-208" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalEventSeries<span class="op">&gt;</span> result <span class="op">=</span> find_interval_peaks<span class="op">(</span></span>
+<span id="cb3-209"><a href="#cb3-209" aria-hidden="true" tabindex="-1"></a>            analog_raw_ptr<span class="op">,</span> currentParams<span class="op">,</span> progressCallback<span class="op">);</span></span>
+<span id="cb3-210"><a href="#cb3-210" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-211"><a href="#cb3-211" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>result<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-212"><a href="#cb3-212" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"AnalogIntervalPeakOperation::execute: 'find_interval_peaks' failed to produce a result."</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb3-213"><a href="#cb3-213" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>progressCallback<span class="op">)</span> progressCallback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
+<span id="cb3-214"><a href="#cb3-214" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb3-215"><a href="#cb3-215" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-216"><a href="#cb3-216" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-217"><a href="#cb3-217" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb3-218"><a href="#cb3-218" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-29 at 21:29:35 +0000</p>
+<p>Updated on 2026-07-30 at 14:56:54 +0000</p>
 
 
 </section>

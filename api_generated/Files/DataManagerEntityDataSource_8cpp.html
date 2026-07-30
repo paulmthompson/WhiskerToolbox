@@ -423,7 +423,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>size_t local_index<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> ids_range <span class="op">=</span> data<span class="op">-&gt;</span>getEntityIdsAtTime<span class="op">(</span>time<span class="op">);</span></span>
 <span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t idx <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> id <span class="op">:</span> ids_range<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> id<span class="op">:</span> ids_range<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>idx <span class="op">==</span> local_index<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> id<span class="op">;</span></span>
 <span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
@@ -438,7 +438,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data<span class="op">,</span></span>
 <span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex time<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> result<span class="op">;</span></span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> id <span class="op">:</span> data<span class="op">-&gt;</span>getEntityIdsAtTime<span class="op">(</span>time<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> id<span class="op">:</span> data<span class="op">-&gt;</span>getEntityIdsAtTime<span class="op">(</span>time<span class="op">))</span> <span class="op">{</span></span>
 <span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>push_back<span class="op">(</span>id<span class="op">);</span></span>
 <span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">;</span></span>
@@ -448,7 +448,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
 <span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> extractEntityIdsFromRagged<span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> result<span class="op">;</span></span>
-<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="op">[</span>time<span class="op">,</span> entity_id<span class="op">,</span> data_ref<span class="op">]</span> <span class="op">:</span> data<span class="op">-&gt;</span>flattened_data<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="op">[</span>time<span class="op">,</span> entity_id<span class="op">,</span> data_ref<span class="op">]:</span> data<span class="op">-&gt;</span>flattened_data<span class="op">())</span> <span class="op">{</span></span>
 <span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>insert<span class="op">(</span>entity_id<span class="op">);</span></span>
 <span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">;</span></span>
@@ -459,7 +459,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> extractEntityIdsFromVector<span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> ids <span class="op">=</span> data<span class="op">-&gt;</span>view<span class="op">();</span></span>
 <span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> result<span class="op">;</span></span>
-<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> item <span class="op">:</span> ids<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> item<span class="op">:</span> ids<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>        result<span class="op">.</span>insert<span class="op">(</span>item<span class="op">.</span>id<span class="op">());</span></span>
 <span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">;</span></span>
@@ -469,7 +469,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
 <span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t countElementsAtTime<span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data<span class="op">,</span> TimeFrameIndex time<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">([[</span><span class="at">maybe_unused</span><span class="op">]]</span> <span class="kw">auto</span> <span class="at">const</span> id <span class="op">:</span> data<span class="op">-&gt;</span>getEntityIdsAtTime<span class="op">(</span>time<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">([[</span><span class="at">maybe_unused</span><span class="op">]]</span> <span class="kw">auto</span> <span class="at">const</span> id<span class="op">:</span> data<span class="op">-&gt;</span>getEntityIdsAtTime<span class="op">(</span>time<span class="op">))</span> <span class="op">{</span></span>
 <span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>        <span class="op">++</span>count<span class="op">;</span></span>
 <span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> count<span class="op">;</span></span>
@@ -518,243 +518,241 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-115"><a href="#cb1-115" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-116"><a href="#cb1-116" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>DigitalEvent<span class="op">:</span></span>
 <span id="cb1-117"><a href="#cb1-117" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>DigitalEventSeries<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-118"><a href="#cb1-118" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> events <span class="op">=</span> data<span class="op">-&gt;</span>view<span class="op">();</span></span>
-<span id="cb1-119"><a href="#cb1-119" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> event <span class="op">:</span> events<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-120"><a href="#cb1-120" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>event<span class="op">.</span>time<span class="op">()</span> <span class="op">==</span> time<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-121"><a href="#cb1-121" aria-hidden="true" tabindex="-1"></a>                        <span class="cf">return</span> <span class="op">{</span>event<span class="op">.</span>id<span class="op">()};</span></span>
-<span id="cb1-122"><a href="#cb1-122" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
-<span id="cb1-123"><a href="#cb1-123" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
-<span id="cb1-124"><a href="#cb1-124" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-125"><a href="#cb1-125" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-126"><a href="#cb1-126" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-127"><a href="#cb1-127" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>DigitalInterval<span class="op">:</span></span>
-<span id="cb1-128"><a href="#cb1-128" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-129"><a href="#cb1-129" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> intervals <span class="op">=</span> data<span class="op">-&gt;</span>view<span class="op">();</span></span>
-<span id="cb1-130"><a href="#cb1-130" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> <span class="at">const</span> <span class="op">*</span> timeframe <span class="op">=</span> data<span class="op">-&gt;</span>getTimeFrame<span class="op">().</span>get<span class="op">();</span></span>
-<span id="cb1-131"><a href="#cb1-131" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> interval <span class="op">:</span> intervals<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-132"><a href="#cb1-132" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex <span class="at">const</span> start <span class="op">=</span> timeframe<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span>interval<span class="op">.</span>value<span class="op">().</span>start<span class="op">);</span></span>
-<span id="cb1-133"><a href="#cb1-133" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex <span class="at">const</span> end <span class="op">=</span> timeframe<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span>interval<span class="op">.</span>value<span class="op">().</span>end<span class="op">);</span></span>
-<span id="cb1-134"><a href="#cb1-134" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>start <span class="op">&lt;=</span> time <span class="op">&amp;&amp;</span></span>
-<span id="cb1-135"><a href="#cb1-135" aria-hidden="true" tabindex="-1"></a>                        time <span class="op">&lt;=</span> end<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-136"><a href="#cb1-136" aria-hidden="true" tabindex="-1"></a>                        <span class="cf">return</span> <span class="op">{</span>interval<span class="op">.</span>id<span class="op">()};</span></span>
-<span id="cb1-137"><a href="#cb1-137" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
-<span id="cb1-138"><a href="#cb1-138" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
-<span id="cb1-139"><a href="#cb1-139" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-140"><a href="#cb1-140" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-141"><a href="#cb1-141" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Video<span class="op">:</span></span>
-<span id="cb1-143"><a href="#cb1-143" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Images<span class="op">:</span></span>
-<span id="cb1-144"><a href="#cb1-144" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Analog<span class="op">:</span></span>
-<span id="cb1-145"><a href="#cb1-145" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>RaggedAnalog<span class="op">:</span></span>
-<span id="cb1-146"><a href="#cb1-146" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Tensor<span class="op">:</span></span>
-<span id="cb1-147"><a href="#cb1-147" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Time<span class="op">:</span></span>
-<span id="cb1-148"><a href="#cb1-148" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Unknown<span class="op">:</span></span>
-<span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">{};</span></span>
-<span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> DataManagerEntityDataSource<span class="op">::</span>getAllEntityIdsAtTime<span class="op">(</span></span>
-<span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
-<span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex time<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_dm<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
-<span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a>    DM_DataType <span class="at">const</span> type <span class="op">=</span> _dm<span class="op">-&gt;</span>getType<span class="op">(</span>data_key<span class="op">);</span></span>
-<span id="cb1-163"><a href="#cb1-163" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-164"><a href="#cb1-164" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> <span class="op">(</span>type<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-165"><a href="#cb1-165" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Line<span class="op">:</span></span>
-<span id="cb1-166"><a href="#cb1-166" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>LineData<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-167"><a href="#cb1-167" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> collectEntityIdsAtTime<span class="op">(</span>data<span class="op">,</span> time<span class="op">);</span></span>
-<span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Mask<span class="op">:</span></span>
-<span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>MaskData<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> collectEntityIdsAtTime<span class="op">(</span>data<span class="op">,</span> time<span class="op">);</span></span>
-<span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-175"><a href="#cb1-175" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-176"><a href="#cb1-176" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Points<span class="op">:</span></span>
-<span id="cb1-178"><a href="#cb1-178" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>PointData<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-179"><a href="#cb1-179" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> collectEntityIdsAtTime<span class="op">(</span>data<span class="op">,</span> time<span class="op">);</span></span>
-<span id="cb1-180"><a href="#cb1-180" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-181"><a href="#cb1-181" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-182"><a href="#cb1-182" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-183"><a href="#cb1-183" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>DigitalEvent<span class="op">:</span></span>
-<span id="cb1-184"><a href="#cb1-184" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>DigitalEventSeries<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-185"><a href="#cb1-185" aria-hidden="true" tabindex="-1"></a>                <span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> result<span class="op">;</span></span>
-<span id="cb1-186"><a href="#cb1-186" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> events <span class="op">=</span> data<span class="op">-&gt;</span>view<span class="op">();</span></span>
-<span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> event <span class="op">:</span> events<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>event<span class="op">.</span>time<span class="op">()</span> <span class="op">==</span> time<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a>                        result<span class="op">.</span>push_back<span class="op">(</span>event<span class="op">.</span>id<span class="op">());</span></span>
-<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
-<span id="cb1-191"><a href="#cb1-191" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
-<span id="cb1-192"><a href="#cb1-192" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> result<span class="op">;</span></span>
-<span id="cb1-193"><a href="#cb1-193" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-194"><a href="#cb1-194" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-195"><a href="#cb1-195" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-196"><a href="#cb1-196" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>DigitalInterval<span class="op">:</span></span>
-<span id="cb1-197"><a href="#cb1-197" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-198"><a href="#cb1-198" aria-hidden="true" tabindex="-1"></a>                <span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> result<span class="op">;</span></span>
-<span id="cb1-199"><a href="#cb1-199" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> intervals <span class="op">=</span> data<span class="op">-&gt;</span>view<span class="op">();</span></span>
-<span id="cb1-200"><a href="#cb1-200" aria-hidden="true" tabindex="-1"></a>                ClockTicks <span class="at">const</span> time_ticks <span class="op">=</span> data<span class="op">-&gt;</span>getTimeFrame<span class="op">()-&gt;</span>getTimeAtIndex<span class="op">(</span>time<span class="op">);</span></span>
-<span id="cb1-201"><a href="#cb1-201" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> interval <span class="op">:</span> intervals<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-202"><a href="#cb1-202" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>interval<span class="op">.</span>value<span class="op">().</span>start <span class="op">&lt;=</span> time_ticks <span class="op">&amp;&amp;</span></span>
-<span id="cb1-203"><a href="#cb1-203" aria-hidden="true" tabindex="-1"></a>                        time_ticks <span class="op">&lt;=</span> interval<span class="op">.</span>value<span class="op">().</span>end<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-204"><a href="#cb1-204" aria-hidden="true" tabindex="-1"></a>                        result<span class="op">.</span>push_back<span class="op">(</span>interval<span class="op">.</span>id<span class="op">());</span></span>
-<span id="cb1-205"><a href="#cb1-205" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
-<span id="cb1-206"><a href="#cb1-206" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
-<span id="cb1-207"><a href="#cb1-207" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> result<span class="op">;</span></span>
-<span id="cb1-208"><a href="#cb1-208" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-209"><a href="#cb1-209" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-210"><a href="#cb1-210" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-211"><a href="#cb1-211" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Video<span class="op">:</span></span>
-<span id="cb1-212"><a href="#cb1-212" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Images<span class="op">:</span></span>
-<span id="cb1-213"><a href="#cb1-213" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Analog<span class="op">:</span></span>
-<span id="cb1-214"><a href="#cb1-214" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>RaggedAnalog<span class="op">:</span></span>
-<span id="cb1-215"><a href="#cb1-215" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Tensor<span class="op">:</span></span>
-<span id="cb1-216"><a href="#cb1-216" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Time<span class="op">:</span></span>
-<span id="cb1-217"><a href="#cb1-217" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Unknown<span class="op">:</span></span>
-<span id="cb1-218"><a href="#cb1-218" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-219"><a href="#cb1-219" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-220"><a href="#cb1-220" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-221"><a href="#cb1-221" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">{};</span></span>
-<span id="cb1-222"><a href="#cb1-222" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-223"><a href="#cb1-223" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-224"><a href="#cb1-224" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> DataManagerEntityDataSource<span class="op">::</span>getAllEntityIds<span class="op">(</span></span>
-<span id="cb1-225"><a href="#cb1-225" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-226"><a href="#cb1-226" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_dm<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-227"><a href="#cb1-227" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
-<span id="cb1-228"><a href="#cb1-228" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-118"><a href="#cb1-118" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> data<span class="op">-&gt;</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-119"><a href="#cb1-119" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>data<span class="op">-&gt;</span>getStoredEvent<span class="op">(</span>i<span class="op">)</span> <span class="op">==</span> time<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-120"><a href="#cb1-120" aria-hidden="true" tabindex="-1"></a>                        <span class="cf">return</span> <span class="op">{</span>data<span class="op">-&gt;</span>getStoredEntityId<span class="op">(</span>i<span class="op">)};</span></span>
+<span id="cb1-121"><a href="#cb1-121" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb1-122"><a href="#cb1-122" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb1-123"><a href="#cb1-123" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-124"><a href="#cb1-124" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-125"><a href="#cb1-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-126"><a href="#cb1-126" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>DigitalInterval<span class="op">:</span></span>
+<span id="cb1-127"><a href="#cb1-127" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-128"><a href="#cb1-128" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> intervals <span class="op">=</span> data<span class="op">-&gt;</span>view<span class="op">();</span></span>
+<span id="cb1-129"><a href="#cb1-129" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> <span class="at">const</span> <span class="op">*</span> timeframe <span class="op">=</span> data<span class="op">-&gt;</span>getTimeFrame<span class="op">().</span>get<span class="op">();</span></span>
+<span id="cb1-130"><a href="#cb1-130" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">:</span> intervals<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-131"><a href="#cb1-131" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex <span class="at">const</span> start <span class="op">=</span> timeframe<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span>interval<span class="op">.</span>value<span class="op">().</span>start<span class="op">);</span></span>
+<span id="cb1-132"><a href="#cb1-132" aria-hidden="true" tabindex="-1"></a>                    TimeFrameIndex <span class="at">const</span> end <span class="op">=</span> timeframe<span class="op">-&gt;</span>getIndexAtTime<span class="op">(</span>interval<span class="op">.</span>value<span class="op">().</span>end<span class="op">);</span></span>
+<span id="cb1-133"><a href="#cb1-133" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>start <span class="op">&lt;=</span> time <span class="op">&amp;&amp;</span></span>
+<span id="cb1-134"><a href="#cb1-134" aria-hidden="true" tabindex="-1"></a>                        time <span class="op">&lt;=</span> end<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-135"><a href="#cb1-135" aria-hidden="true" tabindex="-1"></a>                        <span class="cf">return</span> <span class="op">{</span>interval<span class="op">.</span>id<span class="op">()};</span></span>
+<span id="cb1-136"><a href="#cb1-136" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb1-137"><a href="#cb1-137" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb1-138"><a href="#cb1-138" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-139"><a href="#cb1-139" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-140"><a href="#cb1-140" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-141"><a href="#cb1-141" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Video<span class="op">:</span></span>
+<span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Images<span class="op">:</span></span>
+<span id="cb1-143"><a href="#cb1-143" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Analog<span class="op">:</span></span>
+<span id="cb1-144"><a href="#cb1-144" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>RaggedAnalog<span class="op">:</span></span>
+<span id="cb1-145"><a href="#cb1-145" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Tensor<span class="op">:</span></span>
+<span id="cb1-146"><a href="#cb1-146" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Time<span class="op">:</span></span>
+<span id="cb1-147"><a href="#cb1-147" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Unknown<span class="op">:</span></span>
+<span id="cb1-148"><a href="#cb1-148" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> DataManagerEntityDataSource<span class="op">::</span>getAllEntityIdsAtTime<span class="op">(</span></span>
+<span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex time<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_dm<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a>    DM_DataType <span class="at">const</span> type <span class="op">=</span> _dm<span class="op">-&gt;</span>getType<span class="op">(</span>data_key<span class="op">);</span></span>
+<span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-163"><a href="#cb1-163" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> <span class="op">(</span>type<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-164"><a href="#cb1-164" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Line<span class="op">:</span></span>
+<span id="cb1-165"><a href="#cb1-165" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>LineData<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-166"><a href="#cb1-166" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> collectEntityIdsAtTime<span class="op">(</span>data<span class="op">,</span> time<span class="op">);</span></span>
+<span id="cb1-167"><a href="#cb1-167" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Mask<span class="op">:</span></span>
+<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>MaskData<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> collectEntityIdsAtTime<span class="op">(</span>data<span class="op">,</span> time<span class="op">);</span></span>
+<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-175"><a href="#cb1-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-176"><a href="#cb1-176" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Points<span class="op">:</span></span>
+<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>PointData<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-178"><a href="#cb1-178" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> collectEntityIdsAtTime<span class="op">(</span>data<span class="op">,</span> time<span class="op">);</span></span>
+<span id="cb1-179"><a href="#cb1-179" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-180"><a href="#cb1-180" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-181"><a href="#cb1-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-182"><a href="#cb1-182" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>DigitalEvent<span class="op">:</span></span>
+<span id="cb1-183"><a href="#cb1-183" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>DigitalEventSeries<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-184"><a href="#cb1-184" aria-hidden="true" tabindex="-1"></a>                <span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> result<span class="op">;</span></span>
+<span id="cb1-185"><a href="#cb1-185" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> data<span class="op">-&gt;</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-186"><a href="#cb1-186" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>data<span class="op">-&gt;</span>getStoredEvent<span class="op">(</span>i<span class="op">)</span> <span class="op">==</span> time<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a>                        result<span class="op">.</span>push_back<span class="op">(</span>data<span class="op">-&gt;</span>getStoredEntityId<span class="op">(</span>i<span class="op">));</span></span>
+<span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb1-191"><a href="#cb1-191" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-192"><a href="#cb1-192" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-193"><a href="#cb1-193" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-194"><a href="#cb1-194" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>DigitalInterval<span class="op">:</span></span>
+<span id="cb1-195"><a href="#cb1-195" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-196"><a href="#cb1-196" aria-hidden="true" tabindex="-1"></a>                <span class="bu">std::</span>vector<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> result<span class="op">;</span></span>
+<span id="cb1-197"><a href="#cb1-197" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> intervals <span class="op">=</span> data<span class="op">-&gt;</span>view<span class="op">();</span></span>
+<span id="cb1-198"><a href="#cb1-198" aria-hidden="true" tabindex="-1"></a>                ClockTicks <span class="at">const</span> time_ticks <span class="op">=</span> data<span class="op">-&gt;</span>getTimeFrame<span class="op">()-&gt;</span>getTimeAtIndex<span class="op">(</span>time<span class="op">);</span></span>
+<span id="cb1-199"><a href="#cb1-199" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">:</span> intervals<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-200"><a href="#cb1-200" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>interval<span class="op">.</span>value<span class="op">().</span>start <span class="op">&lt;=</span> time_ticks <span class="op">&amp;&amp;</span></span>
+<span id="cb1-201"><a href="#cb1-201" aria-hidden="true" tabindex="-1"></a>                        time_ticks <span class="op">&lt;=</span> interval<span class="op">.</span>value<span class="op">().</span>end<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-202"><a href="#cb1-202" aria-hidden="true" tabindex="-1"></a>                        result<span class="op">.</span>push_back<span class="op">(</span>interval<span class="op">.</span>id<span class="op">());</span></span>
+<span id="cb1-203"><a href="#cb1-203" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb1-204"><a href="#cb1-204" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb1-205"><a href="#cb1-205" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb1-206"><a href="#cb1-206" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-207"><a href="#cb1-207" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-208"><a href="#cb1-208" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-209"><a href="#cb1-209" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Video<span class="op">:</span></span>
+<span id="cb1-210"><a href="#cb1-210" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Images<span class="op">:</span></span>
+<span id="cb1-211"><a href="#cb1-211" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Analog<span class="op">:</span></span>
+<span id="cb1-212"><a href="#cb1-212" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>RaggedAnalog<span class="op">:</span></span>
+<span id="cb1-213"><a href="#cb1-213" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Tensor<span class="op">:</span></span>
+<span id="cb1-214"><a href="#cb1-214" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Time<span class="op">:</span></span>
+<span id="cb1-215"><a href="#cb1-215" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Unknown<span class="op">:</span></span>
+<span id="cb1-216"><a href="#cb1-216" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-217"><a href="#cb1-217" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-218"><a href="#cb1-218" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-219"><a href="#cb1-219" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb1-220"><a href="#cb1-220" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-221"><a href="#cb1-221" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-222"><a href="#cb1-222" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_set<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> DataManagerEntityDataSource<span class="op">::</span>getAllEntityIds<span class="op">(</span></span>
+<span id="cb1-223"><a href="#cb1-223" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb1-224"><a href="#cb1-224" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_dm<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-225"><a href="#cb1-225" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb1-226"><a href="#cb1-226" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-227"><a href="#cb1-227" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-228"><a href="#cb1-228" aria-hidden="true" tabindex="-1"></a>    DM_DataType <span class="at">const</span> type <span class="op">=</span> _dm<span class="op">-&gt;</span>getType<span class="op">(</span>data_key<span class="op">);</span></span>
 <span id="cb1-229"><a href="#cb1-229" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-230"><a href="#cb1-230" aria-hidden="true" tabindex="-1"></a>    DM_DataType <span class="at">const</span> type <span class="op">=</span> _dm<span class="op">-&gt;</span>getType<span class="op">(</span>data_key<span class="op">);</span></span>
-<span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> <span class="op">(</span>type<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Line<span class="op">:</span></span>
-<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>LineData<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> extractEntityIdsFromRagged<span class="op">(</span>data<span class="op">);</span></span>
-<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-239"><a href="#cb1-239" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Mask<span class="op">:</span></span>
-<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>MaskData<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> extractEntityIdsFromRagged<span class="op">(</span>data<span class="op">);</span></span>
-<span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Points<span class="op">:</span></span>
-<span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>PointData<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-247"><a href="#cb1-247" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> extractEntityIdsFromRagged<span class="op">(</span>data<span class="op">);</span></span>
-<span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-249"><a href="#cb1-249" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-250"><a href="#cb1-250" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-251"><a href="#cb1-251" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>DigitalEvent<span class="op">:</span></span>
-<span id="cb1-252"><a href="#cb1-252" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>DigitalEventSeries<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-253"><a href="#cb1-253" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> extractEntityIdsFromVector<span class="op">(</span>data<span class="op">);</span></span>
-<span id="cb1-254"><a href="#cb1-254" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-255"><a href="#cb1-255" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-256"><a href="#cb1-256" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-257"><a href="#cb1-257" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>DigitalInterval<span class="op">:</span></span>
-<span id="cb1-258"><a href="#cb1-258" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-259"><a href="#cb1-259" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> extractEntityIdsFromVector<span class="op">(</span>data<span class="op">);</span></span>
-<span id="cb1-260"><a href="#cb1-260" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-261"><a href="#cb1-261" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-262"><a href="#cb1-262" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-263"><a href="#cb1-263" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Types without EntityIds</span></span>
-<span id="cb1-264"><a href="#cb1-264" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Video<span class="op">:</span></span>
-<span id="cb1-265"><a href="#cb1-265" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Images<span class="op">:</span></span>
-<span id="cb1-266"><a href="#cb1-266" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Analog<span class="op">:</span></span>
-<span id="cb1-267"><a href="#cb1-267" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>RaggedAnalog<span class="op">:</span></span>
-<span id="cb1-268"><a href="#cb1-268" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Tensor<span class="op">:</span></span>
-<span id="cb1-269"><a href="#cb1-269" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Time<span class="op">:</span></span>
-<span id="cb1-270"><a href="#cb1-270" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Unknown<span class="op">:</span></span>
-<span id="cb1-271"><a href="#cb1-271" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-272"><a href="#cb1-272" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-273"><a href="#cb1-273" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-274"><a href="#cb1-274" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">{};</span></span>
-<span id="cb1-275"><a href="#cb1-275" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-276"><a href="#cb1-276" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-277"><a href="#cb1-277" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t DataManagerEntityDataSource<span class="op">::</span>getElementCount<span class="op">(</span></span>
-<span id="cb1-278"><a href="#cb1-278" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
-<span id="cb1-279"><a href="#cb1-279" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex time<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-280"><a href="#cb1-280" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_dm<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-281"><a href="#cb1-281" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb1-282"><a href="#cb1-282" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-230"><a href="#cb1-230" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> <span class="op">(</span>type<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Line<span class="op">:</span></span>
+<span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>LineData<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> extractEntityIdsFromRagged<span class="op">(</span>data<span class="op">);</span></span>
+<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Mask<span class="op">:</span></span>
+<span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>MaskData<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-239"><a href="#cb1-239" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> extractEntityIdsFromRagged<span class="op">(</span>data<span class="op">);</span></span>
+<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Points<span class="op">:</span></span>
+<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>PointData<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> extractEntityIdsFromRagged<span class="op">(</span>data<span class="op">);</span></span>
+<span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-247"><a href="#cb1-247" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-249"><a href="#cb1-249" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>DigitalEvent<span class="op">:</span></span>
+<span id="cb1-250"><a href="#cb1-250" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>DigitalEventSeries<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-251"><a href="#cb1-251" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> extractEntityIdsFromVector<span class="op">(</span>data<span class="op">);</span></span>
+<span id="cb1-252"><a href="#cb1-252" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-253"><a href="#cb1-253" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-254"><a href="#cb1-254" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-255"><a href="#cb1-255" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>DigitalInterval<span class="op">:</span></span>
+<span id="cb1-256"><a href="#cb1-256" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-257"><a href="#cb1-257" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> extractEntityIdsFromVector<span class="op">(</span>data<span class="op">);</span></span>
+<span id="cb1-258"><a href="#cb1-258" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-259"><a href="#cb1-259" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-260"><a href="#cb1-260" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-261"><a href="#cb1-261" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Types without EntityIds</span></span>
+<span id="cb1-262"><a href="#cb1-262" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Video<span class="op">:</span></span>
+<span id="cb1-263"><a href="#cb1-263" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Images<span class="op">:</span></span>
+<span id="cb1-264"><a href="#cb1-264" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Analog<span class="op">:</span></span>
+<span id="cb1-265"><a href="#cb1-265" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>RaggedAnalog<span class="op">:</span></span>
+<span id="cb1-266"><a href="#cb1-266" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Tensor<span class="op">:</span></span>
+<span id="cb1-267"><a href="#cb1-267" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Time<span class="op">:</span></span>
+<span id="cb1-268"><a href="#cb1-268" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Unknown<span class="op">:</span></span>
+<span id="cb1-269"><a href="#cb1-269" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-270"><a href="#cb1-270" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-271"><a href="#cb1-271" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-272"><a href="#cb1-272" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb1-273"><a href="#cb1-273" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-274"><a href="#cb1-274" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-275"><a href="#cb1-275" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t DataManagerEntityDataSource<span class="op">::</span>getElementCount<span class="op">(</span></span>
+<span id="cb1-276"><a href="#cb1-276" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb1-277"><a href="#cb1-277" aria-hidden="true" tabindex="-1"></a>        TimeFrameIndex time<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb1-278"><a href="#cb1-278" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_dm<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-279"><a href="#cb1-279" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-280"><a href="#cb1-280" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-281"><a href="#cb1-281" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-282"><a href="#cb1-282" aria-hidden="true" tabindex="-1"></a>    DM_DataType <span class="at">const</span> type <span class="op">=</span> _dm<span class="op">-&gt;</span>getType<span class="op">(</span>data_key<span class="op">);</span></span>
 <span id="cb1-283"><a href="#cb1-283" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-284"><a href="#cb1-284" aria-hidden="true" tabindex="-1"></a>    DM_DataType <span class="at">const</span> type <span class="op">=</span> _dm<span class="op">-&gt;</span>getType<span class="op">(</span>data_key<span class="op">);</span></span>
-<span id="cb1-285"><a href="#cb1-285" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-286"><a href="#cb1-286" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> <span class="op">(</span>type<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-287"><a href="#cb1-287" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>RaggedAnalog<span class="op">:</span></span>
-<span id="cb1-288"><a href="#cb1-288" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>RaggedAnalogTimeSeries<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-289"><a href="#cb1-289" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> values <span class="op">=</span> data<span class="op">-&gt;</span>getDataAtTime<span class="op">(</span>time<span class="op">);</span></span>
-<span id="cb1-290"><a href="#cb1-290" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> values<span class="op">.</span>size<span class="op">();</span></span>
-<span id="cb1-291"><a href="#cb1-291" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-292"><a href="#cb1-292" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-293"><a href="#cb1-293" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-294"><a href="#cb1-294" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Mask<span class="op">:</span></span>
-<span id="cb1-295"><a href="#cb1-295" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>MaskData<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-296"><a href="#cb1-296" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> countElementsAtTime<span class="op">(</span>data<span class="op">,</span> time<span class="op">);</span></span>
-<span id="cb1-297"><a href="#cb1-297" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-298"><a href="#cb1-298" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-299"><a href="#cb1-299" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-300"><a href="#cb1-300" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Line<span class="op">:</span></span>
-<span id="cb1-301"><a href="#cb1-301" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>LineData<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-302"><a href="#cb1-302" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> countElementsAtTime<span class="op">(</span>data<span class="op">,</span> time<span class="op">);</span></span>
-<span id="cb1-303"><a href="#cb1-303" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-304"><a href="#cb1-304" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-305"><a href="#cb1-305" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-306"><a href="#cb1-306" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Points<span class="op">:</span></span>
-<span id="cb1-307"><a href="#cb1-307" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>PointData<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-308"><a href="#cb1-308" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> countElementsAtTime<span class="op">(</span>data<span class="op">,</span> time<span class="op">);</span></span>
-<span id="cb1-309"><a href="#cb1-309" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-310"><a href="#cb1-310" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-311"><a href="#cb1-311" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-312"><a href="#cb1-312" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>DigitalEvent<span class="op">:</span></span>
-<span id="cb1-313"><a href="#cb1-313" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>DigitalEventSeries<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-314"><a href="#cb1-314" aria-hidden="true" tabindex="-1"></a>                <span class="bu">std::</span>size_t count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb1-315"><a href="#cb1-315" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> event <span class="op">:</span> data<span class="op">-&gt;</span>view<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-316"><a href="#cb1-316" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>event<span class="op">.</span>time<span class="op">()</span> <span class="op">==</span> time<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-317"><a href="#cb1-317" aria-hidden="true" tabindex="-1"></a>                        <span class="op">++</span>count<span class="op">;</span></span>
-<span id="cb1-318"><a href="#cb1-318" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
-<span id="cb1-319"><a href="#cb1-319" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
-<span id="cb1-320"><a href="#cb1-320" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> count<span class="op">;</span></span>
-<span id="cb1-321"><a href="#cb1-321" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-322"><a href="#cb1-322" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-323"><a href="#cb1-323" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-324"><a href="#cb1-324" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>DigitalInterval<span class="op">:</span></span>
-<span id="cb1-325"><a href="#cb1-325" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-326"><a href="#cb1-326" aria-hidden="true" tabindex="-1"></a>                ClockTicks <span class="at">const</span> time_ticks <span class="op">=</span> data<span class="op">-&gt;</span>getTimeFrame<span class="op">()-&gt;</span>getTimeAtIndex<span class="op">(</span>time<span class="op">);</span></span>
-<span id="cb1-327"><a href="#cb1-327" aria-hidden="true" tabindex="-1"></a>                <span class="bu">std::</span>size_t count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb1-328"><a href="#cb1-328" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> interval <span class="op">:</span> data<span class="op">-&gt;</span>view<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-329"><a href="#cb1-329" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>interval<span class="op">.</span>value<span class="op">().</span>start <span class="op">&lt;=</span> time_ticks <span class="op">&amp;&amp;</span> time_ticks <span class="op">&lt;=</span> interval<span class="op">.</span>value<span class="op">().</span>end<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-330"><a href="#cb1-330" aria-hidden="true" tabindex="-1"></a>                        <span class="op">++</span>count<span class="op">;</span></span>
-<span id="cb1-331"><a href="#cb1-331" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
-<span id="cb1-332"><a href="#cb1-332" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
-<span id="cb1-333"><a href="#cb1-333" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> count<span class="op">;</span></span>
-<span id="cb1-334"><a href="#cb1-334" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-335"><a href="#cb1-335" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-336"><a href="#cb1-336" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-337"><a href="#cb1-337" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Single-element types</span></span>
-<span id="cb1-338"><a href="#cb1-338" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Video<span class="op">:</span></span>
-<span id="cb1-339"><a href="#cb1-339" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Images<span class="op">:</span></span>
-<span id="cb1-340"><a href="#cb1-340" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Analog<span class="op">:</span></span>
-<span id="cb1-341"><a href="#cb1-341" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Tensor<span class="op">:</span></span>
-<span id="cb1-342"><a href="#cb1-342" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Time<span class="op">:</span></span>
-<span id="cb1-343"><a href="#cb1-343" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb1-344"><a href="#cb1-344" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-345"><a href="#cb1-345" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Unknown<span class="op">:</span></span>
-<span id="cb1-346"><a href="#cb1-346" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-347"><a href="#cb1-347" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-348"><a href="#cb1-348" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-349"><a href="#cb1-349" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb1-350"><a href="#cb1-350" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-351"><a href="#cb1-351" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-352"><a href="#cb1-352" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace Neuralyzer::Lineage</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-284"><a href="#cb1-284" aria-hidden="true" tabindex="-1"></a>    <span class="cf">switch</span> <span class="op">(</span>type<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-285"><a href="#cb1-285" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>RaggedAnalog<span class="op">:</span></span>
+<span id="cb1-286"><a href="#cb1-286" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>RaggedAnalogTimeSeries<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-287"><a href="#cb1-287" aria-hidden="true" tabindex="-1"></a>                <span class="kw">auto</span> values <span class="op">=</span> data<span class="op">-&gt;</span>getDataAtTime<span class="op">(</span>time<span class="op">);</span></span>
+<span id="cb1-288"><a href="#cb1-288" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> values<span class="op">.</span>size<span class="op">();</span></span>
+<span id="cb1-289"><a href="#cb1-289" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-290"><a href="#cb1-290" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-291"><a href="#cb1-291" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-292"><a href="#cb1-292" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Mask<span class="op">:</span></span>
+<span id="cb1-293"><a href="#cb1-293" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>MaskData<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-294"><a href="#cb1-294" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> countElementsAtTime<span class="op">(</span>data<span class="op">,</span> time<span class="op">);</span></span>
+<span id="cb1-295"><a href="#cb1-295" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-296"><a href="#cb1-296" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-297"><a href="#cb1-297" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-298"><a href="#cb1-298" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Line<span class="op">:</span></span>
+<span id="cb1-299"><a href="#cb1-299" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>LineData<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-300"><a href="#cb1-300" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> countElementsAtTime<span class="op">(</span>data<span class="op">,</span> time<span class="op">);</span></span>
+<span id="cb1-301"><a href="#cb1-301" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-302"><a href="#cb1-302" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-303"><a href="#cb1-303" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-304"><a href="#cb1-304" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Points<span class="op">:</span></span>
+<span id="cb1-305"><a href="#cb1-305" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>PointData<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-306"><a href="#cb1-306" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> countElementsAtTime<span class="op">(</span>data<span class="op">,</span> time<span class="op">);</span></span>
+<span id="cb1-307"><a href="#cb1-307" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-308"><a href="#cb1-308" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-309"><a href="#cb1-309" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-310"><a href="#cb1-310" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>DigitalEvent<span class="op">:</span></span>
+<span id="cb1-311"><a href="#cb1-311" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>DigitalEventSeries<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-312"><a href="#cb1-312" aria-hidden="true" tabindex="-1"></a>                <span class="bu">std::</span>size_t count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-313"><a href="#cb1-313" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> data<span class="op">-&gt;</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-314"><a href="#cb1-314" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>data<span class="op">-&gt;</span>getStoredEvent<span class="op">(</span>i<span class="op">)</span> <span class="op">==</span> time<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-315"><a href="#cb1-315" aria-hidden="true" tabindex="-1"></a>                        <span class="op">++</span>count<span class="op">;</span></span>
+<span id="cb1-316"><a href="#cb1-316" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb1-317"><a href="#cb1-317" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb1-318"><a href="#cb1-318" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> count<span class="op">;</span></span>
+<span id="cb1-319"><a href="#cb1-319" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-320"><a href="#cb1-320" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-321"><a href="#cb1-321" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-322"><a href="#cb1-322" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>DigitalInterval<span class="op">:</span></span>
+<span id="cb1-323"><a href="#cb1-323" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> data <span class="op">=</span> _dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;(</span>data_key<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-324"><a href="#cb1-324" aria-hidden="true" tabindex="-1"></a>                ClockTicks <span class="at">const</span> time_ticks <span class="op">=</span> data<span class="op">-&gt;</span>getTimeFrame<span class="op">()-&gt;</span>getTimeAtIndex<span class="op">(</span>time<span class="op">);</span></span>
+<span id="cb1-325"><a href="#cb1-325" aria-hidden="true" tabindex="-1"></a>                <span class="bu">std::</span>size_t count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-326"><a href="#cb1-326" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> interval<span class="op">:</span> data<span class="op">-&gt;</span>view<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-327"><a href="#cb1-327" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>interval<span class="op">.</span>value<span class="op">().</span>start <span class="op">&lt;=</span> time_ticks <span class="op">&amp;&amp;</span> time_ticks <span class="op">&lt;=</span> interval<span class="op">.</span>value<span class="op">().</span>end<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-328"><a href="#cb1-328" aria-hidden="true" tabindex="-1"></a>                        <span class="op">++</span>count<span class="op">;</span></span>
+<span id="cb1-329"><a href="#cb1-329" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb1-330"><a href="#cb1-330" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb1-331"><a href="#cb1-331" aria-hidden="true" tabindex="-1"></a>                <span class="cf">return</span> count<span class="op">;</span></span>
+<span id="cb1-332"><a href="#cb1-332" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-333"><a href="#cb1-333" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-334"><a href="#cb1-334" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-335"><a href="#cb1-335" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Single-element types</span></span>
+<span id="cb1-336"><a href="#cb1-336" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Video<span class="op">:</span></span>
+<span id="cb1-337"><a href="#cb1-337" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Images<span class="op">:</span></span>
+<span id="cb1-338"><a href="#cb1-338" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Analog<span class="op">:</span></span>
+<span id="cb1-339"><a href="#cb1-339" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Tensor<span class="op">:</span></span>
+<span id="cb1-340"><a href="#cb1-340" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Time<span class="op">:</span></span>
+<span id="cb1-341"><a href="#cb1-341" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb1-342"><a href="#cb1-342" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-343"><a href="#cb1-343" aria-hidden="true" tabindex="-1"></a>        <span class="cf">case</span> DM_DataType<span class="op">::</span>Unknown<span class="op">:</span></span>
+<span id="cb1-344"><a href="#cb1-344" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-345"><a href="#cb1-345" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-346"><a href="#cb1-346" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-347"><a href="#cb1-347" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-348"><a href="#cb1-348" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-349"><a href="#cb1-349" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-350"><a href="#cb1-350" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace Neuralyzer::Lineage</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-29 at 21:29:35 +0000</p>
+<p>Updated on 2026-07-30 at 14:56:54 +0000</p>
 
 
 </section>

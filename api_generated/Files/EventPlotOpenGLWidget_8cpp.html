@@ -1381,7 +1381,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-997"><a href="#cb1-997" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-998"><a href="#cb1-998" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-999"><a href="#cb1-999" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> event<span class="op">:</span> trial_view<span class="op">-&gt;</span>view<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-1000"><a href="#cb1-1000" aria-hidden="true" tabindex="-1"></a>                        ClockTicks <span class="at">const</span> event_time_abs <span class="op">=</span> trial_tf<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span>event<span class="op">.</span>time<span class="op">());</span></span>
+<span id="cb1-1000"><a href="#cb1-1000" aria-hidden="true" tabindex="-1"></a>                        ClockTicks <span class="at">const</span> event_time_abs <span class="op">=</span> event<span class="op">.</span>time<span class="op">();</span></span>
 <span id="cb1-1001"><a href="#cb1-1001" aria-hidden="true" tabindex="-1"></a>                        <span class="co">// Relative time (positive = after alignment)</span></span>
 <span id="cb1-1002"><a href="#cb1-1002" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">auto</span> <span class="at">const</span> relative_time <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;((</span>event_time_abs <span class="op">-</span> alignment_time_abs<span class="op">.</span>getValue<span class="op">()).</span>getValue<span class="op">());</span></span>
 <span id="cb1-1003"><a href="#cb1-1003" aria-hidden="true" tabindex="-1"></a>                        <span class="cf">if</span> <span class="op">(</span>relative_time <span class="op">&gt;=</span> <span class="fl">0.0</span> <span class="op">&amp;&amp;</span> relative_time <span class="op">&lt;</span> first_positive_latency<span class="op">)</span> <span class="op">{</span></span>
@@ -1427,7 +1427,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-1043"><a href="#cb1-1043" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
 <span id="cb1-1044"><a href="#cb1-1044" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-1045"><a href="#cb1-1045" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> event<span class="op">:</span> trial_view<span class="op">-&gt;</span>view<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-1046"><a href="#cb1-1046" aria-hidden="true" tabindex="-1"></a>                        ClockTicks <span class="at">const</span> event_time_abs <span class="op">=</span> trial_tf<span class="op">-&gt;</span>getTimeAtIndex<span class="op">(</span>event<span class="op">.</span>time<span class="op">());</span></span>
+<span id="cb1-1046"><a href="#cb1-1046" aria-hidden="true" tabindex="-1"></a>                        ClockTicks <span class="at">const</span> event_time_abs <span class="op">=</span> event<span class="op">.</span>time<span class="op">();</span></span>
 <span id="cb1-1047"><a href="#cb1-1047" aria-hidden="true" tabindex="-1"></a>                        <span class="kw">auto</span> <span class="at">const</span> relative_time <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;((</span>event_time_abs <span class="op">-</span> alignment_time_abs<span class="op">.</span>getValue<span class="op">()).</span>getValue<span class="op">());</span></span>
 <span id="cb1-1048"><a href="#cb1-1048" aria-hidden="true" tabindex="-1"></a>                        <span class="cf">if</span> <span class="op">(</span>relative_time <span class="op">&gt;=</span> <span class="fl">0.0</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-1049"><a href="#cb1-1049" aria-hidden="true" tabindex="-1"></a>                            <span class="op">++</span>positive_count<span class="op">;</span></span>
@@ -1499,7 +1499,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-1115"><a href="#cb1-1115" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sort_indices<span class="op">;</span></span>
 <span id="cb1-1116"><a href="#cb1-1116" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-29 at 21:29:38 +0000</p>
+<p>Updated on 2026-07-30 at 14:56:57 +0000</p>
 
 
 </section>

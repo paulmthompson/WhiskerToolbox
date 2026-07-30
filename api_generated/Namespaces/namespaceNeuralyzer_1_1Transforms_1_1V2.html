@@ -391,7 +391,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-eventintervalreduction" id="toc-function-eventintervalreduction" class="nav-link" data-scroll-target="#function-eventintervalreduction">function eventIntervalReduction</a></li>
   <li><a href="#function-intervaloverlapreduction" id="toc-function-intervaloverlapreduction" class="nav-link" data-scroll-target="#function-intervaloverlapreduction">function intervalOverlapReduction</a></li>
   <li><a href="#function-normalizetimevaluev2" id="toc-function-normalizetimevaluev2" class="nav-link" data-scroll-target="#function-normalizetimevaluev2">function normalizeTimeValueV2</a></li>
+  <li><a href="#function-normalizeclockticksvaluev2" id="toc-function-normalizeclockticksvaluev2" class="nav-link" data-scroll-target="#function-normalizeclockticksvaluev2">function normalizeClockTicksValueV2</a></li>
   <li><a href="#function-normalizeeventtimevaluev2" id="toc-function-normalizeeventtimevaluev2" class="nav-link" data-scroll-target="#function-normalizeeventtimevaluev2">function normalizeEventTimeValueV2</a></li>
+  <li><a href="#function-normalizeclocktickswithidvaluev2" id="toc-function-normalizeclocktickswithidvaluev2" class="nav-link" data-scroll-target="#function-normalizeclocktickswithidvaluev2">function normalizeClockTicksWithIdValueV2</a></li>
   <li><a href="#function-normalizesampletimevaluev2" id="toc-function-normalizesampletimevaluev2" class="nav-link" data-scroll-target="#function-normalizesampletimevaluev2">function normalizeSampleTimeValueV2</a></li>
   <li><a href="#function-zscorenormalizationv2" id="toc-function-zscorenormalizationv2" class="nav-link" data-scroll-target="#function-zscorenormalizationv2">function zScoreNormalizationV2</a></li>
   <li><a href="#function-load_data_from_json_config_v2" id="toc-function-load_data_from_json_config_v2" class="nav-link" data-scroll-target="#function-load_data_from_json_config_v2">function load_data_from_json_config_v2</a></li>
@@ -867,11 +869,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2.html#using-pipelinevalue">PipelineValue</a></strong> <br>Variant of all types supported by <a href="">PipelineValueStore</a>.</td>
 </tr>
 <tr class="even">
-<td>using std::variant&lt; float, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>, <a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt;, <a href="../../api_generated/Classes/classLine2D.html">Line2D</a>, <a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> &gt;</td>
+<td>using std::variant&lt; float, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>, <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a>, <a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt;, <a href="../../api_generated/Classes/classLine2D.html">Line2D</a>, <a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2.html#using-elementvariant">ElementVariant</a></strong> <br>Variant type for single elements in the transform pipeline.</td>
 </tr>
 <tr class="odd">
-<td>using std::variant&lt; std::vector&lt; float &gt;, std::vector&lt; <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt;, std::vector&lt; <a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt; &gt;, std::vector&lt; <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> &gt;, std::vector&lt; <a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> &gt; &gt;</td>
+<td>using std::variant&lt; std::vector&lt; float &gt;, std::vector&lt; <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt;, std::vector&lt; <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> &gt;, std::vector&lt; <a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt; &gt;, std::vector&lt; <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> &gt;, std::vector&lt; <a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> &gt; &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2.html#using-batchvariant">BatchVariant</a></strong> <br>Variant type for batches of elements (for time-grouped transforms)</td>
 </tr>
 </tbody>
@@ -917,7 +919,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2.html#function-normalizeclockticksvaluev2">normalizeClockTicksValueV2</a></strong>(<a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> const &amp; time, <a href="../../api_generated/Classes/structNeuralyzer_1_1Transforms_1_1V2_1_1NormalizeTimeParamsV2.html">NormalizeTimeParamsV2</a> const &amp; params)<br>Normalize a <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> value to float (<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2.html">V2</a> - uses bound params)</td>
+</tr>
+<tr class="odd">
+<td>float</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2.html#function-normalizeeventtimevaluev2">normalizeEventTimeValueV2</a></strong>(<a href="../../api_generated/Classes/structEventWithId.html">EventWithId</a> const &amp; event, <a href="../../api_generated/Classes/structNeuralyzer_1_1Transforms_1_1V2_1_1NormalizeTimeParamsV2.html">NormalizeTimeParamsV2</a> const &amp; params)<br>Normalize event time to float value (<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2.html">V2</a> - uses bound params)</td>
+</tr>
+<tr class="even">
+<td>float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2.html#function-normalizeclocktickswithidvaluev2">normalizeClockTicksWithIdValueV2</a></strong>(<a href="../../api_generated/Classes/structClockTicksWithId.html">ClockTicksWithId</a> const &amp; event, <a href="../../api_generated/Classes/structNeuralyzer_1_1Transforms_1_1V2_1_1NormalizeTimeParamsV2.html">NormalizeTimeParamsV2</a> const &amp; params)<br>Normalize clock-tick event time to float value (<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2.html">V2</a> - uses bound params)</td>
 </tr>
 <tr class="odd">
 <td>float</td>
@@ -1336,12 +1346,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="using-elementvariant" class="level3">
 <h3 class="anchored" data-anchor-id="using-elementvariant">using ElementVariant</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>ElementVariant <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>variant<span class="op">&lt;</span> <span class="dt">float</span><span class="op">,</span> TimeFrameIndex<span class="op">,</span> Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;,</span> Line2D<span class="op">,</span> Mask2D <span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>ElementVariant <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>variant<span class="op">&lt;</span> <span class="dt">float</span><span class="op">,</span> TimeFrameIndex<span class="op">,</span> ClockTicks<span class="op">,</span> Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;,</span> Line2D<span class="op">,</span> Mask2D <span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Variant type for single elements in the transform pipeline.</p>
 <p>Includes:</p>
 <ul>
 <li>float: Scalar results (e.g., normalized times, areas) - first for default construction</li>
-<li><a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>: Fundamental time type for temporal transforms</li>
+<li><a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>: Fundamental time type for temporal transforms (legacy index-space)</li>
+<li><a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a>: Physical clock-tick time for temporal transforms</li>
 <li><a href="../../api_generated/Classes/structPoint2D.html">Point2D<float></float></a>: 2D spatial points</li>
 <li><a href="../../api_generated/Classes/classLine2D.html">Line2D</a>: Polylines/curves</li>
 <li><a href="../../api_generated/Classes/classMask2D.html">Mask2D</a>: Binary masks</li>
@@ -1349,7 +1360,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="using-batchvariant" class="level3">
 <h3 class="anchored" data-anchor-id="using-batchvariant">using BatchVariant</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>BatchVariant <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>variant<span class="op">&lt;</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameIndex<span class="op">&gt;,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;</span> <span class="op">&gt;,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>Line2D<span class="op">&gt;,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>Mask2D<span class="op">&gt;</span> <span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>BatchVariant <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>variant<span class="op">&lt;</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameIndex<span class="op">&gt;,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>ClockTicks<span class="op">&gt;,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;</span> <span class="op">&gt;,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>Line2D<span class="op">&gt;,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>Mask2D<span class="op">&gt;</span> <span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Variant type for batches of elements (for time-grouped transforms)</p>
 <p>Stores contiguous vectors of elements to allow zero-copy passing to transforms that expect std::span<t>.</t></p>
 </section>
@@ -1372,7 +1383,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>params</strong> Parameters controlling peak type and search mode</li>
 <li><strong>ctx</strong> Compute context for progress reporting and cancellation</li>
 </ul>
-<p><strong>Return</strong>: Digital event series with peak timestamps (in interval coordinate system)</p>
+<p><strong>Return</strong>: Digital event series with peak timestamps stored as analog <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> values. The implementation attaches the analog <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> (when present) so view() resolves <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> correctly; see AnalogIntervalPeak.qmd.</p>
 <p>This is a <strong>binary container transform</strong> because:</p>
 <ul>
 <li>Requires temporal alignment between intervals and analog data</li>
@@ -1544,12 +1555,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> norm_time <span class="op">=</span> normalizeTimeValueV2<span class="op">(</span>event_time<span class="op">,</span> params<span class="op">);</span></span>
 <span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co">// norm_time == 25.0f</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="function-normalizeeventtimevaluev2" class="level3">
-<h3 class="anchored" data-anchor-id="function-normalizeeventtimevaluev2">function normalizeEventTimeValueV2</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">float</span> normalizeEventTimeValueV2<span class="op">(</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    EventWithId <span class="at">const</span> <span class="op">&amp;</span> event<span class="op">,</span></span>
+<section id="function-normalizeclockticksvaluev2" class="level3">
+<h3 class="anchored" data-anchor-id="function-normalizeclockticksvaluev2">function normalizeClockTicksValueV2</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">float</span> normalizeClockTicksValueV2<span class="op">(</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    ClockTicks <span class="at">const</span> <span class="op">&amp;</span> time<span class="op">,</span></span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    NormalizeTimeParamsV2 <span class="at">const</span> <span class="op">&amp;</span> params</span>
 <span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Normalize a <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> value to float (<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2.html">V2</a> - uses bound params)</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>time</strong> Input clock-tick time to normalize</li>
+<li><strong>params</strong> Parameters with alignment_time bound from store</li>
+</ul>
+<p><strong>Return</strong>: float The normalized time (time - alignment_time)</p>
+</section>
+<section id="function-normalizeeventtimevaluev2" class="level3">
+<h3 class="anchored" data-anchor-id="function-normalizeeventtimevaluev2">function normalizeEventTimeValueV2</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">float</span> normalizeEventTimeValueV2<span class="op">(</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    EventWithId <span class="at">const</span> <span class="op">&amp;</span> event<span class="op">,</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    NormalizeTimeParamsV2 <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Normalize event time to float value (<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2.html">V2</a> - uses bound params)</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1559,12 +1584,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Return</strong>: float The normalized time (event.time() - alignment_time)</p>
 <p>Convenience function for <a href="../../api_generated/Classes/structEventWithId.html">EventWithId</a> that extracts time and normalizes.</p>
 </section>
+<section id="function-normalizeclocktickswithidvaluev2" class="level3">
+<h3 class="anchored" data-anchor-id="function-normalizeclocktickswithidvaluev2">function normalizeClockTicksWithIdValueV2</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">float</span> normalizeClockTicksWithIdValueV2<span class="op">(</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    ClockTicksWithId <span class="at">const</span> <span class="op">&amp;</span> event<span class="op">,</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    NormalizeTimeParamsV2 <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Normalize clock-tick event time to float value (<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2.html">V2</a> - uses bound params)</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>event</strong> Input event with absolute clock-tick time</li>
+<li><strong>params</strong> Parameters with alignment_time bound from store</li>
+</ul>
+<p><strong>Return</strong>: float The normalized time (event.time() - alignment_time)</p>
+<p>Convenience function for <a href="../../api_generated/Classes/structClockTicksWithId.html">ClockTicksWithId</a> that extracts time and normalizes.</p>
+</section>
 <section id="function-normalizesampletimevaluev2" class="level3">
 <h3 class="anchored" data-anchor-id="function-normalizesampletimevaluev2">function normalizeSampleTimeValueV2</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">float</span> normalizeSampleTimeValueV2<span class="op">(</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    AnalogTimeSeries<span class="op">::</span>TimeValuePoint <span class="at">const</span> <span class="op">&amp;</span> sample<span class="op">,</span></span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    NormalizeTimeParamsV2 <span class="at">const</span> <span class="op">&amp;</span> params</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">float</span> normalizeSampleTimeValueV2<span class="op">(</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    AnalogTimeSeries<span class="op">::</span>TimeValuePoint <span class="at">const</span> <span class="op">&amp;</span> sample<span class="op">,</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    NormalizeTimeParamsV2 <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Normalize analog sample time to float value (<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2.html">V2</a> - uses bound params)</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1575,10 +1615,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-zscorenormalizationv2" class="level3">
 <h3 class="anchored" data-anchor-id="function-zscorenormalizationv2">function zScoreNormalizationV2</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">float</span> zScoreNormalizationV2<span class="op">(</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> value<span class="op">,</span></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    ZScoreNormalizationParamsV2 <span class="at">const</span> <span class="op">&amp;</span> params</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">float</span> zScoreNormalizationV2<span class="op">(</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> value<span class="op">,</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    ZScoreNormalizationParamsV2 <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply Z-Score normalization to a single value (<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2.html">V2</a>)</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1591,10 +1631,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-load_data_from_json_config_v2" class="level3">
 <h3 class="anchored" data-anchor-id="function-load_data_from_json_config_v2">function load_data_from_json_config_v2</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> DataInfo <span class="op">&gt;</span> load_data_from_json_config_v2<span class="op">(</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">*</span> dm<span class="op">,</span></span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json_filepath</span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> DataInfo <span class="op">&gt;</span> load_data_from_json_config_v2<span class="op">(</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">*</span> dm<span class="op">,</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json_filepath</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Load and execute transformation pipeline from JSON config (<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2.html">V2</a> version)</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1635,68 +1675,68 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 </section>
 <section id="function-pushtobatch" class="level3">
 <h3 class="anchored" data-anchor-id="function-pushtobatch">function pushToBatch</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> pushToBatch<span class="op">(</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    BatchVariant <span class="op">&amp;</span> batch<span class="op">,</span></span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>    ElementVariant <span class="at">const</span> <span class="op">&amp;</span> element</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> pushToBatch<span class="op">(</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    BatchVariant <span class="op">&amp;</span> batch<span class="op">,</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    ElementVariant <span class="at">const</span> <span class="op">&amp;</span> element</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-initbatchfromelement" class="level3">
 <h3 class="anchored" data-anchor-id="function-initbatchfromelement">function initBatchFromElement</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>BatchVariant initBatchFromElement<span class="op">(</span></span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    ElementVariant <span class="at">const</span> <span class="op">&amp;</span> element</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>BatchVariant initBatchFromElement<span class="op">(</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    ElementVariant <span class="at">const</span> <span class="op">&amp;</span> element</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-getbatchsize" class="level3">
 <h3 class="anchored" data-anchor-id="function-getbatchsize">function getBatchSize</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="dt">size_t</span> getBatchSize<span class="op">(</span></span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    BatchVariant <span class="at">const</span> <span class="op">&amp;</span> batch</span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="dt">size_t</span> getBatchSize<span class="op">(</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    BatchVariant <span class="at">const</span> <span class="op">&amp;</span> batch</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-clearbatch" class="level3">
 <h3 class="anchored" data-anchor-id="function-clearbatch">function clearBatch</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearBatch<span class="op">(</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    BatchVariant <span class="op">&amp;</span> batch</span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearBatch<span class="op">(</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    BatchVariant <span class="op">&amp;</span> batch</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-executepipeline" class="level3">
 <h3 class="anchored" data-anchor-id="function-executepipeline">function executePipeline</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>DataTypeVariant executePipeline<span class="op">(</span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    TransformPipeline <span class="at">const</span> <span class="op">&amp;</span> pipeline</span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>DataTypeVariant executePipeline<span class="op">(</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    TransformPipeline <span class="at">const</span> <span class="op">&amp;</span> pipeline</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Execute pipeline on variant input.</p>
 </section>
 <section id="function-bindvalueprojectionv2" class="level3">
 <h3 class="anchored" data-anchor-id="function-bindvalueprojectionv2">function bindValueProjectionV2</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InElement <span class="op">,</span></span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Value <span class="op">&gt;</span></span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>ValueProjectionFactoryV2<span class="op">&lt;</span> InElement<span class="op">,</span> Value <span class="op">&gt;</span> bindValueProjectionV2<span class="op">(</span></span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    TransformPipeline <span class="at">const</span> <span class="op">&amp;</span> pipeline</span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InElement <span class="op">,</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Value <span class="op">&gt;</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>ValueProjectionFactoryV2<span class="op">&lt;</span> InElement<span class="op">,</span> Value <span class="op">&gt;</span> bindValueProjectionV2<span class="op">(</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    TransformPipeline <span class="at">const</span> <span class="op">&amp;</span> pipeline</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Bind a pipeline with parameter bindings to produce a value projection factory.</p>
 <p>Creates a factory function that takes <a href="../../api_generated/Classes/classNeuralyzer_1_1Transforms_1_1V2_1_1PipelineValueStore.html">PipelineValueStore</a> and returns a value projection. Values from the store are bound to transform parameters via the param_bindings field.</p>
 <p><strong>Primary Use Case: Raster <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html">Plots</a> with Value Store</strong></p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Pipeline with param bindings (loaded from JSON)</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> pipeline <span class="op">=</span> loadPipelineFromJson<span class="op">(</span><span class="st">R"(</span><span class="vs">{</span></span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="vs">    "steps": [{</span></span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="vs">        "transform": "NormalizeTimeV2",</span></span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="vs">        "params": </span><span class="sc">{}</span><span class="vs">,</span></span>
-<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="vs">        "param_bindings": {"alignment_time": "alignment_time"}</span></span>
-<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a><span class="vs">    }]</span></span>
-<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a><span class="vs">}</span><span class="st">)"</span><span class="op">);</span></span>
-<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> factory <span class="op">=</span> bindValueProjectionV2<span class="op">&lt;</span>EventWithId<span class="op">,</span> <span class="dt">float</span><span class="op">&gt;(</span>pipeline<span class="op">);</span></span>
-<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> gather_result<span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> store <span class="op">=</span> buildGatherRowStore<span class="op">(</span>gather_result<span class="op">,</span> i<span class="op">);</span></span>
-<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> projection <span class="op">=</span> factory<span class="op">(</span>store<span class="op">);</span></span>
-<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> event <span class="op">:</span> gather_result<span class="op">[</span>i<span class="op">]-&gt;</span>view<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> norm_time <span class="op">=</span> projection<span class="op">(</span>event<span class="op">);</span>  <span class="co">// Computed value</span></span>
-<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a>        EntityId id <span class="op">=</span> event<span class="op">.</span>id<span class="op">();</span>             <span class="co">// From source element</span></span>
-<span id="cb34-19"><a href="#cb34-19" aria-hidden="true" tabindex="-1"></a>        draw<span class="op">(</span>norm_time<span class="op">,</span> i<span class="op">,</span> id<span class="op">);</span></span>
-<span id="cb34-20"><a href="#cb34-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb34-21"><a href="#cb34-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Pipeline with param bindings (loaded from JSON)</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> pipeline <span class="op">=</span> loadPipelineFromJson<span class="op">(</span><span class="st">R"(</span><span class="vs">{</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="vs">    "steps": [{</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="vs">        "transform": "NormalizeTimeV2",</span></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="vs">        "params": </span><span class="sc">{}</span><span class="vs">,</span></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="vs">        "param_bindings": {"alignment_time": "alignment_time"}</span></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a><span class="vs">    }]</span></span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a><span class="vs">}</span><span class="st">)"</span><span class="op">);</span></span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> factory <span class="op">=</span> bindValueProjectionV2<span class="op">&lt;</span>EventWithId<span class="op">,</span> <span class="dt">float</span><span class="op">&gt;(</span>pipeline<span class="op">);</span></span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> gather_result<span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> store <span class="op">=</span> buildGatherRowStore<span class="op">(</span>gather_result<span class="op">,</span> i<span class="op">);</span></span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> projection <span class="op">=</span> factory<span class="op">(</span>store<span class="op">);</span></span>
+<span id="cb36-15"><a href="#cb36-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-16"><a href="#cb36-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> event <span class="op">:</span> gather_result<span class="op">[</span>i<span class="op">]-&gt;</span>view<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb36-17"><a href="#cb36-17" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> norm_time <span class="op">=</span> projection<span class="op">(</span>event<span class="op">);</span>  <span class="co">// Computed value</span></span>
+<span id="cb36-18"><a href="#cb36-18" aria-hidden="true" tabindex="-1"></a>        EntityId id <span class="op">=</span> event<span class="op">.</span>id<span class="op">();</span>             <span class="co">// From source element</span></span>
+<span id="cb36-19"><a href="#cb36-19" aria-hidden="true" tabindex="-1"></a>        draw<span class="op">(</span>norm_time<span class="op">,</span> i<span class="op">,</span> id<span class="op">);</span></span>
+<span id="cb36-20"><a href="#cb36-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb36-21"><a href="#cb36-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </section>
 <section id="binding-mechanism" class="level2">
@@ -1716,10 +1756,10 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 <p>buildGatherRowStore() For populating store with trial values</p>
 <section id="function-resolvetypechain" class="level3">
 <h3 class="anchored" data-anchor-id="function-resolvetypechain">function resolveTypeChain</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>TypeChainResult resolveTypeChain<span class="op">(</span></span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">input_container_type</span><span class="op">,</span></span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&gt;</span> step_names</span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>TypeChainResult resolveTypeChain<span class="op">(</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">input_container_type</span><span class="op">,</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&gt;</span> step_names</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Resolve the type chain for a sequence of transform names.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1742,16 +1782,16 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 </section>
 <section id="function-applyelementtransform" class="level3">
 <h3 class="anchored" data-anchor-id="function-applyelementtransform">function applyElementTransform</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InContainer <span class="op">,</span></span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutContainer <span class="op">,</span></span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> InElement <span class="op">,</span></span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutElement <span class="op">,</span></span>
-<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
-<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> OutContainer <span class="op">&gt;</span> applyElementTransform<span class="op">(</span></span>
-<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    InContainer <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
-<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
-<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    Params <span class="at">const</span> <span class="op">&amp;</span> params</span>
-<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InContainer <span class="op">,</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutContainer <span class="op">,</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> InElement <span class="op">,</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutElement <span class="op">,</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> OutContainer <span class="op">&gt;</span> applyElementTransform<span class="op">(</span></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>    InContainer <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>    Params <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply element transform to a ragged container.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1773,28 +1813,28 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 </section>
 <section id="function-applyelementtransform-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-applyelementtransform-1">function applyElementTransform</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InContainer <span class="op">,</span></span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutContainer <span class="op">,</span></span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> InElement <span class="op">,</span></span>
-<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutElement <span class="op">&gt;</span></span>
-<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> OutContainer <span class="op">&gt;</span> applyElementTransform<span class="op">(</span></span>
-<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>    InContainer <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
-<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name</span>
-<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InContainer <span class="op">,</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutContainer <span class="op">,</span></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> InElement <span class="op">,</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutElement <span class="op">&gt;</span></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> OutContainer <span class="op">&gt;</span> applyElementTransform<span class="op">(</span></span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>    InContainer <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name</span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply element transform to a ragged container (no params version)</p>
 </section>
 <section id="function-applytimegroupedtransform" class="level3">
 <h3 class="anchored" data-anchor-id="function-applytimegroupedtransform">function applyTimeGroupedTransform</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb38"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InContainer <span class="op">,</span></span>
-<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutContainer <span class="op">,</span></span>
-<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> InElement <span class="op">,</span></span>
-<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutElement <span class="op">,</span></span>
-<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
-<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> OutContainer <span class="op">&gt;</span> applyTimeGroupedTransform<span class="op">(</span></span>
-<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>    InContainer <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
-<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
-<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>    Params <span class="at">const</span> <span class="op">&amp;</span> params</span>
-<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InContainer <span class="op">,</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutContainer <span class="op">,</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> InElement <span class="op">,</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutElement <span class="op">,</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> OutContainer <span class="op">&gt;</span> applyTimeGroupedTransform<span class="op">(</span></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>    InContainer <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>    Params <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply time-grouped transform to reduce ragged time series.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1816,48 +1856,48 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 </section>
 <section id="function-applytimegroupedtransform-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-applytimegroupedtransform-1">function applyTimeGroupedTransform</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InContainer <span class="op">,</span></span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutContainer <span class="op">,</span></span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> InElement <span class="op">,</span></span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutElement <span class="op">&gt;</span></span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> OutContainer <span class="op">&gt;</span> applyTimeGroupedTransform<span class="op">(</span></span>
-<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>    InContainer <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
-<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name</span>
-<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InContainer <span class="op">,</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutContainer <span class="op">,</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> InElement <span class="op">,</span></span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutElement <span class="op">&gt;</span></span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> OutContainer <span class="op">&gt;</span> applyTimeGroupedTransform<span class="op">(</span></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>    InContainer <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name</span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply time-grouped transform (no params version)</p>
 </section>
 <section id="function-applyelementtransformview" class="level3">
 <h3 class="anchored" data-anchor-id="function-applyelementtransformview">function applyElementTransformView</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb40"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InContainer <span class="op">,</span></span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> InElement <span class="op">,</span></span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutElement <span class="op">,</span></span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
-<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> applyElementTransformView<span class="op">(</span></span>
-<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>    InContainer <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
-<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
-<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>    Params <span class="at">const</span> <span class="op">&amp;</span> params</span>
-<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InContainer <span class="op">,</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> InElement <span class="op">,</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutElement <span class="op">,</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> applyElementTransformView<span class="op">(</span></span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>    InContainer <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>    Params <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-applyelementtransformview-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-applyelementtransformview-1">function applyElementTransformView</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InContainer <span class="op">,</span></span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> InElement <span class="op">,</span></span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutElement <span class="op">&gt;</span></span>
-<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> applyElementTransformView<span class="op">(</span></span>
-<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>    InContainer <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
-<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name</span>
-<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InContainer <span class="op">,</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> InElement <span class="op">,</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> OutElement <span class="op">&gt;</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> applyElementTransformView<span class="op">(</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>    InContainer <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply element transform returning a lazy view (no params version)</p>
 </section>
 <section id="function-applytransform" class="level3">
 <h3 class="anchored" data-anchor-id="function-applytransform">function applyTransform</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb42"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InContainer <span class="op">,</span></span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
-<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> applyTransform<span class="op">(</span></span>
-<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>    InContainer <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
-<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
-<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>    Params <span class="at">const</span> <span class="op">&amp;</span> params</span>
-<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InContainer <span class="op">,</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> applyTransform<span class="op">(</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>    InContainer <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>    Params <span class="at">const</span> <span class="op">&amp;</span> params</span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply a registered transform by name, automatically deducing container types.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1875,11 +1915,11 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 </section>
 <section id="function-extractelement" class="level3">
 <h3 class="anchored" data-anchor-id="function-extractelement">function extractElement</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> IterValue <span class="op">,</span></span>
-<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> ElementType <span class="op">&gt;</span></span>
-<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="kw">decltype</span><span class="op">(</span><span class="kw">auto</span><span class="op">)</span> extractElement<span class="op">(</span></span>
-<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    IterValue <span class="at">const</span> <span class="op">&amp;</span> iter_value</span>
-<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> IterValue <span class="op">,</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> ElementType <span class="op">&gt;</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="kw">decltype</span><span class="op">(</span><span class="kw">auto</span><span class="op">)</span> extractElement<span class="op">(</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    IterValue <span class="at">const</span> <span class="op">&amp;</span> iter_value</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Extract the actual data element from a container’s iterator value.</p>
 <p>Different containers have different iterator structures:</p>
 <ul>
@@ -1891,33 +1931,33 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 </section>
 <section id="function-flatzipview" class="level3">
 <h3 class="anchored" data-anchor-id="function-flatzipview">function FlatZipView</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> R1 <span class="op">,</span></span>
-<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> R2 <span class="op">&gt;</span></span>
-<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>FlatZipView<span class="op">(</span></span>
-<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>    R1 <span class="op">&amp;&amp;</span> <span class="op">,</span></span>
-<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>    R2 <span class="op">&amp;&amp;</span> </span>
-<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> R1 <span class="op">,</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> R2 <span class="op">&gt;</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>FlatZipView<span class="op">(</span></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>    R1 <span class="op">&amp;&amp;</span> <span class="op">,</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>    R2 <span class="op">&amp;&amp;</span> </span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-makezipview" class="level3">
 <h3 class="anchored" data-anchor-id="function-makezipview">function makeZipView</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> TS1 <span class="op">,</span></span>
-<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> TS2 <span class="op">&gt;</span></span>
-<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> makeZipView<span class="op">(</span></span>
-<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    TS1 <span class="at">const</span> <span class="op">&amp;</span> ts1<span class="op">,</span></span>
-<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>    TS2 <span class="at">const</span> <span class="op">&amp;</span> ts2</span>
-<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> TS1 <span class="op">,</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> TS2 <span class="op">&gt;</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> makeZipView<span class="op">(</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>    TS1 <span class="at">const</span> <span class="op">&amp;</span> ts1<span class="op">,</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>    TS2 <span class="at">const</span> <span class="op">&amp;</span> ts2</span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Helper function to create a <a href="">FlatZipView</a> from two <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a>.</p>
 <p>Usage: auto zip = makeZipView(<em>lines, </em>points); for (auto [time, line, point] : zip) { … }</p>
 </section>
 <section id="function-addelementtocontainer" class="level3">
 <h3 class="anchored" data-anchor-id="function-addelementtocontainer">function addElementToContainer</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb46"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Container <span class="op">,</span></span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Element <span class="op">&gt;</span></span>
-<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> addElementToContainer<span class="op">(</span></span>
-<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>    Container <span class="op">&amp;</span> container<span class="op">,</span></span>
-<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex time<span class="op">,</span></span>
-<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>    Element <span class="op">&amp;&amp;</span> element</span>
-<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Container <span class="op">,</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Element <span class="op">&gt;</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> addElementToContainer<span class="op">(</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>    Container <span class="op">&amp;</span> container<span class="op">,</span></span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex time<span class="op">,</span></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>    Element <span class="op">&amp;&amp;</span> element</span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Add element to output container, handling different container APIs.</p>
 <p>Different containers have different methods:</p>
 <ul>
@@ -1928,32 +1968,32 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 </section>
 <section id="function-compose" class="level3">
 <h3 class="anchored" data-anchor-id="function-compose">function compose</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> In <span class="op">,</span></span>
-<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Mid <span class="op">,</span></span>
-<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Out <span class="op">,</span></span>
-<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params1 <span class="op">,</span></span>
-<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params2 <span class="op">&gt;</span></span>
-<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> compose<span class="op">(</span></span>
-<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>    TypedTransform<span class="op">&lt;</span> In<span class="op">,</span> Mid<span class="op">,</span> Params1 <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> first<span class="op">,</span></span>
-<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>    TypedTransform<span class="op">&lt;</span> Mid<span class="op">,</span> Out<span class="op">,</span> Params2 <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> second</span>
-<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> In <span class="op">,</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Mid <span class="op">,</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Out <span class="op">,</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params1 <span class="op">,</span></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Params2 <span class="op">&gt;</span></span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> compose<span class="op">(</span></span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>    TypedTransform<span class="op">&lt;</span> In<span class="op">,</span> Mid<span class="op">,</span> Params1 <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> first<span class="op">,</span></span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>    TypedTransform<span class="op">&lt;</span> Mid<span class="op">,</span> Out<span class="op">,</span> Params2 <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> second</span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Compose two transforms f(g(x))</p>
 <p>Creates a new transform that applies g then f.&nbsp;Types must be compatible: In → Mid → Out</p>
 </section>
 <section id="function-getbindingapplicatorregistry" class="level3">
 <h3 class="anchored" data-anchor-id="function-getbindingapplicatorregistry">function getBindingApplicatorRegistry</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_map<span class="op">&lt;</span> <span class="bu">std::</span>type_index<span class="op">,</span> BindingApplicatorFn <span class="op">&gt;</span> <span class="op">&amp;</span> getBindingApplicatorRegistry<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_map<span class="op">&lt;</span> <span class="bu">std::</span>type_index<span class="op">,</span> BindingApplicatorFn <span class="op">&gt;</span> <span class="op">&amp;</span> getBindingApplicatorRegistry<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Registry for binding applicators by parameter type.</p>
 <p>Each parameter type registers an applicator function during transform registration. This enables type-erased binding application in pipeline runtime.</p>
 </section>
 <section id="function-applybindingserased" class="level3">
 <h3 class="anchored" data-anchor-id="function-applybindingserased">function applyBindingsErased</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>any applyBindingsErased<span class="op">(</span></span>
-<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">params_type</span><span class="op">,</span></span>
-<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;</span> base_params<span class="op">,</span></span>
-<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> bindings<span class="op">,</span></span>
-<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>    PipelineValueStore <span class="at">const</span> <span class="op">&amp;</span> store</span>
-<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>any applyBindingsErased<span class="op">(</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">params_type</span><span class="op">,</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;</span> base_params<span class="op">,</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> bindings<span class="op">,</span></span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>    PipelineValueStore <span class="at">const</span> <span class="op">&amp;</span> store</span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply bindings to type-erased parameters.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1971,12 +2011,12 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 </section>
 <section id="function-tryapplybindingserased" class="level3">
 <h3 class="anchored" data-anchor-id="function-tryapplybindingserased">function tryApplyBindingsErased</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>any tryApplyBindingsErased<span class="op">(</span></span>
-<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">params_type</span><span class="op">,</span></span>
-<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;</span> base_params<span class="op">,</span></span>
-<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> bindings<span class="op">,</span></span>
-<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>    PipelineValueStore <span class="at">const</span> <span class="op">&amp;</span> store</span>
-<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>any tryApplyBindingsErased<span class="op">(</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">params_type</span><span class="op">,</span></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>any <span class="at">const</span> <span class="op">&amp;</span> base_params<span class="op">,</span></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> bindings<span class="op">,</span></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>    PipelineValueStore <span class="at">const</span> <span class="op">&amp;</span> store</span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Try to apply bindings to type-erased parameters.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1990,9 +2030,9 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 </section>
 <section id="function-hasbindingapplicator" class="level3">
 <h3 class="anchored" data-anchor-id="function-hasbindingapplicator">function hasBindingApplicator</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasBindingApplicator<span class="op">(</span></span>
-<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">params_type</span></span>
-<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasBindingApplicator<span class="op">(</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>type_index <span class="dt">params_type</span></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Check if a binding applicator is registered for a parameter type.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -2002,21 +2042,21 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 </section>
 <section id="function-applybindings" class="level3">
 <h3 class="anchored" data-anchor-id="function-applybindings">function applyBindings</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
-<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>Params applyBindings<span class="op">(</span></span>
-<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    Params <span class="at">const</span> <span class="op">&amp;</span> base_params<span class="op">,</span></span>
-<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> bindings<span class="op">,</span></span>
-<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>    PipelineValueStore <span class="at">const</span> <span class="op">&amp;</span> store</span>
-<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>Params applyBindings<span class="op">(</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>    Params <span class="at">const</span> <span class="op">&amp;</span> base_params<span class="op">,</span></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> bindings<span class="op">,</span></span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>    PipelineValueStore <span class="at">const</span> <span class="op">&amp;</span> store</span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-tryapplybindings" class="level3">
 <h3 class="anchored" data-anchor-id="function-tryapplybindings">function tryApplyBindings</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
-<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> Params <span class="op">&gt;</span> tryApplyBindings<span class="op">(</span></span>
-<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>    Params <span class="at">const</span> <span class="op">&amp;</span> base_params<span class="op">,</span></span>
-<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> bindings<span class="op">,</span></span>
-<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>    PipelineValueStore <span class="at">const</span> <span class="op">&amp;</span> store</span>
-<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> Params <span class="op">&gt;</span> tryApplyBindings<span class="op">(</span></span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>    Params <span class="at">const</span> <span class="op">&amp;</span> base_params<span class="op">,</span></span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> bindings<span class="op">,</span></span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>    PipelineValueStore <span class="at">const</span> <span class="op">&amp;</span> store</span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Try to apply bindings, returning nullopt on failure.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -2033,8 +2073,8 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 </section>
 <section id="function-registerbindingapplicatorfor" class="level3">
 <h3 class="anchored" data-anchor-id="function-registerbindingapplicatorfor">function registerBindingApplicatorFor</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
-<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> registerBindingApplicatorFor<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb56"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Params <span class="op">&gt;</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> registerBindingApplicatorFor<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Register a binding applicator for a parameter type.</p>
 <p><strong>Template Parameters</strong>:</p>
 <ul>
@@ -2044,12 +2084,12 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 </section>
 <section id="function-makeprojectedview" class="level3">
 <h3 class="anchored" data-anchor-id="function-makeprojectedview">function makeProjectedView</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range Range<span class="op">,</span></span>
-<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Proj <span class="op">&gt;</span></span>
-<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> makeProjectedView<span class="op">(</span></span>
-<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>    Range <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
-<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>    Proj <span class="op">&amp;&amp;</span> projection</span>
-<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb57"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range Range<span class="op">,</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Proj <span class="op">&gt;</span></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> makeProjectedView<span class="op">(</span></span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>    Range <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>    Proj <span class="op">&amp;&amp;</span> projection</span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create a lazy projected view from a range and projection function.</p>
 <p>Returns a range adaptor that yields (element_ref, projected_value) pairs. No intermediate storage is allocated - values are computed on iteration.</p>
 </section>
@@ -2065,24 +2105,24 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 </section>
 <section id="example-2" class="level2">
 <h2 class="anchored" data-anchor-id="example-2">Example</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb56"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> view <span class="op">=</span> trial<span class="op">-&gt;</span>view<span class="op">();</span></span>
-<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> projection <span class="op">=</span> <span class="op">[](</span>EventWithId <span class="at">const</span><span class="op">&amp;</span> e<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> e<span class="op">.</span>time<span class="op">().</span>getValue<span class="op">()</span> <span class="op">*</span> <span class="fl">0.001</span><span class="bu">f</span><span class="op">;</span> <span class="op">};</span></span>
-<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> pair <span class="op">:</span> makeProjectedView<span class="op">(</span>view<span class="op">,</span> projection<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// pair.first is EventWithId const&amp;</span></span>
-<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// pair.second is float (computed on-demand)</span></span>
-<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a>    EntityId id <span class="op">=</span> pair<span class="op">.</span>first<span class="op">.</span>id<span class="op">();</span></span>
-<span id="cb56-9"><a href="#cb56-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> scaled <span class="op">=</span> pair<span class="op">.</span>second<span class="op">;</span></span>
-<span id="cb56-10"><a href="#cb56-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> view <span class="op">=</span> trial<span class="op">-&gt;</span>view<span class="op">();</span></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> projection <span class="op">=</span> <span class="op">[](</span>EventWithId <span class="at">const</span><span class="op">&amp;</span> e<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> e<span class="op">.</span>time<span class="op">().</span>getValue<span class="op">()</span> <span class="op">*</span> <span class="fl">0.001</span><span class="bu">f</span><span class="op">;</span> <span class="op">};</span></span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> pair <span class="op">:</span> makeProjectedView<span class="op">(</span>view<span class="op">,</span> projection<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>    <span class="co">// pair.first is EventWithId const&amp;</span></span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">// pair.second is float (computed on-demand)</span></span>
+<span id="cb58-8"><a href="#cb58-8" aria-hidden="true" tabindex="-1"></a>    EntityId id <span class="op">=</span> pair<span class="op">.</span>first<span class="op">.</span>id<span class="op">();</span></span>
+<span id="cb58-9"><a href="#cb58-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> scaled <span class="op">=</span> pair<span class="op">.</span>second<span class="op">;</span></span>
+<span id="cb58-10"><a href="#cb58-10" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <section id="function-makevalueview" class="level3">
 <h3 class="anchored" data-anchor-id="function-makevalueview">function makeValueView</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb57"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range Range<span class="op">,</span></span>
-<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Proj <span class="op">&gt;</span></span>
-<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> makeValueView<span class="op">(</span></span>
-<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>    Range <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
-<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>    Proj <span class="op">&amp;&amp;</span> projection</span>
-<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::input_range Range<span class="op">,</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Proj <span class="op">&gt;</span></span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> makeValueView<span class="op">(</span></span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>    Range <span class="op">&amp;&amp;</span> range<span class="op">,</span></span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a>    Proj <span class="op">&amp;&amp;</span> projection</span>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create a lazy view that yields only projected values.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -2100,16 +2140,16 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 </section>
 <section id="example-3" class="level2">
 <h2 class="anchored" data-anchor-id="example-3">Example</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> values <span class="op">=</span> makeValueView<span class="op">(</span>trial<span class="op">-&gt;</span>view<span class="op">(),</span> normalize_fn<span class="op">);</span></span>
-<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> sum <span class="op">=</span> <span class="bu">std::</span>accumulate<span class="op">(</span>values<span class="op">.</span>begin<span class="op">(),</span> values<span class="op">.</span>end<span class="op">(),</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb60"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> values <span class="op">=</span> makeValueView<span class="op">(</span>trial<span class="op">-&gt;</span>view<span class="op">(),</span> normalize_fn<span class="op">);</span></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> sum <span class="op">=</span> <span class="bu">std::</span>accumulate<span class="op">(</span>values<span class="op">.</span>begin<span class="op">(),</span> values<span class="op">.</span>end<span class="op">(),</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <section id="function-erasevalueprojection" class="level3">
 <h3 class="anchored" data-anchor-id="function-erasevalueprojection">function eraseValueProjection</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InElement <span class="op">,</span></span>
-<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Value <span class="op">&gt;</span></span>
-<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>ErasedValueProjectionFn eraseValueProjection<span class="op">(</span></span>
-<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>    ValueProjectionFn<span class="op">&lt;</span> InElement<span class="op">,</span> Value <span class="op">&gt;</span> typed_fn</span>
-<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb61"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InElement <span class="op">,</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Value <span class="op">&gt;</span></span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>ErasedValueProjectionFn eraseValueProjection<span class="op">(</span></span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>    ValueProjectionFn<span class="op">&lt;</span> InElement<span class="op">,</span> Value <span class="op">&gt;</span> typed_fn</span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Wrap a typed value projection as a type-erased function.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -2125,11 +2165,11 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 </section>
 <section id="function-erasevalueprojectionfactoryv2" class="level3">
 <h3 class="anchored" data-anchor-id="function-erasevalueprojectionfactoryv2">function eraseValueProjectionFactoryV2</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb60"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InElement <span class="op">,</span></span>
-<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Value <span class="op">&gt;</span></span>
-<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>ErasedValueProjectionFactoryV2 eraseValueProjectionFactoryV2<span class="op">(</span></span>
-<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>    ValueProjectionFactoryV2<span class="op">&lt;</span> InElement<span class="op">,</span> Value <span class="op">&gt;</span> typed_factory</span>
-<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb62"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InElement <span class="op">,</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Value <span class="op">&gt;</span></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>ErasedValueProjectionFactoryV2 eraseValueProjectionFactoryV2<span class="op">(</span></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>    ValueProjectionFactoryV2<span class="op">&lt;</span> InElement<span class="op">,</span> Value <span class="op">&gt;</span> typed_factory</span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Wrap a typed value projection factory as a type-erased factory.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -2144,11 +2184,11 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 </section>
 <section id="function-recovervalueprojection" class="level3">
 <h3 class="anchored" data-anchor-id="function-recovervalueprojection">function recoverValueProjection</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb61"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InElement <span class="op">,</span></span>
-<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Value <span class="op">&gt;</span></span>
-<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>ValueProjectionFn<span class="op">&lt;</span> InElement<span class="op">,</span> Value <span class="op">&gt;</span> recoverValueProjection<span class="op">(</span></span>
-<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>    ErasedValueProjectionFn erased_fn</span>
-<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb63"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InElement <span class="op">,</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Value <span class="op">&gt;</span></span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>ValueProjectionFn<span class="op">&lt;</span> InElement<span class="op">,</span> Value <span class="op">&gt;</span> recoverValueProjection<span class="op">(</span></span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>    ErasedValueProjectionFn erased_fn</span>
+<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Recover a typed value projection from a type-erased function.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -2164,11 +2204,11 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 </section>
 <section id="function-recovervalueprojectionfactoryv2" class="level3">
 <h3 class="anchored" data-anchor-id="function-recovervalueprojectionfactoryv2">function recoverValueProjectionFactoryV2</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb62"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InElement <span class="op">,</span></span>
-<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Value <span class="op">&gt;</span></span>
-<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>ValueProjectionFactoryV2<span class="op">&lt;</span> InElement<span class="op">,</span> Value <span class="op">&gt;</span> recoverValueProjectionFactoryV2<span class="op">(</span></span>
-<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>    ErasedValueProjectionFactoryV2 erased_factory</span>
-<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb64"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> InElement <span class="op">,</span></span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a><span class="kw">typename</span> Value <span class="op">&gt;</span></span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>ValueProjectionFactoryV2<span class="op">&lt;</span> InElement<span class="op">,</span> Value <span class="op">&gt;</span> recoverValueProjectionFactoryV2<span class="op">(</span></span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>    ErasedValueProjectionFactoryV2 erased_factory</span>
+<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Recover a typed value projection factory from a type-erased factory.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -2183,20 +2223,20 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 </section>
 <section id="function-register_transformsv2_commands" class="level3">
 <h3 class="anchored" data-anchor-id="function-register_transformsv2_commands">function register_transformsv2_commands</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb63"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> register_transformsv2_commands<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb65"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> register_transformsv2_commands<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Register TransformsV2 commands with the CommandRegistry singleton.</p>
 <p>Must be called once at startup before any command creation or introspection. Safe to call multiple times (subsequent calls are no-ops once commands exist).</p>
 </section>
 <section id="function-builddimreductionoutput" class="level3">
 <h3 class="anchored" data-anchor-id="function-builddimreductionoutput">function buildDimReductionOutput</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb64"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TensorData <span class="op">&gt;</span> buildDimReductionOutput<span class="op">(</span></span>
-<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>    arma<span class="op">::</span>mat <span class="at">const</span> <span class="op">&amp;</span> reduced<span class="op">,</span></span>
-<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
-<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> valid_indices<span class="op">,</span></span>
-<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a>    NaNPolicy policy<span class="op">,</span></span>
-<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t n_components<span class="op">,</span></span>
-<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> col_names</span>
-<span id="cb64-8"><a href="#cb64-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb66"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TensorData <span class="op">&gt;</span> buildDimReductionOutput<span class="op">(</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>    arma<span class="op">::</span>mat <span class="at">const</span> <span class="op">&amp;</span> reduced<span class="op">,</span></span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> input<span class="op">,</span></span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> valid_indices<span class="op">,</span></span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a>    NaNPolicy policy<span class="op">,</span></span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t n_components<span class="op">,</span></span>
+<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> col_names</span>
+<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Build an output <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> from a reduced matrix, handling NaN policies.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -2225,29 +2265,29 @@ std::vector&lt; DataInfo &gt; load_data_from_json_config_v2(
 <h2 class="anchored" data-anchor-id="attributes-documentation">Attributes Documentation</h2>
 <section id="variable-is_in_variant_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_in_variant_v">variable is_in_variant_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb65"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_in_variant_v <span class="op">=</span> is_in_variant<span class="op">&lt;</span>T<span class="op">,</span> Variant<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb67"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_in_variant_v <span class="op">=</span> is_in_variant<span class="op">&lt;</span>T<span class="op">,</span> Variant<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-always_false" class="level3">
 <h3 class="anchored" data-anchor-id="variable-always_false">variable always_false</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb66"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> always_false <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb68"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> always_false <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-is_tuple_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_tuple_v">variable is_tuple_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb67"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_tuple_v <span class="op">=</span> is_tuple<span class="op">&lt;</span>T<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb69"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_tuple_v <span class="op">=</span> is_tuple<span class="op">&lt;</span>T<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-input_arity_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-input_arity_v">variable input_arity_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb68"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">size_t</span> input_arity_v <span class="op">=</span> input_arity<span class="op">&lt;</span>In<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb70"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">size_t</span> input_arity_v <span class="op">=</span> input_arity<span class="op">&lt;</span>In<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-is_range_reduction_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_range_reduction_v">variable is_range_reduction_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb69"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_range_reduction_v <span class="op">=</span> is_range_reduction<span class="op">&lt;</span>F<span class="op">,</span> Element<span class="op">,</span> Scalar<span class="op">,</span> Params<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb71"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_range_reduction_v <span class="op">=</span> is_range_reduction<span class="op">&lt;</span>F<span class="op">,</span> Element<span class="op">,</span> Scalar<span class="op">,</span> Params<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-is_stateless_range_reduction_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_stateless_range_reduction_v">variable is_stateless_range_reduction_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb70"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_stateless_range_reduction_v <span class="op">=</span> is_stateless_range_reduction<span class="op">&lt;</span>F<span class="op">,</span> Element<span class="op">,</span> Scalar<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb72"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_stateless_range_reduction_v <span class="op">=</span> is_stateless_range_reduction<span class="op">&lt;</span>F<span class="op">,</span> Element<span class="op">,</span> Scalar<span class="op">&gt;::</span>value<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-07-29 at 21:29:34 +0000</p>
+<p>Updated on 2026-07-30 at 14:56:53 +0000</p>
 
 
 </section>
