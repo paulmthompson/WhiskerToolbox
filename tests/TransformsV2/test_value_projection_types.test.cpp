@@ -12,10 +12,10 @@
  */
 
 #include "DigitalTimeSeries/EventWithId.hpp"
+#include "TransformsV2/PipelineValueStore/PipelineValueStore.hpp"
 #include "TransformsV2/algorithms/Temporal/NormalizeTime.hpp"
 #include "TransformsV2/algorithms/Temporal/RegisteredTemporalTransforms.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
-#include "TransformsV2/PipelineValueStore/PipelineValueStore.hpp"
 #include "TransformsV2/extension/ValueProjectionTypes.hpp"
 
 #include <catch2/catch_test_macros.hpp>
@@ -447,7 +447,7 @@ TEST_CASE("bindValueProjectionV2 - ClockTicksWithId gather path", "[ValueProject
     auto factory = bindValueProjectionV2<ClockTicksWithId, float>(pipeline);
 
     PipelineValueStore store;
-    store.set("alignment_time", int64_t{200});
+    store.set("alignment_time", ClockTicks{200});
 
     auto projection = factory(store);
 

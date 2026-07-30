@@ -50,6 +50,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "DigitalTimeSeries/EventWithId.hpp"
+#include "TimeFrame/ClockTicksReflector.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
@@ -76,7 +77,7 @@ namespace Neuralyzer::Transforms::V2 {
  *
  * ## Key Differences from NormalizeTimeParams
  *
- * - `alignment_time` is a regular int64_t field, not rfl::Skip
+ * - `alignment_time` is a regular ClockTicks field, not rfl::Skip
  * - No setAlignmentTime() method - values come from pipeline bindings
  * - Fully serializable via reflect-cpp
  *
@@ -103,7 +104,7 @@ namespace Neuralyzer::Transforms::V2 {
  */
 struct NormalizeTimeParamsV2 {
     /// Alignment time (t=0 reference point) - populated via binding
-    int64_t alignment_time = 0;
+    ClockTicks alignment_time{0};
 };
 
 // ============================================================================
@@ -131,7 +132,7 @@ struct NormalizeTimeParamsV2 {
 [[nodiscard]] inline float normalizeTimeValueV2(
         TimeFrameIndex const & time,
         NormalizeTimeParamsV2 const & params) {
-    return static_cast<float>(time.getValue() - params.alignment_time);
+    return static_cast<float>(time.getValue() - params.alignment_time.getValue());
 }
 
 /**
@@ -144,7 +145,7 @@ struct NormalizeTimeParamsV2 {
 [[nodiscard]] inline float normalizeClockTicksValueV2(
         ClockTicks const & time,
         NormalizeTimeParamsV2 const & params) {
-    return static_cast<float>(time.getValue() - params.alignment_time);
+    return static_cast<float>(time - params.alignment_time);
 }
 
 /**
@@ -159,7 +160,7 @@ struct NormalizeTimeParamsV2 {
 [[nodiscard]] inline float normalizeEventTimeValueV2(
         EventWithId const & event,
         NormalizeTimeParamsV2 const & params) {
-    return static_cast<float>(event.time().getValue() - params.alignment_time);
+    return static_cast<float>(event.time().getValue() - params.alignment_time.getValue());
 }
 
 /**
@@ -174,7 +175,7 @@ struct NormalizeTimeParamsV2 {
 [[nodiscard]] inline float normalizeClockTicksWithIdValueV2(
         ClockTicksWithId const & event,
         NormalizeTimeParamsV2 const & params) {
-    return static_cast<float>(event.time().getValue() - params.alignment_time);
+    return static_cast<float>(event.time() - params.alignment_time);
 }
 
 /**
@@ -187,7 +188,7 @@ struct NormalizeTimeParamsV2 {
 [[nodiscard]] inline float normalizeSampleTimeValueV2(
         AnalogTimeSeries::TimeValuePoint const & sample,
         NormalizeTimeParamsV2 const & params) {
-    return static_cast<float>(sample.time().getValue() - params.alignment_time);
+    return static_cast<float>(sample.time().getValue() - params.alignment_time.getValue());
 }
 
 }// namespace Neuralyzer::Transforms::V2

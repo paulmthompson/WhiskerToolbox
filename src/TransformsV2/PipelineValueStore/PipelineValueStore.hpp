@@ -50,6 +50,8 @@
  * @see TransformPipeline for integration with pipeline execution
  */
 
+#include "TimeFrame/ClockTicks.hpp"
+
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -70,8 +72,9 @@ namespace Neuralyzer::Transforms::V2 {
  * - float: For floating-point scalars (statistics, measurements)
  * - int64_t: For integer values (indices, counts, timestamps)
  * - std::string: For string values (labels, categories)
+ * - ClockTicks: For time values in acquisition-clock coordinates
  */
-using PipelineValue = std::variant<float, int64_t, std::string>;
+using PipelineValue = std::variant<float, int64_t, std::string, ClockTicks>;
 
 // ============================================================================
 // PipelineValueStore Implementation
@@ -97,7 +100,7 @@ public:
      * @param key Unique key for the value
      * @param value The float value to store
      */
-    void set(std::string const& key, float value) {
+    void set(std::string const & key, float value) {
         values_[key] = value;
     }
 
@@ -106,7 +109,7 @@ public:
      * @param key Unique key for the value
      * @param value The int value to store
      */
-    void set(std::string const& key, int value) {
+    void set(std::string const & key, int value) {
         values_[key] = static_cast<int64_t>(value);
     }
 
@@ -115,7 +118,16 @@ public:
      * @param key Unique key for the value
      * @param value The int64_t value to store
      */
-    void set(std::string const& key, int64_t value) {
+    void set(std::string const & key, int64_t value) {
+        values_[key] = value;
+    }
+
+    /**
+     * @brief Store a clock-tick time value
+     * @param key Unique key for the value
+     * @param value The clock-tick value to store
+     */
+    void set(std::string const & key, ClockTicks value) {
         values_[key] = value;
     }
 
@@ -124,7 +136,7 @@ public:
      * @param key Unique key for the value
      * @param value The string value to store
      */
-    void set(std::string const& key, std::string value) {
+    void set(std::string const & key, std::string value) {
         values_[key] = std::move(value);
     }
 
@@ -145,7 +157,7 @@ public:
      * @param key Key to look up
      * @return JSON string representation, or std::nullopt if key not found
      */
-    [[nodiscard]] std::optional<std::string> getJson(std::string const& key) const;
+    [[nodiscard]] std::optional<std::string> getJson(std::string const & key) const;
 
     // ========================================================================
     // Typed Getters (for direct access)
@@ -162,7 +174,7 @@ public:
      * @param key Key to look up
      * @return Float value, or std::nullopt if key not found or incompatible type
      */
-    [[nodiscard]] std::optional<float> getFloat(std::string const& key) const;
+    [[nodiscard]] std::optional<float> getFloat(std::string const & key) const;
 
     /**
      * @brief Get value as int64_t
@@ -175,7 +187,7 @@ public:
      * @param key Key to look up
      * @return Int64 value, or std::nullopt if key not found or incompatible type
      */
-    [[nodiscard]] std::optional<int64_t> getInt(std::string const& key) const;
+    [[nodiscard]] std::optional<int64_t> getInt(std::string const & key) const;
 
     /**
      * @brief Get value as string
@@ -186,14 +198,27 @@ public:
      * @param key Key to look up
      * @return String value, or std::nullopt if key not found or not a string
      */
-    [[nodiscard]] std::optional<std::string> getString(std::string const& key) const;
+    [[nodiscard]] std::optional<std::string> getString(std::string const & key) const;
+
+    /**
+     * @brief Get value as ClockTicks
+     *
+     * Performs type conversion if necessary:
+     * - ClockTicks: returns directly
+     * - int64_t: converts to ClockTicks
+     * - float/string: returns nullopt
+     *
+     * @param key Key to look up
+     * @return ClockTicks value, or std::nullopt if key not found or incompatible type
+     */
+    [[nodiscard]] std::optional<ClockTicks> getClockTicks(std::string const & key) const;
     /**
      * @brief Get the raw variant value
      *
      * @param key Key to look up
      * @return The stored variant, or std::nullopt if key not found
      */
-    [[nodiscard]] std::optional<PipelineValue> get(std::string const& key) const {
+    [[nodiscard]] std::optional<PipelineValue> get(std::string const & key) const {
         auto it = values_.find(key);
         if (it == values_.end()) {
             return std::nullopt;
@@ -210,7 +235,7 @@ public:
      * @param key Key to check
      * @return true if the key exists
      */
-    [[nodiscard]] bool contains(std::string const& key) const {
+    [[nodiscard]] bool contains(std::string const & key) const {
         return values_.find(key) != values_.end();
     }
 
@@ -235,7 +260,7 @@ public:
     [[nodiscard]] std::vector<std::string> keys() const {
         std::vector<std::string> result;
         result.reserve(values_.size());
-        for (auto const& [key, _] : values_) {
+        for (auto const & [key, _]: values_) {
             result.push_back(key);
         }
         return result;
@@ -252,8 +277,8 @@ public:
      *
      * @param other Store to merge from
      */
-    void merge(PipelineValueStore const& other) {
-        for (auto const& [key, value] : other.values_) {
+    void merge(PipelineValueStore const & other) {
+        for (auto const & [key, value]: other.values_) {
             values_[key] = value;
         }
     }
@@ -263,7 +288,7 @@ public:
      * @param key Key to remove
      * @return true if the key was found and removed
      */
-    bool erase(std::string const& key) {
+    bool erase(std::string const & key) {
         return values_.erase(key) > 0;
     }
 
@@ -278,6 +303,6 @@ private:
     std::unordered_map<std::string, PipelineValue> values_;
 };
 
-}  // namespace Neuralyzer::Transforms::V2
+}// namespace Neuralyzer::Transforms::V2
 
-#endif  // NEURALYZER_V2_PIPELINE_VALUE_STORE_HPP
+#endif// NEURALYZER_V2_PIPELINE_VALUE_STORE_HPP

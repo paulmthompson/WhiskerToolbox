@@ -12,6 +12,8 @@
 
 #include "TransformsV2/PipelineValueStore/PipelineValueStore.hpp"
 
+#include "TimeFrame/ClockTicks.hpp"
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
@@ -29,7 +31,7 @@ TEST_CASE("PipelineValueStore - Float storage", "[transforms][v2][value_store]")
 
     SECTION("Store and retrieve float") {
         store.set("mean", 0.5f);
-        
+
         REQUIRE(store.contains("mean"));
         auto value = store.getFloat("mean");
         REQUIRE(value.has_value());
@@ -38,7 +40,7 @@ TEST_CASE("PipelineValueStore - Float storage", "[transforms][v2][value_store]")
 
     SECTION("Float with negative value") {
         store.set("offset", -3.14f);
-        
+
         auto value = store.getFloat("offset");
         REQUIRE(value.has_value());
         REQUIRE_THAT(*value, WithinRel(-3.14f, 0.0001f));
@@ -46,7 +48,7 @@ TEST_CASE("PipelineValueStore - Float storage", "[transforms][v2][value_store]")
 
     SECTION("Float as JSON") {
         store.set("std_dev", 0.123f);
-        
+
         auto json = store.getJson("std_dev");
         REQUIRE(json.has_value());
         // JSON should be a valid float string
@@ -59,7 +61,7 @@ TEST_CASE("PipelineValueStore - Integer storage", "[transforms][v2][value_store]
 
     SECTION("Store int, retrieve as int64") {
         store.set("count", 42);
-        
+
         auto value = store.getInt("count");
         REQUIRE(value.has_value());
         REQUIRE(*value == 42);
@@ -68,7 +70,7 @@ TEST_CASE("PipelineValueStore - Integer storage", "[transforms][v2][value_store]
     SECTION("Store int64_t directly") {
         int64_t large_value = 1'000'000'000'000LL;
         store.set("timestamp", large_value);
-        
+
         auto value = store.getInt("timestamp");
         REQUIRE(value.has_value());
         REQUIRE(*value == large_value);
@@ -76,7 +78,7 @@ TEST_CASE("PipelineValueStore - Integer storage", "[transforms][v2][value_store]
 
     SECTION("Negative integer") {
         store.set("offset", -100);
-        
+
         auto value = store.getInt("offset");
         REQUIRE(value.has_value());
         REQUIRE(*value == -100);
@@ -84,7 +86,7 @@ TEST_CASE("PipelineValueStore - Integer storage", "[transforms][v2][value_store]
 
     SECTION("Integer as JSON") {
         store.set("trial_index", 5);
-        
+
         auto json = store.getJson("trial_index");
         REQUIRE(json.has_value());
         REQUIRE(*json == "5");
@@ -96,7 +98,7 @@ TEST_CASE("PipelineValueStore - String storage", "[transforms][v2][value_store]"
 
     SECTION("Store and retrieve string") {
         store.set("label", std::string("test_label"));
-        
+
         auto value = store.getString("label");
         REQUIRE(value.has_value());
         REQUIRE(*value == "test_label");
@@ -104,7 +106,7 @@ TEST_CASE("PipelineValueStore - String storage", "[transforms][v2][value_store]"
 
     SECTION("Empty string") {
         store.set("empty", std::string(""));
-        
+
         auto value = store.getString("empty");
         REQUIRE(value.has_value());
         REQUIRE(value->empty());
@@ -112,10 +114,31 @@ TEST_CASE("PipelineValueStore - String storage", "[transforms][v2][value_store]"
 
     SECTION("String as JSON (quoted)") {
         store.set("name", std::string("test"));
-        
+
         auto json = store.getJson("name");
         REQUIRE(json.has_value());
-        REQUIRE(*json == "\"test\"");  // Should be JSON-quoted
+        REQUIRE(*json == "\"test\"");// Should be JSON-quoted
+    }
+}
+
+TEST_CASE("PipelineValueStore - ClockTicks storage", "[transforms][v2][value_store]") {
+    PipelineValueStore store;
+
+    SECTION("Store and retrieve ClockTicks") {
+        store.set("alignment_time", ClockTicks{1234});
+
+        REQUIRE(store.contains("alignment_time"));
+        auto value = store.getClockTicks("alignment_time");
+        REQUIRE(value.has_value());
+        REQUIRE(*value == ClockTicks{1234});
+    }
+
+    SECTION("ClockTicks as JSON") {
+        store.set("alignment_time", ClockTicks{5678});
+
+        auto json = store.getJson("alignment_time");
+        REQUIRE(json.has_value());
+        REQUIRE(*json == "5678");
     }
 }
 
@@ -128,7 +151,7 @@ TEST_CASE("PipelineValueStore - Type conversions", "[transforms][v2][value_store
 
     SECTION("Int to float conversion") {
         store.set("integer", 42);
-        
+
         auto as_float = store.getFloat("integer");
         REQUIRE(as_float.has_value());
         REQUIRE_THAT(*as_float, WithinRel(42.0f, 0.0001f));
@@ -136,27 +159,43 @@ TEST_CASE("PipelineValueStore - Type conversions", "[transforms][v2][value_store
 
     SECTION("Float to int conversion (truncation)") {
         store.set("float_val", 3.7f);
-        
+
         auto as_int = store.getInt("float_val");
         REQUIRE(as_int.has_value());
-        REQUIRE(*as_int == 3);  // Truncated
+        REQUIRE(*as_int == 3);// Truncated
     }
 
     SECTION("String cannot convert to numeric") {
         store.set("text", std::string("hello"));
-        
+
         auto as_float = store.getFloat("text");
         auto as_int = store.getInt("text");
-        
+
         REQUIRE_FALSE(as_float.has_value());
         REQUIRE_FALSE(as_int.has_value());
     }
 
     SECTION("Numeric cannot convert to string") {
         store.set("number", 42);
-        
+
         auto as_string = store.getString("number");
         REQUIRE_FALSE(as_string.has_value());
+    }
+
+    SECTION("Int64 converts to ClockTicks") {
+        store.set("timestamp", int64_t{123});
+
+        auto as_ticks = store.getClockTicks("timestamp");
+        REQUIRE(as_ticks.has_value());
+        REQUIRE(*as_ticks == ClockTicks{123});
+    }
+
+    SECTION("ClockTicks converts to int64") {
+        store.set("ticks", ClockTicks{456});
+
+        auto as_int = store.getInt("ticks");
+        REQUIRE(as_int.has_value());
+        REQUIRE(*as_int == 456);
     }
 }
 
@@ -177,21 +216,21 @@ TEST_CASE("PipelineValueStore - Query methods", "[transforms][v2][value_store]")
     SECTION("Non-existent key returns nullopt") {
         auto value = store.getFloat("missing");
         REQUIRE_FALSE(value.has_value());
-        
+
         auto json = store.getJson("missing");
         REQUIRE_FALSE(json.has_value());
     }
 
     SECTION("Size tracking") {
         REQUIRE(store.size() == 0);
-        
+
         store.set("a", 1);
         REQUIRE(store.size() == 1);
-        
+
         store.set("b", 2);
         REQUIRE(store.size() == 2);
-        
-        store.set("a", 3);  // Overwrite
+
+        store.set("a", 3);// Overwrite
         REQUIRE(store.size() == 2);
     }
 
@@ -199,10 +238,10 @@ TEST_CASE("PipelineValueStore - Query methods", "[transforms][v2][value_store]")
         store.set("alpha", 1);
         store.set("beta", 2.0f);
         store.set("gamma", std::string("three"));
-        
+
         auto keys = store.keys();
         REQUIRE(keys.size() == 3);
-        
+
         // Check all keys are present (order not guaranteed)
         REQUIRE(std::find(keys.begin(), keys.end(), "alpha") != keys.end());
         REQUIRE(std::find(keys.begin(), keys.end(), "beta") != keys.end());
@@ -219,13 +258,13 @@ TEST_CASE("PipelineValueStore - Merge operation", "[transforms][v2][value_store]
         PipelineValueStore store1;
         store1.set("a", 1);
         store1.set("b", 2.0f);
-        
+
         PipelineValueStore store2;
         store2.set("c", 3);
         store2.set("d", std::string("four"));
-        
+
         store1.merge(store2);
-        
+
         REQUIRE(store1.size() == 4);
         REQUIRE(store1.contains("a"));
         REQUIRE(store1.contains("b"));
@@ -236,12 +275,12 @@ TEST_CASE("PipelineValueStore - Merge operation", "[transforms][v2][value_store]
     SECTION("Merge overwrites existing keys") {
         PipelineValueStore store1;
         store1.set("key", 1);
-        
+
         PipelineValueStore store2;
         store2.set("key", 999);
-        
+
         store1.merge(store2);
-        
+
         REQUIRE(store1.size() == 1);
         auto value = store1.getInt("key");
         REQUIRE(value.has_value());
@@ -256,7 +295,7 @@ TEST_CASE("PipelineValueStore - Erase operation", "[transforms][v2][value_store]
 
     SECTION("Erase existing key") {
         bool erased = store.erase("remove");
-        
+
         REQUIRE(erased);
         REQUIRE(store.size() == 1);
         REQUIRE_FALSE(store.contains("remove"));
@@ -265,7 +304,7 @@ TEST_CASE("PipelineValueStore - Erase operation", "[transforms][v2][value_store]
 
     SECTION("Erase non-existent key") {
         bool erased = store.erase("missing");
-        
+
         REQUIRE_FALSE(erased);
         REQUIRE(store.size() == 2);
     }
@@ -276,11 +315,11 @@ TEST_CASE("PipelineValueStore - Clear operation", "[transforms][v2][value_store]
     store.set("a", 1);
     store.set("b", 2.0f);
     store.set("c", std::string("three"));
-    
+
     REQUIRE(store.size() == 3);
-    
+
     store.clear();
-    
+
     REQUIRE(store.empty());
     REQUIRE(store.size() == 0);
     REQUIRE_FALSE(store.contains("a"));
@@ -332,29 +371,29 @@ TEST_CASE("PipelineValueStore - Edge cases", "[transforms][v2][value_store]") {
     SECTION("Overwrite with different type") {
         PipelineValueStore store;
         store.set("key", 42);
-        
+
         auto int_val = store.getInt("key");
         REQUIRE(int_val.has_value());
         REQUIRE(*int_val == 42);
-        
+
         // Overwrite with float
         store.set("key", 3.14f);
-        
+
         auto float_val = store.getFloat("key");
         REQUIRE(float_val.has_value());
         REQUIRE_THAT(*float_val, WithinRel(3.14f, 0.0001f));
-        
+
         // Int access should still work via conversion
         int_val = store.getInt("key");
         REQUIRE(int_val.has_value());
-        REQUIRE(*int_val == 3);  // Truncated
+        REQUIRE(*int_val == 3);// Truncated
     }
 
     SECTION("Very large integers") {
         PipelineValueStore store;
         int64_t big = 9'000'000'000'000'000'000LL;
         store.set("big", big);
-        
+
         auto value = store.getInt("big");
         REQUIRE(value.has_value());
         REQUIRE(*value == big);
@@ -363,7 +402,7 @@ TEST_CASE("PipelineValueStore - Edge cases", "[transforms][v2][value_store]") {
     SECTION("Special float values") {
         PipelineValueStore store;
         store.set("zero", 0.0f);
-        
+
         auto zero = store.getFloat("zero");
         REQUIRE(zero.has_value());
         REQUIRE(*zero == 0.0f);

@@ -260,16 +260,16 @@ TEST_CASE("GatherResult extension - buildGatherRowStore with reordering",
 TEST_CASE("NormalizeTimeParamsV2 - basic functionality", "[NormalizeTimeParamsV2][ValueStore][Phase3]") {
     SECTION("Default initialization") {
         NormalizeTimeParamsV2 const params{};
-        CHECK(params.alignment_time == 0);
+        CHECK(params.alignment_time == ClockTicks{0});
     }
 
     SECTION("Designated initialization") {
-        NormalizeTimeParamsV2 const params{.alignment_time = 100};
-        CHECK(params.alignment_time == 100);
+        NormalizeTimeParamsV2 const params{.alignment_time = ClockTicks{100}};
+        CHECK(params.alignment_time == ClockTicks{100});
     }
 
     SECTION("Transform with params") {
-        NormalizeTimeParamsV2 const params{.alignment_time = 100};
+        NormalizeTimeParamsV2 const params{.alignment_time = ClockTicks{100}};
 
         TimeFrameIndex const event_time{125};
         float norm_time = normalizeTimeValueV2(event_time, params);
@@ -277,7 +277,7 @@ TEST_CASE("NormalizeTimeParamsV2 - basic functionality", "[NormalizeTimeParamsV2
     }
 
     SECTION("Clock-tick transform with params") {
-        NormalizeTimeParamsV2 const params{.alignment_time = 50};
+        NormalizeTimeParamsV2 const params{.alignment_time = ClockTicks{50}};
 
         ClockTicks const time{75};
         float norm_time = normalizeClockTicksValueV2(time, params);
@@ -285,7 +285,7 @@ TEST_CASE("NormalizeTimeParamsV2 - basic functionality", "[NormalizeTimeParamsV2
     }
 
     SECTION("Clock-tick event transform with params") {
-        NormalizeTimeParamsV2 const params{.alignment_time = 50};
+        NormalizeTimeParamsV2 const params{.alignment_time = ClockTicks{50}};
 
         ClockTicksWithId const event{ClockTicks{75}, EntityId{1}};
         float norm_time = normalizeClockTicksWithIdValueV2(event, params);
@@ -304,25 +304,25 @@ TEST_CASE("NormalizeTimeParamsV2 - parameter binding", "[NormalizeTimeParamsV2][
         PipelineValueStore store;
         store.set("alignment_time", int64_t{100});
 
-        NormalizeTimeParamsV2 const base_params{.alignment_time = 0};
+        NormalizeTimeParamsV2 const base_params{.alignment_time = ClockTicks{0}};
         std::map<std::string, std::string> const bindings = {
                 {"alignment_time", "alignment_time"}};
 
         auto bound_params = applyBindings(base_params, bindings, store);
-        CHECK(bound_params.alignment_time == 100);
+        CHECK(bound_params.alignment_time == ClockTicks{100});
     }
 
     SECTION("Bindings override default values") {
         PipelineValueStore store;
         store.set("trial_alignment", int64_t{500});
 
-        NormalizeTimeParamsV2 const base_params{.alignment_time = 100};
+        NormalizeTimeParamsV2 const base_params{.alignment_time = ClockTicks{100}};
         std::map<std::string, std::string> const bindings = {
                 {"alignment_time", "trial_alignment"}// Different store key
         };
 
         auto bound_params = applyBindings(base_params, bindings, store);
-        CHECK(bound_params.alignment_time == 500);
+        CHECK(bound_params.alignment_time == ClockTicks{500});
     }
 
     SECTION("Missing store key throws") {

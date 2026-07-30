@@ -12,6 +12,12 @@
 #include "TransformsV2/PipelineValueStore/PipelineValueStore.hpp"
 #include "TransformsV2/extension/ParameterBinding.hpp"
 
+#include "TimeFrame/ClockTicks.hpp"
+#include "TimeFrame/ClockTicksReflector.hpp"
+#include "TransformsV2/algorithms/Temporal/NormalizeTime.hpp"
+
+#include <rfl/json.hpp>
+
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
@@ -46,9 +52,9 @@ struct ComplexTestParams {
 
 // Register binding applicators for test params
 namespace {
-    [[maybe_unused]] auto const reg_simple = RegisterBindingApplicator<SimpleTestParams>();
-    [[maybe_unused]] auto const reg_complex = RegisterBindingApplicator<ComplexTestParams>();
-}
+[[maybe_unused]] auto const reg_simple = RegisterBindingApplicator<SimpleTestParams>();
+[[maybe_unused]] auto const reg_complex = RegisterBindingApplicator<ComplexTestParams>();
+}// namespace
 
 // ============================================================================
 // Templated Binding Tests
@@ -63,23 +69,21 @@ TEST_CASE("ParameterBinding - Templated binding", "[transforms][v2][binding]") {
     SECTION("Single binding") {
         SimpleTestParams base{.mean = 0.0f, .std_dev = 1.0f, .count = 0};
         std::map<std::string, std::string> bindings = {
-            {"mean", "computed_mean"}
-        };
+                {"mean", "computed_mean"}};
 
         auto result = applyBindings(base, bindings, store);
 
         REQUIRE_THAT(result.mean, WithinRel(0.5f, 0.0001f));
-        REQUIRE_THAT(result.std_dev, WithinRel(1.0f, 0.0001f));  // Unchanged
-        REQUIRE(result.count == 0);  // Unchanged
+        REQUIRE_THAT(result.std_dev, WithinRel(1.0f, 0.0001f));// Unchanged
+        REQUIRE(result.count == 0);                            // Unchanged
     }
 
     SECTION("Multiple bindings") {
         SimpleTestParams base{.mean = 0.0f, .std_dev = 1.0f, .count = 0};
         std::map<std::string, std::string> bindings = {
-            {"mean", "computed_mean"},
-            {"std_dev", "computed_std"},
-            {"count", "sample_count"}
-        };
+                {"mean", "computed_mean"},
+                {"std_dev", "computed_std"},
+                {"count", "sample_count"}};
 
         auto result = applyBindings(base, bindings, store);
 
@@ -140,6 +144,32 @@ TEST_CASE("ParameterBinding - Type conversions via JSON", "[transforms][v2][bind
     }
 }
 
+TEST_CASE("ParameterBinding - ClockTicks binding", "[transforms][v2][binding]") {
+    SECTION("ClockTicks reflect-cpp round trip") {
+        auto parsed = rfl::json::read<NormalizeTimeParamsV2>(
+                R"({"alignment_time":100})");
+
+        REQUIRE(parsed);
+        REQUIRE(parsed.value().alignment_time == ClockTicks{100});
+
+        auto const json = rfl::json::write(
+                NormalizeTimeParamsV2{.alignment_time = ClockTicks{42}});
+        REQUIRE(json.find("42") != std::string::npos);
+    }
+
+    SECTION("PipelineValueStore binds ClockTicks into NormalizeTimeParamsV2") {
+        PipelineValueStore store;
+        store.set("row_alignment_time", ClockTicks{100});
+
+        NormalizeTimeParamsV2 base{.alignment_time = ClockTicks{0}};
+        std::map<std::string, std::string> bindings = {
+                {"alignment_time", "row_alignment_time"}};
+
+        auto result = applyBindings(base, bindings, store);
+        REQUIRE(result.alignment_time == ClockTicks{100});
+    }
+}
+
 TEST_CASE("ParameterBinding - Error handling", "[transforms][v2][binding]") {
     PipelineValueStore store;
     store.set("existing", 1.0f);
@@ -149,8 +179,8 @@ TEST_CASE("ParameterBinding - Error handling", "[transforms][v2][binding]") {
         std::map<std::string, std::string> bindings = {{"mean", "missing_key"}};
 
         REQUIRE_THROWS_AS(
-            applyBindings(base, bindings, store),
-            std::runtime_error);
+                applyBindings(base, bindings, store),
+                std::runtime_error);
     }
 
     SECTION("tryApplyBindings returns nullopt on error") {
@@ -158,7 +188,7 @@ TEST_CASE("ParameterBinding - Error handling", "[transforms][v2][binding]") {
         std::map<std::string, std::string> bindings = {{"mean", "missing_key"}};
 
         auto result = tryApplyBindings(base, bindings, store);
-        
+
         REQUIRE_FALSE(result.has_value());
     }
 }
@@ -175,15 +205,14 @@ TEST_CASE("ParameterBinding - Type-erased binding", "[transforms][v2][binding]")
     SECTION("Erased binding with registered type") {
         std::any base = SimpleTestParams{.mean = 0.0f, .std_dev = 1.0f, .count = 0};
         std::map<std::string, std::string> bindings = {
-            {"mean", "computed_mean"},
-            {"std_dev", "computed_std"}
-        };
+                {"mean", "computed_mean"},
+                {"std_dev", "computed_std"}};
 
         auto result_any = applyBindingsErased(
-            typeid(SimpleTestParams),
-            base,
-            bindings,
-            store);
+                typeid(SimpleTestParams),
+                base,
+                bindings,
+                store);
 
         auto result = std::any_cast<SimpleTestParams>(result_any);
         REQUIRE_THAT(result.mean, WithinRel(0.75f, 0.0001f));
@@ -195,10 +224,10 @@ TEST_CASE("ParameterBinding - Type-erased binding", "[transforms][v2][binding]")
         std::map<std::string, std::string> bindings;
 
         auto result_any = applyBindingsErased(
-            typeid(SimpleTestParams),
-            base,
-            bindings,
-            store);
+                typeid(SimpleTestParams),
+                base,
+                bindings,
+                store);
 
         auto result = std::any_cast<SimpleTestParams>(result_any);
         REQUIRE_THAT(result.mean, WithinRel(1.0f, 0.0001f));
@@ -209,10 +238,10 @@ TEST_CASE("ParameterBinding - Type-erased binding", "[transforms][v2][binding]")
         std::map<std::string, std::string> bindings = {{"mean", "missing"}};
 
         auto result_any = tryApplyBindingsErased(
-            typeid(SimpleTestParams),
-            base,
-            bindings,
-            store);
+                typeid(SimpleTestParams),
+                base,
+                bindings,
+                store);
 
         // Should return original params on failure
         auto result = std::any_cast<SimpleTestParams>(result_any);
@@ -250,8 +279,8 @@ TEST_CASE("ParameterBinding - Registry", "[transforms][v2][binding]") {
         store.set("key", 42);
 
         REQUIRE_THROWS_AS(
-            applyBindingsErased(typeid(UnregisteredParams), base, bindings, store),
-            std::runtime_error);
+                applyBindingsErased(typeid(UnregisteredParams), base, bindings, store),
+                std::runtime_error);
     }
 }
 
@@ -267,43 +296,39 @@ TEST_CASE("ParameterBinding - Complex params", "[transforms][v2][binding]") {
 
     SECTION("Mixed type bindings") {
         ComplexTestParams base{
-            .threshold = 0.5f,
-            .alignment_time = 0,
-            .label = "default",
-            .enabled = true
-        };
+                .threshold = 0.5f,
+                .alignment_time = 0,
+                .label = "default",
+                .enabled = true};
 
         std::map<std::string, std::string> bindings = {
-            {"threshold", "thresh"},
-            {"alignment_time", "time"},
-            {"label", "name"}
-        };
+                {"threshold", "thresh"},
+                {"alignment_time", "time"},
+                {"label", "name"}};
 
         auto result = applyBindings(base, bindings, store);
 
         REQUIRE_THAT(result.threshold, WithinRel(0.75f, 0.0001f));
         REQUIRE(result.alignment_time == 5000);
         REQUIRE(result.label == "custom");
-        REQUIRE(result.enabled == true);  // Unchanged
+        REQUIRE(result.enabled == true);// Unchanged
     }
 
     SECTION("Partial binding preserves unbound fields") {
         ComplexTestParams base{
-            .threshold = 0.1f,
-            .alignment_time = 100,
-            .label = "original",
-            .enabled = false
-        };
+                .threshold = 0.1f,
+                .alignment_time = 100,
+                .label = "original",
+                .enabled = false};
 
         std::map<std::string, std::string> bindings = {
-            {"threshold", "thresh"}
-        };
+                {"threshold", "thresh"}};
 
         auto result = applyBindings(base, bindings, store);
 
-        REQUIRE_THAT(result.threshold, WithinRel(0.75f, 0.0001f));  // Bound
-        REQUIRE(result.alignment_time == 100);  // Preserved
-        REQUIRE(result.label == "original");    // Preserved
-        REQUIRE(result.enabled == false);       // Preserved
+        REQUIRE_THAT(result.threshold, WithinRel(0.75f, 0.0001f));// Bound
+        REQUIRE(result.alignment_time == 100);                    // Preserved
+        REQUIRE(result.label == "original");                      // Preserved
+        REQUIRE(result.enabled == false);                         // Preserved
     }
 }
