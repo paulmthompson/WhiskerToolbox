@@ -280,16 +280,16 @@ TEST_CASE("NormalizeTimeParamsV2 - basic functionality", "[NormalizeTimeParamsV2
         NormalizeTimeParamsV2 const params{.alignment_time = ClockTicks{50}};
 
         ClockTicks const time{75};
-        float norm_time = normalizeClockTicksValueV2(time, params);
-        CHECK_THAT(norm_time, WithinAbs(25.0f, 0.001f));
+        ClockTicks const norm_time = normalizeClockTicksValueV2(time, params);
+        CHECK(norm_time == ClockTicks{25});
     }
 
     SECTION("Clock-tick event view element normalizes via time value") {
         NormalizeTimeParamsV2 const params{.alignment_time = ClockTicks{50}};
 
         ClockTicksWithId const event{ClockTicks{75}, EntityId{1}};
-        float norm_time = normalizeClockTicksValueV2(event.time(), params);
-        CHECK_THAT(norm_time, WithinAbs(25.0f, 0.001f));
+        ClockTicks const norm_time = normalizeClockTicksValueV2(event.time(), params);
+        CHECK(norm_time == ClockTicks{25});
     }
 }
 
@@ -373,7 +373,7 @@ TEST_CASE("bindValueProjectionV2 - basic usage", "[TransformPipeline][ValueStore
 
     SECTION("Create factory from pipeline (ClockTicksWithId gather path)") {
         auto pipeline = makeNormalizeClockTicksPipeline();
-        auto factory = bindValueProjectionV2<ClockTicksWithId, float>(pipeline);
+        auto factory = bindValueProjectionV2<ClockTicksWithId, ClockTicks>(pipeline);
 
         PipelineValueStore store;
         store.set("alignment_time", int64_t{100});
@@ -381,8 +381,8 @@ TEST_CASE("bindValueProjectionV2 - basic usage", "[TransformPipeline][ValueStore
         auto projection = factory(store);
 
         ClockTicksWithId const event{ClockTicks{125}, EntityId{1}};
-        float norm_time = projection(event);
-        CHECK_THAT(norm_time, WithinAbs(25.0f, 0.001f));
+        ClockTicks const norm_time = projection(event);
+        CHECK(norm_time == ClockTicks{25});
     }
 
     SECTION("Factory produces different projections for different stores") {
@@ -438,37 +438,37 @@ TEST_CASE("GatherResult - project", "[GatherResult][ValueStore][Phase3]") {
         // Create pipeline with bindings for gathered clock-tick events
         auto pipeline = makeNormalizeClockTicksPipeline();
 
-        auto factory = bindValueProjectionV2<ClockTicksWithId, float>(pipeline);
+        auto factory = bindValueProjectionV2<ClockTicksWithId, ClockTicks>(pipeline);
         auto projections = projectGatherRows(result, factory);
 
         REQUIRE(projections.size() == 3);
 
         // Test trial 0 projection (alignment = 0)
-        std::vector<float> trial0_values;
+        std::vector<ClockTicks> trial0_values;
         for (auto const & event: result[0]->view()) {
             trial0_values.push_back(projections[0](event));
         }
         REQUIRE(trial0_values.size() == 2);
-        CHECK_THAT(trial0_values[0], WithinAbs(5.0f, 0.001f)); // 5 - 0
-        CHECK_THAT(trial0_values[1], WithinAbs(15.0f, 0.001f));// 15 - 0
+        CHECK(trial0_values[0] == ClockTicks{5});
+        CHECK(trial0_values[1] == ClockTicks{15});
 
         // Test trial 1 projection (alignment = 30)
-        std::vector<float> trial1_values;
+        std::vector<ClockTicks> trial1_values;
         for (auto const & event: result[1]->view()) {
             trial1_values.push_back(projections[1](event));
         }
         REQUIRE(trial1_values.size() == 2);
-        CHECK_THAT(trial1_values[0], WithinAbs(5.0f, 0.001f)); // 35 - 30
-        CHECK_THAT(trial1_values[1], WithinAbs(15.0f, 0.001f));// 45 - 30
+        CHECK(trial1_values[0] == ClockTicks{5});
+        CHECK(trial1_values[1] == ClockTicks{15});
 
         // Test trial 2 projection (alignment = 60)
-        std::vector<float> trial2_values;
+        std::vector<ClockTicks> trial2_values;
         for (auto const & event: result[2]->view()) {
             trial2_values.push_back(projections[2](event));
         }
         REQUIRE(trial2_values.size() == 2);
-        CHECK_THAT(trial2_values[0], WithinAbs(5.0f, 0.001f)); // 65 - 60
-        CHECK_THAT(trial2_values[1], WithinAbs(15.0f, 0.001f));// 75 - 60
+        CHECK(trial2_values[0] == ClockTicks{5});
+        CHECK(trial2_values[1] == ClockTicks{15});
     }
 }
 
@@ -562,49 +562,49 @@ TEST_CASE("GatherResult - V2 raster plot workflow", "[GatherResult][ValueStore][
     // Build pipeline for time normalization using V2 pattern (clock-tick gathered events)
     auto pipeline = makeNormalizeClockTicksPipeline();
 
-    auto factory = bindValueProjectionV2<ClockTicksWithId, float>(pipeline);
+    auto factory = bindValueProjectionV2<ClockTicksWithId, ClockTicks>(pipeline);
     auto projections = projectGatherRows(raster, factory);
 
     SECTION("Verify normalized times for raster plot") {
         // Trial 0: alignment = 0
-        std::vector<float> trial0_times;
+        std::vector<ClockTicks> trial0_times;
         for (auto const & event: raster[0]->view()) {
             trial0_times.push_back(projections[0](event));
         }
         REQUIRE(trial0_times.size() == 3);
-        CHECK_THAT(trial0_times[0], WithinAbs(10.0f, 0.001f));// 10 - 0
-        CHECK_THAT(trial0_times[1], WithinAbs(25.0f, 0.001f));// 25 - 0
-        CHECK_THAT(trial0_times[2], WithinAbs(40.0f, 0.001f));// 40 - 0
+        CHECK(trial0_times[0] == ClockTicks{10});
+        CHECK(trial0_times[1] == ClockTicks{25});
+        CHECK(trial0_times[2] == ClockTicks{40});
 
         // Trial 1: alignment = 100
-        std::vector<float> trial1_times;
+        std::vector<ClockTicks> trial1_times;
         for (auto const & event: raster[1]->view()) {
             trial1_times.push_back(projections[1](event));
         }
         REQUIRE(trial1_times.size() == 2);
-        CHECK_THAT(trial1_times[0], WithinAbs(10.0f, 0.001f));// 110 - 100
-        CHECK_THAT(trial1_times[1], WithinAbs(30.0f, 0.001f));// 130 - 100
+        CHECK(trial1_times[0] == ClockTicks{10});
+        CHECK(trial1_times[1] == ClockTicks{30});
 
         // Trial 2: alignment = 200
-        std::vector<float> trial2_times;
+        std::vector<ClockTicks> trial2_times;
         for (auto const & event: raster[2]->view()) {
             trial2_times.push_back(projections[2](event));
         }
         REQUIRE(trial2_times.size() == 3);
-        CHECK_THAT(trial2_times[0], WithinAbs(15.0f, 0.001f));// 215 - 200
-        CHECK_THAT(trial2_times[1], WithinAbs(20.0f, 0.001f));// 220 - 200
-        CHECK_THAT(trial2_times[2], WithinAbs(30.0f, 0.001f));// 230 - 200
+        CHECK(trial2_times[0] == ClockTicks{15});
+        CHECK(trial2_times[1] == ClockTicks{20});
+        CHECK(trial2_times[2] == ClockTicks{30});
     }
 
     SECTION("Verify EntityId access preserved") {
         // The key benefit: we can still access EntityId from source elements
         for (size_t trial = 0; trial < raster.size(); ++trial) {
             for (auto const & event: raster[trial]->view()) {
-                float const norm_time = projections[trial](event);
+                ClockTicks const norm_time = projections[trial](event);
                 EntityId const id = event.id();// Still accessible!
 
                 // Both values should be valid
-                CHECK(norm_time >= 0.0f);
+                CHECK(norm_time >= ClockTicks{0});
                 // EntityId is valid (even if uninitialized in test data)
             }
         }
@@ -747,38 +747,38 @@ TEST_CASE("Prepared event windows with time normalization", "[GatherResult][Valu
     // Build pipeline for normalization (clock-tick gathered events)
     auto pipeline = makeNormalizeClockTicksPipeline();
 
-    auto factory = bindValueProjectionV2<ClockTicksWithId, float>(pipeline);
+    auto factory = bindValueProjectionV2<ClockTicksWithId, ClockTicks>(pipeline);
     auto projections = projectGatherRows(raster, factory);
 
     SECTION("Each trial uses correct alignment time") {
         // Trial 0: alignment = 100
-        std::vector<float> trial0_times;
+        std::vector<ClockTicks> trial0_times;
         for (auto const & event: raster[0]->view()) {
             trial0_times.push_back(projections[0](event));
         }
         REQUIRE(trial0_times.size() == 3);
-        CHECK_THAT(trial0_times[0], WithinAbs(-20.0f, 0.001f));// 80 - 100
-        CHECK_THAT(trial0_times[1], WithinAbs(0.0f, 0.001f));  // 100 - 100
-        CHECK_THAT(trial0_times[2], WithinAbs(20.0f, 0.001f)); // 120 - 100
+        CHECK(trial0_times[0] == ClockTicks{-20});
+        CHECK(trial0_times[1] == ClockTicks{0});
+        CHECK(trial0_times[2] == ClockTicks{20});
 
         // Trial 1: alignment = 200
-        std::vector<float> trial1_times;
+        std::vector<ClockTicks> trial1_times;
         for (auto const & event: raster[1]->view()) {
             trial1_times.push_back(projections[1](event));
         }
         REQUIRE(trial1_times.size() == 3);
-        CHECK_THAT(trial1_times[0], WithinAbs(-20.0f, 0.001f));// 180 - 200
-        CHECK_THAT(trial1_times[1], WithinAbs(0.0f, 0.001f));  // 200 - 200
-        CHECK_THAT(trial1_times[2], WithinAbs(20.0f, 0.001f)); // 220 - 200
+        CHECK(trial1_times[0] == ClockTicks{-20});
+        CHECK(trial1_times[1] == ClockTicks{0});
+        CHECK(trial1_times[2] == ClockTicks{20});
 
         // Trial 2: alignment = 300
-        std::vector<float> trial2_times;
+        std::vector<ClockTicks> trial2_times;
         for (auto const & event: raster[2]->view()) {
             trial2_times.push_back(projections[2](event));
         }
         REQUIRE(trial2_times.size() == 3);
-        CHECK_THAT(trial2_times[0], WithinAbs(-20.0f, 0.001f));// 280 - 300
-        CHECK_THAT(trial2_times[1], WithinAbs(0.0f, 0.001f));  // 300 - 300
-        CHECK_THAT(trial2_times[2], WithinAbs(20.0f, 0.001f)); // 320 - 300
+        CHECK(trial2_times[0] == ClockTicks{-20});
+        CHECK(trial2_times[1] == ClockTicks{0});
+        CHECK(trial2_times[2] == ClockTicks{20});
     }
 }

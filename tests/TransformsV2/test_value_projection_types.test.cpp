@@ -444,7 +444,7 @@ TEST_CASE("bindValueProjectionV2 - ClockTicksWithId gather path", "[ValueProject
     step.param_bindings = {{"alignment_time", "alignment_time"}};
     pipeline.addStep(step);
 
-    auto factory = bindValueProjectionV2<ClockTicksWithId, float>(pipeline);
+    auto factory = bindValueProjectionV2<ClockTicksWithId, ClockTicks>(pipeline);
 
     PipelineValueStore store;
     store.set("alignment_time", ClockTicks{200});
@@ -452,5 +452,5 @@ TEST_CASE("bindValueProjectionV2 - ClockTicksWithId gather path", "[ValueProject
     auto projection = factory(store);
 
     ClockTicksWithId const event{ClockTicks{250}, EntityId{1}};
-    REQUIRE_THAT(projection(event), WithinAbs(50.0f, 0.001f));
+    CHECK(projection(event) == ClockTicks{50});
 }

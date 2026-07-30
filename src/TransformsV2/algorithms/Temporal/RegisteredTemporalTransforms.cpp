@@ -129,20 +129,20 @@ auto const register_normalize_event_time_value_v2 = RegisterTransform<
  */
 auto const register_normalize_clock_ticks_value_v2 = RegisterTransform<
         ClockTicks,
-        float,
+        ClockTicks,
         NormalizeTimeParamsV2>(
         "NormalizeClockTicksValueV2",
         normalizeClockTicksValueV2,
         TransformMetadata{
                 .name = "NormalizeClockTicksValueV2",
-                .description = "Compute normalized clock-tick time offset as float (V2 - uses param bindings)",
+                .description = "Compute normalized clock-tick time offset (V2 - uses param bindings)",
                 .category = "Temporal",
                 .input_type = typeid(ClockTicks),
-                .output_type = typeid(float),
+                .output_type = typeid(ClockTicks),
                 .params_type = typeid(NormalizeTimeParamsV2),
                 .lineage_type = TransformLineageType::None,
                 .input_type_name = "ClockTicks",
-                .output_type_name = "float",
+                .output_type_name = "ClockTicks",
                 .params_type_name = "NormalizeTimeParamsV2",
                 .is_expensive = false,
                 .is_deterministic = true,

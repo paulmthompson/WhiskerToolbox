@@ -40,9 +40,9 @@
  *
  * ## Output Types
  *
- * The transforms return float values representing normalized time offsets.
- * Using float allows sub-frame precision and negative values
- * (events before alignment point).
+ * Clock-tick inputs normalize to `ClockTicks` offsets. Index-space inputs
+ * (`TimeFrameIndex`, `EventWithId`, analog samples) still return `float` for
+ * sub-frame precision where applicable.
  *
  * @see GatherResult for trial-aligned data gathering
  * @see PipelineValueStore for value store documentation
@@ -136,16 +136,16 @@ struct NormalizeTimeParamsV2 {
 }
 
 /**
- * @brief Normalize a ClockTicks value to float (V2 - uses bound params)
+ * @brief Normalize a ClockTicks value (V2 - uses bound params)
  *
  * @param time Input clock-tick time to normalize
  * @param params Parameters with alignment_time bound from store
- * @return float The normalized time (time - alignment_time)
+ * @return ClockTicks The normalized time (time - alignment_time)
  */
-[[nodiscard]] inline float normalizeClockTicksValueV2(
+[[nodiscard]] inline ClockTicks normalizeClockTicksValueV2(
         ClockTicks const & time,
         NormalizeTimeParamsV2 const & params) {
-    return static_cast<float>(time - params.alignment_time);
+    return ClockTicks{time.getValue() - params.alignment_time.getValue()};
 }
 
 /**
