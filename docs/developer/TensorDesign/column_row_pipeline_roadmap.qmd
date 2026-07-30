@@ -157,6 +157,7 @@ Exit criteria:
 - Iterable binding sources are explicit and row-count checked.
 - Direct-key iterable bindings and key-plus-pipeline iterable bindings are both covered by tests.
 - `NormalizeTime` accepts a `ClockTicks` binding and subtracts in clock-tick coordinates.
+- Phase 5 tests use the same DataObject `view()` element types that normal TransformPipeline execution uses.
 
 Settled design choices:
 
@@ -166,7 +167,9 @@ Settled design choices:
 - Temporal iterable values should be bound as `ClockTicks`, not raw `TimeFrameIndex` values.
 - `PipelineValueStore` stores `ClockTicks` directly.
 - `NormalizeTimeParamsV2::alignment_time` is `ClockTicks` and binds through `ClockTicksReflector`.
+- `NormalizeClockTicksValueV2` is the canonical pipeline transform for DigitalEventSeries value projections; `ClockTicksWithId` is reduced to `ClockTicks` by the projection helper before pipeline execution.
 - Existing `PipelineValueStore`, parameter bindings, and gather extension helpers should be reused or generalized to bind iterable values per row.
+- User-facing presets should hide the distinction between `ClockTicksWithId` and `ClockTicks` normalize transforms whenever possible.
 
 ## Phase 6: Timestamp And Point Sampling
 
@@ -261,6 +264,7 @@ Tasks:
    - event presence around interval start
    - analog sample at interval start
    - raster events relative to interval start
+   - trial-relative event times using NormalizeTime with row-specific `ClockTicks` bindings
 4. Expand preset JSON into raw `ColumnRecipe` fields before provider construction.
 5. Add tests that preset expansion produces the same tensor values as equivalent raw recipes.
 6. Decide whether saved designs store raw expansion only or preset plus expanded raw JSON.

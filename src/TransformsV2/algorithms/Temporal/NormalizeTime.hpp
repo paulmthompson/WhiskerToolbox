@@ -163,20 +163,22 @@ struct NormalizeTimeParamsV2 {
     return static_cast<float>(event.time().getValue() - params.alignment_time.getValue());
 }
 
-/**
- * @brief Normalize clock-tick event time to float value (V2 - uses bound params)
- *
- * Convenience function for ClockTicksWithId that extracts time and normalizes.
- *
- * @param event Input event with absolute clock-tick time
- * @param params Parameters with alignment_time bound from store
- * @return float The normalized time (event.time() - alignment_time)
- */
-[[nodiscard]] inline float normalizeClockTicksWithIdValueV2(
-        ClockTicksWithId const & event,
-        NormalizeTimeParamsV2 const & params) {
-    return static_cast<float>(event.time() - params.alignment_time);
-}
+// NOTE: A ClockTicksWithId-specific normalize transform is intentionally not
+// registered. TransformPipeline value projections operate on ElementVariant
+// types, and ElementVariant contains ClockTicks but not ClockTicksWithId. When
+// bindValueProjectionV2 receives a ClockTicksWithId view element it extracts
+// element.time() and passes ClockTicks into the pipeline. The original
+// ClockTicksWithId remains available to the caller for EntityId access outside
+// the TransformPipeline. Therefore NormalizeClockTicksValueV2 is the canonical
+// pipeline transform for DigitalEventSeries view elements.
+//
+// If ElementVariant is later extended to include ClockTicksWithId, this helper
+// can be restored and registered deliberately.
+// [[nodiscard]] inline float normalizeClockTicksWithIdValueV2(
+//         ClockTicksWithId const & event,
+//         NormalizeTimeParamsV2 const & params) {
+//     return static_cast<float>(event.time() - params.alignment_time);
+// }
 
 /**
  * @brief Normalize analog sample time to float value (V2 - uses bound params)

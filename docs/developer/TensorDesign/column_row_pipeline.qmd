@@ -144,6 +144,10 @@ For example, a spike raster column may gather spikes inside each trial window, t
 
 TensorDesign should express per-column geometry through composed registered transforms rather than new tensor enums.
 
+TransformPipeline execution and iterable bindings both use the DataObject `view()` contract. For example, a `DigitalEventSeries` contributes `ClockTicksWithId` elements. Users should not need to choose between entity-carrying and bare-time implementation types; presets and generated raw JSON should select the appropriate registered transform for the pipeline execution mode.
+
+For value projections, `bindValueProjectionV2()` operates on `ElementVariant` types. `ElementVariant` contains `ClockTicks` but not `ClockTicksWithId`; when the source view element is `ClockTicksWithId`, the projection helper passes `element.time()` into the TransformPipeline. Therefore the canonical normalize transform for DigitalEventSeries event times is `NormalizeClockTicksValueV2`. The `EntityId` remains available from the original `ClockTicksWithId` view element outside the TransformPipeline.
+
 | Intent | Row pipeline output | Source pipeline |
 |---|---|---|
 | Mean over full contact | Identity row `DigitalIntervalSeries` | Range reduction such as `MeanValue` |
@@ -463,6 +467,8 @@ Phase 5 should therefore bind temporal iterable values as `ClockTicks`. `Normali
 
 This also means `IntervalToEvent` and `EventToInterval` should compose in clock-tick coordinates at the API boundary. If a transform still uses `TimeFrameIndex` internally, that should be treated as an implementation detail hidden behind the DataObject view/storage boundary.
 
+For `NormalizeTime`, the user-facing intent is simply "normalize event time by a row-specific clock tick". The raw transform name for DigitalEventSeries value projections is `NormalizeClockTicksValueV2` because the projection helper extracts `ClockTicks` from `ClockTicksWithId` view elements before transform execution. Presets should hide this raw transform name when possible.
+
 ### Execution Shape
 
 For a gathered source and one binding source:
@@ -630,6 +636,7 @@ Tensor row pipelines should use the same DataObject vocabulary for windows and e
 - Should identical row pipelines be cached across columns during one tensor build?
 - How should `DigitalEventSeries` row-pipeline output choose between point sampling, window expansion, or rejection?
 - Should row filtering ever be supported, or should row pipelines always be required to preserve row count?
+- Should raw JSON expose low-level transform names such as `NormalizeClockTicksValueV2`, or should TensorDesign provide friendlier aliases/presets for common column workflows?
 
 Settled for Phase 5:
 

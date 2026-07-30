@@ -284,11 +284,11 @@ TEST_CASE("NormalizeTimeParamsV2 - basic functionality", "[NormalizeTimeParamsV2
         CHECK_THAT(norm_time, WithinAbs(25.0f, 0.001f));
     }
 
-    SECTION("Clock-tick event transform with params") {
+    SECTION("Clock-tick event view element normalizes via time value") {
         NormalizeTimeParamsV2 const params{.alignment_time = ClockTicks{50}};
 
         ClockTicksWithId const event{ClockTicks{75}, EntityId{1}};
-        float norm_time = normalizeClockTicksWithIdValueV2(event, params);
+        float norm_time = normalizeClockTicksValueV2(event.time(), params);
         CHECK_THAT(norm_time, WithinAbs(25.0f, 0.001f));
     }
 }
