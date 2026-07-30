@@ -2,6 +2,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "TimeFrame/ClockTicks.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <fstream>
@@ -17,7 +18,7 @@ std::shared_ptr<TimeFrame> makeTestTimeFrame(int64_t num_frames) {
     }
     return std::make_shared<TimeFrame>(times);
 }
-} // namespace
+}// namespace
 
 TEST_CASE("Digital Event Series - Constructor", "[DataManager]") {
     DigitalEventSeries des;
@@ -29,7 +30,7 @@ TEST_CASE("Digital Event Series - Constructor", "[DataManager]") {
     // Verify that the constructor sorts the events
     REQUIRE(des2.size() == 3);
     std::vector<TimeFrameIndex> collected;
-    for (auto event : des2.view()) {
+    for (auto event: des2.view()) {
         collected.push_back(event.time());
     }
     REQUIRE(collected[0] == TimeFrameIndex(1));
@@ -49,7 +50,7 @@ TEST_CASE("Digital Event Series - Add Event", "[DataManager]") {
     // Verify that events are sorted after each addition
     REQUIRE(des.size() == 4);
     std::vector<TimeFrameIndex> collected;
-    for (auto event : des.view()) {
+    for (auto event: des.view()) {
         collected.push_back(event.time());
     }
     REQUIRE(collected[0] == TimeFrameIndex(1));
@@ -69,7 +70,7 @@ TEST_CASE("Digital Event Series - Remove Event", "[DataManager]") {
     // Check that the event was removed
     REQUIRE(des.size() == 4);
     std::vector<TimeFrameIndex> collected;
-    for (auto event : des.view()) {
+    for (auto event: des.view()) {
         collected.push_back(event.time());
     }
     REQUIRE(collected[0] == TimeFrameIndex(1));
@@ -106,7 +107,7 @@ TEST_CASE("Digital Event Series - Duplicate Events", "[DataManager]") {
     // Verify that duplicates are not added and sorted
     REQUIRE(des.size() == 3);
     std::vector<TimeFrameIndex> collected;
-    for (auto event : des.view()) {
+    for (auto event: des.view()) {
         collected.push_back(event.time());
     }
     REQUIRE(collected[0] == TimeFrameIndex(1));
@@ -145,32 +146,32 @@ TEST_CASE("DigitalEventSeries - Range-based access (C++20)", "[DataManager]") {
 
         // Count elements in the range
         size_t count = 0;
-        std::vector<TimeFrameIndex> collected;
-        for (TimeFrameIndex event : range) {
+        std::vector<ClockTicks> collected;
+        for (ClockTicks event: range) {
             collected.push_back(event);
             count++;
         }
 
         REQUIRE(count == 4);
-        REQUIRE(collected[0] == TimeFrameIndex(2));
-        REQUIRE(collected[1] == TimeFrameIndex(3));
-        REQUIRE(collected[2] == TimeFrameIndex(5));
-        REQUIRE(collected[3] == TimeFrameIndex(7));
+        REQUIRE(collected[0] == ClockTicks(2));
+        REQUIRE(collected[1] == ClockTicks(3));
+        REQUIRE(collected[2] == ClockTicks(5));
+        REQUIRE(collected[3] == ClockTicks(7));
     }
 
-    SECTION("viewInRange returns EventWithId objects") {
+    SECTION("viewInRange returns ClockTickWithId objects") {
         // Get events between 3 and 9 inclusive
         auto range = des.viewInRange(TimeFrameIndex(3), TimeFrameIndex(9), *tf);
 
-        std::vector<TimeFrameIndex> collected;
-        for (auto event : range) {
+        std::vector<ClockTicks> collected;
+        for (auto event: range) {
             collected.push_back(event.time());
         }
 
         REQUIRE(collected.size() == 3);
-        REQUIRE(collected[0] == TimeFrameIndex(3));
-        REQUIRE(collected[1] == TimeFrameIndex(5));
-        REQUIRE(collected[2] == TimeFrameIndex(7));
+        REQUIRE(collected[0] == ClockTicks(3));
+        REQUIRE(collected[1] == ClockTicks(5));
+        REQUIRE(collected[2] == ClockTicks(7));
     }
 }
 
@@ -182,12 +183,12 @@ TEST_CASE("DigitalEventSeries - Range edge cases", "[DataManager]") {
 
     SECTION("Exact boundary matches") {
         auto range = des.viewTimesInRange(TimeFrameIndex(2), TimeFrameIndex(4), *tf);
-        std::vector<TimeFrameIndex> collected;
-        for (auto t : range) { collected.push_back(t); }
+        std::vector<ClockTicks> collected;
+        for (auto t: range) { collected.push_back(t); }
         REQUIRE(collected.size() == 3);
-        REQUIRE(collected[0] == TimeFrameIndex(2));
-        REQUIRE(collected[1] == TimeFrameIndex(3));
-        REQUIRE(collected[2] == TimeFrameIndex(4));
+        REQUIRE(collected[0] == ClockTicks(2));
+        REQUIRE(collected[1] == ClockTicks(3));
+        REQUIRE(collected[2] == ClockTicks(4));
     }
 
     SECTION("Range includes all events") {
@@ -207,10 +208,10 @@ TEST_CASE("DigitalEventSeries - Range edge cases", "[DataManager]") {
 
     SECTION("Single point range") {
         auto range = des.viewTimesInRange(TimeFrameIndex(3), TimeFrameIndex(3), *tf);
-        std::vector<TimeFrameIndex> collected;
-        for (auto t : range) { collected.push_back(t); }
+        std::vector<ClockTicks> collected;
+        for (auto t: range) { collected.push_back(t); }
         REQUIRE(collected.size() == 1);
-        REQUIRE(collected[0] == TimeFrameIndex(3));
+        REQUIRE(collected[0] == ClockTicks(3));
     }
 }
 
@@ -237,34 +238,32 @@ TEST_CASE("DigitalEventSeries - Range with duplicate events", "[DataManager]") {
     REQUIRE(des.size() == 3);
 
     auto range = des.viewTimesInRange(TimeFrameIndex(2), TimeFrameIndex(3), *tf);
-    std::vector<TimeFrameIndex> collected;
-    for (auto t : range) { collected.push_back(t); }
+    std::vector<ClockTicks> collected;
+    for (auto t: range) { collected.push_back(t); }
     REQUIRE(collected.size() == 2);
-    REQUIRE(collected[0] == TimeFrameIndex(2));
-    REQUIRE(collected[1] == TimeFrameIndex(3));
+    REQUIRE(collected[0] == ClockTicks(2));
+    REQUIRE(collected[1] == ClockTicks(3));
 }
 
 TEST_CASE("DigitalEventSeries - Constructor deduplication", "[DataManager]") {
     SECTION("All duplicates are removed, correct size reported") {
         std::vector<TimeFrameIndex> events = {
-            TimeFrameIndex(5), TimeFrameIndex(5), TimeFrameIndex(5)
-        };
+                TimeFrameIndex(5), TimeFrameIndex(5), TimeFrameIndex(5)};
         DigitalEventSeries des(events);
         REQUIRE(des.size() == 1);
         auto collected = std::vector<TimeFrameIndex>();
-        for (auto e : des.view()) { collected.push_back(e.time()); }
+        for (auto e: des.view()) { collected.push_back(e.time()); }
         REQUIRE(collected[0] == TimeFrameIndex(5));
     }
 
     SECTION("Unsorted input with duplicates is sorted and deduplicated") {
         std::vector<TimeFrameIndex> events = {
-            TimeFrameIndex(10), TimeFrameIndex(1), TimeFrameIndex(5),
-            TimeFrameIndex(1),  TimeFrameIndex(10), TimeFrameIndex(5)
-        };
+                TimeFrameIndex(10), TimeFrameIndex(1), TimeFrameIndex(5),
+                TimeFrameIndex(1), TimeFrameIndex(10), TimeFrameIndex(5)};
         DigitalEventSeries des(events);
         REQUIRE(des.size() == 3);
         std::vector<TimeFrameIndex> collected;
-        for (auto e : des.view()) { collected.push_back(e.time()); }
+        for (auto e: des.view()) { collected.push_back(e.time()); }
         REQUIRE(collected[0] == TimeFrameIndex(1));
         REQUIRE(collected[1] == TimeFrameIndex(5));
         REQUIRE(collected[2] == TimeFrameIndex(10));
@@ -295,8 +294,8 @@ TEST_CASE("DigitalEventSeries - Range interaction with add/remove", "[DataManage
 
     // Helper to collect range
     auto collectRange = [&](TimeFrameIndex start, TimeFrameIndex stop) {
-        std::vector<TimeFrameIndex> result;
-        for (auto t : des.viewTimesInRange(start, stop, *tf)) {
+        std::vector<ClockTicks> result;
+        for (auto t: des.viewTimesInRange(start, stop, *tf)) {
             result.push_back(t);
         }
         return result;
@@ -305,23 +304,23 @@ TEST_CASE("DigitalEventSeries - Range interaction with add/remove", "[DataManage
     // Initial check
     auto collected = collectRange(TimeFrameIndex(2), TimeFrameIndex(6));
     REQUIRE(collected.size() == 2);
-    REQUIRE(collected[0] == TimeFrameIndex(3));
-    REQUIRE(collected[1] == TimeFrameIndex(5));
+    REQUIRE(collected[0] == ClockTicks(3));
+    REQUIRE(collected[1] == ClockTicks(5));
 
     // Add another event in range
     des.addEvent(TimeFrameIndex(4));
     collected = collectRange(TimeFrameIndex(2), TimeFrameIndex(6));
     REQUIRE(collected.size() == 3);
-    REQUIRE(collected[0] == TimeFrameIndex(3));
-    REQUIRE(collected[1] == TimeFrameIndex(4));
-    REQUIRE(collected[2] == TimeFrameIndex(5));
+    REQUIRE(collected[0] == ClockTicks(3));
+    REQUIRE(collected[1] == ClockTicks(4));
+    REQUIRE(collected[2] == ClockTicks(5));
 
     // Remove an event
     des.removeEvent(TimeFrameIndex(3));
     collected = collectRange(TimeFrameIndex(2), TimeFrameIndex(6));
     REQUIRE(collected.size() == 2);
-    REQUIRE(collected[0] == TimeFrameIndex(4));
-    REQUIRE(collected[1] == TimeFrameIndex(5));
+    REQUIRE(collected[0] == ClockTicks(4));
+    REQUIRE(collected[1] == ClockTicks(5));
 }
 
 // =============================================================================
@@ -337,7 +336,7 @@ TEST_CASE("DigitalEventSeries - view() method", "[DataManager][view]") {
         std::vector<TimeFrameIndex> collected_values;
         std::vector<EntityId> collected_ids;
 
-        for (auto event : des.view()) {
+        for (auto event: des.view()) {
             collected_times.push_back(event.time());
             collected_values.push_back(event.value());
             collected_ids.push_back(event.id());
@@ -358,7 +357,7 @@ TEST_CASE("DigitalEventSeries - view() method", "[DataManager][view]") {
         DigitalEventSeries empty_des;
 
         size_t count = 0;
-        for ([[maybe_unused]] auto event : empty_des.view()) {
+        for ([[maybe_unused]] auto event: empty_des.view()) {
             count++;
         }
         REQUIRE(count == 0);
@@ -390,7 +389,7 @@ TEST_CASE("DigitalEventSeries - view() concept-compliant iteration", "[DataManag
         std::vector<EntityId> collected_ids;
         std::vector<TimeFrameIndex> collected_values;
 
-        for (auto event : des.view()) {
+        for (auto event: des.view()) {
             collected_times.push_back(event.time());
             collected_ids.push_back(event.id());
             collected_values.push_back(event.value());

@@ -66,6 +66,7 @@
 #include "TypeTraits/DataTypeTraits.hpp"
 #include "storage/DigitalEventStorage.hpp"
 
+#include <cassert>
 #include <compare>
 #include <memory>
 #include <ranges>
@@ -271,43 +272,50 @@ public:
     // ========== Range Queries (Public - Require TimeFrame) ==========
 
     /**
-     * @brief Get events in a time range as a lazy view of EventWithId objects
-     * 
+     * @brief Get events in a time range as a lazy view of ClockTickWithId objects
+     *
      * This is the primary range query interface. It requires a source TimeFrame
      * parameter to enable proper time conversion when the query time base differs
      * from the series' internal time base.
-     * 
+     *
+     * @pre series time frame must be set (@ref getTimeFrame() non-null)
+     *
      * @param start_index Start time index (inclusive)
      * @param stop_index Stop time index (inclusive)
      * @param source_time_frame The time frame that start_index/stop_index are expressed in
-     * @return Lazy view of EventWithId objects in the range
-     * 
-     * @note If source_time_frame matches the series' time frame, no conversion occurs
-     * @note If the series has no time frame set, indices are used directly
+     * @return Lazy view of ClockTickWithId objects in the range
      */
     [[nodiscard]] auto viewInRange(TimeFrameIndex start_index,
                                    TimeFrameIndex stop_index,
                                    TimeFrame const & source_time_frame) const {
+        assert(_time_frame != nullptr && "viewInRange requires series time frame");
         auto [start_idx, end_idx] = _getTimeRangeIndices(start_index, stop_index, source_time_frame);
-        return std::views::iota(start_idx, end_idx) | std::views::transform([this](size_t idx) {
-                   return EventWithId(_storage.getEvent(idx), _storage.getEntityId(idx));
+        TimeFrame const * time_frame = _time_frame.get();
+        return std::views::iota(start_idx, end_idx) | std::views::transform([this, time_frame](size_t idx) {
+                   return ClockTickWithId(
+                           time_frame->getTimeAtIndex(_storage.getEvent(idx)),
+                           _storage.getEntityId(idx));
                });
     }
 
     /**
-     * @brief Get just the TimeFrameIndex values in a range as a lazy view
-     * 
+     * @brief Get event times in a range as a lazy view of clock ticks.
+     *
+     * @pre series time frame must be set (@ref getTimeFrame() non-null)
+     *
      * @param start_index Start time index (inclusive)
      * @param stop_index Stop time index (inclusive)
      * @param source_time_frame The time frame that start_index/stop_index are expressed in
-     * @return Lazy view of TimeFrameIndex values in the range
+     * @return Lazy view of ClockTicks values in the range
      */
     [[nodiscard]] auto viewTimesInRange(TimeFrameIndex start_index,
                                         TimeFrameIndex stop_index,
                                         TimeFrame const & source_time_frame) const {
+        assert(_time_frame != nullptr && "viewTimesInRange requires series time frame");
         auto [start_idx, end_idx] = _getTimeRangeIndices(start_index, stop_index, source_time_frame);
-        return std::views::iota(start_idx, end_idx) | std::views::transform([this](size_t idx) {
-                   return _storage.getEvent(idx);
+        TimeFrame const * time_frame = _time_frame.get();
+        return std::views::iota(start_idx, end_idx) | std::views::transform([this, time_frame](size_t idx) {
+                   return time_frame->getTimeAtIndex(_storage.getEvent(idx));
                });
     }
 
@@ -379,7 +387,7 @@ public:
      * @return New series backed by view storage
      */
     static std::shared_ptr<DigitalEventSeries> createView(
-            const std::shared_ptr<DigitalEventSeries const>& source,
+            std::shared_ptr<DigitalEventSeries const> const & source,
             TimeFrameIndex start,
             TimeFrameIndex end);
 
@@ -391,7 +399,7 @@ public:
      * @return New series backed by view storage
      */
     static std::shared_ptr<DigitalEventSeries> createView(
-            const std::shared_ptr<DigitalEventSeries const>& source,
+            std::shared_ptr<DigitalEventSeries const> const & source,
             std::unordered_set<EntityId> const & entity_ids);
 
     /**

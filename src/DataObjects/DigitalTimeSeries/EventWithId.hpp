@@ -2,6 +2,7 @@
 #define BEHAVIORTOOLBOX_EVENT_WITH_ID_HPP
 
 #include "Entity/EntityTypes.hpp"
+#include "TimeFrame/ClockTicks.hpp"
 #include "TimeFrame/TimeFrameIndex.hpp"
 
 /**
@@ -39,6 +40,38 @@ struct EventWithId {
      * @return TimeFrameIndex The event timestamp
      */
     [[nodiscard]] constexpr TimeFrameIndex value() const noexcept { return event_time; }
+};
+
+/**
+ * @brief Structure to hold a clock-tick event with its associated EntityID
+ *
+ * API-facing element type for range queries on DigitalEventSeries where event
+ * times are expressed in absolute physical time (ClockTicks).
+ *
+ * @see EventWithId for index-based storage/iteration element type
+ */
+struct ClockTickWithId {
+    ClockTicks event_time;
+    EntityId entity_id;
+
+    ClockTickWithId(ClockTicks time, EntityId id)
+        : event_time(time),
+          entity_id(id) {}
+
+    /**
+     * @brief Get the time of this event in clock ticks
+     */
+    [[nodiscard]] ClockTicks time() const noexcept { return event_time; }
+
+    /**
+     * @brief Get the EntityId of this event
+     */
+    [[nodiscard]] constexpr EntityId id() const noexcept { return entity_id; }
+
+    /**
+     * @brief Get the clock-tick event time
+     */
+    [[nodiscard]] ClockTicks value() const noexcept { return event_time; }
 };
 
 #endif// BEHAVIORTOOLBOX_EVENT_WITH_ID_HPP

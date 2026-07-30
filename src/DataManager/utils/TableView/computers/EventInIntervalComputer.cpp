@@ -80,7 +80,7 @@ std::pair<std::vector<bool>, ColumnEntityIds> EventInIntervalComputer<bool>::com
 
     for (auto const & interval: intervals) {
 
-        entity_ids.push_back(std::vector<EntityId>());
+        entity_ids.emplace_back();
 
         auto events_with_ids = m_source->viewInRange(interval.start,
                                                      interval.end,
@@ -137,7 +137,7 @@ std::pair<std::vector<int>, ColumnEntityIds> EventInIntervalComputer<int>::compu
                                                      *destinationTimeFrame);
 
         results.push_back(static_cast<int>(events_with_ids.size()));
-        entity_ids.push_back(std::vector<EntityId>());
+        entity_ids.emplace_back();
 
         for (auto const & event_with_id: events_with_ids) {
             entity_ids.back().push_back(event_with_id.entity_id);
@@ -184,7 +184,6 @@ std::pair<std::vector<std::vector<float>>, ColumnEntityIds> EventInIntervalCompu
 
     auto intervals = plan.getIntervals();
     auto destinationTimeFrame = plan.getTimeFrame();
-    auto sourceTimeFrame = m_source->getTimeFrame();
 
     std::vector<std::vector<float>> results;
     results.reserve(intervals.size());
@@ -192,8 +191,8 @@ std::pair<std::vector<std::vector<float>>, ColumnEntityIds> EventInIntervalCompu
 
     for (auto const & interval: intervals) {
 
-        results.push_back(std::vector<float>());
-        entity_ids.push_back(std::vector<EntityId>());
+        results.emplace_back();
+        entity_ids.emplace_back();
 
         auto events_with_ids = m_source->viewInRange(interval.start,
                                                      interval.end,
@@ -205,12 +204,11 @@ std::pair<std::vector<std::vector<float>>, ColumnEntityIds> EventInIntervalCompu
         }
 
         if (m_operation == EventOperation::Gather_Center) {
-            auto center = (interval.start + interval.end).getValue() / 2;
-            auto center_time_value = destinationTimeFrame->getTimeAtIndex(TimeFrameIndex(center));
-            auto source_time_index = sourceTimeFrame->getIndexAtTime(center_time_value);
+            auto const center = (interval.start + interval.end).getValue() / 2;
+            auto const center_time_value = destinationTimeFrame->getTimeAtIndex(TimeFrameIndex(center));
 
             for (auto & event: results.back()) {
-                event = event - static_cast<float>(source_time_index.getValue());
+                event -= static_cast<float>(center_time_value.getValue());
             }
         }
     }

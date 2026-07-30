@@ -82,12 +82,12 @@ Export_Video_Widget::Export_Video_Widget(
     _updateMediaWidgetComboBox();
 
     // Connect to editor registry signals for state changes
-    connect(_editor_registry, &EditorRegistry::stateRegistered, this, [this](EditorInstanceId instance_id, EditorTypeId type_id) {
+    connect(_editor_registry, &EditorRegistry::stateRegistered, this, [this](const EditorInstanceId& instance_id, const EditorTypeId& type_id) {
         if (type_id.toString() == QStringLiteral("MediaWidget")) {
             _updateMediaWidgetComboBox();
         }
     });
-    connect(_editor_registry, &EditorRegistry::stateUnregistered, this, [this](EditorInstanceId instance_id) {
+    connect(_editor_registry, &EditorRegistry::stateUnregistered, this, [this](const EditorInstanceId& instance_id) {
         // Check if we need to update - the unregistered state might have been a MediaWidget
         _updateMediaWidgetComboBox();
     });
@@ -124,8 +124,8 @@ void Export_Video_Widget::_exportVideo() {
     _last_written_frame = -1;
 
     // Get configured output dimensions
-    int output_width = ui->output_width_spinbox->value();
-    int output_height = ui->output_height_spinbox->value();
+    int const output_width = ui->output_width_spinbox->value();
+    int const output_height = ui->output_height_spinbox->value();
 
     std::cout << "Exporting video with output dimensions: " << output_width << "x" << output_height << std::endl;
 
@@ -167,7 +167,7 @@ void Export_Video_Widget::_exportVideo() {
                 std::cout << "Generating " << sequence.title_frames << " title frames for sequence " << (seq_idx + 1) << std::endl;
 
                 for (int i = 0; i < sequence.title_frames; i++) {
-                    QImage title_frame = _generateTitleFrame(output_width, output_height,
+                    QImage const title_frame = _generateTitleFrame(output_width, output_height,
                                                              sequence.title_text, sequence.title_font_size);
                     _writeFrameToVideo(title_frame);
                 }
@@ -178,7 +178,7 @@ void Export_Video_Widget::_exportVideo() {
             auto export_time_frame = _data_manager->getTime(TimeKey("time"));
             if (export_time_frame) {
                 for (int i = sequence.start_frame; i < sequence.end_frame; i++) {
-                    TimePosition position(TimeFrameIndex(i), export_time_frame);
+                    TimePosition const position(TimeFrameIndex(i), export_time_frame);
                     emit requestTimeChange(position);
                     // Process events to ensure signal is handled and canvas is updated
                     QCoreApplication::processEvents();
@@ -205,14 +205,14 @@ void Export_Video_Widget::_exportVideo() {
 
         // Generate title sequence frames if enabled
         if (ui->title_sequence_groupbox->isChecked()) {
-            int title_frame_count = ui->title_frames_spinbox->value();
-            QString title_text = ui->title_text_edit->toPlainText();
-            int font_size = ui->font_size_spinbox->value();
+            int const title_frame_count = ui->title_frames_spinbox->value();
+            QString const title_text = ui->title_text_edit->toPlainText();
+            int const font_size = ui->font_size_spinbox->value();
 
             std::cout << "Generating " << title_frame_count << " title frames" << std::endl;
 
             for (int i = 0; i < title_frame_count; i++) {
-                QImage title_frame = _generateTitleFrame(output_width, output_height, title_text, font_size);
+                QImage const title_frame = _generateTitleFrame(output_width, output_height, title_text, font_size);
                 _writeFrameToVideo(title_frame);
             }
         }
@@ -222,7 +222,7 @@ void Export_Video_Widget::_exportVideo() {
         auto export_time_frame = _data_manager->getTime(TimeKey("time"));
         if (export_time_frame) {
             for (int i = start_num; i < end_num; i++) {
-                TimePosition position(TimeFrameIndex(i), export_time_frame);
+                TimePosition const position(TimeFrameIndex(i), export_time_frame);
                 emit requestTimeChange(position);
                 // Process events to ensure signal is handled and canvas is updated
                 QCoreApplication::processEvents();
@@ -263,15 +263,15 @@ void Export_Video_Widget::_exportVideo() {
             }
         }
 
-        int video_fps = ui->frame_rate_spinbox->value();
-        int audio_sample_rate = ui->audio_sample_rate_spinbox->value();
+        int const video_fps = ui->frame_rate_spinbox->value();
+        int const audio_sample_rate = ui->audio_sample_rate_spinbox->value();
 
         // Generate audio for content frames
         auto content_audio = _convertEventsToAudioTrack(content_start_frame, content_end_frame, video_fps, audio_sample_rate);
 
         // Calculate total audio length including title frames
-        int title_samples = static_cast<int>((static_cast<float>(title_frames_total) / static_cast<float>(video_fps)) * audio_sample_rate);
-        int total_samples = title_samples + static_cast<int>(content_audio.size());
+        int const title_samples = static_cast<int>((static_cast<float>(title_frames_total) / static_cast<float>(video_fps)) * audio_sample_rate);
+        int const total_samples = title_samples + static_cast<int>(content_audio.size());
 
         // Create final audio track with silence for title frames
         std::vector<float> audio_track(total_samples, 0.0f);
@@ -287,9 +287,9 @@ void Export_Video_Widget::_exportVideo() {
         std::string audio_filename = filename;
         std::string final_filename = filename;
 
-        size_t last_dot = filename.find_last_of('.');
+        size_t const last_dot = filename.find_last_of('.');
         if (last_dot != std::string::npos) {
-            std::string base = filename.substr(0, last_dot);
+            std::string const base = filename.substr(0, last_dot);
             video_only_filename = base + "_video_only.mp4";
             audio_filename = base + "_audio.wav";
             final_filename = filename;// Keep the original filename for the final output
@@ -308,7 +308,7 @@ void Export_Video_Widget::_exportVideo() {
         // Use FFmpeg libraries to combine video and audio
         std::cout << "Combining video and audio streams..." << std::endl;
 
-        bool success = ffmpeg_wrapper::mux_video_and_audio(video_only_filename, audio_filename, final_filename, video_fps);
+        bool const success = ffmpeg_wrapper::mux_video_and_audio(video_only_filename, audio_filename, final_filename, video_fps);
 
         if (success) {
             std::cout << "Successfully combined video and audio into: " << final_filename << std::endl;
@@ -342,10 +342,10 @@ void Export_Video_Widget::_handleCanvasUpdated(QImage const & canvasImage) {
 
 
     // Resize canvas image to output dimensions
-    int output_width = ui->output_width_spinbox->value();
-    int output_height = ui->output_height_spinbox->value();
+    int const output_width = ui->output_width_spinbox->value();
+    int const output_height = ui->output_height_spinbox->value();
 
-    QImage resized_image = canvasImage.scaled(output_width, output_height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+    QImage const resized_image = canvasImage.scaled(output_width, output_height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 
     // Use the same conversion process as title frames
     _writeFrameToVideo(resized_image);
@@ -358,14 +358,14 @@ void Export_Video_Widget::_updateTitlePreview() {
         return;
     }
 
-    QString title_text = ui->title_text_edit->toPlainText();
-    int font_size = ui->font_size_spinbox->value();
+    QString const title_text = ui->title_text_edit->toPlainText();
+    int const font_size = ui->font_size_spinbox->value();
 
     // Generate a small preview image
-    QImage preview_image = _generateTitleFrame(200, 100, title_text, font_size / 2);// Scale down font for preview
+    QImage const preview_image = _generateTitleFrame(200, 100, title_text, font_size / 2);// Scale down font for preview
 
     // Convert to pixmap and set on label
-    QPixmap preview_pixmap = QPixmap::fromImage(preview_image);
+    QPixmap const preview_pixmap = QPixmap::fromImage(preview_image);
     ui->title_preview->setPixmap(preview_pixmap);
     ui->title_preview->setText("");// Clear text when showing pixmap
     ui->title_preview->setStyleSheet("background-color: black; border: 1px solid gray;");
@@ -388,7 +388,7 @@ void Export_Video_Widget::_writeFrameToVideo(QImage const & frame) {
 }
 
 void Export_Video_Widget::_addSequence() {
-    int start_frame = ui->start_frame_spinbox->value();
+    int const start_frame = ui->start_frame_spinbox->value();
     int end_frame = ui->end_frame_spinbox->value();
 
     // Handle end_frame of -1 (use total frame count)
@@ -403,12 +403,12 @@ void Export_Video_Widget::_addSequence() {
     }
 
     // Create new sequence with current title settings
-    bool has_title = ui->title_sequence_groupbox->isChecked();
-    QString title_text = has_title ? ui->title_text_edit->toPlainText() : "";
-    int title_frames = has_title ? ui->title_frames_spinbox->value() : 100;
-    int title_font_size = has_title ? ui->font_size_spinbox->value() : 24;
+    bool const has_title = ui->title_sequence_groupbox->isChecked();
+    QString const title_text = has_title ? ui->title_text_edit->toPlainText() : "";
+    int const title_frames = has_title ? ui->title_frames_spinbox->value() : 100;
+    int const title_font_size = has_title ? ui->font_size_spinbox->value() : 24;
 
-    VideoSequence sequence(start_frame, end_frame, has_title, title_text, title_frames, title_font_size);
+    VideoSequence const sequence(start_frame, end_frame, has_title, title_text, title_frames, title_font_size);
     _video_sequences.push_back(sequence);
 
     _updateSequenceTable();
@@ -419,7 +419,7 @@ void Export_Video_Widget::_addSequence() {
 }
 
 void Export_Video_Widget::_removeSequence() {
-    int selected_row = ui->sequences_table->currentRow();
+    int const selected_row = ui->sequences_table->currentRow();
     if (selected_row >= 0 && selected_row < static_cast<int>(_video_sequences.size())) {
         _video_sequences.erase(_video_sequences.begin() + selected_row);
         _updateSequenceTable();
@@ -460,7 +460,7 @@ void Export_Video_Widget::_updateSequenceTable() {
 }
 
 void Export_Video_Widget::_updateDurationEstimate() {
-    int frame_rate = ui->frame_rate_spinbox->value();
+    int const frame_rate = ui->frame_rate_spinbox->value();
     int total_frames = 0;
 
     if (!_video_sequences.empty()) {
@@ -478,12 +478,12 @@ void Export_Video_Widget::_updateDurationEstimate() {
         }
 
         if (total_frames > 0 && frame_rate > 0) {
-            double duration_seconds = static_cast<double>(total_frames) / static_cast<double>(frame_rate);
+            double const duration_seconds = static_cast<double>(total_frames) / static_cast<double>(frame_rate);
 
             QString duration_text;
             if (duration_seconds >= 60.0) {
-                int minutes = static_cast<int>(duration_seconds / 60.0);
-                double remaining_seconds = duration_seconds - (minutes * 60.0);
+                int const minutes = static_cast<int>(duration_seconds / 60.0);
+                double const remaining_seconds = duration_seconds - (minutes * 60.0);
                 duration_text = QString("Estimated Duration: %1m %2s (%3 frames, %4 sequences)")
                                         .arg(minutes)
                                         .arg(remaining_seconds, 0, 'f', 1)
@@ -504,7 +504,7 @@ void Export_Video_Widget::_updateDurationEstimate() {
         }
     } else {
         // Single sequence mode (existing behavior)
-        int start_frame = ui->start_frame_spinbox->value();
+        int const start_frame = ui->start_frame_spinbox->value();
         int end_frame = ui->end_frame_spinbox->value();
 
         // Handle end_frame of -1 (use total frame count)
@@ -521,13 +521,13 @@ void Export_Video_Widget::_updateDurationEstimate() {
                 total_frames += ui->title_frames_spinbox->value();
             }
 
-            double duration_seconds = static_cast<double>(total_frames) / static_cast<double>(frame_rate);
+            double const duration_seconds = static_cast<double>(total_frames) / static_cast<double>(frame_rate);
 
             // Format duration nicely (show minutes if > 60 seconds)
             QString duration_text;
             if (duration_seconds >= 60.0) {
-                int minutes = static_cast<int>(duration_seconds / 60.0);
-                double remaining_seconds = duration_seconds - (minutes * 60.0);
+                int const minutes = static_cast<int>(duration_seconds / 60.0);
+                double const remaining_seconds = duration_seconds - (minutes * 60.0);
                 duration_text = QString("Estimated Duration: %1m %2s (%3 frames)")
                                         .arg(minutes)
                                         .arg(remaining_seconds, 0, 'f', 1)
@@ -551,8 +551,8 @@ std::pair<int, int> Export_Video_Widget::_getMediaDimensions() const {
     // Try to get media dimensions from DataManager
     auto media_data = _data_manager->getData<MediaData>("media");
     if (media_data != nullptr) {
-        int width = media_data->getWidth();
-        int height = media_data->getHeight();
+        int const width = media_data->getWidth();
+        int const height = media_data->getHeight();
         std::cout << "Retrieved media dimensions: " << width << "x" << height << std::endl;
         return std::make_pair(width, height);
     }
@@ -580,12 +580,12 @@ QImage Export_Video_Widget::_generateTitleFrame(int width, int height, QString c
     QPainter painter(&title_image);
     painter.setRenderHint(QPainter::Antialiasing);
 
-    QFont font("Arial", font_size, QFont::Bold);
+    QFont const font("Arial", font_size, QFont::Bold);
     painter.setFont(font);
     painter.setPen(Qt::white);
 
     // Calculate text positioning for center alignment
-    QFontMetrics font_metrics(font);
+    QFontMetrics const font_metrics(font);
     //QRect text_rect = font_metrics.boundingRect(QRect(0, 0, width, height),
     //                                            Qt::AlignCenter | Qt::TextWordWrap, text);
 
@@ -615,15 +615,15 @@ void Export_Video_Widget::_updateAudioSourcesTable() {
         auto series = _data_manager->getData<DigitalEventSeries>(key);
         if (!series) continue;
 
-        std::string time_frame_key = _data_manager->getTimeKey(key).str();
-        int event_count = static_cast<int>(series->size());
+        std::string const time_frame_key = _data_manager->getTimeKey(key).str();
+        int const event_count = static_cast<int>(series->size());
 
         // Create audio source
-        AudioSource audio_source(key, time_frame_key, event_count);
+        AudioSource const audio_source(key, time_frame_key, event_count);
         _audio_sources.push_back(audio_source);
 
         // Add row to table
-        int row = ui->audio_sources_table->rowCount();
+        int const row = ui->audio_sources_table->rowCount();
         ui->audio_sources_table->insertRow(row);
 
         // Enabled checkbox
@@ -655,8 +655,8 @@ void Export_Video_Widget::_updateAudioSourcesTable() {
 void Export_Video_Widget::_onAudioSourceTableItemChanged(QTableWidgetItem * item) {
     if (!item) return;
 
-    int row = item->row();
-    int column = item->column();
+    int const row = item->row();
+    int const column = item->column();
 
     if (row >= 0 && row < static_cast<int>(_audio_sources.size())) {
         AudioSource & source = _audio_sources[row];
@@ -667,7 +667,7 @@ void Export_Video_Widget::_onAudioSourceTableItemChanged(QTableWidgetItem * item
                       << (source.enabled ? "enabled" : "disabled") << std::endl;
         } else if (column == 4) {// Volume
             bool ok;
-            float volume = item->text().toFloat(&ok);
+            float const volume = item->text().toFloat(&ok);
             if (ok && volume >= 0.0f && volume <= 2.0f) {
                 source.volume = volume;
                 std::cout << "Audio source " << source.key << " volume set to " << volume << std::endl;
@@ -682,9 +682,9 @@ void Export_Video_Widget::_onAudioSourceTableItemChanged(QTableWidgetItem * item
     }
 }
 
-std::vector<float> Export_Video_Widget::_generateClickAudio(float duration_seconds, int sample_rate, double click_duration) const {
-    int total_samples = static_cast<int>(duration_seconds * sample_rate);
-    int click_samples = static_cast<int>(click_duration * sample_rate);
+std::vector<float> Export_Video_Widget::_generateClickAudio(float duration_seconds, int sample_rate, double click_duration) {
+    int const total_samples = static_cast<int>(duration_seconds * sample_rate);
+    int const click_samples = static_cast<int>(click_duration * sample_rate);
 
     std::vector<float> audio_data(total_samples, 0.0f);
 
@@ -700,10 +700,10 @@ std::vector<float> Export_Video_Widget::_generateClickAudio(float duration_secon
     float const decay_rate = 1500.0f;  // Decay to <5% in ~2 ms
     float const biphasic_ratio = 0.35f;// Negative phase relative to positive
     for (int i = 0; i < std::min(click_samples, total_samples); ++i) {
-        float t = static_cast<float>(i) / static_cast<float>(sample_rate);
-        float amplitude = std::exp(-t * decay_rate);
+        float const t = static_cast<float>(i) / static_cast<float>(sample_rate);
+        float const amplitude = std::exp(-t * decay_rate);
         // Biphasic: primary fast lobe + slower opposite-polarity lobe
-        float waveform = std::sin(2.0f * std::numbers::pi_v<float> * frequency * t) - biphasic_ratio * std::sin(std::numbers::pi_v<float> * frequency * t);
+        float const waveform = std::sin(2.0f * std::numbers::pi_v<float> * frequency * t) - biphasic_ratio * std::sin(std::numbers::pi_v<float> * frequency * t);
         audio_data[i] = amplitude * waveform;
     }
 
@@ -712,8 +712,8 @@ std::vector<float> Export_Video_Widget::_generateClickAudio(float duration_secon
 
 std::vector<float> Export_Video_Widget::_convertEventsToAudioTrack(int start_frame, int end_frame, int video_fps, int audio_sample_rate) const {
     // Calculate total duration in seconds
-    float duration_seconds = static_cast<float>(end_frame - start_frame + 1) / static_cast<float>(video_fps);
-    int total_samples = static_cast<int>(duration_seconds * audio_sample_rate);
+    float const duration_seconds = static_cast<float>(end_frame - start_frame + 1) / static_cast<float>(video_fps);
+    int const total_samples = static_cast<int>(duration_seconds * audio_sample_rate);
 
     std::vector<float> audio_track(total_samples, 0.0f);
 
@@ -721,7 +721,7 @@ std::vector<float> Export_Video_Widget::_convertEventsToAudioTrack(int start_fra
         return audio_track;// Return silent track if audio is disabled
     }
 
-    double click_duration = ui->click_duration_spinbox->value();
+    double const click_duration = ui->click_duration_spinbox->value();
 
     // Get master time frame for conversion (camera/video time frame)
     auto master_time_frame = _data_manager->getTime(TimeKey("time"));
@@ -741,8 +741,8 @@ std::vector<float> Export_Video_Widget::_convertEventsToAudioTrack(int start_fra
         if (!series_time_frame) continue;
 
         // Get events in the frame range using the proper time frame conversion API
-        TimeFrameIndex start_index(start_frame);
-        TimeFrameIndex end_index(end_frame);
+        TimeFrameIndex const start_index(start_frame);
+        TimeFrameIndex const end_index(end_frame);
 
         auto events_with_ids = series->viewInRange(start_index,
                                                    end_index,
@@ -752,32 +752,17 @@ std::vector<float> Export_Video_Widget::_convertEventsToAudioTrack(int start_fra
 
         // Generate click sounds for each event
         for (auto const & event_with_id: events_with_ids) {
-            // Event time represents a TimeFrameIndex in the series' time frame
-            auto event_time_in_series_frame = event_with_id.event_time;
-            TimeFrameIndex event_index_in_series = event_time_in_series_frame;
-
-            // Convert event index from series time frame to master/video time frame index
-            TimeFrameIndex event_index_in_master{0};
-            if (series_time_frame.get() == master_time_frame.get()) {
-                // Same time frame - use index directly
-                event_index_in_master = event_index_in_series;
-            } else {
-                // Different time frames - convert index from series to master
-                // Get the time value at this index in the series time frame
-                ClockTicks time_value_in_series = series_time_frame->getTimeAtIndex(event_index_in_series);
-
-                // Find the corresponding index in the master time frame with that time value
-                event_index_in_master = master_time_frame->getIndexAtTime(time_value_in_series, false);
-            }
+            TimeFrameIndex const event_index_in_master =
+                    master_time_frame->getIndexAtTime(event_with_id.event_time, false);
 
             // Now convert from master frame index to audio sample index
             // Calculate relative position within the exported frame range (0.0 to 1.0)
-            int64_t master_frame_value = event_index_in_master.getValue();
-            float relative_position = static_cast<float>(master_frame_value - start_frame) /
+            int64_t const master_frame_value = event_index_in_master.getValue();
+            float const relative_position = static_cast<float>(master_frame_value - start_frame) /
                                       static_cast<float>(end_frame - start_frame);
 
             // Map relative position to audio sample index
-            int sample_index = static_cast<int>(relative_position * static_cast<float>(total_samples));
+            int const sample_index = static_cast<int>(relative_position * static_cast<float>(total_samples));
 
             if (sample_index >= 0 && sample_index < total_samples) {
                 // Generate click audio
@@ -798,7 +783,7 @@ std::vector<float> Export_Video_Widget::_convertEventsToAudioTrack(int start_fra
 
 void Export_Video_Widget::_writeAudioFile(std::string const & audio_filename,
                                           std::vector<float> const & audio_data,
-                                          int sample_rate) const {
+                                          int sample_rate) {
 
     std::cout << "Writing audio track: " << audio_data.size() << " samples at " << sample_rate << " Hz" << std::endl;
     std::cout << "Duration: " << static_cast<float>(audio_data.size()) / static_cast<float>(sample_rate) << " seconds" << std::endl;
@@ -856,7 +841,7 @@ void Export_Video_Widget::_writeAudioFile(std::string const & audio_filename,
         sample = std::max(-1.0f, std::min(1.0f, sample));
 
         // Convert to 24-bit signed integer (range: -8388608 to 8388607)
-        int32_t int_val = static_cast<int32_t>(sample * 8388607.0f);
+        auto const int_val = static_cast<int32_t>(sample * 8388607.0f);
 
         // Write 24-bit value (3 bytes, little-endian)
         stream.put(static_cast<char>(int_val & 0xFF));
@@ -883,8 +868,8 @@ void Export_Video_Widget::_updateMediaWidgetComboBox() {
     auto states = _editor_registry->statesByType(EditorTypeId(QStringLiteral("MediaWidget")));
 
     for (auto const & state: states) {
-        QString instance_id = state->getInstanceId();
-        QString display_name = state->getDisplayName();
+        QString const instance_id = state->getInstanceId();
+        QString const display_name = state->getDisplayName();
         ui->media_widget_combobox->addItem(display_name, instance_id);
     }
 
@@ -900,7 +885,7 @@ void Export_Video_Widget::_onMediaWidgetSelectionChanged() {
         return;
     }
 
-    EditorInstanceId selected_id(ui->media_widget_combobox->currentData().toString());
+    EditorInstanceId const selected_id(ui->media_widget_combobox->currentData().toString());
     auto state = _editor_registry->state(selected_id);
     _selected_state = std::dynamic_pointer_cast<MediaWidgetState>(state);
 

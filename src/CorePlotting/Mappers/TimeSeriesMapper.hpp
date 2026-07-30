@@ -159,13 +159,10 @@ namespace {
         TimeFrameIndex end_time,
         ClockTicks x_origin_time = ClockTicks(0)) {
     float const y_center = layout.y_transform.offset;
-    auto const * series_tf = series.getTimeFrame().get();
 
-    // views::all on an rvalue vector creates an owning_view
     return series.viewInRange(start_time, end_time, query_time_frame) |
-           std::views::transform([series_tf, y_center, x_origin_time, &query_time_frame](auto const & event) {
-               ClockTicks const abs_time = physicalTimeAtDataIndex(series_tf, query_time_frame, event.event_time);
-               float const x = static_cast<float>(abs_time - x_origin_time);
+           std::views::transform([y_center, x_origin_time](auto const & event) {
+               float const x = static_cast<float>((event.event_time - x_origin_time.getValue()).getValue());
                return MappedElement{x, y_center, event.entity_id};
            });
 }

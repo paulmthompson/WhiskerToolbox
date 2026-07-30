@@ -124,16 +124,16 @@ private slots:
     void _onMediaWidgetSelectionChanged();
 
 private:
-    QImage _generateTitleFrame(int width, int height, QString const & text, int font_size);
+    static QImage _generateTitleFrame(int width, int height, QString const & text, int font_size);
     void _writeFrameToVideo(QImage const & frame);
     std::pair<int, int> _getMediaDimensions() const;
     std::shared_ptr<MediaWidgetState> _getSelectedState() const;
     void _updateMediaWidgetComboBox();
 
     // Audio generation methods
-    std::vector<float> _generateClickAudio(float duration_seconds, int sample_rate, double click_duration) const;
+    static std::vector<float> _generateClickAudio(float duration_seconds, int sample_rate, double click_duration) ;
     std::vector<float> _convertEventsToAudioTrack(int start_frame, int end_frame, int video_fps, int audio_sample_rate) const;
-    void _writeAudioFile(std::string const & audio_filename, std::vector<float> const & audio_data, int sample_rate) const;
+    static void _writeAudioFile(std::string const & audio_filename, std::vector<float> const & audio_data, int sample_rate) ;
 
 };
 
