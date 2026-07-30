@@ -62,6 +62,7 @@
 #include "DigitalTimeSeries/EventWithId.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "Observer/Observer_Data.hpp"
+#include "TimeFrame/ClockTicks.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TypeTraits/DataTypeTraits.hpp"
 #include "storage/DigitalEventStorage.hpp"
@@ -132,7 +133,7 @@ class EntityRegistry;
  */
 class DigitalEventSeries : public ObserverData {
 public:
-    struct DataTraits : Neuralyzer::TypeTraits::DataTypeTraitsBase<DigitalEventSeries, ClockTicksWithId> {
+    struct DataTraits : Neuralyzer::TypeTraits::DataTypeTraitsBase<DigitalEventSeries, ClockTicks> {
         static constexpr bool is_ragged = false;
         static constexpr bool is_temporal = true;
         static constexpr bool has_entity_ids = true;

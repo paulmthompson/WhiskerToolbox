@@ -18,6 +18,7 @@ class PointData;
 class RaggedAnalogTimeSeries;
 class TensorData;
 
+class ClockTicks;
 class Line2D;
 class Mask2D;
 template<typename T>
@@ -61,6 +62,14 @@ struct ContainerFor<float> {
     using type = RaggedAnalogTimeSeries;
     using element_type = float;
     using container_ptr = std::shared_ptr<RaggedAnalogTimeSeries>;
+};
+
+/// ClockTicks maps to DigitalEventSeries (entity ids via DataTraits::has_entity_ids).
+template<>
+struct ContainerFor<ClockTicks> {
+    using type = DigitalEventSeries;
+    using element_type = ClockTicks;
+    using container_ptr = std::shared_ptr<DigitalEventSeries>;
 };
 
 template<typename Element>
@@ -117,6 +126,6 @@ template<typename Container>
 inline constexpr bool has_element_type_v =
         ElementForSafe<Container>::is_valid && HasElements<Container>;
 
-} // namespace Neuralyzer::TypeTraits
+}// namespace Neuralyzer::TypeTraits
 
-#endif // NEURALYZER_CONTAINER_ELEMENT_MAPPING_HPP
+#endif// NEURALYZER_CONTAINER_ELEMENT_MAPPING_HPP

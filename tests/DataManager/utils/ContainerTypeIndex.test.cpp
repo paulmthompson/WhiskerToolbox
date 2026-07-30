@@ -11,8 +11,10 @@
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
+#include "TimeFrame/ClockTicks.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -23,6 +25,9 @@ using namespace Neuralyzer::TypeTraits;
 static_assert(std::is_same_v<ElementFor_t<MaskData>, Mask2D>);
 static_assert(std::is_same_v<ContainerFor_t<Mask2D>, MaskData>);
 static_assert(std::is_same_v<ContainerFor_t<float>, RaggedAnalogTimeSeries>);
+static_assert(std::is_same_v<ElementFor_t<DigitalEventSeries>, ClockTicks>);
+static_assert(std::is_same_v<ContainerFor_t<ClockTicks>, DigitalEventSeries>);
+static_assert(DigitalEventSeries::DataTraits::has_entity_ids);
 
 TEST_CASE("TypeIndexMapper resolves container types", "[datamanager][container_type_index]") {
     CHECK_NOTHROW(TypeIndexMapper::stringToContainer("MaskData"));
