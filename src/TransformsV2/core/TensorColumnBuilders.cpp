@@ -15,6 +15,7 @@
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Tensors/TensorData.hpp"
 #include "Tensors/storage/LazyColumnTensorStorage.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <cmath>// NAN
 #include <functional>
@@ -302,13 +303,33 @@ std::vector<float> sampleOutputAtRowTimes(
 }
 
 std::vector<TimeFrameIndex> sampleTimesToTimeFrameIndices(
-        DigitalEventSeries const & sample_times) {
+        DigitalEventSeries const & sample_times,
+        TimeFrame const & target_time_frame) {
     std::vector<TimeFrameIndex> result;
     result.reserve(sample_times.size());
     for (auto const & event: sample_times.view()) {
-        result.emplace_back(event.time().getValue());
+        result.push_back(target_time_frame.getIndexAtTime(event.time(), false));
     }
     return result;
+}
+
+std::shared_ptr<TimeFrame> getSourceTimeFrameForSampling(
+        DataManager & dm,
+        std::string const & source_key) {
+    auto source_variant = dm.getDataVariant(source_key);
+    if (!source_variant) {
+        throw std::runtime_error(
+                "buildProviderFromRecipe: source_key '" + source_key + "' not found in DataManager");
+    }
+
+    return std::visit([](auto const & ptr) -> std::shared_ptr<TimeFrame> {
+        if constexpr (requires { ptr->getTimeFrame(); }) {
+            return ptr->getTimeFrame();
+        } else {
+            return nullptr;
+        }
+    },
+                      *source_variant);
 }
 
 }// anonymous namespace
@@ -505,10 +526,16 @@ ColumnProviderFn buildProviderFromRecipe(
                         "buildProviderFromRecipe: DigitalEventSeries row_pipeline_json output "
                         "selects sample times and cannot be combined with a range reduction");
             }
+            auto source_time_frame = getSourceTimeFrameForSampling(dm, recipe.source_key);
+            if (!source_time_frame) {
+                throw std::runtime_error(
+                        "buildProviderFromRecipe: source '" + recipe.source_key +
+                        "' has no TimeFrame for sample-time row pipeline output");
+            }
             return buildPipelineColumnProvider(
                     dm,
                     recipe.source_key,
-                    sampleTimesToTimeFrameIndices(**sample_times),
+                    sampleTimesToTimeFrameIndices(**sample_times, *source_time_frame),
                     std::move(pipeline));
         }
 

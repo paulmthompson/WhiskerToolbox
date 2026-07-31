@@ -48,6 +48,7 @@ Implemented foundations:
 - Direct binding sources from DataManager keys and derived binding sources using `source_pipeline_json` are supported when they resolve to row-aligned `DigitalEventSeries` objects.
 - Interval-row columns can dispatch `DigitalEventSeries` row-pipeline output as sample times for timestamp-style providers.
 - `ShiftDigitalEventSeries` shifts `DigitalEventSeries` sample times and replaces the temporary top-level `pipeline_json` `"offset"` compatibility path.
+- Angle-at-contact-onset point sampling is tested through TensorDesign JSON in the whisker-contact scenario.
 - Contact-aligned spike presence is tested through TensorDesign JSON in the whisker-contact scenario.
 
 Known gaps:
@@ -238,14 +239,14 @@ Exit criteria:
 
 Goal: prove the design on the motivating analysis table.
 
-Status: partially implemented. The contact-onset spike-presence column is covered by TensorDesign JSON. Angle-at-onset point sampling and trial-relative raster/PSTH examples remain planned.
+Status: partially implemented. The contact-onset spike-presence column and angle-at-onset point sampling are covered by TensorDesign JSON. Trial-relative raster/PSTH examples remain planned.
 
 Tasks:
 
 1. ~~Extend the whisker-contact scenario with contact onset features.~~ **Done for onset spike presence.**
 2. ~~Add a full-contact curvature column.~~ **Done.**
 3. ~~Add a spike-in-onset-window column.~~ **Done.**
-4. Add an angle-at-onset column after timestamp/sample row-pipeline dispatch is implemented.
+4. ~~Add an angle-at-onset column after timestamp/sample row-pipeline dispatch is implemented.~~ **Done.**
 5. Verify row count, row descriptors, and expected values.
 6. Update scenario documentation with valid JSON.
 

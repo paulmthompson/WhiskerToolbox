@@ -33,6 +33,7 @@ T requireValue(std::optional<T> const & opt) {
 std::string whiskerContactDesignJson(
         std::string const & contact_key,
         std::string const & curvature_key,
+        std::string const & angle_key,
         std::string const & spikes_key) {
     return R"({
   "tensor_key": "contact_features",
@@ -60,6 +61,13 @@ std::string whiskerContactDesignJson(
            spikes_key + R"(",
       "row_pipeline_json": "{\"steps\": [{\"step_id\": \"contact_start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}, {\"step_id\": \"onset_window\", \"transform_name\": \"EventToInterval\", \"parameters\": {\"pre_expansion\": 0, \"post_expansion\": 1}}]}",
       "pipeline_json": "{\"steps\": [], \"range_reduction\": {\"reduction_name\": \"EventPresence\"}}"
+    },
+    {
+      "name": "angle_at_onset",
+      "source_key": ")" +
+           angle_key + R"(",
+      "row_pipeline_json": "{\"steps\": [{\"step_id\": \"contact_start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}]}",
+      "pipeline_json": "{\"steps\": []}"
     }
   ]
 })";
@@ -109,18 +117,21 @@ TEST_CASE("Whisker contact scenario builds tensor from design JSON",
     auto const json = whiskerContactDesignJson(
             scenario.config.contact_key,
             scenario.config.curvature_key,
+            scenario.config.angle_key,
             scenario.config.spikes_key);
 
     auto const built = requireValue(buildTensorFromDesignJson(fixture.dm(), json));
     REQUIRE(built.numRows() == num_rows);
-    REQUIRE(built.numColumns() == 3);
+    REQUIRE(built.numColumns() == 4);
 
     auto const mean_curvature = built.getColumn(0);
     auto const spike_counts = built.getColumn(1);
     auto const onset_spike_present = built.getColumn(2);
+    auto const angle_at_onset = built.getColumn(3);
     REQUIRE(mean_curvature.size() == num_rows);
     REQUIRE(spike_counts.size() == num_rows);
     REQUIRE(onset_spike_present.size() == num_rows);
+    REQUIRE(angle_at_onset.size() == num_rows);
 
     double onset_spike_contacts = 0.0;
     for (std::size_t row_index = 0; row_index < num_rows; ++row_index) {
@@ -128,13 +139,23 @@ TEST_CASE("Whisker contact scenario builds tensor from design JSON",
         REQUIRE(spike_counts[row_index] >= 0.0f);
         REQUIRE((onset_spike_present[row_index] == 0.0f ||
                  onset_spike_present[row_index] == 1.0f));
+        REQUIRE(std::isfinite(angle_at_onset[row_index]));
     }
 
     std::size_t row_index = 0;
+    auto const contact_time_frame = scenario.contact->getTimeFrame();
+    REQUIRE(contact_time_frame != nullptr);
     for (auto const & contact_with_id: scenario.contact->view()) {
         auto const expected_presence = expectedOnsetSpikePresence(
                 scenario, contact_with_id.interval);
         REQUIRE(onset_spike_present[row_index] == expected_presence);
+
+        auto const contact_start_index = contact_time_frame->getIndexAtTime(
+                contact_with_id.interval.start, false);
+        auto const expected_angle = scenario.angle->getAtTime(contact_start_index);
+        REQUIRE(expected_angle.has_value());
+        REQUIRE(angle_at_onset[row_index] == expected_angle.value());
+
         onset_spike_contacts += static_cast<double>(onset_spike_present[row_index]);
         ++row_index;
     }

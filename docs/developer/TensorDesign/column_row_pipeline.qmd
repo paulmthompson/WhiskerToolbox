@@ -55,6 +55,7 @@ Implemented today:
 - `gatherAndExecutePipeline()` can execute JSON-loaded container steps before the terminal range reduction, and can apply a per-row bound pipeline copy when row stores are supplied.
 - `DigitalEventSeries` row-pipeline outputs are routed to timestamp/sample providers for interval-row columns without terminal range reductions.
 - `ShiftDigitalEventSeries` expresses sample offsets as a normal TransformPipeline step.
+- Angle-at-contact-onset point sampling is tested through TensorDesign JSON in the whisker-contact scenario.
 - `GatherResult` consumes prepared `DigitalIntervalSeries` windows and can hold companion alignment events, but TensorDesign should not rely on that metadata path for column transformations.
 - `GatherResult` converts prepared window bounds to the gathered source `TimeFrame` with `convertTimeFrameRange()`.
 - `DigitalIntervalSeries` supports `IntervalLayout::Overlapping` through `createOverlapping()`.
@@ -670,7 +671,7 @@ Current coverage is split by architectural layer:
 |---|---|---|
 | `tests/TransformsV2/test_tensor_column_builders.test.cpp` | TransformsV2 column-builder layer | `resolveIntervalGatherWindows()`, identity row pipelines, `DigitalIntervalSeries` row-pipeline output, overlapping windows, row-count rejection, interval-property bypass, provider dispatch, JSON-loaded container steps before reduction, direct/derived `pipeline_value_bindings`, and binding row-count rejection. |
 | `tests/TensorDesign/test_tensor_design_builder.cpp` | TensorDesign JSON/build layer | Parse/serialize `row_pipeline_json`, parse/serialize `pipeline_value_bindings`, identity behavior, Phase 4 JSON builds, Phase 5 bound-normalization JSON builds, mixed interval-property/gather columns, cross-timeframe gather windows, and offset compatibility characterization. |
-| `tests/TensorDesign/test_tensor_whisker_contact_scenario.cpp` | TensorDesign scenario integration | Builds the whisker-contact JSON design with mean curvature, full-contact spike count, and contact-onset spike presence through `row_pipeline_json`. |
+| `tests/TensorDesign/test_tensor_whisker_contact_scenario.cpp` | TensorDesign scenario integration | Builds the whisker-contact JSON design with mean curvature, full-contact spike count, contact-onset spike presence, and angle-at-onset point sampling through `row_pipeline_json`. |
 | `tests/TransformsV2/test_tensor_whisker_contact_scenario.cpp` | Lower-level TransformsV2 scenario integration | Exercises programmatic `buildIntervalPipelineProvider()` and lazy tensor construction over the same fixture without TensorDesign JSON. |
 
 The two whisker-contact test files intentionally cover different levels. The TransformsV2 test validates the lower-level provider/lazy tensor path. The TensorDesign test validates the JSON-to-tensor path, including the new contact-aligned spike column. If test runtime becomes a concern, keep both layers but reduce duplicate statistical assertions rather than deleting one file.

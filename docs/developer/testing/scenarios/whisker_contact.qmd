@@ -102,7 +102,7 @@ Spikes are drawn via **Lewis–Shedler thinning** (`fixtures/stochastic/PoissonT
 | `tests/DataManager/fixtures/stochastic/*.hpp` | AR(1), intervals, rate builder, thinning |
 | `tests/DataManager/test_whisker_contact_scenario.cpp` | Scenario unit / property tests |
 | `tests/TransformsV2/test_tensor_whisker_contact_scenario.cpp` | Programmatic TransformsV2 column-provider / lazy tensor integration |
-| `tests/TensorDesign/test_tensor_whisker_contact_scenario.cpp` | TensorDesign JSON integration, including contact-aligned spike windows |
+| `tests/TensorDesign/test_tensor_whisker_contact_scenario.cpp` | TensorDesign JSON integration, including contact-aligned spike windows and angle-at-onset point sampling |
 
 ## Configuration
 
@@ -160,7 +160,7 @@ auto tensor = TensorData::createFromLazyColumns(...);
 
 ### JSON design specification
 
-The TensorDesign scenario test builds the same feature set plus contact-aligned spike presence from a [TensorDesigner-compatible JSON envelope](../../TensorDesign/TensorDesignBuilder.qmd) using the Qt-free `TensorDesign` library:
+The TensorDesign scenario test builds the same feature set plus contact-aligned spike presence and angle-at-contact-onset point sampling from a [TensorDesigner-compatible JSON envelope](../../TensorDesign/TensorDesignBuilder.qmd) using the Qt-free `TensorDesign` library:
 
 ```json
 {
@@ -185,6 +185,12 @@ The TensorDesign scenario test builds the same feature set plus contact-aligned 
       "source_key": "Spikes",
       "row_pipeline_json": "{\"steps\": [{\"step_id\": \"contact_start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}, {\"step_id\": \"onset_window\", \"transform_name\": \"EventToInterval\", \"parameters\": {\"pre_expansion\": 0, \"post_expansion\": 1}}]}",
       "pipeline_json": "{\"steps\": [], \"range_reduction\": {\"reduction_name\": \"EventPresence\"}}"
+    },
+    {
+      "name": "angle_at_onset",
+      "source_key": "Angle",
+      "row_pipeline_json": "{\"steps\": [{\"step_id\": \"contact_start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}]}",
+      "pipeline_json": "{\"steps\": []}"
     }
   ]
 }
@@ -200,7 +206,9 @@ REQUIRE(tensor.has_value());
 
 Note that `pipeline_json` and `row_pipeline_json` are **embedded JSON strings** (double-encoded in the outer file). Cross-timeframe spike counting works because interval gather resolves timebases automatically. The `onset_spike_present` column keeps the tensor rows tied to the original `Contact` intervals while its `row_pipeline_json` converts each contact to a start event and expands that event into a one-frame prepared window before running the `EventPresence` reduction over `Spikes`.
 
-For future point-sampling and per-row normalization examples (angle at onset, trial-relative rasters, tuning-curve tables), see the [column row pipeline design](../../TensorDesign/column_row_pipeline.qmd) and [roadmap](../../TensorDesign/column_row_pipeline_roadmap.qmd).
+The `angle_at_onset` column uses the same `Contact -> IntervalToEvent(start)` row pipeline but does not expand the event into a window. The resulting `DigitalEventSeries` supplies one sample time per contact row, and TensorDesign samples `Angle` at those contact-onset times. This validates the motivating point-sampling workflow.
+
+For future per-row normalization examples (trial-relative rasters, tuning-curve tables), see the [column row pipeline design](../../TensorDesign/column_row_pipeline.qmd) and [roadmap](../../TensorDesign/column_row_pipeline_roadmap.qmd).
 
 ## Running tests
 
