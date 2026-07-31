@@ -27,6 +27,7 @@
 #include "TransformsV2/core/RangeReductionRegistry.hpp"
 #include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/extension/gatherResult/RowGatherGeometry.hpp"
+#include "TransformsV2/io/PipelineLoader.hpp"
 
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -619,6 +620,39 @@ TEST_CASE("buildIntervalPipelineProvider - Event empty interval returns zero cou
 
     REQUIRE(values.size() == 1);
     CHECK_THAT(values[0], WithinAbs(0.0, 0.01));
+}
+
+TEST_CASE("buildIntervalPipelineProvider - JSON container event normalize before reduction",
+          "[TensorColumnBuilders]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 1000);
+    auto events = createEventSeries({95, 105, 112, 190, 205, 220});
+    dm.setData<DigitalEventSeries>("events", events, TimeKey("time"));
+
+    auto intervals = createIntervalSeries({{90, 120}, {180, 230}});
+
+    auto pipeline_result = Neuralyzer::Transforms::V2::Examples::loadPipelineFromJson(R"({
+        "steps": [
+            {
+                "step_id": "1",
+                "transform_name": "NormalizeDigitalEventSeriesRelative",
+                "parameters": {"alignment_time": 100}
+            }
+        ],
+        "range_reduction": {
+            "reduction_name": "EventCountInWindow",
+            "parameters": {"window_start": 0.0, "window_end": 15.0}
+        }
+    })");
+    REQUIRE(pipeline_result);
+
+    auto provider = buildIntervalPipelineProvider(
+            dm, "events", intervals, std::move(*pipeline_result));
+    auto values = provider();
+
+    REQUIRE(values.size() == 2);
+    CHECK_THAT(values[0], WithinAbs(2.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(0.0, 0.01));
 }
 
 // =============================================================================

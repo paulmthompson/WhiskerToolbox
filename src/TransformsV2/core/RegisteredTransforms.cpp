@@ -27,6 +27,7 @@
 #include "algorithms/RemoveLineOutliers/RemoveLineOutliers.hpp"
 #include "algorithms/SincInterpolation/SincInterpolation.hpp"
 #include "algorithms/SumReduction/SumReduction.hpp"
+#include "algorithms/Temporal/NormalizeTime.hpp"
 #include "algorithms/TensorCAR/TensorCAR.hpp"
 #include "algorithms/TensorCentralDifference/TensorCentralDifference.hpp"
 #include "algorithms/TensorICA/TensorICA.hpp"
@@ -93,6 +94,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<ZScoreNormalizationParamsV2>();
     registerPipelineStepFactoryFor<AnalogDifferenceParams>();
     registerPipelineStepFactoryFor<SincInterpolationParams>();
+    registerPipelineStepFactoryFor<NormalizeTimeParamsV2>();
     registerPipelineStepFactoryFor<TensorPCAParams>();
     registerPipelineStepFactoryFor<TensorICAParams>();
     registerPipelineStepFactoryFor<TensorRobustPCAParams>();

@@ -5,7 +5,10 @@ format: html
 
 **Status:** Implementation roadmap for [Column Row Pipeline Design](column_row_pipeline.qmd).
 
-Phases 1-4 are implemented. Phase 5 and later remain planned.
+Phases 1-4 are implemented. Phase 5 is partially implemented: gathered row
+pipelines can run JSON-loaded container steps before terminal range reduction,
+including container-level DigitalEventSeries normalization. Iterable
+`PipelineValueStore` bindings and later phases remain planned.
 
 This roadmap breaks the per-column row-pipeline refactor into small, testable steps. The design goal is to let each tensor column derive its own row-aligned gather inputs through TransformPipelines while keeping `GatherResult` a container/direct-gather executor rather than a pipeline runner.
 
@@ -42,6 +45,8 @@ Implemented foundations:
 - `buildProviderFromRecipe()` uses row-pipeline windows for interval-row columns.
 - Digital event/interval views expose `ClockTicks`-based API-facing elements.
 - `PipelineValueStore` stores `ClockTicks`, and `NormalizeTimeParamsV2::alignment_time` is `ClockTicks`.
+- `gatherAndExecutePipeline()` executes JSON-loaded pipeline steps, including container steps, on each gathered row before applying the terminal range reduction.
+- `NormalizeDigitalEventSeriesRelative` normalizes a gathered `DigitalEventSeries` into relative `ClockTicks` storage while preserving event `EntityId`s.
 - Contact-aligned spike presence is tested through TensorDesign JSON in the whisker-contact scenario.
 
 Known gaps:
@@ -132,11 +137,27 @@ Exit criteria:
 
 ## Phase 5: Iterable PipelineValueStore Bindings
 
+Status: partially implemented. The gathered-row execution path now supports
+container-step pipelines before terminal range reduction, and a container-level
+`NormalizeDigitalEventSeriesRelative` transform is available for
+`DigitalEventSeries -> DigitalEventSeries` normalization with a fixed or already
+bound `NormalizeTimeParamsV2::alignment_time`. The remaining Phase 5 work is the
+iterable binding layer that supplies a different alignment value for each tensor
+row through `PipelineValueStore`.
+
 Goal: supply per-row values to `pipeline_json` transforms through the existing TransformsV2 `PipelineValueStore` mechanism without making `row_pipeline_json` responsible for normalization markers.
 
 Motivating example: gather `Spikes` into one `DigitalEventSeries` per trial/contact interval, then execute a TransformPipeline containing `NormalizeTime` on each gathered row. The normalization time comes from a row-aligned `DigitalEventSeries`, such as `ContactOnset`, or from `Contact -> IntervalToEvent(start)`. The event for row `i` is written into `PipelineValueStore` as `ClockTicks` and bound to the `NormalizeTime` parameter for row `i`.
 
 Tasks:
+
+Completed prerequisites:
+
+1. Allow gathered row execution to run JSON-loaded container steps before terminal range reduction.
+2. Add `NormalizeDigitalEventSeriesRelative` as the container-level normalize transform for gathered `DigitalEventSeries` rows.
+3. Cover container-step-before-reduction behavior with a TensorColumnBuilders test using `EventCountInWindow` after normalization.
+
+Remaining tasks:
 
 1. Define a JSON schema for iterable bindings from DataObjects into `PipelineValueStore` keys.
 2. Support direct iterable sources from DataManager keys with implicit identity source pipeline.
@@ -168,6 +189,7 @@ Settled design choices:
 - `PipelineValueStore` stores `ClockTicks` directly.
 - `NormalizeTimeParamsV2::alignment_time` is `ClockTicks` and binds through `ClockTicksReflector`.
 - `NormalizeClockTicksValueV2` is the canonical pipeline transform for DigitalEventSeries value projections; `ClockTicksWithId` is reduced to `ClockTicks` by the projection helper before pipeline execution.
+- `NormalizeDigitalEventSeriesRelative` is the canonical container-level transform when the gathered row should remain a `DigitalEventSeries` with relative `ClockTicks` values before reduction or export.
 - Existing `PipelineValueStore`, parameter bindings, and gather extension helpers should be reused or generalized to bind iterable values per row.
 - User-facing presets should hide the distinction between `ClockTicksWithId` and `ClockTicks` normalize transforms whenever possible.
 

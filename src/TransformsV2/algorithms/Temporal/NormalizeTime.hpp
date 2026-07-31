@@ -49,14 +49,19 @@
  */
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/EventWithId.hpp"
+#include "Entity/EntityTypes.hpp"
 #include "TimeFrame/ClockTicksReflector.hpp"
+#include "core/ComputeContext.hpp"
 
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
+#include <memory>
 #include <optional>
 #include <stdexcept>
+#include <vector>
 
 namespace Neuralyzer::Transforms::V2 {
 
@@ -191,6 +196,37 @@ struct NormalizeTimeParamsV2 {
         AnalogTimeSeries::TimeValuePoint const & sample,
         NormalizeTimeParamsV2 const & params) {
     return static_cast<float>(sample.time().getValue() - params.alignment_time.getValue());
+}
+
+/**
+ * @brief Normalize every event in a DigitalEventSeries into relative ClockTicks.
+ *
+ * Container signature: DigitalEventSeries -> DigitalEventSeries.
+ * The output is backed by relative ClockTicks storage and preserves event EntityIds.
+ *
+ * @param input Input event series whose view() exposes ClockTicksWithId values
+ * @param params Parameters containing the alignment time to subtract
+ * @param ctx Compute context for cancellation
+ * @return Relative-time DigitalEventSeries with no TimeFrame
+ */
+[[nodiscard]] inline std::shared_ptr<DigitalEventSeries> normalizeDigitalEventSeriesRelative(
+        DigitalEventSeries const & input,
+        NormalizeTimeParamsV2 const & params,
+        ComputeContext const & ctx) {
+    std::vector<ClockTicks> events;
+    std::vector<EntityId> entity_ids;
+    events.reserve(input.size());
+    entity_ids.reserve(input.size());
+
+    for (auto const & event: input.view()) {
+        if (ctx.shouldCancel()) {
+            break;
+        }
+        events.emplace_back(event.time().getValue() - params.alignment_time.getValue());
+        entity_ids.push_back(event.id());
+    }
+
+    return DigitalEventSeries::createFromRelativeClockTicks(std::move(events), std::move(entity_ids));
 }
 
 }// namespace Neuralyzer::Transforms::V2

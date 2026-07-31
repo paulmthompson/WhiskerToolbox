@@ -45,6 +45,11 @@ std::vector<std::string> getStepNames(
     return names;
 }
 
+[[nodiscard]] bool isFloatCompatibleReductionOutput(std::type_index output_type) {
+    return output_type == typeid(float) || output_type == typeid(double) ||
+           output_type == typeid(int);
+}
+
 /**
  * @brief Check whether a pipeline (element steps + optional range reduction)
  *        will produce float output when applied to a source of the given
@@ -75,7 +80,8 @@ bool pipelineProducesFloat(
     auto const step_names = getStepNames(pipeline);
 
     if (!step_names.empty()) {
-        // Validate the element transform chain
+        // Validate the transform chain. TypeChainResolver supports both
+        // element-level and container-level steps.
         auto chain = resolveTypeChain(
                 source_container_type,
                 std::span<std::string const>{step_names});
@@ -86,9 +92,11 @@ bool pipelineProducesFloat(
         if (auto const & range_reduction = pipeline.getRangeReduction();
             range_reduction.has_value()) {
             // Range reduction follows the element chain —
-            // check the reduction's declared output type.
+            // check the reduction's declared scalar output. Input compatibility
+            // is intentionally left to execution because some reductions consume
+            // API-facing view elements rather than DataTraits element types.
             auto const & red = *range_reduction;
-            return red.output_type == typeid(float) || red.output_type == typeid(double) || red.output_type == typeid(int);
+            return isFloatCompatibleReductionOutput(red.output_type);
         }
 
         // No range reduction: the chain itself must end at float.
@@ -99,7 +107,7 @@ bool pipelineProducesFloat(
         range_reduction.has_value()) {
         // Range-reduction-only (no element steps).
         auto const & red = *range_reduction;
-        return red.output_type == typeid(float) || red.output_type == typeid(double) || red.output_type == typeid(int);
+        return isFloatCompatibleReductionOutput(red.output_type);
     }
 
     // Empty pipeline (identity / passthrough).

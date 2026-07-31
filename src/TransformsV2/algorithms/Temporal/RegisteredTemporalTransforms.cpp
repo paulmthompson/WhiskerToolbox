@@ -1,6 +1,7 @@
 #include "algorithms/Temporal/RegisteredTemporalTransforms.hpp"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/EventWithId.hpp"
 #include "TimeFrame/ClockTicks.hpp"
 #include "algorithms/Temporal/NormalizeTime.hpp"
@@ -180,6 +181,32 @@ auto const register_normalize_sample_time_value_v2 = RegisterTransform<
                 .is_deterministic = true,
                 .supports_cancellation = false});
 
+/**
+ * @brief Register NormalizeDigitalEventSeriesRelative container transform.
+ *
+ * This materializes gathered DigitalEventSeries rows into relative ClockTicks
+ * storage before a terminal range reduction is applied.
+ */
+auto const register_normalize_digital_event_series_relative = RegisterContainerTransform<
+        DigitalEventSeries,
+        DigitalEventSeries,
+        NormalizeTimeParamsV2>(
+        "NormalizeDigitalEventSeriesRelative",
+        normalizeDigitalEventSeriesRelative,
+        ContainerTransformMetadata{
+                .name = "NormalizeDigitalEventSeriesRelative",
+                .description = "Normalize a DigitalEventSeries to relative clock-tick event times",
+                .category = "Temporal",
+                .input_container_type = typeid(DigitalEventSeries),
+                .output_container_type = typeid(DigitalEventSeries),
+                .params_type = typeid(NormalizeTimeParamsV2),
+                .input_type_name = "DigitalEventSeries",
+                .output_type_name = "DigitalEventSeries",
+                .params_type_name = "NormalizeTimeParamsV2",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
 }// anonymous namespace
 
 // ============================================================================
@@ -201,6 +228,7 @@ void registerTemporalTransforms() {
     (void) register_normalize_event_time_value_v2;
     (void) register_normalize_clock_ticks_value_v2;
     (void) register_normalize_sample_time_value_v2;
+    (void) register_normalize_digital_event_series_relative;
     (void) register_binding_applicator_v2;
 }
 
