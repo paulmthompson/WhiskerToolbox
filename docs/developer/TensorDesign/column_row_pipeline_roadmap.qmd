@@ -335,7 +335,7 @@ Exit criteria:
 
 ## Phase 9c: Column Preset Registry And Expansion
 
-Goal: make common row-pipeline workflows discoverable without requiring users to write raw TransformPipeline JSON.
+Goal: provide friendly recipe generators that expand user-supplied parameters into raw `ColumnRecipe` objects, avoiding manual embedded JSON authoring. Presets are for authoring convenience; saved designs remain expanded raw TensorDesign JSON.
 
 Tasks:
 
@@ -355,8 +355,8 @@ Tasks:
 5. Expand preset JSON into raw `ColumnRecipe` fields before provider construction.
 6. Add tests that preset expansion produces the same tensor values as equivalent raw recipes.
 7. Add TensorDesigner UI support for **Add Preset...** that appends all expanded columns.
-8. Decide whether saved designs store raw expansion only or preset plus expanded raw JSON.
-9. Decide whether user presets can override bundled preset IDs or whether duplicate IDs are rejected.
+8. Save expanded raw recipes only after presets are applied; preset invocations are not required for execution.
+9. Reject duplicate preset IDs across built-in and user presets for the initial implementation.
 
 Exit criteria:
 
@@ -364,6 +364,7 @@ Exit criteria:
 - Users can add keypoint x/y column groups without manually authoring repeated `PointCoordinate` pipelines.
 - Presets are discoverable from a registry that can be reused by documentation and UI.
 - Raw JSON remains available for advanced workflows.
+- Saved designs remain reproducible expanded TensorDesign JSON and do not depend on the preset registry at load time.
 
 ## Phase 9d: Design/Table Presets
 
@@ -374,17 +375,18 @@ Tasks:
 1. Define a `DesignPresetExpansion` shape containing a row source plus multiple `ColumnRecipe`s.
 2. Add a whisker-contact feature table preset covering curvature, spike count, onset spike presence, angle at onset, and optional keypoint x/y columns.
 3. Add tests comparing design preset expansion to the equivalent raw TensorDesign JSON.
-4. Decide whether design presets can be nested/composed from column presets or should use compiled expansion functions initially.
+4. Prefer compiled expansion functions initially for design presets that need loops or complex defaults; avoid making saved analyses depend on preset invocations.
 5. Add TensorDesigner UI affordance for applying a table preset to an empty design.
 
 Exit criteria:
 
 - A complete motivating analysis table can be created from one preset plus a small parameter form.
 - Column presets remain useful for incremental table editing.
+- Applying a design preset produces ordinary row-source and column recipe JSON that can be saved independently of the preset.
 
 ## Phase 10: Preset Library Files
 
-Goal: distribute Neuralyzer with useful built-in column presets and let users save/import their own presets using a library pattern similar to TransformsV2 `PipelineLibrary`.
+Goal: distribute Neuralyzer with useful built-in recipe generators and let users save/import their own preset definitions using a library pattern similar to TransformsV2 `PipelineLibrary`.
 
 Tasks:
 
@@ -395,7 +397,8 @@ Tasks:
 5. Implement load/save/delete for user preset JSON files.
 6. Add bundled JSON presets for simple fixed-shape registry entries.
 7. Support compiled/static presets for expansions requiring loops, such as arbitrary-length multi-keypoint x/y.
-8. Add tests for path helpers, catalog merge behavior, load/save/delete, duplicate ID policy, and expansion.
+8. Reject duplicate preset IDs across bundled and user entries in the initial implementation.
+9. Add tests for path helpers, catalog merge behavior, load/save/delete, duplicate ID policy, and expansion.
 
 Exit criteria:
 
@@ -403,6 +406,7 @@ Exit criteria:
 - Users can save and import lab-specific presets.
 - The preset library uses a schema distinct from raw `PipelineDescriptor` JSON but follows the existing PipelineLibrary mechanics where practical.
 - The library can represent both simple fixed-column templates and delegate complex multi-column templates to compiled registry entries.
+- User presets do not silently override bundled presets; lab-specific variants use unique IDs until explicit namespacing is introduced.
 
 ## Phase 11: Documentation And UI Follow-Up
 

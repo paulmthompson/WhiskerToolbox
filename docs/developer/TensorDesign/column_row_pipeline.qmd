@@ -312,7 +312,9 @@ The raw schema is functional but not friendly: users should not need to remember
 
 ### Level 1: Presets
 
-Presets are the preferred user-facing format for common analysis patterns. They name the intent and expose only the parameters a user should edit.
+Presets are the preferred user-facing way to generate common analysis columns without manually typing embedded TransformPipeline JSON. A preset is a recipe generator: it accepts a small, preset-specific parameter set and expands into one or more raw `ColumnRecipe` objects.
+
+Presets are not the canonical saved-analysis format. The reproducible artifact remains the expanded TensorDesign JSON containing ordinary `ColumnRecipe` fields. If a user wants to repeat the exact same analysis later, saving and loading the expanded design is the stable path. Presets are for authoring convenience and error reduction.
 
 Example: spike presence around interval onset:
 
@@ -360,6 +362,8 @@ struct ColumnRecipePresetDescriptor {
 ```
 
 Presets should expand to a list of columns, not a single `ColumnRecipe`. Single-column presets are the common case, but multi-column presets are required for keypoints and other grouped features.
+
+The preset parameter schema is intentionally friendlier and smaller than raw TensorDesign JSON. Each preset can expose whatever inputs matter for its expansion, such as `source_key`, `output_name`, `pre`, `post`, `name_prefix`, or a list of keypoint keys. The expansion function is responsible for substituting those values into raw `row_pipeline_json`, `pipeline_value_bindings`, and `pipeline_json` fields.
 
 Example multi-column preset intents:
 
@@ -590,6 +594,49 @@ The preset catalog should merge bundled and user entries by `id`:
 - Display should sort by `display_name`, with source badges such as `Built-in` and `User`.
 
 This is intentionally similar to `PipelineLibrary`: list entries, load JSON, save user JSON, delete user JSON, import/export files. The difference is schema and expansion target, not the library mechanics.
+
+### Saved Designs After Preset Use
+
+Applying a preset in TensorDesigner should append the expanded raw `ColumnRecipe`s to the current design. Saving the design should write the expanded recipes, not the preset invocation.
+
+For example, applying a `point_xy` preset with `source_key = "Nose"` and `name_prefix = "nose"` should save as ordinary columns:
+
+```json
+{
+  "columns": [
+    {
+      "name": "nose_x",
+      "source_key": "Nose",
+      "pipeline_json": "{\"steps\": [{\"step_id\": \"x\", \"transform_name\": \"PointCoordinate\", \"parameters\": {\"coordinate\": \"X\"}}]}"
+    },
+    {
+      "name": "nose_y",
+      "source_key": "Nose",
+      "pipeline_json": "{\"steps\": [{\"step_id\": \"y\", \"transform_name\": \"PointCoordinate\", \"parameters\": {\"coordinate\": \"Y\"}}]}"
+    }
+  ]
+}
+```
+
+It should not require this to execute:
+
+```json
+{
+  "preset": "point_xy",
+  "parameters": {
+    "source_key": "Nose",
+    "name_prefix": "nose"
+  }
+}
+```
+
+Optional future UI metadata may record which preset created a column group, but that metadata should be informational only. The executable design should remain the expanded raw recipe list.
+
+### Preset ID Policy
+
+Initial preset catalogs should reject duplicate IDs across built-in and user presets. Users who want a lab-specific variation should choose a unique ID, such as `wanglab_point_xy`, rather than shadowing `point_xy`.
+
+This keeps preset listing and expansion deterministic. If user override behavior becomes important later, add explicit namespacing such as `builtin:point_xy`, `user:point_xy`, or `wanglab:point_xy` rather than silent shadowing.
 
 ## PipelineValueStore Iterable Binding
 
