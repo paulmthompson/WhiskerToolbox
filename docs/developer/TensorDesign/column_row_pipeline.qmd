@@ -178,6 +178,68 @@ Potential future transforms should be added only when there is a concrete use ca
 | Data-derived event transforms | Produce one event per row from a row object plus another source object. |
 | Fused convenience transforms | Optional wrappers around common compositions; they should still return normal DataObjects. |
 
+## Row Source Extensions
+
+The implemented row sources are data-object based: interval rows from `DigitalIntervalSeries`, timestamp rows from `DigitalEventSeries`, and derived timestamp rows from timestamp-bearing data objects through `extractTimeIndices()`. A missing but important row source is a bare `TimeFrame`.
+
+Planned `TimeFrame` rows should let a tensor have one row per index in a named `TimeFrame` without requiring a synthetic data object:
+
+```json
+{
+  "row_source": {
+    "time_key": "Time",
+    "row_type": "timeframe"
+  }
+}
+```
+
+This should be distinct from `row_source.data_key`, because timeframes are DataManager time metadata addressed by `TimeKey`, not normal data object keys. In the TensorDesigner UI this should appear as a separate **TimeFrame Rows** option populated from `DataManager::getTimeFrameKeys()`. This will make the current distinction clearer:
+
+| UI row mode | Source list | Row identity |
+|---|---|---|
+| Interval Rows | `DigitalIntervalSeries` data keys | one row per interval |
+| Timestamp Rows | `DigitalEventSeries` data keys | one row per event |
+| TimeFrame Rows | `TimeKey` entries | one row per TimeFrame index |
+| Derived from Source | timestamp-bearing data object keys | one row per timestamp extracted from the data object |
+
+`Derived from Source` should remain available for objects such as `AnalogTimeSeries`, `PointData`, `LineData`, `MaskData`, `DigitalEventSeries`, and `DigitalIntervalSeries`, but the UI should describe it as "derive rows from timestamps in a data object" rather than implying a row TransformPipeline.
+
+## Point And Keypoint Columns
+
+Point/keypoint tables are a motivating case for presets because the low-level representation is simple but verbose. For example, a `PointData` object representing one tracked keypoint often needs two scalar tensor columns, `x` and `y`, at each row time.
+
+The preferred low-level building block is a parameterized TransformsV2 container transform rather than tensor-specific column enums or two separate element transforms:
+
+```text
+PointCoordinate: PointData -> RaggedAnalogTimeSeries
+parameters: coordinate = "x" | "y"
+```
+
+This keeps the implementation in one registry entry with a small coordinate switch, preserves `PointData` as the input object, and produces an analog-family output that existing timestamp sampling and interval reductions can consume.
+
+A one-keypoint tensor column group would expand to two `ColumnRecipe`s:
+
+```json
+[
+  {
+    "name": "nose_x",
+    "source_key": "Nose",
+    "pipeline_json": "{\"steps\": [{\"step_id\": \"x\", \"transform_name\": \"PointCoordinate\", \"parameters\": {\"coordinate\": \"x\"}}]}"
+  },
+  {
+    "name": "nose_y",
+    "source_key": "Nose",
+    "pipeline_json": "{\"steps\": [{\"step_id\": \"y\", \"transform_name\": \"PointCoordinate\", \"parameters\": {\"coordinate\": \"y\"}}]}"
+  }
+]
+```
+
+For multiple keypoints, the same idea expands one source key into two columns. For example `Nose` and `Paw` become `Nose_x`, `Nose_y`, `Paw_x`, and `Paw_y`. Users should not need to manually author those four raw pipelines; this should be handled by multi-column presets.
+
+For interval-row analyses, the row pipeline can still determine when the point is sampled. For example, point x/y at contact onset uses `Contact -> IntervalToEvent(start)` as `row_pipeline_json`, then applies `PointCoordinate` to the sampled `PointData` source.
+
+`PointCoordinate` should preserve all point entries as a `RaggedAnalogTimeSeries`: if a `PointData` time contains multiple points, the corresponding ragged analog time contains multiple x or y values. Tensor timestamp sampling currently consumes the first value at a time point, which is appropriate for single-keypoint-per-time data and should be documented or made configurable before using multi-point-per-time data. Interval-row workflows can use normal range reductions such as `MeanValue`, `SumValue`, or `MaxValue` over the coordinate values.
+
 ## Proposed Recipe Shape
 
 The minimal API extension is one optional field on `ColumnRecipe`:
@@ -282,14 +344,119 @@ Presets should be backed by a registry, not hard-coded in UI code. The registry 
 Conceptual registry descriptor:
 
 ```cpp
+struct ColumnPresetExpansion {
+    std::vector<ColumnRecipe> columns;
+};
+
 struct ColumnRecipePresetDescriptor {
     std::string name;
     std::string display_name;
     std::string description;
     ParameterSchema parameters;
-    std::function<ColumnRecipe(ColumnPresetArgs const &)> expand;
+    std::function<ColumnPresetExpansion(ColumnPresetArgs const &)> expand;
 };
 ```
+
+Presets should expand to a list of columns, not a single `ColumnRecipe`. Single-column presets are the common case, but multi-column presets are required for keypoints and other grouped features.
+
+Example multi-column preset intents:
+
+| Preset | Parameters | Expansion |
+|---|---|---|
+| `point_xy` | one `PointData` source key, name prefix | two columns: x and y |
+| `multi_point_xy` | list of `PointData` source keys | two columns per source key |
+| `point_xy_at_interval_start` | `PointData` source key, row point selection | two sampled columns with `IntervalToEvent(start)` row pipeline |
+| `analog_covariates_at_event` | list of analog source keys, sample event pipeline | one sampled column per analog source |
+
+For complete reusable tables, a separate design/table preset layer is useful:
+
+```cpp
+struct DesignPresetExpansion {
+    RowSourceSpec row_source;
+    std::vector<ColumnRecipe> columns;
+};
+```
+
+A design preset can set the row source and add a whole feature table, such as a whisker-contact table with curvature, spike count, onset spike presence, angle at onset, and several keypoint x/y columns. This should be treated as a higher-level layer than column presets.
+
+Concrete composite preset example:
+
+```json
+{
+  "preset": "whisker_contact_feature_table",
+  "parameters": {
+    "contact_key": "Contact",
+    "curvature_key": "Curvature",
+    "angle_key": "Angle",
+    "spike_key": "Spikes",
+    "keypoints": ["Nose", "WhiskerBase"]
+  }
+}
+```
+
+The preset expands the shared row source once:
+
+```json
+"row_source": {
+  "data_key": "Contact",
+  "row_type": "interval"
+}
+```
+
+It then emits fixed analysis columns:
+
+```text
+mean_curvature
+spike_count
+onset_spike_present
+angle_at_onset
+```
+
+For each key in `keypoints`, it emits two additional sampled columns:
+
+```text
+Nose_x_at_onset
+Nose_y_at_onset
+WhiskerBase_x_at_onset
+WhiskerBase_y_at_onset
+```
+
+Those keypoint columns all share the same row-pipeline sample geometry:
+
+```json
+"row_pipeline_json": "{\"steps\": [{\"step_id\": \"contact_start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}]}"
+```
+
+and differ only in `source_key` and `PointCoordinate` parameterization:
+
+```json
+{
+  "name": "Nose_x_at_onset",
+  "source_key": "Nose",
+  "row_pipeline_json": "{\"steps\": [{\"step_id\": \"contact_start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}]}",
+  "pipeline_json": "{\"steps\": [{\"step_id\": \"x\", \"transform_name\": \"PointCoordinate\", \"parameters\": {\"coordinate\": \"x\"}}]}"
+}
+```
+
+```json
+{
+  "name": "Nose_y_at_onset",
+  "source_key": "Nose",
+  "row_pipeline_json": "{\"steps\": [{\"step_id\": \"contact_start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}]}",
+  "pipeline_json": "{\"steps\": [{\"step_id\": \"y\", \"transform_name\": \"PointCoordinate\", \"parameters\": {\"coordinate\": \"y\"}}]}"
+}
+```
+
+The expansion algorithm is intentionally simple:
+
+```text
+columns = fixed_whisker_contact_columns()
+for keypoint_key in parameters.keypoints:
+    columns.push_back(point_coordinate_column(keypoint_key, "x", row_pipeline_json))
+    columns.push_back(point_coordinate_column(keypoint_key, "y", row_pipeline_json))
+```
+
+This is why preset expansion must support multiple output columns and why arbitrary-length keypoint lists are better handled by compiled/static preset expansion before attempting a pure JSON-template loop system.
 
 This matches existing project patterns: transforms and generators are registered, parameter schemas drive UI, and AutoParamWidget can render parameter forms.
 
@@ -376,7 +543,7 @@ TransformsV2 already has a [`PipelineLibrary`](../transforms_v2/pipeline_library
 {config_dir}/pipelines/transforms_v2/*.json
 ```
 
-Column recipe presets should reuse the same library pattern where it helps, but they are not identical to raw TransformPipeline descriptors. A column preset may expand to several fields: `source_key`, `row_pipeline_json`, `pipeline_value_bindings`, and `pipeline_json`. It may also include UI-facing parameter metadata. Therefore the preferred design is a sibling library for TensorDesign column presets rather than overloading the existing transform pipeline file format.
+Column recipe presets should reuse the same library pattern where it helps, but they are not identical to raw TransformPipeline descriptors. A column preset may expand to several fields: `source_key`, `row_pipeline_json`, `pipeline_value_bindings`, and `pipeline_json`, and may expand to multiple columns. It may also include UI-facing parameter metadata. Therefore the preferred design is a sibling library for TensorDesign column presets rather than overloading the existing transform pipeline file format.
 
 Proposed library layers:
 
@@ -409,6 +576,8 @@ A preset JSON file should be self-describing:
   }
 }
 ```
+
+Simple JSON-template presets can handle one-column or fixed two-column expansions. More complex cases such as "x/y columns for an arbitrary list of keypoints" may require compiled C++ expansion functions or a template language with loops. Prefer static C++ presets first for complex multi-column expansion, while allowing JSON library files for simple and fixed-shape presets.
 
 This can start as a simple JSON-template expansion system. If templates become too limited, the registry can later support compiled C++ expansion functions while preserving the same catalog metadata.
 

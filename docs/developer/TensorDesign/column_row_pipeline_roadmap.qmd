@@ -235,11 +235,11 @@ Exit criteria:
 - New transforms are generally useful outside TensorDesign.
 - TensorDesign does not gain tensor-specific geometry enums.
 
-## Phase 8: Whisker-Contact Integration
+## Phase 8: Whisker-Contact Integration — Done
 
 Goal: prove the design on the motivating analysis table.
 
-Status: partially implemented. The contact-onset spike-presence column and angle-at-onset point sampling are covered by TensorDesign JSON. Trial-relative raster/PSTH examples remain planned.
+Status: done for the motivating whisker-contact feature table. TensorDesign JSON covers full-contact curvature, full-contact spike count, contact-onset spike presence, and angle-at-onset point sampling. Trial-relative raster/PSTH examples are now tracked as preset/example-library work in later phases rather than as a blocker for this integration phase.
 
 Tasks:
 
@@ -247,13 +247,14 @@ Tasks:
 2. ~~Add a full-contact curvature column.~~ **Done.**
 3. ~~Add a spike-in-onset-window column.~~ **Done.**
 4. ~~Add an angle-at-onset column after timestamp/sample row-pipeline dispatch is implemented.~~ **Done.**
-5. Verify row count, row descriptors, and expected values.
-6. Update scenario documentation with valid JSON.
+5. ~~Verify row count, row descriptors, and expected values.~~ **Done.**
+6. ~~Update scenario documentation with valid JSON.~~ **Done.**
 
 Exit criteria:
 
 - Contact-aligned spike presence is built through production TensorDesign code.
-- The JSON example in the design document can be promoted from target shape to working example.
+- Angle-at-contact-onset point sampling is built through production TensorDesign code.
+- The JSON example in the whisker-contact scenario documentation is a working example of the motivating feature table.
 
 ## Test Coverage Notes
 
@@ -266,15 +267,55 @@ Current row-pipeline coverage is split across four files:
 
 The two whisker-contact files are not exact duplicates. They exercise different architectural layers. The older TransformsV2 file does not validate `row_pipeline_json`; it remains useful as lower-level integration coverage, though it may be a candidate for reduced assertions if runtime becomes an issue.
 
-Potential stale or missing coverage after Phase 5:
+Potential stale or missing coverage after Phase 8:
 
-- The timestamp offset characterization test is intentionally stale-by-design until Phase 6 replaces it.
 - `DigitalEventSeries` row-pipeline output rejection is covered at the row-geometry/helper layer; add a TensorDesign JSON-level rejection test if error messages become part of the user contract.
 - Add explicit tests for malformed but non-empty `row_pipeline_json` at the TensorDesign JSON build layer if not already covered by provider tests.
 - Add a derived binding row-count mismatch test if direct mismatch coverage is not considered sufficient.
 - Add cache behavior tests when row-pipeline caching is introduced.
 
-## Phase 9: Preset Registry And Expansion
+## Phase 9a: TimeFrame Row Source
+
+Goal: allow tensors with one row per index in a named `TimeFrame`, without requiring a synthetic data object.
+
+Tasks:
+
+1. Add `RowType::TimeFrame` or equivalent to TensorDesign row source parsing.
+2. Extend row-source JSON with a `time_key` field distinct from `data_key`.
+3. Build row descriptors from every index in the selected `TimeFrame`.
+4. Add TensorDesigner UI support for a **TimeFrame Rows** mode populated from `DataManager::getTimeFrameKeys()`.
+5. Keep **Timestamp Rows** data-object based (`DigitalEventSeries`) and clarify **Derived from Source** as "derive rows from timestamps in a data object".
+6. Add tests for TimeFrame rows sampling analog data.
+7. Add UI tests that TimeFrame row sources appear separately from timestamp-event row sources.
+
+Exit criteria:
+
+- Users can build frame-aligned tensors directly from a TimeFrame key.
+- TensorDesigner no longer implies that a `DigitalEventSeries` is the only way to create timestamp-like rows.
+- Existing timestamp and derived-from-source behavior is unchanged.
+
+## Phase 9b: Point And Keypoint Column Primitives
+
+Goal: support common keypoint feature tables without tensor-specific geometry enums.
+
+Tasks:
+
+1. Add `PointCoordinate` as a parameterized container transform (`PointData -> RaggedAnalogTimeSeries`) with `coordinate = x | y`.
+2. Register the transform with TransformsV2 JSON loading and parameter schema infrastructure.
+3. Add transform tests for point coordinate extraction.
+4. Document timestamp sampling semantics for `RaggedAnalogTimeSeries` output: single-keypoint data uses the first/only value; multi-point-per-time data needs an explicit policy before broad use.
+5. Add TensorDesign tests for `PointData` rows from `DerivedFromSource` producing x/y columns.
+6. Add TensorDesign tests for TimeFrame rows sampling `PointData` into x/y columns after Phase 9a.
+7. Add interval-row tests reducing point coordinate values with a standard range reduction.
+8. Add TensorDesigner UI/load-config tests for a PointData x/y tensor once TimeFrame rows are available.
+
+Exit criteria:
+
+- A `PointData` keypoint can produce scalar x and y tensor columns through normal TransformPipeline JSON using one parameterized transform.
+- Multiple keypoint tables can be represented by repeating the same primitive column recipes.
+- The primitive transforms remain useful outside TensorDesign.
+
+## Phase 9c: Column Preset Registry And Expansion
 
 Goal: make common row-pipeline workflows discoverable without requiring users to write raw TransformPipeline JSON.
 
@@ -282,23 +323,46 @@ Tasks:
 
 1. Add a `ColumnRecipePresetRegistry` or equivalent registry in the TensorDesign/TransformsV2 boundary.
 2. Define preset descriptors with name, display name, description, parameter schema, source (`Built-in` or `User`), and expansion function/template.
-3. Add presets for the initial common workflows:
+3. Preset expansion must return a list of `ColumnRecipe`s, not a single recipe, so grouped features can be appended atomically.
+4. Add presets for the initial common workflows:
    - mean over interval
    - event count over interval
    - event presence around interval start
    - analog sample at interval start
+   - point x/y for one keypoint
+   - point x/y for multiple keypoints
+   - point x/y sampled at interval start
    - raster events relative to interval start
    - trial-relative event times using NormalizeTime with row-specific `ClockTicks` bindings
-4. Expand preset JSON into raw `ColumnRecipe` fields before provider construction.
-5. Add tests that preset expansion produces the same tensor values as equivalent raw recipes.
-6. Decide whether saved designs store raw expansion only or preset plus expanded raw JSON.
-7. Decide whether user presets can override bundled preset IDs or whether duplicate IDs are rejected.
+5. Expand preset JSON into raw `ColumnRecipe` fields before provider construction.
+6. Add tests that preset expansion produces the same tensor values as equivalent raw recipes.
+7. Add TensorDesigner UI support for **Add Preset...** that appends all expanded columns.
+8. Decide whether saved designs store raw expansion only or preset plus expanded raw JSON.
+9. Decide whether user presets can override bundled preset IDs or whether duplicate IDs are rejected.
 
 Exit criteria:
 
 - Users can express the whisker-contact examples without raw transform names.
+- Users can add keypoint x/y column groups without manually authoring repeated `PointCoordinate` pipelines.
 - Presets are discoverable from a registry that can be reused by documentation and UI.
 - Raw JSON remains available for advanced workflows.
+
+## Phase 9d: Design/Table Presets
+
+Goal: support reusable whole-table templates that set row source and add multiple related column groups.
+
+Tasks:
+
+1. Define a `DesignPresetExpansion` shape containing a row source plus multiple `ColumnRecipe`s.
+2. Add a whisker-contact feature table preset covering curvature, spike count, onset spike presence, angle at onset, and optional keypoint x/y columns.
+3. Add tests comparing design preset expansion to the equivalent raw TensorDesign JSON.
+4. Decide whether design presets can be nested/composed from column presets or should use compiled expansion functions initially.
+5. Add TensorDesigner UI affordance for applying a table preset to an empty design.
+
+Exit criteria:
+
+- A complete motivating analysis table can be created from one preset plus a small parameter form.
+- Column presets remain useful for incremental table editing.
 
 ## Phase 10: Preset Library Files
 
@@ -311,14 +375,16 @@ Tasks:
 3. Define bundled preset lookup, for example `resources/presets/tensor_design/columns/` or another installed resource directory.
 4. Implement catalog listing that merges bundled and user presets with source metadata.
 5. Implement load/save/delete for user preset JSON files.
-6. Add bundled JSON presets for the initial registry entries.
-7. Add tests for path helpers, catalog merge behavior, load/save/delete, duplicate ID policy, and expansion.
+6. Add bundled JSON presets for simple fixed-shape registry entries.
+7. Support compiled/static presets for expansions requiring loops, such as arbitrary-length multi-keypoint x/y.
+8. Add tests for path helpers, catalog merge behavior, load/save/delete, duplicate ID policy, and expansion.
 
 Exit criteria:
 
 - A fresh Neuralyzer install has useful TensorDesign column presets without user setup.
 - Users can save and import lab-specific presets.
 - The preset library uses a schema distinct from raw `PipelineDescriptor` JSON but follows the existing PipelineLibrary mechanics where practical.
+- The library can represent both simple fixed-column templates and delegate complex multi-column templates to compiled registry entries.
 
 ## Phase 11: Documentation And UI Follow-Up
 
