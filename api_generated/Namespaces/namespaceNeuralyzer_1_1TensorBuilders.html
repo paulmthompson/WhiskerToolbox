@@ -363,6 +363,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-buildanalogsampleatoffsetprovider" id="toc-function-buildanalogsampleatoffsetprovider" class="nav-link" data-scroll-target="#function-buildanalogsampleatoffsetprovider">function buildAnalogSampleAtOffsetProvider</a></li>
   <li><a href="#function-buildpipelinecolumnprovider" id="toc-function-buildpipelinecolumnprovider" class="nav-link" data-scroll-target="#function-buildpipelinecolumnprovider">function buildPipelineColumnProvider</a></li>
   <li><a href="#function-buildintervalpipelineprovider" id="toc-function-buildintervalpipelineprovider" class="nav-link" data-scroll-target="#function-buildintervalpipelineprovider">function buildIntervalPipelineProvider</a></li>
+  <li><a href="#function-buildintervalpipelineprovider-1" id="toc-function-buildintervalpipelineprovider-1" class="nav-link" data-scroll-target="#function-buildintervalpipelineprovider-1">function buildIntervalPipelineProvider</a></li>
   <li><a href="#function-buildproviderfromrecipe" id="toc-function-buildproviderfromrecipe" class="nav-link" data-scroll-target="#function-buildproviderfromrecipe">function buildProviderFromRecipe</a></li>
   <li><a href="#function-buildinvalidationwiringfn" id="toc-function-buildinvalidationwiringfn" class="nav-link" data-scroll-target="#function-buildinvalidationwiringfn">function buildInvalidationWiringFn</a></li>
   </ul></li>
@@ -408,6 +409,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1TensorBuilders_1_1ColumnRecipe.html">Neuralyzer::TensorBuilders::ColumnRecipe</a></strong> <br>Describes how one tensor column is computed.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1TensorBuilders_1_1PipelineValueBindingRecipe.html">Neuralyzer::TensorBuilders::PipelineValueBindingRecipe</a></strong> <br>Row-aligned DataObject source used to populate one PipelineValueStore key.</td>
 </tr>
 </tbody>
 </table>
@@ -457,9 +462,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Files/LazyColumnTensorStorage_8hpp.html#using-columnproviderfn">ColumnProviderFn</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1TensorBuilders.html#function-buildproviderfromrecipe">buildProviderFromRecipe</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, <a href="../../api_generated/Classes/structNeuralyzer_1_1TensorBuilders_1_1ColumnRecipe.html">ColumnRecipe</a> const &amp; recipe, std::vector&lt; <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt; const &amp; row_times, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; const &amp; intervals)<br>Build a ColumnProviderFn from a <a href="">ColumnRecipe</a>.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1TensorBuilders.html#function-buildintervalpipelineprovider">buildIntervalPipelineProvider</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, std::string const &amp; source_key, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; intervals, <a href="../../api_generated/Classes/classNeuralyzer_1_1Transforms_1_1V2_1_1TransformPipeline.html">Neuralyzer::Transforms::V2::TransformPipeline</a> pipeline, std::vector&lt; <a href="../../api_generated/Classes/classNeuralyzer_1_1Transforms_1_1V2_1_1PipelineValueStore.html">Neuralyzer::Transforms::V2::PipelineValueStore</a> &gt; row_stores)<br>Build an interval-row provider with one PipelineValueStore per row.</td>
 </tr>
 <tr class="even">
+<td><a href="../../api_generated/Files/LazyColumnTensorStorage_8hpp.html#using-columnproviderfn">ColumnProviderFn</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1TensorBuilders.html#function-buildproviderfromrecipe">buildProviderFromRecipe</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, <a href="../../api_generated/Classes/structNeuralyzer_1_1TensorBuilders_1_1ColumnRecipe.html">ColumnRecipe</a> const &amp; recipe, std::vector&lt; <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> &gt; const &amp; row_times, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; const &amp; intervals)<br>Build a ColumnProviderFn from a <a href="">ColumnRecipe</a>.</td>
+</tr>
+<tr class="odd">
 <td><a href="../../api_generated/Files/InvalidationWiringFn_8hpp.html#using-invalidationwiringfn">InvalidationWiringFn</a></td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1TensorBuilders.html#function-buildinvalidationwiringfn">buildInvalidationWiringFn</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, std::vector&lt; std::string &gt; const &amp; source_keys)<br>Build an InvalidationWiringFn that registers <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> observers to invalidate tensor columns when source data changes.</td>
 </tr>
@@ -602,14 +611,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>The pipeline <strong>must</strong> contain a range reduction that collapses each gathered view to a single scalar. Pipelines without a range reduction are rejected at build time.</p>
 <p>Validation is performed at build time via pipelineProducesFloat().</p>
 </section>
+<section id="function-buildintervalpipelineprovider-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-buildintervalpipelineprovider-1">function buildIntervalPipelineProvider</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>ColumnProviderFn buildIntervalPipelineProvider<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> source_key<span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> intervals<span class="op">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>TransformPipeline pipeline<span class="op">,</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>PipelineValueStore <span class="op">&gt;</span> row_stores</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Build an interval-row provider with one PipelineValueStore per row.</p>
+</section>
 <section id="function-buildproviderfromrecipe" class="level3">
 <h3 class="anchored" data-anchor-id="function-buildproviderfromrecipe">function buildProviderFromRecipe</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>ColumnProviderFn buildProviderFromRecipe<span class="op">(</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    ColumnRecipe <span class="at">const</span> <span class="op">&amp;</span> recipe<span class="op">,</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> TimeFrameIndex <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> row_times<span class="op">,</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> intervals</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>ColumnProviderFn buildProviderFromRecipe<span class="op">(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    ColumnRecipe <span class="at">const</span> <span class="op">&amp;</span> recipe<span class="op">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> TimeFrameIndex <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> row_times<span class="op">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> intervals</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Build a ColumnProviderFn from a <a href="">ColumnRecipe</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -623,10 +643,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-buildinvalidationwiringfn" class="level3">
 <h3 class="anchored" data-anchor-id="function-buildinvalidationwiringfn">function buildInvalidationWiringFn</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>InvalidationWiringFn buildInvalidationWiringFn<span class="op">(</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> source_keys</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>InvalidationWiringFn buildInvalidationWiringFn<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> source_keys</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Build an InvalidationWiringFn that registers <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> observers to invalidate tensor columns when source data changes.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -636,7 +656,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Return</strong>: InvalidationWiringFn suitable for <a href="../../api_generated/Classes/classTensorData.html#function-createfromlazycolumns">TensorData::createFromLazyColumns()</a></p>
 <p>For each (column_index, source_key) pair, the wiring function registers an observer on the source data. When the source notifies, the wiring callback invalidates the corresponding column and notifies the tensor’s own observers.</p>
 <hr>
-<p>Updated on 2026-07-30 at 14:56:53 +0000</p>
+<p>Updated on 2026-07-31 at 21:53:20 +0000</p>
 
 
 </section>

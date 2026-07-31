@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-07-30">
+<meta name="dcterms.date" content="2026-07-31">
 
 <title>Storage Backend Architecture – Neuralyzer</title>
 <style>
@@ -1549,6 +1549,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#owning-storage" id="toc-owning-storage" class="nav-link" data-scroll-target="#owning-storage">Owning Storage</a></li>
   <li><a href="#view-storage" id="toc-view-storage" class="nav-link" data-scroll-target="#view-storage">View Storage</a></li>
   <li><a href="#lazy-storage" id="toc-lazy-storage" class="nav-link" data-scroll-target="#lazy-storage">Lazy Storage</a></li>
+  <li><a href="#relative-owning-storage-digitaleventseries-only" id="toc-relative-owning-storage-digitaleventseries-only" class="nav-link" data-scroll-target="#relative-owning-storage-digitaleventseries-only">Relative Owning Storage (<code>DigitalEventSeries</code> only)</a></li>
   </ul></li>
   <li><a href="#layer-3-type-erased-wrapper" id="toc-layer-3-type-erased-wrapper" class="nav-link" data-scroll-target="#layer-3-type-erased-wrapper">Layer 3: Type-Erased Wrapper</a>
   <ul class="collapse">
@@ -1599,7 +1600,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">July 30, 2026</p>
+      <p class="date">July 31, 2026</p>
     </div>
   </div>
   
@@ -1727,7 +1728,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td><code>DigitalEventSeries</code></td>
 <td><code>DigitalEventStorageBase&lt;D&gt;</code></td>
-<td><code>size</code>, <code>getEvent</code>, <code>getEntityId</code>, <code>findByTime</code>, <code>findByEntityId</code>, <code>getTimeRange</code>, <code>tryGetCache</code></td>
+<td><code>size</code>, <code>getEvent</code>, <code>getEntityId</code>, <code>findByTime</code>, <code>findByEntityId</code>, <code>getTimeRange</code>, <code>getTimeDomain</code>, <code>getRelativeEvent</code>, <code>findByRelativeTime</code>, <code>getRelativeTimeRange</code>, <code>tryGetCache</code></td>
 </tr>
 <tr class="even">
 <td><code>DigitalIntervalSeries</code></td>
@@ -1745,7 +1746,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="layer-2-concrete-storage-backends" class="level2">
 <h2 class="anchored" data-anchor-id="layer-2-concrete-storage-backends">Layer 2: Concrete Storage Backends</h2>
-<p>Each storage family provides three concrete implementations:</p>
+<p>Each storage family provides three concrete implementations (four for <code>DigitalEventSeries</code>, which adds relative owning storage):</p>
 <section id="owning-storage" class="level3">
 <h3 class="anchored" data-anchor-id="owning-storage">Owning Storage</h3>
 <p>Owns the data in contiguous arrays. Supports full mutation (add, remove, clear). Uses Structure-of-Arrays (SoA) layout for cache-friendly iteration:</p>
@@ -1801,6 +1802,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Cache always invalid (non-contiguous by nature)</li>
 <li>Read-only: mutations throw <code>std::runtime_error</code></li>
 <li>Template parameter <code>ViewType</code> is unbounded — this is why type erasure is needed</li>
+</ul>
+</section>
+<section id="relative-owning-storage-digitaleventseries-only" class="level3">
+<h3 class="anchored" data-anchor-id="relative-owning-storage-digitaleventseries-only">Relative Owning Storage (<code>DigitalEventSeries</code> only)</h3>
+<p>Immutable owning storage for trial-relative <code>ClockTicks</code>. Constructed once from caller-provided vectors; no mutation API. Does not use a <code>TimeFrame</code>. See <a href="../../developer/DataObjects/DigitalTimeSeries/storage/RelativeOwningDigitalEventStorage.html">RelativeOwningDigitalEventStorage</a>.</p>
+<p><strong>Performance characteristics:</strong></p>
+<ul>
+<li>Cache always valid (contiguous <code>ClockTicks</code> array)</li>
+<li>O(log n) relative-time lookup via binary search</li>
+<li>O(1) EntityId lookup via hash map</li>
 </ul>
 </section>
 </section>

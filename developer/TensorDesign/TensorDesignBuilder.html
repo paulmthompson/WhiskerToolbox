@@ -450,35 +450,40 @@ DataManager  ←─────────────────┘</code></p
 </tr>
 <tr class="odd">
 <td><code>row_source.data_key</code></td>
-<td>Yes</td>
+<td>For data-object row sources</td>
 <td>Row source object in DataManager</td>
 </tr>
 <tr class="even">
-<td><code>row_source.row_type</code></td>
-<td>Yes</td>
-<td><code>interval</code>, <code>timestamp</code>, <code>derived_from_source</code>, <code>ordinal</code> (unsupported), or <code>none</code></td>
+<td><code>row_source.time_key</code></td>
+<td>For <code>timeframe</code> row sources</td>
+<td>TimeFrame key in DataManager</td>
 </tr>
 <tr class="odd">
+<td><code>row_source.row_type</code></td>
+<td>Yes</td>
+<td><code>interval</code>, <code>timestamp</code>, <code>timeframe</code>, <code>derived_from_source</code>, <code>ordinal</code> (unsupported), or <code>none</code></td>
+</tr>
+<tr class="even">
 <td><code>columns[].name</code></td>
 <td>Yes</td>
 <td>Column display name</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>columns[].source_key</code></td>
 <td>For data columns</td>
 <td>DataManager source key</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>columns[].row_pipeline_json</code></td>
 <td>No</td>
 <td>Embedded row <code>PipelineDescriptor</code> JSON string. Empty or explicit identity (<code>{"steps": []}</code>) preserves current row geometry; interval-row pipelines that produce a row-aligned <code>DigitalIntervalSeries</code> provide prepared gather windows.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>columns[].pipeline_json</code></td>
 <td>For interval/timestamp data columns</td>
 <td>Embedded <code>PipelineDescriptor</code> JSON string</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>columns[].interval_property</code></td>
 <td>For property columns</td>
 <td><code>start</code>, <code>end</code>, or <code>duration</code> (no <code>source_key</code> needed)</td>
@@ -486,8 +491,8 @@ DataManager  ←─────────────────┘</code></p
 </tbody>
 </table>
 <p>Each <code>pipeline_json</code> string is a <a href="../transforms_v2/pipeline_loader.qmd"><code>PipelineDescriptor</code></a> fragment. Interval-row columns require a terminal <code>range_reduction</code>.</p>
-<p>Current interval-row tensor columns gather over the full row interval when <code>row_pipeline_json</code> is omitted, empty, or an explicit identity descriptor such as <code>{"steps": []}</code>. Non-identity row pipelines may now run against the original interval row source when they produce a <code>DigitalIntervalSeries</code> with the same row count; the output is used as prepared gather windows for that column. <code>DigitalEventSeries</code> sample-time output remains deferred to the timestamp/sample row-pipeline phase. Per-row normalization markers should be bound into the column TransformPipeline through TransformsV2 <code>PipelineValueStore</code> parameter bindings rather than through <code>row_pipeline_json</code>; <code>GatherResult</code> remains only the row container and direct gather executor.</p>
-<p>There is still a temporary compatibility path in <code>TensorDesignBuilder::buildColumnProvider()</code> that detects a top-level <code>"offset"</code> field inside <code>pipeline_json</code> for analog sample-at-offset columns. This should be removed once point sampling is expressible through the row-pipeline design.</p>
+<p>Current interval-row tensor columns gather over the full row interval when <code>row_pipeline_json</code> is omitted, empty, or an explicit identity descriptor such as <code>{"steps": []}</code>. Non-identity row pipelines may run against the original interval row source when they produce a <code>DigitalIntervalSeries</code> with the same row count; the output is used as prepared gather windows for that column. Row pipelines that produce <code>DigitalEventSeries</code> with the same row count are routed to timestamp/sample provider behavior when the column pipeline has no terminal range reduction. Per-row normalization markers should be bound into the column TransformPipeline through TransformsV2 <code>PipelineValueStore</code> parameter bindings rather than through <code>row_pipeline_json</code>; <code>GatherResult</code> remains only the row container and direct gather executor.</p>
+<p>TimeFrame row sources use <code>row_source.time_key</code> and build one row per index in the selected <code>TimeFrame</code>. The previous temporary compatibility path that detected a top-level <code>"offset"</code> field inside <code>pipeline_json</code> has been removed; offsets should be expressed as row-pipeline transforms such as <code>ShiftDigitalEventSeries</code>.</p>
 </section>
 <section id="build-api-lazy-column-tensors" class="level2">
 <h2 class="anchored" data-anchor-id="build-api-lazy-column-tensors">Build API (lazy-column tensors)</h2>

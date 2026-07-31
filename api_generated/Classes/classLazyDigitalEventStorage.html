@@ -363,6 +363,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-findbytimeimpl" id="toc-function-findbytimeimpl" class="nav-link" data-scroll-target="#function-findbytimeimpl">function findByTimeImpl</a></li>
   <li><a href="#function-findbyentityidimpl" id="toc-function-findbyentityidimpl" class="nav-link" data-scroll-target="#function-findbyentityidimpl">function findByEntityIdImpl</a></li>
   <li><a href="#function-gettimerangeimpl" id="toc-function-gettimerangeimpl" class="nav-link" data-scroll-target="#function-gettimerangeimpl">function getTimeRangeImpl</a></li>
+  <li><a href="#function-gettimedomainimpl" id="toc-function-gettimedomainimpl" class="nav-link" data-scroll-target="#function-gettimedomainimpl">function getTimeDomainImpl</a></li>
   <li><a href="#function-getstoragetypeimpl" id="toc-function-getstoragetypeimpl" class="nav-link" data-scroll-target="#function-getstoragetypeimpl">function getStorageTypeImpl</a></li>
   <li><a href="#function-trygetcacheimpl" id="toc-function-trygetcacheimpl" class="nav-link" data-scroll-target="#function-trygetcacheimpl">function tryGetCacheImpl</a></li>
   <li><a href="#function-getview" id="toc-function-getview" class="nav-link" data-scroll-target="#function-getview">function getView</a></li>
@@ -442,14 +443,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classLazyDigitalEventStorage.html#function-gettimerangeimpl">getTimeRangeImpl</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end) const</td>
 </tr>
 <tr class="odd">
+<td><a href="../../api_generated/Files/DigitalEventStorageCache_8hpp.html#enum-digitaleventtimedomain">DigitalEventTimeDomain</a></td>
+<td><strong><a href="../../api_generated/Classes/classLazyDigitalEventStorage.html#function-gettimedomainimpl">getTimeDomainImpl</a></strong>() const</td>
+</tr>
+<tr class="even">
 <td><a href="../../api_generated/Files/DigitalEventStorageCache_8hpp.html#enum-digitaleventstoragetype">DigitalEventStorageType</a></td>
 <td><strong><a href="../../api_generated/Classes/classLazyDigitalEventStorage.html#function-getstoragetypeimpl">getStorageTypeImpl</a></strong>() const</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><a href="../../api_generated/Classes/structDigitalEventStorageCache.html">DigitalEventStorageCache</a></td>
 <td><strong><a href="../../api_generated/Classes/classLazyDigitalEventStorage.html#function-trygetcacheimpl">tryGetCacheImpl</a></strong>() const<br>Lazy storage is never contiguous in memory.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>ViewType const &amp;</td>
 <td><strong><a href="../../api_generated/Classes/classLazyDigitalEventStorage.html#function-getview">getView</a></strong>() const<br>Get reference to underlying view.</td>
 </tr>
@@ -500,16 +505,40 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classDigitalEventStorageBase.html#function-gettimerange">getTimeRange</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end) const<br>Get range of indices for events in [start, end] inclusive.</td>
 </tr>
 <tr class="odd">
-<td><a href="../../api_generated/Files/DigitalEventStorageCache_8hpp.html#enum-digitaleventstoragetype">DigitalEventStorageType</a></td>
-<td><strong><a href="../../api_generated/Classes/classDigitalEventStorageBase.html#function-getstoragetype">getStorageType</a></strong>() const<br>Get the storage type identifier.</td>
+<td><a href="../../api_generated/Files/DigitalEventStorageCache_8hpp.html#enum-digitaleventtimedomain">DigitalEventTimeDomain</a></td>
+<td><strong><a href="../../api_generated/Classes/classDigitalEventStorageBase.html#function-gettimedomain">getTimeDomain</a></strong>() const<br>Get the time coordinate domain for this storage.</td>
 </tr>
 <tr class="even">
 <td>bool</td>
-<td><strong><a href="../../api_generated/Classes/classDigitalEventStorageBase.html#function-isview">isView</a></strong>() const<br>Check if this is a view (doesn’t own data).</td>
+<td><strong><a href="../../api_generated/Classes/classDigitalEventStorageBase.html#function-isrelative">isRelative</a></strong>() const<br>Check if events are stored as relative <a href="">ClockTicks</a>.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a></td>
+<td><strong><a href="../../api_generated/Classes/classDigitalEventStorageBase.html#function-getrelativeevent">getRelativeEvent</a></strong>(size_t idx) const<br>Get the relative event time at a flat index.</td>
+</tr>
+<tr class="even">
+<td>std::optional&lt; size_t &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classDigitalEventStorageBase.html#function-findbyrelativetime">findByRelativeTime</a></strong>(<a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> time) const<br>Find the index of an event by its exact relative time.</td>
+</tr>
+<tr class="odd">
+<td>std::pair&lt; size_t, size_t &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classDigitalEventStorageBase.html#function-getrelativetimerange">getRelativeTimeRange</a></strong>(<a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> start, <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> end) const<br>Get range of indices for events in [start, end] inclusive (relative time).</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Files/DigitalEventStorageCache_8hpp.html#enum-digitaleventstoragetype">DigitalEventStorageType</a></td>
+<td><strong><a href="../../api_generated/Classes/classDigitalEventStorageBase.html#function-getstoragetype">getStorageType</a></strong>() const<br>Get the storage type identifier.</td>
 </tr>
 <tr class="odd">
 <td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classDigitalEventStorageBase.html#function-isview">isView</a></strong>() const<br>Check if this is a view (doesn’t own data).</td>
+</tr>
+<tr class="even">
+<td>bool</td>
 <td><strong><a href="../../api_generated/Classes/classDigitalEventStorageBase.html#function-islazy">isLazy</a></strong>() const<br>Check if this is lazy storage.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classDigitalEventStorageBase.html#function-isrelativeowning">isRelativeOwning</a></strong>() const<br>Check if this is relative owning storage.</td>
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Classes/structDigitalEventStorageCache.html">DigitalEventStorageCache</a></td>
@@ -599,22 +628,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end</span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
+<section id="function-gettimedomainimpl" class="level3">
+<h3 class="anchored" data-anchor-id="function-gettimedomainimpl">function getTimeDomainImpl</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> DigitalEventTimeDomain getTimeDomainImpl<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
 <section id="function-getstoragetypeimpl" class="level3">
 <h3 class="anchored" data-anchor-id="function-getstoragetypeimpl">function getStorageTypeImpl</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> DigitalEventStorageType getStorageTypeImpl<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> DigitalEventStorageType getStorageTypeImpl<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-trygetcacheimpl" class="level3">
 <h3 class="anchored" data-anchor-id="function-trygetcacheimpl">function tryGetCacheImpl</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> DigitalEventStorageCache tryGetCacheImpl<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> DigitalEventStorageCache tryGetCacheImpl<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Lazy storage is never contiguous in memory.</p>
 <p>Returns an invalid cache, forcing callers to use polymorphic access.</p>
 </section>
 <section id="function-getview" class="level3">
 <h3 class="anchored" data-anchor-id="function-getview">function getView</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> ViewType <span class="at">const</span> <span class="op">&amp;</span> getView<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> ViewType <span class="at">const</span> <span class="op">&amp;</span> getView<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get reference to underlying view.</p>
 <hr>
-<p>Updated on 2026-07-30 at 14:56:52 +0000</p>
+<p>Updated on 2026-07-31 at 21:53:18 +0000</p>
 
 
 </section>
