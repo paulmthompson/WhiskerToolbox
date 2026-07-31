@@ -21,6 +21,7 @@
 #include "Tensors/InvalidationWiringFn.hpp"           // InvalidationWiringFn
 #include "Tensors/storage/LazyColumnTensorStorage.hpp"// ColumnProviderFn, ColumnSource
 #include "TimeFrame/TimeFrameIndex.hpp"               // TimeFrameIndex
+#include "TransformsV2/PipelineValueStore/PipelineValueStore.hpp"
 
 #include <functional>
 #include <memory>
@@ -33,6 +34,7 @@ class DigitalIntervalSeries;
 
 namespace Neuralyzer::Transforms::V2 {
 class TransformPipeline;
+class PipelineValueStore;
 }// namespace Neuralyzer::Transforms::V2
 
 namespace Neuralyzer::TensorBuilders {
@@ -56,6 +58,20 @@ enum class IntervalProperty : std::uint8_t {
 // ============================================================================
 // ColumnRecipe — JSON-serializable column specification
 // ============================================================================
+
+/**
+ * @brief Row-aligned DataObject source used to populate one PipelineValueStore key.
+ */
+struct PipelineValueBindingRecipe {
+    /// DataManager key for the direct or derived iterable source
+    std::string source_key;
+
+    /// Optional TransformPipeline JSON applied to source_key before binding
+    std::string source_pipeline_json;
+
+    /// PipelineValueStore key populated for each tensor row
+    std::string store_key;
+};
 
 /**
  * @brief Describes how one tensor column is computed.
@@ -86,6 +102,9 @@ struct ColumnRecipe {
     /// If this is an interval-property column, which property to extract.
     /// nullopt means this is a data-source column, not an interval-property column.
     std::optional<IntervalProperty> interval_property;
+
+    /// Row-aligned iterable DataObject bindings for per-row pipeline execution.
+    std::vector<PipelineValueBindingRecipe> pipeline_value_bindings;
 };
 
 // ============================================================================
@@ -209,6 +228,16 @@ ColumnProviderFn buildIntervalPipelineProvider(
         std::string const & source_key,
         std::shared_ptr<DigitalIntervalSeries const> intervals,
         Neuralyzer::Transforms::V2::TransformPipeline pipeline);
+
+/**
+ * @brief Build an interval-row provider with one PipelineValueStore per row.
+ */
+ColumnProviderFn buildIntervalPipelineProvider(
+        DataManager & dm,
+        std::string const & source_key,
+        std::shared_ptr<DigitalIntervalSeries const> intervals,
+        Neuralyzer::Transforms::V2::TransformPipeline pipeline,
+        std::vector<Neuralyzer::Transforms::V2::PipelineValueStore> row_stores);
 
 /**
  * @brief Build a ColumnProviderFn from a ColumnRecipe.

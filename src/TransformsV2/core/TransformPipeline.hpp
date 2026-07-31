@@ -343,6 +343,14 @@ public:
     }
 
     /**
+     * @brief Return a copy with all step and reduction parameter bindings applied.
+     *
+     * @param store Value store used to resolve each `param_bindings` entry
+     * @return Bound pipeline copy; the original pipeline is not modified
+     */
+    [[nodiscard]] TransformPipeline withBoundParameters(PipelineValueStore const & store) const;
+
+    /**
      * @brief Clear the terminal range reduction
      */
     void clearRangeReduction() noexcept {

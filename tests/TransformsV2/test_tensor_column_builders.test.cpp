@@ -655,6 +655,116 @@ TEST_CASE("buildIntervalPipelineProvider - JSON container event normalize before
     CHECK_THAT(values[1], WithinAbs(0.0, 0.01));
 }
 
+TEST_CASE("buildProviderFromRecipe - direct event binding normalizes gathered events per row",
+          "[TensorColumnBuilders][Phase5]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 1000);
+    auto events = createEventSeries({95, 105, 112, 190, 205, 220});
+    auto alignments = createEventSeries({100, 200});
+    dm.setData<DigitalEventSeries>("events", events, TimeKey("time"));
+    dm.setData<DigitalEventSeries>("align", alignments, TimeKey("time"));
+
+    auto intervals = createIntervalSeries({{90, 120}, {180, 230}});
+
+    ColumnRecipe recipe;
+    recipe.column_name = "relative_count";
+    recipe.source_key = "events";
+    recipe.pipeline_json = R"({
+        "steps": [
+            {
+                "step_id": "normalize",
+                "transform_name": "NormalizeDigitalEventSeriesRelative",
+                "parameters": {"alignment_time": 0},
+                "param_bindings": {"alignment_time": "row_alignment_time"}
+            }
+        ],
+        "range_reduction": {
+            "reduction_name": "EventCountInWindow",
+            "parameters": {"window_start": 0.0, "window_end": 15.0}
+        }
+    })";
+    recipe.pipeline_value_bindings.push_back(PipelineValueBindingRecipe{
+            .source_key = "align",
+            .store_key = "row_alignment_time"});
+
+    auto provider = buildProviderFromRecipe(dm, recipe, {}, intervals);
+    auto values = provider();
+
+    REQUIRE(values.size() == 2);
+    CHECK_THAT(values[0], WithinAbs(2.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(1.0, 0.01));
+}
+
+TEST_CASE("buildProviderFromRecipe - derived event binding normalizes gathered events per row",
+          "[TensorColumnBuilders][Phase5]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 1000);
+    auto events = createEventSeries({95, 105, 112, 190, 205, 220});
+    dm.setData<DigitalEventSeries>("events", events, TimeKey("time"));
+
+    auto intervals = createIntervalSeries({{100, 120}, {200, 230}});
+
+    ColumnRecipe recipe;
+    recipe.column_name = "relative_count";
+    recipe.source_key = "events";
+    recipe.pipeline_json = R"({
+        "steps": [
+            {
+                "step_id": "normalize",
+                "transform_name": "NormalizeDigitalEventSeriesRelative",
+                "parameters": {"alignment_time": 0},
+                "param_bindings": {"alignment_time": "row_alignment_time"}
+            }
+        ],
+        "range_reduction": {
+            "reduction_name": "EventCountInWindow",
+            "parameters": {"window_start": 0.0, "window_end": 15.0}
+        }
+    })";
+    recipe.pipeline_value_bindings.push_back(PipelineValueBindingRecipe{
+            .source_key = "intervals",
+            .source_pipeline_json = R"({
+                "steps": [
+                    {
+                        "step_id": "start",
+                        "transform_name": "IntervalToEvent",
+                        "parameters": {"point": "start"}
+                    }
+                ]
+            })",
+            .store_key = "row_alignment_time"});
+    dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("time"));
+
+    auto provider = buildProviderFromRecipe(dm, recipe, {}, intervals);
+    auto values = provider();
+
+    REQUIRE(values.size() == 2);
+    CHECK_THAT(values[0], WithinAbs(2.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(1.0, 0.01));
+}
+
+TEST_CASE("buildProviderFromRecipe - event binding row-count mismatch throws",
+          "[TensorColumnBuilders][Phase5]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 1000);
+    auto events = createEventSeries({95, 105, 112});
+    auto alignments = createEventSeries({100});
+    dm.setData<DigitalEventSeries>("events", events, TimeKey("time"));
+    dm.setData<DigitalEventSeries>("align", alignments, TimeKey("time"));
+
+    auto intervals = createIntervalSeries({{90, 120}, {180, 230}});
+
+    ColumnRecipe recipe;
+    recipe.column_name = "relative_count";
+    recipe.source_key = "events";
+    recipe.pipeline_json = R"({"steps": [], "range_reduction": {"reduction_name": "EventCount"}})";
+    recipe.pipeline_value_bindings.push_back(PipelineValueBindingRecipe{
+            .source_key = "align",
+            .store_key = "row_alignment_time"});
+
+    CHECK_THROWS_AS(buildProviderFromRecipe(dm, recipe, {}, intervals), std::runtime_error);
+}
+
 // =============================================================================
 // buildIntervalPipelineProvider — Validation
 // =============================================================================

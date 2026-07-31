@@ -102,6 +102,20 @@ using Neuralyzer::TensorBuilders::IntervalProperty;
     recipe.pipeline_json = col.value("pipeline_json", "");
     recipe.row_pipeline_json = col.value("row_pipeline_json", "");
 
+    if (col.contains("pipeline_value_bindings")) {
+        if (!col["pipeline_value_bindings"].is_array()) {
+            spdlog::error("TensorDesign: pipeline_value_bindings must be an array");
+            return std::nullopt;
+        }
+        for (auto const & binding_json: col["pipeline_value_bindings"]) {
+            Neuralyzer::TensorBuilders::PipelineValueBindingRecipe binding;
+            binding.source_key = binding_json.value("source_key", "");
+            binding.source_pipeline_json = binding_json.value("source_pipeline_json", "");
+            binding.store_key = binding_json.value("store_key", "");
+            recipe.pipeline_value_bindings.push_back(std::move(binding));
+        }
+    }
+
     if (col.contains("interval_property")) {
         auto const prop = col["interval_property"].get<std::string>();
         auto const parsed = parseIntervalProperty(prop);
@@ -294,6 +308,19 @@ std::string serializeDesignJson(TensorDesignSpec const & spec) {
         col["pipeline_json"] = recipe.pipeline_json;
         if (!recipe.row_pipeline_json.empty()) {
             col["row_pipeline_json"] = recipe.row_pipeline_json;
+        }
+        if (!recipe.pipeline_value_bindings.empty()) {
+            nlohmann::json bindings = nlohmann::json::array();
+            for (auto const & binding: recipe.pipeline_value_bindings) {
+                nlohmann::json binding_json;
+                binding_json["source_key"] = binding.source_key;
+                binding_json["store_key"] = binding.store_key;
+                if (!binding.source_pipeline_json.empty()) {
+                    binding_json["source_pipeline_json"] = binding.source_pipeline_json;
+                }
+                bindings.push_back(binding_json);
+            }
+            col["pipeline_value_bindings"] = bindings;
         }
         if (recipe.interval_property.has_value()) {
             col["interval_property"] =

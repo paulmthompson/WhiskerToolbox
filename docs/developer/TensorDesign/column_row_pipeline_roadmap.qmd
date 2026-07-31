@@ -5,10 +5,7 @@ format: html
 
 **Status:** Implementation roadmap for [Column Row Pipeline Design](column_row_pipeline.qmd).
 
-Phases 1-4 are implemented. Phase 5 is partially implemented: gathered row
-pipelines can run JSON-loaded container steps before terminal range reduction,
-including container-level DigitalEventSeries normalization. Iterable
-`PipelineValueStore` bindings and later phases remain planned.
+Phases 1-5 are implemented. Phase 6 and later remain planned.
 
 This roadmap breaks the per-column row-pipeline refactor into small, testable steps. The design goal is to let each tensor column derive its own row-aligned gather inputs through TransformPipelines while keeping `GatherResult` a container/direct-gather executor rather than a pipeline runner.
 
@@ -47,11 +44,12 @@ Implemented foundations:
 - `PipelineValueStore` stores `ClockTicks`, and `NormalizeTimeParamsV2::alignment_time` is `ClockTicks`.
 - `gatherAndExecutePipeline()` executes JSON-loaded pipeline steps, including container steps, on each gathered row before applying the terminal range reduction.
 - `NormalizeDigitalEventSeriesRelative` normalizes a gathered `DigitalEventSeries` into relative `ClockTicks` storage while preserving event `EntityId`s.
+- `ColumnRecipe::pipeline_value_bindings` is parsed, serialized, and used to bind one row-aligned `DigitalEventSeries` value into `PipelineValueStore` per tensor row.
+- Direct binding sources from DataManager keys and derived binding sources using `source_pipeline_json` are supported when they resolve to row-aligned `DigitalEventSeries` objects.
 - Contact-aligned spike presence is tested through TensorDesign JSON in the whisker-contact scenario.
 
 Known gaps:
 
-- Tensor column builders cannot yet bind iterable DataObject elements into `PipelineValueStore` for per-row column TransformPipeline execution.
 - Tensor column builders reject `DigitalEventSeries` sample-time row-pipeline output for interval-row columns; timestamp/sample dispatch is not implemented yet.
 - Point sampling still uses a temporary `pipeline_json` `"offset"` detection path in `TensorDesignBuilder::buildColumnProvider()`.
 - There is no row-pipeline caching.
@@ -137,13 +135,11 @@ Exit criteria:
 
 ## Phase 5: Iterable PipelineValueStore Bindings
 
-Status: partially implemented. The gathered-row execution path now supports
-container-step pipelines before terminal range reduction, and a container-level
-`NormalizeDigitalEventSeriesRelative` transform is available for
-`DigitalEventSeries -> DigitalEventSeries` normalization with a fixed or already
-bound `NormalizeTimeParamsV2::alignment_time`. The remaining Phase 5 work is the
-iterable binding layer that supplies a different alignment value for each tensor
-row through `PipelineValueStore`.
+Status: done. The gathered-row execution path supports container-step pipelines
+before terminal range reduction, `NormalizeDigitalEventSeriesRelative` provides
+container-level `DigitalEventSeries -> DigitalEventSeries` normalization, and
+`pipeline_value_bindings` supplies row-specific `ClockTicks` values through
+`PipelineValueStore`.
 
 Goal: supply per-row values to `pipeline_json` transforms through the existing TransformsV2 `PipelineValueStore` mechanism without making `row_pipeline_json` responsible for normalization markers.
 
@@ -151,25 +147,21 @@ Motivating example: gather `Spikes` into one `DigitalEventSeries` per trial/cont
 
 Tasks:
 
-Completed prerequisites:
+Completed tasks:
 
 1. Allow gathered row execution to run JSON-loaded container steps before terminal range reduction.
 2. Add `NormalizeDigitalEventSeriesRelative` as the container-level normalize transform for gathered `DigitalEventSeries` rows.
 3. Cover container-step-before-reduction behavior with a TensorColumnBuilders test using `EventCountInWindow` after normalization.
-
-Remaining tasks:
-
-1. Define a JSON schema for iterable bindings from DataObjects into `PipelineValueStore` keys.
-2. Support direct iterable sources from DataManager keys with implicit identity source pipeline.
-3. Support derived iterable sources from a DataManager key plus `source_pipeline_json`.
-4. Start with `DigitalEventSeries` binding into `PipelineValueStore` as `ClockTicks` from the event returned by `DigitalEventSeries::view()`.
-5. Defer `DigitalIntervalSeries` binding. Use `IntervalToEvent` in `source_pipeline_json` for start/end/center selection.
-6. Build one store value per tensor row from the resolved iterable DataObject, constructing the source view once before row iteration.
-7. Merge iterable store values with any base row store from `buildGatherRowStore()` without relying on GatherResult alignment metadata.
-8. Inject the current row's values into `PipelineValueStore` before applying `pipeline_json` parameter bindings.
-9. Verify a normalize-time transform uses the bound store value, not the gather window start.
-10. Add raster/PSTH-style tests where spikes are gathered in trial windows and normalized to a separate event per row.
-11. Add row-count mismatch tests for both direct and derived iterable sources.
+4. Define a JSON schema for iterable bindings from DataObjects into `PipelineValueStore` keys: `pipeline_value_bindings[]` with `source_key`, optional `source_pipeline_json`, and `store_key`.
+5. Support direct iterable sources from DataManager keys with implicit identity source pipeline.
+6. Support derived iterable sources from a DataManager key plus `source_pipeline_json`.
+7. Start with `DigitalEventSeries` binding into `PipelineValueStore` as `ClockTicks` from the event returned by `DigitalEventSeries::view()`.
+8. Defer `DigitalIntervalSeries` binding. Use `IntervalToEvent` in `source_pipeline_json` for start/end/center selection.
+9. Build one store value per tensor row from the resolved iterable DataObject.
+10. Inject the current row's values into `PipelineValueStore` before applying `pipeline_json` parameter bindings.
+11. Verify a normalize-time transform uses the bound store value, not the gather window start.
+12. Add raster/PSTH-style tests where spikes are gathered in trial windows and normalized to a separate event per row.
+13. Add row-count mismatch tests for direct iterable sources.
 
 Exit criteria:
 
@@ -258,18 +250,19 @@ Exit criteria:
 
 Current row-pipeline coverage is split across four files:
 
-- `tests/TransformsV2/test_tensor_column_builders.test.cpp` covers the TransformsV2 provider layer and `resolveIntervalGatherWindows()` behavior.
-- `tests/TensorDesign/test_tensor_design_builder.cpp` covers TensorDesign JSON parsing, serialization, and JSON-to-tensor builds.
+- `tests/TransformsV2/test_tensor_column_builders.test.cpp` covers the TransformsV2 provider layer, `resolveIntervalGatherWindows()` behavior, and Phase 5 direct/derived `pipeline_value_bindings` execution.
+- `tests/TensorDesign/test_tensor_design_builder.cpp` covers TensorDesign JSON parsing, serialization, JSON-to-tensor builds, and Phase 5 end-to-end bound normalization through fully specified JSON.
 - `tests/TransformsV2/test_tensor_whisker_contact_scenario.cpp` covers programmatic provider/lazy tensor construction over the whisker-contact fixture.
 - `tests/TensorDesign/test_tensor_whisker_contact_scenario.cpp` covers the TensorDesign JSON path over the same fixture, including contact-aligned spikes.
 
 The two whisker-contact files are not exact duplicates. They exercise different architectural layers. The older TransformsV2 file does not validate `row_pipeline_json`; it remains useful as lower-level integration coverage, though it may be a candidate for reduced assertions if runtime becomes an issue.
 
-Potential stale or missing coverage after Phase 4:
+Potential stale or missing coverage after Phase 5:
 
 - The timestamp offset characterization test is intentionally stale-by-design until Phase 6 replaces it.
 - `DigitalEventSeries` row-pipeline output rejection is covered at the row-geometry/helper layer; add a TensorDesign JSON-level rejection test if error messages become part of the user contract.
 - Add explicit tests for malformed but non-empty `row_pipeline_json` at the TensorDesign JSON build layer if not already covered by provider tests.
+- Add a derived binding row-count mismatch test if direct mismatch coverage is not considered sufficient.
 - Add cache behavior tests when row-pipeline caching is introduced.
 
 ## Phase 9: Preset Registry And Expansion

@@ -3,7 +3,7 @@ title: "Column Row Pipeline Design"
 format: html
 ---
 
-**Status:** Partially implemented. GatherResult, interval-window primitives, `ColumnRecipe::row_pipeline_json`, TensorDesign JSON round-trip, identity row-pipeline dispatch, and `DigitalIntervalSeries` row-pipeline gather windows are implemented. `PipelineValueStore` iterable bindings, timestamp/sample row-pipeline dispatch, presets, and UI support remain planned.
+**Status:** Partially implemented. GatherResult, interval-window primitives, `ColumnRecipe::row_pipeline_json`, TensorDesign JSON round-trip, identity row-pipeline dispatch, `DigitalIntervalSeries` row-pipeline gather windows, and `pipeline_value_bindings` for row-specific `PipelineValueStore` values are implemented. Timestamp/sample row-pipeline dispatch, presets, and UI support remain planned.
 
 This document describes the target architecture for per-column gather geometry in lazy-column tensors. The implementation sequence is tracked separately in [Column Row Pipeline Roadmap](column_row_pipeline_roadmap.qmd).
 
@@ -43,12 +43,16 @@ Implemented today:
 - Interval-row columns gather over the full row interval.
 - `ColumnRecipe::pipeline_json` describes source processing and interval range reductions.
 - `ColumnRecipe::row_pipeline_json` is parsed, serialized, and used for interval-row gather geometry.
+- `ColumnRecipe::pipeline_value_bindings` is parsed, serialized, and used to bind one row-aligned `DigitalEventSeries` value into `PipelineValueStore` per tensor row.
 - `ColumnRecipe::interval_property` provides row metadata columns such as interval start, end, and duration.
 - Empty or whitespace `row_pipeline_json` and explicit empty-step descriptors are treated as identity row geometry.
 - Non-identity interval-row pipelines may produce row-aligned `DigitalIntervalSeries` prepared windows.
 - TensorDesign verifies row-pipeline window output preserves the original row count.
 - Digital event/interval iteration exposes `ClockTicks` API-facing values, so cross-timeframe temporal math should happen in clock-tick coordinates rather than raw `TimeFrameIndex` coordinates.
 - `PipelineValueStore` can store `ClockTicks`, and `NormalizeTimeParamsV2::alignment_time` is a `ClockTicks` value.
+- Direct binding sources from DataManager keys and derived binding sources using `source_pipeline_json` are supported when they resolve to row-aligned `DigitalEventSeries` objects.
+- `NormalizeDigitalEventSeriesRelative` normalizes gathered `DigitalEventSeries` rows to relative `ClockTicks` storage before reductions such as `EventCountInWindow`.
+- `gatherAndExecutePipeline()` can execute JSON-loaded container steps before the terminal range reduction, and can apply a per-row bound pipeline copy when row stores are supplied.
 - `GatherResult` consumes prepared `DigitalIntervalSeries` windows and can hold companion alignment events, but TensorDesign should not rely on that metadata path for column transformations.
 - `GatherResult` converts prepared window bounds to the gathered source `TimeFrame` with `convertTimeFrameRange()`.
 - `DigitalIntervalSeries` supports `IntervalLayout::Overlapping` through `createOverlapping()`.
@@ -57,7 +61,6 @@ Implemented today:
 Not implemented yet:
 
 - `DigitalEventSeries` row-pipeline output dispatch for timestamp/sample columns.
-- TensorDesign column recipe support for iterable bindings from row-aligned DataObjects into `PipelineValueStore`.
 - Replacement of the temporary `pipeline_json` `"offset"` sample-at-offset compatibility path.
 - Row-pipeline caching across columns.
 - Preset registry, bundled preset library, and preset expansion.
@@ -65,7 +68,7 @@ Not implemented yet:
 
 ## Problem
 
-Original interval-row tensor columns always gathered source data over the full row interval. With the implemented `DigitalIntervalSeries` row-pipeline path, onset-window event reductions are now expressible in TensorDesign JSON. Remaining gaps are point sampling, per-row normalization context, presets, and UI.
+Original interval-row tensor columns always gathered source data over the full row interval. With the implemented `DigitalIntervalSeries` row-pipeline path, onset-window event reductions are now expressible in TensorDesign JSON. With `pipeline_value_bindings`, per-row normalization context is also expressible for row-aligned `DigitalEventSeries` markers. Remaining gaps are point sampling, presets, and UI.
 
 The full design addresses these common per-row features:
 
@@ -184,6 +187,17 @@ struct ColumnRecipe {
     std::string pipeline_json;
     std::string row_pipeline_json;
     std::optional<IntervalProperty> interval_property;
+    std::vector<PipelineValueBindingRecipe> pipeline_value_bindings;
+};
+```
+
+`PipelineValueBindingRecipe` has the implemented shape:
+
+```cpp
+struct PipelineValueBindingRecipe {
+    std::string source_key;
+    std::string source_pipeline_json;
+    std::string store_key;
 };
 ```
 
@@ -320,7 +334,7 @@ Example:
       "store_key": "row_alignment_time"
     }
   ],
-  "pipeline_json": "{\"steps\": [{\"transform_name\": \"NormalizeTime\", \"param_bindings\": {\"alignment_time\": \"row_alignment_time\"}}]}"
+  "pipeline_json": "{\"steps\": [{\"step_id\": \"normalize\", \"transform_name\": \"NormalizeDigitalEventSeriesRelative\", \"parameters\": {\"alignment_time\": 0}, \"param_bindings\": {\"alignment_time\": \"row_alignment_time\"}}], \"range_reduction\": {\"reduction_name\": \"EventCountInWindow\", \"parameters\": {\"window_start\": 0.0, \"window_end\": 15.0}}}"
 }
 ```
 
@@ -408,11 +422,11 @@ This is intentionally similar to `PipelineLibrary`: list entries, load JSON, sav
 
 TransformsV2 already has the mechanism needed to inject runtime values into a `TransformPipeline`: `PipelineValueStore` plus parameter bindings loaded from pipeline JSON. GatherResult previously used this mechanism through TransformsV2 gather extension helpers such as `buildGatherRowStore()`.
 
-The row-pipeline refactor should reuse that mechanism rather than adding TensorData-specific context plumbing. The missing piece is an iterable binding layer owned by TransformsV2 or the TensorColumnBuilders/TransformsV2 integration.
+The row-pipeline refactor reuses that mechanism rather than adding TensorData-specific context plumbing. The implemented iterable binding layer lives in the TensorColumnBuilders/TransformsV2 integration and is exposed through `ColumnRecipe::pipeline_value_bindings`.
 
 The core contract is:
 
-1. A column recipe or pipeline descriptor identifies an iterable context source.
+1. A column recipe identifies an iterable context source through `pipeline_value_bindings`.
 2. The source is a DataObject in `DataManager` or a DataObject produced by a row TransformPipeline.
 3. The source has one row-aligned element per tensor row.
 4. For row `i`, the iterable binding converts element `i` into the DataObject's default binding value and writes it into `PipelineValueStore` under the declared key.
@@ -420,7 +434,7 @@ The core contract is:
 
 This is conceptually equivalent to how the GatherResult extension previously created a per-row store, but the values are no longer limited to GatherResult metadata. Any row-aligned iterable DataObject can supply bound values.
 
-Binding declarations should live on `ColumnRecipe`, beside `pipeline_json`. They should not be embedded in `PipelineDescriptor`, because the descriptor should remain a reusable transform pipeline that does not know about DataManager keys, tensor rows, or external iterable sources. All pipeline-valued fields, including `row_pipeline_json`, `source_pipeline_json`, and `pipeline_json`, should use the same `PipelineDescriptor` schema.
+Binding declarations live on `ColumnRecipe`, beside `pipeline_json`. They are not embedded in `PipelineDescriptor`, because the descriptor remains a reusable transform pipeline that does not know about DataManager keys, tensor rows, or external iterable sources. All pipeline-valued fields, including `row_pipeline_json`, `source_pipeline_json`, and `pipeline_json`, use the same `PipelineDescriptor` schema.
 
 ### Binding Source Options
 
@@ -463,11 +477,11 @@ If a caller needs interval start, end, or center as the bound value, it should f
 
 The ClockTicks refactor removes the need for binding declarations to carry `TimeFrame` pointers. `DigitalEventSeries::view()` and `DigitalIntervalSeries::view()` expose API-facing elements in clock ticks (`ClockTicksWithId` and `ClockTicksIntervalWithId`) while storage/persistence APIs can still expose `TimeFrameIndex` through explicit stored-value accessors.
 
-Phase 5 should therefore bind temporal iterable values as `ClockTicks`. `NormalizeTime` subtracts `ClockTicks`, not raw `TimeFrameIndex` values.
+Phase 5 binds temporal iterable values as `ClockTicks`. `NormalizeTimeParamsV2::alignment_time` receives `ClockTicks`, not raw `TimeFrameIndex` values.
 
 This also means `IntervalToEvent` and `EventToInterval` should compose in clock-tick coordinates at the API boundary. If a transform still uses `TimeFrameIndex` internally, that should be treated as an implementation detail hidden behind the DataObject view/storage boundary.
 
-For `NormalizeTime`, the user-facing intent is simply "normalize event time by a row-specific clock tick". The raw transform name for DigitalEventSeries value projections is `NormalizeClockTicksValueV2` because the projection helper extracts `ClockTicks` from `ClockTicksWithId` view elements before transform execution. Presets should hide this raw transform name when possible.
+For `NormalizeTime`, the user-facing intent is simply "normalize event time by a row-specific clock tick". The raw transform name for DigitalEventSeries value projections is `NormalizeClockTicksValueV2` because the projection helper extracts `ClockTicks` from `ClockTicksWithId` view elements before transform execution. When the gathered row should remain a `DigitalEventSeries`, use the container transform `NormalizeDigitalEventSeriesRelative`, which writes relative `ClockTicks` storage and preserves event `EntityId`s. Presets should hide these raw transform names when possible.
 
 ### Execution Shape
 
@@ -489,7 +503,7 @@ value_i = execute/reduce pipeline_i(row_i)
 
 ### Validation Rules
 
-Phase 5 should enforce these rules:
+Phase 5 enforces these rules:
 
 - Binding source DataObject must exist or the binding source pipeline must produce a supported DataObject.
 - Binding source row count must equal the `GatherResult` row count.
@@ -498,11 +512,11 @@ Phase 5 should enforce these rules:
 - Binding value construction must be deterministic and must not mutate the source object.
 - If row filtering is introduced later, filtering must be applied consistently to gather windows and binding sources.
 
-Failure should occur at provider construction when possible. If a lazy source can only be evaluated at provider invocation time, fail with a message that identifies the column, binding source, and store key.
+Failure occurs at provider construction when possible. If a lazy source can only be evaluated at provider invocation time, fail with a message that identifies the column, binding source, and store key.
 
 ### Motivating Test Cases
 
-Phase 5 should have at least two tests using the raster/PSTH normalization pattern.
+Phase 5 has tests using the raster/PSTH normalization pattern.
 
 Direct iterable source:
 
@@ -524,13 +538,13 @@ pipeline_value_bindings: Contact -> IntervalToEvent(start) -> ClockTicks -> row_
 pipeline_json: NormalizeTime(alignment_time bound to row_alignment_time) + event/bin reduction
 ```
 
-Both tests should assert that normalized event times are relative to contact onset, not to the gather window start. They should also assert row-count mismatch rejection by using a binding source with one missing or extra event.
+The tests assert that normalized event times are relative to the bound marker, not to the gather window start. They also assert row-count mismatch rejection by using a binding source with a missing event.
 
 Example binding shape, shown as design intent rather than final JSON:
 
 ```json
 {
-  "pipeline_json": "{\"steps\": [{\"transform_name\": \"NormalizeTime\", \"param_bindings\": {\"alignment_time\": \"row_alignment_time\"}}]}",
+  "pipeline_json": "{\"steps\": [{\"step_id\": \"normalize\", \"transform_name\": \"NormalizeDigitalEventSeriesRelative\", \"parameters\": {\"alignment_time\": 0}, \"param_bindings\": {\"alignment_time\": \"row_alignment_time\"}}], \"range_reduction\": {\"reduction_name\": \"EventCountInWindow\", \"parameters\": {\"window_start\": 0.0, \"window_end\": 15.0}}}",
   "pipeline_value_bindings": [
     {
       "source_key": "ContactOnset",
@@ -540,7 +554,7 @@ Example binding shape, shown as design intent rather than final JSON:
 }
 ```
 
-The exact schema can change, but the ownership should remain clear: TransformsV2 binds row-specific values into `PipelineValueStore`; TensorDesign selects the row source, gather/sample input, and column recipe; TensorData stores the resulting column values.
+The ownership is clear: TransformsV2 binds row-specific values into `PipelineValueStore`; TensorDesign selects the row source, gather/sample input, and column recipe; TensorData stores the resulting column values.
 
 ## Raster/PSTH Example
 
@@ -549,7 +563,7 @@ A raster or PSTH-like tensor column illustrates the separation between gather in
 1. The row source defines trials, such as one `DigitalIntervalSeries` interval per contact or behavioral trial.
 2. `row_pipeline_json` defines which spikes are gathered for each row. This can be identity for full-trial windows or a window-producing transform for a restricted interval.
 3. The gathered row DataObject is a `DigitalEventSeries` subset in source coordinates.
-4. `pipeline_json` runs per row and includes a normalize-time transform.
+4. `pipeline_json` runs per row and includes a normalize-time transform, such as `NormalizeDigitalEventSeriesRelative` for event-series rows.
 5. The normalize-time transform needs one marker for the current row, such as contact onset or cue time.
 6. That marker is supplied through `PipelineValueStore` when executing `pipeline_json`, not through `GatherResult` row metadata and not as a paired output of `row_pipeline_json`.
 
@@ -572,13 +586,12 @@ The implemented dispatch for interval-row columns is:
 2. Resolve `row_pipeline_json`.
 3. If `row_pipeline_json` is empty, use the current full-interval gather path.
 4. If the row pipeline produces `DigitalIntervalSeries` windows, verify row count and gather the column source through `GatherResult`.
-5. Run `pipeline_json` over gathered rows to produce one value per tensor row.
+5. Build any iterable `PipelineValueStore` bindings requested by `pipeline_value_bindings`, such as one normalization marker per row. Initial support binds one `ClockTicks` value per row from a direct or derived `DigitalEventSeries`.
+6. Run `pipeline_json` over gathered rows with the row store to produce one value per tensor row.
 
 Planned dispatch extensions are:
 
 1. If the row pipeline produces `DigitalEventSeries` sample times without windows, use timestamp/sample provider behavior or expand to windows with `EventToInterval`, depending on the column recipe.
-2. Build any iterable `PipelineValueStore` bindings requested by `pipeline_json`, such as one normalization marker per row.
-3. Run `pipeline_json` over gathered rows or sampled timestamps with the row store to produce one value per tensor row.
 
 The dispatch should reject row-pipeline outputs that do not preserve row count unless the recipe explicitly opts into row filtering.
 
@@ -631,7 +644,6 @@ Tensor row pipelines should use the same DataObject vocabulary for windows and e
 
 ## Open Questions
 
-- What JSON schema should declare iterable bindings from DataObjects into `PipelineValueStore` keys?
 - Should row pipelines be allowed to use `additional_input_keys`, and if so should those keys be declared per column or at the tensor level?
 - Should identical row pipelines be cached across columns during one tensor build?
 - How should `DigitalEventSeries` row-pipeline output choose between point sampling, window expansion, or rejection?
@@ -646,6 +658,7 @@ Settled for Phase 5:
 - Binding declarations live on `ColumnRecipe`, not inside `PipelineDescriptor`.
 - `source_pipeline_json` uses the same `PipelineDescriptor` schema as `row_pipeline_json` and `pipeline_json`.
 - Duplicate binding `store_key` values should be rejected rather than overwritten.
+- Direct-key bindings and key-plus-`source_pipeline_json` bindings are implemented for `DigitalEventSeries` sources.
 
 ## Tests
 
@@ -653,8 +666,8 @@ Current coverage is split by architectural layer:
 
 | Test file | Layer | Coverage |
 |---|---|---|
-| `tests/TransformsV2/test_tensor_column_builders.test.cpp` | TransformsV2 column-builder layer | `resolveIntervalGatherWindows()`, identity row pipelines, `DigitalIntervalSeries` row-pipeline output, overlapping windows, row-count rejection, interval-property bypass, and provider dispatch. |
-| `tests/TensorDesign/test_tensor_design_builder.cpp` | TensorDesign JSON/build layer | Parse/serialize `row_pipeline_json`, identity behavior, Phase 4 JSON builds, mixed interval-property/gather columns, cross-timeframe gather windows, and offset compatibility characterization. |
+| `tests/TransformsV2/test_tensor_column_builders.test.cpp` | TransformsV2 column-builder layer | `resolveIntervalGatherWindows()`, identity row pipelines, `DigitalIntervalSeries` row-pipeline output, overlapping windows, row-count rejection, interval-property bypass, provider dispatch, JSON-loaded container steps before reduction, direct/derived `pipeline_value_bindings`, and binding row-count rejection. |
+| `tests/TensorDesign/test_tensor_design_builder.cpp` | TensorDesign JSON/build layer | Parse/serialize `row_pipeline_json`, parse/serialize `pipeline_value_bindings`, identity behavior, Phase 4 JSON builds, Phase 5 bound-normalization JSON builds, mixed interval-property/gather columns, cross-timeframe gather windows, and offset compatibility characterization. |
 | `tests/TensorDesign/test_tensor_whisker_contact_scenario.cpp` | TensorDesign scenario integration | Builds the whisker-contact JSON design with mean curvature, full-contact spike count, and contact-onset spike presence through `row_pipeline_json`. |
 | `tests/TransformsV2/test_tensor_whisker_contact_scenario.cpp` | Lower-level TransformsV2 scenario integration | Exercises programmatic `buildIntervalPipelineProvider()` and lazy tensor construction over the same fixture without TensorDesign JSON. |
 

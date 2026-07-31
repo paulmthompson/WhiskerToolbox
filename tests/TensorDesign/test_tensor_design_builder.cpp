@@ -883,3 +883,97 @@ TEST_CASE("serializeDesignJson omits empty row_pipeline_json", "[TensorDesign][P
     REQUIRE(roundtrip.columns.size() == 1);
     REQUIRE(roundtrip.columns[0].row_pipeline_json.empty());
 }
+
+TEST_CASE("parseDesignJson parses pipeline_value_bindings", "[TensorDesign][Phase5]") {
+    std::string const json = R"({
+        "tensor_key": "features",
+        "row_source": {"data_key": "intervals", "row_type": "interval"},
+        "columns": [
+            {
+                "name": "relative_spikes",
+                "source_key": "spikes",
+                "pipeline_value_bindings": [
+                    {
+                        "source_key": "contacts",
+                        "source_pipeline_json": "{\"steps\": [{\"step_id\": \"start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}]}",
+                        "store_key": "row_alignment_time"
+                    }
+                ],
+                "pipeline_json": "{\"steps\": []}"
+            }
+        ]
+    })";
+
+    auto const parsed = requireValue(parseDesignJson(json));
+    REQUIRE(parsed.columns.size() == 1);
+    REQUIRE(parsed.columns[0].pipeline_value_bindings.size() == 1);
+    auto const & binding = parsed.columns[0].pipeline_value_bindings[0];
+    REQUIRE(binding.source_key == "contacts");
+    REQUIRE(binding.store_key == "row_alignment_time");
+    REQUIRE(binding.source_pipeline_json.find("IntervalToEvent") != std::string::npos);
+}
+
+TEST_CASE("buildTensorFromDesignJson applies derived pipeline_value_bindings",
+          "[TensorDesign][Phase5]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 1000);
+
+    auto intervals = createIntervalSeries({{100, 120}, {200, 230}});
+    auto contacts = createIntervalSeries({{100, 120}, {200, 230}});
+    auto spikes = createEventSeries({95, 105, 112, 190, 205, 220});
+    dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("time"));
+    dm.setData<DigitalIntervalSeries>("contacts", contacts, TimeKey("time"));
+    dm.setData<DigitalEventSeries>("spikes", spikes, TimeKey("time"));
+
+    std::string const json = R"({
+        "tensor_key": "features",
+        "row_source": {"data_key": "intervals", "row_type": "interval"},
+        "columns": [
+            {
+                "name": "relative_spikes",
+                "source_key": "spikes",
+                "pipeline_value_bindings": [
+                    {
+                        "source_key": "contacts",
+                        "source_pipeline_json": "{\"steps\": [{\"step_id\": \"start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}]}",
+                        "store_key": "row_alignment_time"
+                    }
+                ],
+                "pipeline_json": "{\"steps\": [{\"step_id\": \"normalize\", \"transform_name\": \"NormalizeDigitalEventSeriesRelative\", \"parameters\": {\"alignment_time\": 0}, \"param_bindings\": {\"alignment_time\": \"row_alignment_time\"}}], \"range_reduction\": {\"reduction_name\": \"EventCountInWindow\", \"parameters\": {\"window_start\": 0.0, \"window_end\": 15.0}}}"
+            }
+        ]
+    })";
+
+    auto const built = requireValue(buildTensorFromDesignJson(dm, json));
+    auto const values = built.getColumn(0);
+
+    REQUIRE(values.size() == intervals->size());
+    CHECK_THAT(values[0], WithinAbs(2.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(1.0, 0.01));
+}
+
+TEST_CASE("serializeDesignJson round-trips pipeline_value_bindings", "[TensorDesign][Phase5]") {
+    TensorDesignSpec original;
+    original.tensor_key = "features";
+    original.row_source_key = "intervals";
+    original.row_type = DesignRowType::Interval;
+    Neuralyzer::TensorBuilders::ColumnRecipe recipe;
+    recipe.column_name = "relative_spikes";
+    recipe.source_key = "spikes";
+    recipe.pipeline_json = R"({"steps": []})";
+    recipe.pipeline_value_bindings.push_back(Neuralyzer::TensorBuilders::PipelineValueBindingRecipe{
+            .source_key = "contacts",
+            .source_pipeline_json = R"({"steps": [{"step_id": "start", "transform_name": "IntervalToEvent", "parameters": {"point": "start"}}]})",
+            .store_key = "row_alignment_time"});
+    original.columns.push_back(std::move(recipe));
+
+    auto const json = serializeDesignJson(original);
+    REQUIRE(json.find("pipeline_value_bindings") != std::string::npos);
+
+    auto const roundtrip = requireValue(parseDesignJson(json));
+    REQUIRE(roundtrip.columns.size() == 1);
+    REQUIRE(roundtrip.columns[0].pipeline_value_bindings.size() == 1);
+    REQUIRE(roundtrip.columns[0].pipeline_value_bindings[0].source_key == "contacts");
+    REQUIRE(roundtrip.columns[0].pipeline_value_bindings[0].store_key == "row_alignment_time");
+    REQUIRE(roundtrip.columns[0].pipeline_value_bindings[0].source_pipeline_json.find("IntervalToEvent") != std::string::npos);
+}

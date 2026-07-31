@@ -6,6 +6,7 @@
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
+#include "extension/ParameterBinding.hpp"
 
 namespace Neuralyzer::Transforms::V2 {
 
@@ -51,11 +52,30 @@ void clearBatch(BatchVariant & batch) {
 // Transform Pipeline
 // ============================================================================
 
+TransformPipeline TransformPipeline::withBoundParameters(PipelineValueStore const & store) const {
+    TransformPipeline bound = *this;
+
+    for (auto & step: bound.steps_) {
+        if (step.hasBindings()) {
+            auto const * element_meta = ElementRegistry::instance().getMetadata(step.transform_name);
+            auto const * container_meta = ElementRegistry::instance().getContainerMetadata(step.transform_name);
+            auto const params_type = element_meta     ? element_meta->params_type
+                                     : container_meta ? container_meta->params_type
+                                                      : std::type_index(typeid(void));
+            step.params = applyBindingsErased(
+                    params_type,
+                    step.params,
+                    step.param_bindings,
+                    store);
+        }
+    }
+
+    return bound;
+}
+
 std::function<ElementVariant(ElementVariant)> TransformPipeline::buildTypeErasedFunction(
         PipelineStep const & step,
         TransformMetadata const * meta) const {
-    auto & registry = ElementRegistry::instance();
-
     // Dispatch based on input and output types from metadata
     // This is where we handle the type erasure/recovery
 

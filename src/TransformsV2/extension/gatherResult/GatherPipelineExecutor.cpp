@@ -21,6 +21,12 @@
 
 namespace Neuralyzer::Gather {
 
+namespace {
+
+using RowStores = std::vector<Neuralyzer::Transforms::V2::PipelineValueStore>;
+
+}
+
 // ============================================================================
 // extractSingleFloat
 // ============================================================================
@@ -201,11 +207,19 @@ float applyRangeReductionToOutput(
 // gatherAndExecutePipeline
 // ============================================================================
 
-std::vector<float> gatherAndExecutePipeline(
+namespace {
+
+std::vector<float> gatherAndExecutePipelineImpl(
         DataTypeVariant const & source,
         std::shared_ptr<DigitalIntervalSeries const> intervals,
-        Neuralyzer::Transforms::V2::TransformPipeline const & pipeline) {
+        Neuralyzer::Transforms::V2::TransformPipeline const & pipeline,
+        RowStores const * row_stores) {
     using Neuralyzer::Transforms::V2::executePipeline;
+
+    if (row_stores && row_stores->size() != intervals->size()) {
+        throw std::runtime_error(
+                "gatherAndExecutePipeline: row store count must match interval count");
+    }
 
     return std::visit([&](auto const & ptr) -> std::vector<float> {
         using T = std::remove_reference_t<decltype(*ptr)>;
@@ -234,15 +248,17 @@ std::vector<float> gatherAndExecutePipeline(
 
             for (std::size_t i = 0; i < gather.size(); ++i) {
                 DataTypeVariant const segment_var{gather[i]};
+                auto const & row_pipeline = row_stores ? pipeline.withBoundParameters((*row_stores)[i])
+                                                       : pipeline;
 
                 if (has_element_steps) {
                     // Run element transforms then apply range reduction
-                    DataTypeVariant const output = executePipeline(segment_var, pipeline);
-                    result.push_back(applyRangeReductionToOutput(output, pipeline));
+                    DataTypeVariant const output = executePipeline(segment_var, row_pipeline);
+                    result.push_back(applyRangeReductionToOutput(output, row_pipeline));
                 } else {
                     // No element steps — apply range reduction directly to
                     // the raw gathered segment (avoids "Pipeline has no steps")
-                    result.push_back(applyRangeReductionToOutput(segment_var, pipeline));
+                    result.push_back(applyRangeReductionToOutput(segment_var, row_pipeline));
                 }
             }
 
@@ -257,6 +273,23 @@ std::vector<float> gatherAndExecutePipeline(
         }
     },
                       source);
+}
+
+}// namespace
+
+std::vector<float> gatherAndExecutePipeline(
+        DataTypeVariant const & source,
+        std::shared_ptr<DigitalIntervalSeries const> intervals,
+        Neuralyzer::Transforms::V2::TransformPipeline const & pipeline) {
+    return gatherAndExecutePipelineImpl(source, std::move(intervals), pipeline, nullptr);
+}
+
+std::vector<float> gatherAndExecutePipeline(
+        DataTypeVariant const & source,
+        std::shared_ptr<DigitalIntervalSeries const> intervals,
+        Neuralyzer::Transforms::V2::TransformPipeline const & pipeline,
+        RowStores const & row_stores) {
+    return gatherAndExecutePipelineImpl(source, std::move(intervals), pipeline, &row_stores);
 }
 
 }// namespace Neuralyzer::Gather
