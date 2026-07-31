@@ -10,6 +10,7 @@
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "Points/Point_Data.hpp"
 #include "Tensors/TensorData.hpp"
 
 #include "TimeFrame/StrongTimeTypes.hpp"
@@ -93,6 +94,15 @@ std::shared_ptr<DigitalEventSeries> createEventSeries(std::vector<int64_t> const
 
 std::shared_ptr<TimeFrame> createTimeFrameFromTimes(std::vector<int> const & times) {
     return std::make_shared<TimeFrame>(times);
+}
+
+std::shared_ptr<PointData> createPointData(
+        std::vector<std::pair<int64_t, Point2D<float>>> const & points) {
+    auto data = std::make_shared<PointData>();
+    for (auto const & [time, point]: points) {
+        data->addAtTime(TimeFrameIndex(time), point, NotifyObservers::No);
+    }
+    return data;
 }
 
 }// namespace
@@ -767,6 +777,87 @@ TEST_CASE("buildTensorFromDesignJson builds TimeFrame row tensors",
     CHECK_THAT(values[2], WithinAbs(2.0, 0.01));
     CHECK_THAT(values[3], WithinAbs(3.0, 0.01));
     CHECK_THAT(values[4], WithinAbs(4.0, 0.01));
+}
+
+TEST_CASE("buildTensorFromDesignJson builds PointData x/y columns over TimeFrame rows",
+          "[TensorDesign][Phase9b]") {
+    DataManager dm;
+    REQUIRE(dm.setTime(TimeKey("frame"), createTimeFrameFromTimes({0, 1, 2}), true));
+    auto points = createPointData({
+            {0, Point2D<float>{1.0f, 2.0f}},
+            {1, Point2D<float>{3.0f, 4.0f}},
+            {2, Point2D<float>{5.0f, 6.0f}},
+    });
+    dm.setData<PointData>("Nose", points, TimeKey("frame"));
+
+    std::string const json = R"({
+        "tensor_key": "point_features",
+        "row_source": {
+            "time_key": "frame",
+            "row_type": "timeframe"
+        },
+        "columns": [
+            {
+                "name": "nose_x",
+                "source_key": "Nose",
+                "pipeline_json": "{\"steps\": [{\"step_id\": \"x\", \"transform_name\": \"PointCoordinate\", \"parameters\": {\"coordinate\": \"X\"}}]}"
+            },
+            {
+                "name": "nose_y",
+                "source_key": "Nose",
+                "pipeline_json": "{\"steps\": [{\"step_id\": \"y\", \"transform_name\": \"PointCoordinate\", \"parameters\": {\"coordinate\": \"Y\"}}]}"
+            }
+        ]
+    })";
+
+    auto const built = requireValue(buildTensorFromDesignJson(dm, json));
+    REQUIRE(built.numRows() == 3);
+    REQUIRE(built.numColumns() == 2);
+
+    auto const x = built.getColumn(0);
+    auto const y = built.getColumn(1);
+    REQUIRE(x.size() == 3);
+    REQUIRE(y.size() == 3);
+    CHECK_THAT(x[0], WithinAbs(1.0, 0.01));
+    CHECK_THAT(x[1], WithinAbs(3.0, 0.01));
+    CHECK_THAT(x[2], WithinAbs(5.0, 0.01));
+    CHECK_THAT(y[0], WithinAbs(2.0, 0.01));
+    CHECK_THAT(y[1], WithinAbs(4.0, 0.01));
+    CHECK_THAT(y[2], WithinAbs(6.0, 0.01));
+}
+
+TEST_CASE("buildTensorFromDesignJson leaves NaN for missing TimeFrame samples",
+          "[TensorDesign][Phase9a]") {
+    DataManager dm;
+    REQUIRE(dm.setTime(TimeKey("frame"), createTimeFrameFromTimes({0, 1, 2, 3, 4}), true));
+    auto analog = std::make_shared<AnalogTimeSeries>(
+            std::vector<float>{10.0f, 30.0f},
+            std::vector<TimeFrameIndex>{TimeFrameIndex(1), TimeFrameIndex(3)});
+    dm.setData<AnalogTimeSeries>("signal", analog, TimeKey("frame"));
+
+    std::string const json = R"({
+        "tensor_key": "sparse_features",
+        "row_source": {
+            "time_key": "frame",
+            "row_type": "timeframe"
+        },
+        "columns": [
+            {
+                "name": "signal_value",
+                "source_key": "signal",
+                "pipeline_json": "{\"steps\": []}"
+            }
+        ]
+    })";
+
+    auto const built = requireValue(buildTensorFromDesignJson(dm, json));
+    auto const values = built.getColumn(0);
+    REQUIRE(values.size() == 5);
+    CHECK(std::isnan(values[0]));
+    CHECK_THAT(values[1], WithinAbs(10.0, 0.01));
+    CHECK(std::isnan(values[2]));
+    CHECK_THAT(values[3], WithinAbs(30.0, 0.01));
+    CHECK(std::isnan(values[4]));
 }
 
 TEST_CASE("buildTensorFromDesignJson samples analog source from DigitalEventSeries row_pipeline_json",

@@ -1,0 +1,58 @@
+---
+title: "PointCoordinate"
+format: html
+---
+
+`PointCoordinate` is a TransformsV2 container transform that projects one coordinate component from `PointData` into `RaggedAnalogTimeSeries`.
+
+## Signature
+
+```text
+PointData -> RaggedAnalogTimeSeries
+```
+
+Parameters:
+
+```cpp
+struct PointCoordinateParams {
+    PointCoordinateComponent coordinate{PointCoordinateComponent::X};
+};
+```
+
+`coordinate` selects `X` or `Y`.
+
+## Semantics
+
+For every time point in the input `PointData`, the transform emits one float value per point at that time:
+
+```text
+PointData[t] = [(x1, y1), (x2, y2)]
+PointCoordinate(X)[t] = [x1, x2]
+PointCoordinate(Y)[t] = [y1, y2]
+```
+
+The output preserves the input `TimeFrame`.
+
+## TensorDesign Use
+
+For single-keypoint-per-time data, `PointCoordinate` can be sampled directly by timestamp or TimeFrame row providers:
+
+```json
+{
+  "name": "nose_x",
+  "source_key": "Nose",
+  "pipeline_json": "{\"steps\": [{\"step_id\": \"x\", \"transform_name\": \"PointCoordinate\", \"parameters\": {\"coordinate\": \"X\"}}]}"
+}
+```
+
+For interval rows, use a terminal range reduction after coordinate projection:
+
+```json
+{
+  "name": "mean_nose_x",
+  "source_key": "Nose",
+  "pipeline_json": "{\"steps\": [{\"step_id\": \"x\", \"transform_name\": \"PointCoordinate\", \"parameters\": {\"coordinate\": \"X\"}}], \"range_reduction\": {\"reduction_name\": \"MeanValue\"}}"
+}
+```
+
+Timestamp sampling of `RaggedAnalogTimeSeries` currently uses the first value at a time point. This is intended for single-keypoint-per-time `PointData`. Multi-point-per-time data should use an explicit reduction or future sampling policy before being treated as a single scalar column.

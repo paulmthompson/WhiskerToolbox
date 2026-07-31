@@ -5,7 +5,7 @@ format: html
 
 **Status:** Implementation roadmap for [Column Row Pipeline Design](column_row_pipeline.qmd).
 
-Phases 1-6 and 9a are implemented. Phase 7, 9b, and later remain planned.
+Phases 1-6, 9a, and 9b are implemented. Phase 7, 9c, and later remain planned.
 
 This roadmap breaks the per-column row-pipeline refactor into small, testable steps. The design goal is to let each tensor column derive its own row-aligned gather inputs through TransformPipelines while keeping `GatherResult` a container/direct-gather executor rather than a pipeline runner.
 
@@ -303,9 +303,11 @@ Exit criteria:
 - TensorDesigner no longer implies that a `DigitalEventSeries` is the only way to create timestamp-like rows.
 - Existing timestamp and derived-from-source behavior is unchanged.
 
-## Phase 9b: Point And Keypoint Column Primitives
+## Phase 9b: Point And Keypoint Column Primitives — Done
 
 Goal: support common keypoint feature tables without tensor-specific geometry enums.
+
+Status: done. `PointCoordinate` converts `PointData` to `RaggedAnalogTimeSeries` using a coordinate parameter, and TensorDesign JSON can build x/y keypoint columns over TimeFrame rows.
 
 Tasks:
 
@@ -317,6 +319,13 @@ Tasks:
 6. Add TensorDesign tests for TimeFrame rows sampling `PointData` into x/y columns after Phase 9a.
 7. Add interval-row tests reducing point coordinate values with a standard range reduction.
 8. Add TensorDesigner UI/load-config tests for a PointData x/y tensor once TimeFrame rows are available.
+
+Implemented notes:
+
+- `PointCoordinate` is implemented as one container transform with `coordinate = X | Y`.
+- TensorDesign tests cover TimeFrame rows sampling one-keypoint-per-time `PointData` into x/y columns.
+- Sparse TimeFrame sampling is covered for analog data and produces `NaN` where no source sample exists.
+- Additional DerivedFromSource, interval-reduction, and TensorDesigner UI tests remain useful follow-up coverage but are not required to prove the primitive path.
 
 Exit criteria:
 
