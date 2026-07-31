@@ -91,6 +91,10 @@ std::shared_ptr<DigitalEventSeries> createEventSeries(std::vector<int64_t> const
     return series;
 }
 
+std::shared_ptr<TimeFrame> createTimeFrameFromTimes(std::vector<int> const & times) {
+    return std::make_shared<TimeFrame>(times);
+}
+
 }// namespace
 
 TEST_CASE("parseDesignJson parses valid interval design", "[TensorDesign]") {
@@ -142,6 +146,28 @@ TEST_CASE("parseDesignJson parses row_pipeline_json", "[TensorDesign][Phase2]") 
     REQUIRE(parsed.columns[0].column_name == "onset_signal");
     REQUIRE(parsed.columns[0].pipeline_json == kMeanValuePipelineJson);
     REQUIRE(parsed.columns[0].row_pipeline_json == expected_row_pipeline);
+}
+
+TEST_CASE("parseDesignJson parses TimeFrame row source", "[TensorDesign][Phase9a]") {
+    std::string const json = R"({
+        "tensor_key": "frame_features",
+        "row_source": {
+            "time_key": "frame",
+            "row_type": "timeframe"
+        },
+        "columns": [
+            {
+                "name": "signal_value",
+                "source_key": "signal",
+                "pipeline_json": "{\"steps\": []}"
+            }
+        ]
+    })";
+
+    auto const parsed = requireValue(parseDesignJson(json));
+    REQUIRE(parsed.row_type == DesignRowType::TimeFrame);
+    REQUIRE(parsed.row_time_key == "frame");
+    REQUIRE(parsed.row_source_key.empty());
 }
 
 TEST_CASE("parseDesignJson rejects unknown row_type", "[TensorDesign]") {
@@ -708,6 +734,41 @@ TEST_CASE("buildTensorFromDesignJson builds derived-from-source row tensors",
     CHECK_THAT(values[5], WithinAbs(5.0, 0.01));
 }
 
+TEST_CASE("buildTensorFromDesignJson builds TimeFrame row tensors",
+          "[TensorDesign][Phase9a]") {
+    DataManager dm;
+    REQUIRE(dm.setTime(TimeKey("frame"), createTimeFrameFromTimes({0, 1, 2, 3, 4}), true));
+    auto analog = createLinearAnalog(5);
+    dm.setData<AnalogTimeSeries>("signal", analog, TimeKey("frame"));
+
+    std::string const json = R"({
+        "tensor_key": "frame_features",
+        "row_source": {
+            "time_key": "frame",
+            "row_type": "timeframe"
+        },
+        "columns": [
+            {
+                "name": "signal_value",
+                "source_key": "signal",
+                "pipeline_json": "{\"steps\": []}"
+            }
+        ]
+    })";
+
+    auto const built = requireValue(buildTensorFromDesignJson(dm, json));
+    REQUIRE(built.numRows() == 5);
+    REQUIRE(built.numColumns() == 1);
+
+    auto const values = built.getColumn(0);
+    REQUIRE(values.size() == 5);
+    CHECK_THAT(values[0], WithinAbs(0.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(1.0, 0.01));
+    CHECK_THAT(values[2], WithinAbs(2.0, 0.01));
+    CHECK_THAT(values[3], WithinAbs(3.0, 0.01));
+    CHECK_THAT(values[4], WithinAbs(4.0, 0.01));
+}
+
 TEST_CASE("buildTensorFromDesignJson samples analog source from DigitalEventSeries row_pipeline_json",
           "[TensorDesign][Phase6]") {
     DataManager dm;
@@ -885,6 +946,27 @@ TEST_CASE("serializeDesignJson omits empty row_pipeline_json", "[TensorDesign][P
     auto const roundtrip = requireValue(parseDesignJson(json));
     REQUIRE(roundtrip.columns.size() == 1);
     REQUIRE(roundtrip.columns[0].row_pipeline_json.empty());
+}
+
+TEST_CASE("serializeDesignJson round-trips TimeFrame row source", "[TensorDesign][Phase9a]") {
+    TensorDesignSpec original;
+    original.tensor_key = "frame_features";
+    original.row_time_key = "frame";
+    original.row_type = DesignRowType::TimeFrame;
+    original.columns.push_back({
+            .column_name = "signal_value",
+            .source_key = "signal",
+            .pipeline_json = R"({"steps": []})",
+    });
+
+    auto const json = serializeDesignJson(original);
+    REQUIRE(json.find("time_key") != std::string::npos);
+    REQUIRE(json.find("data_key") == std::string::npos);
+
+    auto const roundtrip = requireValue(parseDesignJson(json));
+    REQUIRE(roundtrip.row_type == DesignRowType::TimeFrame);
+    REQUIRE(roundtrip.row_time_key == "frame");
+    REQUIRE(roundtrip.row_source_key.empty());
 }
 
 TEST_CASE("parseDesignJson parses pipeline_value_bindings", "[TensorDesign][Phase5]") {

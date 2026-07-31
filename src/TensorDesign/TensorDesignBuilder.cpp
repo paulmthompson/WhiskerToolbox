@@ -27,7 +27,6 @@ namespace Neuralyzer::TensorDesign {
 
 namespace {
 
-using Neuralyzer::TensorBuilders::buildAnalogSampleAtOffsetProvider;
 using Neuralyzer::TensorBuilders::buildIntervalPropertyProvider;
 using Neuralyzer::TensorBuilders::buildInvalidationWiringFn;
 using Neuralyzer::TensorBuilders::buildProviderFromRecipe;
@@ -47,6 +46,9 @@ using Neuralyzer::TensorBuilders::IntervalProperty;
     if (row_type_str == "derived_from_source") {
         return RowType::DerivedFromSource;
     }
+    if (row_type_str == "timeframe") {
+        return RowType::TimeFrame;
+    }
     if (row_type_str == "none") {
         return RowType::None;
     }
@@ -63,6 +65,8 @@ using Neuralyzer::TensorBuilders::IntervalProperty;
             return "ordinal";
         case RowType::DerivedFromSource:
             return "derived_from_source";
+        case RowType::TimeFrame:
+            return "timeframe";
         case RowType::None:
             return "none";
     }
@@ -214,6 +218,28 @@ struct RowBuildContext {
         return ctx;
     }
 
+    if (spec.row_type == RowType::TimeFrame) {
+        auto time_frame = dm.getTime(TimeKey(spec.row_time_key));
+        if (!time_frame || time_frame->getTotalFrameCount() <= 0) {
+            spdlog::error(
+                    "TensorDesign: row TimeFrame '{}' is empty or not found",
+                    spec.row_time_key);
+            return std::nullopt;
+        }
+
+        auto const count = static_cast<std::size_t>(time_frame->getTotalFrameCount());
+        ctx.row_times.reserve(count);
+        for (std::size_t i = 0; i < count; ++i) {
+            ctx.row_times.emplace_back(static_cast<int64_t>(i));
+        }
+        ctx.num_rows = ctx.row_times.size();
+
+        auto time_storage = TimeIndexStorageFactory::createFromTimeIndices(ctx.row_times);
+        ctx.row_desc = RowDescriptor::fromTimeIndices(
+                std::move(time_storage), std::move(time_frame));
+        return ctx;
+    }
+
     spdlog::error("TensorDesign: unsupported row_type");
     return std::nullopt;
 }
@@ -255,6 +281,7 @@ std::optional<TensorDesignSpec> parseDesignJson(std::string const & json) {
             }
             spec.row_type = parsed_row_type.value();
             spec.row_source_key = rs.value("data_key", "");
+            spec.row_time_key = rs.value("time_key", "");
         }
 
         if (j.contains("columns") && j["columns"].is_array()) {
@@ -285,7 +312,12 @@ std::string serializeDesignJson(TensorDesignSpec const & spec) {
     }
 
     nlohmann::json row_source;
-    row_source["data_key"] = spec.row_source_key;
+    if (!spec.row_source_key.empty()) {
+        row_source["data_key"] = spec.row_source_key;
+    }
+    if (!spec.row_time_key.empty()) {
+        row_source["time_key"] = spec.row_time_key;
+    }
     row_source["row_type"] = rowTypeToString(spec.row_type);
     j["row_source"] = row_source;
 

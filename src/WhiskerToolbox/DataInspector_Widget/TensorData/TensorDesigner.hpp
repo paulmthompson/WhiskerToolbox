@@ -59,11 +59,12 @@ enum class IntervalProperty : std::uint8_t;
  * @brief Row source type for the tensor designer
  */
 enum class DesignerRowType {
-    None,            ///< No row source selected
-    Interval,        ///< Rows from DigitalIntervalSeries
-    Timestamp,       ///< Rows from DigitalEventSeries
-    Ordinal,         ///< Manual ordinal rows
-    DerivedFromSource///< Derive row timestamps from any data source's timestamps
+    None,             ///< No row source selected
+    Interval,         ///< Rows from DigitalIntervalSeries
+    Timestamp,        ///< Rows from DigitalEventSeries
+    Ordinal,          ///< Manual ordinal rows
+    DerivedFromSource,///< Derive row timestamps from any data source's timestamps
+    TimeFrame         ///< Rows from a registered TimeFrame
 };
 
 /**

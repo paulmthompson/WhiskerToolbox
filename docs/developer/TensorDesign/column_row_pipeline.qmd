@@ -3,7 +3,7 @@ title: "Column Row Pipeline Design"
 format: html
 ---
 
-**Status:** Partially implemented. GatherResult, interval-window primitives, `ColumnRecipe::row_pipeline_json`, TensorDesign JSON round-trip, identity row-pipeline dispatch, `DigitalIntervalSeries` row-pipeline gather windows, `pipeline_value_bindings` for row-specific `PipelineValueStore` values, and `DigitalEventSeries` sample-time row-pipeline dispatch are implemented. Presets and UI support remain planned.
+**Status:** Partially implemented. GatherResult, interval-window primitives, `ColumnRecipe::row_pipeline_json`, TensorDesign JSON round-trip, identity row-pipeline dispatch, `DigitalIntervalSeries` row-pipeline gather windows, `pipeline_value_bindings` for row-specific `PipelineValueStore` values, `DigitalEventSeries` sample-time row-pipeline dispatch, and TimeFrame row sources are implemented. Presets and broader UI support remain planned.
 
 This document describes the target architecture for per-column gather geometry in lazy-column tensors. The implementation sequence is tracked separately in [Column Row Pipeline Roadmap](column_row_pipeline_roadmap.qmd).
 
@@ -39,7 +39,7 @@ The design should use existing project primitives instead of tensor-specific int
 
 Implemented today:
 
-- `TensorDesign` can build lazy-column tensors from interval, timestamp, and derived timestamp row sources.
+- `TensorDesign` can build lazy-column tensors from interval, timestamp, TimeFrame, and derived timestamp row sources.
 - Interval-row columns gather over the full row interval.
 - `ColumnRecipe::pipeline_json` describes source processing and interval range reductions.
 - `ColumnRecipe::row_pipeline_json` is parsed, serialized, and used for interval-row gather geometry.
@@ -56,6 +56,7 @@ Implemented today:
 - `DigitalEventSeries` row-pipeline outputs are routed to timestamp/sample providers for interval-row columns without terminal range reductions.
 - `ShiftDigitalEventSeries` expresses sample offsets as a normal TransformPipeline step.
 - Angle-at-contact-onset point sampling is tested through TensorDesign JSON in the whisker-contact scenario.
+- `row_source.time_key` with `row_type: "timeframe"` builds one row per index in a registered TimeFrame.
 - `GatherResult` consumes prepared `DigitalIntervalSeries` windows and can hold companion alignment events, but TensorDesign should not rely on that metadata path for column transformations.
 - `GatherResult` converts prepared window bounds to the gathered source `TimeFrame` with `convertTimeFrameRange()`.
 - `DigitalIntervalSeries` supports `IntervalLayout::Overlapping` through `createOverlapping()`.
@@ -180,9 +181,9 @@ Potential future transforms should be added only when there is a concrete use ca
 
 ## Row Source Extensions
 
-The implemented row sources are data-object based: interval rows from `DigitalIntervalSeries`, timestamp rows from `DigitalEventSeries`, and derived timestamp rows from timestamp-bearing data objects through `extractTimeIndices()`. A missing but important row source is a bare `TimeFrame`.
+The implemented row sources include interval rows from `DigitalIntervalSeries`, timestamp rows from `DigitalEventSeries`, TimeFrame rows from registered `TimeKey`s, and derived timestamp rows from timestamp-bearing data objects through `extractTimeIndices()`.
 
-Planned `TimeFrame` rows should let a tensor have one row per index in a named `TimeFrame` without requiring a synthetic data object:
+`TimeFrame` rows let a tensor have one row per index in a named `TimeFrame` without requiring a synthetic data object:
 
 ```json
 {
@@ -193,7 +194,7 @@ Planned `TimeFrame` rows should let a tensor have one row per index in a named `
 }
 ```
 
-This should be distinct from `row_source.data_key`, because timeframes are DataManager time metadata addressed by `TimeKey`, not normal data object keys. In the TensorDesigner UI this should appear as a separate **TimeFrame Rows** option populated from `DataManager::getTimeFrameKeys()`. This will make the current distinction clearer:
+This is distinct from `row_source.data_key`, because timeframes are DataManager time metadata addressed by `TimeKey`, not normal data object keys. In the TensorDesigner UI this appears as a separate **TimeFrame Rows** option populated from `DataManager::getTimeFrameKeys()`. This makes the row-source distinction clearer:
 
 | UI row mode | Source list | Row identity |
 |---|---|---|

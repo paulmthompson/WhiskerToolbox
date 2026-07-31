@@ -5,7 +5,7 @@ format: html
 
 **Status:** Implementation roadmap for [Column Row Pipeline Design](column_row_pipeline.qmd).
 
-Phases 1-6 are implemented. Phase 7 and later remain planned.
+Phases 1-6 and 9a are implemented. Phase 7, 9b, and later remain planned.
 
 This roadmap breaks the per-column row-pipeline refactor into small, testable steps. The design goal is to let each tensor column derive its own row-aligned gather inputs through TransformPipelines while keeping `GatherResult` a container/direct-gather executor rather than a pipeline runner.
 
@@ -274,9 +274,11 @@ Potential stale or missing coverage after Phase 8:
 - Add a derived binding row-count mismatch test if direct mismatch coverage is not considered sufficient.
 - Add cache behavior tests when row-pipeline caching is introduced.
 
-## Phase 9a: TimeFrame Row Source
+## Phase 9a: TimeFrame Row Source — Done
 
 Goal: allow tensors with one row per index in a named `TimeFrame`, without requiring a synthetic data object.
+
+Status: done. TensorDesign supports `row_type: "timeframe"` with `row_source.time_key`, and TensorDesigner exposes a **TimeFrame Rows** mode populated from `DataManager::getTimeFrameKeys()`.
 
 Tasks:
 
@@ -287,6 +289,13 @@ Tasks:
 5. Keep **Timestamp Rows** data-object based (`DigitalEventSeries`) and clarify **Derived from Source** as "derive rows from timestamps in a data object".
 6. Add tests for TimeFrame rows sampling analog data.
 7. Add UI tests that TimeFrame row sources appear separately from timestamp-event row sources.
+
+Implemented notes:
+
+- TensorDesign JSON uses `row_source.time_key` for TimeFrame rows.
+- `serializeDesignJson()` omits `data_key` for TimeFrame row sources.
+- Backend tests cover parsing, serialization, and analog sampling over all TimeFrame rows.
+- TensorDesigner load-config tests cover building a tensor from TimeFrame rows.
 
 Exit criteria:
 

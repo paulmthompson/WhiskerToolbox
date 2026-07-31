@@ -569,9 +569,9 @@ ColumnProviderFn buildProviderFromRecipe(
                 "buildProviderFromRecipe: timestamp-row column requires non-empty row_times");
     }
 
-    // Load pipeline from JSON (empty JSON = empty pipeline = identity passthrough)
+    // Load pipeline from JSON (empty or explicit identity JSON = passthrough)
     Neuralyzer::Transforms::V2::TransformPipeline pipeline;
-    if (!recipe.pipeline_json.empty()) {
+    if (!Neuralyzer::Gather::isIdentityRowPipelineJson(recipe.pipeline_json)) {
         auto pipeline_result = Neuralyzer::Transforms::V2::Examples::loadPipelineFromJson(recipe.pipeline_json);
         if (!pipeline_result) {
             auto const error = pipeline_result.error();

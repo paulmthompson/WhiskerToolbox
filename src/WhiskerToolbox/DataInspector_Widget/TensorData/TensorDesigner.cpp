@@ -52,6 +52,8 @@ using DesignRowType = Neuralyzer::TensorDesign::RowType;
             return DesignRowType::Ordinal;
         case DesignerRowType::DerivedFromSource:
             return DesignRowType::DerivedFromSource;
+        case DesignerRowType::TimeFrame:
+            return DesignRowType::TimeFrame;
         case DesignerRowType::None:
             return DesignRowType::None;
     }
@@ -68,6 +70,8 @@ using DesignRowType = Neuralyzer::TensorDesign::RowType;
             return DesignerRowType::Ordinal;
         case DesignRowType::DerivedFromSource:
             return DesignerRowType::DerivedFromSource;
+        case DesignRowType::TimeFrame:
+            return DesignerRowType::TimeFrame;
         case DesignRowType::None:
             return DesignerRowType::None;
     }
@@ -138,8 +142,12 @@ void TensorDesigner::setTensorKey(std::string const & key) {
 std::string TensorDesigner::toJson() const {
     Neuralyzer::TensorDesign::TensorDesignSpec spec;
     spec.tensor_key = _tensor_key;
-    spec.row_source_key = _row_source_key;
     spec.row_type = toTensorDesignRowType(_row_type);
+    if (_row_type == DesignerRowType::TimeFrame) {
+        spec.row_time_key = _row_source_key;
+    } else {
+        spec.row_source_key = _row_source_key;
+    }
     spec.columns = _column_recipes;
     return Neuralyzer::TensorDesign::serializeDesignJson(spec);
 }
@@ -152,7 +160,8 @@ bool TensorDesigner::fromJson(std::string const & json) {
     }
 
     _row_type = fromTensorDesignRowType(spec->row_type);
-    _row_source_key = spec->row_source_key;
+    _row_source_key = _row_type == DesignerRowType::TimeFrame ? spec->row_time_key
+                                                              : spec->row_source_key;
     if (!spec->tensor_key.empty()) {
         _tensor_key = spec->tensor_key;
     }
@@ -170,6 +179,9 @@ bool TensorDesigner::fromJson(std::string const & json) {
             break;
         case DesignerRowType::DerivedFromSource:
             _row_type_combo->setCurrentIndex(4);
+            break;
+        case DesignerRowType::TimeFrame:
+            _row_type_combo->setCurrentIndex(5);
             break;
         case DesignerRowType::None:
             _row_type_combo->setCurrentIndex(0);
@@ -211,6 +223,9 @@ void TensorDesigner::_onRowSourceTypeChanged(int index) {
         case 4:
             _row_type = DesignerRowType::DerivedFromSource;
             break;
+        case 5:
+            _row_type = DesignerRowType::TimeFrame;
+            break;
         default:
             _row_type = DesignerRowType::None;
             break;
@@ -245,6 +260,13 @@ void TensorDesigner::_onRowSourceKeyChanged(int index) {
         _row_info_label->setText(
                 QStringLiteral("Rows: %1 timestamps (derived from source)")
                         .arg(static_cast<int>(result.size())));
+    } else if (_row_type == DesignerRowType::TimeFrame) {
+        auto time_frame = _data_manager->getTime(TimeKey(_row_source_key));
+        if (time_frame) {
+            _row_info_label->setText(
+                    QStringLiteral("Rows: %1 TimeFrame indices")
+                            .arg(time_frame->getTotalFrameCount()));
+        }
     }
 }
 
@@ -420,6 +442,7 @@ void TensorDesigner::_setupUi() {
     _row_type_combo->addItem(QStringLiteral("Timestamp Rows"));
     _row_type_combo->addItem(QStringLiteral("Ordinal Rows"));
     _row_type_combo->addItem(QStringLiteral("Derived from Source"));
+    _row_type_combo->addItem(QStringLiteral("TimeFrame Rows"));
     _row_type_combo->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     row_layout->addWidget(_row_type_combo);
 
@@ -541,6 +564,13 @@ void TensorDesigner::_populateRowSourceKeys() {
                 _row_source_combo->addItem(display, QString::fromStdString(key));
             }
         }
+    } else if (_row_type == DesignerRowType::TimeFrame) {
+        auto time_keys = _data_manager->getTimeFrameKeys();
+        for (auto const & key: time_keys) {
+            auto const key_string = key.str();
+            _row_source_combo->addItem(
+                    QString::fromStdString(key_string), QString::fromStdString(key_string));
+        }
     }
     // For Ordinal, no source key needed
 
@@ -548,7 +578,8 @@ void TensorDesigner::_populateRowSourceKeys() {
 
     _row_source_combo->setVisible(_row_type == DesignerRowType::Interval ||
                                   _row_type == DesignerRowType::Timestamp ||
-                                  _row_type == DesignerRowType::DerivedFromSource);
+                                  _row_type == DesignerRowType::DerivedFromSource ||
+                                  _row_type == DesignerRowType::TimeFrame);
 
     if (_row_source_combo->count() > 0) {
         _onRowSourceKeyChanged(0);
@@ -599,8 +630,12 @@ void TensorDesigner::_buildTensor() {
 
     Neuralyzer::TensorDesign::TensorDesignSpec spec;
     spec.tensor_key = _tensor_key;
-    spec.row_source_key = _row_source_key;
     spec.row_type = toTensorDesignRowType(_row_type);
+    if (_row_type == DesignerRowType::TimeFrame) {
+        spec.row_time_key = _row_source_key;
+    } else {
+        spec.row_source_key = _row_source_key;
+    }
     spec.columns = _column_recipes;
 
     auto built = Neuralyzer::TensorDesign::buildTensor(*_data_manager, spec);

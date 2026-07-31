@@ -21,7 +21,8 @@ enum class RowType : std::uint8_t {
     Interval,
     Timestamp,
     Ordinal,
-    DerivedFromSource
+    DerivedFromSource,
+    TimeFrame
 };
 
 /**
@@ -36,6 +37,9 @@ struct TensorDesignSpec {
 
     /// DataManager key for the row source data object
     std::string row_source_key;
+
+    /// DataManager TimeKey for TimeFrame row sources
+    std::string row_time_key;
 
     /// How rows are derived from the row source
     RowType row_type = RowType::None;

@@ -56,8 +56,9 @@ The format matches `TensorDesigner::toJson()` / `fromJson()`:
 |-------|----------|-------------|
 | `tensor_key` | For `populateDataManager` only | DataManager key for the output tensor |
 | `output_time_key` | No (default `"default"`) | `TimeKey` when registering in DataManager |
-| `row_source.data_key` | Yes | Row source object in DataManager |
-| `row_source.row_type` | Yes | `interval`, `timestamp`, `derived_from_source`, `ordinal` (unsupported), or `none` |
+| `row_source.data_key` | For data-object row sources | Row source object in DataManager |
+| `row_source.time_key` | For `timeframe` row sources | TimeFrame key in DataManager |
+| `row_source.row_type` | Yes | `interval`, `timestamp`, `timeframe`, `derived_from_source`, `ordinal` (unsupported), or `none` |
 | `columns[].name` | Yes | Column display name |
 | `columns[].source_key` | For data columns | DataManager source key |
 | `columns[].row_pipeline_json` | No | Embedded row `PipelineDescriptor` JSON string. Empty or explicit identity (`{"steps": []}`) preserves current row geometry; interval-row pipelines that produce a row-aligned `DigitalIntervalSeries` provide prepared gather windows. |
@@ -66,9 +67,9 @@ The format matches `TensorDesigner::toJson()` / `fromJson()`:
 
 Each `pipeline_json` string is a [`PipelineDescriptor`](../transforms_v2/pipeline_loader.qmd) fragment. Interval-row columns require a terminal `range_reduction`.
 
-Current interval-row tensor columns gather over the full row interval when `row_pipeline_json` is omitted, empty, or an explicit identity descriptor such as `{"steps": []}`. Non-identity row pipelines may now run against the original interval row source when they produce a `DigitalIntervalSeries` with the same row count; the output is used as prepared gather windows for that column. `DigitalEventSeries` sample-time output remains deferred to the timestamp/sample row-pipeline phase. Per-row normalization markers should be bound into the column TransformPipeline through TransformsV2 `PipelineValueStore` parameter bindings rather than through `row_pipeline_json`; `GatherResult` remains only the row container and direct gather executor.
+Current interval-row tensor columns gather over the full row interval when `row_pipeline_json` is omitted, empty, or an explicit identity descriptor such as `{"steps": []}`. Non-identity row pipelines may run against the original interval row source when they produce a `DigitalIntervalSeries` with the same row count; the output is used as prepared gather windows for that column. Row pipelines that produce `DigitalEventSeries` with the same row count are routed to timestamp/sample provider behavior when the column pipeline has no terminal range reduction. Per-row normalization markers should be bound into the column TransformPipeline through TransformsV2 `PipelineValueStore` parameter bindings rather than through `row_pipeline_json`; `GatherResult` remains only the row container and direct gather executor.
 
-There is still a temporary compatibility path in `TensorDesignBuilder::buildColumnProvider()` that detects a top-level `"offset"` field inside `pipeline_json` for analog sample-at-offset columns. This should be removed once point sampling is expressible through the row-pipeline design.
+TimeFrame row sources use `row_source.time_key` and build one row per index in the selected `TimeFrame`. The previous temporary compatibility path that detected a top-level `"offset"` field inside `pipeline_json` has been removed; offsets should be expressed as row-pipeline transforms such as `ShiftDigitalEventSeries`.
 
 ## Build API (lazy-column tensors)
 
