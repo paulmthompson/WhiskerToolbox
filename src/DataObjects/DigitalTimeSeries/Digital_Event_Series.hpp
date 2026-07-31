@@ -71,6 +71,7 @@
 #include <compare>
 #include <memory>
 #include <ranges>
+#include <stdexcept>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -158,18 +159,33 @@ public:
     // =============================================================
 
     /**
-     * @brief Get a std::ranges compatible view of the series in absolute clock-tick time.
+     * @brief Get a std::ranges compatible view of the series in clock-tick time.
      *
-     * Returns a random-access view that synthesizes ClockTicksWithId objects on demand.
+     * For absolute-time series, returns ClockTicks mapped through the series TimeFrame.
+     * For relative-time series, returns stored relative ClockTicks directly (no TimeFrame).
      *
-     * @pre series time frame must be set (@ref getTimeFrame() non-null)
+     * @pre For absolute-time series, @ref getTimeFrame() must be non-null
      * @see getStoredEvent for index-space access (save/export)
+     * @see getStoredRelativeEvent for relative storage export
      */
     [[nodiscard]] auto view() const {
-        assert(_time_frame != nullptr && "view() requires series time frame");
-        TimeFrame const * time_frame = _time_frame.get();
-        return std::views::iota(size_t{0}, size()) | std::views::transform([this, time_frame](size_t idx) {
-                   if (_cached_storage.isValid()) {
+        return std::views::iota(size_t{0}, size()) | std::views::transform([this](size_t idx) -> ClockTicksWithId {
+                   if (storesRelativeTimes()) {
+                       if (_cached_storage.isValid() &&
+                           _cached_storage.time_domain == DigitalEventTimeDomain::RelativeClockTicks) {
+                           return ClockTicksWithId(
+                                   _cached_storage.getRelativeEvent(idx),
+                                   _cached_storage.getEntityId(idx));
+                       }
+                       return ClockTicksWithId(
+                               _storage.getRelativeEvent(idx),
+                               _storage.getEntityId(idx));
+                   }
+
+                   TimeFrame const * time_frame = _time_frame.get();
+                   assert(time_frame != nullptr && "view() requires series time frame");
+                   if (_cached_storage.isValid() &&
+                       _cached_storage.time_domain == DigitalEventTimeDomain::TimeFrameIndex) {
                        return ClockTicksWithId(
                                time_frame->getTimeAtIndex(_cached_storage.getEvent(idx)),
                                _cached_storage.getEntityId(idx));
@@ -187,9 +203,24 @@ public:
      *
      * @param index Flat index in [0, size())
      * @return TimeFrameIndex from internal storage
+     * @throws std::runtime_error if storage uses relative ClockTicks
      */
     [[nodiscard]] TimeFrameIndex getStoredEvent(size_t index) const {
+        if (storesRelativeTimes()) {
+            throw std::runtime_error(
+                    "getStoredEvent() is not valid for relative-time series; use getStoredRelativeEvent()");
+        }
         return _storage.getEvent(index);
+    }
+
+    /**
+     * @brief Get the stored relative event time at a flat storage index.
+     *
+     * @param index Flat index in [0, size())
+     * @return ClockTicks from internal relative storage
+     */
+    [[nodiscard]] ClockTicks getStoredRelativeEvent(size_t index) const {
+        return _storage.getRelativeEvent(index);
     }
 
     /**
@@ -313,12 +344,39 @@ public:
     [[nodiscard]] auto viewInRange(TimeFrameIndex start_index,
                                    TimeFrameIndex stop_index,
                                    TimeFrame const & source_time_frame) const {
+        if (storesRelativeTimes()) {
+            throw std::runtime_error(
+                    "viewInRange() requires absolute-time series; use viewInRelativeRange()");
+        }
         assert(_time_frame != nullptr && "viewInRange requires series time frame");
         auto [start_idx, end_idx] = _getTimeRangeIndices(start_index, stop_index, source_time_frame);
         TimeFrame const * time_frame = _time_frame.get();
         return std::views::iota(start_idx, end_idx) | std::views::transform([this, time_frame](size_t idx) {
                    return ClockTicksWithId(
                            time_frame->getTimeAtIndex(_storage.getEvent(idx)),
+                           _storage.getEntityId(idx));
+               });
+    }
+
+    /**
+     * @brief Get events in a relative ClockTicks range as a lazy view of ClockTicksWithId objects.
+     *
+     * @pre storesRelativeTimes() == true
+     * @param start Start relative time (inclusive)
+     * @param end End relative time (inclusive)
+     * @return Lazy view of ClockTicksWithId objects in the range
+     */
+    [[nodiscard]] auto viewInRelativeRange(ClockTicks start, ClockTicks end) const {
+        auto [start_idx, end_idx] = _storage.getRelativeTimeRange(start, end);
+        return std::views::iota(start_idx, end_idx) | std::views::transform([this](size_t idx) {
+                   if (_cached_storage.isValid() &&
+                       _cached_storage.time_domain == DigitalEventTimeDomain::RelativeClockTicks) {
+                       return ClockTicksWithId(
+                               _cached_storage.getRelativeEvent(idx),
+                               _cached_storage.getEntityId(idx));
+                   }
+                   return ClockTicksWithId(
+                           _storage.getRelativeEvent(idx),
                            _storage.getEntityId(idx));
                });
     }
@@ -336,6 +394,10 @@ public:
     [[nodiscard]] auto viewTimesInRange(TimeFrameIndex start_index,
                                         TimeFrameIndex stop_index,
                                         TimeFrame const & source_time_frame) const {
+        if (storesRelativeTimes()) {
+            throw std::runtime_error(
+                    "viewTimesInRange() requires absolute-time series; use viewInRelativeRange()");
+        }
         assert(_time_frame != nullptr && "viewTimesInRange requires series time frame");
         auto [start_idx, end_idx] = _getTimeRangeIndices(start_index, stop_index, source_time_frame);
         TimeFrame const * time_frame = _time_frame.get();
@@ -397,11 +459,29 @@ public:
     [[nodiscard]] bool isLazy() const { return _storage.isLazy(); }
 
     /**
+     * @brief Check if events are stored as relative ClockTicks (no TimeFrame required for view()).
+     */
+    [[nodiscard]] bool storesRelativeTimes() const { return _storage.isRelative(); }
+
+    /**
      * @brief Get the underlying storage type
      */
     [[nodiscard]] DigitalEventStorageType getStorageType() const { return _storage.getStorageType(); }
 
     // ========== View and Lazy Factory Methods ==========
+
+    /**
+     * @brief Create a series with immutable relative ClockTicks storage.
+     *
+     * The resulting series has no TimeFrame and does not support mutation or createView().
+     *
+     * @param events Relative event times (sorted and deduplicated on construction)
+     * @param entity_ids Optional entity IDs aligned with events before sorting
+     * @return New series backed by relative owning storage
+     */
+    static std::shared_ptr<DigitalEventSeries> createFromRelativeClockTicks(
+            std::vector<ClockTicks> events,
+            std::vector<EntityId> entity_ids = {});
 
     /**
      * @brief Create a view-based series filtering by time range

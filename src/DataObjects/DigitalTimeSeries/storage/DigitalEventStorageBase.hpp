@@ -6,12 +6,14 @@
 #ifndef DIGITAL_EVENT_STORAGE_BASE_HPP
 #define DIGITAL_EVENT_STORAGE_BASE_HPP
 
-#include "DigitalEventStorageCache.hpp"     // DigitalEventStorageCache
+#include "DigitalEventStorageCache.hpp"// DigitalEventStorageCache
 
-#include "Entity/EntityId.hpp"              // EntityId
-#include "TimeFrame/TimeFrameIndex.hpp"     // TimeFrameIndex
+#include "Entity/EntityId.hpp"         // EntityId
+#include "TimeFrame/ClockTicks.hpp"    // ClockTicks
+#include "TimeFrame/TimeFrameIndex.hpp"// TimeFrameIndex
 
 #include <optional>
+#include <stdexcept>
 #include <utility>
 
 // =============================================================================
@@ -105,6 +107,61 @@ public:
         return static_cast<Derived const *>(this)->getTimeRangeImpl(start, end);
     }
 
+    // ========== Relative Time Access ==========
+
+    /**
+     * @brief Get the time coordinate domain for this storage.
+     */
+    [[nodiscard]] DigitalEventTimeDomain getTimeDomain() const {
+        return static_cast<Derived const *>(this)->getTimeDomainImpl();
+    }
+
+    /**
+     * @brief Check if events are stored as relative ClockTicks.
+     */
+    [[nodiscard]] bool isRelative() const {
+        return getTimeDomain() == DigitalEventTimeDomain::RelativeClockTicks;
+    }
+
+    /**
+     * @brief Get the relative event time at a flat index.
+     * @pre getTimeDomain() == DigitalEventTimeDomain::RelativeClockTicks
+     * @param idx Flat index in [0, size()).
+     */
+    [[nodiscard]] ClockTicks getRelativeEvent(size_t idx) const {
+        if constexpr (requires(Derived const & d, size_t i) { d.getRelativeEventImpl(i); }) {
+            return static_cast<Derived const *>(this)->getRelativeEventImpl(idx);
+        }
+        throw std::runtime_error("getRelativeEvent() not supported for absolute-time storage");
+    }
+
+    /**
+     * @brief Find the index of an event by its exact relative time.
+     * @param time The exact ClockTicks to find.
+     * @return Index of the event, or std::nullopt if not found.
+     */
+    [[nodiscard]] std::optional<size_t> findByRelativeTime(ClockTicks time) const {
+        if constexpr (requires(Derived const & d, ClockTicks t) { d.findByRelativeTimeImpl(t); }) {
+            return static_cast<Derived const *>(this)->findByRelativeTimeImpl(time);
+        }
+        throw std::runtime_error("findByRelativeTime() not supported for absolute-time storage");
+    }
+
+    /**
+     * @brief Get range of indices for events in [start, end] inclusive (relative time).
+     * @param start Start time (inclusive).
+     * @param end   End time (inclusive).
+     * @return Pair of (start_idx, end_idx) where end is exclusive.
+     */
+    [[nodiscard]] std::pair<size_t, size_t> getRelativeTimeRange(ClockTicks start, ClockTicks end) const {
+        if constexpr (requires(Derived const & d, ClockTicks s, ClockTicks e) {
+                          d.getRelativeTimeRangeImpl(s, e);
+                      }) {
+            return static_cast<Derived const *>(this)->getRelativeTimeRangeImpl(start, end);
+        }
+        throw std::runtime_error("getRelativeTimeRange() not supported for absolute-time storage");
+    }
+
     // ========== Storage Type ==========
 
     /**
@@ -126,6 +183,13 @@ public:
      */
     [[nodiscard]] bool isLazy() const {
         return getStorageType() == DigitalEventStorageType::Lazy;
+    }
+
+    /**
+     * @brief Check if this is relative owning storage.
+     */
+    [[nodiscard]] bool isRelativeOwning() const {
+        return getStorageType() == DigitalEventStorageType::RelativeOwning;
     }
 
     // ========== Cache Optimization ==========

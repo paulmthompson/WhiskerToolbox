@@ -1,0 +1,31 @@
+---
+title: "RelativeOwningDigitalEventStorage"
+date: last-modified
+---
+
+# RelativeOwningDigitalEventStorage
+
+Immutable owning storage backend for `DigitalEventSeries` that stores trial-relative event times as `ClockTicks` without an associated `TimeFrame`.
+
+## Construction
+
+Series are created exclusively via `DigitalEventSeries::createFromRelativeClockTicks()`. The storage sorts and deduplicates events on construction. Optional `EntityId` vectors may be supplied; otherwise entity IDs default to zero.
+
+## Properties
+
+- **Time domain**: `DigitalEventTimeDomain::RelativeClockTicks`
+- **Storage type**: `DigitalEventStorageType::RelativeOwning`
+- **Mutation**: Not supported (no `addEvent`, `removeEvent`, or `clear`)
+- **Views**: `createView()` is not supported in v1 (`getSharedOwningStorage()` returns `nullptr`)
+- **Iteration**: `DigitalEventSeries::view()` returns stored `ClockTicks` directly; no `TimeFrame` is required
+
+## Lookup
+
+- `findByRelativeTime(ClockTicks)` — O(log n) binary search
+- `getRelativeTimeRange(ClockTicks, ClockTicks)` — index range for inclusive relative bounds
+- Absolute-time APIs (`getEvent`, `findByTime`, `getTimeRange`) throw `std::runtime_error`
+
+## See Also
+
+- [Storage Backend Architecture](../../DataManager/storage_architecture.qmd)
+- `Digital_Event_Series.hpp` — `createFromRelativeClockTicks()`, `viewInRelativeRange()`

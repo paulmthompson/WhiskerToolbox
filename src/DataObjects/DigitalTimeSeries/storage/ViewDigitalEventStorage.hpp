@@ -84,6 +84,10 @@ public:
 
     [[nodiscard]] std::pair<size_t, size_t> getTimeRangeImpl(TimeFrameIndex start, TimeFrameIndex end) const;
 
+    [[nodiscard]] DigitalEventTimeDomain getTimeDomainImpl() const {
+        return DigitalEventTimeDomain::TimeFrameIndex;
+    }
+
     [[nodiscard]] DigitalEventStorageType getStorageTypeImpl() const {
         return DigitalEventStorageType::View;
     }

@@ -1,6 +1,7 @@
 #include "Digital_Event_Series.hpp"
 
 #include "storage/OwningDigitalEventStorage.hpp"
+#include "storage/RelativeOwningDigitalEventStorage.hpp"
 #include "storage/ViewDigitalEventStorage.hpp"
 
 #include "Entity/EntityRegistry.hpp"
@@ -176,6 +177,10 @@ void DigitalEventSeries::_cacheOptimizationPointers() {
 }
 
 void DigitalEventSeries::rebuildAllEntityIds() {
+    if (storesRelativeTimes()) {
+        return;
+    }
+
     auto * owning = _storage.tryGetMutableOwning();
     if (!owning) {
         // For view/lazy storage, just invalidate the cache
@@ -207,10 +212,27 @@ void DigitalEventSeries::rebuildAllEntityIds() {
     _cacheOptimizationPointers();
 }
 
+// ========== Relative Factory Method ==========
+
+std::shared_ptr<DigitalEventSeries> DigitalEventSeries::createFromRelativeClockTicks(
+        std::vector<ClockTicks> events,
+        std::vector<EntityId> entity_ids) {
+    auto result = std::make_shared<DigitalEventSeries>();
+    if (entity_ids.empty()) {
+        result->_storage = DigitalEventStorageWrapper{
+                RelativeOwningDigitalEventStorage{std::move(events)}};
+    } else {
+        result->_storage = DigitalEventStorageWrapper{
+                RelativeOwningDigitalEventStorage{std::move(events), std::move(entity_ids)}};
+    }
+    result->_cacheOptimizationPointers();
+    return result;
+}
+
 // ========== View Factory Methods ==========
 
 std::shared_ptr<DigitalEventSeries> DigitalEventSeries::createView(
-        const std::shared_ptr<DigitalEventSeries const>& source,
+        std::shared_ptr<DigitalEventSeries const> const & source,
         TimeFrameIndex start,
         TimeFrameIndex end) {
     // Get shared owning storage from source (zero-copy)
@@ -234,7 +256,7 @@ std::shared_ptr<DigitalEventSeries> DigitalEventSeries::createView(
 }
 
 std::shared_ptr<DigitalEventSeries> DigitalEventSeries::createView(
-        const std::shared_ptr<DigitalEventSeries const>& source,
+        std::shared_ptr<DigitalEventSeries const> const & source,
         std::unordered_set<EntityId> const & entity_ids) {
     // Get shared owning storage from source (zero-copy)
     auto shared_storage = source->_storage.getSharedOwningStorage();
@@ -257,6 +279,21 @@ std::shared_ptr<DigitalEventSeries> DigitalEventSeries::createView(
 }
 
 std::shared_ptr<DigitalEventSeries> DigitalEventSeries::materialize() const {
+    if (storesRelativeTimes()) {
+        std::vector<ClockTicks> events;
+        std::vector<EntityId> entity_ids;
+
+        events.reserve(_storage.size());
+        entity_ids.reserve(_storage.size());
+
+        for (size_t i = 0; i < _storage.size(); ++i) {
+            events.push_back(_storage.getRelativeEvent(i));
+            entity_ids.push_back(_storage.getEntityId(i));
+        }
+
+        return createFromRelativeClockTicks(std::move(events), std::move(entity_ids));
+    }
+
     std::vector<TimeFrameIndex> events;
     std::vector<EntityId> entity_ids;
 

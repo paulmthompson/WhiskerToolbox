@@ -104,6 +104,10 @@ public:
 
     [[nodiscard]] std::pair<size_t, size_t> getTimeRangeImpl(TimeFrameIndex start, TimeFrameIndex end) const;
 
+    [[nodiscard]] DigitalEventTimeDomain getTimeDomainImpl() const {
+        return DigitalEventTimeDomain::TimeFrameIndex;
+    }
+
     [[nodiscard]] DigitalEventStorageType getStorageTypeImpl() const {
         return DigitalEventStorageType::Owning;
     }
@@ -116,7 +120,9 @@ public:
      */
     [[nodiscard]] DigitalEventStorageCache tryGetCacheImpl() const {
         return DigitalEventStorageCache{
+                DigitalEventTimeDomain::TimeFrameIndex,
                 _events.data(),
+                nullptr,
                 _entity_ids.data(),
                 _events.size(),
                 true};// is_contiguous

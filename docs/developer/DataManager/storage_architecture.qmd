@@ -76,13 +76,13 @@ the `*Impl()` methods. The compiler resolves all calls at compile time — no vi
 |-----------|-----------|-------------|
 | `RaggedTimeSeries<T>` | `RaggedStorageBase<D, TData>` | `size`, `getTime`, `getData`, `getEntityId`, `findByEntityId`, `getTimeRange`, `tryGetCache` |
 | `RaggedAnalogTimeSeries` | `RaggedAnalogStorageBase<D>` | `size`, `getTime`, `getValue`, `getTimeRange`, `getValuesAtTime`, `tryGetCache` |
-| `DigitalEventSeries` | `DigitalEventStorageBase<D>` | `size`, `getEvent`, `getEntityId`, `findByTime`, `findByEntityId`, `getTimeRange`, `tryGetCache` |
+| `DigitalEventSeries` | `DigitalEventStorageBase<D>` | `size`, `getEvent`, `getEntityId`, `findByTime`, `findByEntityId`, `getTimeRange`, `getTimeDomain`, `getRelativeEvent`, `findByRelativeTime`, `getRelativeTimeRange`, `tryGetCache` |
 | `DigitalIntervalSeries` | `DigitalIntervalStorageBase<D>` | `size`, `getInterval`, `getEntityId`, `findByInterval`, `getOverlappingRange`, `getContainedRange`, `tryGetCache` |
 | `AnalogTimeSeries` | `AnalogDataStorageBase<D>` | `getValueAt`, `size`, `getSpan`, `isContiguous` |
 
 ## Layer 2: Concrete Storage Backends
 
-Each storage family provides three concrete implementations:
+Each storage family provides three concrete implementations (four for `DigitalEventSeries`, which adds relative owning storage):
 
 ### Owning Storage
 
@@ -151,6 +151,16 @@ class LazyRaggedStorage : public RaggedStorageBase<...> {
 - Cache always invalid (non-contiguous by nature)
 - Read-only: mutations throw `std::runtime_error`
 - Template parameter `ViewType` is unbounded — this is why type erasure is needed
+
+### Relative Owning Storage (`DigitalEventSeries` only)
+
+Immutable owning storage for trial-relative `ClockTicks`. Constructed once from caller-provided vectors; no mutation API. Does not use a `TimeFrame`. See [RelativeOwningDigitalEventStorage](../DataObjects/DigitalTimeSeries/storage/RelativeOwningDigitalEventStorage.qmd).
+
+**Performance characteristics:**
+
+- Cache always valid (contiguous `ClockTicks` array)
+- O(log n) relative-time lookup via binary search
+- O(1) EntityId lookup via hash map
 
 ## Layer 3: Type-Erased Wrapper
 

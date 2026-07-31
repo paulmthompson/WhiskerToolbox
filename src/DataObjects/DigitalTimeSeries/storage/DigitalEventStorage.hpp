@@ -6,6 +6,7 @@
 #include "LazyDigitalEventStorage.hpp"
 
 #include "Entity/EntityTypes.hpp"
+#include "TimeFrame/ClockTicks.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <memory>
@@ -15,6 +16,7 @@
 #include <vector>
 
 class OwningDigitalEventStorage;
+class RelativeOwningDigitalEventStorage;
 class ViewDigitalEventStorage;
 
 // =============================================================================
@@ -82,6 +84,26 @@ public:
 
     [[nodiscard]] bool isLazy() const {
         return getStorageType() == DigitalEventStorageType::Lazy;
+    }
+
+    [[nodiscard]] bool isRelative() const {
+        return getStorageType() == DigitalEventStorageType::RelativeOwning;
+    }
+
+    [[nodiscard]] DigitalEventTimeDomain getTimeDomain() const {
+        return _impl->getTimeDomain();
+    }
+
+    [[nodiscard]] ClockTicks getRelativeEvent(size_t idx) const {
+        return _impl->getRelativeEvent(idx);
+    }
+
+    [[nodiscard]] std::optional<size_t> findByRelativeTime(ClockTicks time) const {
+        return _impl->findByRelativeTime(time);
+    }
+
+    [[nodiscard]] std::pair<size_t, size_t> getRelativeTimeRange(ClockTicks start, ClockTicks end) const {
+        return _impl->getRelativeTimeRange(start, end);
     }
 
     // ========== Cache Optimization ==========
@@ -161,6 +183,10 @@ private:
         virtual std::optional<size_t> findByTime(TimeFrameIndex time) const = 0;
         virtual std::optional<size_t> findByEntityId(EntityId id) const = 0;
         virtual std::pair<size_t, size_t> getTimeRange(TimeFrameIndex start, TimeFrameIndex end) const = 0;
+        virtual DigitalEventTimeDomain getTimeDomain() const = 0;
+        virtual ClockTicks getRelativeEvent(size_t idx) const = 0;
+        virtual std::optional<size_t> findByRelativeTime(ClockTicks time) const = 0;
+        virtual std::pair<size_t, size_t> getRelativeTimeRange(ClockTicks start, ClockTicks end) const = 0;
         virtual DigitalEventStorageType getStorageType() const = 0;
         virtual DigitalEventStorageCache tryGetCache() const = 0;
 
@@ -200,6 +226,22 @@ private:
 
         std::pair<size_t, size_t> getTimeRange(TimeFrameIndex start, TimeFrameIndex end) const override {
             return _storage.getTimeRange(start, end);
+        }
+
+        DigitalEventTimeDomain getTimeDomain() const override {
+            return _storage.getTimeDomain();
+        }
+
+        ClockTicks getRelativeEvent(size_t idx) const override {
+            return _storage.getRelativeEvent(idx);
+        }
+
+        std::optional<size_t> findByRelativeTime(ClockTicks time) const override {
+            return _storage.findByRelativeTime(time);
+        }
+
+        std::pair<size_t, size_t> getRelativeTimeRange(ClockTicks start, ClockTicks end) const override {
+            return _storage.getRelativeTimeRange(start, end);
         }
 
         DigitalEventStorageType getStorageType() const override {

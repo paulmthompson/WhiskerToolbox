@@ -20,6 +20,8 @@ set(digital_subdirectory_sources
         storage/LazyDigitalEventStorage.hpp
         storage/OwningDigitalEventStorage.hpp
         storage/OwningDigitalEventStorage.cpp
+        storage/RelativeOwningDigitalEventStorage.hpp
+        storage/RelativeOwningDigitalEventStorage.cpp
         storage/ViewDigitalEventStorage.hpp
         storage/ViewDigitalEventStorage.cpp
 )

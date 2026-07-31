@@ -15,6 +15,7 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/storage/DigitalEventStorage.hpp"
 #include "DigitalTimeSeries/storage/OwningDigitalEventStorage.hpp"
+#include "DigitalTimeSeries/storage/RelativeOwningDigitalEventStorage.hpp"
 #include "DigitalTimeSeries/storage/ViewDigitalEventStorage.hpp"
 #include "TimeFrame/ClockTicks.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -356,6 +357,142 @@ TEST_CASE("LazyDigitalEventStorage basic operations", "[DigitalEventStorage][laz
         auto found = lazy.findByEntityId(EntityId{2});
         REQUIRE(found.has_value());
         CHECK(lazy.getEvent(*found) == TimeFrameIndex{40});
+    }
+}
+
+// =============================================================================
+// RelativeOwningDigitalEventStorage Tests
+// =============================================================================
+
+TEST_CASE("RelativeOwningDigitalEventStorage basic operations", "[DigitalEventStorage][relative]") {
+    RelativeOwningDigitalEventStorage storage{std::vector<ClockTicks>{
+            ClockTicks{30}, ClockTicks{10}, ClockTicks{20}}};
+
+    SECTION("Empty construction via moved empty vector") {
+        RelativeOwningDigitalEventStorage empty_storage{std::vector<ClockTicks>{}};
+        CHECK(empty_storage.size() == 0);
+        CHECK(empty_storage.empty());
+        CHECK(empty_storage.getStorageType() == DigitalEventStorageType::RelativeOwning);
+        CHECK(storage.getTimeDomain() == DigitalEventTimeDomain::RelativeClockTicks);
+        CHECK(storage.isRelative());
+    }
+
+    SECTION("Events are sorted and deduplicated") {
+        CHECK(storage.size() == 3);
+        CHECK(storage.getRelativeEvent(0) == ClockTicks{10});
+        CHECK(storage.getRelativeEvent(1) == ClockTicks{20});
+        CHECK(storage.getRelativeEvent(2) == ClockTicks{30});
+    }
+
+    SECTION("Absolute-time accessors throw") {
+        CHECK_THROWS_AS(storage.getEvent(0), std::runtime_error);
+        CHECK_THROWS_AS(storage.findByTime(TimeFrameIndex{10}), std::runtime_error);
+        CHECK_THROWS_AS(storage.getTimeRange(TimeFrameIndex{0}, TimeFrameIndex{10}), std::runtime_error);
+    }
+
+    SECTION("Find by relative time") {
+        auto found = storage.findByRelativeTime(ClockTicks{20});
+        REQUIRE(found.has_value());
+        CHECK(*found == 1);
+        CHECK_FALSE(storage.findByRelativeTime(ClockTicks{99}).has_value());
+    }
+
+    SECTION("Relative time range") {
+        auto [start, end] = storage.getRelativeTimeRange(ClockTicks{15}, ClockTicks{25});
+        CHECK(start == 1);
+        CHECK(end == 2);
+    }
+
+    SECTION("Cache is valid and uses relative domain") {
+        auto cache = storage.tryGetCache();
+        CHECK(cache.isValid());
+        CHECK(cache.time_domain == DigitalEventTimeDomain::RelativeClockTicks);
+        CHECK(cache.getRelativeEvent(0) == ClockTicks{10});
+        CHECK(cache.cache_size == 3);
+    }
+
+    SECTION("Optional entity IDs are preserved through sorting") {
+        RelativeOwningDigitalEventStorage with_ids{
+                std::vector<ClockTicks>{ClockTicks{30}, ClockTicks{10}},
+                std::vector<EntityId>{EntityId{30}, EntityId{10}}};
+        CHECK(with_ids.getEntityId(0) == EntityId{10});
+        CHECK(with_ids.getEntityId(1) == EntityId{30});
+        CHECK(with_ids.findByEntityId(EntityId{30}) == std::optional<size_t>{1});
+    }
+}
+
+TEST_CASE("DigitalEventStorageWrapper with relative owning storage", "[DigitalEventStorage][wrapper][relative]") {
+    DigitalEventStorageWrapper wrapper{
+            RelativeOwningDigitalEventStorage{std::vector<ClockTicks>{ClockTicks{-10}, ClockTicks{0}, ClockTicks{10}}}};
+
+    SECTION("Relative storage properties") {
+        CHECK(wrapper.getStorageType() == DigitalEventStorageType::RelativeOwning);
+        CHECK(wrapper.isRelative());
+        CHECK(wrapper.getTimeDomain() == DigitalEventTimeDomain::RelativeClockTicks);
+        CHECK(wrapper.size() == 3);
+        CHECK(wrapper.getRelativeEvent(1) == ClockTicks{0});
+    }
+
+    SECTION("Mutation operations throw") {
+        CHECK_THROWS_AS(wrapper.addEvent(TimeFrameIndex{1}, EntityId{1}), std::runtime_error);
+        CHECK_THROWS_AS(wrapper.clear(), std::runtime_error);
+    }
+
+    SECTION("getSharedOwningStorage returns nullptr") {
+        CHECK(wrapper.getSharedOwningStorage() == nullptr);
+    }
+}
+
+TEST_CASE("DigitalEventSeries relative factory and view", "[DigitalEventSeries][relative]") {
+    auto series = DigitalEventSeries::createFromRelativeClockTicks(
+            std::vector<ClockTicks>{ClockTicks{50}, ClockTicks{10}, ClockTicks{30}},
+            std::vector<EntityId>{EntityId{5}, EntityId{1}, EntityId{3}});
+
+    SECTION("Factory properties") {
+        REQUIRE(series != nullptr);
+        CHECK(series->storesRelativeTimes());
+        CHECK(series->getStorageType() == DigitalEventStorageType::RelativeOwning);
+        CHECK(series->getTimeFrame() == nullptr);
+        CHECK(series->size() == 3);
+    }
+
+    SECTION("view() works without TimeFrame") {
+        std::vector<ClockTicks> times;
+        std::vector<EntityId> ids;
+        for (auto const & event: series->view()) {
+            times.push_back(event.time());
+            ids.push_back(event.id());
+        }
+        REQUIRE(times.size() == 3);
+        CHECK(times[0] == ClockTicks{10});
+        CHECK(times[1] == ClockTicks{30});
+        CHECK(times[2] == ClockTicks{50});
+        CHECK(ids[0] == EntityId{1});
+        CHECK(ids[2] == EntityId{5});
+    }
+
+    SECTION("viewInRelativeRange filters events") {
+        auto range = series->viewInRelativeRange(ClockTicks{20}, ClockTicks{60});
+        std::vector<ClockTicks> times;
+        for (auto const & event: range) {
+            times.push_back(event.time());
+        }
+        REQUIRE(times.size() == 2);
+        CHECK(times[0] == ClockTicks{30});
+        CHECK(times[1] == ClockTicks{50});
+    }
+
+    SECTION("getStoredEvent throws and getStoredRelativeEvent works") {
+        CHECK_THROWS_AS(series->getStoredEvent(0), std::runtime_error);
+        CHECK(series->getStoredRelativeEvent(0) == ClockTicks{10});
+    }
+
+    SECTION("materialize preserves relative storage") {
+        auto materialized = series->materialize();
+        REQUIRE(materialized != nullptr);
+        CHECK(materialized->storesRelativeTimes());
+        CHECK(materialized->size() == 3);
+        CHECK(materialized->getStoredRelativeEvent(1) == ClockTicks{30});
     }
 }
 
@@ -711,6 +848,28 @@ struct LazyBackend {
     static constexpr DigitalEventStorageType storage_type = DigitalEventStorageType::Lazy;
 };
 
+/**
+ * @brief Helper struct to create test series with relative owning storage
+ */
+struct RelativeBackend {
+    static std::shared_ptr<DigitalEventSeries> create() {
+        return DigitalEventSeries::createFromRelativeClockTicks(
+                std::vector<ClockTicks>{
+                        ClockTicks{10}, ClockTicks{20}, ClockTicks{30},
+                        ClockTicks{40}, ClockTicks{50}},
+                std::vector<EntityId>{
+                        EntityId{1}, EntityId{2}, EntityId{3},
+                        EntityId{4}, EntityId{5}});
+    }
+
+    static std::shared_ptr<DigitalEventSeries> createEmpty() {
+        return DigitalEventSeries::createFromRelativeClockTicks(std::vector<ClockTicks>{});
+    }
+
+    static constexpr bool is_mutable = false;
+    static constexpr DigitalEventStorageType storage_type = DigitalEventStorageType::RelativeOwning;
+};
+
 }// anonymous namespace
 
 // =============================================================================
@@ -812,6 +971,29 @@ TEST_CASE("DigitalEventSeries::view() - Lazy backend", "[DigitalEventSeries][int
     }
 }
 
+TEST_CASE("DigitalEventSeries::view() - Relative backend", "[DigitalEventSeries][interface][relative]") {
+    auto series = RelativeBackend::create();
+
+    SECTION("view() returns relative ClockTicks without TimeFrame") {
+        auto v = series->view();
+
+        std::vector<ClockTicks> times;
+        for (auto event: v) {
+            times.push_back(event.time());
+        }
+
+        REQUIRE(times.size() == 5);
+        CHECK(times[0] == ClockTicks{10});
+        CHECK(times[4] == ClockTicks{50});
+        CHECK(series->getTimeFrame() == nullptr);
+    }
+
+    SECTION("view() supports range algorithms") {
+        auto v = series->view();
+        CHECK(std::ranges::distance(v) == 5);
+    }
+}
+
 TEST_CASE("DigitalEventSeries::view() - Empty series all backends", "[DigitalEventSeries][interface][empty]") {
     SECTION("Owning empty") {
         auto series = OwningBackend::createEmpty();
@@ -828,6 +1010,12 @@ TEST_CASE("DigitalEventSeries::view() - Empty series all backends", "[DigitalEve
 
     SECTION("Lazy empty") {
         auto series = LazyBackend::createEmpty();
+        auto v = series->view();
+        CHECK(std::ranges::distance(v) == 0);
+    }
+
+    SECTION("Relative empty") {
+        auto series = RelativeBackend::createEmpty();
         auto v = series->view();
         CHECK(std::ranges::distance(v) == 0);
     }

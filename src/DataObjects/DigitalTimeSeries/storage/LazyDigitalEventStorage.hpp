@@ -112,6 +112,10 @@ public:
         return start_idx <= end_idx ? std::pair{start_idx, end_idx} : std::pair<size_t, size_t>{0, 0};
     }
 
+    [[nodiscard]] DigitalEventTimeDomain getTimeDomainImpl() const {
+        return DigitalEventTimeDomain::TimeFrameIndex;
+    }
+
     [[nodiscard]] DigitalEventStorageType getStorageTypeImpl() const {
         return DigitalEventStorageType::Lazy;
     }

@@ -95,14 +95,22 @@ std::pair<size_t, size_t> ViewDigitalEventStorage::getTimeRangeImpl(TimeFrameInd
 
 DigitalEventStorageCache ViewDigitalEventStorage::tryGetCacheImpl() const {
     if (_indices.empty()) {
-        return DigitalEventStorageCache{nullptr, nullptr, 0, true};
+        return DigitalEventStorageCache{
+                DigitalEventTimeDomain::TimeFrameIndex,
+                nullptr,
+                nullptr,
+                nullptr,
+                0,
+                true};
     }
 
     // Fast path: contiguity is already known from the operation that created the indices
     if (_known_contiguous) {
         size_t const start_idx = _indices[0];
         return DigitalEventStorageCache{
+                DigitalEventTimeDomain::TimeFrameIndex,
                 _source->events().data() + start_idx,
+                nullptr,
                 _source->entityIds().data() + start_idx,
                 _indices.size(),
                 true};
@@ -121,7 +129,9 @@ DigitalEventStorageCache ViewDigitalEventStorage::tryGetCacheImpl() const {
 
     if (is_contiguous) {
         return DigitalEventStorageCache{
+                DigitalEventTimeDomain::TimeFrameIndex,
                 _source->events().data() + start_idx,
+                nullptr,
                 _source->entityIds().data() + start_idx,
                 _indices.size(),
                 true};
