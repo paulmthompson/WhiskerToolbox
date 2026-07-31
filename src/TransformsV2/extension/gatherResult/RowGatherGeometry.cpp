@@ -69,30 +69,28 @@ namespace {
 }
 
 /**
- * @brief Extract a DigitalIntervalSeries pointer from a row-pipeline output variant.
+ * @brief Extract row pipeline geometry from a row-pipeline output variant.
  * @param output Row-pipeline DataTypeVariant output.
- * @return DigitalIntervalSeries output as prepared gather windows.
+ * @return DigitalIntervalSeries windows or DigitalEventSeries sample times.
  * @post The returned pointer aliases the pipeline output object.
  *
- * @throws std::runtime_error if the output is DigitalEventSeries or another type.
+ * @throws std::runtime_error if the output is another type.
  */
-[[nodiscard]] std::shared_ptr<DigitalIntervalSeries const> requireIntervalOutput(
+[[nodiscard]] RowPipelineGeometry requireGeometryOutput(
         DataTypeVariant const & output) {
     if (auto const * intervals = std::get_if<std::shared_ptr<DigitalIntervalSeries>>(&output);
         intervals != nullptr && *intervals) {
         return *intervals;
     }
 
-    if (std::holds_alternative<std::shared_ptr<DigitalEventSeries>>(output)) {
-        throw std::runtime_error(
-                "resolveIntervalGatherWindows: row_pipeline_json produced "
-                "DigitalEventSeries sample times, which are deferred until "
-                "timestamp/sample row-pipeline dispatch is implemented");
+    if (auto const * events = std::get_if<std::shared_ptr<DigitalEventSeries>>(&output);
+        events != nullptr && *events) {
+        return *events;
     }
 
     throw std::runtime_error(
-            "resolveIntervalGatherWindows: row_pipeline_json must produce "
-            "DigitalIntervalSeries prepared windows for interval-row columns");
+            "resolveIntervalRowPipelineGeometry: row_pipeline_json must produce "
+            "DigitalIntervalSeries prepared windows or DigitalEventSeries sample times");
 }
 
 /**
@@ -116,6 +114,21 @@ void verifyResolvedRowCount(
     if (windows->size() != expected_row_count) {
         throw std::runtime_error(
                 "resolveIntervalGatherWindows: resolved row windows changed row count");
+    }
+}
+
+void verifyResolvedRowCount(
+        std::shared_ptr<DigitalEventSeries const> const & sample_times,
+        std::size_t expected_row_count) {
+    assert(sample_times && "verifyResolvedRowCount: sample_times must not be null");
+    if (!sample_times) {
+        throw std::runtime_error(
+                "resolveIntervalRowPipelineGeometry: resolved sample times must not be null");
+    }
+
+    if (sample_times->size() != expected_row_count) {
+        throw std::runtime_error(
+                "resolveIntervalRowPipelineGeometry: resolved sample times changed row count");
     }
 }
 
@@ -147,6 +160,21 @@ std::shared_ptr<DigitalIntervalSeries const> resolveIntervalGatherWindows(
         std::shared_ptr<DigitalIntervalSeries const> intervals,
         std::string_view row_pipeline_json,
         std::size_t expected_row_count) {
+    auto geometry = resolveIntervalRowPipelineGeometry(
+            std::move(intervals), row_pipeline_json, expected_row_count);
+    if (auto const * windows = std::get_if<std::shared_ptr<DigitalIntervalSeries const>>(&geometry)) {
+        return *windows;
+    }
+
+    throw std::runtime_error(
+            "resolveIntervalGatherWindows: row_pipeline_json produced DigitalEventSeries sample times; "
+            "use sample-time provider dispatch for this column");
+}
+
+RowPipelineGeometry resolveIntervalRowPipelineGeometry(
+        std::shared_ptr<DigitalIntervalSeries const> intervals,
+        std::string_view row_pipeline_json,
+        std::size_t expected_row_count) {
     assert(intervals && "resolveIntervalGatherWindows: intervals must not be null");
     if (!intervals) {
         throw std::runtime_error(
@@ -165,10 +193,13 @@ std::shared_ptr<DigitalIntervalSeries const> resolveIntervalGatherWindows(
             std::const_pointer_cast<DigitalIntervalSeries>(intervals);
     auto const row_output =
             Neuralyzer::Transforms::V2::executePipeline(row_input, row_pipeline);
-    auto resolved_windows = requireIntervalOutput(row_output);
+    auto geometry = requireGeometryOutput(row_output);
 
-    verifyResolvedRowCount(resolved_windows, expected_row_count);
-    return resolved_windows;
+    std::visit([expected_row_count](auto const & resolved) {
+        verifyResolvedRowCount(resolved, expected_row_count);
+    },
+               geometry);
+    return geometry;
 }
 
 }// namespace Neuralyzer::Gather

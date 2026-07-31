@@ -227,17 +227,6 @@ struct RowBuildContext {
         return buildIntervalPropertyProvider(intervals, recipe.interval_property.value());
     }
 
-    if (recipe.pipeline_json.find("\"offset\"") != std::string::npos) {
-        try {
-            auto const j = nlohmann::json::parse(recipe.pipeline_json);
-            auto const offset = j.value("offset", int64_t{0});
-            return buildAnalogSampleAtOffsetProvider(
-                    dm, recipe.source_key, row_times, offset);
-        } catch (...) {
-            return buildProviderFromRecipe(dm, recipe, row_times, intervals);
-        }
-    }
-
     return buildProviderFromRecipe(dm, recipe, row_times, intervals);
 }
 

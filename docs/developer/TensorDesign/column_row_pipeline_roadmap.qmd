@@ -5,7 +5,7 @@ format: html
 
 **Status:** Implementation roadmap for [Column Row Pipeline Design](column_row_pipeline.qmd).
 
-Phases 1-5 are implemented. Phase 6 and later remain planned.
+Phases 1-6 are implemented. Phase 7 and later remain planned.
 
 This roadmap breaks the per-column row-pipeline refactor into small, testable steps. The design goal is to let each tensor column derive its own row-aligned gather inputs through TransformPipelines while keeping `GatherResult` a container/direct-gather executor rather than a pipeline runner.
 
@@ -46,12 +46,12 @@ Implemented foundations:
 - `NormalizeDigitalEventSeriesRelative` normalizes a gathered `DigitalEventSeries` into relative `ClockTicks` storage while preserving event `EntityId`s.
 - `ColumnRecipe::pipeline_value_bindings` is parsed, serialized, and used to bind one row-aligned `DigitalEventSeries` value into `PipelineValueStore` per tensor row.
 - Direct binding sources from DataManager keys and derived binding sources using `source_pipeline_json` are supported when they resolve to row-aligned `DigitalEventSeries` objects.
+- Interval-row columns can dispatch `DigitalEventSeries` row-pipeline output as sample times for timestamp-style providers.
+- `ShiftDigitalEventSeries` shifts `DigitalEventSeries` sample times and replaces the temporary top-level `pipeline_json` `"offset"` compatibility path.
 - Contact-aligned spike presence is tested through TensorDesign JSON in the whisker-contact scenario.
 
 Known gaps:
 
-- Tensor column builders reject `DigitalEventSeries` sample-time row-pipeline output for interval-row columns; timestamp/sample dispatch is not implemented yet.
-- Point sampling still uses a temporary `pipeline_json` `"offset"` detection path in `TensorDesignBuilder::buildColumnProvider()`.
 - There is no row-pipeline caching.
 - UI does not expose row-pipeline configuration.
 - There is no column recipe preset registry, preset expansion layer, or bundled preset catalog.
@@ -185,7 +185,7 @@ Settled design choices:
 - Existing `PipelineValueStore`, parameter bindings, and gather extension helpers should be reused or generalized to bind iterable values per row.
 - User-facing presets should hide the distinction between `ClockTicksWithId` and `ClockTicks` normalize transforms whenever possible.
 
-## Phase 6: Timestamp And Point Sampling
+## Phase 6: Timestamp And Point Sampling — Done
 
 Goal: replace the temporary `"offset"` sample-at-offset path with row-pipeline-driven point sampling.
 
@@ -202,6 +202,14 @@ Exit criteria:
 - Point sampling is expressible through row-pipeline JSON.
 - The offset string-search path is gone.
 - Existing sample-at-offset behavior is preserved where intended.
+
+Implemented notes:
+
+- `resolveIntervalRowPipelineGeometry()` resolves interval-row pipelines to either `DigitalIntervalSeries` gather windows or `DigitalEventSeries` sample times.
+- `buildProviderFromRecipe()` routes `DigitalEventSeries` row-pipeline output to timestamp/sample provider behavior when the column pipeline has no terminal range reduction.
+- `ShiftDigitalEventSeries` expresses sample offsets as a regular TransformPipeline step.
+- The old top-level `pipeline_json` `"offset"` detection path has been removed.
+- Tests cover provider-level analog sampling at interval starts, shifted sample times, and TensorDesign JSON replacing the old offset behavior.
 
 ## Phase 7: Optional Additional Row Transforms
 

@@ -95,6 +95,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<AnalogDifferenceParams>();
     registerPipelineStepFactoryFor<SincInterpolationParams>();
     registerPipelineStepFactoryFor<NormalizeTimeParamsV2>();
+    registerPipelineStepFactoryFor<ShiftDigitalEventSeriesParams>();
     registerPipelineStepFactoryFor<TensorPCAParams>();
     registerPipelineStepFactoryFor<TensorICAParams>();
     registerPipelineStepFactoryFor<TensorRobustPCAParams>();

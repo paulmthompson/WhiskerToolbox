@@ -112,6 +112,14 @@ struct NormalizeTimeParamsV2 {
     ClockTicks alignment_time{0};
 };
 
+/**
+ * @brief Parameters for shifting all DigitalEventSeries event times.
+ */
+struct ShiftDigitalEventSeriesParams {
+    /// Clock-tick offset added to every event time.
+    int64_t offset{0};
+};
+
 // ============================================================================
 // V2 Transform Functions
 // ============================================================================
@@ -227,6 +235,48 @@ struct NormalizeTimeParamsV2 {
     }
 
     return DigitalEventSeries::createFromRelativeClockTicks(std::move(events), std::move(entity_ids));
+}
+
+/**
+ * @brief Shift every event in a DigitalEventSeries by a fixed clock-tick offset.
+ *
+ * Container signature: DigitalEventSeries -> DigitalEventSeries.
+ * The output preserves absolute storage and TimeFrame for absolute-time series,
+ * and uses relative storage for relative-time input series.
+ */
+[[nodiscard]] inline std::shared_ptr<DigitalEventSeries> shiftDigitalEventSeries(
+        DigitalEventSeries const & input,
+        ShiftDigitalEventSeriesParams const & params,
+        ComputeContext const & ctx) {
+    std::vector<ClockTicks> shifted_events;
+    std::vector<EntityId> entity_ids;
+    shifted_events.reserve(input.size());
+    entity_ids.reserve(input.size());
+
+    for (auto const & event: input.view()) {
+        if (ctx.shouldCancel()) {
+            break;
+        }
+        shifted_events.emplace_back(event.time().getValue() + params.offset);
+        entity_ids.push_back(event.id());
+    }
+
+    if (input.storesRelativeTimes()) {
+        return DigitalEventSeries::createFromRelativeClockTicks(
+                std::move(shifted_events), std::move(entity_ids));
+    }
+
+    std::vector<TimeFrameIndex> shifted_indices;
+    shifted_indices.reserve(shifted_events.size());
+    for (auto const & shifted_event: shifted_events) {
+        shifted_indices.emplace_back(shifted_event.getValue());
+    }
+
+    auto result = std::make_shared<DigitalEventSeries>(std::move(shifted_indices));
+    if (input.getTimeFrame()) {
+        result->setTimeFrame(input.getTimeFrame());
+    }
+    return result;
 }
 
 }// namespace Neuralyzer::Transforms::V2

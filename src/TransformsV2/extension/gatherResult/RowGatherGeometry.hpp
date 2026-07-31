@@ -9,10 +9,16 @@
 #include <cstddef>
 #include <memory>
 #include <string_view>
+#include <variant>
 
+class DigitalEventSeries;
 class DigitalIntervalSeries;
 
 namespace Neuralyzer::Gather {
+
+using RowPipelineGeometry = std::variant<
+        std::shared_ptr<DigitalIntervalSeries const>,
+        std::shared_ptr<DigitalEventSeries const>>;
 
 /**
  * @brief Check whether row-pipeline JSON represents identity row geometry.
@@ -38,6 +44,18 @@ namespace Neuralyzer::Gather {
  *         or the row pipeline output is not a DigitalIntervalSeries.
  */
 [[nodiscard]] std::shared_ptr<DigitalIntervalSeries const> resolveIntervalGatherWindows(
+        std::shared_ptr<DigitalIntervalSeries const> intervals,
+        std::string_view row_pipeline_json,
+        std::size_t expected_row_count);
+
+/**
+ * @brief Resolve interval-row pipeline output as gather windows or sample times.
+ *
+ * Identity row pipelines return the original DigitalIntervalSeries windows.
+ * Non-identity row pipelines may return DigitalIntervalSeries windows or
+ * DigitalEventSeries sample times, both preserving the expected row count.
+ */
+[[nodiscard]] RowPipelineGeometry resolveIntervalRowPipelineGeometry(
         std::shared_ptr<DigitalIntervalSeries const> intervals,
         std::string_view row_pipeline_json,
         std::size_t expected_row_count);

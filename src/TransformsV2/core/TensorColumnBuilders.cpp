@@ -301,6 +301,16 @@ std::vector<float> sampleOutputAtRowTimes(
                       output);
 }
 
+std::vector<TimeFrameIndex> sampleTimesToTimeFrameIndices(
+        DigitalEventSeries const & sample_times) {
+    std::vector<TimeFrameIndex> result;
+    result.reserve(sample_times.size());
+    for (auto const & event: sample_times.view()) {
+        result.emplace_back(event.time().getValue());
+    }
+    return result;
+}
+
 }// anonymous namespace
 
 ColumnProviderFn buildPipelineColumnProvider(
@@ -472,37 +482,57 @@ ColumnProviderFn buildProviderFromRecipe(
 
     // 3. Interval-row columns → Pattern B (generic gather + pipeline)
     if (intervals) {
-        if (recipe.pipeline_json.empty()) {
-            throw std::runtime_error(
-                    "buildProviderFromRecipe: interval-row columns require a pipeline "
-                    "with a range reduction (pipeline_json is empty)");
+        Neuralyzer::Transforms::V2::TransformPipeline pipeline;
+        bool const identity_pipeline = Neuralyzer::Gather::isIdentityRowPipelineJson(recipe.pipeline_json);
+        if (!identity_pipeline) {
+            auto pipeline_result = Neuralyzer::Transforms::V2::Examples::loadPipelineFromJson(recipe.pipeline_json);
+            if (!pipeline_result) {
+                auto const error = pipeline_result.error();
+                auto const error_message = error ? std::string(error->what()) : std::string("unknown error");
+                throw std::runtime_error(
+                        "buildProviderFromRecipe: failed to load pipeline from JSON: " +
+                        error_message);
+            }
+            pipeline = std::move(pipeline_result.value());
         }
 
-        auto pipeline_result = Neuralyzer::Transforms::V2::Examples::loadPipelineFromJson(recipe.pipeline_json);
-        if (!pipeline_result) {
-            auto const error = pipeline_result.error();
-            auto const error_message = error ? std::string(error->what()) : std::string("unknown error");
-            throw std::runtime_error(
-                    "buildProviderFromRecipe: failed to load pipeline from JSON: " +
-                    error_message);
-        }
-
-        auto gather_windows = Neuralyzer::Gather::resolveIntervalGatherWindows(
+        auto row_geometry = Neuralyzer::Gather::resolveIntervalRowPipelineGeometry(
                 intervals, recipe.row_pipeline_json, intervals->size());
+
+        if (auto const * sample_times = std::get_if<std::shared_ptr<DigitalEventSeries const>>(&row_geometry)) {
+            if (pipeline.hasRangeReduction()) {
+                throw std::runtime_error(
+                        "buildProviderFromRecipe: DigitalEventSeries row_pipeline_json output "
+                        "selects sample times and cannot be combined with a range reduction");
+            }
+            return buildPipelineColumnProvider(
+                    dm,
+                    recipe.source_key,
+                    sampleTimesToTimeFrameIndices(**sample_times),
+                    std::move(pipeline));
+        }
+
+        auto gather_windows = std::get<std::shared_ptr<DigitalIntervalSeries const>>(std::move(row_geometry));
+
+        if (identity_pipeline) {
+            throw std::runtime_error(
+                    "buildProviderFromRecipe: interval-row gather columns require a pipeline "
+                    "with a range reduction");
+        }
 
         auto row_stores = buildPipelineValueRowStores(
                 dm, recipe.pipeline_value_bindings, gather_windows->size());
 
         if (recipe.pipeline_value_bindings.empty()) {
             return buildIntervalPipelineProvider(
-                    dm, recipe.source_key, std::move(gather_windows), std::move(pipeline_result.value()));
+                    dm, recipe.source_key, std::move(gather_windows), std::move(pipeline));
         }
 
         return buildIntervalPipelineProvider(
                 dm,
                 recipe.source_key,
                 std::move(gather_windows),
-                std::move(pipeline_result.value()),
+                std::move(pipeline),
                 std::move(row_stores));
     }
 

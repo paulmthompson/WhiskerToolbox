@@ -304,8 +304,8 @@ TEST_CASE("resolveIntervalGatherWindows returns source intervals for identity",
     REQUIRE(resolved->size() == intervals->size());
 }
 
-TEST_CASE("resolveIntervalGatherWindows rejects non-identity row pipelines",
-          "[TensorColumnBuilders][Phase3]") {
+TEST_CASE("resolveIntervalGatherWindows rejects DigitalEventSeries sample-time row pipelines",
+          "[TensorColumnBuilders][Phase6]") {
     auto intervals = createIntervalSeries({{10, 20}, {50, 60}});
 
     CHECK_THROWS_AS(
@@ -441,8 +441,8 @@ TEST_CASE("buildProviderFromRecipe - interval_property ignores row_pipeline_json
     CHECK_THAT(values[1], WithinAbs(50.0, 0.01));
 }
 
-TEST_CASE("buildProviderFromRecipe - rejects non-identity interval row_pipeline_json",
-          "[TensorColumnBuilders][Phase3]") {
+TEST_CASE("buildProviderFromRecipe - DigitalEventSeries row_pipeline_json samples analog source",
+          "[TensorColumnBuilders][Phase6]") {
     DataManager dm;
     setDefaultIdentityTimeFrame(dm, 1000);
     auto analog = createLinearAnalog(100);
@@ -452,13 +452,39 @@ TEST_CASE("buildProviderFromRecipe - rejects non-identity interval row_pipeline_
     ColumnRecipe const recipe{
             .column_name = "mean_signal",
             .source_key = "analog",
-            .pipeline_json = kMeanValuePipelineJson,
+            .pipeline_json = kIdentityRowPipelineJson,
             .row_pipeline_json = kNonIdentityRowPipelineJson,
     };
 
-    CHECK_THROWS_AS(
-            buildProviderFromRecipe(dm, recipe, {}, intervals),
-            std::runtime_error);
+    auto provider = buildProviderFromRecipe(dm, recipe, {}, intervals);
+    auto const values = provider();
+
+    REQUIRE(values.size() == intervals->size());
+    CHECK_THAT(values[0], WithinAbs(10.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(50.0, 0.01));
+}
+
+TEST_CASE("buildProviderFromRecipe - shifted DigitalEventSeries row_pipeline_json samples analog source",
+          "[TensorColumnBuilders][Phase6]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 1000);
+    auto analog = createLinearAnalog(100);
+    dm.setData<AnalogTimeSeries>("analog", analog, TimeKey("time"));
+    auto intervals = createIntervalSeries({{10, 20}, {50, 60}});
+
+    ColumnRecipe const recipe{
+            .column_name = "signal_at_shifted_start",
+            .source_key = "analog",
+            .pipeline_json = "",
+            .row_pipeline_json = R"({"steps": [{"step_id": "interval_start", "transform_name": "IntervalToEvent", "parameters": {"point": "start"}}, {"step_id": "shift", "transform_name": "ShiftDigitalEventSeries", "parameters": {"offset": 2}}]})",
+    };
+
+    auto provider = buildProviderFromRecipe(dm, recipe, {}, intervals);
+    auto const values = provider();
+
+    REQUIRE(values.size() == intervals->size());
+    CHECK_THAT(values[0], WithinAbs(12.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(52.0, 0.01));
 }
 
 TEST_CASE("buildProviderFromRecipe - derived row windows gather event counts",

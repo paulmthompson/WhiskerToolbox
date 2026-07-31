@@ -3,7 +3,7 @@ title: "Column Row Pipeline Design"
 format: html
 ---
 
-**Status:** Partially implemented. GatherResult, interval-window primitives, `ColumnRecipe::row_pipeline_json`, TensorDesign JSON round-trip, identity row-pipeline dispatch, `DigitalIntervalSeries` row-pipeline gather windows, and `pipeline_value_bindings` for row-specific `PipelineValueStore` values are implemented. Timestamp/sample row-pipeline dispatch, presets, and UI support remain planned.
+**Status:** Partially implemented. GatherResult, interval-window primitives, `ColumnRecipe::row_pipeline_json`, TensorDesign JSON round-trip, identity row-pipeline dispatch, `DigitalIntervalSeries` row-pipeline gather windows, `pipeline_value_bindings` for row-specific `PipelineValueStore` values, and `DigitalEventSeries` sample-time row-pipeline dispatch are implemented. Presets and UI support remain planned.
 
 This document describes the target architecture for per-column gather geometry in lazy-column tensors. The implementation sequence is tracked separately in [Column Row Pipeline Roadmap](column_row_pipeline_roadmap.qmd).
 
@@ -53,6 +53,8 @@ Implemented today:
 - Direct binding sources from DataManager keys and derived binding sources using `source_pipeline_json` are supported when they resolve to row-aligned `DigitalEventSeries` objects.
 - `NormalizeDigitalEventSeriesRelative` normalizes gathered `DigitalEventSeries` rows to relative `ClockTicks` storage before reductions such as `EventCountInWindow`.
 - `gatherAndExecutePipeline()` can execute JSON-loaded container steps before the terminal range reduction, and can apply a per-row bound pipeline copy when row stores are supplied.
+- `DigitalEventSeries` row-pipeline outputs are routed to timestamp/sample providers for interval-row columns without terminal range reductions.
+- `ShiftDigitalEventSeries` expresses sample offsets as a normal TransformPipeline step.
 - `GatherResult` consumes prepared `DigitalIntervalSeries` windows and can hold companion alignment events, but TensorDesign should not rely on that metadata path for column transformations.
 - `GatherResult` converts prepared window bounds to the gathered source `TimeFrame` with `convertTimeFrameRange()`.
 - `DigitalIntervalSeries` supports `IntervalLayout::Overlapping` through `createOverlapping()`.
@@ -60,15 +62,13 @@ Implemented today:
 
 Not implemented yet:
 
-- `DigitalEventSeries` row-pipeline output dispatch for timestamp/sample columns.
-- Replacement of the temporary `pipeline_json` `"offset"` sample-at-offset compatibility path.
 - Row-pipeline caching across columns.
 - Preset registry, bundled preset library, and preset expansion.
 - UI support for configuring row pipelines.
 
 ## Problem
 
-Original interval-row tensor columns always gathered source data over the full row interval. With the implemented `DigitalIntervalSeries` row-pipeline path, onset-window event reductions are now expressible in TensorDesign JSON. With `pipeline_value_bindings`, per-row normalization context is also expressible for row-aligned `DigitalEventSeries` markers. Remaining gaps are point sampling, presets, and UI.
+Original interval-row tensor columns always gathered source data over the full row interval. With the implemented `DigitalIntervalSeries` row-pipeline path, onset-window event reductions are now expressible in TensorDesign JSON. With `pipeline_value_bindings`, per-row normalization context is also expressible for row-aligned `DigitalEventSeries` markers. With `DigitalEventSeries` row-pipeline dispatch, point sampling is expressible in row-pipeline JSON. Remaining gaps are presets and UI.
 
 The full design addresses these common per-row features:
 
@@ -155,7 +155,7 @@ For value projections, `bindValueProjectionV2()` operates on `ElementVariant` ty
 |---|---|---|
 | Mean over full contact | Identity row `DigitalIntervalSeries` | Range reduction such as `MeanValue` |
 | Spike near onset | `IntervalToEvent(start)` sample times followed by `EventToInterval(pre, post)` windows | Event presence or event count reduction |
-| Angle at onset | `IntervalToEvent(start)` sample times | Sample-at-event provider or equivalent source transform |
+| Angle at onset | `IntervalToEvent(start)` sample times | Sample-at-event provider behavior |
 | Raster/PSTH over trials | Trial windows from identity row source | Normalize event times with one marker per row, then count/bin/export |
 | Lagged contact statistic | `IntervalShift(delta)` windows | Any interval reduction |
 | Peak-centered feature | Data-derived row transform producing one event per row | Sample or windowed reduction around that event |
@@ -167,6 +167,7 @@ Implemented transforms that should be reused:
 | `IntervalToEvent` | Implemented | Extract start, end, or center events from interval rows. |
 | `EventToInterval` | Implemented | Expand events into overlapping gather windows. |
 | `PruneOverlappingIntervals` | Implemented | Optional keep-first pruning when a caller explicitly wants to drop overlapping windows. |
+| `ShiftDigitalEventSeries` | Implemented | Apply lag/lead offsets to row-pipeline sample times. |
 
 Potential future transforms should be added only when there is a concrete use case:
 
@@ -238,7 +239,7 @@ Raw row-pipeline JSON is the low-level target shape and is not valid until `row_
 }
 ```
 
-`row_pipeline_json` describes only the row-aligned gather or sample input. The `DigitalIntervalSeries` gather-window form shown above is implemented. `DigitalEventSeries` sample-time output remains planned. `row_pipeline_json` should not also be responsible for carrying a separate normalization marker. If a column needs one marker per row for a transform such as normalize-time, that marker should be loaded into `PipelineValueStore` during per-row `pipeline_json` execution.
+`row_pipeline_json` describes only the row-aligned gather or sample input. The `DigitalIntervalSeries` gather-window form and `DigitalEventSeries` sample-time form are implemented. `row_pipeline_json` should not also be responsible for carrying a separate normalization marker. If a column needs one marker per row for a transform such as normalize-time, that marker should be loaded into `PipelineValueStore` during per-row `pipeline_json` execution.
 
 ## JSON Authoring Levels
 
@@ -588,14 +589,15 @@ The implemented dispatch for interval-row columns is:
 4. If the row pipeline produces `DigitalIntervalSeries` windows, verify row count and gather the column source through `GatherResult`.
 5. Build any iterable `PipelineValueStore` bindings requested by `pipeline_value_bindings`, such as one normalization marker per row. Initial support binds one `ClockTicks` value per row from a direct or derived `DigitalEventSeries`.
 6. Run `pipeline_json` over gathered rows with the row store to produce one value per tensor row.
+7. If the row pipeline produces `DigitalEventSeries` sample times and the column pipeline has no terminal range reduction, route those sample times to timestamp/sample provider behavior.
 
 Planned dispatch extensions are:
 
-1. If the row pipeline produces `DigitalEventSeries` sample times without windows, use timestamp/sample provider behavior or expand to windows with `EventToInterval`, depending on the column recipe.
+1. Optional future expansion may allow recipes to choose whether `DigitalEventSeries` row-pipeline output should sample directly or be expanded to windows with `EventToInterval`.
 
 The dispatch should reject row-pipeline outputs that do not preserve row count unless the recipe explicitly opts into row filtering.
 
-Implemented behavior rejects `DigitalEventSeries` row-pipeline output for interval-row gather columns with a runtime error explaining that timestamp/sample dispatch is deferred.
+Implemented behavior rejects `DigitalEventSeries` row-pipeline output only when the interval-row column also declares a terminal range reduction, because sample-time output is point geometry rather than gather-window geometry.
 
 ## TimeFrame Semantics
 

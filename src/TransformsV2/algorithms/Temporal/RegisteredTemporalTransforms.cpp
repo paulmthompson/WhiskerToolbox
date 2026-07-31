@@ -34,6 +34,7 @@ static RegisterBindingApplicator<NormalizeTimeParamsV2> const register_binding_a
  */
 bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<NormalizeTimeParamsV2>();
+    registerPipelineStepFactoryFor<ShiftDigitalEventSeriesParams>();
     return true;
 }();
 
@@ -207,6 +208,26 @@ auto const register_normalize_digital_event_series_relative = RegisterContainerT
                 .is_deterministic = true,
                 .supports_cancellation = true});
 
+auto const register_shift_digital_event_series = RegisterContainerTransform<
+        DigitalEventSeries,
+        DigitalEventSeries,
+        ShiftDigitalEventSeriesParams>(
+        "ShiftDigitalEventSeries",
+        shiftDigitalEventSeries,
+        ContainerTransformMetadata{
+                .name = "ShiftDigitalEventSeries",
+                .description = "Shift every DigitalEventSeries event by a fixed clock-tick offset",
+                .category = "Temporal",
+                .input_container_type = typeid(DigitalEventSeries),
+                .output_container_type = typeid(DigitalEventSeries),
+                .params_type = typeid(ShiftDigitalEventSeriesParams),
+                .input_type_name = "DigitalEventSeries",
+                .output_type_name = "DigitalEventSeries",
+                .params_type_name = "ShiftDigitalEventSeriesParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
 }// anonymous namespace
 
 // ============================================================================
@@ -229,6 +250,7 @@ void registerTemporalTransforms() {
     (void) register_normalize_clock_ticks_value_v2;
     (void) register_normalize_sample_time_value_v2;
     (void) register_normalize_digital_event_series_relative;
+    (void) register_shift_digital_event_series;
     (void) register_binding_applicator_v2;
 }
 

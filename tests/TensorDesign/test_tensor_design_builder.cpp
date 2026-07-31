@@ -708,42 +708,45 @@ TEST_CASE("buildTensorFromDesignJson builds derived-from-source row tensors",
     CHECK_THAT(values[5], WithinAbs(5.0, 0.01));
 }
 
-TEST_CASE("buildTensorFromDesignJson characterizes timestamp offset sampling",
-          "[TensorDesign][offset][characterization][Phase1]") {
+TEST_CASE("buildTensorFromDesignJson samples analog source from DigitalEventSeries row_pipeline_json",
+          "[TensorDesign][Phase6]") {
     DataManager dm;
     setDefaultIdentityTimeFrame(dm, 12);
     auto analog = createLinearAnalog(12);
     dm.setData<AnalogTimeSeries>("signal", analog, TimeKey("time"));
-    auto row_events = createEventSeries({2, 7, 9});
-    dm.setData<DigitalEventSeries>("row_events", row_events, TimeKey("time"));
+    auto intervals = createIntervalSeries({{2, 4}, {7, 8}, {9, 10}});
+    dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("time"));
 
     std::string const json = R"({
         "tensor_key": "offset_features",
         "row_source": {
-            "data_key": "row_events",
-            "row_type": "timestamp"
+            "data_key": "intervals",
+            "row_type": "interval"
         },
         "columns": [
             {
                 "name": "signal_plus_two",
                 "source_key": "signal",
-                "pipeline_json": "{\"offset\": 2}"
+                "row_pipeline_json": "{\"steps\": [{\"step_id\": \"start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}, {\"step_id\": \"shift\", \"transform_name\": \"ShiftDigitalEventSeries\", \"parameters\": {\"offset\": 2}}]}",
+                "pipeline_json": "{\"steps\": []}"
             },
             {
                 "name": "signal_no_offset",
                 "source_key": "signal",
-                "pipeline_json": "{\"offset\": 0}"
+                "row_pipeline_json": "{\"steps\": [{\"step_id\": \"start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}]}",
+                "pipeline_json": "{\"steps\": []}"
             },
             {
                 "name": "signal_out_of_range",
                 "source_key": "signal",
-                "pipeline_json": "{\"offset\": 20}"
+                "row_pipeline_json": "{\"steps\": [{\"step_id\": \"start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}, {\"step_id\": \"shift\", \"transform_name\": \"ShiftDigitalEventSeries\", \"parameters\": {\"offset\": 20}}]}",
+                "pipeline_json": "{\"steps\": []}"
             }
         ]
     })";
 
     auto const built = requireValue(buildTensorFromDesignJson(dm, json));
-    REQUIRE(built.numRows() == row_events->size());
+    REQUIRE(built.numRows() == intervals->size());
     REQUIRE(built.numColumns() == 3);
 
     auto const plus_two = built.getColumn(0);
