@@ -3,7 +3,7 @@ title: "Column Recipe Preset Registry"
 format: html
 ---
 
-**Status:** Initial Phase 9c slice implemented. The registry exists with the Phase 9c compiled preset set: `mean_over_interval`, `event_count_over_interval`, `analog_sample_at_interval_start`, `event_presence_around_interval_start`, `point_xy`, `multi_point_xy`, `point_xy_at_interval_start`, `raster_events_relative_to_interval_start`, and `trial_relative_event_count_from_interval_start`. Preset JSON files, UI integration, and the broader bundled preset catalog remain planned.
+**Status:** Phase 9c implemented. The registry exists with the Phase 9c compiled preset set: `mean_over_interval`, `event_count_over_interval`, `analog_sample_at_interval_start`, `event_presence_around_interval_start`, `point_xy`, `multi_point_xy`, `point_xy_at_interval_start`, `raster_events_relative_to_interval_start`, and `trial_relative_event_count_from_interval_start`. TensorDesign JSON can use preset invocations, and TensorDesigner can append expanded preset columns through **Add Preset...**. Preset JSON files and the broader bundled/user preset catalog remain planned for Phase 10.
 
 ## Purpose
 
@@ -273,6 +273,12 @@ Expansion is the same as `raster_events_relative_to_interval_start`, plus an `Ev
 
 It also verifies direct preset-authored JSON, such as `columns[].preset = "point_xy"`, through both `parseDesignJson()` and `buildTensorFromDesignJson()`.
 
+## TensorDesigner UI
+
+TensorDesigner exposes **Add Preset...** next to **Add Column**. The dialog lists built-in registry presets, shows each preset description and parameter field names, collects the shared preset parameters, expands the selected preset through `ColumnRecipePresetRegistry`, and appends all generated raw `ColumnRecipe`s to the current design.
+
+Saving from TensorDesigner uses `serializeDesignJson()` on the expanded recipes. The saved JSON contains ordinary `columns[]` entries and does not require the preset registry for execution.
+
 ## Planned Follow-Up
 
-Later Phase 9c slices should add richer preset argument structs or JSON-backed argument parsing, expand presets into TensorDesigner actions, and add the remaining built-in workflows only after this registry surface is stable.
+Phase 10 should add preset file/library support, including bundled and user preset catalogs. Later UI refinements may replace the shared-argument form with per-preset generated forms, but the Phase 9c path is functional and saves expanded raw recipes.

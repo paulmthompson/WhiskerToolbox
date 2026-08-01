@@ -4,6 +4,7 @@
 
 #include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataManager/DataManager.hpp"
+#include "TensorDesign/ColumnRecipePresetRegistry.hpp"
 #include "TensorDesign/TensorDesignBuilder.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
@@ -23,12 +24,18 @@
 #include <nlohmann/json.hpp>
 
 #include <QComboBox>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QDoubleSpinBox>
 #include <QFileDialog>
+#include <QFormLayout>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QLineEdit>
 #include <QListWidget>
 #include <QMessageBox>
 #include <QPushButton>
+#include <QSpinBox>
 #include <QVBoxLayout>
 
 #include <chrono>
@@ -76,6 +83,29 @@ using DesignRowType = Neuralyzer::TensorDesign::RowType;
             return DesignerRowType::None;
     }
     return DesignerRowType::None;
+}
+
+}// namespace
+
+namespace {
+
+[[nodiscard]] QString presetParameterHint(Neuralyzer::TensorDesign::ColumnRecipePresetDescriptor const & descriptor) {
+    QStringList names;
+    for (auto const & field: descriptor.parameters.fields) {
+        names << QString::fromStdString(field.name);
+    }
+    return names.join(QStringLiteral(", "));
+}
+
+[[nodiscard]] std::vector<std::string> parseSourceKeys(QString const & text) {
+    std::vector<std::string> keys;
+    for (auto const & part: text.split(QStringLiteral(","), Qt::SkipEmptyParts)) {
+        auto const trimmed = part.trimmed();
+        if (!trimmed.isEmpty()) {
+            keys.push_back(trimmed.toStdString());
+        }
+    }
+    return keys;
 }
 
 }// namespace
@@ -301,6 +331,126 @@ void TensorDesigner::_onAddColumnClicked() {
     dialog->show();
 }
 
+void TensorDesigner::_onAddPresetClicked() {
+    if (_row_type == DesignerRowType::None) {
+        QMessageBox::warning(this, QStringLiteral("No Row Source"),
+                             QStringLiteral("Please select a row source type first."));
+        return;
+    }
+
+    auto registry = Neuralyzer::TensorDesign::createBuiltInColumnRecipePresetRegistry();
+    auto descriptors = registry.descriptors();
+    if (descriptors.empty()) {
+        _updateStatus(QStringLiteral("No column presets are registered."));
+        return;
+    }
+
+    QDialog dialog(this);
+    dialog.setWindowTitle(QStringLiteral("Add Column Preset"));
+    auto * layout = new QVBoxLayout(&dialog);
+    auto * form = new QFormLayout();
+
+    auto * preset_combo = new QComboBox(&dialog);
+    for (auto const * descriptor: descriptors) {
+        preset_combo->addItem(
+                QString::fromStdString(descriptor->display_name),
+                QString::fromStdString(descriptor->id));
+    }
+    form->addRow(QStringLiteral("Preset"), preset_combo);
+
+    auto * description_label = new QLabel(&dialog);
+    description_label->setWordWrap(true);
+    form->addRow(QStringLiteral("Description"), description_label);
+
+    auto * output_name_edit = new QLineEdit(&dialog);
+    auto * source_key_edit = new QLineEdit(&dialog);
+    auto * binding_source_key_edit = new QLineEdit(&dialog);
+    auto * store_key_edit = new QLineEdit(QStringLiteral("row_alignment_time"), &dialog);
+    auto * name_prefix_edit = new QLineEdit(&dialog);
+    auto * source_keys_edit = new QLineEdit(&dialog);
+    auto * pre_spin = new QSpinBox(&dialog);
+    auto * post_spin = new QSpinBox(&dialog);
+    auto * window_start_spin = new QDoubleSpinBox(&dialog);
+    auto * window_end_spin = new QDoubleSpinBox(&dialog);
+
+    pre_spin->setRange(0, 1'000'000'000);
+    post_spin->setRange(0, 1'000'000'000);
+    window_start_spin->setRange(-1'000'000'000.0, 1'000'000'000.0);
+    window_end_spin->setRange(-1'000'000'000.0, 1'000'000'000.0);
+    window_start_spin->setDecimals(3);
+    window_end_spin->setDecimals(3);
+    window_end_spin->setValue(15.0);
+
+    form->addRow(QStringLiteral("Output name"), output_name_edit);
+    form->addRow(QStringLiteral("Source key"), source_key_edit);
+    form->addRow(QStringLiteral("Binding source key"), binding_source_key_edit);
+    form->addRow(QStringLiteral("Store key"), store_key_edit);
+    form->addRow(QStringLiteral("Name prefix"), name_prefix_edit);
+    form->addRow(QStringLiteral("Source keys (comma-separated)"), source_keys_edit);
+    form->addRow(QStringLiteral("Pre"), pre_spin);
+    form->addRow(QStringLiteral("Post"), post_spin);
+    form->addRow(QStringLiteral("Window start"), window_start_spin);
+    form->addRow(QStringLiteral("Window end"), window_end_spin);
+
+    auto * hint_label = new QLabel(&dialog);
+    hint_label->setWordWrap(true);
+    form->addRow(QStringLiteral("Used fields"), hint_label);
+
+    layout->addLayout(form);
+
+    auto update_description = [&]() {
+        auto const id = preset_combo->currentData().toString().toStdString();
+        auto const * descriptor = registry.find(id);
+        if (descriptor == nullptr) {
+            description_label->clear();
+            hint_label->clear();
+            return;
+        }
+        description_label->setText(QString::fromStdString(descriptor->description));
+        hint_label->setText(presetParameterHint(*descriptor));
+    };
+    update_description();
+    connect(preset_combo, &QComboBox::currentIndexChanged, &dialog, update_description);
+
+    auto * buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    layout->addWidget(buttons);
+    connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
+
+    Neuralyzer::TensorDesign::ColumnRecipePresetArgs args;
+    args.output_name = output_name_edit->text().trimmed().toStdString();
+    args.source_key = source_key_edit->text().trimmed().toStdString();
+    args.binding_source_key = binding_source_key_edit->text().trimmed().toStdString();
+    args.store_key = store_key_edit->text().trimmed().toStdString();
+    args.name_prefix = name_prefix_edit->text().trimmed().toStdString();
+    args.source_keys = parseSourceKeys(source_keys_edit->text());
+    args.pre = pre_spin->value();
+    args.post = post_spin->value();
+    args.window_start = window_start_spin->value();
+    args.window_end = window_end_spin->value();
+
+    auto const preset_id = preset_combo->currentData().toString().toStdString();
+    auto expansion = registry.expand(preset_id, args);
+    if (!expansion.has_value()) {
+        QMessageBox::warning(this, QStringLiteral("Preset Expansion Failed"),
+                             QStringLiteral("Required preset parameters are missing or invalid."));
+        return;
+    }
+
+    auto const added_count = expansion->columns.size();
+    for (auto & recipe: expansion->columns) {
+        _column_recipes.push_back(std::move(recipe));
+    }
+    _refreshColumnList();
+    _updateStatus(QStringLiteral("Preset added: %1 columns total (+%2)")
+                          .arg(static_cast<int>(_column_recipes.size()))
+                          .arg(static_cast<int>(added_count)));
+}
+
 void TensorDesigner::_onRemoveColumnClicked() {
     auto * item = _column_list->currentItem();
     if (!item) {
@@ -469,10 +619,12 @@ void TensorDesigner::_setupUi() {
     _col_button_layout->setSpacing(4);
 
     _add_col_btn = new QPushButton(QStringLiteral("Add Column"), this);
+    _add_preset_btn = new QPushButton(QStringLiteral("Add Preset..."), this);
     _edit_col_btn = new QPushButton(QStringLiteral("Edit"), this);
     _remove_col_btn = new QPushButton(QStringLiteral("Remove"), this);
 
     _col_button_layout->addWidget(_add_col_btn);
+    _col_button_layout->addWidget(_add_preset_btn);
     _col_button_layout->addWidget(_edit_col_btn);
     _col_button_layout->addWidget(_remove_col_btn);
     _col_button_layout->addStretch();
@@ -510,6 +662,8 @@ void TensorDesigner::_connectSignals() {
             this, &TensorDesigner::_onRowSourceKeyChanged);
     connect(_add_col_btn, &QPushButton::clicked,
             this, &TensorDesigner::_onAddColumnClicked);
+    connect(_add_preset_btn, &QPushButton::clicked,
+            this, &TensorDesigner::_onAddPresetClicked);
     connect(_edit_col_btn, &QPushButton::clicked,
             this, &TensorDesigner::_onEditColumnClicked);
     connect(_remove_col_btn, &QPushButton::clicked,

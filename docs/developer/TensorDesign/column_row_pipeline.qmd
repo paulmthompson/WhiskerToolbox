@@ -3,7 +3,7 @@ title: "Column Row Pipeline Design"
 format: html
 ---
 
-**Status:** Partially implemented. GatherResult, interval-window primitives, `ColumnRecipe::row_pipeline_json`, TensorDesign JSON round-trip, identity row-pipeline dispatch, `DigitalIntervalSeries` row-pipeline gather windows, `pipeline_value_bindings` for row-specific `PipelineValueStore` values, `DigitalEventSeries` sample-time row-pipeline dispatch, TimeFrame row sources, `PointCoordinate` keypoint coordinate projection, and the initial column preset registry with a small compiled preset set are implemented. The broader preset catalog, preset file library, and UI support remain planned.
+**Status:** Partially implemented. GatherResult, interval-window primitives, `ColumnRecipe::row_pipeline_json`, TensorDesign JSON round-trip, identity row-pipeline dispatch, `DigitalIntervalSeries` row-pipeline gather windows, `pipeline_value_bindings` for row-specific `PipelineValueStore` values, `DigitalEventSeries` sample-time row-pipeline dispatch, TimeFrame row sources, `PointCoordinate` keypoint coordinate projection, and Phase 9c column presets with TensorDesigner **Add Preset...** support are implemented. The broader preset file library and user/bundled preset catalog remain planned.
 
 This document describes the target architecture for per-column gather geometry in lazy-column tensors. The implementation sequence is tracked separately in [Column Row Pipeline Roadmap](column_row_pipeline_roadmap.qmd).
 
@@ -66,12 +66,12 @@ Implemented today:
 Not implemented yet:
 
 - Row-pipeline caching across columns.
-- Broader preset catalog, bundled preset library, and UI preset expansion.
+- Broader preset catalog and bundled/user preset file library.
 - UI support for configuring row pipelines.
 
 ## Problem
 
-Original interval-row tensor columns always gathered source data over the full row interval. With the implemented `DigitalIntervalSeries` row-pipeline path, onset-window event reductions are now expressible in TensorDesign JSON. With `pipeline_value_bindings`, per-row normalization context is also expressible for row-aligned `DigitalEventSeries` markers. With `DigitalEventSeries` row-pipeline dispatch, point sampling is expressible in row-pipeline JSON. Remaining gaps are presets and UI.
+Original interval-row tensor columns always gathered source data over the full row interval. With the implemented `DigitalIntervalSeries` row-pipeline path, onset-window event reductions are now expressible in TensorDesign JSON. With `pipeline_value_bindings`, per-row normalization context is also expressible for row-aligned `DigitalEventSeries` markers. With `DigitalEventSeries` row-pipeline dispatch, point sampling is expressible in row-pipeline JSON. Phase 9c presets cover common authoring patterns; remaining gaps are row-pipeline caching, preset libraries, and richer UI for manually configuring row pipelines.
 
 The full design addresses these common per-row features:
 

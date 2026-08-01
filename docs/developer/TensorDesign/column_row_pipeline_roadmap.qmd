@@ -5,7 +5,7 @@ format: html
 
 **Status:** Implementation roadmap for [Column Row Pipeline Design](column_row_pipeline.qmd).
 
-Phases 1-6, 9a, and 9b are implemented. Phase 9c has started with the initial column preset registry and a small compiled preset set. Phase 7 and later preset/UI/library work remain planned.
+Phases 1-6, 9a, 9b, and 9c are implemented. Phase 7 and later preset-library/design-preset work remain planned.
 
 This roadmap breaks the per-column row-pipeline refactor into small, testable steps. The design goal is to let each tensor column derive its own row-aligned gather inputs through TransformPipelines while keeping `GatherResult` a container/direct-gather executor rather than a pipeline runner.
 
@@ -55,7 +55,7 @@ Known gaps:
 
 - There is no row-pipeline caching.
 - UI does not expose row-pipeline configuration.
-- The initial column recipe preset registry exists with a small compiled preset set; there is no broader preset catalog, preset JSON/file library, or UI integration yet.
+- The Phase 9c column recipe preset registry exists with a compiled preset set and TensorDesigner **Add Preset...** support; there is no broader preset JSON/file library yet.
 
 ## Phase 1: Baseline Tests — Done
 
@@ -337,14 +337,14 @@ Exit criteria:
 
 Goal: provide friendly recipe generators that expand user-supplied parameters into raw `ColumnRecipe` objects, avoiding manual embedded JSON authoring. Presets are for authoring convenience; saved designs remain expanded raw TensorDesign JSON.
 
-Status: started. `ColumnRecipePresetRegistry` is implemented in `src/TensorDesign` with the Phase 9c compiled preset set. Focused expansion tests cover raw recipe output, and TensorDesign JSON tests verify both JSON-authored preset invocations and selected expanded presets through `buildTensorFromDesignJson()`. This slice does not add preset files or UI support.
+Status: done. `ColumnRecipePresetRegistry` is implemented in `src/TensorDesign` with the Phase 9c compiled preset set. Focused expansion tests cover raw recipe output, TensorDesign JSON tests verify both JSON-authored preset invocations and selected expanded presets through `buildTensorFromDesignJson()`, and TensorDesigner exposes **Add Preset...** to append expanded raw recipes. This phase does not add preset files or user/bundled preset catalogs; those are Phase 10.
 
 Tasks:
 
 1. ~~Add a `ColumnRecipePresetRegistry` or equivalent registry in the TensorDesign/TransformsV2 boundary.~~ **Started with a TensorDesign-side registry.**
 2. ~~Define preset descriptors with name, display name, description, parameter schema, source (`Built-in` or `User`), and expansion function/template.~~ **Started for compiled presets.**
 3. ~~Preset expansion must return a list of `ColumnRecipe`s, not a single recipe, so grouped features can be appended atomically.~~ **Done in the expansion type.**
-4. Add presets for the initial common workflows:
+4. ~~Add presets for the initial common workflows:~~ **Done.**
    - ~~mean over interval~~ **Done.**
    - ~~event count over interval~~ **Done.**
    - ~~event presence around interval start~~ **Done.**
@@ -355,10 +355,10 @@ Tasks:
    - ~~raster events relative to interval start~~ **Done.**
    - ~~trial-relative event times using NormalizeTime with row-specific `ClockTicks` bindings~~ **Done as `trial_relative_event_count_from_interval_start`.**
 5. ~~Expand preset JSON into raw `ColumnRecipe` fields before provider construction.~~ **Done for compiled built-in presets in `parseDesignJson()`.**
-6. Add tests that preset expansion produces the same tensor values as equivalent raw recipes.
-7. Add TensorDesigner UI support for **Add Preset...** that appends all expanded columns.
-8. Save expanded raw recipes only after presets are applied; preset invocations are not required for execution.
-9. Reject duplicate preset IDs across built-in and user presets for the initial implementation.
+6. ~~Add tests that preset expansion produces the same tensor values as equivalent raw recipes.~~ **Done through focused expansion tests and TensorDesign JSON build tests.**
+7. ~~Add TensorDesigner UI support for **Add Preset...** that appends all expanded columns.~~ **Done.**
+8. ~~Save expanded raw recipes only after presets are applied; preset invocations are not required for execution.~~ **Done through `TensorDesigner::toJson()` / `serializeDesignJson()`.**
+9. ~~Reject duplicate preset IDs across built-in and user presets for the initial implementation.~~ **Done for registry registration.**
 
 Exit criteria:
 
