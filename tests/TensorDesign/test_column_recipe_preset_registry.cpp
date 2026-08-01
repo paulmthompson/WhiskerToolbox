@@ -192,6 +192,55 @@ TEST_CASE("point_xy_at_interval_start preset expands sampled x and y ColumnRecip
           R"({"steps": [{"step_id": "y", "transform_name": "PointCoordinate", "parameters": {"coordinate": "Y"}}]})");
 }
 
+TEST_CASE("raster_events_relative_to_interval_start preset expands binding and normalize pipeline",
+          "[TensorDesign][presets]") {
+    auto registry = createBuiltInColumnRecipePresetRegistry();
+
+    auto expansion = requireValue(registry.expand(
+            "raster_events_relative_to_interval_start",
+            ColumnRecipePresetArgs{
+                    .output_name = "relative_spikes",
+                    .source_key = "spikes",
+                    .binding_source_key = "contacts"}));
+
+    REQUIRE(expansion.columns.size() == 1);
+    auto const & column = expansion.columns.front();
+    CHECK(column.column_name == "relative_spikes");
+    CHECK(column.source_key == "spikes");
+    REQUIRE(column.pipeline_value_bindings.size() == 1);
+    CHECK(column.pipeline_value_bindings[0].source_key == "contacts");
+    CHECK(column.pipeline_value_bindings[0].source_pipeline_json.find("IntervalToEvent") != std::string::npos);
+    CHECK(column.pipeline_value_bindings[0].store_key == "row_alignment_time");
+    CHECK(column.pipeline_json.find("NormalizeDigitalEventSeriesRelative") != std::string::npos);
+    CHECK(column.pipeline_json.find("EventCountInWindow") == std::string::npos);
+}
+
+TEST_CASE("trial_relative_event_count_from_interval_start preset expands count-in-window pipeline",
+          "[TensorDesign][presets]") {
+    auto registry = createBuiltInColumnRecipePresetRegistry();
+
+    auto expansion = requireValue(registry.expand(
+            "trial_relative_event_count_from_interval_start",
+            ColumnRecipePresetArgs{
+                    .output_name = "early_spike_count",
+                    .source_key = "spikes",
+                    .binding_source_key = "contacts",
+                    .window_start = 0.0,
+                    .window_end = 15.0}));
+
+    REQUIRE(expansion.columns.size() == 1);
+    auto const & column = expansion.columns.front();
+    CHECK(column.column_name == "early_spike_count");
+    CHECK(column.source_key == "spikes");
+    REQUIRE(column.pipeline_value_bindings.size() == 1);
+    CHECK(column.pipeline_value_bindings[0].source_key == "contacts");
+    CHECK(column.pipeline_value_bindings[0].store_key == "row_alignment_time");
+    CHECK(column.pipeline_json.find("NormalizeDigitalEventSeriesRelative") != std::string::npos);
+    CHECK(column.pipeline_json.find("EventCountInWindow") != std::string::npos);
+    CHECK(column.pipeline_json.find("\"window_start\": 0.000000") != std::string::npos);
+    CHECK(column.pipeline_json.find("\"window_end\": 15.000000") != std::string::npos);
+}
+
 TEST_CASE("ColumnRecipePresetRegistry rejects duplicate preset ids", "[TensorDesign][presets]") {
     auto registry = createBuiltInColumnRecipePresetRegistry();
 

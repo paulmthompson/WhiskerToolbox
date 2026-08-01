@@ -1444,6 +1444,43 @@ TEST_CASE("buildTensorFromDesignJson applies derived pipeline_value_bindings",
     CHECK_THAT(values[1], WithinAbs(1.0, 0.01));
 }
 
+TEST_CASE("buildTensorFromDesignJson expands trial_relative_event_count_from_interval_start preset JSON",
+          "[TensorDesign][presets][Phase9c]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 1000);
+
+    auto intervals = createIntervalSeries({{100, 120}, {200, 230}});
+    auto contacts = createIntervalSeries({{100, 120}, {200, 230}});
+    auto spikes = createEventSeries({95, 105, 112, 190, 205, 220});
+    dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("time"));
+    dm.setData<DigitalIntervalSeries>("contacts", contacts, TimeKey("time"));
+    dm.setData<DigitalEventSeries>("spikes", spikes, TimeKey("time"));
+
+    std::string const json = R"({
+        "tensor_key": "features",
+        "row_source": {"data_key": "intervals", "row_type": "interval"},
+        "columns": [
+            {
+                "preset": "trial_relative_event_count_from_interval_start",
+                "parameters": {
+                    "output_name": "relative_spikes",
+                    "source_key": "spikes",
+                    "binding_source_key": "contacts",
+                    "window_start": 0.0,
+                    "window_end": 15.0
+                }
+            }
+        ]
+    })";
+
+    auto const built = requireValue(buildTensorFromDesignJson(dm, json));
+    auto const values = built.getColumn(0);
+
+    REQUIRE(values.size() == intervals->size());
+    CHECK_THAT(values[0], WithinAbs(2.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(1.0, 0.01));
+}
+
 TEST_CASE("serializeDesignJson round-trips pipeline_value_bindings", "[TensorDesign][Phase5]") {
     TensorDesignSpec original;
     original.tensor_key = "features";

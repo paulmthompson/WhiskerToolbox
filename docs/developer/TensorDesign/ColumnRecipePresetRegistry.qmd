@@ -3,7 +3,7 @@ title: "Column Recipe Preset Registry"
 format: html
 ---
 
-**Status:** Initial Phase 9c slice implemented. The registry exists with a small compiled preset set: `mean_over_interval`, `event_count_over_interval`, `analog_sample_at_interval_start`, `event_presence_around_interval_start`, `point_xy`, `multi_point_xy`, and `point_xy_at_interval_start`. Preset JSON files, UI integration, and the broader bundled preset catalog remain planned.
+**Status:** Initial Phase 9c slice implemented. The registry exists with the Phase 9c compiled preset set: `mean_over_interval`, `event_count_over_interval`, `analog_sample_at_interval_start`, `event_presence_around_interval_start`, `point_xy`, `multi_point_xy`, `point_xy_at_interval_start`, `raster_events_relative_to_interval_start`, and `trial_relative_event_count_from_interval_start`. Preset JSON files, UI integration, and the broader bundled preset catalog remain planned.
 
 ## Purpose
 
@@ -56,7 +56,7 @@ During parsing, this expands to ordinary raw columns:
 
 Preset-authored JSON and raw-column JSON can be mixed in the same `columns` array. Expansion preserves order: a multi-column preset contributes its expanded columns at the location of the preset invocation.
 
-The current JSON parameter parser maps the shared `ColumnRecipePresetArgs` fields from `parameters`: `output_name`, `name`, `source_key`, `name_prefix`, `source_keys`, `pre`, and `post`. `name` is accepted as an alias for `output_name` for simple single-output presets.
+The current JSON parameter parser maps the shared `ColumnRecipePresetArgs` fields from `parameters`: `output_name`, `name`, `source_key`, `binding_source_key`, `store_key`, `name_prefix`, `source_keys`, `pre`, `post`, `window_start`, and `window_end`. `name` is accepted as an alias for `output_name` for simple single-output presets.
 
 ## Built-In Presets
 
@@ -226,6 +226,40 @@ Expansion:
 ```
 
 This preset combines interval-row sample geometry with point coordinate projection.
+
+### `raster_events_relative_to_interval_start`
+
+Parameters:
+
+| Field | Meaning |
+|---|---|
+| `output_name` | Generated column name. |
+| `source_key` | Event source gathered over each row interval. |
+| `binding_source_key` | Interval source used to derive one interval-start alignment event per row. Defaults to `source_key` if omitted, but interval-row workflows should usually pass the row interval key. |
+| `store_key` | Optional `PipelineValueStore` key. Defaults to `row_alignment_time`. |
+
+Expansion:
+
+- Leaves `row_pipeline_json` empty, so events are gathered over the full row interval.
+- Adds a `pipeline_value_bindings` entry deriving interval-start events from `binding_source_key` with `IntervalToEvent(start)`.
+- Runs `NormalizeDigitalEventSeriesRelative` with `alignment_time` bound from the row store.
+
+This preset produces row-relative event times without a terminal reduction.
+
+### `trial_relative_event_count_from_interval_start`
+
+Parameters:
+
+| Field | Meaning |
+|---|---|
+| `output_name` | Generated column name. |
+| `source_key` | Event source gathered over each row interval. |
+| `binding_source_key` | Interval source used to derive one interval-start alignment event per row. |
+| `store_key` | Optional `PipelineValueStore` key. Defaults to `row_alignment_time`. |
+| `window_start` | Relative event-count window start. |
+| `window_end` | Relative event-count window end. |
+
+Expansion is the same as `raster_events_relative_to_interval_start`, plus an `EventCountInWindow` terminal range reduction over `[window_start, window_end]`.
 
 ## Test Coverage
 

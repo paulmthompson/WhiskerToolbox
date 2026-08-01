@@ -85,6 +85,39 @@ namespace {
     return schema;
 }
 
+[[nodiscard]] ParameterSchema trialRelativeEventSchema(std::string params_type_name) {
+    auto schema = outputSourceSchema(std::move(params_type_name));
+    schema.fields.push_back(ParameterFieldDescriptor{
+            .name = "binding_source_key",
+            .type_name = "data_key",
+            .raw_type_name = "std::string",
+            .display_name = "Binding Source Key",
+            .tooltip = "Interval source used to derive one interval-start alignment event per row."});
+    schema.fields.push_back(ParameterFieldDescriptor{
+            .name = "store_key",
+            .type_name = "std::string",
+            .raw_type_name = "std::string",
+            .display_name = "Store Key",
+            .tooltip = "PipelineValueStore key used for row alignment time."});
+    schema.fields.push_back(ParameterFieldDescriptor{
+            .name = "window_start",
+            .type_name = "double",
+            .raw_type_name = "double",
+            .display_name = "Window Start",
+            .tooltip = "Relative window start for event count reductions."});
+    schema.fields.push_back(ParameterFieldDescriptor{
+            .name = "window_end",
+            .type_name = "double",
+            .raw_type_name = "double",
+            .display_name = "Window End",
+            .tooltip = "Relative window end for event count reductions."});
+    return schema;
+}
+
+[[nodiscard]] std::string intervalStartPipelineJson() {
+    return R"({"steps": [{"step_id": "interval_start", "transform_name": "IntervalToEvent", "parameters": {"point": "start"}}]})";
+}
+
 [[nodiscard]] std::optional<ColumnRecipePresetExpansion> expandMeanOverInterval(
         ColumnRecipePresetArgs const & args) {
     if (args.output_name.empty() || args.source_key.empty()) {
@@ -126,8 +159,7 @@ namespace {
     TensorBuilders::ColumnRecipe recipe;
     recipe.column_name = args.output_name;
     recipe.source_key = args.source_key;
-    recipe.row_pipeline_json =
-            R"({"steps": [{"step_id": "interval_start", "transform_name": "IntervalToEvent", "parameters": {"point": "start"}}]})";
+    recipe.row_pipeline_json = intervalStartPipelineJson();
     recipe.pipeline_json = R"({"steps": []})";
 
     ColumnRecipePresetExpansion expansion;
@@ -211,14 +243,77 @@ namespace {
         return std::nullopt;
     }
 
-    auto const row_pipeline_json =
-            R"({"steps": [{"step_id": "interval_start", "transform_name": "IntervalToEvent", "parameters": {"point": "start"}}]})";
+    auto const row_pipeline_json = intervalStartPipelineJson();
 
     ColumnRecipePresetExpansion expansion;
     expansion.columns.push_back(pointCoordinateRecipe(
             args.name_prefix + "_x_at_interval_start", args.source_key, "x", "X", row_pipeline_json));
     expansion.columns.push_back(pointCoordinateRecipe(
             args.name_prefix + "_y_at_interval_start", args.source_key, "y", "Y", row_pipeline_json));
+    return expansion;
+}
+
+[[nodiscard]] std::string bindingStoreKey(ColumnRecipePresetArgs const & args) {
+    if (!args.store_key.empty()) {
+        return args.store_key;
+    }
+    return "row_alignment_time";
+}
+
+[[nodiscard]] std::string bindingSourceKey(ColumnRecipePresetArgs const & args) {
+    if (!args.binding_source_key.empty()) {
+        return args.binding_source_key;
+    }
+    return args.source_key;
+}
+
+[[nodiscard]] Neuralyzer::TensorBuilders::PipelineValueBindingRecipe intervalStartBinding(
+        ColumnRecipePresetArgs const & args) {
+    return Neuralyzer::TensorBuilders::PipelineValueBindingRecipe{
+            .source_key = bindingSourceKey(args),
+            .source_pipeline_json = intervalStartPipelineJson(),
+            .store_key = bindingStoreKey(args)};
+}
+
+[[nodiscard]] std::optional<ColumnRecipePresetExpansion> expandRasterEventsRelativeToIntervalStart(
+        ColumnRecipePresetArgs const & args) {
+    if (args.output_name.empty() || args.source_key.empty() || bindingSourceKey(args).empty()) {
+        return std::nullopt;
+    }
+
+    TensorBuilders::ColumnRecipe recipe;
+    recipe.column_name = args.output_name;
+    recipe.source_key = args.source_key;
+    recipe.pipeline_value_bindings.push_back(intervalStartBinding(args));
+    auto const store_key = bindingStoreKey(args);
+    recipe.pipeline_json =
+            R"({"steps": [{"step_id": "normalize", "transform_name": "NormalizeDigitalEventSeriesRelative", "parameters": {"alignment_time": 0}, "param_bindings": {"alignment_time": ")" +
+            store_key + R"("}}]})";
+
+    ColumnRecipePresetExpansion expansion;
+    expansion.columns.push_back(std::move(recipe));
+    return expansion;
+}
+
+[[nodiscard]] std::optional<ColumnRecipePresetExpansion> expandTrialRelativeEventCountFromIntervalStart(
+        ColumnRecipePresetArgs const & args) {
+    if (args.output_name.empty() || args.source_key.empty() || bindingSourceKey(args).empty() ||
+        args.window_end < args.window_start) {
+        return std::nullopt;
+    }
+
+    TensorBuilders::ColumnRecipe recipe;
+    recipe.column_name = args.output_name;
+    recipe.source_key = args.source_key;
+    recipe.pipeline_value_bindings.push_back(intervalStartBinding(args));
+    auto const store_key = bindingStoreKey(args);
+    recipe.pipeline_json =
+            R"({"steps": [{"step_id": "normalize", "transform_name": "NormalizeDigitalEventSeriesRelative", "parameters": {"alignment_time": 0}, "param_bindings": {"alignment_time": ")" +
+            store_key + R"("}}], "range_reduction": {"reduction_name": "EventCountInWindow", "parameters": {"window_start": )" +
+            std::to_string(args.window_start) + R"(, "window_end": )" + std::to_string(args.window_end) + R"(}}})";
+
+    ColumnRecipePresetExpansion expansion;
+    expansion.columns.push_back(std::move(recipe));
     return expansion;
 }
 
@@ -292,6 +387,26 @@ namespace {
             .expand = expandPointXyAtIntervalStart};
 }
 
+[[nodiscard]] ColumnRecipePresetDescriptor rasterEventsRelativeToIntervalStartDescriptor() {
+    return ColumnRecipePresetDescriptor{
+            .id = "raster_events_relative_to_interval_start",
+            .display_name = "Raster events relative to interval start",
+            .description = "Gather row-interval events and normalize event times to each row interval start.",
+            .parameters = trialRelativeEventSchema("RasterEventsRelativeToIntervalStartPresetArgs"),
+            .source = ColumnRecipePresetSource::BuiltIn,
+            .expand = expandRasterEventsRelativeToIntervalStart};
+}
+
+[[nodiscard]] ColumnRecipePresetDescriptor trialRelativeEventCountFromIntervalStartDescriptor() {
+    return ColumnRecipePresetDescriptor{
+            .id = "trial_relative_event_count_from_interval_start",
+            .display_name = "Trial-relative event count from interval start",
+            .description = "Normalize row-interval events to interval start and count events in a relative window.",
+            .parameters = trialRelativeEventSchema("TrialRelativeEventCountFromIntervalStartPresetArgs"),
+            .source = ColumnRecipePresetSource::BuiltIn,
+            .expand = expandTrialRelativeEventCountFromIntervalStart};
+}
+
 }// namespace
 
 bool ColumnRecipePresetRegistry::registerPreset(ColumnRecipePresetDescriptor descriptor) {
@@ -357,6 +472,8 @@ ColumnRecipePresetRegistry createBuiltInColumnRecipePresetRegistry() {
     static_cast<void>(registry.registerPreset(pointXyDescriptor()));
     static_cast<void>(registry.registerPreset(multiPointXyDescriptor()));
     static_cast<void>(registry.registerPreset(pointXyAtIntervalStartDescriptor()));
+    static_cast<void>(registry.registerPreset(rasterEventsRelativeToIntervalStartDescriptor()));
+    static_cast<void>(registry.registerPreset(trialRelativeEventCountFromIntervalStartDescriptor()));
     return registry;
 }
 
@@ -368,9 +485,13 @@ std::optional<ColumnRecipePresetArgs> parseColumnRecipePresetArgs(nlohmann::json
     ColumnRecipePresetArgs args;
     args.output_name = parameters.value("output_name", parameters.value("name", std::string{}));
     args.source_key = parameters.value("source_key", std::string{});
+    args.binding_source_key = parameters.value("binding_source_key", std::string{});
+    args.store_key = parameters.value("store_key", std::string{});
     args.name_prefix = parameters.value("name_prefix", std::string{});
     args.pre = parameters.value("pre", int64_t{0});
     args.post = parameters.value("post", int64_t{0});
+    args.window_start = parameters.value("window_start", 0.0);
+    args.window_end = parameters.value("window_end", 0.0);
 
     if (parameters.contains("source_keys")) {
         if (!parameters["source_keys"].is_array()) {

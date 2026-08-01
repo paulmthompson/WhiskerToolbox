@@ -25,10 +25,14 @@ enum class ColumnRecipePresetSource : std::uint8_t {
 struct ColumnRecipePresetArgs {
     std::string output_name;
     std::string source_key;
+    std::string binding_source_key;
+    std::string store_key;
     std::string name_prefix;
     std::vector<std::string> source_keys;
     int64_t pre = 0;
     int64_t post = 0;
+    double window_start = 0.0;
+    double window_end = 0.0;
 };
 
 struct ColumnRecipePresetExpansion {
