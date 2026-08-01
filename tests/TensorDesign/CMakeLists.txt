@@ -9,6 +9,7 @@ if (WIN32)
 endif()
 
 add_executable(test_tensor_design
+    test_column_recipe_preset_registry.cpp
     test_tensor_design_builder.cpp
     test_tensor_whisker_contact_scenario.cpp
 )

@@ -3,6 +3,7 @@
  * @brief Unit tests for the Qt-free TensorDesign library.
  */
 
+#include "TensorDesign/ColumnRecipePresetRegistry.hpp"
 #include "TensorDesign/TensorDesignBuilder.hpp"
 
 #include "../fixtures/GatherAlignmentFixtures.hpp"
@@ -31,6 +32,8 @@ using Catch::Matchers::WithinAbs;
 using Neuralyzer::TensorBuilders::IntervalProperty;
 using Neuralyzer::TensorDesign::buildTensor;
 using Neuralyzer::TensorDesign::buildTensorFromDesignJson;
+using Neuralyzer::TensorDesign::ColumnRecipePresetArgs;
+using Neuralyzer::TensorDesign::createBuiltInColumnRecipePresetRegistry;
 using Neuralyzer::TensorDesign::parseDesignJson;
 using Neuralyzer::TensorDesign::populateDataManager;
 using Neuralyzer::TensorDesign::serializeDesignJson;
@@ -824,6 +827,78 @@ TEST_CASE("buildTensorFromDesignJson builds PointData x/y columns over TimeFrame
     CHECK_THAT(y[0], WithinAbs(2.0, 0.01));
     CHECK_THAT(y[1], WithinAbs(4.0, 0.01));
     CHECK_THAT(y[2], WithinAbs(6.0, 0.01));
+}
+
+TEST_CASE("point_xy preset expansion builds PointData x/y columns over TimeFrame rows",
+          "[TensorDesign][presets][Phase9c]") {
+    DataManager dm;
+    REQUIRE(dm.setTime(TimeKey("frame"), createTimeFrameFromTimes({0, 1, 2}), true));
+    auto points = createPointData({
+            {0, Point2D<float>{1.0f, 2.0f}},
+            {1, Point2D<float>{3.0f, 4.0f}},
+            {2, Point2D<float>{5.0f, 6.0f}},
+    });
+    dm.setData<PointData>("Nose", points, TimeKey("frame"));
+
+    auto registry = createBuiltInColumnRecipePresetRegistry();
+    auto expansion = requireValue(registry.expand(
+            "point_xy",
+            ColumnRecipePresetArgs{
+                    .source_key = "Nose",
+                    .name_prefix = "nose"}));
+
+    TensorDesignSpec spec;
+    spec.tensor_key = "point_features";
+    spec.row_time_key = "frame";
+    spec.row_type = DesignRowType::TimeFrame;
+    spec.columns = std::move(expansion.columns);
+
+    auto const built = requireValue(buildTensorFromDesignJson(dm, serializeDesignJson(spec)));
+    REQUIRE(built.numRows() == 3);
+    REQUIRE(built.numColumns() == 2);
+
+    auto const x = built.getColumn(0);
+    auto const y = built.getColumn(1);
+    REQUIRE(x.size() == 3);
+    REQUIRE(y.size() == 3);
+    CHECK_THAT(x[0], WithinAbs(1.0, 0.01));
+    CHECK_THAT(x[1], WithinAbs(3.0, 0.01));
+    CHECK_THAT(x[2], WithinAbs(5.0, 0.01));
+    CHECK_THAT(y[0], WithinAbs(2.0, 0.01));
+    CHECK_THAT(y[1], WithinAbs(4.0, 0.01));
+    CHECK_THAT(y[2], WithinAbs(6.0, 0.01));
+}
+
+TEST_CASE("mean_over_interval preset expansion builds tensor from expanded JSON",
+          "[TensorDesign][presets][Phase9c]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 10);
+    auto analog = createLinearAnalog(10);
+    dm.setData<AnalogTimeSeries>("Curvature", analog, TimeKey("time"));
+    auto intervals = createIntervalSeries({{0, 3}, {4, 6}});
+    dm.setData<DigitalIntervalSeries>("Contact", intervals, TimeKey("time"));
+
+    auto registry = createBuiltInColumnRecipePresetRegistry();
+    auto expansion = requireValue(registry.expand(
+            "mean_over_interval",
+            ColumnRecipePresetArgs{
+                    .output_name = "mean_curvature",
+                    .source_key = "Curvature"}));
+
+    TensorDesignSpec spec;
+    spec.tensor_key = "contact_features";
+    spec.row_source_key = "Contact";
+    spec.row_type = DesignRowType::Interval;
+    spec.columns = std::move(expansion.columns);
+
+    auto const built = requireValue(buildTensorFromDesignJson(dm, serializeDesignJson(spec)));
+    REQUIRE(built.numRows() == 2);
+    REQUIRE(built.numColumns() == 1);
+
+    auto const mean = built.getColumn(0);
+    REQUIRE(mean.size() == 2);
+    CHECK_THAT(mean[0], WithinAbs(1.5, 0.01));
+    CHECK_THAT(mean[1], WithinAbs(5.0, 0.01));
 }
 
 TEST_CASE("buildTensorFromDesignJson leaves NaN for missing TimeFrame samples",

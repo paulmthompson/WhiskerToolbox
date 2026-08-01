@@ -5,7 +5,7 @@ format: html
 
 **Status:** Implementation roadmap for [Column Row Pipeline Design](column_row_pipeline.qmd).
 
-Phases 1-6, 9a, and 9b are implemented. Phase 7, 9c, and later remain planned.
+Phases 1-6, 9a, and 9b are implemented. Phase 9c has started with the initial column preset registry and a small compiled preset set. Phase 7 and later preset/UI/library work remain planned.
 
 This roadmap breaks the per-column row-pipeline refactor into small, testable steps. The design goal is to let each tensor column derive its own row-aligned gather inputs through TransformPipelines while keeping `GatherResult` a container/direct-gather executor rather than a pipeline runner.
 
@@ -55,7 +55,7 @@ Known gaps:
 
 - There is no row-pipeline caching.
 - UI does not expose row-pipeline configuration.
-- There is no column recipe preset registry, preset expansion layer, or bundled preset catalog.
+- The initial column recipe preset registry exists with a small compiled preset set; there is no broader preset catalog, preset JSON/file library, or UI integration yet.
 
 ## Phase 1: Baseline Tests — Done
 
@@ -337,17 +337,19 @@ Exit criteria:
 
 Goal: provide friendly recipe generators that expand user-supplied parameters into raw `ColumnRecipe` objects, avoiding manual embedded JSON authoring. Presets are for authoring convenience; saved designs remain expanded raw TensorDesign JSON.
 
+Status: started. `ColumnRecipePresetRegistry` is implemented in `src/TensorDesign` with compiled built-in presets for mean-over-interval, event-count-over-interval, event-presence-around-interval-start, and point x/y. Focused expansion tests cover raw recipe output, and TensorDesign JSON tests verify selected expanded presets through `buildTensorFromDesignJson()`. This slice does not add saved-design preset invocation parsing, preset files, or UI support.
+
 Tasks:
 
-1. Add a `ColumnRecipePresetRegistry` or equivalent registry in the TensorDesign/TransformsV2 boundary.
-2. Define preset descriptors with name, display name, description, parameter schema, source (`Built-in` or `User`), and expansion function/template.
-3. Preset expansion must return a list of `ColumnRecipe`s, not a single recipe, so grouped features can be appended atomically.
+1. ~~Add a `ColumnRecipePresetRegistry` or equivalent registry in the TensorDesign/TransformsV2 boundary.~~ **Started with a TensorDesign-side registry.**
+2. ~~Define preset descriptors with name, display name, description, parameter schema, source (`Built-in` or `User`), and expansion function/template.~~ **Started for compiled presets.**
+3. ~~Preset expansion must return a list of `ColumnRecipe`s, not a single recipe, so grouped features can be appended atomically.~~ **Done in the expansion type.**
 4. Add presets for the initial common workflows:
-   - mean over interval
-   - event count over interval
-   - event presence around interval start
+   - ~~mean over interval~~ **Done.**
+   - ~~event count over interval~~ **Done.**
+   - ~~event presence around interval start~~ **Done.**
    - analog sample at interval start
-   - point x/y for one keypoint
+   - ~~point x/y for one keypoint~~ **Done.**
    - point x/y for multiple keypoints
    - point x/y sampled at interval start
    - raster events relative to interval start

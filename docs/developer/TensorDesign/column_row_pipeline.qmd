@@ -3,7 +3,7 @@ title: "Column Row Pipeline Design"
 format: html
 ---
 
-**Status:** Partially implemented. GatherResult, interval-window primitives, `ColumnRecipe::row_pipeline_json`, TensorDesign JSON round-trip, identity row-pipeline dispatch, `DigitalIntervalSeries` row-pipeline gather windows, `pipeline_value_bindings` for row-specific `PipelineValueStore` values, `DigitalEventSeries` sample-time row-pipeline dispatch, TimeFrame row sources, and `PointCoordinate` keypoint coordinate projection are implemented. Presets and broader UI support remain planned.
+**Status:** Partially implemented. GatherResult, interval-window primitives, `ColumnRecipe::row_pipeline_json`, TensorDesign JSON round-trip, identity row-pipeline dispatch, `DigitalIntervalSeries` row-pipeline gather windows, `pipeline_value_bindings` for row-specific `PipelineValueStore` values, `DigitalEventSeries` sample-time row-pipeline dispatch, TimeFrame row sources, `PointCoordinate` keypoint coordinate projection, and the initial column preset registry with a small compiled preset set are implemented. The broader preset catalog, preset file library, and UI support remain planned.
 
 This document describes the target architecture for per-column gather geometry in lazy-column tensors. The implementation sequence is tracked separately in [Column Row Pipeline Roadmap](column_row_pipeline_roadmap.qmd).
 
@@ -66,7 +66,7 @@ Implemented today:
 Not implemented yet:
 
 - Row-pipeline caching across columns.
-- Preset registry, bundled preset library, and preset expansion.
+- Broader preset catalog, bundled preset library, and UI preset expansion.
 - UI support for configuring row pipelines.
 
 ## Problem
