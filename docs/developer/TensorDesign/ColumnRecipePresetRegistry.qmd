@@ -3,7 +3,7 @@ title: "Column Recipe Preset Registry"
 format: html
 ---
 
-**Status:** Initial Phase 9c slice implemented. The registry exists with a small compiled preset set: `mean_over_interval`, `event_count_over_interval`, `analog_sample_at_interval_start`, `event_presence_around_interval_start`, and `point_xy`. Preset JSON files, UI integration, and the broader bundled preset catalog remain planned.
+**Status:** Initial Phase 9c slice implemented. The registry exists with a small compiled preset set: `mean_over_interval`, `event_count_over_interval`, `analog_sample_at_interval_start`, `event_presence_around_interval_start`, `point_xy`, `multi_point_xy`, and `point_xy_at_interval_start`. Preset JSON files, UI integration, and the broader bundled preset catalog remain planned.
 
 ## Purpose
 
@@ -175,6 +175,57 @@ Expansion:
 ```
 
 This preset demonstrates multi-column expansion. Applying the preset appends two ordinary `ColumnRecipe` entries to the tensor design.
+
+### `multi_point_xy`
+
+Parameters:
+
+| Field | Meaning |
+|---|---|
+| `source_keys` | PointData keys to expand. |
+
+Expansion for `source_keys = ["Nose", "Paw"]`:
+
+```json
+[
+  {"name": "Nose_x", "source_key": "Nose", "pipeline_json": "... PointCoordinate X ..."},
+  {"name": "Nose_y", "source_key": "Nose", "pipeline_json": "... PointCoordinate Y ..."},
+  {"name": "Paw_x", "source_key": "Paw", "pipeline_json": "... PointCoordinate X ..."},
+  {"name": "Paw_y", "source_key": "Paw", "pipeline_json": "... PointCoordinate Y ..."}
+]
+```
+
+This preset is a convenience wrapper around repeated `point_xy` expansion. Column names use the source key as the prefix.
+
+### `point_xy_at_interval_start`
+
+Parameters:
+
+| Field | Meaning |
+|---|---|
+| `source_key` | DataManager key for one `PointData` source. |
+| `name_prefix` | Prefix for generated column names. |
+
+Expansion:
+
+```json
+[
+  {
+    "name": "${name_prefix}_x_at_interval_start",
+    "source_key": "${source_key}",
+    "row_pipeline_json": "{\"steps\": [{\"step_id\": \"interval_start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}]}",
+    "pipeline_json": "{\"steps\": [{\"step_id\": \"x\", \"transform_name\": \"PointCoordinate\", \"parameters\": {\"coordinate\": \"X\"}}]}"
+  },
+  {
+    "name": "${name_prefix}_y_at_interval_start",
+    "source_key": "${source_key}",
+    "row_pipeline_json": "{\"steps\": [{\"step_id\": \"interval_start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}]}",
+    "pipeline_json": "{\"steps\": [{\"step_id\": \"y\", \"transform_name\": \"PointCoordinate\", \"parameters\": {\"coordinate\": \"Y\"}}]}"
+  }
+]
+```
+
+This preset combines interval-row sample geometry with point coordinate projection.
 
 ## Test Coverage
 

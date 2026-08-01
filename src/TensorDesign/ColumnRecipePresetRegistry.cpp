@@ -73,6 +73,18 @@ namespace {
     return schema;
 }
 
+[[nodiscard]] ParameterSchema multiPointXySchema() {
+    ParameterSchema schema;
+    schema.params_type_name = "MultiPointXyPresetArgs";
+    schema.fields.push_back(ParameterFieldDescriptor{
+            .name = "source_keys",
+            .type_name = "std::vector<std::string>",
+            .raw_type_name = "std::vector<std::string>",
+            .display_name = "Source Keys",
+            .tooltip = "PointData keys to expand into x and y columns."});
+    return schema;
+}
+
 [[nodiscard]] std::optional<ColumnRecipePresetExpansion> expandMeanOverInterval(
         ColumnRecipePresetArgs const & args) {
     if (args.output_name.empty() || args.source_key.empty()) {
@@ -146,13 +158,20 @@ namespace {
         std::string column_name,
         std::string source_key,
         char const * step_id,
-        char const * coordinate) {
+        char const * coordinate,
+        std::string row_pipeline_json = {},
+        bool reduce_mean = false) {
     TensorBuilders::ColumnRecipe recipe;
     recipe.column_name = std::move(column_name);
     recipe.source_key = std::move(source_key);
+    recipe.row_pipeline_json = std::move(row_pipeline_json);
     recipe.pipeline_json = R"({"steps": [{"step_id": ")" + std::string(step_id) +
                            R"(", "transform_name": "PointCoordinate", "parameters": {"coordinate": ")" +
-                           coordinate + R"("}}]})";
+                           coordinate + R"("}}])";
+    if (reduce_mean) {
+        recipe.pipeline_json += R"(, "range_reduction": {"reduction_name": "MeanValue"})";
+    }
+    recipe.pipeline_json += "}";
     return recipe;
 }
 
@@ -165,6 +184,41 @@ namespace {
     ColumnRecipePresetExpansion expansion;
     expansion.columns.push_back(pointCoordinateRecipe(args.name_prefix + "_x", args.source_key, "x", "X"));
     expansion.columns.push_back(pointCoordinateRecipe(args.name_prefix + "_y", args.source_key, "y", "Y"));
+    return expansion;
+}
+
+[[nodiscard]] std::optional<ColumnRecipePresetExpansion> expandMultiPointXy(
+        ColumnRecipePresetArgs const & args) {
+    if (args.source_keys.empty()) {
+        return std::nullopt;
+    }
+
+    ColumnRecipePresetExpansion expansion;
+    expansion.columns.reserve(args.source_keys.size() * 2);
+    for (auto const & source_key: args.source_keys) {
+        if (source_key.empty()) {
+            return std::nullopt;
+        }
+        expansion.columns.push_back(pointCoordinateRecipe(source_key + "_x", source_key, "x", "X"));
+        expansion.columns.push_back(pointCoordinateRecipe(source_key + "_y", source_key, "y", "Y"));
+    }
+    return expansion;
+}
+
+[[nodiscard]] std::optional<ColumnRecipePresetExpansion> expandPointXyAtIntervalStart(
+        ColumnRecipePresetArgs const & args) {
+    if (args.source_key.empty() || args.name_prefix.empty()) {
+        return std::nullopt;
+    }
+
+    auto const row_pipeline_json =
+            R"({"steps": [{"step_id": "interval_start", "transform_name": "IntervalToEvent", "parameters": {"point": "start"}}]})";
+
+    ColumnRecipePresetExpansion expansion;
+    expansion.columns.push_back(pointCoordinateRecipe(
+            args.name_prefix + "_x_at_interval_start", args.source_key, "x", "X", row_pipeline_json));
+    expansion.columns.push_back(pointCoordinateRecipe(
+            args.name_prefix + "_y_at_interval_start", args.source_key, "y", "Y", row_pipeline_json));
     return expansion;
 }
 
@@ -216,6 +270,26 @@ namespace {
             .parameters = pointXySchema(),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandPointXy};
+}
+
+[[nodiscard]] ColumnRecipePresetDescriptor multiPointXyDescriptor() {
+    return ColumnRecipePresetDescriptor{
+            .id = "multi_point_xy",
+            .display_name = "Multiple point x/y",
+            .description = "Expand multiple PointData sources into x and y scalar columns.",
+            .parameters = multiPointXySchema(),
+            .source = ColumnRecipePresetSource::BuiltIn,
+            .expand = expandMultiPointXy};
+}
+
+[[nodiscard]] ColumnRecipePresetDescriptor pointXyAtIntervalStartDescriptor() {
+    return ColumnRecipePresetDescriptor{
+            .id = "point_xy_at_interval_start",
+            .display_name = "Point x/y at interval start",
+            .description = "Sample one PointData source at each row interval start and expand x/y columns.",
+            .parameters = pointXySchema(),
+            .source = ColumnRecipePresetSource::BuiltIn,
+            .expand = expandPointXyAtIntervalStart};
 }
 
 }// namespace
@@ -281,6 +355,8 @@ ColumnRecipePresetRegistry createBuiltInColumnRecipePresetRegistry() {
     static_cast<void>(registry.registerPreset(analogSampleAtIntervalStartDescriptor()));
     static_cast<void>(registry.registerPreset(eventPresenceAroundIntervalStartDescriptor()));
     static_cast<void>(registry.registerPreset(pointXyDescriptor()));
+    static_cast<void>(registry.registerPreset(multiPointXyDescriptor()));
+    static_cast<void>(registry.registerPreset(pointXyAtIntervalStartDescriptor()));
     return registry;
 }
 

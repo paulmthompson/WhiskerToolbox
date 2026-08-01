@@ -146,6 +146,52 @@ TEST_CASE("point_xy preset expands to x and y ColumnRecipes", "[TensorDesign][pr
           R"({"steps": [{"step_id": "y", "transform_name": "PointCoordinate", "parameters": {"coordinate": "Y"}}]})");
 }
 
+TEST_CASE("multi_point_xy preset expands multiple keys to x and y ColumnRecipes",
+          "[TensorDesign][presets]") {
+    auto registry = createBuiltInColumnRecipePresetRegistry();
+
+    auto expansion = requireValue(registry.expand(
+            "multi_point_xy",
+            ColumnRecipePresetArgs{
+                    .source_keys = {"Nose", "Paw"}}));
+
+    REQUIRE(expansion.columns.size() == 4);
+    CHECK(expansion.columns[0].column_name == "Nose_x");
+    CHECK(expansion.columns[0].source_key == "Nose");
+    CHECK(expansion.columns[1].column_name == "Nose_y");
+    CHECK(expansion.columns[1].source_key == "Nose");
+    CHECK(expansion.columns[2].column_name == "Paw_x");
+    CHECK(expansion.columns[2].source_key == "Paw");
+    CHECK(expansion.columns[3].column_name == "Paw_y");
+    CHECK(expansion.columns[3].source_key == "Paw");
+}
+
+TEST_CASE("point_xy_at_interval_start preset expands sampled x and y ColumnRecipes",
+          "[TensorDesign][presets]") {
+    auto registry = createBuiltInColumnRecipePresetRegistry();
+
+    auto expansion = requireValue(registry.expand(
+            "point_xy_at_interval_start",
+            ColumnRecipePresetArgs{
+                    .source_key = "Nose",
+                    .name_prefix = "nose"}));
+
+    REQUIRE(expansion.columns.size() == 2);
+
+    CHECK(expansion.columns[0].column_name == "nose_x_at_interval_start");
+    CHECK(expansion.columns[0].source_key == "Nose");
+    CHECK(expansion.columns[0].row_pipeline_json ==
+          R"({"steps": [{"step_id": "interval_start", "transform_name": "IntervalToEvent", "parameters": {"point": "start"}}]})");
+    CHECK(expansion.columns[0].pipeline_json ==
+          R"({"steps": [{"step_id": "x", "transform_name": "PointCoordinate", "parameters": {"coordinate": "X"}}]})");
+
+    CHECK(expansion.columns[1].column_name == "nose_y_at_interval_start");
+    CHECK(expansion.columns[1].source_key == "Nose");
+    CHECK(expansion.columns[1].row_pipeline_json == expansion.columns[0].row_pipeline_json);
+    CHECK(expansion.columns[1].pipeline_json ==
+          R"({"steps": [{"step_id": "y", "transform_name": "PointCoordinate", "parameters": {"coordinate": "Y"}}]})");
+}
+
 TEST_CASE("ColumnRecipePresetRegistry rejects duplicate preset ids", "[TensorDesign][presets]") {
     auto registry = createBuiltInColumnRecipePresetRegistry();
 

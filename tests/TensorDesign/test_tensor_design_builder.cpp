@@ -911,6 +911,108 @@ TEST_CASE("buildTensorFromDesignJson expands point_xy preset JSON",
     CHECK_THAT(y[2], WithinAbs(6.0, 0.01));
 }
 
+TEST_CASE("buildTensorFromDesignJson expands multi_point_xy preset JSON",
+          "[TensorDesign][presets][Phase9c]") {
+    DataManager dm;
+    REQUIRE(dm.setTime(TimeKey("frame"), createTimeFrameFromTimes({0, 1, 2}), true));
+    auto nose = createPointData({
+            {0, Point2D<float>{1.0f, 2.0f}},
+            {1, Point2D<float>{3.0f, 4.0f}},
+            {2, Point2D<float>{5.0f, 6.0f}},
+    });
+    auto paw = createPointData({
+            {0, Point2D<float>{10.0f, 20.0f}},
+            {1, Point2D<float>{30.0f, 40.0f}},
+            {2, Point2D<float>{50.0f, 60.0f}},
+    });
+    dm.setData<PointData>("Nose", nose, TimeKey("frame"));
+    dm.setData<PointData>("Paw", paw, TimeKey("frame"));
+
+    std::string const json = R"({
+        "tensor_key": "point_features",
+        "row_source": {
+            "time_key": "frame",
+            "row_type": "timeframe"
+        },
+        "columns": [
+            {
+                "preset": "multi_point_xy",
+                "parameters": {
+                    "source_keys": ["Nose", "Paw"]
+                }
+            }
+        ]
+    })";
+
+    auto const built = requireValue(buildTensorFromDesignJson(dm, json));
+    REQUIRE(built.numRows() == 3);
+    REQUIRE(built.numColumns() == 4);
+
+    auto const nose_x = built.getColumn(0);
+    auto const nose_y = built.getColumn(1);
+    auto const paw_x = built.getColumn(2);
+    auto const paw_y = built.getColumn(3);
+    CHECK_THAT(nose_x[0], WithinAbs(1.0, 0.01));
+    CHECK_THAT(nose_x[1], WithinAbs(3.0, 0.01));
+    CHECK_THAT(nose_x[2], WithinAbs(5.0, 0.01));
+    CHECK_THAT(nose_y[0], WithinAbs(2.0, 0.01));
+    CHECK_THAT(nose_y[1], WithinAbs(4.0, 0.01));
+    CHECK_THAT(nose_y[2], WithinAbs(6.0, 0.01));
+    CHECK_THAT(paw_x[0], WithinAbs(10.0, 0.01));
+    CHECK_THAT(paw_x[1], WithinAbs(30.0, 0.01));
+    CHECK_THAT(paw_x[2], WithinAbs(50.0, 0.01));
+    CHECK_THAT(paw_y[0], WithinAbs(20.0, 0.01));
+    CHECK_THAT(paw_y[1], WithinAbs(40.0, 0.01));
+    CHECK_THAT(paw_y[2], WithinAbs(60.0, 0.01));
+}
+
+TEST_CASE("buildTensorFromDesignJson expands point_xy_at_interval_start preset JSON",
+          "[TensorDesign][presets][Phase9c]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 12);
+    auto points = createPointData({
+            {2, Point2D<float>{1.0f, 2.0f}},
+            {7, Point2D<float>{3.0f, 4.0f}},
+            {9, Point2D<float>{5.0f, 6.0f}},
+    });
+    dm.setData<PointData>("Nose", points, TimeKey("time"));
+    auto managed_points = dm.getData<PointData>("Nose");
+    REQUIRE(managed_points != nullptr);
+    REQUIRE(managed_points->getTimeFrame() != nullptr);
+    auto intervals = createIntervalSeries({{2, 4}, {7, 8}, {9, 10}});
+    dm.setData<DigitalIntervalSeries>("Contact", intervals, TimeKey("time"));
+
+    std::string const json = R"({
+        "tensor_key": "contact_point_features",
+        "row_source": {
+            "data_key": "Contact",
+            "row_type": "interval"
+        },
+        "columns": [
+            {
+                "preset": "point_xy_at_interval_start",
+                "parameters": {
+                    "source_key": "Nose",
+                    "name_prefix": "nose"
+                }
+            }
+        ]
+    })";
+
+    auto const built = requireValue(buildTensorFromDesignJson(dm, json));
+    REQUIRE(built.numRows() == intervals->size());
+    REQUIRE(built.numColumns() == 2);
+
+    auto const x = built.getColumn(0);
+    auto const y = built.getColumn(1);
+    CHECK_THAT(x[0], WithinAbs(1.0, 0.01));
+    CHECK_THAT(x[1], WithinAbs(3.0, 0.01));
+    CHECK_THAT(x[2], WithinAbs(5.0, 0.01));
+    CHECK_THAT(y[0], WithinAbs(2.0, 0.01));
+    CHECK_THAT(y[1], WithinAbs(4.0, 0.01));
+    CHECK_THAT(y[2], WithinAbs(6.0, 0.01));
+}
+
 TEST_CASE("point_xy preset expansion builds PointData x/y columns over TimeFrame rows",
           "[TensorDesign][presets][Phase9c]") {
     DataManager dm;

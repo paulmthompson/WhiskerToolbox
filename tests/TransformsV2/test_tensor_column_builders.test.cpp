@@ -131,6 +131,18 @@ std::shared_ptr<DigitalEventSeries> createEventSeries(
 }
 
 /**
+ * @brief Create a PointData with one point per timestamp.
+ */
+std::shared_ptr<PointData> createPointData(
+        std::vector<std::pair<int64_t, Point2D<float>>> const & points) {
+    auto data = std::make_shared<PointData>();
+    for (auto const & [time, point]: points) {
+        data->addAtTime(TimeFrameIndex(time), point, NotifyObservers::No);
+    }
+    return data;
+}
+
+/**
  * @brief Set up a minimal DataManager with an AnalogTimeSeries.
  * Uses a pointer since DataManager is non-copyable.
  */
@@ -485,6 +497,37 @@ TEST_CASE("buildProviderFromRecipe - shifted DigitalEventSeries row_pipeline_jso
     REQUIRE(values.size() == intervals->size());
     CHECK_THAT(values[0], WithinAbs(12.0, 0.01));
     CHECK_THAT(values[1], WithinAbs(52.0, 0.01));
+}
+
+TEST_CASE("buildProviderFromRecipe - DigitalEventSeries row_pipeline_json samples PointData x at interval start",
+          "[TensorColumnBuilders][Phase6][PointData]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 12);
+    auto points = createPointData({
+            {2, Point2D<float>{1.0f, 2.0f}},
+            {7, Point2D<float>{3.0f, 4.0f}},
+            {9, Point2D<float>{5.0f, 6.0f}},
+    });
+    dm.setData<PointData>("points", points, TimeKey("time"));
+    REQUIRE(dm.getData<PointData>("points")->getTimeFrame() != nullptr);
+    auto intervals = createIntervalSeries({{2, 4}, {7, 8}, {9, 10}});
+
+    ColumnRecipe const recipe{
+            .column_name = "nose_x_at_interval_start",
+            .source_key = "points",
+            .pipeline_json =
+                    R"({"steps": [{"step_id": "x", "transform_name": "PointCoordinate", "parameters": {"coordinate": "X"}}]})",
+            .row_pipeline_json =
+                    R"({"steps": [{"step_id": "interval_start", "transform_name": "IntervalToEvent", "parameters": {"point": "start"}}]})",
+    };
+
+    auto provider = buildProviderFromRecipe(dm, recipe, {}, intervals);
+    auto const values = provider();
+
+    REQUIRE(values.size() == intervals->size());
+    CHECK_THAT(values[0], WithinAbs(1.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(3.0, 0.01));
+    CHECK_THAT(values[2], WithinAbs(5.0, 0.01));
 }
 
 TEST_CASE("buildProviderFromRecipe - derived row windows gather event counts",

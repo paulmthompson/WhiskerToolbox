@@ -337,7 +337,7 @@ Exit criteria:
 
 Goal: provide friendly recipe generators that expand user-supplied parameters into raw `ColumnRecipe` objects, avoiding manual embedded JSON authoring. Presets are for authoring convenience; saved designs remain expanded raw TensorDesign JSON.
 
-Status: started. `ColumnRecipePresetRegistry` is implemented in `src/TensorDesign` with compiled built-in presets for mean-over-interval, event-count-over-interval, analog-sample-at-interval-start, event-presence-around-interval-start, and point x/y. Focused expansion tests cover raw recipe output, and TensorDesign JSON tests verify both JSON-authored preset invocations and selected expanded presets through `buildTensorFromDesignJson()`. This slice does not add preset files or UI support.
+Status: started. `ColumnRecipePresetRegistry` is implemented in `src/TensorDesign` with compiled built-in presets for mean-over-interval, event-count-over-interval, analog-sample-at-interval-start, event-presence-around-interval-start, point x/y, multi-point x/y, and point x/y at interval start. Focused expansion tests cover raw recipe output, and TensorDesign JSON tests verify both JSON-authored preset invocations and selected expanded presets through `buildTensorFromDesignJson()`. This slice does not add preset files or UI support.
 
 Tasks:
 
@@ -350,8 +350,8 @@ Tasks:
    - ~~event presence around interval start~~ **Done.**
    - ~~analog sample at interval start~~ **Done.**
    - ~~point x/y for one keypoint~~ **Done.**
-   - point x/y for multiple keypoints
-   - point x/y sampled at interval start
+   - ~~point x/y for multiple keypoints~~ **Done.**
+   - ~~point x/y sampled at interval start~~ **Done.**
    - raster events relative to interval start
    - trial-relative event times using NormalizeTime with row-specific `ClockTicks` bindings
 5. ~~Expand preset JSON into raw `ColumnRecipe` fields before provider construction.~~ **Done for compiled built-in presets in `parseDesignJson()`.**
