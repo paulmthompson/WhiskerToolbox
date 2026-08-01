@@ -829,6 +829,88 @@ TEST_CASE("buildTensorFromDesignJson builds PointData x/y columns over TimeFrame
     CHECK_THAT(y[2], WithinAbs(6.0, 0.01));
 }
 
+TEST_CASE("parseDesignJson expands preset columns from JSON", "[TensorDesign][presets][Phase9c]") {
+    std::string const json = R"({
+        "tensor_key": "point_features",
+        "row_source": {
+            "time_key": "frame",
+            "row_type": "timeframe"
+        },
+        "columns": [
+            {
+                "preset": "point_xy",
+                "parameters": {
+                    "source_key": "Nose",
+                    "name_prefix": "nose"
+                }
+            },
+            {
+                "preset": "mean_over_interval",
+                "parameters": {
+                    "output_name": "mean_signal",
+                    "source_key": "signal"
+                }
+            }
+        ]
+    })";
+
+    auto const parsed = requireValue(parseDesignJson(json));
+    REQUIRE(parsed.columns.size() == 3);
+    CHECK(parsed.columns[0].column_name == "nose_x");
+    CHECK(parsed.columns[0].source_key == "Nose");
+    CHECK(parsed.columns[0].pipeline_json.find("PointCoordinate") != std::string::npos);
+    CHECK(parsed.columns[1].column_name == "nose_y");
+    CHECK(parsed.columns[1].source_key == "Nose");
+    CHECK(parsed.columns[1].pipeline_json.find("PointCoordinate") != std::string::npos);
+    CHECK(parsed.columns[2].column_name == "mean_signal");
+    CHECK(parsed.columns[2].source_key == "signal");
+    CHECK(parsed.columns[2].pipeline_json == kMeanValuePipelineJson);
+}
+
+TEST_CASE("buildTensorFromDesignJson expands point_xy preset JSON",
+          "[TensorDesign][presets][Phase9c]") {
+    DataManager dm;
+    REQUIRE(dm.setTime(TimeKey("frame"), createTimeFrameFromTimes({0, 1, 2}), true));
+    auto points = createPointData({
+            {0, Point2D<float>{1.0f, 2.0f}},
+            {1, Point2D<float>{3.0f, 4.0f}},
+            {2, Point2D<float>{5.0f, 6.0f}},
+    });
+    dm.setData<PointData>("Nose", points, TimeKey("frame"));
+
+    std::string const json = R"({
+        "tensor_key": "point_features",
+        "row_source": {
+            "time_key": "frame",
+            "row_type": "timeframe"
+        },
+        "columns": [
+            {
+                "preset": "point_xy",
+                "parameters": {
+                    "source_key": "Nose",
+                    "name_prefix": "nose"
+                }
+            }
+        ]
+    })";
+
+    auto const built = requireValue(buildTensorFromDesignJson(dm, json));
+    REQUIRE(built.numRows() == 3);
+    REQUIRE(built.numColumns() == 2);
+
+    auto const x = built.getColumn(0);
+    auto const y = built.getColumn(1);
+    REQUIRE(x.size() == 3);
+    REQUIRE(y.size() == 3);
+    CHECK_THAT(x[0], WithinAbs(1.0, 0.01));
+    CHECK_THAT(x[1], WithinAbs(3.0, 0.01));
+    CHECK_THAT(x[2], WithinAbs(5.0, 0.01));
+    CHECK_THAT(y[0], WithinAbs(2.0, 0.01));
+    CHECK_THAT(y[1], WithinAbs(4.0, 0.01));
+    CHECK_THAT(y[2], WithinAbs(6.0, 0.01));
+}
+
 TEST_CASE("point_xy preset expansion builds PointData x/y columns over TimeFrame rows",
           "[TensorDesign][presets][Phase9c]") {
     DataManager dm;
@@ -867,6 +949,63 @@ TEST_CASE("point_xy preset expansion builds PointData x/y columns over TimeFrame
     CHECK_THAT(y[0], WithinAbs(2.0, 0.01));
     CHECK_THAT(y[1], WithinAbs(4.0, 0.01));
     CHECK_THAT(y[2], WithinAbs(6.0, 0.01));
+}
+
+TEST_CASE("analog_sample_at_interval_start preset expansion builds tensor from expanded JSON",
+          "[TensorDesign][presets][Phase9c]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 12);
+    auto analog = createLinearAnalog(12);
+    dm.setData<AnalogTimeSeries>("signal", analog, TimeKey("time"));
+    auto intervals = createIntervalSeries({{2, 4}, {7, 8}, {9, 10}});
+    dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("time"));
+
+    // User applies the preset with friendly parameters (TensorDesigner "Add Preset...").
+    auto registry = createBuiltInColumnRecipePresetRegistry();
+    ColumnRecipePresetArgs const preset_args{
+            .output_name = "signal_at_onset",
+            .source_key = "signal",
+    };
+    auto expansion = requireValue(registry.expand("analog_sample_at_interval_start", preset_args));
+    REQUIRE(expansion.columns.size() == 1);
+
+    // Saving the design writes expanded raw columns only. Execution does not depend on
+    // the preset registry, so the saved TensorDesign JSON is ordinary column recipes:
+    std::string const saved_design_json = R"({
+        "tensor_key": "onset_features",
+        "row_source": {
+            "data_key": "intervals",
+            "row_type": "interval"
+        },
+        "columns": [
+            {
+                "name": "signal_at_onset",
+                "source_key": "signal",
+                "row_pipeline_json": "{\"steps\": [{\"step_id\": \"interval_start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}]}",
+                "pipeline_json": "{\"steps\": []}"
+            }
+        ]
+    })";
+
+    // Preset expansion must match the saved column recipe exactly.
+    auto const parsed = requireValue(parseDesignJson(saved_design_json));
+    REQUIRE(parsed.columns.size() == 1);
+    auto const & expanded = expansion.columns.front();
+    auto const & saved = parsed.columns.front();
+    CHECK(expanded.column_name == saved.column_name);
+    CHECK(expanded.source_key == saved.source_key);
+    CHECK(expanded.row_pipeline_json == saved.row_pipeline_json);
+    CHECK(expanded.pipeline_json == saved.pipeline_json);
+
+    auto const built = requireValue(buildTensorFromDesignJson(dm, saved_design_json));
+    REQUIRE(built.numRows() == intervals->size());
+    REQUIRE(built.numColumns() == 1);
+
+    auto const values = built.getColumn(0);
+    REQUIRE(values.size() == intervals->size());
+    CHECK_THAT(values[0], WithinAbs(2.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(7.0, 0.01));
+    CHECK_THAT(values[2], WithinAbs(9.0, 0.01));
 }
 
 TEST_CASE("mean_over_interval preset expansion builds tensor from expanded JSON",

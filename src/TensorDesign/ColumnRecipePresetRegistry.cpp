@@ -5,6 +5,8 @@
 
 #include "ColumnRecipePresetRegistry.hpp"
 
+#include <nlohmann/json.hpp>
+
 #include <algorithm>
 #include <string>
 
@@ -103,6 +105,24 @@ namespace {
     return expansion;
 }
 
+[[nodiscard]] std::optional<ColumnRecipePresetExpansion> expandAnalogSampleAtIntervalStart(
+        ColumnRecipePresetArgs const & args) {
+    if (args.output_name.empty() || args.source_key.empty()) {
+        return std::nullopt;
+    }
+
+    TensorBuilders::ColumnRecipe recipe;
+    recipe.column_name = args.output_name;
+    recipe.source_key = args.source_key;
+    recipe.row_pipeline_json =
+            R"({"steps": [{"step_id": "interval_start", "transform_name": "IntervalToEvent", "parameters": {"point": "start"}}]})";
+    recipe.pipeline_json = R"({"steps": []})";
+
+    ColumnRecipePresetExpansion expansion;
+    expansion.columns.push_back(std::move(recipe));
+    return expansion;
+}
+
 [[nodiscard]] std::optional<ColumnRecipePresetExpansion> expandEventPresenceAroundIntervalStart(
         ColumnRecipePresetArgs const & args) {
     if (args.output_name.empty() || args.source_key.empty() || args.pre < 0 || args.post < 0) {
@@ -168,6 +188,16 @@ namespace {
             .expand = expandEventCountOverInterval};
 }
 
+[[nodiscard]] ColumnRecipePresetDescriptor analogSampleAtIntervalStartDescriptor() {
+    return ColumnRecipePresetDescriptor{
+            .id = "analog_sample_at_interval_start",
+            .display_name = "Analog sample at interval start",
+            .description = "Sample an analog-like source at each row interval start.",
+            .parameters = outputSourceSchema("AnalogSampleAtIntervalStartPresetArgs"),
+            .source = ColumnRecipePresetSource::BuiltIn,
+            .expand = expandAnalogSampleAtIntervalStart};
+}
+
 [[nodiscard]] ColumnRecipePresetDescriptor eventPresenceAroundIntervalStartDescriptor() {
     return ColumnRecipePresetDescriptor{
             .id = "event_presence_around_interval_start",
@@ -225,6 +255,16 @@ std::optional<ColumnRecipePresetExpansion> ColumnRecipePresetRegistry::expand(
     return descriptor->expand(args);
 }
 
+std::optional<ColumnRecipePresetExpansion> ColumnRecipePresetRegistry::expandJson(
+        std::string const & id,
+        nlohmann::json const & parameters) const {
+    auto args = parseColumnRecipePresetArgs(parameters);
+    if (!args.has_value()) {
+        return std::nullopt;
+    }
+    return expand(id, args.value());
+}
+
 std::vector<ColumnRecipePresetDescriptor const *> ColumnRecipePresetRegistry::descriptors() const {
     std::vector<ColumnRecipePresetDescriptor const *> result;
     result.reserve(_descriptors.size());
@@ -238,9 +278,37 @@ ColumnRecipePresetRegistry createBuiltInColumnRecipePresetRegistry() {
     ColumnRecipePresetRegistry registry;
     static_cast<void>(registry.registerPreset(meanOverIntervalDescriptor()));
     static_cast<void>(registry.registerPreset(eventCountOverIntervalDescriptor()));
+    static_cast<void>(registry.registerPreset(analogSampleAtIntervalStartDescriptor()));
     static_cast<void>(registry.registerPreset(eventPresenceAroundIntervalStartDescriptor()));
     static_cast<void>(registry.registerPreset(pointXyDescriptor()));
     return registry;
+}
+
+std::optional<ColumnRecipePresetArgs> parseColumnRecipePresetArgs(nlohmann::json const & parameters) {
+    if (!parameters.is_object()) {
+        return std::nullopt;
+    }
+
+    ColumnRecipePresetArgs args;
+    args.output_name = parameters.value("output_name", parameters.value("name", std::string{}));
+    args.source_key = parameters.value("source_key", std::string{});
+    args.name_prefix = parameters.value("name_prefix", std::string{});
+    args.pre = parameters.value("pre", int64_t{0});
+    args.post = parameters.value("post", int64_t{0});
+
+    if (parameters.contains("source_keys")) {
+        if (!parameters["source_keys"].is_array()) {
+            return std::nullopt;
+        }
+        for (auto const & source_key: parameters["source_keys"]) {
+            if (!source_key.is_string()) {
+                return std::nullopt;
+            }
+            args.source_keys.push_back(source_key.get<std::string>());
+        }
+    }
+
+    return args;
 }
 
 }// namespace Neuralyzer::TensorDesign

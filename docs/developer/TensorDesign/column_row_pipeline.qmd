@@ -314,7 +314,7 @@ The raw schema is functional but not friendly: users should not need to remember
 
 Presets are the preferred user-facing way to generate common analysis columns without manually typing embedded TransformPipeline JSON. A preset is a recipe generator: it accepts a small, preset-specific parameter set and expands into one or more raw `ColumnRecipe` objects.
 
-Presets are not the canonical saved-analysis format. The reproducible artifact remains the expanded TensorDesign JSON containing ordinary `ColumnRecipe` fields. If a user wants to repeat the exact same analysis later, saving and loading the expanded design is the stable path. Presets are for authoring convenience and error reduction.
+Preset invocations are accepted as a JSON authoring format and are expanded by `parseDesignJson()` before provider construction. They are not the canonical saved-analysis format. The reproducible artifact remains the expanded TensorDesign JSON containing ordinary `ColumnRecipe` fields. If a user wants to repeat the exact same analysis later, saving and loading the expanded design is the stable path. Presets are for authoring convenience and error reduction.
 
 Example: spike presence around interval onset:
 

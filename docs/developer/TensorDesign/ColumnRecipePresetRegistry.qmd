@@ -3,11 +3,13 @@ title: "Column Recipe Preset Registry"
 format: html
 ---
 
-**Status:** Initial Phase 9c slice implemented. The registry exists with a small compiled preset set: `mean_over_interval`, `event_count_over_interval`, `event_presence_around_interval_start`, and `point_xy`. Preset JSON files, UI integration, and the broader bundled preset catalog remain planned.
+**Status:** Initial Phase 9c slice implemented. The registry exists with a small compiled preset set: `mean_over_interval`, `event_count_over_interval`, `analog_sample_at_interval_start`, `event_presence_around_interval_start`, and `point_xy`. Preset JSON files, UI integration, and the broader bundled preset catalog remain planned.
 
 ## Purpose
 
-`ColumnRecipePresetRegistry` provides Qt-free TensorDesign column preset discovery and expansion. A preset is an authoring helper: it accepts friendly parameters and expands to one or more raw `ColumnRecipe` objects. Saved TensorDesign specs should continue to store the expanded raw recipes.
+`ColumnRecipePresetRegistry` provides Qt-free TensorDesign column preset discovery and expansion. A preset is an authoring helper: it accepts friendly parameters and expands to one or more raw `ColumnRecipe` objects.
+
+TensorDesign JSON can contain preset invocations. `parseDesignJson()` expands those invocations before constructing the executable `TensorDesignSpec`, and `buildTensorFromDesignJson()` therefore accepts both raw columns and preset-authored columns. `serializeDesignJson()` still emits expanded raw recipes, not preset invocations, so saved executable designs remain reproducible without depending on future preset changes.
 
 ## Current API
 
@@ -20,6 +22,41 @@ The initial registry lives in `src/TensorDesign/ColumnRecipePresetRegistry.hpp` 
 - `createBuiltInColumnRecipePresetRegistry()`: constructs a registry containing the compiled built-in presets available in this phase.
 
 Duplicate preset ids are rejected by `registerPreset()`. This matches the initial policy in the row-pipeline design: user presets should not silently override built-in presets.
+
+## JSON Authoring
+
+A column entry can be a preset invocation:
+
+```json
+{
+  "preset": "point_xy",
+  "parameters": {
+    "source_key": "Nose",
+    "name_prefix": "nose"
+  }
+}
+```
+
+During parsing, this expands to ordinary raw columns:
+
+```json
+[
+  {
+    "name": "nose_x",
+    "source_key": "Nose",
+    "pipeline_json": "{\"steps\": [{\"step_id\": \"x\", \"transform_name\": \"PointCoordinate\", \"parameters\": {\"coordinate\": \"X\"}}]}"
+  },
+  {
+    "name": "nose_y",
+    "source_key": "Nose",
+    "pipeline_json": "{\"steps\": [{\"step_id\": \"y\", \"transform_name\": \"PointCoordinate\", \"parameters\": {\"coordinate\": \"Y\"}}]}"
+  }
+]
+```
+
+Preset-authored JSON and raw-column JSON can be mixed in the same `columns` array. Expansion preserves order: a multi-column preset contributes its expanded columns at the location of the preset invocation.
+
+The current JSON parameter parser maps the shared `ColumnRecipePresetArgs` fields from `parameters`: `output_name`, `name`, `source_key`, `name_prefix`, `source_keys`, `pre`, and `post`. `name` is accepted as an alias for `output_name` for simple single-output presets.
 
 ## Built-In Presets
 
@@ -64,6 +101,28 @@ Expansion:
 ```
 
 The preset leaves `row_pipeline_json` empty, so interval-row tensors count over each full row interval.
+
+### `analog_sample_at_interval_start`
+
+Parameters:
+
+| Field | Meaning |
+|---|---|
+| `output_name` | Generated column name. |
+| `source_key` | DataManager key for the analog-like source to sample. |
+
+Expansion:
+
+```json
+{
+  "name": "${output_name}",
+  "source_key": "${source_key}",
+  "row_pipeline_json": "{\"steps\": [{\"step_id\": \"interval_start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}]}",
+  "pipeline_json": "{\"steps\": []}"
+}
+```
+
+This preset samples the source at each row interval start. The empty `pipeline_json` routes the row-pipeline sample times to timestamp/sample provider behavior rather than interval reduction.
 
 ### `event_presence_around_interval_start`
 
@@ -126,6 +185,8 @@ This preset demonstrates multi-column expansion. Applying the preset appends two
 - Duplicate preset ids are rejected.
 
 `tests/TensorDesign/test_tensor_design_builder.cpp` includes end-to-end checks that expanded preset recipes can be serialized as ordinary TensorDesign JSON and then executed through `buildTensorFromDesignJson()`.
+
+It also verifies direct preset-authored JSON, such as `columns[].preset = "point_xy"`, through both `parseDesignJson()` and `buildTensorFromDesignJson()`.
 
 ## Planned Follow-Up
 

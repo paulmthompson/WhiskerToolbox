@@ -8,6 +8,8 @@
 #include "ParameterSchema/ParameterSchema.hpp"
 #include "TransformsV2/core/TensorColumnBuilders.hpp"
 
+#include <nlohmann/json_fwd.hpp>
+
 #include <functional>
 #include <optional>
 #include <string>
@@ -50,6 +52,9 @@ public:
     [[nodiscard]] std::optional<ColumnRecipePresetExpansion> expand(
             std::string const & id,
             ColumnRecipePresetArgs const & args) const;
+    [[nodiscard]] std::optional<ColumnRecipePresetExpansion> expandJson(
+            std::string const & id,
+            nlohmann::json const & parameters) const;
     [[nodiscard]] std::vector<ColumnRecipePresetDescriptor const *> descriptors() const;
 
 private:
@@ -57,6 +62,8 @@ private:
 };
 
 [[nodiscard]] ColumnRecipePresetRegistry createBuiltInColumnRecipePresetRegistry();
+[[nodiscard]] std::optional<ColumnRecipePresetArgs> parseColumnRecipePresetArgs(
+        nlohmann::json const & parameters);
 
 }// namespace Neuralyzer::TensorDesign
 

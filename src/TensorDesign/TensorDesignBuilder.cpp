@@ -9,6 +9,7 @@
 #include "DataManager/utils/TimeIndexExtractor.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "TensorDesign/ColumnRecipePresetRegistry.hpp"
 #include "Tensors/RowDescriptor.hpp"
 #include "Tensors/TensorData.hpp"
 #include "Tensors/storage/LazyColumnTensorStorage.hpp"
@@ -132,6 +133,67 @@ using Neuralyzer::TensorBuilders::IntervalProperty;
     }
 
     return recipe;
+}
+
+[[nodiscard]] nlohmann::json columnRecipeToJson(ColumnRecipe const & recipe) {
+    nlohmann::json col;
+    col["name"] = recipe.column_name;
+    col["source_key"] = recipe.source_key;
+    col["pipeline_json"] = recipe.pipeline_json;
+    if (!recipe.row_pipeline_json.empty()) {
+        col["row_pipeline_json"] = recipe.row_pipeline_json;
+    }
+    if (!recipe.pipeline_value_bindings.empty()) {
+        nlohmann::json bindings = nlohmann::json::array();
+        for (auto const & binding: recipe.pipeline_value_bindings) {
+            nlohmann::json binding_json;
+            binding_json["source_key"] = binding.source_key;
+            binding_json["store_key"] = binding.store_key;
+            if (!binding.source_pipeline_json.empty()) {
+                binding_json["source_pipeline_json"] = binding.source_pipeline_json;
+            }
+            bindings.push_back(binding_json);
+        }
+        col["pipeline_value_bindings"] = bindings;
+    }
+    if (recipe.interval_property.has_value()) {
+        col["interval_property"] = intervalPropertyToString(recipe.interval_property.value());
+    }
+    return col;
+}
+
+[[nodiscard]] std::optional<nlohmann::json> expandPresetColumns(nlohmann::json design_json) {
+    if (!design_json.contains("columns") || !design_json["columns"].is_array()) {
+        return design_json;
+    }
+
+    auto registry = createBuiltInColumnRecipePresetRegistry();
+    nlohmann::json expanded_columns = nlohmann::json::array();
+    for (auto const & col: design_json["columns"]) {
+        if (!col.contains("preset")) {
+            expanded_columns.push_back(col);
+            continue;
+        }
+
+        auto const preset_id = col.value("preset", std::string{});
+        if (preset_id.empty()) {
+            spdlog::error("TensorDesign: preset column is missing preset id");
+            return std::nullopt;
+        }
+
+        auto const parameters = col.value("parameters", nlohmann::json::object());
+        auto const expansion = registry.expandJson(preset_id, parameters);
+        if (!expansion.has_value()) {
+            spdlog::error("TensorDesign: failed to expand column preset '{}'", preset_id);
+            return std::nullopt;
+        }
+        for (auto const & recipe: expansion->columns) {
+            expanded_columns.push_back(columnRecipeToJson(recipe));
+        }
+    }
+
+    design_json["columns"] = std::move(expanded_columns);
+    return design_json;
 }
 
 struct RowBuildContext {
@@ -260,7 +322,12 @@ struct RowBuildContext {
 
 std::optional<TensorDesignSpec> parseDesignJson(std::string const & json) {
     try {
-        auto const j = nlohmann::json::parse(json);
+        auto parsed_json = nlohmann::json::parse(json);
+        auto const expanded_json = expandPresetColumns(std::move(parsed_json));
+        if (!expanded_json.has_value()) {
+            return std::nullopt;
+        }
+        auto const & j = expanded_json.value();
         TensorDesignSpec spec;
 
         if (j.contains("tensor_key")) {
@@ -323,31 +390,7 @@ std::string serializeDesignJson(TensorDesignSpec const & spec) {
 
     nlohmann::json columns = nlohmann::json::array();
     for (auto const & recipe: spec.columns) {
-        nlohmann::json col;
-        col["name"] = recipe.column_name;
-        col["source_key"] = recipe.source_key;
-        col["pipeline_json"] = recipe.pipeline_json;
-        if (!recipe.row_pipeline_json.empty()) {
-            col["row_pipeline_json"] = recipe.row_pipeline_json;
-        }
-        if (!recipe.pipeline_value_bindings.empty()) {
-            nlohmann::json bindings = nlohmann::json::array();
-            for (auto const & binding: recipe.pipeline_value_bindings) {
-                nlohmann::json binding_json;
-                binding_json["source_key"] = binding.source_key;
-                binding_json["store_key"] = binding.store_key;
-                if (!binding.source_pipeline_json.empty()) {
-                    binding_json["source_pipeline_json"] = binding.source_pipeline_json;
-                }
-                bindings.push_back(binding_json);
-            }
-            col["pipeline_value_bindings"] = bindings;
-        }
-        if (recipe.interval_property.has_value()) {
-            col["interval_property"] =
-                    intervalPropertyToString(recipe.interval_property.value());
-        }
-        columns.push_back(col);
+        columns.push_back(columnRecipeToJson(recipe));
     }
     j["columns"] = columns;
 
