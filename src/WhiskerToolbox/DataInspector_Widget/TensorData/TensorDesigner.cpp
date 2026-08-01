@@ -5,6 +5,7 @@
 #include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "TensorDesign/ColumnRecipePresetRegistry.hpp"
+#include "TensorDesign/DesignPresetRegistry.hpp"
 #include "TensorDesign/TensorDesignBuilder.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
@@ -85,11 +86,30 @@ using DesignRowType = Neuralyzer::TensorDesign::RowType;
     return DesignerRowType::None;
 }
 
+[[nodiscard]] int rowTypeComboIndex(DesignerRowType row_type) {
+    switch (row_type) {
+        case DesignerRowType::Interval:
+            return 1;
+        case DesignerRowType::Timestamp:
+            return 2;
+        case DesignerRowType::Ordinal:
+            return 3;
+        case DesignerRowType::DerivedFromSource:
+            return 4;
+        case DesignerRowType::TimeFrame:
+            return 5;
+        case DesignerRowType::None:
+            return 0;
+    }
+    return 0;
+}
+
 }// namespace
 
 namespace {
 
-[[nodiscard]] QString presetParameterHint(Neuralyzer::TensorDesign::ColumnRecipePresetDescriptor const & descriptor) {
+template<typename Descriptor>
+[[nodiscard]] QString presetParameterHint(Descriptor const & descriptor) {
     QStringList names;
     for (auto const & field: descriptor.parameters.fields) {
         names << QString::fromStdString(field.name);
@@ -329,6 +349,115 @@ void TensorDesigner::_onAddColumnClicked() {
     });
 
     dialog->show();
+}
+
+void TensorDesigner::_onApplyDesignPresetClicked() {
+    auto registry = Neuralyzer::TensorDesign::createBuiltInDesignPresetRegistry();
+    auto descriptors = registry.descriptors();
+    if (descriptors.empty()) {
+        _updateStatus(QStringLiteral("No design presets are registered."));
+        return;
+    }
+
+    QDialog dialog(this);
+    dialog.setWindowTitle(QStringLiteral("Apply Table Preset"));
+    auto * layout = new QVBoxLayout(&dialog);
+    auto * form = new QFormLayout();
+
+    auto * preset_combo = new QComboBox(&dialog);
+    for (auto const * descriptor: descriptors) {
+        preset_combo->addItem(
+                QString::fromStdString(descriptor->display_name),
+                QString::fromStdString(descriptor->id));
+    }
+    form->addRow(QStringLiteral("Preset"), preset_combo);
+
+    auto * description_label = new QLabel(&dialog);
+    description_label->setWordWrap(true);
+    form->addRow(QStringLiteral("Description"), description_label);
+
+    auto * row_source_key_edit = new QLineEdit(&dialog);
+    auto * curvature_source_key_edit = new QLineEdit(&dialog);
+    auto * spike_source_key_edit = new QLineEdit(&dialog);
+    auto * angle_source_key_edit = new QLineEdit(&dialog);
+    auto * keypoint_source_keys_edit = new QLineEdit(&dialog);
+    auto * onset_pre_spin = new QSpinBox(&dialog);
+    auto * onset_post_spin = new QSpinBox(&dialog);
+    onset_pre_spin->setRange(0, 1'000'000'000);
+    onset_post_spin->setRange(0, 1'000'000'000);
+
+    form->addRow(QStringLiteral("Row source key"), row_source_key_edit);
+    form->addRow(QStringLiteral("Curvature source key"), curvature_source_key_edit);
+    form->addRow(QStringLiteral("Spike source key"), spike_source_key_edit);
+    form->addRow(QStringLiteral("Angle source key"), angle_source_key_edit);
+    form->addRow(QStringLiteral("Keypoint keys (comma-separated)"), keypoint_source_keys_edit);
+    form->addRow(QStringLiteral("Onset pre"), onset_pre_spin);
+    form->addRow(QStringLiteral("Onset post"), onset_post_spin);
+
+    auto * hint_label = new QLabel(&dialog);
+    hint_label->setWordWrap(true);
+    form->addRow(QStringLiteral("Used fields"), hint_label);
+    layout->addLayout(form);
+
+    auto update_description = [&]() {
+        auto const id = preset_combo->currentData().toString().toStdString();
+        auto const * descriptor = registry.find(id);
+        if (descriptor == nullptr) {
+            description_label->clear();
+            hint_label->clear();
+            return;
+        }
+        description_label->setText(QString::fromStdString(descriptor->description));
+        hint_label->setText(presetParameterHint(*descriptor));
+    };
+    update_description();
+    connect(preset_combo, &QComboBox::currentIndexChanged, &dialog, update_description);
+
+    auto * buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel, &dialog);
+    layout->addWidget(buttons);
+    connect(buttons, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+
+    if (dialog.exec() != QDialog::Accepted) {
+        return;
+    }
+
+    if (_row_type != DesignerRowType::None || !_row_source_key.empty() || !_column_recipes.empty()) {
+        auto const answer = QMessageBox::question(
+                this,
+                QStringLiteral("Replace Current Design?"),
+                QStringLiteral("Applying a table preset replaces the current row source and columns. Continue?"));
+        if (answer != QMessageBox::Yes) {
+            return;
+        }
+    }
+
+    Neuralyzer::TensorDesign::DesignPresetArgs args;
+    args.row_source_key = row_source_key_edit->text().trimmed().toStdString();
+    args.curvature_source_key = curvature_source_key_edit->text().trimmed().toStdString();
+    args.spike_source_key = spike_source_key_edit->text().trimmed().toStdString();
+    args.angle_source_key = angle_source_key_edit->text().trimmed().toStdString();
+    args.keypoint_source_keys = parseSourceKeys(keypoint_source_keys_edit->text());
+    args.onset_pre = onset_pre_spin->value();
+    args.onset_post = onset_post_spin->value();
+
+    auto const preset_id = preset_combo->currentData().toString().toStdString();
+    auto expansion = registry.expand(preset_id, args);
+    if (!expansion.has_value()) {
+        QMessageBox::warning(this, QStringLiteral("Preset Expansion Failed"),
+                             QStringLiteral("Required preset parameters are missing or invalid."));
+        return;
+    }
+
+    _row_type = fromTensorDesignRowType(expansion->spec.row_type);
+    _row_source_key = _row_type == DesignerRowType::TimeFrame ? expansion->spec.row_time_key
+                                                              : expansion->spec.row_source_key;
+    _column_recipes = std::move(expansion->spec.columns);
+    _row_type_combo->setCurrentIndex(rowTypeComboIndex(_row_type));
+    _populateRowSourceKeys();
+    _refreshColumnList();
+    _updateStatus(QStringLiteral("Table preset applied: %1 columns")
+                          .arg(static_cast<int>(_column_recipes.size())));
 }
 
 void TensorDesigner::_onAddPresetClicked() {
@@ -619,11 +748,13 @@ void TensorDesigner::_setupUi() {
     _col_button_layout->setSpacing(4);
 
     _add_col_btn = new QPushButton(QStringLiteral("Add Column"), this);
+    _apply_design_preset_btn = new QPushButton(QStringLiteral("Apply Table Preset..."), this);
     _add_preset_btn = new QPushButton(QStringLiteral("Add Preset..."), this);
     _edit_col_btn = new QPushButton(QStringLiteral("Edit"), this);
     _remove_col_btn = new QPushButton(QStringLiteral("Remove"), this);
 
     _col_button_layout->addWidget(_add_col_btn);
+    _col_button_layout->addWidget(_apply_design_preset_btn);
     _col_button_layout->addWidget(_add_preset_btn);
     _col_button_layout->addWidget(_edit_col_btn);
     _col_button_layout->addWidget(_remove_col_btn);
@@ -662,6 +793,8 @@ void TensorDesigner::_connectSignals() {
             this, &TensorDesigner::_onRowSourceKeyChanged);
     connect(_add_col_btn, &QPushButton::clicked,
             this, &TensorDesigner::_onAddColumnClicked);
+    connect(_apply_design_preset_btn, &QPushButton::clicked,
+            this, &TensorDesigner::_onApplyDesignPresetClicked);
     connect(_add_preset_btn, &QPushButton::clicked,
             this, &TensorDesigner::_onAddPresetClicked);
     connect(_edit_col_btn, &QPushButton::clicked,

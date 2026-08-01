@@ -1,0 +1,77 @@
+---
+title: "Design Preset Registry"
+format: html
+---
+
+**Status:** Phase 9d implemented for compiled design authoring presets. The built-in registry currently provides `whisker_contact_feature_table`. Preset file catalogs remain Phase 10 work.
+
+## Purpose
+
+`DesignPresetRegistry` provides Qt-free TensorDesign table-level authoring presets. A design preset accepts friendly parameters and expands to an ordinary `TensorDesignSpec`: row source fields plus raw `ColumnRecipe` entries.
+
+Design presets are authoring shortcuts, not the canonical saved-analysis representation. `parseDesignJson()` accepts a design preset invocation and expands it before returning a `TensorDesignSpec`. `serializeDesignJson()` writes expanded `row_source` and `columns` fields only, so saved designs remain executable without loading the design preset registry.
+
+## Current API
+
+The registry lives in `src/TensorDesign/DesignPresetRegistry.hpp` and exposes:
+
+- `DesignPresetDescriptor`: preset id, display name, description, parameter schema, source, and expansion function.
+- `DesignPresetArgs`: shared arguments for the initial compiled table preset.
+- `DesignPresetExpansion`: an expanded `TensorDesignSpec`.
+- `DesignPresetRegistry`: register, find, list, and expand operations.
+- `createBuiltInDesignPresetRegistry()`: constructs the built-in compiled registry.
+
+Duplicate preset ids are rejected by `registerPreset()`.
+
+## JSON Authoring
+
+A TensorDesign JSON envelope can invoke a design preset:
+
+```json
+{
+  "tensor_key": "contact_features",
+  "preset": "whisker_contact_feature_table",
+  "parameters": {
+    "row_source_key": "contacts",
+    "curvature_source_key": "curvature",
+    "spike_source_key": "spikes",
+    "angle_source_key": "angle",
+    "keypoint_source_keys": ["tip"],
+    "onset_pre": 2,
+    "onset_post": 3
+  }
+}
+```
+
+Parsing expands this into raw `row_source` and `columns`. Serializing the parsed spec does not preserve the `preset` invocation.
+
+## Built-In Presets
+
+### `whisker_contact_feature_table`
+
+Parameters:
+
+| Field | Meaning |
+|---|---|
+| `row_source_key` | DigitalIntervalSeries key defining contact rows. |
+| `curvature_source_key` | Analog-like source reduced with `MeanValue` over each contact interval. |
+| `spike_source_key` | DigitalEventSeries source counted over intervals and queried near contact onset. |
+| `angle_source_key` | Analog-like source sampled at contact onset. |
+| `keypoint_source_keys` | Optional PointData keys sampled at contact onset and expanded into x/y columns. |
+| `onset_pre` | Clock ticks before contact onset for spike presence. |
+| `onset_post` | Clock ticks after contact onset for spike presence. |
+
+Expansion:
+
+- Row source: `row_type = interval`, `data_key = row_source_key`.
+- `mean_curvature`: `mean_over_interval(curvature_source_key)`.
+- `spike_count`: `event_count_over_interval(spike_source_key)`.
+- `spike_presence_at_onset`: `event_presence_around_interval_start(spike_source_key, onset_pre, onset_post)`.
+- `angle_at_onset`: `analog_sample_at_interval_start(angle_source_key)`.
+- For each keypoint source: `point_xy_at_interval_start(source_key, name_prefix = source_key)`.
+
+The implementation composes Phase 9c column presets internally so the generated columns stay consistent with incremental authoring behavior.
+
+## TensorDesigner UI
+
+TensorDesigner exposes the built-in registry through **Apply Table Preset...**. Applying a design preset replaces the current row source and columns after confirmation when the current design is non-empty. The in-memory design is immediately expanded to raw fields, so **Save Config** continues to write normal TensorDesign JSON rather than preset invocations.

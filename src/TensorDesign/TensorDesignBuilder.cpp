@@ -10,6 +10,7 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TensorDesign/ColumnRecipePresetRegistry.hpp"
+#include "TensorDesign/DesignPresetRegistry.hpp"
 #include "Tensors/RowDescriptor.hpp"
 #include "Tensors/TensorData.hpp"
 #include "Tensors/storage/LazyColumnTensorStorage.hpp"
@@ -196,6 +197,35 @@ using Neuralyzer::TensorBuilders::IntervalProperty;
     return design_json;
 }
 
+[[nodiscard]] std::optional<nlohmann::json> expandDesignPreset(nlohmann::json design_json) {
+    if (!design_json.contains("preset")) {
+        return design_json;
+    }
+
+    auto const preset_id = design_json.value("preset", std::string{});
+    if (preset_id.empty()) {
+        spdlog::error("TensorDesign: design preset is missing preset id");
+        return std::nullopt;
+    }
+
+    auto registry = createBuiltInDesignPresetRegistry();
+    auto const parameters = design_json.value("parameters", nlohmann::json::object());
+    auto expansion = registry.expandJson(preset_id, parameters);
+    if (!expansion.has_value()) {
+        spdlog::error("TensorDesign: failed to expand design preset '{}'", preset_id);
+        return std::nullopt;
+    }
+
+    nlohmann::json expanded_json = nlohmann::json::parse(serializeDesignJson(expansion->spec));
+    if (design_json.contains("tensor_key")) {
+        expanded_json["tensor_key"] = design_json["tensor_key"];
+    }
+    if (design_json.contains("output_time_key")) {
+        expanded_json["output_time_key"] = design_json["output_time_key"];
+    }
+    return expanded_json;
+}
+
 struct RowBuildContext {
     std::shared_ptr<DigitalIntervalSeries const> intervals;
     std::vector<TimeFrameIndex> row_times;
@@ -323,7 +353,11 @@ struct RowBuildContext {
 std::optional<TensorDesignSpec> parseDesignJson(std::string const & json) {
     try {
         auto parsed_json = nlohmann::json::parse(json);
-        auto const expanded_json = expandPresetColumns(std::move(parsed_json));
+        auto design_expanded_json = expandDesignPreset(std::move(parsed_json));
+        if (!design_expanded_json.has_value()) {
+            return std::nullopt;
+        }
+        auto const expanded_json = expandPresetColumns(std::move(design_expanded_json.value()));
         if (!expanded_json.has_value()) {
             return std::nullopt;
         }

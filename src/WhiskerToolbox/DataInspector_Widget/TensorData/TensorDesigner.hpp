@@ -164,6 +164,7 @@ private slots:
     void _onRowSourceTypeChanged(int index);
     void _onRowSourceKeyChanged(int index);
     void _onAddColumnClicked();
+    void _onApplyDesignPresetClicked();
     void _onAddPresetClicked();
     void _onRemoveColumnClicked();
     void _onEditColumnClicked();
@@ -228,6 +229,7 @@ private:
     QListWidget * _column_list{nullptr};
     QHBoxLayout * _col_button_layout{nullptr};
     QPushButton * _add_col_btn{nullptr};
+    QPushButton * _apply_design_preset_btn{nullptr};
     QPushButton * _add_preset_btn{nullptr};
     QPushButton * _edit_col_btn{nullptr};
     QPushButton * _remove_col_btn{nullptr};

@@ -7,6 +7,8 @@ add_library(TensorDesign STATIC
     TensorDesignSpec.hpp
     ColumnRecipePresetRegistry.hpp
     ColumnRecipePresetRegistry.cpp
+    DesignPresetRegistry.hpp
+    DesignPresetRegistry.cpp
     TensorDesignBuilder.hpp
     TensorDesignBuilder.cpp
     TensorColumnViews.hpp

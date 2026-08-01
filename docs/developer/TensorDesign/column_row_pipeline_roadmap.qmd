@@ -5,7 +5,7 @@ format: html
 
 **Status:** Implementation roadmap for [Column Row Pipeline Design](column_row_pipeline.qmd).
 
-Phases 1-6, 9a, 9b, and 9c are implemented. Phase 7 and later preset-library/design-preset work remain planned.
+Phases 1-6 and 9a-9d are implemented. Phase 7 and preset-library work remain planned.
 
 This roadmap breaks the per-column row-pipeline refactor into small, testable steps. The design goal is to let each tensor column derive its own row-aligned gather inputs through TransformPipelines while keeping `GatherResult` a container/direct-gather executor rather than a pipeline runner.
 
@@ -55,7 +55,9 @@ Known gaps:
 
 - There is no row-pipeline caching.
 - UI does not expose row-pipeline configuration.
-- The Phase 9c column recipe preset registry exists with a compiled preset set and TensorDesigner **Add Preset...** support; there is no broader preset JSON/file library yet.
+- The Phase 9c column recipe preset registry exists with a compiled preset set and TensorDesigner **Add Preset...** support.
+- The Phase 9d design authoring preset registry exists with a compiled `whisker_contact_feature_table` preset and TensorDesigner **Apply Table Preset...** support.
+- There is no broader preset JSON/file library yet.
 
 ## Phase 1: Baseline Tests — Done
 
@@ -368,23 +370,30 @@ Exit criteria:
 - Raw JSON remains available for advanced workflows.
 - Saved designs remain reproducible expanded TensorDesign JSON and do not depend on the preset registry at load time.
 
-## Phase 9d: Design/Table Presets
+## Phase 9d: Design Authoring Presets
 
-Goal: support reusable whole-table templates that set row source and add multiple related column groups.
+Status: done for the initial compiled design authoring preset registry and motivating whisker-contact table preset.
+
+Goal: support reusable whole-table authoring templates that set row source and add multiple related column groups, while preserving expanded raw TensorDesign JSON as the executable and saved-analysis format.
+
+Design authoring presets are a higher-level convenience layer than Phase 9c column presets. A column preset expands to one or more `ColumnRecipe`s and appends them to the current design. A design authoring preset expands to a row source plus a set of raw `ColumnRecipe`s, producing an ordinary `TensorDesignSpec` immediately after application.
+
+Design preset invocations should not become the single source of truth for reproducible analysis. They are authoring shortcuts only. After applying a design preset, saving should write the expanded `row_source` and `columns` fields, not the preset invocation. Loading and executing a saved design should not require the design preset registry.
 
 Tasks:
 
-1. Define a `DesignPresetExpansion` shape containing a row source plus multiple `ColumnRecipe`s.
-2. Add a whisker-contact feature table preset covering curvature, spike count, onset spike presence, angle at onset, and optional keypoint x/y columns.
-3. Add tests comparing design preset expansion to the equivalent raw TensorDesign JSON.
-4. Prefer compiled expansion functions initially for design presets that need loops or complex defaults; avoid making saved analyses depend on preset invocations.
-5. Add TensorDesigner UI affordance for applying a table preset to an empty design.
+1. ~~Define a `DesignPresetExpansion` shape containing row-source fields plus multiple raw `ColumnRecipe`s.~~ **Done.**
+2. ~~Add a compiled `whisker_contact_feature_table` authoring preset covering curvature, spike count, onset spike presence, angle at onset, and optional keypoint x/y columns.~~ **Done.**
+3. ~~Add tests comparing design preset expansion to the equivalent raw TensorDesign JSON.~~ **Done.**
+4. ~~Prefer compiled expansion functions initially for design presets that need loops or complex defaults.~~ **Done.**
+5. ~~Ensure applying a design preset produces an ordinary `TensorDesignSpec` and that `serializeDesignJson()` writes expanded raw fields only.~~ **Done.**
+6. ~~Add TensorDesigner UI affordance such as **New From Preset...** or **Apply Table Preset...**. Because this changes the row source, the UI should confirm replacement when the current design already has a row source or columns.~~ **Done.**
 
 Exit criteria:
 
-- A complete motivating analysis table can be created from one preset plus a small parameter form.
+- A complete motivating analysis table can be authored from one preset plus a small parameter form.
 - Column presets remain useful for incremental table editing.
-- Applying a design preset produces ordinary row-source and column recipe JSON that can be saved independently of the preset.
+- Applying a design preset produces ordinary row-source and column recipe JSON that can be saved and executed independently of the preset registry.
 
 ## Phase 10: Preset Library Files
 

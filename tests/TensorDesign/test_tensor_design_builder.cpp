@@ -195,6 +195,39 @@ TEST_CASE("parseDesignJson rejects unknown row_type", "[TensorDesign]") {
     REQUIRE_FALSE(parseDesignJson(json).has_value());
 }
 
+TEST_CASE("parseDesignJson expands design authoring preset to raw spec", "[TensorDesign][design-presets]") {
+    std::string const json = R"({
+        "tensor_key": "features",
+        "preset": "whisker_contact_feature_table",
+        "parameters": {
+            "row_source_key": "contacts",
+            "curvature_source_key": "curvature",
+            "spike_source_key": "spikes",
+            "angle_source_key": "angle",
+            "keypoint_source_keys": ["tip"],
+            "onset_pre": 2,
+            "onset_post": 3
+        }
+    })";
+
+    auto const parsed = requireValue(parseDesignJson(json));
+    REQUIRE(parsed.tensor_key == "features");
+    REQUIRE(parsed.row_type == DesignRowType::Interval);
+    REQUIRE(parsed.row_source_key == "contacts");
+    REQUIRE(parsed.columns.size() == 6);
+    CHECK(parsed.columns[0].column_name == "mean_curvature");
+    CHECK(parsed.columns[1].column_name == "spike_count");
+    CHECK(parsed.columns[2].column_name == "spike_presence_at_onset");
+    CHECK(parsed.columns[3].column_name == "angle_at_onset");
+    CHECK(parsed.columns[4].column_name == "tip_x_at_interval_start");
+    CHECK(parsed.columns[5].column_name == "tip_y_at_interval_start");
+
+    auto const serialized = serializeDesignJson(parsed);
+    CHECK(serialized.find("whisker_contact_feature_table") == std::string::npos);
+    CHECK(serialized.find("\"row_source\"") != std::string::npos);
+    CHECK(serialized.find("\"columns\"") != std::string::npos);
+}
+
 TEST_CASE("buildTensor builds interval-row tensor from design spec", "[TensorDesign]") {
     DataManager dm;
     setDefaultIdentityTimeFrame(dm, 100);
