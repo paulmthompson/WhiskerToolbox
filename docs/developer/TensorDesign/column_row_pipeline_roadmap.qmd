@@ -420,6 +420,41 @@ Exit criteria:
 - Multi-input workflows (like expanding 5 keypoints at interval onset) remain fully supported and generate the correct Nx2 `ColumnRecipe`s.
 - The UI successfully hides the complexity of building two coordinated JSON pipelines.
 
+## Phase 9f: Two-Step UI Column Stitcher
+
+Status: planned.
+
+Goal: Provide an intuitive UI in TensorDesigner for building modular columns without requiring users to write raw JSON or use monolithic presets. This phase implements the frontend encapsulation of Phase 9e's decoupled backend.
+
+Tasks:
+
+1. **Backend Registry Metadata (UI-Independent)**:
+   - Introduce an `EffectiveRowType` enum (e.g., `Interval`, `Event`) in the C++ backend.
+   - Update `RowModifierDescriptor` to declare its `output_row_type`.
+   - Update `ColumnAggregatorDescriptor` to declare its `supported_row_types` (e.g., Event Rate only supports `Interval`).
+   - Add query methods to the registries (e.g., `registry.getAggregatorsFor(EffectiveRowType::Event)`) so the UI remains stateless and driven purely by the backend.
+2. **Create a Two-Step Column Builder Dialog** (replacing or augmenting the existing `ColumnConfigDialog`).
+   - **Step A: Row Modification (Optional)**. Prompt: "Do you want to modify the row before extracting data?"
+     - Populate a dropdown from the `RowModifierRegistry`.
+     - Internally track the *Effective Row Type* resulting from this modifier (queried from the backend descriptor).
+   - **Step B: Data Aggregation (Required)**. Prompt: "What data do you want to extract?"
+     - Populate a dropdown from the `ColumnAggregatorRegistry`, dynamically filtered by querying the backend with the Effective Row Type from Step A.
+3. **The "Custom/Raw" Escape Hatch**:
+   - In Step B (or as a top-level toggle), include an "Advanced / Custom Pipeline" option.
+   - When selected, instead of showing a preset `AutoParamWidget`, the UI embeds the full `TransformPipelineEditor` (or a raw JSON text box).
+   - This allows users to author completely novel aggregations block-by-block without needing a preset to exist.
+4. **Implement the UI Stitcher logic**. When the user confirms the dialog, generate the `ColumnRecipe` by:
+   - Calling `expand()` on the selected descriptors.
+   - Stitching them together into a final set of `ColumnRecipe`s, just as the JSON backend does, and appending them to the `TensorDesigner` column list.
+5. Add frontend tests for the UI Stitcher logic to ensure that selecting specific combinations yields the exact same raw `ColumnRecipe`s as the JSON backend.
+
+Exit criteria:
+
+- Users can mix and match row geometries (Step A) with data extraction logic (Step B) using a guided, wizard-like UI.
+- The UI safely prevents illegal combinations (e.g., Range Reduction on an Event row) by filtering Step B options based on Step A's output.
+- Combinatorial explosion of UI presets is completely eliminated; the UI is highly composable.
+- The `TensorDesigner` list view accurately displays the generated columns.
+
 ## Phase 10: Preset Library Files
 
 Goal: distribute Neuralyzer with useful built-in recipe generators and let users save/import their own preset definitions using a library pattern similar to TransformsV2 `PipelineLibrary`.

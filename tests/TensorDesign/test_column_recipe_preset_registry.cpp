@@ -34,7 +34,7 @@ TEST_CASE("mean_value aggregator expands to raw ColumnRecipe", "[TensorDesign][p
     auto const * descriptor = registry.find("mean_value");
     REQUIRE(descriptor != nullptr);
     CHECK(descriptor->id == "mean_value");
-    CHECK(descriptor->display_name == "Mean value");
+    CHECK(descriptor->display_name == "Mean Value");
     CHECK(descriptor->source == ColumnRecipePresetSource::BuiltIn);
     REQUIRE(descriptor->parameters.field("output_name") != nullptr);
     REQUIRE(descriptor->parameters.field("source_key") != nullptr);
@@ -200,4 +200,34 @@ TEST_CASE("ColumnRecipePresetRegistry rejects duplicate preset ids", "[TensorDes
     REQUIRE(existing != nullptr);
 
     CHECK_FALSE(registry.registerPreset(*existing));
+}
+
+TEST_CASE("ColumnAggregatorRegistry getAggregatorsFor filters by EffectiveRowType",
+          "[TensorDesign][presets][Phase9f]") {
+    auto registry = createBuiltInColumnAggregatorRegistry();
+
+    SECTION("Filters for Interval") {
+        auto aggregators = registry.getAggregatorsFor(Neuralyzer::TensorDesign::EffectiveRowType::Interval);
+        REQUIRE_FALSE(aggregators.empty());
+        // Verify that mean_value is included
+        auto it_mean = std::ranges::find_if(aggregators, [](auto const * desc) { return desc->id == "mean_value"; });
+        CHECK(it_mean != aggregators.end());
+        // Verify that point_xy is NOT included
+        auto it_point = std::ranges::find_if(aggregators, [](auto const * desc) { return desc->id == "point_xy"; });
+        CHECK(it_point == aggregators.end());
+    }
+
+    SECTION("Filters for Timestamp") {
+        auto aggregators = registry.getAggregatorsFor(Neuralyzer::TensorDesign::EffectiveRowType::Timestamp);
+        REQUIRE_FALSE(aggregators.empty());
+        // Verify that point_xy is included
+        auto it_point = std::ranges::find_if(aggregators, [](auto const * desc) { return desc->id == "point_xy"; });
+        CHECK(it_point != aggregators.end());
+        // Verify that event_count is NOT included
+        auto it_count = std::ranges::find_if(aggregators, [](auto const * desc) { return desc->id == "event_count"; });
+        CHECK(it_count == aggregators.end());
+        // Verify that raster_events_relative is included (it supports both)
+        auto it_raster = std::ranges::find_if(aggregators, [](auto const * desc) { return desc->id == "raster_events_relative"; });
+        CHECK(it_raster != aggregators.end());
+    }
 }

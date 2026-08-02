@@ -67,6 +67,12 @@ private:
 
 // Phase 9e: Decoupling Row Modifiers and Column Aggregators
 
+enum class EffectiveRowType : std::uint8_t {
+    Unchanged, ///< Does not change the row geometry (e.g., binds a value only)
+    Interval,  ///< The row is a continuous interval
+    Timestamp  ///< The row is an instantaneous point in time (Event or TimeFrame)
+};
+
 struct RowModifierExpansion {
     std::string row_pipeline_json;
     std::vector<TensorBuilders::PipelineValueBindingRecipe> pipeline_value_bindings;
@@ -76,6 +82,7 @@ struct RowModifierDescriptor {
     std::string id;
     std::string display_name;
     std::string description;
+    EffectiveRowType output_row_type{EffectiveRowType::Unchanged};
     ParameterSchema parameters;
     ColumnRecipePresetSource source = ColumnRecipePresetSource::BuiltIn;
     std::function<std::optional<RowModifierExpansion>(ColumnRecipePresetArgs const &)> expand;
@@ -98,6 +105,7 @@ struct ColumnAggregatorDescriptor {
     std::string id;
     std::string display_name;
     std::string description;
+    std::vector<EffectiveRowType> supported_row_types;
     ParameterSchema parameters;
     ColumnRecipePresetSource source = ColumnRecipePresetSource::BuiltIn;
     std::function<std::optional<ColumnAggregatorExpansion>(ColumnRecipePresetArgs const &)> expand;
@@ -108,6 +116,7 @@ public:
     bool registerAggregator(ColumnAggregatorDescriptor descriptor);
     [[nodiscard]] ColumnAggregatorDescriptor const * find(std::string const & id) const;
     [[nodiscard]] std::vector<ColumnAggregatorDescriptor const *> descriptors() const;
+    [[nodiscard]] std::vector<ColumnAggregatorDescriptor const *> getAggregatorsFor(EffectiveRowType row_type) const;
 private:
     std::vector<ColumnAggregatorDescriptor> _descriptors;
 };

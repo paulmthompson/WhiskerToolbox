@@ -212,6 +212,7 @@ namespace {
             .id = "interval_start",
             .display_name = "At interval start",
             .description = "Convert an interval to an event at its start.",
+            .output_row_type = EffectiveRowType::Timestamp,
             .parameters = ParameterSchema{.params_type_name = "IntervalStartArgs"},
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandIntervalStartModifier};
@@ -232,6 +233,7 @@ namespace {
             .id = "window_around_interval_start",
             .display_name = "Window around interval start",
             .description = "Create a window around the interval start.",
+            .output_row_type = EffectiveRowType::Interval,
             .parameters = rowModifierWindowSchema(),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandWindowAroundIntervalStartModifier};
@@ -249,6 +251,7 @@ namespace {
             .id = "bind_interval_start",
             .display_name = "Bind interval start",
             .description = "Bind the interval start time to a variable for use in the column pipeline, without modifying the row shape.",
+            .output_row_type = EffectiveRowType::Unchanged,
             .parameters = ParameterSchema{.params_type_name = "BindIntervalStartArgs",
                                           .fields = {
                                                   ParameterFieldDescriptor{
@@ -282,9 +285,10 @@ namespace {
 [[nodiscard]] ColumnAggregatorDescriptor meanValueAggregatorDescriptor() {
     return ColumnAggregatorDescriptor{
             .id = "mean_value",
-            .display_name = "Mean value",
-            .description = "Reduce an analog-like source with MeanValue.",
-            .parameters = meanOverIntervalSchema(),
+            .display_name = "Mean Value",
+            .description = "Calculate the mean of an analog signal over the row interval.",
+            .supported_row_types = {EffectiveRowType::Interval},
+            .parameters = outputSourceSchema("MeanValueArgs"),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandMeanValueAggregator};
 }
@@ -302,9 +306,10 @@ namespace {
 [[nodiscard]] ColumnAggregatorDescriptor eventCountAggregatorDescriptor() {
     return ColumnAggregatorDescriptor{
             .id = "event_count",
-            .display_name = "Event count",
-            .description = "Count events from a source.",
-            .parameters = outputSourceSchema("EventCountAggregatorArgs"),
+            .display_name = "Event Count",
+            .description = "Count the total number of events within the row interval.",
+            .supported_row_types = {EffectiveRowType::Interval},
+            .parameters = outputSourceSchema("EventCountArgs"),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandEventCountAggregator};
 }
@@ -322,9 +327,10 @@ namespace {
 [[nodiscard]] ColumnAggregatorDescriptor eventPresenceAggregatorDescriptor() {
     return ColumnAggregatorDescriptor{
             .id = "event_presence",
-            .display_name = "Event presence",
-            .description = "Report whether any source event occurs.",
-            .parameters = outputSourceSchema("EventPresenceAggregatorArgs"),
+            .display_name = "Event Presence",
+            .description = "Report whether any event is present within the row interval.",
+            .supported_row_types = {EffectiveRowType::Interval},
+            .parameters = outputSourceSchema("EventPresenceArgs"),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandEventPresenceAggregator};
 }
@@ -342,9 +348,10 @@ namespace {
 [[nodiscard]] ColumnAggregatorDescriptor analogSampleAggregatorDescriptor() {
     return ColumnAggregatorDescriptor{
             .id = "analog_sample",
-            .display_name = "Analog sample",
-            .description = "Sample an analog-like source.",
-            .parameters = outputSourceSchema("AnalogSampleAggregatorArgs"),
+            .display_name = "Analog Sample",
+            .description = "Sample an analog signal at a specific timestamp.",
+            .supported_row_types = {EffectiveRowType::Timestamp},
+            .parameters = outputSourceSchema("AnalogSampleArgs"),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandAnalogSampleAggregator};
 }
@@ -361,8 +368,9 @@ namespace {
 [[nodiscard]] ColumnAggregatorDescriptor pointXyAggregatorDescriptor() {
     return ColumnAggregatorDescriptor{
             .id = "point_xy",
-            .display_name = "Point x/y",
-            .description = "Expand one PointData source into x and y scalar columns.",
+            .display_name = "Point XY",
+            .description = "Expand a PointData keypoint into x and y columns at the row timestamp.",
+            .supported_row_types = {EffectiveRowType::Timestamp},
             .parameters = pointXySchema(),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandPointXyAggregator};
@@ -384,8 +392,9 @@ namespace {
 [[nodiscard]] ColumnAggregatorDescriptor multiPointXyAggregatorDescriptor() {
     return ColumnAggregatorDescriptor{
             .id = "multi_point_xy",
-            .display_name = "Multiple point x/y",
-            .description = "Expand multiple PointData sources into x and y scalar columns.",
+            .display_name = "Multi-Point XY",
+            .description = "Expand multiple PointData keypoints into x and y columns at the row timestamp.",
+            .supported_row_types = {EffectiveRowType::Timestamp},
             .parameters = multiPointXySchema(),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandMultiPointXyAggregator};
@@ -405,8 +414,9 @@ namespace {
 [[nodiscard]] ColumnAggregatorDescriptor rasterEventsRelativeAggregatorDescriptor() {
     return ColumnAggregatorDescriptor{
             .id = "raster_events_relative",
-            .display_name = "Raster events relative to interval start",
-            .description = "Normalize event times to a bound alignment time.",
+            .display_name = "Raster Events (Relative)",
+            .description = "Convert events to relative times aligned to a bound timestamp variable. Returns a DigitalEventSeries.",
+            .supported_row_types = {EffectiveRowType::Interval, EffectiveRowType::Timestamp},
             .parameters = trialRelativeEventSchema("RasterEventsRelativeAggregatorArgs"),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandRasterEventsRelativeAggregator};
@@ -429,8 +439,9 @@ namespace {
 [[nodiscard]] ColumnAggregatorDescriptor trialRelativeEventCountAggregatorDescriptor() {
     return ColumnAggregatorDescriptor{
             .id = "trial_relative_event_count",
-            .display_name = "Trial-relative event count",
-            .description = "Normalize event times and count events in a relative window.",
+            .display_name = "Trial Relative Event Count",
+            .description = "Count events in a relative window aligned to a bound timestamp variable.",
+            .supported_row_types = {EffectiveRowType::Interval},
             .parameters = trialRelativeEventSchema("TrialRelativeEventCountAggregatorArgs"),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandTrialRelativeEventCountAggregator};
@@ -610,24 +621,32 @@ bool ColumnAggregatorRegistry::registerAggregator(ColumnAggregatorDescriptor des
 }
 
 ColumnAggregatorDescriptor const * ColumnAggregatorRegistry::find(std::string const & id) const {
-    auto const iter = std::ranges::find_if(
-            _descriptors,
-            [&id](ColumnAggregatorDescriptor const & descriptor) {
-                return descriptor.id == id;
-            });
-    if (iter == _descriptors.end()) {
-        return nullptr;
+    auto const it = std::ranges::find_if(_descriptors, [&id](ColumnAggregatorDescriptor const & desc) {
+        return desc.id == id;
+    });
+    if (it != _descriptors.end()) {
+        return &(*it);
     }
-    return &(*iter);
+    return nullptr;
 }
 
 std::vector<ColumnAggregatorDescriptor const *> ColumnAggregatorRegistry::descriptors() const {
-    std::vector<ColumnAggregatorDescriptor const *> result;
-    result.reserve(_descriptors.size());
-    for (auto const & descriptor: _descriptors) {
-        result.push_back(&descriptor);
+    std::vector<ColumnAggregatorDescriptor const *> results;
+    results.reserve(_descriptors.size());
+    for (auto const & desc : _descriptors) {
+        results.push_back(&desc);
     }
-    return result;
+    return results;
+}
+
+std::vector<ColumnAggregatorDescriptor const *> ColumnAggregatorRegistry::getAggregatorsFor(EffectiveRowType row_type) const {
+    std::vector<ColumnAggregatorDescriptor const *> results;
+    for (auto const & desc : _descriptors) {
+        if (std::ranges::find(desc.supported_row_types, row_type) != desc.supported_row_types.end()) {
+            results.push_back(&desc);
+        }
+    }
+    return results;
 }
 
 ColumnAggregatorRegistry createBuiltInColumnAggregatorRegistry() {
