@@ -362,7 +362,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#phase-9a-timeframe-row-source-done" id="toc-phase-9a-timeframe-row-source-done" class="nav-link" data-scroll-target="#phase-9a-timeframe-row-source-done">Phase 9a: TimeFrame Row Source — Done</a></li>
   <li><a href="#phase-9b-point-and-keypoint-column-primitives-done" id="toc-phase-9b-point-and-keypoint-column-primitives-done" class="nav-link" data-scroll-target="#phase-9b-point-and-keypoint-column-primitives-done">Phase 9b: Point And Keypoint Column Primitives — Done</a></li>
   <li><a href="#phase-9c-column-preset-registry-and-expansion" id="toc-phase-9c-column-preset-registry-and-expansion" class="nav-link" data-scroll-target="#phase-9c-column-preset-registry-and-expansion">Phase 9c: Column Preset Registry And Expansion</a></li>
-  <li><a href="#phase-9d-designtable-presets" id="toc-phase-9d-designtable-presets" class="nav-link" data-scroll-target="#phase-9d-designtable-presets">Phase 9d: Design/Table Presets</a></li>
+  <li><a href="#phase-9d-design-authoring-presets" id="toc-phase-9d-design-authoring-presets" class="nav-link" data-scroll-target="#phase-9d-design-authoring-presets">Phase 9d: Design Authoring Presets</a></li>
   <li><a href="#phase-10-preset-library-files" id="toc-phase-10-preset-library-files" class="nav-link" data-scroll-target="#phase-10-preset-library-files">Phase 10: Preset Library Files</a></li>
   <li><a href="#phase-11-documentation-and-ui-follow-up" id="toc-phase-11-documentation-and-ui-follow-up" class="nav-link" data-scroll-target="#phase-11-documentation-and-ui-follow-up">Phase 11: Documentation And UI Follow-Up</a></li>
   <li><a href="#verification-checklist" id="toc-verification-checklist" class="nav-link" data-scroll-target="#verification-checklist">Verification Checklist</a></li>
@@ -394,7 +394,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p><strong>Status:</strong> Implementation roadmap for <a href="../../developer/TensorDesign/column_row_pipeline.html">Column Row Pipeline Design</a>.</p>
-<p>Phases 1-6, 9a, and 9b are implemented. Phase 7, 9c, and later remain planned.</p>
+<p>Phases 1-6 and 9a-9d are implemented. Phase 7 and preset-library work remain planned.</p>
 <p>This roadmap breaks the per-column row-pipeline refactor into small, testable steps. The design goal is to let each tensor column derive its own row-aligned gather inputs through TransformPipelines while keeping <code>GatherResult</code> a container/direct-gather executor rather than a pipeline runner.</p>
 <section id="end-state" class="level2">
 <h2 class="anchored" data-anchor-id="end-state">End State</h2>
@@ -443,7 +443,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ul>
 <li>There is no row-pipeline caching.</li>
 <li>UI does not expose row-pipeline configuration.</li>
-<li>There is no column recipe preset registry, preset expansion layer, or bundled preset catalog.</li>
+<li>The Phase 9c column recipe preset registry exists with a compiled preset set and TensorDesigner <strong>Add Preset…</strong> support.</li>
+<li>The Phase 9d design authoring preset registry exists with a compiled <code>whisker_contact_feature_table</code> preset and TensorDesigner <strong>Apply Table Preset…</strong> support.</li>
+<li>There is no broader preset JSON/file library yet.</li>
 </ul>
 </section>
 <section id="phase-1-baseline-tests-done" class="level2">
@@ -715,28 +717,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="phase-9c-column-preset-registry-and-expansion" class="level2">
 <h2 class="anchored" data-anchor-id="phase-9c-column-preset-registry-and-expansion">Phase 9c: Column Preset Registry And Expansion</h2>
 <p>Goal: provide friendly recipe generators that expand user-supplied parameters into raw <code>ColumnRecipe</code> objects, avoiding manual embedded JSON authoring. Presets are for authoring convenience; saved designs remain expanded raw TensorDesign JSON.</p>
+<p>Status: done. <code>ColumnRecipePresetRegistry</code> is implemented in <code>src/TensorDesign</code> with the Phase 9c compiled preset set. Focused expansion tests cover raw recipe output, TensorDesign JSON tests verify both JSON-authored preset invocations and selected expanded presets through <code>buildTensorFromDesignJson()</code>, and TensorDesigner exposes <strong>Add Preset…</strong> to append expanded raw recipes. This phase does not add preset files or user/bundled preset catalogs; those are Phase 10.</p>
 <p>Tasks:</p>
 <ol type="1">
-<li>Add a <code>ColumnRecipePresetRegistry</code> or equivalent registry in the TensorDesign/TransformsV2 boundary.</li>
-<li>Define preset descriptors with name, display name, description, parameter schema, source (<code>Built-in</code> or <code>User</code>), and expansion function/template.</li>
-<li>Preset expansion must return a list of <code>ColumnRecipe</code>s, not a single recipe, so grouped features can be appended atomically.</li>
-<li>Add presets for the initial common workflows:
+<li><del>Add a <code>ColumnRecipePresetRegistry</code> or equivalent registry in the TensorDesign/TransformsV2 boundary.</del> <strong>Started with a TensorDesign-side registry.</strong></li>
+<li><del>Define preset descriptors with name, display name, description, parameter schema, source (<code>Built-in</code> or <code>User</code>), and expansion function/template.</del> <strong>Started for compiled presets.</strong></li>
+<li><del>Preset expansion must return a list of <code>ColumnRecipe</code>s, not a single recipe, so grouped features can be appended atomically.</del> <strong>Done in the expansion type.</strong></li>
+<li><del>Add presets for the initial common workflows:</del> <strong>Done.</strong>
 <ul>
-<li>mean over interval</li>
-<li>event count over interval</li>
-<li>event presence around interval start</li>
-<li>analog sample at interval start</li>
-<li>point x/y for one keypoint</li>
-<li>point x/y for multiple keypoints</li>
-<li>point x/y sampled at interval start</li>
-<li>raster events relative to interval start</li>
-<li>trial-relative event times using NormalizeTime with row-specific <code>ClockTicks</code> bindings</li>
+<li><del>mean over interval</del> <strong>Done.</strong></li>
+<li><del>event count over interval</del> <strong>Done.</strong></li>
+<li><del>event presence around interval start</del> <strong>Done.</strong></li>
+<li><del>analog sample at interval start</del> <strong>Done.</strong></li>
+<li><del>point x/y for one keypoint</del> <strong>Done.</strong></li>
+<li><del>point x/y for multiple keypoints</del> <strong>Done.</strong></li>
+<li><del>point x/y sampled at interval start</del> <strong>Done.</strong></li>
+<li><del>raster events relative to interval start</del> <strong>Done.</strong></li>
+<li><del>trial-relative event times using NormalizeTime with row-specific <code>ClockTicks</code> bindings</del> <strong>Done as <code>trial_relative_event_count_from_interval_start</code>.</strong></li>
 </ul></li>
-<li>Expand preset JSON into raw <code>ColumnRecipe</code> fields before provider construction.</li>
-<li>Add tests that preset expansion produces the same tensor values as equivalent raw recipes.</li>
-<li>Add TensorDesigner UI support for <strong>Add Preset…</strong> that appends all expanded columns.</li>
-<li>Save expanded raw recipes only after presets are applied; preset invocations are not required for execution.</li>
-<li>Reject duplicate preset IDs across built-in and user presets for the initial implementation.</li>
+<li><del>Expand preset JSON into raw <code>ColumnRecipe</code> fields before provider construction.</del> <strong>Done for compiled built-in presets in <code>parseDesignJson()</code>.</strong></li>
+<li><del>Add tests that preset expansion produces the same tensor values as equivalent raw recipes.</del> <strong>Done through focused expansion tests and TensorDesign JSON build tests.</strong></li>
+<li><del>Add TensorDesigner UI support for <strong>Add Preset…</strong> that appends all expanded columns.</del> <strong>Done.</strong></li>
+<li><del>Save expanded raw recipes only after presets are applied; preset invocations are not required for execution.</del> <strong>Done through <code>TensorDesigner::toJson()</code> / <code>serializeDesignJson()</code>.</strong></li>
+<li><del>Reject duplicate preset IDs across built-in and user presets for the initial implementation.</del> <strong>Done for registry registration.</strong></li>
 </ol>
 <p>Exit criteria:</p>
 <ul>
@@ -747,22 +750,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Saved designs remain reproducible expanded TensorDesign JSON and do not depend on the preset registry at load time.</li>
 </ul>
 </section>
-<section id="phase-9d-designtable-presets" class="level2">
-<h2 class="anchored" data-anchor-id="phase-9d-designtable-presets">Phase 9d: Design/Table Presets</h2>
-<p>Goal: support reusable whole-table templates that set row source and add multiple related column groups.</p>
+<section id="phase-9d-design-authoring-presets" class="level2">
+<h2 class="anchored" data-anchor-id="phase-9d-design-authoring-presets">Phase 9d: Design Authoring Presets</h2>
+<p>Status: done for the initial compiled design authoring preset registry and motivating whisker-contact table preset.</p>
+<p>Goal: support reusable whole-table authoring templates that set row source and add multiple related column groups, while preserving expanded raw TensorDesign JSON as the executable and saved-analysis format.</p>
+<p>Design authoring presets are a higher-level convenience layer than Phase 9c column presets. A column preset expands to one or more <code>ColumnRecipe</code>s and appends them to the current design. A design authoring preset expands to a row source plus a set of raw <code>ColumnRecipe</code>s, producing an ordinary <code>TensorDesignSpec</code> immediately after application.</p>
+<p>Design preset invocations should not become the single source of truth for reproducible analysis. They are authoring shortcuts only. After applying a design preset, saving should write the expanded <code>row_source</code> and <code>columns</code> fields, not the preset invocation. Loading and executing a saved design should not require the design preset registry.</p>
 <p>Tasks:</p>
 <ol type="1">
-<li>Define a <code>DesignPresetExpansion</code> shape containing a row source plus multiple <code>ColumnRecipe</code>s.</li>
-<li>Add a whisker-contact feature table preset covering curvature, spike count, onset spike presence, angle at onset, and optional keypoint x/y columns.</li>
-<li>Add tests comparing design preset expansion to the equivalent raw TensorDesign JSON.</li>
-<li>Prefer compiled expansion functions initially for design presets that need loops or complex defaults; avoid making saved analyses depend on preset invocations.</li>
-<li>Add TensorDesigner UI affordance for applying a table preset to an empty design.</li>
+<li><del>Define a <code>DesignPresetExpansion</code> shape containing row-source fields plus multiple raw <code>ColumnRecipe</code>s.</del> <strong>Done.</strong></li>
+<li><del>Add a compiled <code>whisker_contact_feature_table</code> authoring preset covering curvature, spike count, onset spike presence, angle at onset, and optional keypoint x/y columns.</del> <strong>Done.</strong></li>
+<li><del>Add tests comparing design preset expansion to the equivalent raw TensorDesign JSON.</del> <strong>Done.</strong></li>
+<li><del>Prefer compiled expansion functions initially for design presets that need loops or complex defaults.</del> <strong>Done.</strong></li>
+<li><del>Ensure applying a design preset produces an ordinary <code>TensorDesignSpec</code> and that <code>serializeDesignJson()</code> writes expanded raw fields only.</del> <strong>Done.</strong></li>
+<li><del>Add TensorDesigner UI affordance such as <strong>New From Preset…</strong> or <strong>Apply Table Preset…</strong>. Because this changes the row source, the UI should confirm replacement when the current design already has a row source or columns.</del> <strong>Done.</strong></li>
 </ol>
 <p>Exit criteria:</p>
 <ul>
-<li>A complete motivating analysis table can be created from one preset plus a small parameter form.</li>
+<li>A complete motivating analysis table can be authored from one preset plus a small parameter form.</li>
 <li>Column presets remain useful for incremental table editing.</li>
-<li>Applying a design preset produces ordinary row-source and column recipe JSON that can be saved independently of the preset.</li>
+<li>Applying a design preset produces ordinary row-source and column recipe JSON that can be saved and executed independently of the preset registry.</li>
 </ul>
 </section>
 <section id="phase-10-preset-library-files" class="level2">

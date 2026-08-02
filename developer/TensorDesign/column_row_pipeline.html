@@ -411,7 +411,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p><strong>Status:</strong> Partially implemented. GatherResult, interval-window primitives, <code>ColumnRecipe::row_pipeline_json</code>, TensorDesign JSON round-trip, identity row-pipeline dispatch, <code>DigitalIntervalSeries</code> row-pipeline gather windows, <code>pipeline_value_bindings</code> for row-specific <code>PipelineValueStore</code> values, <code>DigitalEventSeries</code> sample-time row-pipeline dispatch, TimeFrame row sources, and <code>PointCoordinate</code> keypoint coordinate projection are implemented. Presets and broader UI support remain planned.</p>
+<p><strong>Status:</strong> Partially implemented. GatherResult, interval-window primitives, <code>ColumnRecipe::row_pipeline_json</code>, TensorDesign JSON round-trip, identity row-pipeline dispatch, <code>DigitalIntervalSeries</code> row-pipeline gather windows, <code>pipeline_value_bindings</code> for row-specific <code>PipelineValueStore</code> values, <code>DigitalEventSeries</code> sample-time row-pipeline dispatch, TimeFrame row sources, <code>PointCoordinate</code> keypoint coordinate projection, and Phase 9c column presets with TensorDesigner <strong>Add Preset…</strong> support are implemented. The broader preset file library and user/bundled preset catalog remain planned.</p>
 <p>This document describes the target architecture for per-column gather geometry in lazy-column tensors. The implementation sequence is tracked separately in <a href="../../developer/TensorDesign/column_row_pipeline_roadmap.html">Column Row Pipeline Roadmap</a>.</p>
 <p>See also:</p>
 <ul>
@@ -472,13 +472,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Not implemented yet:</p>
 <ul>
 <li>Row-pipeline caching across columns.</li>
-<li>Preset registry, bundled preset library, and preset expansion.</li>
+<li>Broader preset catalog and bundled/user preset file library.</li>
 <li>UI support for configuring row pipelines.</li>
 </ul>
 </section>
 <section id="problem" class="level2">
 <h2 class="anchored" data-anchor-id="problem">Problem</h2>
-<p>Original interval-row tensor columns always gathered source data over the full row interval. With the implemented <code>DigitalIntervalSeries</code> row-pipeline path, onset-window event reductions are now expressible in TensorDesign JSON. With <code>pipeline_value_bindings</code>, per-row normalization context is also expressible for row-aligned <code>DigitalEventSeries</code> markers. With <code>DigitalEventSeries</code> row-pipeline dispatch, point sampling is expressible in row-pipeline JSON. Remaining gaps are presets and UI.</p>
+<p>Original interval-row tensor columns always gathered source data over the full row interval. With the implemented <code>DigitalIntervalSeries</code> row-pipeline path, onset-window event reductions are now expressible in TensorDesign JSON. With <code>pipeline_value_bindings</code>, per-row normalization context is also expressible for row-aligned <code>DigitalEventSeries</code> markers. With <code>DigitalEventSeries</code> row-pipeline dispatch, point sampling is expressible in row-pipeline JSON. Phase 9c presets cover common authoring patterns; remaining gaps are row-pipeline caching, preset libraries, and richer UI for manually configuring row pipelines.</p>
 <p>The full design addresses these common per-row features:</p>
 <ul>
 <li>Spike presence within <code>[-W, +W]</code> of contact onset.</li>
@@ -850,7 +850,7 @@ parameters: coordinate = "x" | "y"</code></pre>
 <section id="level-1-presets" class="level3">
 <h3 class="anchored" data-anchor-id="level-1-presets">Level 1: Presets</h3>
 <p>Presets are the preferred user-facing way to generate common analysis columns without manually typing embedded TransformPipeline JSON. A preset is a recipe generator: it accepts a small, preset-specific parameter set and expands into one or more raw <code>ColumnRecipe</code> objects.</p>
-<p>Presets are not the canonical saved-analysis format. The reproducible artifact remains the expanded TensorDesign JSON containing ordinary <code>ColumnRecipe</code> fields. If a user wants to repeat the exact same analysis later, saving and loading the expanded design is the stable path. Presets are for authoring convenience and error reduction.</p>
+<p>Preset invocations are accepted as a JSON authoring format and are expanded by <code>parseDesignJson()</code> before provider construction. They are not the canonical saved-analysis format. The reproducible artifact remains the expanded TensorDesign JSON containing ordinary <code>ColumnRecipe</code> fields. If a user wants to repeat the exact same analysis later, saving and loading the expanded design is the stable path. Presets are for authoring convenience and error reduction.</p>
 <p>Example: spike presence around interval onset:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"spike_in_onset_window"</span><span class="fu">,</span></span>

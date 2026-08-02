@@ -355,10 +355,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
   <li><a href="#types-documentation" id="toc-types-documentation" class="nav-link" data-scroll-target="#types-documentation">Types Documentation</a>
   <ul class="collapse">
+  <li><a href="#enum-columnrecipepresetsource" id="toc-enum-columnrecipepresetsource" class="nav-link" data-scroll-target="#enum-columnrecipepresetsource">enum ColumnRecipePresetSource</a></li>
+  <li><a href="#enum-designpresetsource" id="toc-enum-designpresetsource" class="nav-link" data-scroll-target="#enum-designpresetsource">enum DesignPresetSource</a></li>
   <li><a href="#enum-rowtype" id="toc-enum-rowtype" class="nav-link" data-scroll-target="#enum-rowtype">enum RowType</a></li>
   </ul></li>
   <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
   <ul class="collapse">
+  <li><a href="#function-createbuiltincolumnrecipepresetregistry" id="toc-function-createbuiltincolumnrecipepresetregistry" class="nav-link" data-scroll-target="#function-createbuiltincolumnrecipepresetregistry">function createBuiltInColumnRecipePresetRegistry</a></li>
+  <li><a href="#function-parsecolumnrecipepresetargs" id="toc-function-parsecolumnrecipepresetargs" class="nav-link" data-scroll-target="#function-parsecolumnrecipepresetargs">function parseColumnRecipePresetArgs</a></li>
+  <li><a href="#function-createbuiltindesignpresetregistry" id="toc-function-createbuiltindesignpresetregistry" class="nav-link" data-scroll-target="#function-createbuiltindesignpresetregistry">function createBuiltInDesignPresetRegistry</a></li>
+  <li><a href="#function-parsedesignpresetargs" id="toc-function-parsedesignpresetargs" class="nav-link" data-scroll-target="#function-parsedesignpresetargs">function parseDesignPresetArgs</a></li>
   <li><a href="#function-createtensorcolumnviews" id="toc-function-createtensorcolumnviews" class="nav-link" data-scroll-target="#function-createtensorcolumnviews">function createTensorColumnViews</a></li>
   <li><a href="#function-discoveranalogkeygroups" id="toc-function-discoveranalogkeygroups" class="nav-link" data-scroll-target="#function-discoveranalogkeygroups">function discoverAnalogKeyGroups</a></li>
   <li><a href="#function-populatetensorfromanalogkeys" id="toc-function-populatetensorfromanalogkeys" class="nav-link" data-scroll-target="#function-populatetensorfromanalogkeys">function populateTensorFromAnalogKeys</a></li>
@@ -413,6 +419,38 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1ColumnRecipePresetArgs.html">Neuralyzer::TensorDesign::ColumnRecipePresetArgs</a></strong></td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1ColumnRecipePresetDescriptor.html">Neuralyzer::TensorDesign::ColumnRecipePresetDescriptor</a></strong></td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1ColumnRecipePresetExpansion.html">Neuralyzer::TensorDesign::ColumnRecipePresetExpansion</a></strong></td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1ColumnRecipePresetRegistry.html">Neuralyzer::TensorDesign::ColumnRecipePresetRegistry</a></strong></td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1DesignPresetArgs.html">Neuralyzer::TensorDesign::DesignPresetArgs</a></strong></td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1DesignPresetDescriptor.html">Neuralyzer::TensorDesign::DesignPresetDescriptor</a></strong></td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1DesignPresetExpansion.html">Neuralyzer::TensorDesign::DesignPresetExpansion</a></strong></td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1DesignPresetRegistry.html">Neuralyzer::TensorDesign::DesignPresetRegistry</a></strong></td>
+</tr>
+<tr class="even">
+<td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1TensorDesignSpec.html">Neuralyzer::TensorDesign::TensorDesignSpec</a></strong> <br>Complete specification for building a lazy-column tensor.</td>
 </tr>
 </tbody>
@@ -430,6 +468,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>enum class std::uint8_t</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1TensorDesign.html#enum-columnrecipepresetsource">ColumnRecipePresetSource</a></strong> { BuiltIn, User}</td>
+</tr>
+<tr class="even">
+<td>enum class std::uint8_t</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1TensorDesign.html#enum-designpresetsource">DesignPresetSource</a></strong> { BuiltIn, User}</td>
+</tr>
+<tr class="odd">
+<td>enum class std::uint8_t</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1TensorDesign.html#enum-rowtype">RowType</a></strong> { None, Interval, Timestamp, Ordinal, DerivedFromSource, TimeFrame}<br>Row source type for a tensor design specification.</td>
 </tr>
 </tbody>
@@ -445,6 +491,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </thead>
 <tbody>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1ColumnRecipePresetRegistry.html">ColumnRecipePresetRegistry</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1TensorDesign.html#function-createbuiltincolumnrecipepresetregistry">createBuiltInColumnRecipePresetRegistry</a></strong>()</td>
+</tr>
+<tr class="even">
+<td>std::optional&lt; <a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1ColumnRecipePresetArgs.html">ColumnRecipePresetArgs</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1TensorDesign.html#function-parsecolumnrecipepresetargs">parseColumnRecipePresetArgs</a></strong>(nlohmann::json const &amp; parameters)</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1DesignPresetRegistry.html">DesignPresetRegistry</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1TensorDesign.html#function-createbuiltindesignpresetregistry">createBuiltInDesignPresetRegistry</a></strong>()</td>
+</tr>
+<tr class="even">
+<td>std::optional&lt; <a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1DesignPresetArgs.html">DesignPresetArgs</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1TensorDesign.html#function-parsedesignpresetargs">parseDesignPresetArgs</a></strong>(nlohmann::json const &amp; parameters)</td>
+</tr>
 <tr class="odd">
 <td>std::size_t</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1TensorDesign.html#function-createtensorcolumnviews">createTensorColumnViews</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, std::string const &amp; tensor_key, std::string const &amp; prefix, std::vector&lt; int &gt; const &amp; columns)<br>Create <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> column views from a <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> in <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</td>
@@ -482,6 +544,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="types-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="types-documentation">Types Documentation</h2>
+<section id="enum-columnrecipepresetsource" class="level3">
+<h3 class="anchored" data-anchor-id="enum-columnrecipepresetsource">enum ColumnRecipePresetSource</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Enumerator</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>BuiltIn</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>User</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="enum-designpresetsource" class="level3">
+<h3 class="anchored" data-anchor-id="enum-designpresetsource">enum DesignPresetSource</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Enumerator</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>BuiltIn</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>User</td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
 <section id="enum-rowtype" class="level3">
 <h3 class="anchored" data-anchor-id="enum-rowtype">enum RowType</h3>
 <table class="caption-top table">
@@ -530,14 +640,34 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="functions-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="functions-documentation">Functions Documentation</h2>
+<section id="function-createbuiltincolumnrecipepresetregistry" class="level3">
+<h3 class="anchored" data-anchor-id="function-createbuiltincolumnrecipepresetregistry">function createBuiltInColumnRecipePresetRegistry</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>ColumnRecipePresetRegistry createBuiltInColumnRecipePresetRegistry<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-parsecolumnrecipepresetargs" class="level3">
+<h3 class="anchored" data-anchor-id="function-parsecolumnrecipepresetargs">function parseColumnRecipePresetArgs</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> ColumnRecipePresetArgs <span class="op">&gt;</span> parseColumnRecipePresetArgs<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    nlohmann<span class="op">::</span>json <span class="at">const</span> <span class="op">&amp;</span> parameters</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-createbuiltindesignpresetregistry" class="level3">
+<h3 class="anchored" data-anchor-id="function-createbuiltindesignpresetregistry">function createBuiltInDesignPresetRegistry</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>DesignPresetRegistry createBuiltInDesignPresetRegistry<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-parsedesignpresetargs" class="level3">
+<h3 class="anchored" data-anchor-id="function-parsedesignpresetargs">function parseDesignPresetArgs</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> DesignPresetArgs <span class="op">&gt;</span> parseDesignPresetArgs<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    nlohmann<span class="op">::</span>json <span class="at">const</span> <span class="op">&amp;</span> parameters</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
 <section id="function-createtensorcolumnviews" class="level3">
 <h3 class="anchored" data-anchor-id="function-createtensorcolumnviews">function createTensorColumnViews</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t createTensorColumnViews<span class="op">(</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> tensor_key<span class="op">,</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> prefix<span class="op">,</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> columns</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t createTensorColumnViews<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> tensor_key<span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> prefix<span class="op">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">int</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> columns</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> column views from a <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> in <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -557,9 +687,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-discoveranalogkeygroups" class="level3">
 <h3 class="anchored" data-anchor-id="function-discoveranalogkeygroups">function discoverAnalogKeyGroups</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> AnalogKeyGroup <span class="op">&gt;</span> discoverAnalogKeyGroups<span class="op">(</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> AnalogKeyGroup <span class="op">&gt;</span> discoverAnalogKeyGroups<span class="op">(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Discover groups of <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> keys sharing a common prefix.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -570,11 +700,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-populatetensorfromanalogkeys" class="level3">
 <h3 class="anchored" data-anchor-id="function-populatetensorfromanalogkeys">function populateTensorFromAnalogKeys</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> populateTensorFromAnalogKeys<span class="op">(</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> tensor_key<span class="op">,</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> analog_keys</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> populateTensorFromAnalogKeys<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> tensor_key<span class="op">,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> analog_keys</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Populate an existing <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> from <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> channels.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -593,9 +723,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-parsedesignjson" class="level3">
 <h3 class="anchored" data-anchor-id="function-parsedesignjson">function parseDesignJson</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> TensorDesignSpec <span class="op">&gt;</span> parseDesignJson<span class="op">(</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> TensorDesignSpec <span class="op">&gt;</span> parseDesignJson<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Parse a TensorDesigner-compatible JSON envelope into a design spec.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -605,9 +735,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-serializedesignjson" class="level3">
 <h3 class="anchored" data-anchor-id="function-serializedesignjson">function serializeDesignJson</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string serializeDesignJson<span class="op">(</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    TensorDesignSpec <span class="at">const</span> <span class="op">&amp;</span> spec</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string serializeDesignJson<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    TensorDesignSpec <span class="at">const</span> <span class="op">&amp;</span> spec</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Serialize a design spec to a TensorDesigner-compatible JSON envelope.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -617,10 +747,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-buildtensor" class="level3">
 <h3 class="anchored" data-anchor-id="function-buildtensor">function buildTensor</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> TensorData <span class="op">&gt;</span> buildTensor<span class="op">(</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    TensorDesignSpec <span class="at">const</span> <span class="op">&amp;</span> spec</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> TensorData <span class="op">&gt;</span> buildTensor<span class="op">(</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    TensorDesignSpec <span class="at">const</span> <span class="op">&amp;</span> spec</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Build a lazy <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> from a design spec without registering it.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -636,10 +766,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-buildtensorfromdesignjson" class="level3">
 <h3 class="anchored" data-anchor-id="function-buildtensorfromdesignjson">function buildTensorFromDesignJson</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> TensorData <span class="op">&gt;</span> buildTensorFromDesignJson<span class="op">(</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> TensorData <span class="op">&gt;</span> buildTensorFromDesignJson<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> json</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Parse JSON and build a lazy <a href="../../api_generated/Classes/classTensorData.html">TensorData</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -650,10 +780,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-populatedatamanager" class="level3">
 <h3 class="anchored" data-anchor-id="function-populatedatamanager">function populateDataManager</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> populateDataManager<span class="op">(</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    TensorDesignSpec <span class="at">const</span> <span class="op">&amp;</span> spec</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> populateDataManager<span class="op">(</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="op">&amp;</span> dm<span class="op">,</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    TensorDesignSpec <span class="at">const</span> <span class="op">&amp;</span> spec</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Build a tensor from a design spec and register it in <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -663,7 +793,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Return</strong>: true if the tensor was built and registered</p>
 <p><strong>Precondition</strong>: spec.tensor_key must not be empty</p>
 <hr>
-<p>Updated on 2026-07-31 at 21:53:20 +0000</p>
+<p>Updated on 2026-08-01 at 23:29:12 +0000</p>
 
 
 </section>
