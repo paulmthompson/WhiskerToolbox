@@ -104,6 +104,34 @@ using DesignRowType = Neuralyzer::TensorDesign::RowType;
     return 0;
 }
 
+[[nodiscard]] QString rowTypeDescription(int combo_index) {
+    switch (combo_index) {
+        case 1:
+            return QStringLiteral(
+                    "One row per interval (e.g. contact bouts). "
+                    "Columns summarize data within each interval.");
+        case 2:
+            return QStringLiteral(
+                    "One row per event timestamp (e.g. each spike). "
+                    "Columns extract a value at or around each event.");
+        case 3:
+            return QStringLiteral(
+                    "One row per index 0…N−1. "
+                    "Not yet supported for building tensors.");
+        case 4:
+            return QStringLiteral(
+                    "One row per timestamp extracted from any time-series data object "
+                    "(analog, events, intervals, masks, lines, or points).");
+        case 5:
+            return QStringLiteral(
+                    "One row per video frame or time index. "
+                    "Use for frame-aligned features (e.g. keypoint x/y).");
+        case 0:
+        default:
+            return QStringLiteral("Choose how tensor rows are defined.");
+    }
+}
+
 }// namespace
 
 namespace {
@@ -280,7 +308,18 @@ void TensorDesigner::_onRowSourceTypeChanged(int index) {
             _row_type = DesignerRowType::None;
             break;
     }
+    _updateRowTypeDescription(index);
     _populateRowSourceKeys();
+}
+
+void TensorDesigner::_updateRowTypeDescription(int combo_index) {
+    auto const description = rowTypeDescription(combo_index);
+    if (_row_type_description_label != nullptr) {
+        _row_type_description_label->setText(description);
+    }
+    if (_row_type_combo != nullptr) {
+        _row_type_combo->setToolTip(description);
+    }
 }
 
 void TensorDesigner::_onRowSourceKeyChanged(int index) {
@@ -722,6 +761,9 @@ void TensorDesigner::_setupUi() {
     _row_type_combo->addItem(QStringLiteral("Ordinal Rows"));
     _row_type_combo->addItem(QStringLiteral("Derived from Source"));
     _row_type_combo->addItem(QStringLiteral("TimeFrame Rows"));
+    for (int i = 0; i < _row_type_combo->count(); ++i) {
+        _row_type_combo->setItemData(i, rowTypeDescription(i), Qt::ToolTipRole);
+    }
     _row_type_combo->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     row_layout->addWidget(_row_type_combo);
 
@@ -730,6 +772,11 @@ void TensorDesigner::_setupUi() {
     row_layout->addWidget(_row_source_combo);
 
     _main_layout->addLayout(row_layout);
+
+    _row_type_description_label = new QLabel(this);
+    _row_type_description_label->setWordWrap(true);
+    _row_type_description_label->setStyleSheet(QStringLiteral("color: gray; font-size: 11px;"));
+    _main_layout->addWidget(_row_type_description_label);
 
     _row_info_label = new QLabel(QStringLiteral("No row source selected"), this);
     _row_info_label->setStyleSheet(QStringLiteral("color: gray; font-size: 11px;"));
@@ -784,6 +831,8 @@ void TensorDesigner::_setupUi() {
     _main_layout->addWidget(_status_label);
 
     _main_layout->addStretch();
+
+    _updateRowTypeDescription(_row_type_combo->currentIndex());
 }
 
 void TensorDesigner::_connectSignals() {

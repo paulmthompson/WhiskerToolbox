@@ -184,6 +184,9 @@ private:
     void _buildTensor();
     void _updateStatus(QString const & message);
 
+    /// Update the row-type description label and combo tooltip for @p combo_index
+    void _updateRowTypeDescription(int combo_index);
+
     /// Auto-pin the inspector state when opening a dialog
     void _pinInspectorForDialog();
 
@@ -222,6 +225,7 @@ private:
     QLabel * _row_section_label{nullptr};
     QComboBox * _row_type_combo{nullptr};
     QComboBox * _row_source_combo{nullptr};
+    QLabel * _row_type_description_label{nullptr};
     QLabel * _row_info_label{nullptr};
 
     // Column management section
