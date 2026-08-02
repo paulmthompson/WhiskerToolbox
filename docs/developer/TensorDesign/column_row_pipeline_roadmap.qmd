@@ -5,7 +5,7 @@ format: html
 
 **Status:** Implementation roadmap for [Column Row Pipeline Design](column_row_pipeline.qmd).
 
-Phases 1-6 and 9a-9d are implemented. Phase 7 and preset-library work remain planned.
+Phases 1-6 and 9a-9e are implemented. Phase 7 and preset-library work remain planned.
 
 This roadmap breaks the per-column row-pipeline refactor into small, testable steps. The design goal is to let each tensor column derive its own row-aligned gather inputs through TransformPipelines while keeping `GatherResult` a container/direct-gather executor rather than a pipeline runner.
 
@@ -397,22 +397,22 @@ Exit criteria:
 
 ## Phase 9e: Decoupling Row Modifiers and Column Aggregators
 
-Status: planned.
+Status: done.
 
 Goal: Prevent combinatorial explosion of monolithic presets (e.g., `analog_sample_at_interval_start`, `event_presence_around_interval_start`) by splitting the registry into two composable domains: Row Modifiers and Column Aggregators.
 
 Tasks:
 
-1. Introduce `RowModifierRegistry`. This registry provides descriptors that output `row_pipeline_json` and declare the resulting *Effective Row Type* (e.g., Interval -> Event, Interval -> Interval).
-2. Introduce `ColumnAggregatorRegistry`. This registry provides descriptors that output `pipeline_json` and optional `pipeline_value_bindings`. These are filtered based on the Effective Row Type and Target Data Type.
-3. Refactor `ColumnRecipePresetRegistry` (or create a UI "Stitcher" equivalent) to seamlessly combine a selected Row Modifier and a Column Aggregator into one or more `ColumnRecipe`s.
-4. Carefully untangle multi-input presets (like `multi_point_xy_at_interval_start`):
-   - The UI Stitcher must handle cases where the Column Aggregator accepts a list of `source_keys` (e.g., multiple keypoints).
-   - For each input key, the Stitcher generates a distinct `ColumnRecipe`, applying the *same* `row_pipeline_json` (from the Row Modifier) to each.
-5. Create a two-step UX flow in TensorDesigner:
-   - **Step A (Optional):** Select a Row Modifier (filtered by top-level row strategy).
-   - **Step B (Required):** Select a Target Data Series and Column Aggregator (filtered by the Effective Row Type from Step A).
-6. Write tests ensuring that a composed Modifier + Aggregator yields the exact same JSON as the older monolithic presets.
+1. ~~Introduce `RowModifierRegistry`. This registry provides descriptors that output `row_pipeline_json` and declare the resulting *Effective Row Type* (e.g., Interval -> Event, Interval -> Interval).~~ **Done. RowModifiers also support emitting `pipeline_value_bindings`.**
+2. ~~Introduce `ColumnAggregatorRegistry`. This registry provides descriptors that output `pipeline_json` and optional `pipeline_value_bindings`. These are filtered based on the Effective Row Type and Target Data Type.~~ **Done.**
+3. ~~Refactor `ColumnRecipePresetRegistry` (or create a UI "Stitcher" equivalent) to seamlessly combine a selected Row Modifier and a Column Aggregator into one or more `ColumnRecipe`s.~~ **Done. Handled natively in `TensorDesignBuilder` json parsing.**
+4. ~~Carefully untangle multi-input presets (like `multi_point_xy_at_interval_start`):~~ **Done.**
+   - ~~The UI Stitcher must handle cases where the Column Aggregator accepts a list of `source_keys` (e.g., multiple keypoints).~~
+   - ~~For each input key, the Stitcher generates a distinct `ColumnRecipe`, applying the *same* `row_pipeline_json` (from the Row Modifier) to each.~~
+5. ~~Create a two-step UX flow in TensorDesigner:~~ (Deferred to UI layer)
+   - ~~**Step A (Optional):** Select a Row Modifier (filtered by top-level row strategy).~~
+   - ~~**Step B (Required):** Select a Target Data Series and Column Aggregator (filtered by the Effective Row Type from Step A).~~
+6. ~~Write tests ensuring that a composed Modifier + Aggregator yields the exact same JSON as the older monolithic presets.~~ **Done.**
 
 Exit criteria:
 

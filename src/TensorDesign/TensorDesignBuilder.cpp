@@ -183,11 +183,40 @@ using Neuralyzer::TensorBuilders::IntervalProperty;
         }
 
         auto const parameters = col.value("parameters", nlohmann::json::object());
-        auto const expansion = registry.expandJson(preset_id, parameters);
+        auto expansion = registry.expandJson(preset_id, parameters);
         if (!expansion.has_value()) {
             spdlog::error("TensorDesign: failed to expand column preset '{}'", preset_id);
             return std::nullopt;
         }
+
+        auto const row_modifier_id = col.value("row_modifier", std::string{});
+        if (!row_modifier_id.empty()) {
+            auto row_registry = Neuralyzer::TensorDesign::createBuiltInRowModifierRegistry();
+            auto const * mod_desc = row_registry.find(row_modifier_id);
+            if (!mod_desc) {
+                spdlog::error("TensorDesign: unknown row_modifier '{}'", row_modifier_id);
+                return std::nullopt;
+            }
+            auto const args = Neuralyzer::TensorDesign::parseColumnRecipePresetArgs(parameters);
+            if (!args) {
+                spdlog::error("TensorDesign: failed to parse parameters for row_modifier '{}'", row_modifier_id);
+                return std::nullopt;
+            }
+            auto mod_exp = mod_desc->expand(*args);
+            if (!mod_exp) {
+                spdlog::error("TensorDesign: failed to expand row_modifier '{}'", row_modifier_id);
+                return std::nullopt;
+            }
+            for (auto & recipe : expansion->columns) {
+                if (!mod_exp->row_pipeline_json.empty()) {
+                    recipe.row_pipeline_json = mod_exp->row_pipeline_json;
+                }
+                for (auto const & binding : mod_exp->pipeline_value_bindings) {
+                    recipe.pipeline_value_bindings.push_back(binding);
+                }
+            }
+        }
+
         for (auto const & recipe: expansion->columns) {
             expanded_columns.push_back(columnRecipeToJson(recipe));
         }

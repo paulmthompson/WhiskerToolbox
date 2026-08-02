@@ -13,6 +13,12 @@ The **Tensor Inspector** is designed to view and manipulate `TensorData` objects
     -   **View**: `TensorDataView` (the main table/grid view).
     -   **Designer**: `TensorDesigner` (side panel for adding/editing columns).
 
+## Row Source Guidance
+
+`TensorDesigner` row-type combo items expose `Qt::ToolTipRole` descriptions for each
+category (interval, timestamp, ordinal, derived, TimeFrame). A description label
+below the combo mirrors the current selection so users do not need to hover to read it.
+
 ## Pipeline Integration
 
 The `TensorDesigner` uses `TransformPipeline` to define how computed columns are populated.

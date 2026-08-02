@@ -219,8 +219,8 @@ TEST_CASE("parseDesignJson expands design authoring preset to raw spec", "[Tenso
     CHECK(parsed.columns[1].column_name == "spike_count");
     CHECK(parsed.columns[2].column_name == "spike_presence_at_onset");
     CHECK(parsed.columns[3].column_name == "angle_at_onset");
-    CHECK(parsed.columns[4].column_name == "tip_x_at_interval_start");
-    CHECK(parsed.columns[5].column_name == "tip_y_at_interval_start");
+    CHECK(parsed.columns[4].column_name == "tip_x");
+    CHECK(parsed.columns[5].column_name == "tip_y");
 
     auto const serialized = serializeDesignJson(parsed);
     CHECK(serialized.find("whisker_contact_feature_table") == std::string::npos);
@@ -878,7 +878,7 @@ TEST_CASE("parseDesignJson expands preset columns from JSON", "[TensorDesign][pr
                 }
             },
             {
-                "preset": "mean_over_interval",
+                "preset": "mean_value",
                 "parameters": {
                     "output_name": "mean_signal",
                     "source_key": "signal"
@@ -999,7 +999,7 @@ TEST_CASE("buildTensorFromDesignJson expands multi_point_xy preset JSON",
     CHECK_THAT(paw_y[2], WithinAbs(60.0, 0.01));
 }
 
-TEST_CASE("buildTensorFromDesignJson expands point_xy_at_interval_start preset JSON",
+TEST_CASE("buildTensorFromDesignJson handles stitched point_xy at interval_start JSON",
           "[TensorDesign][presets][Phase9c]") {
     DataManager dm;
     setDefaultIdentityTimeFrame(dm, 12);
@@ -1023,7 +1023,8 @@ TEST_CASE("buildTensorFromDesignJson expands point_xy_at_interval_start preset J
         },
         "columns": [
             {
-                "preset": "point_xy_at_interval_start",
+                "preset": "point_xy",
+                "row_modifier": "interval_start",
                 "parameters": {
                     "source_key": "Nose",
                     "name_prefix": "nose"
@@ -1086,7 +1087,7 @@ TEST_CASE("point_xy preset expansion builds PointData x/y columns over TimeFrame
     CHECK_THAT(y[2], WithinAbs(6.0, 0.01));
 }
 
-TEST_CASE("analog_sample_at_interval_start preset expansion builds tensor from expanded JSON",
+TEST_CASE("buildTensorFromDesignJson handles stitched analog_sample at interval_start JSON",
           "[TensorDesign][presets][Phase9c]") {
     DataManager dm;
     setDefaultIdentityTimeFrame(dm, 12);
@@ -1095,17 +1096,6 @@ TEST_CASE("analog_sample_at_interval_start preset expansion builds tensor from e
     auto intervals = createIntervalSeries({{2, 4}, {7, 8}, {9, 10}});
     dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("time"));
 
-    // User applies the preset with friendly parameters (TensorDesigner "Add Preset...").
-    auto registry = createBuiltInColumnRecipePresetRegistry();
-    ColumnRecipePresetArgs const preset_args{
-            .output_name = "signal_at_onset",
-            .source_key = "signal",
-    };
-    auto expansion = requireValue(registry.expand("analog_sample_at_interval_start", preset_args));
-    REQUIRE(expansion.columns.size() == 1);
-
-    // Saving the design writes expanded raw columns only. Execution does not depend on
-    // the preset registry, so the saved TensorDesign JSON is ordinary column recipes:
     std::string const saved_design_json = R"({
         "tensor_key": "onset_features",
         "row_source": {
@@ -1114,23 +1104,23 @@ TEST_CASE("analog_sample_at_interval_start preset expansion builds tensor from e
         },
         "columns": [
             {
-                "name": "signal_at_onset",
-                "source_key": "signal",
-                "row_pipeline_json": "{\"steps\": [{\"step_id\": \"interval_start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}]}",
-                "pipeline_json": "{\"steps\": []}"
+                "preset": "analog_sample",
+                "row_modifier": "interval_start",
+                "parameters": {
+                    "output_name": "signal_at_onset",
+                    "source_key": "signal"
+                }
             }
         ]
     })";
 
-    // Preset expansion must match the saved column recipe exactly.
     auto const parsed = requireValue(parseDesignJson(saved_design_json));
     REQUIRE(parsed.columns.size() == 1);
-    auto const & expanded = expansion.columns.front();
     auto const & saved = parsed.columns.front();
-    CHECK(expanded.column_name == saved.column_name);
-    CHECK(expanded.source_key == saved.source_key);
-    CHECK(expanded.row_pipeline_json == saved.row_pipeline_json);
-    CHECK(expanded.pipeline_json == saved.pipeline_json);
+    CHECK(saved.column_name == "signal_at_onset");
+    CHECK(saved.source_key == "signal");
+    CHECK(saved.row_pipeline_json == "{\"steps\": [{\"step_id\": \"interval_start\", \"transform_name\": \"IntervalToEvent\", \"parameters\": {\"point\": \"start\"}}]}");
+    CHECK(saved.pipeline_json == "{\"steps\": []}");
 
     auto const built = requireValue(buildTensorFromDesignJson(dm, saved_design_json));
     REQUIRE(built.numRows() == intervals->size());
@@ -1143,7 +1133,7 @@ TEST_CASE("analog_sample_at_interval_start preset expansion builds tensor from e
     CHECK_THAT(values[2], WithinAbs(9.0, 0.01));
 }
 
-TEST_CASE("mean_over_interval preset expansion builds tensor from expanded JSON",
+TEST_CASE("mean_value preset expansion builds tensor from expanded JSON",
           "[TensorDesign][presets][Phase9c]") {
     DataManager dm;
     setDefaultIdentityTimeFrame(dm, 10);
@@ -1154,7 +1144,7 @@ TEST_CASE("mean_over_interval preset expansion builds tensor from expanded JSON"
 
     auto registry = createBuiltInColumnRecipePresetRegistry();
     auto expansion = requireValue(registry.expand(
-            "mean_over_interval",
+            "mean_value",
             ColumnRecipePresetArgs{
                     .output_name = "mean_curvature",
                     .source_key = "Curvature"}));
@@ -1477,7 +1467,7 @@ TEST_CASE("buildTensorFromDesignJson applies derived pipeline_value_bindings",
     CHECK_THAT(values[1], WithinAbs(1.0, 0.01));
 }
 
-TEST_CASE("buildTensorFromDesignJson expands trial_relative_event_count_from_interval_start preset JSON",
+TEST_CASE("buildTensorFromDesignJson handles stitched trial_relative_event_count at interval_start JSON",
           "[TensorDesign][presets][Phase9c]") {
     DataManager dm;
     setDefaultIdentityTimeFrame(dm, 1000);
@@ -1494,11 +1484,13 @@ TEST_CASE("buildTensorFromDesignJson expands trial_relative_event_count_from_int
         "row_source": {"data_key": "intervals", "row_type": "interval"},
         "columns": [
             {
-                "preset": "trial_relative_event_count_from_interval_start",
+                "preset": "trial_relative_event_count",
+                "row_modifier": "bind_interval_start",
                 "parameters": {
                     "output_name": "relative_spikes",
                     "source_key": "spikes",
                     "binding_source_key": "contacts",
+                    "store_key": "row_alignment_time",
                     "window_start": 0.0,
                     "window_end": 15.0
                 }

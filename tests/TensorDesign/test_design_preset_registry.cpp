@@ -59,8 +59,8 @@ TEST_CASE("whisker_contact_feature_table expands to raw TensorDesignSpec", "[Ten
     CHECK(expansion.spec.columns[2].row_pipeline_json.find("EventToInterval") != std::string::npos);
     CHECK(expansion.spec.columns[3].column_name == "angle_at_onset");
     CHECK(expansion.spec.columns[3].row_pipeline_json.find("IntervalToEvent") != std::string::npos);
-    CHECK(expansion.spec.columns[4].column_name == "tip_x_at_interval_start");
-    CHECK(expansion.spec.columns[5].column_name == "tip_y_at_interval_start");
+    CHECK(expansion.spec.columns[4].column_name == "tip_x");
+    CHECK(expansion.spec.columns[5].column_name == "tip_y");
 }
 
 TEST_CASE("whisker_contact_feature_table rejects missing required keys", "[TensorDesign][design-presets]") {

@@ -10,8 +10,10 @@
 #include <optional>
 #include <stdexcept>
 
+using Neuralyzer::TensorDesign::ColumnAggregatorRegistry;
 using Neuralyzer::TensorDesign::ColumnRecipePresetArgs;
 using Neuralyzer::TensorDesign::ColumnRecipePresetSource;
+using Neuralyzer::TensorDesign::createBuiltInColumnAggregatorRegistry;
 using Neuralyzer::TensorDesign::createBuiltInColumnRecipePresetRegistry;
 
 namespace {
@@ -26,19 +28,18 @@ T requireValue(std::optional<T> const & opt) {
 
 }// namespace
 
-TEST_CASE("mean_over_interval preset expands to raw ColumnRecipe", "[TensorDesign][presets]") {
-    auto registry = createBuiltInColumnRecipePresetRegistry();
+TEST_CASE("mean_value aggregator expands to raw ColumnRecipe", "[TensorDesign][presets]") {
+    auto registry = createBuiltInColumnAggregatorRegistry();
 
-    auto const * descriptor = registry.find("mean_over_interval");
+    auto const * descriptor = registry.find("mean_value");
     REQUIRE(descriptor != nullptr);
-    CHECK(descriptor->id == "mean_over_interval");
-    CHECK(descriptor->display_name == "Mean over interval");
+    CHECK(descriptor->id == "mean_value");
+    CHECK(descriptor->display_name == "Mean value");
     CHECK(descriptor->source == ColumnRecipePresetSource::BuiltIn);
     REQUIRE(descriptor->parameters.field("output_name") != nullptr);
     REQUIRE(descriptor->parameters.field("source_key") != nullptr);
 
-    auto expansion = requireValue(registry.expand(
-            "mean_over_interval",
+    auto expansion = requireValue(descriptor->expand(
             ColumnRecipePresetArgs{
                     .output_name = "mean_curvature",
                     .source_key = "Curvature"}));
@@ -54,11 +55,13 @@ TEST_CASE("mean_over_interval preset expands to raw ColumnRecipe", "[TensorDesig
     CHECK(column.pipeline_json == R"({"steps": [], "range_reduction": {"reduction_name": "MeanValue"}})");
 }
 
-TEST_CASE("event_count_over_interval preset expands to raw ColumnRecipe", "[TensorDesign][presets]") {
-    auto registry = createBuiltInColumnRecipePresetRegistry();
+TEST_CASE("event_count aggregator expands to raw ColumnRecipe", "[TensorDesign][presets]") {
+    auto registry = createBuiltInColumnAggregatorRegistry();
 
-    auto expansion = requireValue(registry.expand(
-            "event_count_over_interval",
+    auto const * descriptor = registry.find("event_count");
+    REQUIRE(descriptor != nullptr);
+
+    auto expansion = requireValue(descriptor->expand(
             ColumnRecipePresetArgs{
                     .output_name = "spike_count",
                     .source_key = "Spikes"}));
@@ -72,63 +75,26 @@ TEST_CASE("event_count_over_interval preset expands to raw ColumnRecipe", "[Tens
     CHECK(column.pipeline_json == R"({"steps": [], "range_reduction": {"reduction_name": "EventCount"}})");
 }
 
-TEST_CASE("analog_sample_at_interval_start preset expands to row pipeline recipe",
-          "[TensorDesign][presets]") {
-    auto registry = createBuiltInColumnRecipePresetRegistry();
-
-    auto const * descriptor = registry.find("analog_sample_at_interval_start");
+TEST_CASE("window_around_interval_start RowModifier expands to row pipeline json", "[TensorDesign][presets]") {
+    auto registry = Neuralyzer::TensorDesign::createBuiltInRowModifierRegistry();
+    auto const * descriptor = registry.find("window_around_interval_start");
     REQUIRE(descriptor != nullptr);
-    CHECK(descriptor->id == "analog_sample_at_interval_start");
-    CHECK(descriptor->display_name == "Analog sample at interval start");
-    CHECK(descriptor->source == ColumnRecipePresetSource::BuiltIn);
-    REQUIRE(descriptor->parameters.field("output_name") != nullptr);
-    REQUIRE(descriptor->parameters.field("source_key") != nullptr);
 
-    auto expansion = requireValue(registry.expand(
-            "analog_sample_at_interval_start",
+    auto expansion = requireValue(descriptor->expand(
             ColumnRecipePresetArgs{
-                    .output_name = "angle_at_onset",
-                    .source_key = "Angle"}));
-
-    REQUIRE(expansion.columns.size() == 1);
-
-    auto const & column = expansion.columns.front();
-    CHECK(column.column_name == "angle_at_onset");
-    CHECK(column.source_key == "Angle");
-    CHECK(column.row_pipeline_json ==
-          R"({"steps": [{"step_id": "interval_start", "transform_name": "IntervalToEvent", "parameters": {"point": "start"}}]})");
-    CHECK(column.pipeline_json == R"({"steps": []})");
-    CHECK(column.pipeline_value_bindings.empty());
-    CHECK_FALSE(column.interval_property.has_value());
-}
-
-TEST_CASE("event_presence_around_interval_start preset expands to row pipeline recipe",
-          "[TensorDesign][presets]") {
-    auto registry = createBuiltInColumnRecipePresetRegistry();
-
-    auto expansion = requireValue(registry.expand(
-            "event_presence_around_interval_start",
-            ColumnRecipePresetArgs{
-                    .output_name = "onset_spike_present",
-                    .source_key = "Spikes",
                     .pre = 2,
                     .post = 3}));
 
-    REQUIRE(expansion.columns.size() == 1);
-
-    auto const & column = expansion.columns.front();
-    CHECK(column.column_name == "onset_spike_present");
-    CHECK(column.source_key == "Spikes");
-    CHECK(column.row_pipeline_json ==
+    CHECK(expansion.row_pipeline_json ==
           R"({"steps": [{"step_id": "interval_start", "transform_name": "IntervalToEvent", "parameters": {"point": "start"}}, {"step_id": "window", "transform_name": "EventToInterval", "parameters": {"pre_expansion": 2, "post_expansion": 3}}]})");
-    CHECK(column.pipeline_json == R"({"steps": [], "range_reduction": {"reduction_name": "EventPresence"}})");
 }
 
-TEST_CASE("point_xy preset expands to x and y ColumnRecipes", "[TensorDesign][presets]") {
-    auto registry = createBuiltInColumnRecipePresetRegistry();
+TEST_CASE("point_xy aggregator expands to x and y ColumnRecipes", "[TensorDesign][presets]") {
+    auto registry = createBuiltInColumnAggregatorRegistry();
+    auto const * descriptor = registry.find("point_xy");
+    REQUIRE(descriptor != nullptr);
 
-    auto expansion = requireValue(registry.expand(
-            "point_xy",
+    auto expansion = requireValue(descriptor->expand(
             ColumnRecipePresetArgs{
                     .source_key = "Nose",
                     .name_prefix = "nose"}));
@@ -146,12 +112,13 @@ TEST_CASE("point_xy preset expands to x and y ColumnRecipes", "[TensorDesign][pr
           R"({"steps": [{"step_id": "y", "transform_name": "PointCoordinate", "parameters": {"coordinate": "Y"}}]})");
 }
 
-TEST_CASE("multi_point_xy preset expands multiple keys to x and y ColumnRecipes",
+TEST_CASE("multi_point_xy aggregator expands multiple keys to x and y ColumnRecipes",
           "[TensorDesign][presets]") {
-    auto registry = createBuiltInColumnRecipePresetRegistry();
+    auto registry = createBuiltInColumnAggregatorRegistry();
+    auto const * descriptor = registry.find("multi_point_xy");
+    REQUIRE(descriptor != nullptr);
 
-    auto expansion = requireValue(registry.expand(
-            "multi_point_xy",
+    auto expansion = requireValue(descriptor->expand(
             ColumnRecipePresetArgs{
                     .source_keys = {"Nose", "Paw"}}));
 
@@ -166,65 +133,51 @@ TEST_CASE("multi_point_xy preset expands multiple keys to x and y ColumnRecipes"
     CHECK(expansion.columns[3].source_key == "Paw");
 }
 
-TEST_CASE("point_xy_at_interval_start preset expands sampled x and y ColumnRecipes",
-          "[TensorDesign][presets]") {
-    auto registry = createBuiltInColumnRecipePresetRegistry();
+TEST_CASE("interval_start RowModifier expands to row pipeline json", "[TensorDesign][presets]") {
+    auto registry = Neuralyzer::TensorDesign::createBuiltInRowModifierRegistry();
+    auto const * descriptor = registry.find("interval_start");
+    REQUIRE(descriptor != nullptr);
+    CHECK(descriptor->id == "interval_start");
+    CHECK(descriptor->display_name == "At interval start");
 
-    auto expansion = requireValue(registry.expand(
-            "point_xy_at_interval_start",
-            ColumnRecipePresetArgs{
-                    .source_key = "Nose",
-                    .name_prefix = "nose"}));
-
-    REQUIRE(expansion.columns.size() == 2);
-
-    CHECK(expansion.columns[0].column_name == "nose_x_at_interval_start");
-    CHECK(expansion.columns[0].source_key == "Nose");
-    CHECK(expansion.columns[0].row_pipeline_json ==
+    auto expansion = requireValue(descriptor->expand(ColumnRecipePresetArgs{}));
+    CHECK(expansion.row_pipeline_json ==
           R"({"steps": [{"step_id": "interval_start", "transform_name": "IntervalToEvent", "parameters": {"point": "start"}}]})");
-    CHECK(expansion.columns[0].pipeline_json ==
-          R"({"steps": [{"step_id": "x", "transform_name": "PointCoordinate", "parameters": {"coordinate": "X"}}]})");
-
-    CHECK(expansion.columns[1].column_name == "nose_y_at_interval_start");
-    CHECK(expansion.columns[1].source_key == "Nose");
-    CHECK(expansion.columns[1].row_pipeline_json == expansion.columns[0].row_pipeline_json);
-    CHECK(expansion.columns[1].pipeline_json ==
-          R"({"steps": [{"step_id": "y", "transform_name": "PointCoordinate", "parameters": {"coordinate": "Y"}}]})");
 }
 
-TEST_CASE("raster_events_relative_to_interval_start preset expands binding and normalize pipeline",
+TEST_CASE("raster_events_relative aggregator expands to normalized pipeline",
           "[TensorDesign][presets]") {
-    auto registry = createBuiltInColumnRecipePresetRegistry();
+    auto registry = Neuralyzer::TensorDesign::createBuiltInColumnAggregatorRegistry();
+    auto const * descriptor = registry.find("raster_events_relative");
+    REQUIRE(descriptor != nullptr);
 
-    auto expansion = requireValue(registry.expand(
-            "raster_events_relative_to_interval_start",
+    auto expansion = requireValue(descriptor->expand(
             ColumnRecipePresetArgs{
                     .output_name = "relative_spikes",
                     .source_key = "spikes",
-                    .binding_source_key = "contacts"}));
+                    .store_key = "my_alignment_time"}));
 
     REQUIRE(expansion.columns.size() == 1);
     auto const & column = expansion.columns.front();
     CHECK(column.column_name == "relative_spikes");
     CHECK(column.source_key == "spikes");
-    REQUIRE(column.pipeline_value_bindings.size() == 1);
-    CHECK(column.pipeline_value_bindings[0].source_key == "contacts");
-    CHECK(column.pipeline_value_bindings[0].source_pipeline_json.find("IntervalToEvent") != std::string::npos);
-    CHECK(column.pipeline_value_bindings[0].store_key == "row_alignment_time");
+    CHECK(column.pipeline_value_bindings.empty());
     CHECK(column.pipeline_json.find("NormalizeDigitalEventSeriesRelative") != std::string::npos);
+    CHECK(column.pipeline_json.find("\"alignment_time\": \"my_alignment_time\"") != std::string::npos);
     CHECK(column.pipeline_json.find("EventCountInWindow") == std::string::npos);
 }
 
-TEST_CASE("trial_relative_event_count_from_interval_start preset expands count-in-window pipeline",
+TEST_CASE("trial_relative_event_count aggregator expands count-in-window pipeline",
           "[TensorDesign][presets]") {
-    auto registry = createBuiltInColumnRecipePresetRegistry();
+    auto registry = Neuralyzer::TensorDesign::createBuiltInColumnAggregatorRegistry();
+    auto const * descriptor = registry.find("trial_relative_event_count");
+    REQUIRE(descriptor != nullptr);
 
-    auto expansion = requireValue(registry.expand(
-            "trial_relative_event_count_from_interval_start",
+    auto expansion = requireValue(descriptor->expand(
             ColumnRecipePresetArgs{
                     .output_name = "early_spike_count",
                     .source_key = "spikes",
-                    .binding_source_key = "contacts",
+                    .store_key = "my_alignment_time",
                     .window_start = 0.0,
                     .window_end = 15.0}));
 
@@ -232,10 +185,9 @@ TEST_CASE("trial_relative_event_count_from_interval_start preset expands count-i
     auto const & column = expansion.columns.front();
     CHECK(column.column_name == "early_spike_count");
     CHECK(column.source_key == "spikes");
-    REQUIRE(column.pipeline_value_bindings.size() == 1);
-    CHECK(column.pipeline_value_bindings[0].source_key == "contacts");
-    CHECK(column.pipeline_value_bindings[0].store_key == "row_alignment_time");
+    CHECK(column.pipeline_value_bindings.empty());
     CHECK(column.pipeline_json.find("NormalizeDigitalEventSeriesRelative") != std::string::npos);
+    CHECK(column.pipeline_json.find("\"alignment_time\": \"my_alignment_time\"") != std::string::npos);
     CHECK(column.pipeline_json.find("EventCountInWindow") != std::string::npos);
     CHECK(column.pipeline_json.find("\"window_start\": 0.000000") != std::string::npos);
     CHECK(column.pipeline_json.find("\"window_end\": 15.000000") != std::string::npos);
@@ -244,7 +196,7 @@ TEST_CASE("trial_relative_event_count_from_interval_start preset expands count-i
 TEST_CASE("ColumnRecipePresetRegistry rejects duplicate preset ids", "[TensorDesign][presets]") {
     auto registry = createBuiltInColumnRecipePresetRegistry();
 
-    auto const * existing = registry.find("mean_over_interval");
+    auto const * existing = registry.find("mean_value");
     REQUIRE(existing != nullptr);
 
     CHECK_FALSE(registry.registerPreset(*existing));
