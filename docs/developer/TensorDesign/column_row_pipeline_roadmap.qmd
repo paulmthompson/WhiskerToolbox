@@ -395,6 +395,31 @@ Exit criteria:
 - Column presets remain useful for incremental table editing.
 - Applying a design preset produces ordinary row-source and column recipe JSON that can be saved and executed independently of the preset registry.
 
+## Phase 9e: Decoupling Row Modifiers and Column Aggregators
+
+Status: planned.
+
+Goal: Prevent combinatorial explosion of monolithic presets (e.g., `analog_sample_at_interval_start`, `event_presence_around_interval_start`) by splitting the registry into two composable domains: Row Modifiers and Column Aggregators.
+
+Tasks:
+
+1. Introduce `RowModifierRegistry`. This registry provides descriptors that output `row_pipeline_json` and declare the resulting *Effective Row Type* (e.g., Interval -> Event, Interval -> Interval).
+2. Introduce `ColumnAggregatorRegistry`. This registry provides descriptors that output `pipeline_json` and optional `pipeline_value_bindings`. These are filtered based on the Effective Row Type and Target Data Type.
+3. Refactor `ColumnRecipePresetRegistry` (or create a UI "Stitcher" equivalent) to seamlessly combine a selected Row Modifier and a Column Aggregator into one or more `ColumnRecipe`s.
+4. Carefully untangle multi-input presets (like `multi_point_xy_at_interval_start`):
+   - The UI Stitcher must handle cases where the Column Aggregator accepts a list of `source_keys` (e.g., multiple keypoints).
+   - For each input key, the Stitcher generates a distinct `ColumnRecipe`, applying the *same* `row_pipeline_json` (from the Row Modifier) to each.
+5. Create a two-step UX flow in TensorDesigner:
+   - **Step A (Optional):** Select a Row Modifier (filtered by top-level row strategy).
+   - **Step B (Required):** Select a Target Data Series and Column Aggregator (filtered by the Effective Row Type from Step A).
+6. Write tests ensuring that a composed Modifier + Aggregator yields the exact same JSON as the older monolithic presets.
+
+Exit criteria:
+
+- Users can independently mix and match row gather geometry (like "Onset Window") with data extraction logic (like "Mean", "Event Count") without requiring a custom C++ preset for every combination.
+- Multi-input workflows (like expanding 5 keypoints at interval onset) remain fully supported and generate the correct Nx2 `ColumnRecipe`s.
+- The UI successfully hides the complexity of building two coordinated JSON pipelines.
+
 ## Phase 10: Preset Library Files
 
 Goal: distribute Neuralyzer with useful built-in recipe generators and let users save/import their own preset definitions using a library pattern similar to TransformsV2 `PipelineLibrary`.
