@@ -133,10 +133,10 @@ MainWindow::MainWindow(QWidget * parent)
 
     AutoParamWidget::setFileDialogOpener(
             [](QWidget * parent,
-               QString id,
-               QString caption,
-               QString filter,
-               QString fallback,
+               const QString& id,
+               const QString& caption,
+               const QString& filter,
+               const QString& fallback,
                bool pick_dir) -> QString {
                 if (pick_dir) {
                     return AppFileDialog::getExistingDirectory(
@@ -674,28 +674,7 @@ void MainWindow::loadData() {
 }
 
 void MainWindow::_updateFrameCount() {
-    auto media = _data_manager->getData<MediaData>("media");
-
-    if (_data_manager->getTime()->getTotalFrameCount() != media->getTotalFrameCount()) {
-
-        auto frame_count = media->getTotalFrameCount();
-
-        std::cout << "There is a mismatch between the time in the time vector and number of samples in the video"
-                  << "The video has " << frame_count
-                  << " the time vector has " << _data_manager->getTime()->getTotalFrameCount() << std::endl;
-
-        if (_data_manager->getTime()->getTotalFrameCount() == 0) {
-            std::vector<int> t(frame_count);
-            std::iota(std::begin(t), std::end(t), 0);
-
-            auto new_timeframe = std::make_shared<TimeFrame>(t);
-
-            _data_manager->removeTime(TimeKey("time"));
-            _data_manager->setTime(TimeKey("time"), new_timeframe, true);
-        } else {
-            std::cout << "The time vector is not empty, so we will not create a new time vector" << std::endl;
-        }
-    }
+    ensureDefaultTimeFrameFallback(*_data_manager);
 
     _time_scrollbar->updateScrollBarNewMax(_data_manager->getTime()->getTotalFrameCount() - 1);
 

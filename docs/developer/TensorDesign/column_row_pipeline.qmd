@@ -117,6 +117,8 @@ The invariant is that row `i` remains row `i`. A row pipeline may change the gat
 | `pipeline_json` | Processes gathered source rows with `PipelineValueStore` parameter bindings and produces a scalar column value or supported DataObject output. |
 | TensorDesign | Parse recipes, build row descriptors, connect row pipelines to column providers, and assemble `TensorData`. |
 
+**TensorData materialization stops at scalar float.** `pipeline_json` may produce a gathered `DataObject` (for example a relative `DigitalEventSeries` after `NormalizeDigitalEventSeriesRelative`), but `LazyColumnTensorStorage` column providers must collapse each row to a single `float`. Gather-layer `DataObject` output is valid for intermediate transforms and future GatherResult tooling; only aggregators with `ColumnOutputKind::ScalarFloat` are exposed as tensor column presets.
+
 This keeps the dependency direction aligned with the GatherResult refactor:
 
 ```text

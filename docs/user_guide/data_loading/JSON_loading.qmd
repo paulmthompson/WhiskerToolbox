@@ -130,3 +130,12 @@ Load timestamps from a tabular file with fractional time values:
 TimeFrame stores integer values. Set `sampling_rate` to convert fractional seconds to integers (e.g., 14000.0 for 14kHz sampling).
 :::
 
+#### Default `time` clock (fallback)
+
+If your JSON does not define `data_type: "time"` with `name: "time"`, Neuralyzer attempts to populate the default `time` TimeFrame **after the full config is loaded**:
+
+- When video (or other media) was loaded and `time` is still empty, an identity frame index vector `[0, 1, …, N-1]` is created from the best available media (any media key—not only `"media"`).
+- If you load **only** points, lines, or other non-media data, `time` stays empty unless you add an explicit time entry (for example `format: "max_value"` from an analog or digital event series).
+
+Define `time` explicitly in JSON when you need a custom clock, a derived timebase, or a points-only session without video.
+

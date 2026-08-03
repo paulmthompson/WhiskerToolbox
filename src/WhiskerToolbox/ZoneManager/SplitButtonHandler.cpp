@@ -13,13 +13,11 @@
 
 namespace {
 
-/// @brief Remove a destroyed QObject from a QPointer list without invalid downcasts.
-void removeDestroyedButton(QList<QPointer<QToolButton>> & buttons, QObject * obj) {
-    for (int i = buttons.size() - 1; i >= 0; --i) {
-        if (buttons.at(i).data() == obj) {
-            buttons.removeAt(i);
-        }
-    }
+/// @brief Drop entries whose QToolButton was destroyed (QPointer is already null).
+void pruneNullButtons(QList<QPointer<QToolButton>> & buttons) {
+    buttons.removeIf([](QPointer<QToolButton> const & button) {
+        return button.isNull();
+    });
 }
 
 }// namespace
@@ -44,9 +42,9 @@ SplitButtonHandler::SplitButtonHandler(ads::CDockManager * dock_manager, QObject
 }
 
 SplitButtonHandler::~SplitButtonHandler() {
-    // Clean up any remaining buttons
-    // Qt parent-child relationships will handle actual deletion
+    // Qt parent-child relationships handle button deletion; drop stale tracking.
     _split_buttons.clear();
+    _vertical_split_buttons.clear();
 }
 
 void SplitButtonHandler::setEnabled(bool enabled) {
@@ -277,9 +275,9 @@ void SplitButtonHandler::addSplitButtonToArea(ads::CDockAreaWidget * dock_area) 
     // Track this button for later management
     _split_buttons.append(split_button);
 
-    // Clean up tracking when button is destroyed
-    connect(split_button, &QObject::destroyed, this, [this](QObject * obj) {
-        removeDestroyedButton(_split_buttons, obj);
+    // QPointer clears before destroyed; prune null entries without dereferencing.
+    connect(split_button, &QObject::destroyed, this, [this]() {
+        pruneNullButtons(_split_buttons);
     });
 
     // Create vertical split button (top/bottom)
@@ -298,14 +296,13 @@ void SplitButtonHandler::addSplitButtonToArea(ads::CDockAreaWidget * dock_area) 
 
     // Insert the vertical split button before the horizontal split button
     // (so it appears to the left of the horizontal split button)
-    int horizontal_split_index = title_bar->indexOf(split_button);
+    int const horizontal_split_index = title_bar->indexOf(split_button);
     title_bar->insertWidget(horizontal_split_index, vertical_split_button);
 
     // Track this button for later management
     _vertical_split_buttons.append(vertical_split_button);
 
-    // Clean up tracking when button is destroyed
-    connect(vertical_split_button, &QObject::destroyed, this, [this](QObject * obj) {
-        removeDestroyedButton(_vertical_split_buttons, obj);
+    connect(vertical_split_button, &QObject::destroyed, this, [this]() {
+        pruneNullButtons(_vertical_split_buttons);
     });
 }

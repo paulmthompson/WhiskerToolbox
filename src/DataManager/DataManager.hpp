@@ -431,6 +431,18 @@ private:
  */
 using JsonLoadProgressCallback = std::function<bool(int current, int total, std::string const & message)>;
 
+/**
+ * @brief Populate the default @c time TimeFrame when it is still empty after JSON loading.
+ *
+ * Scans all loaded @c MediaData keys with a positive frame count and builds an identity
+ * @c TimeFrame @c [0, N-1] on @c TimeKey("time"). Does nothing if @c time already has samples
+ * or no suitable media exists.
+ *
+ * @param dm DataManager to update.
+ * @return @c true if a new @c time TimeFrame was created.
+ */
+bool ensureDefaultTimeFrameFallback(DataManager & dm);
+
 std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath);
 std::vector<DataInfo> load_data_from_json_config(DataManager *, std::string const & json_filepath, JsonLoadProgressCallback const & progress_callback);
 std::vector<DataInfo> load_data_from_json_config(DataManager * dm, nlohmann::json const & j, std::string const & base_path);

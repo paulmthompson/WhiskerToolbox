@@ -19,7 +19,16 @@ The initial registry lives in `src/TensorDesign/ColumnRecipePresetRegistry.hpp` 
 - `ColumnRecipePresetArgs`: currently a small shared argument struct with fields used by the initial compiled presets: `output_name`, `source_key`, `name_prefix`, `source_keys`, `pre`, and `post`.
 - `ColumnRecipePresetExpansion`: a vector of raw `TensorBuilders::ColumnRecipe` objects.
 - `ColumnRecipePresetRegistry`: register, find, list, and expand operations.
-- `createBuiltInColumnRecipePresetRegistry()`: constructs a registry containing the compiled built-in presets available in this phase.
+- `createBuiltInColumnRecipePresetRegistry()`: constructs a registry containing scalar tensor column presets (`ColumnOutputKind::ScalarFloat` aggregators only).
+
+Phase 9f also decouples row modifiers and column aggregators:
+
+- `ColumnOutputKind`: `ScalarFloat` (terminal `TensorData` column) vs `GatheredDataObject` (per-row gather transform fragment).
+- `AggregatorCompositionRules`: per-aggregator metadata (`output_kind`, `gathered_output_type`, `requires_pipeline_value_bindings`, `required_row_geometry`, `compatible_modifier_ids`).
+- `AggregatorQueryContext`: filters aggregators by effective row type, selected modifier, and `tensor_column_only`.
+- `ColumnAggregatorRegistry::getAggregatorsFor(AggregatorQueryContext)` and `isCompatibleComposition()`: replace naive `supported_row_types` Cartesian filtering.
+
+`raster_events_relative` is registered as `GatheredDataObject` and is **not** exposed through `createBuiltInColumnRecipePresetRegistry()`. Use `trial_relative_event_count` for a scalar tensor column that composes the same normalize step with `EventCountInWindow`.
 
 Duplicate preset ids are rejected by `registerPreset()`. This matches the initial policy in the row-pipeline design: user presets should not silently override built-in presets.
 
@@ -227,7 +236,7 @@ Expansion:
 
 This preset combines interval-row sample geometry with point coordinate projection.
 
-### `raster_events_relative_to_interval_start`
+### `raster_events_relative` (gather fragment, not a tensor preset)
 
 Parameters:
 
@@ -235,18 +244,18 @@ Parameters:
 |---|---|
 | `output_name` | Generated column name. |
 | `source_key` | Event source gathered over each row interval. |
-| `binding_source_key` | Interval source used to derive one interval-start alignment event per row. Defaults to `source_key` if omitted, but interval-row workflows should usually pass the row interval key. |
+| `binding_source_key` | Interval source used to derive one interval-start alignment event per row. |
 | `store_key` | Optional `PipelineValueStore` key. Defaults to `row_alignment_time`. |
 
 Expansion:
 
-- Leaves `row_pipeline_json` empty, so events are gathered over the full row interval.
-- Adds a `pipeline_value_bindings` entry deriving interval-start events from `binding_source_key` with `IntervalToEvent(start)`.
+- Requires `bind_interval_start` row modifier for `pipeline_value_bindings`.
 - Runs `NormalizeDigitalEventSeriesRelative` with `alignment_time` bound from the row store.
+- Produces per-row `DigitalEventSeries` relative event times **without** a terminal range reduction.
 
-This preset produces row-relative event times without a terminal reduction.
+This is a gather-layer transform fragment (`ColumnOutputKind::GatheredDataObject`). It is not registered in `createBuiltInColumnRecipePresetRegistry()` because `TensorData` columns are scalar floats only.
 
-### `trial_relative_event_count_from_interval_start`
+### `trial_relative_event_count`
 
 Parameters:
 
@@ -259,7 +268,7 @@ Parameters:
 | `window_start` | Relative event-count window start. |
 | `window_end` | Relative event-count window end. |
 
-Expansion is the same as `raster_events_relative_to_interval_start`, plus an `EventCountInWindow` terminal range reduction over `[window_start, window_end]`.
+Expansion is the same normalize step as `raster_events_relative`, plus an `EventCountInWindow` terminal range reduction over `[window_start, window_end]`. Pair with the `bind_interval_start` row modifier.
 
 ## Test Coverage
 

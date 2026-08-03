@@ -140,3 +140,14 @@ Plain JSON arrays (no root object) do not support `"loops"`; use `{ "loops", "da
 }
 ```
 
+## Default `time` TimeFrame fallback (JSON load)
+
+After all JSON entries are processed (including `clock` remapping and transformation pipelines), `load_data_from_json_config` calls `ensureDefaultTimeFrameFallback` **once** as a last resort:
+
+- Runs only when `TimeKey("time")` still has **zero** samples (explicit `data_type: "time"` entries are respected).
+- If any loaded `MediaData` has a positive frame count, builds an identity TimeFrame `[0, N-1]` on `time`.
+- Media selection: prefer key `"media"` if it has frames; else prefer video over image stacks; else largest frame count (with a warning when ambiguous).
+- Does **not** infer time from point, line, or other non-media data. Points-only configs should include an explicit `data_type: "time"` entry (e.g. `format: "max_value"` from an analog or event series).
+
+The same helper is used from `MainWindow::_updateFrameCount` for File → Load Video / Load Images.
+

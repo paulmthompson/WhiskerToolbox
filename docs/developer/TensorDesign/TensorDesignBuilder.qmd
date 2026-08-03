@@ -55,7 +55,7 @@ The format matches `TensorDesigner::toJson()` / `fromJson()`:
 | Field | Required | Description |
 |-------|----------|-------------|
 | `tensor_key` | For `populateDataManager` only | DataManager key for the output tensor |
-| `output_time_key` | No (default `"default"`) | `TimeKey` when registering in DataManager |
+| `output_time_key` | No | `TimeKey` when registering in DataManager. When omitted or `"default"`, `resolveOutputTimeKey()` derives the row source's `TimeKey`, then falls back to `"time"` or `"default"` if registered. TensorDesigner uses the same resolution when building tensors. |
 | `row_source.data_key` | For data-object row sources | Row source object in DataManager |
 | `row_source.time_key` | For `timeframe` row sources | TimeFrame key in DataManager |
 | `row_source.row_type` | Yes | `interval`, `timestamp`, `timeframe`, `derived_from_source`, `ordinal` (unsupported), or `none` |

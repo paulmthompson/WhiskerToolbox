@@ -432,7 +432,7 @@ Tasks:
    - Introduce an `EffectiveRowType` enum (e.g., `Interval`, `Event`) in the C++ backend.
    - Update `RowModifierDescriptor` to declare its `output_row_type`.
    - Update `ColumnAggregatorDescriptor` to declare its `supported_row_types` (e.g., Event Rate only supports `Interval`).
-   - Add query methods to the registries (e.g., `registry.getAggregatorsFor(EffectiveRowType::Event)`) so the UI remains stateless and driven purely by the backend.
+   - Add query methods to the registries (e.g., `ColumnAggregatorRegistry::getAggregatorsFor(AggregatorQueryContext)`) so the UI remains stateless and driven purely by the backend composition rules.
 2. **Create a Two-Step Column Builder Dialog** (replacing or augmenting the existing `ColumnConfigDialog`).
    - **Step A: Row Modification (Optional)**. Prompt: "Do you want to modify the row before extracting data?"
      - Populate a dropdown from the `RowModifierRegistry`.

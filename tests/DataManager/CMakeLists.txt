@@ -62,6 +62,7 @@ add_executable(test_data_manager
         test_time_entity_groups.cpp
        JsonPipelineRunner.test.cpp
        json_data_load_expansion.test.cpp
+       test_default_timeframe_fallback.test.cpp
 
         ${CMAKE_SOURCE_DIR}/src/DataObjects/AnalogTimeSeries/Analog_Time_Series.test.cpp
         ${CMAKE_SOURCE_DIR}/src/DataObjects/AnalogTimeSeries/utils/statistics.test.cpp
@@ -184,6 +185,16 @@ add_executable(test_data_manager
 # Add VideoData tests only if FFmpeg is enabled
 if(ENABLE_FFMPEG)
     target_sources(test_data_manager PRIVATE test_video_data_manager.cpp)
+    target_compile_definitions(test_data_manager PRIVATE ENABLE_FFMPEG)
+    # VideoDataRegistration.cpp registers loaders via static init; whole-archive keeps them linked
+    if(APPLE)
+        target_link_libraries(test_data_manager PRIVATE -Wl,-force_load,$<TARGET_FILE:MediaData>)
+    elseif(MSVC)
+        target_link_options(test_data_manager PRIVATE /WHOLEARCHIVE:MediaData)
+        target_link_libraries(test_data_manager PRIVATE MediaData)
+    else()
+        target_link_libraries(test_data_manager PRIVATE -Wl,--whole-archive MediaData -Wl,--no-whole-archive)
+    endif()
 endif()
 
 if(ENABLE_CAPNPROTO)

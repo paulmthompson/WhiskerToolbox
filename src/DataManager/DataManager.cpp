@@ -44,9 +44,12 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <numeric>
 #include <optional>
 #include <regex>
 #include <utility>
+
+#include <spdlog/spdlog.h>
 
 using namespace nlohmann;
 
@@ -938,6 +941,118 @@ static std::string substituteVariablesInJsonString(
     return result;
 }
 
+namespace {
+
+struct MediaTimeFallbackCandidate {
+    std::string key;
+    int frame_count{0};
+    bool is_video{false};
+};
+
+/**
+ * @brief Pick the MediaData key whose frame count should define the default @c time TimeFrame.
+ */
+std::optional<MediaTimeFallbackCandidate> selectMediaForTimeFallback(DataManager & dm) {
+    std::vector<MediaTimeFallbackCandidate> candidates;
+    for (auto const & key: dm.getKeys<MediaData>()) {
+        auto media = dm.getData<MediaData>(key);
+        if (!media) {
+            continue;
+        }
+        int const frame_count = media->getTotalFrameCount();
+        if (frame_count <= 0) {
+            continue;
+        }
+        candidates.push_back({key, frame_count, dm.getType(key) == DM_DataType::Video});
+    }
+
+    if (candidates.empty()) {
+        return std::nullopt;
+    }
+
+    auto const pick_best = [](std::vector<MediaTimeFallbackCandidate> const & pool) -> std::optional<MediaTimeFallbackCandidate> {
+        if (pool.empty()) {
+            return std::nullopt;
+        }
+        auto const * best = &pool.front();
+        for (auto const & candidate: pool) {
+            if (candidate.frame_count > best->frame_count) {
+                best = &candidate;
+            }
+        }
+        return *best;
+    };
+
+    std::vector<MediaTimeFallbackCandidate> media_key_pool;
+    for (auto const & candidate: candidates) {
+        if (candidate.key == "media") {
+            media_key_pool.push_back(candidate);
+        }
+    }
+    if (!media_key_pool.empty()) {
+        return pick_best(media_key_pool);
+    }
+
+    std::vector<MediaTimeFallbackCandidate> video_pool;
+    for (auto const & candidate: candidates) {
+        if (candidate.is_video) {
+            video_pool.push_back(candidate);
+        }
+    }
+    if (!video_pool.empty()) {
+        if (video_pool.size() > 1) {
+            auto const chosen = pick_best(video_pool);
+            spdlog::warn(
+                    "ensureDefaultTimeFrameFallback: multiple video media keys found; using '{}' "
+                    "({} frames) for default 'time' TimeFrame",
+                    chosen->key,
+                    chosen->frame_count);
+        }
+        return pick_best(video_pool);
+    }
+
+    if (candidates.size() > 1) {
+        auto const chosen = pick_best(candidates);
+        spdlog::warn(
+                "ensureDefaultTimeFrameFallback: multiple media keys found; using '{}' "
+                "({} frames) for default 'time' TimeFrame",
+                chosen->key,
+                chosen->frame_count);
+    }
+    return pick_best(candidates);
+}
+
+}// namespace
+
+bool ensureDefaultTimeFrameFallback(DataManager & dm) {
+    auto const time_tf = dm.getTime(TimeKey("time"));
+    if (!time_tf || time_tf->getTotalFrameCount() > 0) {
+        return false;
+    }
+
+    auto const chosen = selectMediaForTimeFallback(dm);
+    if (!chosen) {
+        return false;
+    }
+
+    std::vector<int> times(static_cast<std::size_t>(chosen->frame_count));
+    std::iota(times.begin(), times.end(), 0);
+
+    auto new_timeframe = std::make_shared<TimeFrame>(times);
+    if (!dm.setTime(TimeKey("time"), new_timeframe, true)) {
+        spdlog::error(
+                "ensureDefaultTimeFrameFallback: failed to register 'time' TimeFrame from media '{}'",
+                chosen->key);
+        return false;
+    }
+
+    spdlog::info(
+            "ensureDefaultTimeFrameFallback: created default 'time' TimeFrame with {} samples from media '{}'",
+            chosen->frame_count,
+            chosen->key);
+    return true;
+}
+
 DM_DataType stringToDataType(std::string const & data_type_str) {
     if (data_type_str == "video") return DM_DataType::Video;
     if (data_type_str == "images") return DM_DataType::Images;
@@ -956,6 +1071,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
     std::vector<DataInfo> data_info_list;
 
     std::map<std::string, std::string> clock_mappings;
+    bool saw_video_in_config = false;
 
     // Support the extended format where the root is an object rather than a plain array:
     //
@@ -1248,6 +1364,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
 
         switch (data_type) {
             case DM_DataType::Video: {
+                saw_video_in_config = true;
                 auto media_data = MediaDataFactory::loadMediaData(data_type, file_path, item);
                 if (media_data) {
                     auto item_key = item.value("name", "media");
@@ -1574,6 +1691,13 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 std::cerr << "Exception during pipeline execution: " << e.what() << std::endl;
             }
         }
+    }
+
+    ensureDefaultTimeFrameFallback(*dm);
+    if (saw_video_in_config && dm->getTime(TimeKey("time"))->getTotalFrameCount() == 0) {
+        spdlog::warn(
+                "JSON config included video entries but no media with frames was loaded; "
+                "default 'time' TimeFrame remains empty. Check file paths, ENABLE_FFMPEG, and decoder output.");
     }
 
     return data_info_list;
