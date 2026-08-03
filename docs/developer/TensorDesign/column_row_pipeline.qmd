@@ -320,10 +320,11 @@ Example: spike presence around interval onset:
 
 ```json
 {
-  "name": "spike_in_onset_window",
-  "preset": "event_presence_around_interval_start",
-  "source_key": "Spikes",
+  "preset": "event_presence",
+  "row_modifier": "window_around_interval_start",
   "parameters": {
+    "output_name": "spike_in_onset_window",
+    "source_key": "Spikes",
     "pre": 150,
     "post": 150
   }
@@ -334,11 +335,13 @@ Example: raster/PSTH events normalized to interval onset:
 
 ```json
 {
-  "name": "trial_relative_spikes",
-  "preset": "raster_events_relative_to_interval_start",
-  "source_key": "Spikes",
+  "preset": "raster_events_relative",
+  "row_modifier": "bind_interval_start",
   "parameters": {
-    "window": "row_interval"
+    "output_name": "trial_relative_spikes",
+    "source_key": "Spikes",
+    "store_key": "row_alignment_time",
+    "binding_source_key": "Trials"
   }
 }
 ```
@@ -371,8 +374,9 @@ Example multi-column preset intents:
 |---|---|---|
 | `point_xy` | one `PointData` source key, name prefix | two columns: x and y |
 | `multi_point_xy` | list of `PointData` source keys | two columns per source key |
-| `point_xy_at_interval_start` | `PointData` source key, row point selection | two sampled columns with `IntervalToEvent(start)` row pipeline |
-| `analog_covariates_at_event` | list of analog source keys, sample event pipeline | one sampled column per analog source |
+| `analog_covariates` | list of analog source keys | one sampled column per analog source |
+
+These Column Aggregators can then be seamlessly mixed with a Row Modifier (such as `interval_start` or `bind_interval_start`) in the JSON configuration, allowing flexible combinatorics without monolithic presets.
 
 For complete reusable tables, a separate design/table preset layer is useful:
 

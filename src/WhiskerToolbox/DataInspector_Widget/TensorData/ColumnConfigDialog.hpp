@@ -34,6 +34,10 @@ class QPushButton;
 class QTextEdit;
 class QVBoxLayout;
 class QWidget;
+#include "TensorDesign/ColumnRecipePresetRegistry.hpp"
+
+class QCheckBox;
+class AutoParamWidget;
 
 enum class DesignerRowType;
 
@@ -72,6 +76,7 @@ public:
             DesignerRowType row_type,
             EditorLib::OperationContext * operation_context = nullptr,
             QString pipeline_library_dir = {},
+            std::string row_source_key = {},
             QWidget * parent = nullptr);
 
     /**
@@ -88,6 +93,7 @@ public:
             Neuralyzer::TensorBuilders::ColumnRecipe const & recipe,
             EditorLib::OperationContext * operation_context = nullptr,
             QString pipeline_library_dir = {},
+            std::string row_source_key = {},
             QWidget * parent = nullptr);
 
     ~ColumnConfigDialog() override;
@@ -96,7 +102,7 @@ public:
      * @brief Get the configured column recipe
      * @return The ColumnRecipe built from user selections
      */
-    [[nodiscard]] Neuralyzer::TensorBuilders::ColumnRecipe getRecipe() const;
+    [[nodiscard]] std::vector<Neuralyzer::TensorBuilders::ColumnRecipe> getRecipes() const;
 
 private slots:
     void _onSourceKeyChanged(int index);
@@ -110,6 +116,10 @@ private slots:
                                EditorLib::OperationResult const & result);
     void _onOperationClosed(EditorLib::OperationId const & id);
     void _onIntervalPropertyToggled(bool checked);
+    void _onAdvancedModeToggled(bool checked);
+    void _onRowModifierToggled(bool checked);
+    void _onRowModifierChanged(int index);
+    void _onAggregatorChanged(int index);
 
 private:
     void _setupUi();
@@ -125,10 +135,31 @@ private:
 
     std::shared_ptr<DataManager> _data_manager;
     DesignerRowType _row_type;
+    std::string _row_source_key;
     EditorLib::OperationContext * _operation_context{nullptr};
     QString _requester_id;        ///< EditorInstanceId for OperationContext requests
     QString _pending_operation_id;///< OperationId of our pending request (empty if none)
     bool _auto_name{true};        ///< Auto-generate column name from source key
+
+    // Preset Mode UI
+    QGroupBox * _preset_group{nullptr};
+    QCheckBox * _row_modifier_check{nullptr};
+    QComboBox * _row_modifier_combo{nullptr};
+    AutoParamWidget * _row_modifier_params{nullptr};
+
+    QComboBox * _aggregator_combo{nullptr};
+    AutoParamWidget * _aggregator_params{nullptr};
+
+    QCheckBox * _advanced_mode_check{nullptr};
+
+    // Registries
+    Neuralyzer::TensorDesign::RowModifierRegistry _modifier_registry;
+    Neuralyzer::TensorDesign::ColumnAggregatorRegistry _aggregator_registry;
+
+    void _updateAggregatorOptions();
+    Neuralyzer::TensorDesign::EffectiveRowType _getBaseEffectiveRowType() const;
+
+    QGroupBox * _pipeline_group{nullptr};// To store the pipeline group
 
     // UI
     QVBoxLayout * _layout{nullptr};

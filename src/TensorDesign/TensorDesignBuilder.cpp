@@ -183,11 +183,40 @@ using Neuralyzer::TensorBuilders::IntervalProperty;
         }
 
         auto const parameters = col.value("parameters", nlohmann::json::object());
-        auto const expansion = registry.expandJson(preset_id, parameters);
+        auto expansion = registry.expandJson(preset_id, parameters);
         if (!expansion.has_value()) {
             spdlog::error("TensorDesign: failed to expand column preset '{}'", preset_id);
             return std::nullopt;
         }
+
+        auto const row_modifier_id = col.value("row_modifier", std::string{});
+        if (!row_modifier_id.empty()) {
+            auto row_registry = Neuralyzer::TensorDesign::createBuiltInRowModifierRegistry();
+            auto const * mod_desc = row_registry.find(row_modifier_id);
+            if (!mod_desc) {
+                spdlog::error("TensorDesign: unknown row_modifier '{}'", row_modifier_id);
+                return std::nullopt;
+            }
+            auto const args = Neuralyzer::TensorDesign::parseColumnRecipePresetArgs(parameters);
+            if (!args) {
+                spdlog::error("TensorDesign: failed to parse parameters for row_modifier '{}'", row_modifier_id);
+                return std::nullopt;
+            }
+            auto mod_exp = mod_desc->expand(*args);
+            if (!mod_exp) {
+                spdlog::error("TensorDesign: failed to expand row_modifier '{}'", row_modifier_id);
+                return std::nullopt;
+            }
+            for (auto & recipe: expansion->columns) {
+                if (!mod_exp->row_pipeline_json.empty()) {
+                    recipe.row_pipeline_json = mod_exp->row_pipeline_json;
+                }
+                for (auto const & binding: mod_exp->pipeline_value_bindings) {
+                    recipe.pipeline_value_bindings.push_back(binding);
+                }
+            }
+        }
+
         for (auto const & recipe: expansion->columns) {
             expanded_columns.push_back(columnRecipeToJson(recipe));
         }
@@ -478,9 +507,63 @@ std::optional<TensorData> buildTensorFromDesignJson(
     return buildTensor(dm, spec.value());
 }
 
+namespace {
+
+[[nodiscard]] std::optional<TimeKey> tryRegisteredTimeKey(
+        DataManager & dm,
+        std::string const & key_str) {
+    if (key_str.empty()) {
+        return std::nullopt;
+    }
+    TimeKey candidate(key_str);
+    if (dm.getTime(candidate) != nullptr) {
+        return candidate;
+    }
+    return std::nullopt;
+}
+
+}// namespace
+
+std::optional<TimeKey> resolveOutputTimeKey(
+        DataManager & dm,
+        TensorDesignSpec const & spec) {
+    if (!spec.output_time_key.empty() && spec.output_time_key != "default") {
+        if (auto const explicit_key = tryRegisteredTimeKey(dm, spec.output_time_key)) {
+            return explicit_key;
+        }
+    }
+
+    if (spec.row_type == RowType::TimeFrame) {
+        if (auto const row_time_key = tryRegisteredTimeKey(dm, spec.row_time_key)) {
+            return row_time_key;
+        }
+    } else if (spec.row_type != RowType::None && spec.row_type != RowType::Ordinal &&
+               !spec.row_source_key.empty()) {
+        auto const row_source_time_key = dm.getTimeKey(spec.row_source_key);
+        if (!row_source_time_key.empty()) {
+            if (auto const derived_key = tryRegisteredTimeKey(dm, row_source_time_key.str())) {
+                return derived_key;
+            }
+        }
+    }
+
+    if (auto const time_key = tryRegisteredTimeKey(dm, "time")) {
+        return time_key;
+    }
+    return tryRegisteredTimeKey(dm, "default");
+}
+
 bool populateDataManager(DataManager & dm, TensorDesignSpec const & spec) {
     if (spec.tensor_key.empty()) {
         spdlog::error("TensorDesign: tensor_key is required to populate DataManager");
+        return false;
+    }
+
+    auto const output_time_key = resolveOutputTimeKey(dm, spec);
+    if (!output_time_key.has_value()) {
+        spdlog::error(
+                "TensorDesign: could not resolve output TimeKey for tensor '{}'",
+                spec.tensor_key);
         return false;
     }
 
@@ -492,7 +575,7 @@ bool populateDataManager(DataManager & dm, TensorDesignSpec const & spec) {
     dm.setData<TensorData>(
             spec.tensor_key,
             std::make_shared<TensorData>(std::move(tensor.value())),
-            TimeKey(spec.output_time_key));
+            output_time_key.value());
     return true;
 }
 

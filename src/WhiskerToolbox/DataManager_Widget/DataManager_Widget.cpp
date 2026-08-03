@@ -208,6 +208,7 @@ void DataManager_Widget::_handleFeatureSelected(QString const & feature) {
             break;
         }
         case DM_DataType::Tensor: {
+            break;
         }
         case DM_DataType::Unknown: {
             std::cout << "Unsupported feature type" << std::endl;

@@ -8,6 +8,8 @@
 
 #include "TensorDesignSpec.hpp"
 
+#include "TimeFrame/StrongTimeTypes.hpp"
+
 #include <optional>
 #include <string>
 
@@ -60,6 +62,20 @@ namespace Neuralyzer::TensorDesign {
  * @return true if the tensor was built and registered
  */
 bool populateDataManager(DataManager & dm, TensorDesignSpec const & spec);
+
+/**
+ * @brief Resolve the TimeKey under which a designed tensor should be registered.
+ *
+ * Uses an explicit non-default @c spec.output_time_key when present and valid,
+ * otherwise the row source's TimeKey, then @c "time" or @c "default" if registered.
+ *
+ * @param dm DataManager containing row source and timeframe registrations
+ * @param spec Design specification
+ * @return Resolved TimeKey, or nullopt when no valid timeframe exists
+ */
+[[nodiscard]] std::optional<TimeKey> resolveOutputTimeKey(
+        DataManager & dm,
+        TensorDesignSpec const & spec);
 
 }// namespace Neuralyzer::TensorDesign
 

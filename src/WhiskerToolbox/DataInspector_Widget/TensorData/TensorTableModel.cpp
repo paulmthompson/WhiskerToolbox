@@ -20,9 +20,9 @@ TensorTableModel::TensorTableModel(QObject * parent)
 // Data binding
 // =============================================================================
 
-void TensorTableModel::setTensorData(TensorData * tensor_data) {
+void TensorTableModel::setTensorData(std::shared_ptr<TensorData> tensor_data) {
     beginResetModel();
-    _tensor_data = tensor_data;
+    _tensor_data = std::move(tensor_data);
     _resetDimensionMapping();
     endResetModel();
 }

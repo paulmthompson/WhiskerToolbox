@@ -29,7 +29,7 @@ std::shared_ptr<DigitalIntervalSeries> makeEmptyIntervalThresholdResult(
     return makeIntervalThresholdResult({}, std::move(time_frame));
 }
 
-} // namespace
+}// namespace
 
 
 std::shared_ptr<DigitalIntervalSeries> interval_threshold(
@@ -46,7 +46,7 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
     // Input validation
     if (!analog_time_series) {
         std::cerr << "interval_threshold: Input AnalogTimeSeries is null" << std::endl;
-        return std::make_shared<DigitalIntervalSeries>();
+        return makeEmptyIntervalThresholdResult(nullptr);
     }
 
     auto const input_time_frame = analog_time_series->getTimeFrame();
@@ -71,7 +71,7 @@ std::shared_ptr<DigitalIntervalSeries> interval_threshold(
     bool in_interval = false;
     TimeFrameIndex interval_start = TimeFrameIndex{0};
     double last_interval_end = -thresholdParams.lockoutTime - 1.0;// Initialize to allow first interval
-    TimeFrameIndex last_valid_time = TimeFrameIndex{0};                                  // Track the last time where we know the interval state
+    TimeFrameIndex last_valid_time = TimeFrameIndex{0};           // Track the last time where we know the interval state
 
     auto addIntervalIfValid = [&intervals, minDuration](TimeFrameIndex start, TimeFrameIndex end) {
         // Check if the interval meets the minimum duration requirement

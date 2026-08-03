@@ -3,6 +3,7 @@
 #include "TensorTableModel.hpp"
 
 #include "DataManager/DataManager.hpp"
+#include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 
 //https://stackoverflow.com/questions/72533139/libtorch-errors-when-used-with-qt-opencv-and-point-cloud-library
 #undef slots
@@ -14,8 +15,10 @@
 #include <QHBoxLayout>
 #include <QHeaderView>
 #include <QLabel>
+#include <QPointer>
 #include <QSpinBox>
 #include <QTableView>
+#include <QTimer>
 #include <QVBoxLayout>
 
 #include <iostream>
@@ -27,36 +30,63 @@ TensorDataView::TensorDataView(
       _table_model(new TensorTableModel(this)) {
     _setupUi();
     _connectSignals();
+
+    if (dataManager()) {
+        _dm_observer_id = dataManager()->addObserver([this]() {
+            _onDataManagerChanged();
+        },
+                                                     "TensorDataView");
+    }
 }
 
 TensorDataView::~TensorDataView() {
+    if (dataManager() && _dm_observer_id != -1) {
+        dataManager()->removeObserver(_dm_observer_id);
+    }
     removeCallbacks();
 }
 
 void TensorDataView::setActiveKey(std::string const & key) {
+    removeCallbacks();
     _active_key = key;
 
     auto tensor_data = dataManager()->getData<TensorData>(_active_key);
+    _table_model->setTensorData(tensor_data);
     if (tensor_data) {
-        _table_model->setTensorData(tensor_data.get());
-    } else {
-        _table_model->setTensorData(nullptr);
+        _callback_id = dataManager()->addCallbackToData(_active_key, [this]() {
+            _onDataChanged();
+        });
     }
     _rebuildDimensionControls();
     _updateShapeLabel();
 }
 
 void TensorDataView::removeCallbacks() {
-    // TensorData view doesn't register callbacks currently
+    remove_callback(dataManager().get(), _active_key, _callback_id);
 }
 
 void TensorDataView::updateView() {
-    if (!_active_key.empty() && _table_model) {
-        auto tensor_data = dataManager()->getData<TensorData>(_active_key);
-        _table_model->setTensorData(tensor_data.get());
-        _rebuildDimensionControls();
-        _updateShapeLabel();
+    setActiveKey(_active_key);
+}
+
+void TensorDataView::_onDataChanged() {
+    updateView();
+}
+
+void TensorDataView::_onDataManagerChanged() {
+    if (_active_key.empty()) {
+        return;
     }
+
+    // Defer: setData() may erase and re-insert the same key in one call.
+    std::string const key_snapshot = _active_key;
+    QPointer<TensorDataView> const guard(this);
+    QTimer::singleShot(0, this, [guard, key_snapshot]() {
+        if (!guard || guard->_active_key != key_snapshot) {
+            return;
+        }
+        guard->setActiveKey(key_snapshot);
+    });
 }
 
 // =============================================================================

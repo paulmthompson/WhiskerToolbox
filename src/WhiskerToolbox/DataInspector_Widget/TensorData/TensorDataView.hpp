@@ -60,6 +60,8 @@ private slots:
     void _onRowDimChanged(int combo_index);
     void _onColDimChanged(int combo_index);
     void _onFixedIndexChanged();
+    void _onDataChanged();
+    void _onDataManagerChanged();
 
 private:
     void _setupUi();
@@ -88,6 +90,9 @@ private:
     // Table
     QTableView * _table_view{nullptr};
     TensorTableModel * _table_model{nullptr};
+
+    int _callback_id{-1};
+    int _dm_observer_id{-1};
 };
 
 #endif// TENSOR_DATA_VIEW_HPP

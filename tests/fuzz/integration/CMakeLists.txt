@@ -33,3 +33,6 @@ target_link_options(fuzz_transform_pipeline
 
 # Register with gtest discovery
 add_fuzz_test(fuzz_transform_pipeline)
+
+# TensorDesign registry composition fuzz test
+add_subdirectory(TensorDesign)

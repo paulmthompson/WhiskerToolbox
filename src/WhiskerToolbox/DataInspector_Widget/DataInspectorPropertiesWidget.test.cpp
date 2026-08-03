@@ -21,6 +21,7 @@
 #include "Masks/Mask_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "Tensors/TensorData.hpp"
+#include "Tensors/storage/LazyColumnTensorStorage.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
@@ -58,7 +59,7 @@ struct TestFixture {
         constexpr int kFrames = 100;
         std::vector<int> times(kFrames);
         std::iota(times.begin(), times.end(), 0);
-        dm->setTime(TimeKey("time"), std::make_shared<TimeFrame>(times));
+        dm->setTime(TimeKey("time"), std::make_shared<TimeFrame>(times),true);
 
         state = std::make_shared<DataInspectorState>();
 
@@ -97,7 +98,7 @@ TEST_CASE("DataInspectorPropertiesWidget clears on data deletion", "[DataInspect
         REQUIRE(f.state->inspectedDataKey() == QStringLiteral("test_mask"));
 
         f.dm->deleteData("test_mask");
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         CHECK(f.state->inspectedDataKey().isEmpty());
     }
@@ -110,7 +111,7 @@ TEST_CASE("DataInspectorPropertiesWidget clears on data deletion", "[DataInspect
         REQUIRE(f.state->inspectedDataKey() == QStringLiteral("test_points"));
 
         f.dm->deleteData("test_points");
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         CHECK(f.state->inspectedDataKey().isEmpty());
     }
@@ -123,7 +124,7 @@ TEST_CASE("DataInspectorPropertiesWidget clears on data deletion", "[DataInspect
         REQUIRE(f.state->inspectedDataKey() == QStringLiteral("test_lines"));
 
         f.dm->deleteData("test_lines");
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         CHECK(f.state->inspectedDataKey().isEmpty());
     }
@@ -137,7 +138,7 @@ TEST_CASE("DataInspectorPropertiesWidget clears on data deletion", "[DataInspect
         REQUIRE(f.state->inspectedDataKey() == QStringLiteral("test_events"));
 
         f.dm->deleteData("test_events");
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         CHECK(f.state->inspectedDataKey().isEmpty());
     }
@@ -151,7 +152,7 @@ TEST_CASE("DataInspectorPropertiesWidget clears on data deletion", "[DataInspect
         REQUIRE(f.state->inspectedDataKey() == QStringLiteral("test_intervals"));
 
         f.dm->deleteData("test_intervals");
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         CHECK(f.state->inspectedDataKey().isEmpty());
     }
@@ -164,7 +165,7 @@ TEST_CASE("DataInspectorPropertiesWidget clears on data deletion", "[DataInspect
         REQUIRE(f.state->inspectedDataKey() == QStringLiteral("test_analog"));
 
         f.dm->deleteData("test_analog");
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         CHECK(f.state->inspectedDataKey().isEmpty());
     }
@@ -177,7 +178,7 @@ TEST_CASE("DataInspectorPropertiesWidget clears on data deletion", "[DataInspect
         REQUIRE(f.state->inspectedDataKey() == QStringLiteral("test_tensor"));
 
         f.dm->deleteData("test_tensor");
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         CHECK(f.state->inspectedDataKey().isEmpty());
     }
@@ -197,7 +198,7 @@ TEST_CASE("DataInspectorViewWidget clears on data deletion", "[DataInspector][de
     REQUIRE(f.view->currentView() != nullptr);
 
     f.dm->deleteData("view_mask");
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     // View should be cleared (no current view)
     CHECK(f.view->currentView() == nullptr);
@@ -220,7 +221,7 @@ TEST_CASE("Deleting non-inspected key does not affect inspector", "[DataInspecto
 
     // Delete a different key
     f.dm->deleteData("mask_b");
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     // Inspector should still show mask_a
     CHECK(f.state->inspectedDataKey() == QStringLiteral("mask_a"));
@@ -243,7 +244,7 @@ TEST_CASE("Inspector handles repeated deletion gracefully", "[DataInspector][del
         REQUIRE(f.state->inspectedDataKey() == QString::fromStdString(key));
 
         f.dm->deleteData(key);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         CHECK(f.state->inspectedDataKey().isEmpty());
     }
@@ -264,10 +265,46 @@ TEST_CASE("inspectedDataKeyChanged signal fires on deletion", "[DataInspector][d
     REQUIRE(spy.isValid());
 
     f.dm->deleteData("signal_mask");
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     // Should have received at least one signal with empty key
     REQUIRE(spy.count() >= 1);
     auto const last_args = spy.last();
     CHECK(last_args[0].toString().isEmpty());
+}
+
+TEST_CASE("DataInspectorPropertiesWidget reuses TensorInspector across tensor keys",
+          "[DataInspector][Tensor]") {
+    ensureQApplication();
+    auto * app = QApplication::instance();
+    REQUIRE(app != nullptr);
+
+    TestFixture f;
+
+    std::vector<ColumnSource> cols_a;
+    cols_a.push_back(ColumnSource{
+            "value",
+            []() { return std::vector<float>{1.0F, 2.0F}; },
+            {}});
+    auto tensor_a = std::make_shared<TensorData>(TensorData::createFromLazyColumns(
+            2, std::move(cols_a), RowDescriptor::ordinal(2)));
+
+    std::vector<ColumnSource> cols_b;
+    cols_b.push_back(ColumnSource{
+            "value",
+            []() { return std::vector<float>{3.0F, 4.0F}; },
+            {}});
+    auto tensor_b = std::make_shared<TensorData>(TensorData::createFromLazyColumns(
+            2, std::move(cols_b), RowDescriptor::ordinal(2)));
+
+    f.dm->setData<TensorData>("tensor_a", tensor_a, TimeKey("time"));
+    f.dm->setData<TensorData>("tensor_b", tensor_b, TimeKey("time"));
+
+    f.inspectKey("tensor_a");
+    REQUIRE(f.state->inspectedDataKey() == QStringLiteral("tensor_a"));
+
+    f.inspectKey("tensor_b");
+    QCoreApplication::processEvents();
+
+    REQUIRE(f.state->inspectedDataKey() == QStringLiteral("tensor_b"));
 }

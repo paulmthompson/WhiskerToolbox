@@ -259,11 +259,12 @@ public:
      * auto skeleton = lazy_skeleton->getData(0);
      * @endcode
      * 
+     * @tparam Derived Concrete series type to construct (defaults to RaggedTimeSeries<TData>)
      * @tparam ViewType Random-access range type
      * @param view Random-access range view yielding (TimeFrameIndex, EntityId, TData) tuples
      * @param time_frame Shared time frame (reuse from base series for efficiency)
      * @param image_size Optional image size metadata
-     * @return std::shared_ptr<RaggedTimeSeries<TData>> Lazy ragged time series
+     * @return std::shared_ptr<Derived> Lazy ragged time series
      * 
      * @note The view must remain valid for the lifetime of the returned RaggedTimeSeries.
      *       Capture by value in lambdas or ensure base series outlives the lazy series.
@@ -272,8 +273,9 @@ public:
      * @see materialize() to convert lazy storage to owning storage
      * @see flattened_data() to get a view over an existing RaggedTimeSeries
      */
-    template<std::ranges::random_access_range ViewType>
-    [[nodiscard]] static std::shared_ptr<RaggedTimeSeries<TData>> createFromView(
+    template<typename Derived = RaggedTimeSeries<TData>, std::ranges::random_access_range ViewType>
+        requires std::is_base_of_v<RaggedTimeSeries<TData>, Derived>
+    [[nodiscard]] static std::shared_ptr<Derived> createFromView(
             ViewType view,
             std::shared_ptr<TimeFrame> time_frame,
             ImageSize image_size = ImageSize{}) {
@@ -284,7 +286,7 @@ public:
         RaggedStorageWrapper<TData> storage_wrapper(std::move(lazy_storage));
 
         // Create the result using the wrapper
-        auto result = std::make_shared<RaggedTimeSeries<TData>>();
+        auto result = std::make_shared<Derived>();
         result->_storage = std::move(storage_wrapper);
         result->_time_frame = std::move(time_frame);
         result->_image_size = image_size;

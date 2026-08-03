@@ -35,8 +35,10 @@
 #include <QLineEdit>
 #include <QListWidget>
 #include <QMessageBox>
+#include <QPointer>
 #include <QPushButton>
 #include <QSpinBox>
+#include <QTimer>
 #include <QVBoxLayout>
 
 #include <chrono>
@@ -102,6 +104,34 @@ using DesignRowType = Neuralyzer::TensorDesign::RowType;
             return 0;
     }
     return 0;
+}
+
+[[nodiscard]] QString rowTypeDescription(int combo_index) {
+    switch (combo_index) {
+        case 1:
+            return QStringLiteral(
+                    "One row per interval (e.g. contact bouts). "
+                    "Columns summarize data within each interval.");
+        case 2:
+            return QStringLiteral(
+                    "One row per event timestamp (e.g. each spike). "
+                    "Columns extract a value at or around each event.");
+        case 3:
+            return QStringLiteral(
+                    "One row per index 0…N−1. "
+                    "Not yet supported for building tensors.");
+        case 4:
+            return QStringLiteral(
+                    "One row per timestamp extracted from any time-series data object "
+                    "(analog, events, intervals, masks, lines, or points).");
+        case 5:
+            return QStringLiteral(
+                    "One row per video frame or time index. "
+                    "Use for frame-aligned features (e.g. keypoint x/y).");
+        case 0:
+        default:
+            return QStringLiteral("Choose how tensor rows are defined.");
+    }
 }
 
 }// namespace
@@ -280,7 +310,18 @@ void TensorDesigner::_onRowSourceTypeChanged(int index) {
             _row_type = DesignerRowType::None;
             break;
     }
+    _updateRowTypeDescription(index);
     _populateRowSourceKeys();
+}
+
+void TensorDesigner::_updateRowTypeDescription(int combo_index) {
+    auto const description = rowTypeDescription(combo_index);
+    if (_row_type_description_label != nullptr) {
+        _row_type_description_label->setText(description);
+    }
+    if (_row_type_combo != nullptr) {
+        _row_type_combo->setToolTip(description);
+    }
 }
 
 void TensorDesigner::_onRowSourceKeyChanged(int index) {
@@ -337,7 +378,7 @@ void TensorDesigner::_onAddColumnClicked() {
     _pinInspectorForDialog();
 
     auto * dialog = new ColumnConfigDialog(
-            _data_manager, _row_type, _operation_context, _pipeline_library_dir, this);
+            _data_manager, _row_type, _operation_context, _pipeline_library_dir, _row_source_key, this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setWindowModality(Qt::NonModal);
     _active_dialog = dialog;
@@ -620,6 +661,7 @@ void TensorDesigner::_onEditColumnClicked() {
                                            _column_recipes[row],
                                            _operation_context,
                                            _pipeline_library_dir,
+                                           _row_source_key,
                                            this);
     dialog->setAttribute(Qt::WA_DeleteOnClose);
     dialog->setWindowModality(Qt::NonModal);
@@ -722,6 +764,9 @@ void TensorDesigner::_setupUi() {
     _row_type_combo->addItem(QStringLiteral("Ordinal Rows"));
     _row_type_combo->addItem(QStringLiteral("Derived from Source"));
     _row_type_combo->addItem(QStringLiteral("TimeFrame Rows"));
+    for (int i = 0; i < _row_type_combo->count(); ++i) {
+        _row_type_combo->setItemData(i, rowTypeDescription(i), Qt::ToolTipRole);
+    }
     _row_type_combo->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     row_layout->addWidget(_row_type_combo);
 
@@ -730,6 +775,11 @@ void TensorDesigner::_setupUi() {
     row_layout->addWidget(_row_source_combo);
 
     _main_layout->addLayout(row_layout);
+
+    _row_type_description_label = new QLabel(this);
+    _row_type_description_label->setWordWrap(true);
+    _row_type_description_label->setStyleSheet(QStringLiteral("color: gray; font-size: 11px;"));
+    _main_layout->addWidget(_row_type_description_label);
 
     _row_info_label = new QLabel(QStringLiteral("No row source selected"), this);
     _row_info_label->setStyleSheet(QStringLiteral("color: gray; font-size: 11px;"));
@@ -784,6 +834,8 @@ void TensorDesigner::_setupUi() {
     _main_layout->addWidget(_status_label);
 
     _main_layout->addStretch();
+
+    _updateRowTypeDescription(_row_type_combo->currentIndex());
 }
 
 void TensorDesigner::_connectSignals() {
@@ -915,6 +967,10 @@ void TensorDesigner::_buildTensor() {
                               std::chrono::steady_clock::now().time_since_epoch().count());
     }
 
+    // Pin the inspector so SelectionContext / feature-table refreshes during
+    // setData() do not tear down this widget while the build is in flight.
+    _pinInspectorForDialog();
+
     Neuralyzer::TensorDesign::TensorDesignSpec spec;
     spec.tensor_key = _tensor_key;
     spec.row_type = toTensorDesignRowType(_row_type);
@@ -927,22 +983,57 @@ void TensorDesigner::_buildTensor() {
 
     auto built = Neuralyzer::TensorDesign::buildTensor(*_data_manager, spec);
     if (!built.has_value()) {
+        _unpinInspectorAfterDialog();
         _updateStatus(QStringLiteral("Build failed. Check row source and column configuration."));
         return;
     }
 
+    auto const output_time_key = Neuralyzer::TensorDesign::resolveOutputTimeKey(*_data_manager, spec);
+    if (!output_time_key.has_value()) {
+        _unpinInspectorAfterDialog();
+        _updateStatus(QStringLiteral(
+                "Build succeeded but registration failed: no valid output TimeKey. "
+                "Ensure the row source is assigned to a TimeFrame."));
+        return;
+    }
+
+    spec.output_time_key = output_time_key->str();
+
     auto const num_rows = built->numRows();
-    _data_manager->setData<TensorData>(
-            _tensor_key,
-            std::make_shared<TensorData>(std::move(built.value())),
-            TimeKey("default"));
+    auto const column_count = _column_recipes.size();
+    auto const tensor_key = _tensor_key;
+    auto tensor_ptr = std::make_shared<TensorData>(std::move(built.value()));
+    auto dm = _data_manager;
+    auto const& time_key = output_time_key.value();
 
-    _updateStatus(QStringLiteral("Tensor built: %1 rows × %2 columns → '%3'")
-                          .arg(static_cast<int>(num_rows))
-                          .arg(static_cast<int>(_column_recipes.size()))
-                          .arg(QString::fromStdString(_tensor_key)));
+    // Defer registration so DataManager observer callbacks (feature table refresh,
+    // inspector deletion checks) do not run while this click handler is unwinding.
+    QPointer<TensorDesigner> const guard(this);
+    QTimer::singleShot(0, this, [guard, dm, tensor_key, tensor_ptr, time_key, num_rows, column_count]() {
+        if (!guard || !dm) {
+            return;
+        }
 
-    emit tensorCreated(QString::fromStdString(_tensor_key));
+        dm->setData<TensorData>(tensor_key, tensor_ptr, time_key);
+
+        auto const registered = dm->getData<TensorData>(tensor_key);
+        if (!registered || dm->getTimeKey(tensor_key).empty()) {
+            guard->_unpinInspectorAfterDialog();
+            guard->_updateStatus(QStringLiteral(
+                                         "Build succeeded but registration failed for '%1'. "
+                                         "Check TimeFrame assignment and duplicate data keys.")
+                                         .arg(QString::fromStdString(tensor_key)));
+            return;
+        }
+
+        guard->_updateStatus(QStringLiteral("Tensor built: %1 rows × %2 columns → '%3'")
+                                     .arg(static_cast<int>(num_rows))
+                                     .arg(static_cast<int>(column_count))
+                                     .arg(QString::fromStdString(tensor_key)));
+
+        emit guard->tensorCreated(QString::fromStdString(tensor_key));
+        guard->_unpinInspectorAfterDialog();
+    });
 }
 
 void TensorDesigner::_updateStatus(QString const & message) {
@@ -956,13 +1047,15 @@ void TensorDesigner::_updateStatus(QString const & message) {
 void TensorDesigner::_onDialogAcceptedAdd() {
     if (!_active_dialog) return;
 
-    auto recipe = _active_dialog->getRecipe();
-    if (recipe.column_name.empty()) {
-        recipe.column_name = "column_" + std::to_string(_column_recipes.size());
+    auto recipes = _active_dialog->getRecipes();
+    for (auto & recipe: recipes) {
+        if (recipe.column_name.empty()) {
+            recipe.column_name = "column_" + std::to_string(_column_recipes.size());
+        }
+        _column_recipes.push_back(std::move(recipe));
     }
-    _column_recipes.push_back(std::move(recipe));
     _refreshColumnList();
-    _updateStatus(QStringLiteral("Column added: %1 columns total")
+    _updateStatus(QStringLiteral("Column(s) added: %1 columns total")
                           .arg(static_cast<int>(_column_recipes.size())));
 }
 
@@ -970,7 +1063,15 @@ void TensorDesigner::_onDialogAcceptedEdit(int row) {
     if (!_active_dialog) return;
     if (row < 0 || row >= static_cast<int>(_column_recipes.size())) return;
 
-    _column_recipes[row] = _active_dialog->getRecipe();
+    auto recipes = _active_dialog->getRecipes();
+    if (recipes.empty()) return;
+
+    _column_recipes[row] = std::move(recipes[0]);
+    if (recipes.size() > 1) {
+        _column_recipes.insert(_column_recipes.begin() + row + 1,
+                               std::make_move_iterator(recipes.begin() + 1),
+                               std::make_move_iterator(recipes.end()));
+    }
     _refreshColumnList();
 }
 

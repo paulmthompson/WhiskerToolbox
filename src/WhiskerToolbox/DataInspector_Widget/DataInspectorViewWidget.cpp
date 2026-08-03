@@ -64,7 +64,10 @@ void DataInspectorViewWidget::_updateViewForKey(QString const & key) {
     std::string const key_std = key.toStdString();
     
     if (key_std == _current_key && _current_data_view) {
-        return;  // Already showing this data
+        if (_current_type == DM_DataType::Tensor) {
+            _current_data_view->updateView();
+        }
+        return;// Already showing this data
     }
 
     _current_key = key_std;

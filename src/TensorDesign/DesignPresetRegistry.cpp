@@ -72,52 +72,43 @@ namespace {
         return std::nullopt;
     }
 
-    auto column_registry = createBuiltInColumnRecipePresetRegistry();
+    auto row_registry = createBuiltInRowModifierRegistry();
+    auto agg_registry = createBuiltInColumnAggregatorRegistry();
     DesignPresetExpansion expansion;
     expansion.spec.row_type = RowType::Interval;
     expansion.spec.row_source_key = args.row_source_key;
 
-    auto append_columns = [&expansion](ColumnRecipePresetExpansion & column_expansion) {
-        for (auto & column: column_expansion.columns) {
-            expansion.spec.columns.push_back(std::move(column));
+    auto stitch = [&](std::string const & mod_id, std::string const & agg_id, ColumnRecipePresetArgs const & agg_args) -> bool {
+        auto agg_desc = agg_registry.find(agg_id);
+        if (!agg_desc || !agg_desc->expand) return false;
+        auto agg_exp = agg_desc->expand(agg_args);
+        if (!agg_exp) return false;
+        
+        if (!mod_id.empty()) {
+            auto mod_desc = row_registry.find(mod_id);
+            if (!mod_desc || !mod_desc->expand) return false;
+            auto mod_exp = mod_desc->expand(agg_args);
+            if (!mod_exp) return false;
+            for (auto & col : agg_exp->columns) {
+                col.row_pipeline_json = mod_exp->row_pipeline_json;
+            }
         }
+        for (auto & col: agg_exp->columns) {
+            expansion.spec.columns.push_back(std::move(col));
+        }
+        return true;
     };
 
-    auto curvature = column_registry.expand("mean_over_interval", ColumnRecipePresetArgs{
-                                                                          .output_name = "mean_curvature",
-                                                                          .source_key = args.curvature_source_key});
-    auto spike_count = column_registry.expand("event_count_over_interval", ColumnRecipePresetArgs{
-                                                                                   .output_name = "spike_count",
-                                                                                   .source_key = args.spike_source_key});
-    auto onset_presence = column_registry.expand("event_presence_around_interval_start", ColumnRecipePresetArgs{
-                                                                                                 .output_name = "spike_presence_at_onset",
-                                                                                                 .source_key = args.spike_source_key,
-                                                                                                 .pre = args.onset_pre,
-                                                                                                 .post = args.onset_post});
-    auto onset_angle = column_registry.expand("analog_sample_at_interval_start", ColumnRecipePresetArgs{
-                                                                                         .output_name = "angle_at_onset",
-                                                                                         .source_key = args.angle_source_key});
-    if (!curvature.has_value() || !spike_count.has_value() || !onset_presence.has_value() ||
-        !onset_angle.has_value()) {
-        return std::nullopt;
-    }
-
-    append_columns(curvature.value());
-    append_columns(spike_count.value());
-    append_columns(onset_presence.value());
-    append_columns(onset_angle.value());
+    if (!stitch("", "mean_value", ColumnRecipePresetArgs{.output_name = "mean_curvature", .source_key = args.curvature_source_key})) return std::nullopt;
+    if (!stitch("", "event_count", ColumnRecipePresetArgs{.output_name = "spike_count", .source_key = args.spike_source_key})) return std::nullopt;
+    if (!stitch("window_around_interval_start", "event_presence", ColumnRecipePresetArgs{.output_name = "spike_presence_at_onset", .source_key = args.spike_source_key, .pre = args.onset_pre, .post = args.onset_post})) return std::nullopt;
+    if (!stitch("interval_start", "analog_sample", ColumnRecipePresetArgs{.output_name = "angle_at_onset", .source_key = args.angle_source_key})) return std::nullopt;
 
     for (auto const & keypoint_source_key: args.keypoint_source_keys) {
         if (keypoint_source_key.empty()) {
             return std::nullopt;
         }
-        auto keypoint = column_registry.expand("point_xy_at_interval_start", ColumnRecipePresetArgs{
-                                                                                     .source_key = keypoint_source_key,
-                                                                                     .name_prefix = keypoint_source_key});
-        if (!keypoint.has_value()) {
-            return std::nullopt;
-        }
-        append_columns(keypoint.value());
+        if (!stitch("interval_start", "point_xy", ColumnRecipePresetArgs{.source_key = keypoint_source_key, .name_prefix = keypoint_source_key})) return std::nullopt;
     }
 
     return expansion;

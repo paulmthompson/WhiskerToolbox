@@ -735,12 +735,6 @@ private:
             return row == nullptr;
         });
 
-        assert(!has_null_row && "GatherResult::fromRows: rows must not contain null pointers");
-        assert((!windows || windows->size() == rows.size()) &&
-               "GatherResult::fromRows: window count must match row count");
-        assert((!alignment_points || alignment_points->size() == rows.size()) &&
-               "GatherResult::fromRows: alignment point count must match row count");
-
         if (has_null_row) {
             throw std::invalid_argument("GatherResult::fromRows: rows must not contain null pointers");
         }
@@ -783,11 +777,6 @@ private:
             std::shared_ptr<U> const & source,
             std::shared_ptr<DigitalIntervalSeries const> const & windows,
             std::shared_ptr<DigitalEventSeries const> const & alignment_points) {
-        assert(source && "GatherResult::create: source must not be null");
-        assert(windows && "GatherResult::create: windows must not be null");
-        assert((!alignment_points || alignment_points->size() == windows->size()) &&
-               "GatherResult::create: alignment point count must match window count");
-
         if (!source || !windows) {
             throw std::invalid_argument("GatherResult::create: source and windows must not be null");
         }

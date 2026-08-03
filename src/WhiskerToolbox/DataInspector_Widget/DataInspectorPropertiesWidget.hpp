@@ -159,6 +159,14 @@ private slots:
     void _onStateChanged();
     void _onDataManagerChanged();
 
+    /**
+     * @brief Sync inspected key after TensorDesigner creates/rebuilds a tensor
+     * @param key DataManager key of the tensor
+     *
+     * Updates state and header without destroying the active TensorInspector.
+     */
+    void _onTensorCreatedByDesigner(QString const & key);
+
 private:
     void _setupUi();
     void _connectSignals();

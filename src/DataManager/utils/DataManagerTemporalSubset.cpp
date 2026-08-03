@@ -42,11 +42,11 @@ createRaggedTemporalSubset(std::shared_ptr<TSeries const> const & source,
                 std::get<2>(element));
     }
 
-    auto const subset = RaggedTimeSeries<TData>::createFromView(
+    auto const subset = TSeries::template createFromView<TSeries>(
             std::move(entries),
             source->getTimeFrame(),
             source->getImageSize());
-    return std::static_pointer_cast<TSeries>(subset);
+    return subset;
 }
 
 [[nodiscard]] std::shared_ptr<RaggedAnalogTimeSeries>

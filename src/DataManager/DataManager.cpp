@@ -685,6 +685,11 @@ void DataManager::setData(std::string const & key, DataTypeVariant data, TimeKey
     // entry first and notify observers.  This lets consumers (inspectors, plots,
     // etc.) see the key disappear before the new object appears, so they can
     // detach per-object callbacks and reset any raw pointers they hold.
+    if (_times.find(time_key) == _times.end()) {
+        std::cerr << "Error: Time key not found in DataManager: " << time_key << std::endl;
+        return;
+    }
+
     if (_data.contains(key)) {
         _time_frames.erase(key);
         _removeLineageForKey(key);

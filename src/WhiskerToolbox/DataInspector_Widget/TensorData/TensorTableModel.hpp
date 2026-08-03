@@ -18,6 +18,7 @@
 #include <QAbstractTableModel>
 
 #include <cstddef>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -37,7 +38,7 @@ public:
      * Resets the model and auto-selects sensible row/column dimensions
      * (row = 0, col = 1 if ndim >= 2).
      */
-    void setTensorData(TensorData * tensor_data);
+    void setTensorData(std::shared_ptr<TensorData> tensor_data);
 
     // ========== Dimension mapping ==========
 
@@ -87,7 +88,7 @@ private:
     /// Rebuild _fixed_indices vector and pick default row/col dims
     void _resetDimensionMapping();
 
-    TensorData * _tensor_data{nullptr};
+    std::shared_ptr<TensorData> _tensor_data;
     int _row_dim{0};                        ///< Axis index shown as table rows
     int _col_dim{-1};                       ///< Axis index shown as table columns (-1 = single value column)
     std::vector<std::size_t> _fixed_indices;///< One per tensor axis; only entries for "other" dims matter
