@@ -730,7 +730,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-materialize">materialize</a></strong>() const</td>
 </tr>
 <tr class="odd">
-<td>template &lt;std::ranges::random_access_range ViewType&gt; <br>std::shared_ptr&lt; <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a>&lt; TData &gt; &gt;</td>
+<td>template <typename derived="RaggedTimeSeries<TData">,std::ranges::random_access_range ViewType&gt; <br>std::shared_ptr&lt; Derived &gt;</typename></td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-createfromview">createFromView</a></strong>(ViewType view, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; time_frame, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> image_size =<a href="../../api_generated/Classes/structImageSize.html">ImageSize</a>)<br>Create <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> from a lazy view.</td>
 </tr>
 <tr class="even">
@@ -1540,12 +1540,13 @@ inline auto flattened_data() const</code></pre>
 </section>
 <section id="function-createfromview" class="level3">
 <h3 class="anchored" data-anchor-id="function-createfromview">function createFromView</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="bu">std::</span>ranges::random_access_range ViewType<span class="op">&gt;</span></span>
-<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> RaggedTimeSeries<span class="op">&lt;</span> TData <span class="op">&gt;</span> <span class="op">&gt;</span> createFromView<span class="op">(</span></span>
-<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>    ViewType view<span class="op">,</span></span>
-<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> time_frame<span class="op">,</span></span>
-<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>    ImageSize image_size <span class="op">=</span>ImageSize<span class="op">{}</span></span>
-<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> Derived  <span class="op">=</span>RaggedTimeSeries<span class="op">&lt;</span>TData<span class="op">&gt;,</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>ranges::random_access_range ViewType<span class="op">&gt;</span></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> Derived <span class="op">&gt;</span> createFromView<span class="op">(</span></span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>    ViewType view<span class="op">,</span></span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> time_frame<span class="op">,</span></span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>    ImageSize image_size <span class="op">=</span>ImageSize<span class="op">{}</span></span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a> from a lazy view.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1555,6 +1556,7 @@ inline auto flattened_data() const</code></pre>
 </ul>
 <p><strong>Template Parameters</strong>:</p>
 <ul>
+<li><strong>Derived</strong> Concrete series type to construct (defaults to RaggedTimeSeries<tdata>)</tdata></li>
 <li><strong>ViewType</strong> Random-access range type</li>
 </ul>
 <p><strong>See</strong>:</p>
@@ -1562,7 +1564,7 @@ inline auto flattened_data() const</code></pre>
 <li><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-materialize">materialize()</a> to convert lazy storage to owning storage</li>
 <li><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-flattened-data">flattened_data()</a> to get a <a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-view">view</a> over an existing <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a></li>
 </ul>
-<p><strong>Return</strong>: std::shared_ptr&lt;RaggedTimeSeries<tdata>&gt; Lazy ragged time series</tdata></p>
+<p><strong>Return</strong>: std::shared_ptr<derived> Lazy ragged time series</derived></p>
 <p><strong>Note</strong>:</p>
 <ul>
 <li>The view must remain valid for the lifetime of the returned <a href="../../api_generated/Classes/classRaggedTimeSeries.html">RaggedTimeSeries</a>. Capture by value in lambdas or ensure base series outlives the lazy series.</li>
@@ -1703,7 +1705,7 @@ inline auto flattened_data() const</code></pre>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb72"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>EntityRegistry <span class="op">*</span> _identity_registry <span class="op">{</span><span class="kw">nullptr</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Pointer to <a href="">EntityRegistry</a> for automatic <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> management.</p>
 <hr>
-<p>Updated on 2026-08-01 at 23:29:11 +0000</p>
+<p>Updated on 2026-08-03 at 14:20:37 +0000</p>
 
 
 </section>

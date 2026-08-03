@@ -853,23 +853,26 @@ parameters: coordinate = "x" | "y"</code></pre>
 <p>Preset invocations are accepted as a JSON authoring format and are expanded by <code>parseDesignJson()</code> before provider construction. They are not the canonical saved-analysis format. The reproducible artifact remains the expanded TensorDesign JSON containing ordinary <code>ColumnRecipe</code> fields. If a user wants to repeat the exact same analysis later, saving and loading the expanded design is the stable path. Presets are for authoring convenience and error reduction.</p>
 <p>Example: spike presence around interval onset:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"spike_in_onset_window"</span><span class="fu">,</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"preset"</span><span class="fu">:</span> <span class="st">"event_presence_around_interval_start"</span><span class="fu">,</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"Spikes"</span><span class="fu">,</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"pre"</span><span class="fu">:</span> <span class="dv">150</span><span class="fu">,</span></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"post"</span><span class="fu">:</span> <span class="dv">150</span></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"preset"</span><span class="fu">:</span> <span class="st">"event_presence"</span><span class="fu">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"row_modifier"</span><span class="fu">:</span> <span class="st">"window_around_interval_start"</span><span class="fu">,</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"output_name"</span><span class="fu">:</span> <span class="st">"spike_in_onset_window"</span><span class="fu">,</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"Spikes"</span><span class="fu">,</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"pre"</span><span class="fu">:</span> <span class="dv">150</span><span class="fu">,</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"post"</span><span class="fu">:</span> <span class="dv">150</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Example: raster/PSTH events normalized to interval onset:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"trial_relative_spikes"</span><span class="fu">,</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"preset"</span><span class="fu">:</span> <span class="st">"raster_events_relative_to_interval_start"</span><span class="fu">,</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"Spikes"</span><span class="fu">,</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"window"</span><span class="fu">:</span> <span class="st">"row_interval"</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"preset"</span><span class="fu">:</span> <span class="st">"raster_events_relative"</span><span class="fu">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"row_modifier"</span><span class="fu">:</span> <span class="st">"bind_interval_start"</span><span class="fu">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"parameters"</span><span class="fu">:</span> <span class="fu">{</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"output_name"</span><span class="fu">:</span> <span class="st">"trial_relative_spikes"</span><span class="fu">,</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"source_key"</span><span class="fu">:</span> <span class="st">"Spikes"</span><span class="fu">,</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"store_key"</span><span class="fu">:</span> <span class="st">"row_alignment_time"</span><span class="fu">,</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"binding_source_key"</span><span class="fu">:</span> <span class="st">"Trials"</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">}</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Presets should be backed by a registry, not hard-coded in UI code. The registry should expose display names, descriptions, parameter schemas, and an expansion function that produces the low-level <code>ColumnRecipe</code> fields.</p>
 <p>Conceptual registry descriptor:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ColumnPresetExpansion <span class="op">{</span></span>
@@ -911,17 +914,13 @@ parameters: coordinate = "x" | "y"</code></pre>
 <td>two columns per source key</td>
 </tr>
 <tr class="odd">
-<td><code>point_xy_at_interval_start</code></td>
-<td><code>PointData</code> source key, row point selection</td>
-<td>two sampled columns with <code>IntervalToEvent(start)</code> row pipeline</td>
-</tr>
-<tr class="even">
-<td><code>analog_covariates_at_event</code></td>
-<td>list of analog source keys, sample event pipeline</td>
+<td><code>analog_covariates</code></td>
+<td>list of analog source keys</td>
 <td>one sampled column per analog source</td>
 </tr>
 </tbody>
 </table>
+<p>These Column Aggregators can then be seamlessly mixed with a Row Modifier (such as <code>interval_start</code> or <code>bind_interval_start</code>) in the JSON configuration, allowing flexible combinatorics without monolithic presets.</p>
 <p>For complete reusable tables, a separate design/table preset layer is useful:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> DesignPresetExpansion <span class="op">{</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    RowSourceSpec row_source<span class="op">;</span></span>

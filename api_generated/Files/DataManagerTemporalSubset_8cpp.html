@@ -516,11 +516,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>                <span class="bu">std::</span>get<span class="op">&lt;</span><span class="dv">2</span><span class="op">&gt;(</span>element<span class="op">));</span></span>
 <span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> subset <span class="op">=</span> RaggedTimeSeries<span class="op">&lt;</span>TData<span class="op">&gt;::</span>createFromView<span class="op">(</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> subset <span class="op">=</span> TSeries<span class="op">::</span><span class="kw">template</span> createFromView<span class="op">&lt;</span>TSeries<span class="op">&gt;(</span></span>
 <span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>move<span class="op">(</span>entries<span class="op">),</span></span>
 <span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>            source<span class="op">-&gt;</span>getTimeFrame<span class="op">(),</span></span>
 <span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>            source<span class="op">-&gt;</span>getImageSize<span class="op">());</span></span>
-<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>static_pointer_cast<span class="op">&lt;</span>TSeries<span class="op">&gt;(</span>subset<span class="op">);</span></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> subset<span class="op">;</span></span>
 <span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>RaggedAnalogTimeSeries<span class="op">&gt;</span></span>
@@ -628,7 +628,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-153"><a href="#cb4-153" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> createTemporalSubset<span class="op">(</span>variant<span class="op">.</span>value<span class="op">(),</span> interval<span class="op">,</span> error_message<span class="op">);</span></span>
 <span id="cb4-154"><a href="#cb4-154" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-01 at 23:29:14 +0000</p>
+<p>Updated on 2026-08-03 at 14:20:41 +0000</p>
 
 
 </section>

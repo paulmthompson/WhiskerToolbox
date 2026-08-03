@@ -481,7 +481,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> makeIntervalThresholdResult<span class="op">({},</span> <span class="bu">std::</span>move<span class="op">(</span>time_frame<span class="op">));</span></span>
 <span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="co">// namespace</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace</span></span>
 <span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;</span> interval_threshold<span class="op">(</span></span>
@@ -498,7 +498,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Input validation</span></span>
 <span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>analog_time_series<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"interval_threshold: Input AnalogTimeSeries is null"</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
-<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DigitalIntervalSeries<span class="op">&gt;();</span></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> makeEmptyIntervalThresholdResult<span class="op">(</span><span class="kw">nullptr</span><span class="op">);</span></span>
 <span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input_time_frame <span class="op">=</span> analog_time_series<span class="op">-&gt;</span>getTimeFrame<span class="op">();</span></span>
@@ -523,7 +523,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> in_interval <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
 <span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex interval_start <span class="op">=</span> TimeFrameIndex<span class="op">{</span><span class="dv">0</span><span class="op">};</span></span>
 <span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> last_interval_end <span class="op">=</span> <span class="op">-</span>thresholdParams<span class="op">.</span>lockoutTime <span class="op">-</span> <span class="fl">1.0</span><span class="op">;</span><span class="co">// Initialize to allow first interval</span></span>
-<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex last_valid_time <span class="op">=</span> TimeFrameIndex<span class="op">{</span><span class="dv">0</span><span class="op">};</span>                                  <span class="co">// Track the last time where we know the interval state</span></span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex last_valid_time <span class="op">=</span> TimeFrameIndex<span class="op">{</span><span class="dv">0</span><span class="op">};</span>           <span class="co">// Track the last time where we know the interval state</span></span>
 <span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> addIntervalIfValid <span class="op">=</span> <span class="op">[&amp;</span>intervals<span class="op">,</span> minDuration<span class="op">](</span>TimeFrameIndex start<span class="op">,</span> TimeFrameIndex end<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Check if the interval meets the minimum duration requirement</span></span>
@@ -714,7 +714,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-258"><a href="#cb3-258" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">;</span></span>
 <span id="cb3-259"><a href="#cb3-259" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-01 at 23:29:14 +0000</p>
+<p>Updated on 2026-08-03 at 14:20:40 +0000</p>
 
 
 </section>

@@ -363,6 +363,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#phase-9b-point-and-keypoint-column-primitives-done" id="toc-phase-9b-point-and-keypoint-column-primitives-done" class="nav-link" data-scroll-target="#phase-9b-point-and-keypoint-column-primitives-done">Phase 9b: Point And Keypoint Column Primitives — Done</a></li>
   <li><a href="#phase-9c-column-preset-registry-and-expansion" id="toc-phase-9c-column-preset-registry-and-expansion" class="nav-link" data-scroll-target="#phase-9c-column-preset-registry-and-expansion">Phase 9c: Column Preset Registry And Expansion</a></li>
   <li><a href="#phase-9d-design-authoring-presets" id="toc-phase-9d-design-authoring-presets" class="nav-link" data-scroll-target="#phase-9d-design-authoring-presets">Phase 9d: Design Authoring Presets</a></li>
+  <li><a href="#phase-9e-decoupling-row-modifiers-and-column-aggregators" id="toc-phase-9e-decoupling-row-modifiers-and-column-aggregators" class="nav-link" data-scroll-target="#phase-9e-decoupling-row-modifiers-and-column-aggregators">Phase 9e: Decoupling Row Modifiers and Column Aggregators</a></li>
+  <li><a href="#phase-9f-two-step-ui-column-stitcher" id="toc-phase-9f-two-step-ui-column-stitcher" class="nav-link" data-scroll-target="#phase-9f-two-step-ui-column-stitcher">Phase 9f: Two-Step UI Column Stitcher</a></li>
   <li><a href="#phase-10-preset-library-files" id="toc-phase-10-preset-library-files" class="nav-link" data-scroll-target="#phase-10-preset-library-files">Phase 10: Preset Library Files</a></li>
   <li><a href="#phase-11-documentation-and-ui-follow-up" id="toc-phase-11-documentation-and-ui-follow-up" class="nav-link" data-scroll-target="#phase-11-documentation-and-ui-follow-up">Phase 11: Documentation And UI Follow-Up</a></li>
   <li><a href="#verification-checklist" id="toc-verification-checklist" class="nav-link" data-scroll-target="#verification-checklist">Verification Checklist</a></li>
@@ -394,7 +396,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p><strong>Status:</strong> Implementation roadmap for <a href="../../developer/TensorDesign/column_row_pipeline.html">Column Row Pipeline Design</a>.</p>
-<p>Phases 1-6 and 9a-9d are implemented. Phase 7 and preset-library work remain planned.</p>
+<p>Phases 1-6 and 9a-9e are implemented. Phase 7 and preset-library work remain planned.</p>
 <p>This roadmap breaks the per-column row-pipeline refactor into small, testable steps. The design goal is to let each tensor column derive its own row-aligned gather inputs through TransformPipelines while keeping <code>GatherResult</code> a container/direct-gather executor rather than a pipeline runner.</p>
 <section id="end-state" class="level2">
 <h2 class="anchored" data-anchor-id="end-state">End State</h2>
@@ -770,6 +772,80 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>A complete motivating analysis table can be authored from one preset plus a small parameter form.</li>
 <li>Column presets remain useful for incremental table editing.</li>
 <li>Applying a design preset produces ordinary row-source and column recipe JSON that can be saved and executed independently of the preset registry.</li>
+</ul>
+</section>
+<section id="phase-9e-decoupling-row-modifiers-and-column-aggregators" class="level2">
+<h2 class="anchored" data-anchor-id="phase-9e-decoupling-row-modifiers-and-column-aggregators">Phase 9e: Decoupling Row Modifiers and Column Aggregators</h2>
+<p>Status: done.</p>
+<p>Goal: Prevent combinatorial explosion of monolithic presets (e.g., <code>analog_sample_at_interval_start</code>, <code>event_presence_around_interval_start</code>) by splitting the registry into two composable domains: Row Modifiers and Column Aggregators.</p>
+<p>Tasks:</p>
+<ol type="1">
+<li><del>Introduce <code>RowModifierRegistry</code>. This registry provides descriptors that output <code>row_pipeline_json</code> and declare the resulting <em>Effective Row Type</em> (e.g., Interval -&gt; Event, Interval -&gt; Interval).</del> <strong>Done. RowModifiers also support emitting <code>pipeline_value_bindings</code>.</strong></li>
+<li><del>Introduce <code>ColumnAggregatorRegistry</code>. This registry provides descriptors that output <code>pipeline_json</code> and optional <code>pipeline_value_bindings</code>. These are filtered based on the Effective Row Type and Target Data Type.</del> <strong>Done.</strong></li>
+<li><del>Refactor <code>ColumnRecipePresetRegistry</code> (or create a UI “Stitcher” equivalent) to seamlessly combine a selected Row Modifier and a Column Aggregator into one or more <code>ColumnRecipe</code>s.</del> <strong>Done. Handled natively in <code>TensorDesignBuilder</code> json parsing.</strong></li>
+<li><del>Carefully untangle multi-input presets (like <code>multi_point_xy_at_interval_start</code>):</del> <strong>Done.</strong>
+<ul>
+<li><del>The UI Stitcher must handle cases where the Column Aggregator accepts a list of <code>source_keys</code> (e.g., multiple keypoints).</del></li>
+<li><del>For each input key, the Stitcher generates a distinct <code>ColumnRecipe</code>, applying the <em>same</em> <code>row_pipeline_json</code> (from the Row Modifier) to each.</del></li>
+</ul></li>
+<li><del>Create a two-step UX flow in TensorDesigner:</del> (Deferred to UI layer)
+<ul>
+<li><del><strong>Step A (Optional):</strong> Select a Row Modifier (filtered by top-level row strategy).</del></li>
+<li><del><strong>Step B (Required):</strong> Select a Target Data Series and Column Aggregator (filtered by the Effective Row Type from Step A).</del></li>
+</ul></li>
+<li><del>Write tests ensuring that a composed Modifier + Aggregator yields the exact same JSON as the older monolithic presets.</del> <strong>Done.</strong></li>
+</ol>
+<p>Exit criteria:</p>
+<ul>
+<li>Users can independently mix and match row gather geometry (like “Onset Window”) with data extraction logic (like “Mean”, “Event Count”) without requiring a custom C++ preset for every combination.</li>
+<li>Multi-input workflows (like expanding 5 keypoints at interval onset) remain fully supported and generate the correct Nx2 <code>ColumnRecipe</code>s.</li>
+<li>The UI successfully hides the complexity of building two coordinated JSON pipelines.</li>
+</ul>
+</section>
+<section id="phase-9f-two-step-ui-column-stitcher" class="level2">
+<h2 class="anchored" data-anchor-id="phase-9f-two-step-ui-column-stitcher">Phase 9f: Two-Step UI Column Stitcher</h2>
+<p>Status: planned.</p>
+<p>Goal: Provide an intuitive UI in TensorDesigner for building modular columns without requiring users to write raw JSON or use monolithic presets. This phase implements the frontend encapsulation of Phase 9e’s decoupled backend.</p>
+<p>Tasks:</p>
+<ol type="1">
+<li><strong>Backend Registry Metadata (UI-Independent)</strong>:
+<ul>
+<li>Introduce an <code>EffectiveRowType</code> enum (e.g., <code>Interval</code>, <code>Event</code>) in the C++ backend.</li>
+<li>Update <code>RowModifierDescriptor</code> to declare its <code>output_row_type</code>.</li>
+<li>Update <code>ColumnAggregatorDescriptor</code> to declare its <code>supported_row_types</code> (e.g., Event Rate only supports <code>Interval</code>).</li>
+<li>Add query methods to the registries (e.g., <code>registry.getAggregatorsFor(EffectiveRowType::Event)</code>) so the UI remains stateless and driven purely by the backend.</li>
+</ul></li>
+<li><strong>Create a Two-Step Column Builder Dialog</strong> (replacing or augmenting the existing <code>ColumnConfigDialog</code>).
+<ul>
+<li><strong>Step A: Row Modification (Optional)</strong>. Prompt: “Do you want to modify the row before extracting data?”
+<ul>
+<li>Populate a dropdown from the <code>RowModifierRegistry</code>.</li>
+<li>Internally track the <em>Effective Row Type</em> resulting from this modifier (queried from the backend descriptor).</li>
+</ul></li>
+<li><strong>Step B: Data Aggregation (Required)</strong>. Prompt: “What data do you want to extract?”
+<ul>
+<li>Populate a dropdown from the <code>ColumnAggregatorRegistry</code>, dynamically filtered by querying the backend with the Effective Row Type from Step A.</li>
+</ul></li>
+</ul></li>
+<li><strong>The “Custom/Raw” Escape Hatch</strong>:
+<ul>
+<li>In Step B (or as a top-level toggle), include an “Advanced / Custom Pipeline” option.</li>
+<li>When selected, instead of showing a preset <code>AutoParamWidget</code>, the UI embeds the full <code>TransformPipelineEditor</code> (or a raw JSON text box).</li>
+<li>This allows users to author completely novel aggregations block-by-block without needing a preset to exist.</li>
+</ul></li>
+<li><strong>Implement the UI Stitcher logic</strong>. When the user confirms the dialog, generate the <code>ColumnRecipe</code> by:
+<ul>
+<li>Calling <code>expand()</code> on the selected descriptors.</li>
+<li>Stitching them together into a final set of <code>ColumnRecipe</code>s, just as the JSON backend does, and appending them to the <code>TensorDesigner</code> column list.</li>
+</ul></li>
+<li>Add frontend tests for the UI Stitcher logic to ensure that selecting specific combinations yields the exact same raw <code>ColumnRecipe</code>s as the JSON backend.</li>
+</ol>
+<p>Exit criteria:</p>
+<ul>
+<li>Users can mix and match row geometries (Step A) with data extraction logic (Step B) using a guided, wizard-like UI.</li>
+<li>The UI safely prevents illegal combinations (e.g., Range Reduction on an Event row) by filtering Step B options based on Step A’s output.</li>
+<li>Combinatorial explosion of UI presets is completely eliminated; the UI is highly composable.</li>
+<li>The <code>TensorDesigner</code> list view accurately displays the generated columns.</li>
 </ul>
 </section>
 <section id="phase-10-preset-library-files" class="level2">

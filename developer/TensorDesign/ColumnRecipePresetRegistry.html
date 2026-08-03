@@ -759,6 +759,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><code>tests/TensorDesign/test_tensor_design_builder.cpp</code> includes end-to-end checks that expanded preset recipes can be serialized as ordinary TensorDesign JSON and then executed through <code>buildTensorFromDesignJson()</code>.</p>
 <p>It also verifies direct preset-authored JSON, such as <code>columns[].preset = "point_xy"</code>, through both <code>parseDesignJson()</code> and <code>buildTensorFromDesignJson()</code>.</p>
+<p><code>tests/fuzz/integration/TensorDesign/fuzz_tensor_design_registry.cpp</code> adds an allowlisted scalar-composition fuzz target. Each fuzz input selects one explicit <code>(row_modifier, column_aggregator)</code> pair from a curated table rather than the full registry Cartesian product. The allowlist is organized in tiers that mirror the former monolithic presets:</p>
+<ul>
+<li><strong>Tier 0:</strong> no modifier + <code>mean_value</code>, <code>event_count</code>, or <code>event_presence</code> over full row intervals.</li>
+<li><strong>Tier 1:</strong> <code>interval_start</code> + <code>analog_sample</code>, <code>point_xy</code>, or <code>multi_point_xy</code>.</li>
+<li><strong>Tier 2:</strong> <code>window_around_interval_start</code> + interval reducers, with fuzzed <code>pre</code>/<code>post</code>.</li>
+<li><strong>Tier 3:</strong> <code>bind_interval_start</code> + <code>trial_relative_event_count</code>.</li>
+</ul>
+<p><code>raster_events_relative</code> is intentionally excluded because it produces per-row <code>DigitalEventSeries</code> output (relative spike times) rather than scalar float tensor columns. Add new allowlist entries incrementally as deterministic Catch2 coverage lands for each composition.</p>
 </section>
 <section id="tensordesigner-ui" class="level2">
 <h2 class="anchored" data-anchor-id="tensordesigner-ui">TensorDesigner UI</h2>

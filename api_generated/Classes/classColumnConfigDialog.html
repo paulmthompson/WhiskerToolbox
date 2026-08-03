@@ -357,7 +357,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-columnconfigdialog" id="toc-function-columnconfigdialog" class="nav-link" data-scroll-target="#function-columnconfigdialog">function ColumnConfigDialog</a></li>
   <li><a href="#function-columnconfigdialog-1" id="toc-function-columnconfigdialog-1" class="nav-link" data-scroll-target="#function-columnconfigdialog-1">function ColumnConfigDialog</a></li>
   <li><a href="#function-columnconfigdialog-2" id="toc-function-columnconfigdialog-2" class="nav-link" data-scroll-target="#function-columnconfigdialog-2">function ~ColumnConfigDialog</a></li>
-  <li><a href="#function-getrecipe" id="toc-function-getrecipe" class="nav-link" data-scroll-target="#function-getrecipe">function getRecipe</a></li>
+  <li><a href="#function-getrecipes" id="toc-function-getrecipes" class="nav-link" data-scroll-target="#function-getrecipes">function getRecipes</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -403,19 +403,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td></td>
-<td><strong><a href="../../api_generated/Classes/classColumnConfigDialog.html#function-columnconfigdialog">ColumnConfigDialog</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; data_manager, <a href="../../api_generated/Files/TensorDesigner_8hpp.html#enum-designerrowtype">DesignerRowType</a> row_type, <a href="../../api_generated/Classes/classEditorLib_1_1OperationContext.html">EditorLib::OperationContext</a> * operation_context =nullptr, QString pipeline_library_dir ={}, QWidget * parent =nullptr)<br>Construct column configuration dialog.</td>
+<td><strong><a href="../../api_generated/Classes/classColumnConfigDialog.html#function-columnconfigdialog">ColumnConfigDialog</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; data_manager, <a href="../../api_generated/Files/TensorDesigner_8hpp.html#enum-designerrowtype">DesignerRowType</a> row_type, <a href="../../api_generated/Classes/classEditorLib_1_1OperationContext.html">EditorLib::OperationContext</a> * operation_context =nullptr, QString pipeline_library_dir ={}, std::string row_source_key ={}, QWidget * parent =nullptr)<br>Construct column configuration dialog.</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><strong><a href="../../api_generated/Classes/classColumnConfigDialog.html#function-columnconfigdialog">ColumnConfigDialog</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; data_manager, <a href="../../api_generated/Files/TensorDesigner_8hpp.html#enum-designerrowtype">DesignerRowType</a> row_type, <a href="../../api_generated/Classes/structNeuralyzer_1_1TensorBuilders_1_1ColumnRecipe.html">Neuralyzer::TensorBuilders::ColumnRecipe</a> const &amp; recipe, <a href="../../api_generated/Classes/classEditorLib_1_1OperationContext.html">EditorLib::OperationContext</a> * operation_context =nullptr, QString pipeline_library_dir ={}, QWidget * parent =nullptr)<br>Construct dialog pre-populated with an existing recipe.</td>
+<td><strong><a href="../../api_generated/Classes/classColumnConfigDialog.html#function-columnconfigdialog">ColumnConfigDialog</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; data_manager, <a href="../../api_generated/Files/TensorDesigner_8hpp.html#enum-designerrowtype">DesignerRowType</a> row_type, <a href="../../api_generated/Classes/structNeuralyzer_1_1TensorBuilders_1_1ColumnRecipe.html">Neuralyzer::TensorBuilders::ColumnRecipe</a> const &amp; recipe, <a href="../../api_generated/Classes/classEditorLib_1_1OperationContext.html">EditorLib::OperationContext</a> * operation_context =nullptr, QString pipeline_library_dir ={}, std::string row_source_key ={}, QWidget * parent =nullptr)<br>Construct dialog pre-populated with an existing recipe.</td>
 </tr>
 <tr class="odd">
 <td></td>
 <td><strong><a href="../../api_generated/Classes/classColumnConfigDialog.html#function-~columnconfigdialog">~ColumnConfigDialog</a></strong>() override</td>
 </tr>
 <tr class="even">
-<td><a href="../../api_generated/Classes/structNeuralyzer_1_1TensorBuilders_1_1ColumnRecipe.html">Neuralyzer::TensorBuilders::ColumnRecipe</a></td>
-<td><strong><a href="../../api_generated/Classes/classColumnConfigDialog.html#function-getrecipe">getRecipe</a></strong>() const<br>Get the configured column recipe.</td>
+<td>std::vector&lt; <a href="../../api_generated/Classes/structNeuralyzer_1_1TensorBuilders_1_1ColumnRecipe.html">Neuralyzer::TensorBuilders::ColumnRecipe</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classColumnConfigDialog.html#function-getrecipes">getRecipes</a></strong>() const<br>Get the configured column recipe.</td>
 </tr>
 </tbody>
 </table>
@@ -435,8 +435,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    DesignerRowType <span class="dt">row_type</span><span class="op">,</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    EditorLib<span class="op">::</span>OperationContext <span class="op">*</span> operation_context <span class="op">=</span><span class="kw">nullptr</span><span class="op">,</span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> pipeline_library_dir <span class="op">={},</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QWidget</span> <span class="op">*</span> parent <span class="op">=</span><span class="kw">nullptr</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string row_source_key <span class="op">={},</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QWidget</span> <span class="op">*</span> parent <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Construct column configuration dialog.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -454,8 +455,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>TensorBuilders<span class="op">::</span>ColumnRecipe <span class="at">const</span> <span class="op">&amp;</span> recipe<span class="op">,</span></span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    EditorLib<span class="op">::</span>OperationContext <span class="op">*</span> operation_context <span class="op">=</span><span class="kw">nullptr</span><span class="op">,</span></span>
 <span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> pipeline_library_dir <span class="op">={},</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QWidget</span> <span class="op">*</span> parent <span class="op">=</span><span class="kw">nullptr</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string row_source_key <span class="op">={},</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QWidget</span> <span class="op">*</span> parent <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Construct dialog pre-populated with an existing recipe.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -470,13 +472,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="function-columnconfigdialog-2">function ~ColumnConfigDialog</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>ColumnConfigDialog<span class="op">()</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="function-getrecipe" class="level3">
-<h3 class="anchored" data-anchor-id="function-getrecipe">function getRecipe</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>Neuralyzer<span class="op">::</span>TensorBuilders<span class="op">::</span>ColumnRecipe getRecipe<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="function-getrecipes" class="level3">
+<h3 class="anchored" data-anchor-id="function-getrecipes">function getRecipes</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> Neuralyzer<span class="op">::</span>TensorBuilders<span class="op">::</span>ColumnRecipe <span class="op">&gt;</span> getRecipes<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the configured column recipe.</p>
 <p><strong>Return</strong>: The ColumnRecipe built from user selections</p>
 <hr>
-<p>Updated on 2026-08-01 at 23:29:12 +0000</p>
+<p>Updated on 2026-08-03 at 14:20:38 +0000</p>
 
 
 </section>
