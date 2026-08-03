@@ -4,6 +4,7 @@
  */
 
 #include "TensorData/ColumnConfigDialog.hpp"
+#include "TensorData/TensorDataView.hpp"
 #include "TensorData/TensorDesigner.hpp"
 #include "TensorData/TensorInspector.hpp"
 
@@ -12,6 +13,8 @@
 #include "DataInspector_Widget/DataInspectorState.hpp"
 #include "DataInspector_Widget/DataInspectorViewWidget.hpp"
 #include "DataManager/DataManager.hpp"
+#include "EditorState/SelectionContext.hpp"
+#include "EditorState/StrongTypes.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Tensors/TensorData.hpp"
@@ -28,6 +31,7 @@
 #include <QDir>
 #include <QPushButton>
 #include <QSignalSpy>
+#include <QTableView>
 #include <QTimer>
 
 #include <iostream>
@@ -315,9 +319,11 @@ TEST_CASE("TensorInspector builds contact_0 spikes_1 cross-timeframe validation 
     auto view = std::make_unique<DataInspectorViewWidget>(data_manager, nullptr);
     view->setState(state);
 
+    SelectionContext selection_context;
     auto props = std::make_unique<DataInspectorPropertiesWidget>(data_manager, nullptr, nullptr);
     props->setState(state);
     props->setViewWidget(view.get());
+    props->setSelectionContext(&selection_context);
 
     // Bootstrap the real UI path: TensorInspector embedded in the properties panel.
     data_manager->setData<TensorData>("placeholder", makePlaceholderTensor(), TimeKey("time"));
@@ -356,7 +362,14 @@ TEST_CASE("TensorInspector builds contact_0 spikes_1 cross-timeframe validation 
     auto * build_button = findBuildTensorButton(*designer);
     REQUIRE(build_button != nullptr);
 
+    SelectionSource const selection_source{
+            EditorInstanceId(QStringLiteral("feature_table_test")),
+            QStringLiteral("feature_table")};
+
     build_button->click();
+    // Simulate feature-table selection churn during deferred registration.
+    selection_context.setSelectedData(SelectedDataKey(QStringLiteral("contact_0")), selection_source);
+    selection_context.setSelectedData(SelectedDataKey(QStringLiteral("test")), selection_source);
     drainDeferredQtEvents();
 
     REQUIRE(created_spy.count() == 1);
@@ -364,6 +377,10 @@ TEST_CASE("TensorInspector builds contact_0 spikes_1 cross-timeframe validation 
     REQUIRE_FALSE(data_manager->getTimeKey("test").empty());
     REQUIRE(data_manager->getTimeKey("test").str() == "time");
     REQUIRE(state->inspectedDataKey() == QStringLiteral("test"));
+
+    auto * tensor_view = dynamic_cast<TensorDataView *>(view->currentView());
+    REQUIRE(tensor_view != nullptr);
+    REQUIRE(tensor_view->tableView()->model()->rowCount() == static_cast<int>(contact_0->size()));
 
     auto tensor = data_manager->getData<TensorData>("test");
     REQUIRE(tensor != nullptr);
@@ -394,4 +411,7 @@ TEST_CASE("TensorInspector builds contact_0 spikes_1 cross-timeframe validation 
     REQUIRE(rebuilt_values.size() == contact_0->size());
     CHECK_THAT(rebuilt_values[0], WithinAbs(2.0, 0.01));
     CHECK_THAT(rebuilt_values[1], WithinAbs(1.0, 0.01));
+
+    REQUIRE(tensor_view != nullptr);
+    REQUIRE(tensor_view->tableView()->model()->rowCount() == static_cast<int>(contact_0->size()));
 }

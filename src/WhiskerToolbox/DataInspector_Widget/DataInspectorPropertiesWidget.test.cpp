@@ -59,7 +59,7 @@ struct TestFixture {
         constexpr int kFrames = 100;
         std::vector<int> times(kFrames);
         std::iota(times.begin(), times.end(), 0);
-        dm->setTime(TimeKey("time"), std::make_shared<TimeFrame>(times));
+        dm->setTime(TimeKey("time"), std::make_shared<TimeFrame>(times),true);
 
         state = std::make_shared<DataInspectorState>();
 

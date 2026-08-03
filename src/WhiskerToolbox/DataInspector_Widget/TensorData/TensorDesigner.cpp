@@ -967,6 +967,10 @@ void TensorDesigner::_buildTensor() {
                               std::chrono::steady_clock::now().time_since_epoch().count());
     }
 
+    // Pin the inspector so SelectionContext / feature-table refreshes during
+    // setData() do not tear down this widget while the build is in flight.
+    _pinInspectorForDialog();
+
     Neuralyzer::TensorDesign::TensorDesignSpec spec;
     spec.tensor_key = _tensor_key;
     spec.row_type = toTensorDesignRowType(_row_type);
@@ -979,12 +983,14 @@ void TensorDesigner::_buildTensor() {
 
     auto built = Neuralyzer::TensorDesign::buildTensor(*_data_manager, spec);
     if (!built.has_value()) {
+        _unpinInspectorAfterDialog();
         _updateStatus(QStringLiteral("Build failed. Check row source and column configuration."));
         return;
     }
 
     auto const output_time_key = Neuralyzer::TensorDesign::resolveOutputTimeKey(*_data_manager, spec);
     if (!output_time_key.has_value()) {
+        _unpinInspectorAfterDialog();
         _updateStatus(QStringLiteral(
                 "Build succeeded but registration failed: no valid output TimeKey. "
                 "Ensure the row source is assigned to a TimeFrame."));
@@ -1012,6 +1018,7 @@ void TensorDesigner::_buildTensor() {
 
         auto const registered = dm->getData<TensorData>(tensor_key);
         if (!registered || dm->getTimeKey(tensor_key).empty()) {
+            guard->_unpinInspectorAfterDialog();
             guard->_updateStatus(QStringLiteral(
                                          "Build succeeded but registration failed for '%1'. "
                                          "Check TimeFrame assignment and duplicate data keys.")
@@ -1025,6 +1032,7 @@ void TensorDesigner::_buildTensor() {
                                      .arg(QString::fromStdString(tensor_key)));
 
         emit guard->tensorCreated(QString::fromStdString(tensor_key));
+        guard->_unpinInspectorAfterDialog();
     });
 }
 

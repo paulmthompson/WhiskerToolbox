@@ -256,6 +256,26 @@ void DataInspectorPropertiesWidget::_onDataManagerChanged() {
     });
 }
 
+void DataInspectorPropertiesWidget::_onTensorCreatedByDesigner(QString const & key) {
+    if (!_current_inspector || _current_type != DM_DataType::Tensor) {
+        inspectData(key);
+        return;
+    }
+
+    _current_key = key.toStdString();
+    _updateHeaderDisplay();
+
+    if (_state) {
+        if (_state->inspectedDataKey() != key) {
+            _state->setInspectedDataKey(key);
+        } else if (_view_widget != nullptr) {
+            if (auto * view = _view_widget->currentView()) {
+                view->updateView();
+            }
+        }
+    }
+}
+
 void DataInspectorPropertiesWidget::_updateInspectorForKey(QString const & key) {
     std::string const key_std = key.toStdString();
 
@@ -388,6 +408,12 @@ void DataInspectorPropertiesWidget::_createInspectorForType(DM_DataType type) {
             }
         }
 
+        if (auto * tensor_inspector = dynamic_cast<TensorInspector *>(_current_inspector.get())) {
+            connect(tensor_inspector, &TensorInspector::tensorCreated, this,
+                    &DataInspectorPropertiesWidget::_onTensorCreatedByDesigner,
+                    Qt::UniqueConnection);
+        }
+
         ui->contentLayout->addWidget(_current_inspector.get());
 
         // Connect the inspector's frameSelected signal
@@ -492,7 +518,7 @@ void DataInspectorPropertiesWidget::_connectInspectorToView() {
         }
     }
 
-    // Check if this is a TensorInspector and wire SelectionContext + tensorCreated
+    // Check if this is a TensorInspector and wire SelectionContext
     auto * tensor_inspector = dynamic_cast<TensorInspector *>(_current_inspector.get());
     if (tensor_inspector) {
         if (_selection_context) {
@@ -508,14 +534,6 @@ void DataInspectorPropertiesWidget::_connectInspectorToView() {
         if (tensor_inspector->designer() && _state) {
             tensor_inspector->designer()->setInspectorState(_state);
         }
-        // When designer creates a tensor, navigate the inspector to it on the next
-        // event-loop turn so TensorDesigner finishes emitting before we update.
-        QObject::connect(tensor_inspector, &TensorInspector::tensorCreated,
-                         this, [this](QString const & key) {
-                             QTimer::singleShot(0, this, [this, key]() {
-                                 inspectData(key);
-                             });
-                         });
     }
 
     // Check if this is a TimeFrameInspector and connect it to the view

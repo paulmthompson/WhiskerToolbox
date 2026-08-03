@@ -11,6 +11,19 @@
 #include <QPixmap>
 #include <QStyle>
 
+namespace {
+
+/// @brief Remove a destroyed QObject from a QPointer list without invalid downcasts.
+void removeDestroyedButton(QList<QPointer<QToolButton>> & buttons, QObject * obj) {
+    for (int i = buttons.size() - 1; i >= 0; --i) {
+        if (buttons.at(i).data() == obj) {
+            buttons.removeAt(i);
+        }
+    }
+}
+
+}// namespace
+
 SplitButtonHandler::SplitButtonHandler(ads::CDockManager * dock_manager, QObject * parent)
     : QObject(parent),
       _dock_manager(dock_manager),
@@ -265,8 +278,8 @@ void SplitButtonHandler::addSplitButtonToArea(ads::CDockAreaWidget * dock_area) 
     _split_buttons.append(split_button);
 
     // Clean up tracking when button is destroyed
-    connect(split_button, &QObject::destroyed, this, [this, split_button]() {
-        _split_buttons.removeAll(split_button);
+    connect(split_button, &QObject::destroyed, this, [this](QObject * obj) {
+        removeDestroyedButton(_split_buttons, obj);
     });
 
     // Create vertical split button (top/bottom)
@@ -292,7 +305,7 @@ void SplitButtonHandler::addSplitButtonToArea(ads::CDockAreaWidget * dock_area) 
     _vertical_split_buttons.append(vertical_split_button);
 
     // Clean up tracking when button is destroyed
-    connect(vertical_split_button, &QObject::destroyed, this, [this, vertical_split_button]() {
-        _vertical_split_buttons.removeAll(vertical_split_button);
+    connect(vertical_split_button, &QObject::destroyed, this, [this](QObject * obj) {
+        removeDestroyedButton(_vertical_split_buttons, obj);
     });
 }
