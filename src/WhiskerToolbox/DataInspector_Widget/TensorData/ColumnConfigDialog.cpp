@@ -290,6 +290,14 @@ void ColumnConfigDialog::_onRowModifierChanged(int index) {
                 return field.name == "source_key" || field.name == "output_name";
             });
             _row_modifier_params->setSchema(filtered_schema);
+            if (_data_manager) {
+                auto const keys = _data_manager->getAllKeys();
+                for (auto const & field : filtered_schema.fields) {
+                    if (field.type_name == "data_key" || field.type_name == "std::vector<std::string>") {
+                        _row_modifier_params->updateAllowedValues(field.name, keys);
+                    }
+                }
+            }
         }
     }
     _updateAggregatorOptions();
@@ -304,6 +312,14 @@ void ColumnConfigDialog::_onAggregatorChanged(int index) {
                 return field.name == "source_key" || field.name == "output_name";
             });
             _aggregator_params->setSchema(filtered_schema);
+            if (_data_manager) {
+                auto const keys = _data_manager->getAllKeys();
+                for (auto const & field : filtered_schema.fields) {
+                    if (field.type_name == "data_key" || field.type_name == "std::vector<std::string>") {
+                        _aggregator_params->updateAllowedValues(field.name, keys);
+                    }
+                }
+            }
         }
     }
 }

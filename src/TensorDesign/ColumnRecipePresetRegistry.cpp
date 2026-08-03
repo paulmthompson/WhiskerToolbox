@@ -87,7 +87,8 @@ namespace {
             .type_name = "std::string",
             .raw_type_name = "std::string",
             .display_name = "Name Prefix",
-            .tooltip = "Prefix for generated x and y column names."});
+            .tooltip = "Prefix for generated x and y column names.",
+            .is_optional = true});
     return schema;
 }
 
@@ -99,6 +100,9 @@ namespace {
             .type_name = "std::vector<std::string>",
             .raw_type_name = "std::vector<std::string>",
             .display_name = "Source Keys",
+            .is_vector = true,
+            .vector_element_type = "std::string",
+            .dynamic_combo = true,
             .tooltip = "PointData keys to expand into x and y columns."});
     return schema;
 }
@@ -372,7 +376,7 @@ namespace {
             .composition_rules = {
                     .output_kind = ColumnOutputKind::ScalarFloat,
                     .required_row_geometry = EffectiveRowType::Timestamp,
-                    .compatible_modifier_ids = {"interval_start"}},
+                    .compatible_modifier_ids = {"", "interval_start"}},
             .parameters = outputSourceSchema("AnalogSampleArgs"),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandAnalogSampleAggregator};
@@ -380,10 +384,11 @@ namespace {
 
 [[nodiscard]] std::optional<ColumnAggregatorExpansion> expandPointXyAggregator(
         ColumnRecipePresetArgs const & args) {
-    if (args.source_key.empty() || args.name_prefix.empty()) return std::nullopt;
+    if (args.source_key.empty()) return std::nullopt;
+    std::string const prefix = args.name_prefix.empty() ? args.source_key : args.name_prefix;
     return ColumnAggregatorExpansion{.columns = {
-                                             pointCoordinateRecipe(args.name_prefix + "_x", args.source_key, "x", "X"),
-                                             pointCoordinateRecipe(args.name_prefix + "_y", args.source_key, "y", "Y")}};
+                                             pointCoordinateRecipe(prefix + "_x", args.source_key, "x", "X"),
+                                             pointCoordinateRecipe(prefix + "_y", args.source_key, "y", "Y")}};
 }
 
 [[nodiscard]] ColumnAggregatorDescriptor pointXyAggregatorDescriptor() {
@@ -395,7 +400,7 @@ namespace {
             .composition_rules = {
                     .output_kind = ColumnOutputKind::ScalarFloat,
                     .required_row_geometry = EffectiveRowType::Timestamp,
-                    .compatible_modifier_ids = {"interval_start"}},
+                    .compatible_modifier_ids = {"", "interval_start"}},
             .parameters = pointXySchema(),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandPointXyAggregator};
@@ -423,7 +428,7 @@ namespace {
             .composition_rules = {
                     .output_kind = ColumnOutputKind::ScalarFloat,
                     .required_row_geometry = EffectiveRowType::Timestamp,
-                    .compatible_modifier_ids = {"interval_start"}},
+                    .compatible_modifier_ids = {"", "interval_start"}},
             .parameters = multiPointXySchema(),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandMultiPointXyAggregator};
@@ -723,7 +728,7 @@ bool ColumnAggregatorRegistry::isCompatibleComposition(
     }
 
     if (rules.required_row_geometry == EffectiveRowType::Timestamp) {
-        if (modifier == nullptr || modifier->output_row_type != EffectiveRowType::Timestamp) {
+        if (modifier != nullptr && modifier->output_row_type != EffectiveRowType::Timestamp) {
             return false;
         }
     }
