@@ -29,6 +29,7 @@ using namespace Neuralyzer::Plots;
 using Catch::Approx;
 using Neuralyzer::Test::GatherFixtures::createEventSeries;
 using Neuralyzer::Test::GatherFixtures::createIdentityTimeFrame;
+using Neuralyzer::Test::GatherFixtures::createIdentityTimeFrameForMax;
 using Neuralyzer::Test::GatherFixtures::createIntervalSeries;
 using Neuralyzer::Test::GatherFixtures::createTimeFrameForRate;
 using Neuralyzer::Test::GatherFixtures::kSpikeSamplesPerEventIndex;
@@ -66,6 +67,7 @@ static RateEstimate makeEstimate(std::vector<double> values,
 static std::shared_ptr<DataManager> makeGatherDataManager() {
     auto dm = std::make_shared<DataManager>();
     TimeKey const time_key("test_time");
+    dm->setTime(time_key, createIdentityTimeFrameForMax(400));
 
     auto spikes = createEventSeries({10, 50, 100, 150, 200, 250, 300, 350});
     dm->setData<DigitalEventSeries>("spikes", spikes, time_key);
