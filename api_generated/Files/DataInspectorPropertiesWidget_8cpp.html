@@ -640,279 +640,297 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-256"><a href="#cb1-256" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
 <span id="cb1-257"><a href="#cb1-257" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-258"><a href="#cb1-258" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-259"><a href="#cb1-259" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DataInspectorPropertiesWidget<span class="op">::</span>_updateInspectorForKey<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-260"><a href="#cb1-260" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> key_std <span class="op">=</span> key<span class="op">.</span>toStdString<span class="op">();</span></span>
-<span id="cb1-261"><a href="#cb1-261" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-262"><a href="#cb1-262" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>key_std <span class="op">==</span> _current_key <span class="op">&amp;&amp;</span> _current_inspector<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-263"><a href="#cb1-263" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span><span class="co">// Already showing this data</span></span>
-<span id="cb1-264"><a href="#cb1-264" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-265"><a href="#cb1-265" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-266"><a href="#cb1-266" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>key<span class="op">.</span>isEmpty<span class="op">()</span> <span class="op">||</span> <span class="op">!</span>_data_manager<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-267"><a href="#cb1-267" aria-hidden="true" tabindex="-1"></a>        _current_key <span class="op">=</span> key_std<span class="op">;</span></span>
-<span id="cb1-268"><a href="#cb1-268" aria-hidden="true" tabindex="-1"></a>        _updateHeaderDisplay<span class="op">();</span></span>
-<span id="cb1-269"><a href="#cb1-269" aria-hidden="true" tabindex="-1"></a>        _clearInspector<span class="op">();</span></span>
-<span id="cb1-270"><a href="#cb1-270" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-271"><a href="#cb1-271" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-272"><a href="#cb1-272" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-273"><a href="#cb1-273" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if data exists</span></span>
-<span id="cb1-274"><a href="#cb1-274" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> data_variant <span class="op">=</span> _data_manager<span class="op">-&gt;</span>getDataVariant<span class="op">(</span>key_std<span class="op">);</span></span>
-<span id="cb1-275"><a href="#cb1-275" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>data_variant<span class="op">.</span>has_value<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-276"><a href="#cb1-276" aria-hidden="true" tabindex="-1"></a>        _current_key <span class="op">=</span> key_std<span class="op">;</span></span>
-<span id="cb1-277"><a href="#cb1-277" aria-hidden="true" tabindex="-1"></a>        _updateHeaderDisplay<span class="op">();</span></span>
-<span id="cb1-278"><a href="#cb1-278" aria-hidden="true" tabindex="-1"></a>        _clearInspector<span class="op">();</span></span>
-<span id="cb1-279"><a href="#cb1-279" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>dataKeyLabel<span class="op">-&gt;</span>setText<span class="op">(</span><span class="fu">tr</span><span class="op">(</span><span class="st">"Data not found: %1"</span><span class="op">).</span>arg<span class="op">(</span>key<span class="op">));</span></span>
-<span id="cb1-280"><a href="#cb1-280" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-281"><a href="#cb1-281" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-282"><a href="#cb1-282" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-283"><a href="#cb1-283" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get the data type</span></span>
-<span id="cb1-284"><a href="#cb1-284" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="dt">data_type</span> <span class="op">=</span> _data_manager<span class="op">-&gt;</span>getType<span class="op">(</span>key_std<span class="op">);</span></span>
+<span id="cb1-259"><a href="#cb1-259" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DataInspectorPropertiesWidget<span class="op">::</span>_onTensorCreatedByDesigner<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-260"><a href="#cb1-260" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_current_inspector <span class="op">||</span> _current_type <span class="op">!=</span> DM_DataType<span class="op">::</span>Tensor<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-261"><a href="#cb1-261" aria-hidden="true" tabindex="-1"></a>        inspectData<span class="op">(</span>key<span class="op">);</span></span>
+<span id="cb1-262"><a href="#cb1-262" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-263"><a href="#cb1-263" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-264"><a href="#cb1-264" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-265"><a href="#cb1-265" aria-hidden="true" tabindex="-1"></a>    _current_key <span class="op">=</span> key<span class="op">.</span>toStdString<span class="op">();</span></span>
+<span id="cb1-266"><a href="#cb1-266" aria-hidden="true" tabindex="-1"></a>    _updateHeaderDisplay<span class="op">();</span></span>
+<span id="cb1-267"><a href="#cb1-267" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-268"><a href="#cb1-268" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-269"><a href="#cb1-269" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>_state<span class="op">-&gt;</span>inspectedDataKey<span class="op">()</span> <span class="op">!=</span> key<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-270"><a href="#cb1-270" aria-hidden="true" tabindex="-1"></a>            _state<span class="op">-&gt;</span>setInspectedDataKey<span class="op">(</span>key<span class="op">);</span></span>
+<span id="cb1-271"><a href="#cb1-271" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span> <span class="cf">else</span> <span class="cf">if</span> <span class="op">(</span>_view_widget <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-272"><a href="#cb1-272" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="op">*</span> view <span class="op">=</span> _view_widget<span class="op">-&gt;</span>currentView<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-273"><a href="#cb1-273" aria-hidden="true" tabindex="-1"></a>                view<span class="op">-&gt;</span>updateView<span class="op">();</span></span>
+<span id="cb1-274"><a href="#cb1-274" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-275"><a href="#cb1-275" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-276"><a href="#cb1-276" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-277"><a href="#cb1-277" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-278"><a href="#cb1-278" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-279"><a href="#cb1-279" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DataInspectorPropertiesWidget<span class="op">::</span>_updateInspectorForKey<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-280"><a href="#cb1-280" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> key_std <span class="op">=</span> key<span class="op">.</span>toStdString<span class="op">();</span></span>
+<span id="cb1-281"><a href="#cb1-281" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-282"><a href="#cb1-282" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>key_std <span class="op">==</span> _current_key <span class="op">&amp;&amp;</span> _current_inspector<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-283"><a href="#cb1-283" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span><span class="co">// Already showing this data</span></span>
+<span id="cb1-284"><a href="#cb1-284" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-285"><a href="#cb1-285" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-286"><a href="#cb1-286" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Reuse TensorInspector when navigating between tensor keys. Destroying the</span></span>
-<span id="cb1-287"><a href="#cb1-287" aria-hidden="true" tabindex="-1"></a>    <span class="co">// inspector during tensorCreated (while TensorDesigner is still emitting)</span></span>
-<span id="cb1-288"><a href="#cb1-288" aria-hidden="true" tabindex="-1"></a>    <span class="co">// would delete the sender widget and crash.</span></span>
-<span id="cb1-289"><a href="#cb1-289" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_current_inspector <span class="op">&amp;&amp;</span> _current_type <span class="op">==</span> DM_DataType<span class="op">::</span>Tensor <span class="op">&amp;&amp;</span></span>
-<span id="cb1-290"><a href="#cb1-290" aria-hidden="true" tabindex="-1"></a>        <span class="dt">data_type</span> <span class="op">==</span> DM_DataType<span class="op">::</span>Tensor<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-291"><a href="#cb1-291" aria-hidden="true" tabindex="-1"></a>        _current_key <span class="op">=</span> key_std<span class="op">;</span></span>
-<span id="cb1-292"><a href="#cb1-292" aria-hidden="true" tabindex="-1"></a>        _updateHeaderDisplay<span class="op">();</span></span>
-<span id="cb1-293"><a href="#cb1-293" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>dataTypeLabel<span class="op">-&gt;</span>setText<span class="op">(</span></span>
-<span id="cb1-294"><a href="#cb1-294" aria-hidden="true" tabindex="-1"></a>                <span class="ex">QString::fromStdString</span><span class="op">(</span>convert_data_type_to_string<span class="op">(</span><span class="dt">data_type</span><span class="op">)));</span></span>
-<span id="cb1-295"><a href="#cb1-295" aria-hidden="true" tabindex="-1"></a>        _current_inspector<span class="op">-&gt;</span>setActiveKey<span class="op">(</span>key_std<span class="op">);</span></span>
-<span id="cb1-296"><a href="#cb1-296" aria-hidden="true" tabindex="-1"></a>        _connectInspectorToView<span class="op">();</span></span>
-<span id="cb1-297"><a href="#cb1-297" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-298"><a href="#cb1-298" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-299"><a href="#cb1-299" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-300"><a href="#cb1-300" aria-hidden="true" tabindex="-1"></a>    _current_key <span class="op">=</span> key_std<span class="op">;</span></span>
-<span id="cb1-301"><a href="#cb1-301" aria-hidden="true" tabindex="-1"></a>    _updateHeaderDisplay<span class="op">();</span></span>
+<span id="cb1-286"><a href="#cb1-286" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>key<span class="op">.</span>isEmpty<span class="op">()</span> <span class="op">||</span> <span class="op">!</span>_data_manager<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-287"><a href="#cb1-287" aria-hidden="true" tabindex="-1"></a>        _current_key <span class="op">=</span> key_std<span class="op">;</span></span>
+<span id="cb1-288"><a href="#cb1-288" aria-hidden="true" tabindex="-1"></a>        _updateHeaderDisplay<span class="op">();</span></span>
+<span id="cb1-289"><a href="#cb1-289" aria-hidden="true" tabindex="-1"></a>        _clearInspector<span class="op">();</span></span>
+<span id="cb1-290"><a href="#cb1-290" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-291"><a href="#cb1-291" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-292"><a href="#cb1-292" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-293"><a href="#cb1-293" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if data exists</span></span>
+<span id="cb1-294"><a href="#cb1-294" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> data_variant <span class="op">=</span> _data_manager<span class="op">-&gt;</span>getDataVariant<span class="op">(</span>key_std<span class="op">);</span></span>
+<span id="cb1-295"><a href="#cb1-295" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>data_variant<span class="op">.</span>has_value<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-296"><a href="#cb1-296" aria-hidden="true" tabindex="-1"></a>        _current_key <span class="op">=</span> key_std<span class="op">;</span></span>
+<span id="cb1-297"><a href="#cb1-297" aria-hidden="true" tabindex="-1"></a>        _updateHeaderDisplay<span class="op">();</span></span>
+<span id="cb1-298"><a href="#cb1-298" aria-hidden="true" tabindex="-1"></a>        _clearInspector<span class="op">();</span></span>
+<span id="cb1-299"><a href="#cb1-299" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>dataKeyLabel<span class="op">-&gt;</span>setText<span class="op">(</span><span class="fu">tr</span><span class="op">(</span><span class="st">"Data not found: %1"</span><span class="op">).</span>arg<span class="op">(</span>key<span class="op">));</span></span>
+<span id="cb1-300"><a href="#cb1-300" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-301"><a href="#cb1-301" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-302"><a href="#cb1-302" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-303"><a href="#cb1-303" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Clear existing inspector</span></span>
-<span id="cb1-304"><a href="#cb1-304" aria-hidden="true" tabindex="-1"></a>    _clearInspector<span class="op">();</span></span>
+<span id="cb1-303"><a href="#cb1-303" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get the data type</span></span>
+<span id="cb1-304"><a href="#cb1-304" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="dt">data_type</span> <span class="op">=</span> _data_manager<span class="op">-&gt;</span>getType<span class="op">(</span>key_std<span class="op">);</span></span>
 <span id="cb1-305"><a href="#cb1-305" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-306"><a href="#cb1-306" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Update type label</span></span>
-<span id="cb1-307"><a href="#cb1-307" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> type_name <span class="op">=</span> <span class="ex">QString::fromStdString</span><span class="op">(</span>convert_data_type_to_string<span class="op">(</span><span class="dt">data_type</span><span class="op">));</span></span>
-<span id="cb1-308"><a href="#cb1-308" aria-hidden="true" tabindex="-1"></a>    ui<span class="op">-&gt;</span>dataTypeLabel<span class="op">-&gt;</span>setText<span class="op">(</span>type_name<span class="op">);</span></span>
-<span id="cb1-309"><a href="#cb1-309" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-310"><a href="#cb1-310" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create type-specific inspector using the factory</span></span>
-<span id="cb1-311"><a href="#cb1-311" aria-hidden="true" tabindex="-1"></a>    _createInspectorForType<span class="op">(</span><span class="dt">data_type</span><span class="op">);</span></span>
-<span id="cb1-312"><a href="#cb1-312" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-313"><a href="#cb1-313" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Set the active key on the inspector</span></span>
-<span id="cb1-314"><a href="#cb1-314" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_current_inspector<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-306"><a href="#cb1-306" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Reuse TensorInspector when navigating between tensor keys. Destroying the</span></span>
+<span id="cb1-307"><a href="#cb1-307" aria-hidden="true" tabindex="-1"></a>    <span class="co">// inspector during tensorCreated (while TensorDesigner is still emitting)</span></span>
+<span id="cb1-308"><a href="#cb1-308" aria-hidden="true" tabindex="-1"></a>    <span class="co">// would delete the sender widget and crash.</span></span>
+<span id="cb1-309"><a href="#cb1-309" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_current_inspector <span class="op">&amp;&amp;</span> _current_type <span class="op">==</span> DM_DataType<span class="op">::</span>Tensor <span class="op">&amp;&amp;</span></span>
+<span id="cb1-310"><a href="#cb1-310" aria-hidden="true" tabindex="-1"></a>        <span class="dt">data_type</span> <span class="op">==</span> DM_DataType<span class="op">::</span>Tensor<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-311"><a href="#cb1-311" aria-hidden="true" tabindex="-1"></a>        _current_key <span class="op">=</span> key_std<span class="op">;</span></span>
+<span id="cb1-312"><a href="#cb1-312" aria-hidden="true" tabindex="-1"></a>        _updateHeaderDisplay<span class="op">();</span></span>
+<span id="cb1-313"><a href="#cb1-313" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>dataTypeLabel<span class="op">-&gt;</span>setText<span class="op">(</span></span>
+<span id="cb1-314"><a href="#cb1-314" aria-hidden="true" tabindex="-1"></a>                <span class="ex">QString::fromStdString</span><span class="op">(</span>convert_data_type_to_string<span class="op">(</span><span class="dt">data_type</span><span class="op">)));</span></span>
 <span id="cb1-315"><a href="#cb1-315" aria-hidden="true" tabindex="-1"></a>        _current_inspector<span class="op">-&gt;</span>setActiveKey<span class="op">(</span>key_std<span class="op">);</span></span>
-<span id="cb1-316"><a href="#cb1-316" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Reconnect to view after setting key (view might have changed)</span></span>
-<span id="cb1-317"><a href="#cb1-317" aria-hidden="true" tabindex="-1"></a>        _connectInspectorToView<span class="op">();</span></span>
+<span id="cb1-316"><a href="#cb1-316" aria-hidden="true" tabindex="-1"></a>        _connectInspectorToView<span class="op">();</span></span>
+<span id="cb1-317"><a href="#cb1-317" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
 <span id="cb1-318"><a href="#cb1-318" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-319"><a href="#cb1-319" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-320"><a href="#cb1-320" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-321"><a href="#cb1-321" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DataInspectorPropertiesWidget<span class="op">::</span>_updateInspectorForTimeFrame<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-322"><a href="#cb1-322" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> key_std <span class="op">=</span> key<span class="op">.</span>toStdString<span class="op">();</span></span>
-<span id="cb1-323"><a href="#cb1-323" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-324"><a href="#cb1-324" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>key_std <span class="op">==</span> _current_key <span class="op">&amp;&amp;</span> _current_type <span class="op">==</span> DM_DataType<span class="op">::</span>Time <span class="op">&amp;&amp;</span> _current_inspector<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-325"><a href="#cb1-325" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span><span class="co">// Already showing this timeframe</span></span>
-<span id="cb1-326"><a href="#cb1-326" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-327"><a href="#cb1-327" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-328"><a href="#cb1-328" aria-hidden="true" tabindex="-1"></a>    _current_key <span class="op">=</span> key_std<span class="op">;</span></span>
-<span id="cb1-329"><a href="#cb1-329" aria-hidden="true" tabindex="-1"></a>    _updateHeaderDisplay<span class="op">();</span></span>
-<span id="cb1-330"><a href="#cb1-330" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-331"><a href="#cb1-331" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Clear existing inspector</span></span>
-<span id="cb1-332"><a href="#cb1-332" aria-hidden="true" tabindex="-1"></a>    _clearInspector<span class="op">();</span></span>
-<span id="cb1-333"><a href="#cb1-333" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-334"><a href="#cb1-334" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>key<span class="op">.</span>isEmpty<span class="op">()</span> <span class="op">||</span> <span class="op">!</span>_data_manager<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-335"><a href="#cb1-335" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-336"><a href="#cb1-336" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-337"><a href="#cb1-337" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-338"><a href="#cb1-338" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Verify the TimeFrame exists</span></span>
-<span id="cb1-339"><a href="#cb1-339" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> timeframe <span class="op">=</span> _data_manager<span class="op">-&gt;</span>getTime<span class="op">(</span>TimeKey<span class="op">(</span>key_std<span class="op">));</span></span>
-<span id="cb1-340"><a href="#cb1-340" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>timeframe<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-341"><a href="#cb1-341" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>dataKeyLabel<span class="op">-&gt;</span>setText<span class="op">(</span><span class="fu">tr</span><span class="op">(</span><span class="st">"TimeFrame not found: %1"</span><span class="op">).</span>arg<span class="op">(</span>key<span class="op">));</span></span>
-<span id="cb1-342"><a href="#cb1-342" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-343"><a href="#cb1-343" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-344"><a href="#cb1-344" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-345"><a href="#cb1-345" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Update type label</span></span>
-<span id="cb1-346"><a href="#cb1-346" aria-hidden="true" tabindex="-1"></a>    ui<span class="op">-&gt;</span>dataTypeLabel<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"TimeFrame"</span><span class="op">));</span></span>
+<span id="cb1-319"><a href="#cb1-319" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-320"><a href="#cb1-320" aria-hidden="true" tabindex="-1"></a>    _current_key <span class="op">=</span> key_std<span class="op">;</span></span>
+<span id="cb1-321"><a href="#cb1-321" aria-hidden="true" tabindex="-1"></a>    _updateHeaderDisplay<span class="op">();</span></span>
+<span id="cb1-322"><a href="#cb1-322" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-323"><a href="#cb1-323" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Clear existing inspector</span></span>
+<span id="cb1-324"><a href="#cb1-324" aria-hidden="true" tabindex="-1"></a>    _clearInspector<span class="op">();</span></span>
+<span id="cb1-325"><a href="#cb1-325" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-326"><a href="#cb1-326" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Update type label</span></span>
+<span id="cb1-327"><a href="#cb1-327" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> type_name <span class="op">=</span> <span class="ex">QString::fromStdString</span><span class="op">(</span>convert_data_type_to_string<span class="op">(</span><span class="dt">data_type</span><span class="op">));</span></span>
+<span id="cb1-328"><a href="#cb1-328" aria-hidden="true" tabindex="-1"></a>    ui<span class="op">-&gt;</span>dataTypeLabel<span class="op">-&gt;</span>setText<span class="op">(</span>type_name<span class="op">);</span></span>
+<span id="cb1-329"><a href="#cb1-329" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-330"><a href="#cb1-330" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create type-specific inspector using the factory</span></span>
+<span id="cb1-331"><a href="#cb1-331" aria-hidden="true" tabindex="-1"></a>    _createInspectorForType<span class="op">(</span><span class="dt">data_type</span><span class="op">);</span></span>
+<span id="cb1-332"><a href="#cb1-332" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-333"><a href="#cb1-333" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Set the active key on the inspector</span></span>
+<span id="cb1-334"><a href="#cb1-334" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_current_inspector<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-335"><a href="#cb1-335" aria-hidden="true" tabindex="-1"></a>        _current_inspector<span class="op">-&gt;</span>setActiveKey<span class="op">(</span>key_std<span class="op">);</span></span>
+<span id="cb1-336"><a href="#cb1-336" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Reconnect to view after setting key (view might have changed)</span></span>
+<span id="cb1-337"><a href="#cb1-337" aria-hidden="true" tabindex="-1"></a>        _connectInspectorToView<span class="op">();</span></span>
+<span id="cb1-338"><a href="#cb1-338" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-339"><a href="#cb1-339" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-340"><a href="#cb1-340" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-341"><a href="#cb1-341" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DataInspectorPropertiesWidget<span class="op">::</span>_updateInspectorForTimeFrame<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-342"><a href="#cb1-342" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> key_std <span class="op">=</span> key<span class="op">.</span>toStdString<span class="op">();</span></span>
+<span id="cb1-343"><a href="#cb1-343" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-344"><a href="#cb1-344" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>key_std <span class="op">==</span> _current_key <span class="op">&amp;&amp;</span> _current_type <span class="op">==</span> DM_DataType<span class="op">::</span>Time <span class="op">&amp;&amp;</span> _current_inspector<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-345"><a href="#cb1-345" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span><span class="co">// Already showing this timeframe</span></span>
+<span id="cb1-346"><a href="#cb1-346" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-347"><a href="#cb1-347" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-348"><a href="#cb1-348" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create TimeFrame inspector</span></span>
-<span id="cb1-349"><a href="#cb1-349" aria-hidden="true" tabindex="-1"></a>    _createInspectorForType<span class="op">(</span>DM_DataType<span class="op">::</span>Time<span class="op">);</span></span>
+<span id="cb1-348"><a href="#cb1-348" aria-hidden="true" tabindex="-1"></a>    _current_key <span class="op">=</span> key_std<span class="op">;</span></span>
+<span id="cb1-349"><a href="#cb1-349" aria-hidden="true" tabindex="-1"></a>    _updateHeaderDisplay<span class="op">();</span></span>
 <span id="cb1-350"><a href="#cb1-350" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-351"><a href="#cb1-351" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Set the active key on the inspector</span></span>
-<span id="cb1-352"><a href="#cb1-352" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_current_inspector<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-353"><a href="#cb1-353" aria-hidden="true" tabindex="-1"></a>        _current_inspector<span class="op">-&gt;</span>setActiveKey<span class="op">(</span>key_std<span class="op">);</span></span>
-<span id="cb1-354"><a href="#cb1-354" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-355"><a href="#cb1-355" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-356"><a href="#cb1-356" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-357"><a href="#cb1-357" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DataInspectorPropertiesWidget<span class="op">::</span>_createInspectorForType<span class="op">(</span>DM_DataType type<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-358"><a href="#cb1-358" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if we already have the right inspector type</span></span>
-<span id="cb1-359"><a href="#cb1-359" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_current_inspector <span class="op">&amp;&amp;</span> _current_type <span class="op">==</span> type<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-360"><a href="#cb1-360" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-361"><a href="#cb1-361" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-362"><a href="#cb1-362" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-363"><a href="#cb1-363" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Clear any existing inspector</span></span>
-<span id="cb1-364"><a href="#cb1-364" aria-hidden="true" tabindex="-1"></a>    _clearInspector<span class="op">();</span></span>
-<span id="cb1-365"><a href="#cb1-365" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-366"><a href="#cb1-366" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create the appropriate inspector using the factory</span></span>
-<span id="cb1-367"><a href="#cb1-367" aria-hidden="true" tabindex="-1"></a>    _current_inspector <span class="op">=</span> InspectorFactory<span class="op">::</span>createInspector<span class="op">(</span></span>
-<span id="cb1-368"><a href="#cb1-368" aria-hidden="true" tabindex="-1"></a>            type<span class="op">,</span></span>
-<span id="cb1-369"><a href="#cb1-369" aria-hidden="true" tabindex="-1"></a>            _data_manager<span class="op">,</span></span>
-<span id="cb1-370"><a href="#cb1-370" aria-hidden="true" tabindex="-1"></a>            _group_manager<span class="op">,</span></span>
-<span id="cb1-371"><a href="#cb1-371" aria-hidden="true" tabindex="-1"></a>            <span class="kw">this</span><span class="op">);</span></span>
-<span id="cb1-372"><a href="#cb1-372" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-373"><a href="#cb1-373" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_current_inspector<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-374"><a href="#cb1-374" aria-hidden="true" tabindex="-1"></a>        _current_type <span class="op">=</span> type<span class="op">;</span></span>
-<span id="cb1-375"><a href="#cb1-375" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-376"><a href="#cb1-376" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Set the state pointer so the inspector can access time position</span></span>
-<span id="cb1-377"><a href="#cb1-377" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>_state<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-378"><a href="#cb1-378" aria-hidden="true" tabindex="-1"></a>            _current_inspector<span class="op">-&gt;</span>setState<span class="op">(</span>_state<span class="op">);</span></span>
-<span id="cb1-379"><a href="#cb1-379" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-380"><a href="#cb1-380" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-381"><a href="#cb1-381" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Forward the command recorder for recording command executions</span></span>
-<span id="cb1-382"><a href="#cb1-382" aria-hidden="true" tabindex="-1"></a>        _current_inspector<span class="op">-&gt;</span>setCommandRecorder<span class="op">(</span>_command_recorder<span class="op">);</span></span>
-<span id="cb1-383"><a href="#cb1-383" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-384"><a href="#cb1-384" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Forward the keymap manager to interval series inspectors for configurable shortcuts</span></span>
-<span id="cb1-385"><a href="#cb1-385" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>_keymap_manager<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-386"><a href="#cb1-386" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="op">*</span> interval_inspector <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>DigitalIntervalSeriesInspector <span class="op">*&gt;(</span>_current_inspector<span class="op">.</span>get<span class="op">()))</span> <span class="op">{</span></span>
-<span id="cb1-387"><a href="#cb1-387" aria-hidden="true" tabindex="-1"></a>                interval_inspector<span class="op">-&gt;</span>setKeymapManager<span class="op">(</span>_keymap_manager<span class="op">);</span></span>
-<span id="cb1-388"><a href="#cb1-388" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-389"><a href="#cb1-389" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-390"><a href="#cb1-390" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-391"><a href="#cb1-391" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>contentLayout<span class="op">-&gt;</span>addWidget<span class="op">(</span>_current_inspector<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb1-351"><a href="#cb1-351" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Clear existing inspector</span></span>
+<span id="cb1-352"><a href="#cb1-352" aria-hidden="true" tabindex="-1"></a>    _clearInspector<span class="op">();</span></span>
+<span id="cb1-353"><a href="#cb1-353" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-354"><a href="#cb1-354" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>key<span class="op">.</span>isEmpty<span class="op">()</span> <span class="op">||</span> <span class="op">!</span>_data_manager<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-355"><a href="#cb1-355" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-356"><a href="#cb1-356" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-357"><a href="#cb1-357" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-358"><a href="#cb1-358" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Verify the TimeFrame exists</span></span>
+<span id="cb1-359"><a href="#cb1-359" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> timeframe <span class="op">=</span> _data_manager<span class="op">-&gt;</span>getTime<span class="op">(</span>TimeKey<span class="op">(</span>key_std<span class="op">));</span></span>
+<span id="cb1-360"><a href="#cb1-360" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>timeframe<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-361"><a href="#cb1-361" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>dataKeyLabel<span class="op">-&gt;</span>setText<span class="op">(</span><span class="fu">tr</span><span class="op">(</span><span class="st">"TimeFrame not found: %1"</span><span class="op">).</span>arg<span class="op">(</span>key<span class="op">));</span></span>
+<span id="cb1-362"><a href="#cb1-362" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-363"><a href="#cb1-363" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-364"><a href="#cb1-364" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-365"><a href="#cb1-365" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Update type label</span></span>
+<span id="cb1-366"><a href="#cb1-366" aria-hidden="true" tabindex="-1"></a>    ui<span class="op">-&gt;</span>dataTypeLabel<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"TimeFrame"</span><span class="op">));</span></span>
+<span id="cb1-367"><a href="#cb1-367" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-368"><a href="#cb1-368" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create TimeFrame inspector</span></span>
+<span id="cb1-369"><a href="#cb1-369" aria-hidden="true" tabindex="-1"></a>    _createInspectorForType<span class="op">(</span>DM_DataType<span class="op">::</span>Time<span class="op">);</span></span>
+<span id="cb1-370"><a href="#cb1-370" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-371"><a href="#cb1-371" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Set the active key on the inspector</span></span>
+<span id="cb1-372"><a href="#cb1-372" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_current_inspector<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-373"><a href="#cb1-373" aria-hidden="true" tabindex="-1"></a>        _current_inspector<span class="op">-&gt;</span>setActiveKey<span class="op">(</span>key_std<span class="op">);</span></span>
+<span id="cb1-374"><a href="#cb1-374" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-375"><a href="#cb1-375" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-376"><a href="#cb1-376" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-377"><a href="#cb1-377" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DataInspectorPropertiesWidget<span class="op">::</span>_createInspectorForType<span class="op">(</span>DM_DataType type<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-378"><a href="#cb1-378" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if we already have the right inspector type</span></span>
+<span id="cb1-379"><a href="#cb1-379" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_current_inspector <span class="op">&amp;&amp;</span> _current_type <span class="op">==</span> type<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-380"><a href="#cb1-380" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-381"><a href="#cb1-381" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-382"><a href="#cb1-382" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-383"><a href="#cb1-383" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Clear any existing inspector</span></span>
+<span id="cb1-384"><a href="#cb1-384" aria-hidden="true" tabindex="-1"></a>    _clearInspector<span class="op">();</span></span>
+<span id="cb1-385"><a href="#cb1-385" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-386"><a href="#cb1-386" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create the appropriate inspector using the factory</span></span>
+<span id="cb1-387"><a href="#cb1-387" aria-hidden="true" tabindex="-1"></a>    _current_inspector <span class="op">=</span> InspectorFactory<span class="op">::</span>createInspector<span class="op">(</span></span>
+<span id="cb1-388"><a href="#cb1-388" aria-hidden="true" tabindex="-1"></a>            type<span class="op">,</span></span>
+<span id="cb1-389"><a href="#cb1-389" aria-hidden="true" tabindex="-1"></a>            _data_manager<span class="op">,</span></span>
+<span id="cb1-390"><a href="#cb1-390" aria-hidden="true" tabindex="-1"></a>            _group_manager<span class="op">,</span></span>
+<span id="cb1-391"><a href="#cb1-391" aria-hidden="true" tabindex="-1"></a>            <span class="kw">this</span><span class="op">);</span></span>
 <span id="cb1-392"><a href="#cb1-392" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-393"><a href="#cb1-393" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Connect the inspector's frameSelected signal</span></span>
-<span id="cb1-394"><a href="#cb1-394" aria-hidden="true" tabindex="-1"></a>        <span class="fu">connect</span><span class="op">(</span>_current_inspector<span class="op">.</span>get<span class="op">(),</span> <span class="op">&amp;</span>BaseInspector<span class="op">::</span>frameSelected<span class="op">,</span></span>
-<span id="cb1-395"><a href="#cb1-395" aria-hidden="true" tabindex="-1"></a>                <span class="kw">this</span><span class="op">,</span> <span class="op">&amp;</span>DataInspectorPropertiesWidget<span class="op">::</span>frameSelected<span class="op">);</span></span>
-<span id="cb1-396"><a href="#cb1-396" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-397"><a href="#cb1-397" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Connect inspector to view if needed</span></span>
-<span id="cb1-398"><a href="#cb1-398" aria-hidden="true" tabindex="-1"></a>        _connectInspectorToView<span class="op">();</span></span>
-<span id="cb1-399"><a href="#cb1-399" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
-<span id="cb1-400"><a href="#cb1-400" aria-hidden="true" tabindex="-1"></a>        <span class="co">// No inspector available for this type - show placeholder</span></span>
-<span id="cb1-401"><a href="#cb1-401" aria-hidden="true" tabindex="-1"></a>        _current_type <span class="op">=</span> DM_DataType<span class="op">::</span>Unknown<span class="op">;</span></span>
-<span id="cb1-402"><a href="#cb1-402" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> placeholder <span class="op">=</span> <span class="kw">new</span> <span class="ex">QLabel</span><span class="op">(</span></span>
-<span id="cb1-403"><a href="#cb1-403" aria-hidden="true" tabindex="-1"></a>                <span class="fu">tr</span><span class="op">(</span><span class="st">"No inspector available for type: %1"</span><span class="op">)</span></span>
-<span id="cb1-404"><a href="#cb1-404" aria-hidden="true" tabindex="-1"></a>                        <span class="op">.</span>arg<span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>convert_data_type_to_string<span class="op">(</span>type<span class="op">))),</span></span>
-<span id="cb1-405"><a href="#cb1-405" aria-hidden="true" tabindex="-1"></a>                <span class="kw">this</span><span class="op">);</span></span>
-<span id="cb1-406"><a href="#cb1-406" aria-hidden="true" tabindex="-1"></a>        placeholder<span class="op">-&gt;</span>setAlignment<span class="op">(</span><span class="ex">Qt::AlignCenter</span><span class="op">);</span></span>
-<span id="cb1-407"><a href="#cb1-407" aria-hidden="true" tabindex="-1"></a>        placeholder<span class="op">-&gt;</span>setWordWrap<span class="op">(</span><span class="kw">true</span><span class="op">);</span></span>
-<span id="cb1-408"><a href="#cb1-408" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>contentLayout<span class="op">-&gt;</span>addWidget<span class="op">(</span>placeholder<span class="op">);</span></span>
-<span id="cb1-409"><a href="#cb1-409" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-410"><a href="#cb1-410" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-411"><a href="#cb1-411" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-412"><a href="#cb1-412" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DataInspectorPropertiesWidget<span class="op">::</span>_updateHeaderDisplay<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-413"><a href="#cb1-413" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_current_key<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-414"><a href="#cb1-414" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>dataKeyLabel<span class="op">-&gt;</span>setText<span class="op">(</span><span class="fu">tr</span><span class="op">(</span><span class="st">"No data selected"</span><span class="op">));</span></span>
-<span id="cb1-415"><a href="#cb1-415" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>dataTypeLabel<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QString</span><span class="op">());</span></span>
-<span id="cb1-416"><a href="#cb1-416" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
-<span id="cb1-417"><a href="#cb1-417" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>dataKeyLabel<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>_current_key<span class="op">));</span></span>
-<span id="cb1-418"><a href="#cb1-418" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-419"><a href="#cb1-419" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-420"><a href="#cb1-420" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-421"><a href="#cb1-421" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DataInspectorPropertiesWidget<span class="op">::</span>_clearInspector<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-422"><a href="#cb1-422" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_current_inspector<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-423"><a href="#cb1-423" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Disconnect signals</span></span>
-<span id="cb1-424"><a href="#cb1-424" aria-hidden="true" tabindex="-1"></a>        <span class="fu">disconnect</span><span class="op">(</span>_current_inspector<span class="op">.</span>get<span class="op">(),</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">this</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb1-425"><a href="#cb1-425" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-426"><a href="#cb1-426" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Remove callbacks from data</span></span>
-<span id="cb1-427"><a href="#cb1-427" aria-hidden="true" tabindex="-1"></a>        _current_inspector<span class="op">-&gt;</span>removeCallbacks<span class="op">();</span></span>
-<span id="cb1-428"><a href="#cb1-428" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-429"><a href="#cb1-429" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Remove from layout and delete</span></span>
-<span id="cb1-430"><a href="#cb1-430" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>contentLayout<span class="op">-&gt;</span>removeWidget<span class="op">(</span>_current_inspector<span class="op">.</span>get<span class="op">());</span></span>
-<span id="cb1-431"><a href="#cb1-431" aria-hidden="true" tabindex="-1"></a>        _current_inspector<span class="op">.</span>reset<span class="op">();</span></span>
-<span id="cb1-432"><a href="#cb1-432" aria-hidden="true" tabindex="-1"></a>        _current_type <span class="op">=</span> DM_DataType<span class="op">::</span>Unknown<span class="op">;</span></span>
-<span id="cb1-433"><a href="#cb1-433" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-434"><a href="#cb1-434" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-435"><a href="#cb1-435" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-436"><a href="#cb1-436" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DataInspectorPropertiesWidget<span class="op">::</span>setViewWidget<span class="op">(</span>DataInspectorViewWidget <span class="op">*</span> view_widget<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-437"><a href="#cb1-437" aria-hidden="true" tabindex="-1"></a>    _view_widget <span class="op">=</span> view_widget<span class="op">;</span></span>
-<span id="cb1-438"><a href="#cb1-438" aria-hidden="true" tabindex="-1"></a>    _connectInspectorToView<span class="op">();</span></span>
-<span id="cb1-439"><a href="#cb1-439" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-440"><a href="#cb1-440" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-441"><a href="#cb1-441" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DataInspectorPropertiesWidget<span class="op">::</span>setKeymapManager<span class="op">(</span>KeymapSystem<span class="op">::</span>KeymapManager <span class="op">*</span> manager<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-442"><a href="#cb1-442" aria-hidden="true" tabindex="-1"></a>    _keymap_manager <span class="op">=</span> manager<span class="op">;</span></span>
-<span id="cb1-443"><a href="#cb1-443" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-444"><a href="#cb1-444" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-445"><a href="#cb1-445" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DataInspectorPropertiesWidget<span class="op">::</span>_connectInspectorToView<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-446"><a href="#cb1-446" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_current_inspector <span class="op">||</span> <span class="op">!</span>_view_widget<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-447"><a href="#cb1-447" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-448"><a href="#cb1-448" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-449"><a href="#cb1-449" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-450"><a href="#cb1-450" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if this is a DigitalIntervalSeriesInspector and connect it to the view</span></span>
-<span id="cb1-451"><a href="#cb1-451" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> interval_inspector <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>DigitalIntervalSeriesInspector <span class="op">*&gt;(</span>_current_inspector<span class="op">.</span>get<span class="op">());</span></span>
-<span id="cb1-452"><a href="#cb1-452" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>interval_inspector<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-453"><a href="#cb1-453" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> interval_view <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>DigitalIntervalSeriesDataView <span class="op">*&gt;(</span>_view_widget<span class="op">-&gt;</span>currentView<span class="op">());</span></span>
-<span id="cb1-454"><a href="#cb1-454" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>interval_view<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-455"><a href="#cb1-455" aria-hidden="true" tabindex="-1"></a>            interval_inspector<span class="op">-&gt;</span>setDataView<span class="op">(</span>interval_view<span class="op">);</span></span>
-<span id="cb1-456"><a href="#cb1-456" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-457"><a href="#cb1-457" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-458"><a href="#cb1-458" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-459"><a href="#cb1-459" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if this is a DigitalEventSeriesInspector and connect it to the view</span></span>
-<span id="cb1-460"><a href="#cb1-460" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> event_inspector <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>DigitalEventSeriesInspector <span class="op">*&gt;(</span>_current_inspector<span class="op">.</span>get<span class="op">());</span></span>
-<span id="cb1-461"><a href="#cb1-461" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>event_inspector<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-462"><a href="#cb1-462" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> event_view <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>DigitalEventSeriesDataView <span class="op">*&gt;(</span>_view_widget<span class="op">-&gt;</span>currentView<span class="op">());</span></span>
-<span id="cb1-463"><a href="#cb1-463" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>event_view<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-464"><a href="#cb1-464" aria-hidden="true" tabindex="-1"></a>            event_inspector<span class="op">-&gt;</span>setDataView<span class="op">(</span>event_view<span class="op">);</span></span>
-<span id="cb1-465"><a href="#cb1-465" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-466"><a href="#cb1-466" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-467"><a href="#cb1-467" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-468"><a href="#cb1-468" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if this is a LineInspector and connect it to the view</span></span>
-<span id="cb1-469"><a href="#cb1-469" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> line_inspector <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>LineInspector <span class="op">*&gt;(</span>_current_inspector<span class="op">.</span>get<span class="op">());</span></span>
-<span id="cb1-470"><a href="#cb1-470" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>line_inspector<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-471"><a href="#cb1-471" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> line_view <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>LineTableView <span class="op">*&gt;(</span>_view_widget<span class="op">-&gt;</span>currentView<span class="op">());</span></span>
-<span id="cb1-472"><a href="#cb1-472" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>line_view<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-473"><a href="#cb1-473" aria-hidden="true" tabindex="-1"></a>            line_inspector<span class="op">-&gt;</span>setDataView<span class="op">(</span>line_view<span class="op">);</span></span>
-<span id="cb1-474"><a href="#cb1-474" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-475"><a href="#cb1-475" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-476"><a href="#cb1-476" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-477"><a href="#cb1-477" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if this is a MaskInspector and connect it to the view</span></span>
-<span id="cb1-478"><a href="#cb1-478" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> mask_inspector <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>MaskInspector <span class="op">*&gt;(</span>_current_inspector<span class="op">.</span>get<span class="op">());</span></span>
-<span id="cb1-479"><a href="#cb1-479" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>mask_inspector<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-480"><a href="#cb1-480" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> mask_view <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>MaskTableView <span class="op">*&gt;(</span>_view_widget<span class="op">-&gt;</span>currentView<span class="op">());</span></span>
-<span id="cb1-481"><a href="#cb1-481" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>mask_view<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-482"><a href="#cb1-482" aria-hidden="true" tabindex="-1"></a>            mask_inspector<span class="op">-&gt;</span>setDataView<span class="op">(</span>mask_view<span class="op">);</span></span>
-<span id="cb1-483"><a href="#cb1-483" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-484"><a href="#cb1-484" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-485"><a href="#cb1-485" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-486"><a href="#cb1-486" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if this is a PointInspector and connect it to the view</span></span>
-<span id="cb1-487"><a href="#cb1-487" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> point_inspector <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>PointInspector <span class="op">*&gt;(</span>_current_inspector<span class="op">.</span>get<span class="op">());</span></span>
-<span id="cb1-488"><a href="#cb1-488" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>point_inspector<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-489"><a href="#cb1-489" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> point_view <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>PointTableView <span class="op">*&gt;(</span>_view_widget<span class="op">-&gt;</span>currentView<span class="op">());</span></span>
-<span id="cb1-490"><a href="#cb1-490" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>point_view<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-491"><a href="#cb1-491" aria-hidden="true" tabindex="-1"></a>            point_inspector<span class="op">-&gt;</span>setTableView<span class="op">(</span>point_view<span class="op">);</span></span>
-<span id="cb1-492"><a href="#cb1-492" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-493"><a href="#cb1-493" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-494"><a href="#cb1-494" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-495"><a href="#cb1-495" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if this is a TensorInspector and wire SelectionContext + tensorCreated</span></span>
-<span id="cb1-496"><a href="#cb1-496" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> tensor_inspector <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>TensorInspector <span class="op">*&gt;(</span>_current_inspector<span class="op">.</span>get<span class="op">());</span></span>
-<span id="cb1-497"><a href="#cb1-497" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>tensor_inspector<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-498"><a href="#cb1-498" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>_selection_context<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-499"><a href="#cb1-499" aria-hidden="true" tabindex="-1"></a>            tensor_inspector<span class="op">-&gt;</span>setSelectionContext<span class="op">(</span>_selection_context<span class="op">);</span></span>
+<span id="cb1-393"><a href="#cb1-393" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_current_inspector<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-394"><a href="#cb1-394" aria-hidden="true" tabindex="-1"></a>        _current_type <span class="op">=</span> type<span class="op">;</span></span>
+<span id="cb1-395"><a href="#cb1-395" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-396"><a href="#cb1-396" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Set the state pointer so the inspector can access time position</span></span>
+<span id="cb1-397"><a href="#cb1-397" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>_state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-398"><a href="#cb1-398" aria-hidden="true" tabindex="-1"></a>            _current_inspector<span class="op">-&gt;</span>setState<span class="op">(</span>_state<span class="op">);</span></span>
+<span id="cb1-399"><a href="#cb1-399" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-400"><a href="#cb1-400" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-401"><a href="#cb1-401" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Forward the command recorder for recording command executions</span></span>
+<span id="cb1-402"><a href="#cb1-402" aria-hidden="true" tabindex="-1"></a>        _current_inspector<span class="op">-&gt;</span>setCommandRecorder<span class="op">(</span>_command_recorder<span class="op">);</span></span>
+<span id="cb1-403"><a href="#cb1-403" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-404"><a href="#cb1-404" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Forward the keymap manager to interval series inspectors for configurable shortcuts</span></span>
+<span id="cb1-405"><a href="#cb1-405" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>_keymap_manager<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-406"><a href="#cb1-406" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="op">*</span> interval_inspector <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>DigitalIntervalSeriesInspector <span class="op">*&gt;(</span>_current_inspector<span class="op">.</span>get<span class="op">()))</span> <span class="op">{</span></span>
+<span id="cb1-407"><a href="#cb1-407" aria-hidden="true" tabindex="-1"></a>                interval_inspector<span class="op">-&gt;</span>setKeymapManager<span class="op">(</span>_keymap_manager<span class="op">);</span></span>
+<span id="cb1-408"><a href="#cb1-408" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-409"><a href="#cb1-409" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-410"><a href="#cb1-410" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-411"><a href="#cb1-411" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="op">*</span> tensor_inspector <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>TensorInspector <span class="op">*&gt;(</span>_current_inspector<span class="op">.</span>get<span class="op">()))</span> <span class="op">{</span></span>
+<span id="cb1-412"><a href="#cb1-412" aria-hidden="true" tabindex="-1"></a>            <span class="fu">connect</span><span class="op">(</span>tensor_inspector<span class="op">,</span> <span class="op">&amp;</span>TensorInspector<span class="op">::</span>tensorCreated<span class="op">,</span> <span class="kw">this</span><span class="op">,</span></span>
+<span id="cb1-413"><a href="#cb1-413" aria-hidden="true" tabindex="-1"></a>                    <span class="op">&amp;</span>DataInspectorPropertiesWidget<span class="op">::</span>_onTensorCreatedByDesigner<span class="op">,</span></span>
+<span id="cb1-414"><a href="#cb1-414" aria-hidden="true" tabindex="-1"></a>                    <span class="ex">Qt::UniqueConnection</span><span class="op">);</span></span>
+<span id="cb1-415"><a href="#cb1-415" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-416"><a href="#cb1-416" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-417"><a href="#cb1-417" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>contentLayout<span class="op">-&gt;</span>addWidget<span class="op">(</span>_current_inspector<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb1-418"><a href="#cb1-418" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-419"><a href="#cb1-419" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Connect the inspector's frameSelected signal</span></span>
+<span id="cb1-420"><a href="#cb1-420" aria-hidden="true" tabindex="-1"></a>        <span class="fu">connect</span><span class="op">(</span>_current_inspector<span class="op">.</span>get<span class="op">(),</span> <span class="op">&amp;</span>BaseInspector<span class="op">::</span>frameSelected<span class="op">,</span></span>
+<span id="cb1-421"><a href="#cb1-421" aria-hidden="true" tabindex="-1"></a>                <span class="kw">this</span><span class="op">,</span> <span class="op">&amp;</span>DataInspectorPropertiesWidget<span class="op">::</span>frameSelected<span class="op">);</span></span>
+<span id="cb1-422"><a href="#cb1-422" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-423"><a href="#cb1-423" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Connect inspector to view if needed</span></span>
+<span id="cb1-424"><a href="#cb1-424" aria-hidden="true" tabindex="-1"></a>        _connectInspectorToView<span class="op">();</span></span>
+<span id="cb1-425"><a href="#cb1-425" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb1-426"><a href="#cb1-426" aria-hidden="true" tabindex="-1"></a>        <span class="co">// No inspector available for this type - show placeholder</span></span>
+<span id="cb1-427"><a href="#cb1-427" aria-hidden="true" tabindex="-1"></a>        _current_type <span class="op">=</span> DM_DataType<span class="op">::</span>Unknown<span class="op">;</span></span>
+<span id="cb1-428"><a href="#cb1-428" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> placeholder <span class="op">=</span> <span class="kw">new</span> <span class="ex">QLabel</span><span class="op">(</span></span>
+<span id="cb1-429"><a href="#cb1-429" aria-hidden="true" tabindex="-1"></a>                <span class="fu">tr</span><span class="op">(</span><span class="st">"No inspector available for type: %1"</span><span class="op">)</span></span>
+<span id="cb1-430"><a href="#cb1-430" aria-hidden="true" tabindex="-1"></a>                        <span class="op">.</span>arg<span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>convert_data_type_to_string<span class="op">(</span>type<span class="op">))),</span></span>
+<span id="cb1-431"><a href="#cb1-431" aria-hidden="true" tabindex="-1"></a>                <span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-432"><a href="#cb1-432" aria-hidden="true" tabindex="-1"></a>        placeholder<span class="op">-&gt;</span>setAlignment<span class="op">(</span><span class="ex">Qt::AlignCenter</span><span class="op">);</span></span>
+<span id="cb1-433"><a href="#cb1-433" aria-hidden="true" tabindex="-1"></a>        placeholder<span class="op">-&gt;</span>setWordWrap<span class="op">(</span><span class="kw">true</span><span class="op">);</span></span>
+<span id="cb1-434"><a href="#cb1-434" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>contentLayout<span class="op">-&gt;</span>addWidget<span class="op">(</span>placeholder<span class="op">);</span></span>
+<span id="cb1-435"><a href="#cb1-435" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-436"><a href="#cb1-436" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-437"><a href="#cb1-437" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-438"><a href="#cb1-438" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DataInspectorPropertiesWidget<span class="op">::</span>_updateHeaderDisplay<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-439"><a href="#cb1-439" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_current_key<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-440"><a href="#cb1-440" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>dataKeyLabel<span class="op">-&gt;</span>setText<span class="op">(</span><span class="fu">tr</span><span class="op">(</span><span class="st">"No data selected"</span><span class="op">));</span></span>
+<span id="cb1-441"><a href="#cb1-441" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>dataTypeLabel<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QString</span><span class="op">());</span></span>
+<span id="cb1-442"><a href="#cb1-442" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb1-443"><a href="#cb1-443" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>dataKeyLabel<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>_current_key<span class="op">));</span></span>
+<span id="cb1-444"><a href="#cb1-444" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-445"><a href="#cb1-445" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-446"><a href="#cb1-446" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-447"><a href="#cb1-447" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DataInspectorPropertiesWidget<span class="op">::</span>_clearInspector<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-448"><a href="#cb1-448" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_current_inspector<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-449"><a href="#cb1-449" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Disconnect signals</span></span>
+<span id="cb1-450"><a href="#cb1-450" aria-hidden="true" tabindex="-1"></a>        <span class="fu">disconnect</span><span class="op">(</span>_current_inspector<span class="op">.</span>get<span class="op">(),</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">this</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb1-451"><a href="#cb1-451" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-452"><a href="#cb1-452" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Remove callbacks from data</span></span>
+<span id="cb1-453"><a href="#cb1-453" aria-hidden="true" tabindex="-1"></a>        _current_inspector<span class="op">-&gt;</span>removeCallbacks<span class="op">();</span></span>
+<span id="cb1-454"><a href="#cb1-454" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-455"><a href="#cb1-455" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Remove from layout and delete</span></span>
+<span id="cb1-456"><a href="#cb1-456" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>contentLayout<span class="op">-&gt;</span>removeWidget<span class="op">(</span>_current_inspector<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb1-457"><a href="#cb1-457" aria-hidden="true" tabindex="-1"></a>        _current_inspector<span class="op">.</span>reset<span class="op">();</span></span>
+<span id="cb1-458"><a href="#cb1-458" aria-hidden="true" tabindex="-1"></a>        _current_type <span class="op">=</span> DM_DataType<span class="op">::</span>Unknown<span class="op">;</span></span>
+<span id="cb1-459"><a href="#cb1-459" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-460"><a href="#cb1-460" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-461"><a href="#cb1-461" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-462"><a href="#cb1-462" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DataInspectorPropertiesWidget<span class="op">::</span>setViewWidget<span class="op">(</span>DataInspectorViewWidget <span class="op">*</span> view_widget<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-463"><a href="#cb1-463" aria-hidden="true" tabindex="-1"></a>    _view_widget <span class="op">=</span> view_widget<span class="op">;</span></span>
+<span id="cb1-464"><a href="#cb1-464" aria-hidden="true" tabindex="-1"></a>    _connectInspectorToView<span class="op">();</span></span>
+<span id="cb1-465"><a href="#cb1-465" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-466"><a href="#cb1-466" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-467"><a href="#cb1-467" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DataInspectorPropertiesWidget<span class="op">::</span>setKeymapManager<span class="op">(</span>KeymapSystem<span class="op">::</span>KeymapManager <span class="op">*</span> manager<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-468"><a href="#cb1-468" aria-hidden="true" tabindex="-1"></a>    _keymap_manager <span class="op">=</span> manager<span class="op">;</span></span>
+<span id="cb1-469"><a href="#cb1-469" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-470"><a href="#cb1-470" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-471"><a href="#cb1-471" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> DataInspectorPropertiesWidget<span class="op">::</span>_connectInspectorToView<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-472"><a href="#cb1-472" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_current_inspector <span class="op">||</span> <span class="op">!</span>_view_widget<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-473"><a href="#cb1-473" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-474"><a href="#cb1-474" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-475"><a href="#cb1-475" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-476"><a href="#cb1-476" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if this is a DigitalIntervalSeriesInspector and connect it to the view</span></span>
+<span id="cb1-477"><a href="#cb1-477" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> interval_inspector <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>DigitalIntervalSeriesInspector <span class="op">*&gt;(</span>_current_inspector<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb1-478"><a href="#cb1-478" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>interval_inspector<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-479"><a href="#cb1-479" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> interval_view <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>DigitalIntervalSeriesDataView <span class="op">*&gt;(</span>_view_widget<span class="op">-&gt;</span>currentView<span class="op">());</span></span>
+<span id="cb1-480"><a href="#cb1-480" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>interval_view<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-481"><a href="#cb1-481" aria-hidden="true" tabindex="-1"></a>            interval_inspector<span class="op">-&gt;</span>setDataView<span class="op">(</span>interval_view<span class="op">);</span></span>
+<span id="cb1-482"><a href="#cb1-482" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-483"><a href="#cb1-483" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-484"><a href="#cb1-484" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-485"><a href="#cb1-485" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if this is a DigitalEventSeriesInspector and connect it to the view</span></span>
+<span id="cb1-486"><a href="#cb1-486" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> event_inspector <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>DigitalEventSeriesInspector <span class="op">*&gt;(</span>_current_inspector<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb1-487"><a href="#cb1-487" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>event_inspector<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-488"><a href="#cb1-488" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> event_view <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>DigitalEventSeriesDataView <span class="op">*&gt;(</span>_view_widget<span class="op">-&gt;</span>currentView<span class="op">());</span></span>
+<span id="cb1-489"><a href="#cb1-489" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>event_view<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-490"><a href="#cb1-490" aria-hidden="true" tabindex="-1"></a>            event_inspector<span class="op">-&gt;</span>setDataView<span class="op">(</span>event_view<span class="op">);</span></span>
+<span id="cb1-491"><a href="#cb1-491" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-492"><a href="#cb1-492" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-493"><a href="#cb1-493" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-494"><a href="#cb1-494" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if this is a LineInspector and connect it to the view</span></span>
+<span id="cb1-495"><a href="#cb1-495" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> line_inspector <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>LineInspector <span class="op">*&gt;(</span>_current_inspector<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb1-496"><a href="#cb1-496" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>line_inspector<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-497"><a href="#cb1-497" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> line_view <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>LineTableView <span class="op">*&gt;(</span>_view_widget<span class="op">-&gt;</span>currentView<span class="op">());</span></span>
+<span id="cb1-498"><a href="#cb1-498" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>line_view<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-499"><a href="#cb1-499" aria-hidden="true" tabindex="-1"></a>            line_inspector<span class="op">-&gt;</span>setDataView<span class="op">(</span>line_view<span class="op">);</span></span>
 <span id="cb1-500"><a href="#cb1-500" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-501"><a href="#cb1-501" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>_operation_context<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-502"><a href="#cb1-502" aria-hidden="true" tabindex="-1"></a>            tensor_inspector<span class="op">-&gt;</span>setOperationContext<span class="op">(</span>_operation_context<span class="op">);</span></span>
-<span id="cb1-503"><a href="#cb1-503" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-504"><a href="#cb1-504" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>_pipeline_library_dir<span class="op">.</span>isEmpty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-505"><a href="#cb1-505" aria-hidden="true" tabindex="-1"></a>            tensor_inspector<span class="op">-&gt;</span>setPipelineLibraryDir<span class="op">(</span>_pipeline_library_dir<span class="op">);</span></span>
-<span id="cb1-506"><a href="#cb1-506" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-507"><a href="#cb1-507" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Pass inspector state to designer for auto-pinning during dialog interaction</span></span>
-<span id="cb1-508"><a href="#cb1-508" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>tensor_inspector<span class="op">-&gt;</span>designer<span class="op">()</span> <span class="op">&amp;&amp;</span> _state<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-509"><a href="#cb1-509" aria-hidden="true" tabindex="-1"></a>            tensor_inspector<span class="op">-&gt;</span>designer<span class="op">()-&gt;</span>setInspectorState<span class="op">(</span>_state<span class="op">);</span></span>
-<span id="cb1-510"><a href="#cb1-510" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-511"><a href="#cb1-511" aria-hidden="true" tabindex="-1"></a>        <span class="co">// When designer creates a tensor, navigate the inspector to it on the next</span></span>
-<span id="cb1-512"><a href="#cb1-512" aria-hidden="true" tabindex="-1"></a>        <span class="co">// event-loop turn so TensorDesigner finishes emitting before we update.</span></span>
-<span id="cb1-513"><a href="#cb1-513" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QObject::connect</span><span class="op">(</span>tensor_inspector<span class="op">,</span> <span class="op">&amp;</span>TensorInspector<span class="op">::</span>tensorCreated<span class="op">,</span></span>
-<span id="cb1-514"><a href="#cb1-514" aria-hidden="true" tabindex="-1"></a>                         <span class="kw">this</span><span class="op">,</span> <span class="op">[</span><span class="kw">this</span><span class="op">](</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-515"><a href="#cb1-515" aria-hidden="true" tabindex="-1"></a>                             <span class="ex">QTimer::singleShot</span><span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="kw">this</span><span class="op">,</span> <span class="op">[</span><span class="kw">this</span><span class="op">,</span> key<span class="op">]()</span> <span class="op">{</span></span>
-<span id="cb1-516"><a href="#cb1-516" aria-hidden="true" tabindex="-1"></a>                                 inspectData<span class="op">(</span>key<span class="op">);</span></span>
-<span id="cb1-517"><a href="#cb1-517" aria-hidden="true" tabindex="-1"></a>                             <span class="op">});</span></span>
-<span id="cb1-518"><a href="#cb1-518" aria-hidden="true" tabindex="-1"></a>                         <span class="op">});</span></span>
+<span id="cb1-501"><a href="#cb1-501" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-502"><a href="#cb1-502" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-503"><a href="#cb1-503" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if this is a MaskInspector and connect it to the view</span></span>
+<span id="cb1-504"><a href="#cb1-504" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> mask_inspector <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>MaskInspector <span class="op">*&gt;(</span>_current_inspector<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb1-505"><a href="#cb1-505" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>mask_inspector<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-506"><a href="#cb1-506" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> mask_view <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>MaskTableView <span class="op">*&gt;(</span>_view_widget<span class="op">-&gt;</span>currentView<span class="op">());</span></span>
+<span id="cb1-507"><a href="#cb1-507" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>mask_view<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-508"><a href="#cb1-508" aria-hidden="true" tabindex="-1"></a>            mask_inspector<span class="op">-&gt;</span>setDataView<span class="op">(</span>mask_view<span class="op">);</span></span>
+<span id="cb1-509"><a href="#cb1-509" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-510"><a href="#cb1-510" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-511"><a href="#cb1-511" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-512"><a href="#cb1-512" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if this is a PointInspector and connect it to the view</span></span>
+<span id="cb1-513"><a href="#cb1-513" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> point_inspector <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>PointInspector <span class="op">*&gt;(</span>_current_inspector<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb1-514"><a href="#cb1-514" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>point_inspector<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-515"><a href="#cb1-515" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> point_view <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>PointTableView <span class="op">*&gt;(</span>_view_widget<span class="op">-&gt;</span>currentView<span class="op">());</span></span>
+<span id="cb1-516"><a href="#cb1-516" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>point_view<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-517"><a href="#cb1-517" aria-hidden="true" tabindex="-1"></a>            point_inspector<span class="op">-&gt;</span>setTableView<span class="op">(</span>point_view<span class="op">);</span></span>
+<span id="cb1-518"><a href="#cb1-518" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb1-519"><a href="#cb1-519" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-520"><a href="#cb1-520" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-521"><a href="#cb1-521" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if this is a TimeFrameInspector and connect it to the view</span></span>
-<span id="cb1-522"><a href="#cb1-522" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> tf_inspector <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>TimeFrameInspector <span class="op">*&gt;(</span>_current_inspector<span class="op">.</span>get<span class="op">());</span></span>
-<span id="cb1-523"><a href="#cb1-523" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>tf_inspector<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-524"><a href="#cb1-524" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> tf_view <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>TimeFrameDataView <span class="op">*&gt;(</span>_view_widget<span class="op">-&gt;</span>currentView<span class="op">());</span></span>
-<span id="cb1-525"><a href="#cb1-525" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>tf_view<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-526"><a href="#cb1-526" aria-hidden="true" tabindex="-1"></a>            tf_inspector<span class="op">-&gt;</span>setDataView<span class="op">(</span>tf_view<span class="op">);</span></span>
-<span id="cb1-527"><a href="#cb1-527" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-528"><a href="#cb1-528" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-529"><a href="#cb1-529" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-521"><a href="#cb1-521" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if this is a TensorInspector and wire SelectionContext</span></span>
+<span id="cb1-522"><a href="#cb1-522" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> tensor_inspector <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>TensorInspector <span class="op">*&gt;(</span>_current_inspector<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb1-523"><a href="#cb1-523" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>tensor_inspector<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-524"><a href="#cb1-524" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>_selection_context<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-525"><a href="#cb1-525" aria-hidden="true" tabindex="-1"></a>            tensor_inspector<span class="op">-&gt;</span>setSelectionContext<span class="op">(</span>_selection_context<span class="op">);</span></span>
+<span id="cb1-526"><a href="#cb1-526" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-527"><a href="#cb1-527" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>_operation_context<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-528"><a href="#cb1-528" aria-hidden="true" tabindex="-1"></a>            tensor_inspector<span class="op">-&gt;</span>setOperationContext<span class="op">(</span>_operation_context<span class="op">);</span></span>
+<span id="cb1-529"><a href="#cb1-529" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-530"><a href="#cb1-530" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>_pipeline_library_dir<span class="op">.</span>isEmpty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-531"><a href="#cb1-531" aria-hidden="true" tabindex="-1"></a>            tensor_inspector<span class="op">-&gt;</span>setPipelineLibraryDir<span class="op">(</span>_pipeline_library_dir<span class="op">);</span></span>
+<span id="cb1-532"><a href="#cb1-532" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-533"><a href="#cb1-533" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Pass inspector state to designer for auto-pinning during dialog interaction</span></span>
+<span id="cb1-534"><a href="#cb1-534" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>tensor_inspector<span class="op">-&gt;</span>designer<span class="op">()</span> <span class="op">&amp;&amp;</span> _state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-535"><a href="#cb1-535" aria-hidden="true" tabindex="-1"></a>            tensor_inspector<span class="op">-&gt;</span>designer<span class="op">()-&gt;</span>setInspectorState<span class="op">(</span>_state<span class="op">);</span></span>
+<span id="cb1-536"><a href="#cb1-536" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-537"><a href="#cb1-537" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-538"><a href="#cb1-538" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-539"><a href="#cb1-539" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if this is a TimeFrameInspector and connect it to the view</span></span>
+<span id="cb1-540"><a href="#cb1-540" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> tf_inspector <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>TimeFrameInspector <span class="op">*&gt;(</span>_current_inspector<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb1-541"><a href="#cb1-541" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>tf_inspector<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-542"><a href="#cb1-542" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> tf_view <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>TimeFrameDataView <span class="op">*&gt;(</span>_view_widget<span class="op">-&gt;</span>currentView<span class="op">());</span></span>
+<span id="cb1-543"><a href="#cb1-543" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>tf_view<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-544"><a href="#cb1-544" aria-hidden="true" tabindex="-1"></a>            tf_inspector<span class="op">-&gt;</span>setDataView<span class="op">(</span>tf_view<span class="op">);</span></span>
+<span id="cb1-545"><a href="#cb1-545" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-546"><a href="#cb1-546" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-547"><a href="#cb1-547" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-03 at 14:20:43 +0000</p>
+<p>Updated on 2026-08-03 at 15:21:54 +0000</p>
 
 
 </section>

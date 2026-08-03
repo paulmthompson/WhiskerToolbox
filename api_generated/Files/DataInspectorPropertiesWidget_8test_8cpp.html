@@ -533,7 +533,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>        <span class="kw">constexpr</span> <span class="dt">int</span> kFrames <span class="op">=</span> <span class="dv">100</span><span class="op">;</span></span>
 <span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;</span> times<span class="op">(</span>kFrames<span class="op">);</span></span>
 <span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>iota<span class="op">(</span>times<span class="op">.</span>begin<span class="op">(),</span> times<span class="op">.</span>end<span class="op">(),</span> <span class="dv">0</span><span class="op">);</span></span>
-<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>        dm<span class="op">-&gt;</span>setTime<span class="op">(</span>TimeKey<span class="op">(</span><span class="st">"time"</span><span class="op">),</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TimeFrame<span class="op">&gt;(</span>times<span class="op">));</span></span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>        dm<span class="op">-&gt;</span>setTime<span class="op">(</span>TimeKey<span class="op">(</span><span class="st">"time"</span><span class="op">),</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TimeFrame<span class="op">&gt;(</span>times<span class="op">),</span><span class="kw">true</span><span class="op">);</span></span>
 <span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>        state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataInspectorState<span class="op">&gt;();</span></span>
 <span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a></span>
@@ -783,7 +783,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-300"><a href="#cb7-300" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>f<span class="op">.</span>state<span class="op">-&gt;</span>inspectedDataKey<span class="op">()</span> <span class="op">==</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"tensor_b"</span><span class="op">));</span></span>
 <span id="cb7-301"><a href="#cb7-301" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-03 at 14:20:43 +0000</p>
+<p>Updated on 2026-08-03 at 15:21:54 +0000</p>
 
 
 </section>

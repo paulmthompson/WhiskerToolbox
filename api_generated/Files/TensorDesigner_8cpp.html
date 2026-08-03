@@ -1380,126 +1380,134 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-967"><a href="#cb2-967" aria-hidden="true" tabindex="-1"></a>                              <span class="bu">std::</span>chrono::steady_clock::now<span class="op">().</span>time_since_epoch<span class="op">().</span>count<span class="op">());</span></span>
 <span id="cb2-968"><a href="#cb2-968" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb2-969"><a href="#cb2-969" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-970"><a href="#cb2-970" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>TensorDesign<span class="op">::</span>TensorDesignSpec spec<span class="op">;</span></span>
-<span id="cb2-971"><a href="#cb2-971" aria-hidden="true" tabindex="-1"></a>    spec<span class="op">.</span>tensor_key <span class="op">=</span> _tensor_key<span class="op">;</span></span>
-<span id="cb2-972"><a href="#cb2-972" aria-hidden="true" tabindex="-1"></a>    spec<span class="op">.</span><span class="dt">row_type</span> <span class="op">=</span> toTensorDesignRowType<span class="op">(</span>_row_type<span class="op">);</span></span>
-<span id="cb2-973"><a href="#cb2-973" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_row_type <span class="op">==</span> DesignerRowType<span class="op">::</span>TimeFrame<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb2-974"><a href="#cb2-974" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>row_time_key <span class="op">=</span> _row_source_key<span class="op">;</span></span>
-<span id="cb2-975"><a href="#cb2-975" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
-<span id="cb2-976"><a href="#cb2-976" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>row_source_key <span class="op">=</span> _row_source_key<span class="op">;</span></span>
-<span id="cb2-977"><a href="#cb2-977" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb2-978"><a href="#cb2-978" aria-hidden="true" tabindex="-1"></a>    spec<span class="op">.</span>columns <span class="op">=</span> _column_recipes<span class="op">;</span></span>
-<span id="cb2-979"><a href="#cb2-979" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-980"><a href="#cb2-980" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> built <span class="op">=</span> Neuralyzer<span class="op">::</span>TensorDesign<span class="op">::</span>buildTensor<span class="op">(*</span>_data_manager<span class="op">,</span> spec<span class="op">);</span></span>
-<span id="cb2-981"><a href="#cb2-981" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>built<span class="op">.</span>has_value<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb2-982"><a href="#cb2-982" aria-hidden="true" tabindex="-1"></a>        _updateStatus<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Build failed. Check row source and column configuration."</span><span class="op">));</span></span>
-<span id="cb2-983"><a href="#cb2-983" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb2-984"><a href="#cb2-984" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb2-985"><a href="#cb2-985" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-986"><a href="#cb2-986" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> output_time_key <span class="op">=</span> Neuralyzer<span class="op">::</span>TensorDesign<span class="op">::</span>resolveOutputTimeKey<span class="op">(*</span>_data_manager<span class="op">,</span> spec<span class="op">);</span></span>
-<span id="cb2-987"><a href="#cb2-987" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>output_time_key<span class="op">.</span>has_value<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb2-988"><a href="#cb2-988" aria-hidden="true" tabindex="-1"></a>        _updateStatus<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span></span>
-<span id="cb2-989"><a href="#cb2-989" aria-hidden="true" tabindex="-1"></a>                <span class="st">"Build succeeded but registration failed: no valid output TimeKey. "</span></span>
-<span id="cb2-990"><a href="#cb2-990" aria-hidden="true" tabindex="-1"></a>                <span class="st">"Ensure the row source is assigned to a TimeFrame."</span><span class="op">));</span></span>
-<span id="cb2-991"><a href="#cb2-991" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb2-992"><a href="#cb2-992" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb2-993"><a href="#cb2-993" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-994"><a href="#cb2-994" aria-hidden="true" tabindex="-1"></a>    spec<span class="op">.</span>output_time_key <span class="op">=</span> output_time_key<span class="op">-&gt;</span>str<span class="op">();</span></span>
-<span id="cb2-995"><a href="#cb2-995" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-996"><a href="#cb2-996" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> num_rows <span class="op">=</span> built<span class="op">-&gt;</span>numRows<span class="op">();</span></span>
-<span id="cb2-997"><a href="#cb2-997" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> column_count <span class="op">=</span> _column_recipes<span class="op">.</span>size<span class="op">();</span></span>
-<span id="cb2-998"><a href="#cb2-998" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> tensor_key <span class="op">=</span> _tensor_key<span class="op">;</span></span>
-<span id="cb2-999"><a href="#cb2-999" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> tensor_ptr <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TensorData<span class="op">&gt;(</span><span class="bu">std::</span>move<span class="op">(</span>built<span class="op">.</span>value<span class="op">()));</span></span>
-<span id="cb2-1000"><a href="#cb2-1000" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> dm <span class="op">=</span> _data_manager<span class="op">;</span></span>
-<span id="cb2-1001"><a href="#cb2-1001" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> time_key <span class="op">=</span> output_time_key<span class="op">.</span>value<span class="op">();</span></span>
-<span id="cb2-1002"><a href="#cb2-1002" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-1003"><a href="#cb2-1003" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Defer registration so DataManager observer callbacks (feature table refresh,</span></span>
-<span id="cb2-1004"><a href="#cb2-1004" aria-hidden="true" tabindex="-1"></a>    <span class="co">// inspector deletion checks) do not run while this click handler is unwinding.</span></span>
-<span id="cb2-1005"><a href="#cb2-1005" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPointer</span><span class="op">&lt;</span>TensorDesigner<span class="op">&gt;</span> <span class="at">const</span> guard<span class="op">(</span><span class="kw">this</span><span class="op">);</span></span>
-<span id="cb2-1006"><a href="#cb2-1006" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTimer::singleShot</span><span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="kw">this</span><span class="op">,</span> <span class="op">[</span>guard<span class="op">,</span> dm<span class="op">,</span> tensor_key<span class="op">,</span> tensor_ptr<span class="op">,</span> time_key<span class="op">,</span> num_rows<span class="op">,</span> column_count<span class="op">]()</span> <span class="op">{</span></span>
-<span id="cb2-1007"><a href="#cb2-1007" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>guard <span class="op">||</span> <span class="op">!</span>dm<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb2-1008"><a href="#cb2-1008" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb2-1009"><a href="#cb2-1009" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb2-1010"><a href="#cb2-1010" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-1011"><a href="#cb2-1011" aria-hidden="true" tabindex="-1"></a>        dm<span class="op">-&gt;</span>setData<span class="op">&lt;</span>TensorData<span class="op">&gt;(</span>tensor_key<span class="op">,</span> tensor_ptr<span class="op">,</span> time_key<span class="op">);</span></span>
-<span id="cb2-1012"><a href="#cb2-1012" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-1013"><a href="#cb2-1013" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> registered <span class="op">=</span> dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>TensorData<span class="op">&gt;(</span>tensor_key<span class="op">);</span></span>
-<span id="cb2-1014"><a href="#cb2-1014" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>registered <span class="op">||</span> dm<span class="op">-&gt;</span>getTimeKey<span class="op">(</span>tensor_key<span class="op">).</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb2-1015"><a href="#cb2-1015" aria-hidden="true" tabindex="-1"></a>            guard<span class="op">-&gt;</span>_updateStatus<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span></span>
-<span id="cb2-1016"><a href="#cb2-1016" aria-hidden="true" tabindex="-1"></a>                                         <span class="st">"Build succeeded but registration failed for '%1'. "</span></span>
-<span id="cb2-1017"><a href="#cb2-1017" aria-hidden="true" tabindex="-1"></a>                                         <span class="st">"Check TimeFrame assignment and duplicate data keys."</span><span class="op">)</span></span>
-<span id="cb2-1018"><a href="#cb2-1018" aria-hidden="true" tabindex="-1"></a>                                         <span class="op">.</span>arg<span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>tensor_key<span class="op">)));</span></span>
-<span id="cb2-1019"><a href="#cb2-1019" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb2-1020"><a href="#cb2-1020" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb2-1021"><a href="#cb2-1021" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-1022"><a href="#cb2-1022" aria-hidden="true" tabindex="-1"></a>        guard<span class="op">-&gt;</span>_updateStatus<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Tensor built: %1 rows × %2 columns → '%3'"</span><span class="op">)</span></span>
-<span id="cb2-1023"><a href="#cb2-1023" aria-hidden="true" tabindex="-1"></a>                                     <span class="op">.</span>arg<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>num_rows<span class="op">))</span></span>
-<span id="cb2-1024"><a href="#cb2-1024" aria-hidden="true" tabindex="-1"></a>                                     <span class="op">.</span>arg<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>column_count<span class="op">))</span></span>
-<span id="cb2-1025"><a href="#cb2-1025" aria-hidden="true" tabindex="-1"></a>                                     <span class="op">.</span>arg<span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>tensor_key<span class="op">)));</span></span>
-<span id="cb2-1026"><a href="#cb2-1026" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-1027"><a href="#cb2-1027" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> guard<span class="op">-&gt;</span>tensorCreated<span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>tensor_key<span class="op">));</span></span>
-<span id="cb2-1028"><a href="#cb2-1028" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
-<span id="cb2-1029"><a href="#cb2-1029" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb2-1030"><a href="#cb2-1030" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-1031"><a href="#cb2-1031" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> TensorDesigner<span class="op">::</span>_updateStatus<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> message<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb2-1032"><a href="#cb2-1032" aria-hidden="true" tabindex="-1"></a>    _status_label<span class="op">-&gt;</span>setText<span class="op">(</span>message<span class="op">);</span></span>
-<span id="cb2-1033"><a href="#cb2-1033" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb2-1034"><a href="#cb2-1034" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-1035"><a href="#cb2-1035" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
-<span id="cb2-1036"><a href="#cb2-1036" aria-hidden="true" tabindex="-1"></a><span class="co">// Dialog result handlers</span></span>
-<span id="cb2-1037"><a href="#cb2-1037" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb2-970"><a href="#cb2-970" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Pin the inspector so SelectionContext / feature-table refreshes during</span></span>
+<span id="cb2-971"><a href="#cb2-971" aria-hidden="true" tabindex="-1"></a>    <span class="co">// setData() do not tear down this widget while the build is in flight.</span></span>
+<span id="cb2-972"><a href="#cb2-972" aria-hidden="true" tabindex="-1"></a>    _pinInspectorForDialog<span class="op">();</span></span>
+<span id="cb2-973"><a href="#cb2-973" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-974"><a href="#cb2-974" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>TensorDesign<span class="op">::</span>TensorDesignSpec spec<span class="op">;</span></span>
+<span id="cb2-975"><a href="#cb2-975" aria-hidden="true" tabindex="-1"></a>    spec<span class="op">.</span>tensor_key <span class="op">=</span> _tensor_key<span class="op">;</span></span>
+<span id="cb2-976"><a href="#cb2-976" aria-hidden="true" tabindex="-1"></a>    spec<span class="op">.</span><span class="dt">row_type</span> <span class="op">=</span> toTensorDesignRowType<span class="op">(</span>_row_type<span class="op">);</span></span>
+<span id="cb2-977"><a href="#cb2-977" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_row_type <span class="op">==</span> DesignerRowType<span class="op">::</span>TimeFrame<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-978"><a href="#cb2-978" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>row_time_key <span class="op">=</span> _row_source_key<span class="op">;</span></span>
+<span id="cb2-979"><a href="#cb2-979" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb2-980"><a href="#cb2-980" aria-hidden="true" tabindex="-1"></a>        spec<span class="op">.</span>row_source_key <span class="op">=</span> _row_source_key<span class="op">;</span></span>
+<span id="cb2-981"><a href="#cb2-981" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-982"><a href="#cb2-982" aria-hidden="true" tabindex="-1"></a>    spec<span class="op">.</span>columns <span class="op">=</span> _column_recipes<span class="op">;</span></span>
+<span id="cb2-983"><a href="#cb2-983" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-984"><a href="#cb2-984" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> built <span class="op">=</span> Neuralyzer<span class="op">::</span>TensorDesign<span class="op">::</span>buildTensor<span class="op">(*</span>_data_manager<span class="op">,</span> spec<span class="op">);</span></span>
+<span id="cb2-985"><a href="#cb2-985" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>built<span class="op">.</span>has_value<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb2-986"><a href="#cb2-986" aria-hidden="true" tabindex="-1"></a>        _unpinInspectorAfterDialog<span class="op">();</span></span>
+<span id="cb2-987"><a href="#cb2-987" aria-hidden="true" tabindex="-1"></a>        _updateStatus<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Build failed. Check row source and column configuration."</span><span class="op">));</span></span>
+<span id="cb2-988"><a href="#cb2-988" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb2-989"><a href="#cb2-989" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-990"><a href="#cb2-990" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-991"><a href="#cb2-991" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> output_time_key <span class="op">=</span> Neuralyzer<span class="op">::</span>TensorDesign<span class="op">::</span>resolveOutputTimeKey<span class="op">(*</span>_data_manager<span class="op">,</span> spec<span class="op">);</span></span>
+<span id="cb2-992"><a href="#cb2-992" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>output_time_key<span class="op">.</span>has_value<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb2-993"><a href="#cb2-993" aria-hidden="true" tabindex="-1"></a>        _unpinInspectorAfterDialog<span class="op">();</span></span>
+<span id="cb2-994"><a href="#cb2-994" aria-hidden="true" tabindex="-1"></a>        _updateStatus<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span></span>
+<span id="cb2-995"><a href="#cb2-995" aria-hidden="true" tabindex="-1"></a>                <span class="st">"Build succeeded but registration failed: no valid output TimeKey. "</span></span>
+<span id="cb2-996"><a href="#cb2-996" aria-hidden="true" tabindex="-1"></a>                <span class="st">"Ensure the row source is assigned to a TimeFrame."</span><span class="op">));</span></span>
+<span id="cb2-997"><a href="#cb2-997" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb2-998"><a href="#cb2-998" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-999"><a href="#cb2-999" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-1000"><a href="#cb2-1000" aria-hidden="true" tabindex="-1"></a>    spec<span class="op">.</span>output_time_key <span class="op">=</span> output_time_key<span class="op">-&gt;</span>str<span class="op">();</span></span>
+<span id="cb2-1001"><a href="#cb2-1001" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-1002"><a href="#cb2-1002" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> num_rows <span class="op">=</span> built<span class="op">-&gt;</span>numRows<span class="op">();</span></span>
+<span id="cb2-1003"><a href="#cb2-1003" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> column_count <span class="op">=</span> _column_recipes<span class="op">.</span>size<span class="op">();</span></span>
+<span id="cb2-1004"><a href="#cb2-1004" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> tensor_key <span class="op">=</span> _tensor_key<span class="op">;</span></span>
+<span id="cb2-1005"><a href="#cb2-1005" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> tensor_ptr <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TensorData<span class="op">&gt;(</span><span class="bu">std::</span>move<span class="op">(</span>built<span class="op">.</span>value<span class="op">()));</span></span>
+<span id="cb2-1006"><a href="#cb2-1006" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> dm <span class="op">=</span> _data_manager<span class="op">;</span></span>
+<span id="cb2-1007"><a href="#cb2-1007" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> time_key <span class="op">=</span> output_time_key<span class="op">.</span>value<span class="op">();</span></span>
+<span id="cb2-1008"><a href="#cb2-1008" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-1009"><a href="#cb2-1009" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Defer registration so DataManager observer callbacks (feature table refresh,</span></span>
+<span id="cb2-1010"><a href="#cb2-1010" aria-hidden="true" tabindex="-1"></a>    <span class="co">// inspector deletion checks) do not run while this click handler is unwinding.</span></span>
+<span id="cb2-1011"><a href="#cb2-1011" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPointer</span><span class="op">&lt;</span>TensorDesigner<span class="op">&gt;</span> <span class="at">const</span> guard<span class="op">(</span><span class="kw">this</span><span class="op">);</span></span>
+<span id="cb2-1012"><a href="#cb2-1012" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTimer::singleShot</span><span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="kw">this</span><span class="op">,</span> <span class="op">[</span>guard<span class="op">,</span> dm<span class="op">,</span> tensor_key<span class="op">,</span> tensor_ptr<span class="op">,</span> time_key<span class="op">,</span> num_rows<span class="op">,</span> column_count<span class="op">]()</span> <span class="op">{</span></span>
+<span id="cb2-1013"><a href="#cb2-1013" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>guard <span class="op">||</span> <span class="op">!</span>dm<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-1014"><a href="#cb2-1014" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb2-1015"><a href="#cb2-1015" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb2-1016"><a href="#cb2-1016" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-1017"><a href="#cb2-1017" aria-hidden="true" tabindex="-1"></a>        dm<span class="op">-&gt;</span>setData<span class="op">&lt;</span>TensorData<span class="op">&gt;(</span>tensor_key<span class="op">,</span> tensor_ptr<span class="op">,</span> time_key<span class="op">);</span></span>
+<span id="cb2-1018"><a href="#cb2-1018" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-1019"><a href="#cb2-1019" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> registered <span class="op">=</span> dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>TensorData<span class="op">&gt;(</span>tensor_key<span class="op">);</span></span>
+<span id="cb2-1020"><a href="#cb2-1020" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>registered <span class="op">||</span> dm<span class="op">-&gt;</span>getTimeKey<span class="op">(</span>tensor_key<span class="op">).</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb2-1021"><a href="#cb2-1021" aria-hidden="true" tabindex="-1"></a>            guard<span class="op">-&gt;</span>_unpinInspectorAfterDialog<span class="op">();</span></span>
+<span id="cb2-1022"><a href="#cb2-1022" aria-hidden="true" tabindex="-1"></a>            guard<span class="op">-&gt;</span>_updateStatus<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span></span>
+<span id="cb2-1023"><a href="#cb2-1023" aria-hidden="true" tabindex="-1"></a>                                         <span class="st">"Build succeeded but registration failed for '%1'. "</span></span>
+<span id="cb2-1024"><a href="#cb2-1024" aria-hidden="true" tabindex="-1"></a>                                         <span class="st">"Check TimeFrame assignment and duplicate data keys."</span><span class="op">)</span></span>
+<span id="cb2-1025"><a href="#cb2-1025" aria-hidden="true" tabindex="-1"></a>                                         <span class="op">.</span>arg<span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>tensor_key<span class="op">)));</span></span>
+<span id="cb2-1026"><a href="#cb2-1026" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb2-1027"><a href="#cb2-1027" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb2-1028"><a href="#cb2-1028" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-1029"><a href="#cb2-1029" aria-hidden="true" tabindex="-1"></a>        guard<span class="op">-&gt;</span>_updateStatus<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Tensor built: %1 rows × %2 columns → '%3'"</span><span class="op">)</span></span>
+<span id="cb2-1030"><a href="#cb2-1030" aria-hidden="true" tabindex="-1"></a>                                     <span class="op">.</span>arg<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>num_rows<span class="op">))</span></span>
+<span id="cb2-1031"><a href="#cb2-1031" aria-hidden="true" tabindex="-1"></a>                                     <span class="op">.</span>arg<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>column_count<span class="op">))</span></span>
+<span id="cb2-1032"><a href="#cb2-1032" aria-hidden="true" tabindex="-1"></a>                                     <span class="op">.</span>arg<span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>tensor_key<span class="op">)));</span></span>
+<span id="cb2-1033"><a href="#cb2-1033" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-1034"><a href="#cb2-1034" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> guard<span class="op">-&gt;</span>tensorCreated<span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>tensor_key<span class="op">));</span></span>
+<span id="cb2-1035"><a href="#cb2-1035" aria-hidden="true" tabindex="-1"></a>        guard<span class="op">-&gt;</span>_unpinInspectorAfterDialog<span class="op">();</span></span>
+<span id="cb2-1036"><a href="#cb2-1036" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb2-1037"><a href="#cb2-1037" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb2-1038"><a href="#cb2-1038" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-1039"><a href="#cb2-1039" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> TensorDesigner<span class="op">::</span>_onDialogAcceptedAdd<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb2-1040"><a href="#cb2-1040" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_active_dialog<span class="op">)</span> <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb2-1041"><a href="#cb2-1041" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-1042"><a href="#cb2-1042" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> recipes <span class="op">=</span> _active_dialog<span class="op">-&gt;</span>getRecipes<span class="op">();</span></span>
-<span id="cb2-1043"><a href="#cb2-1043" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="op">&amp;</span> recipe<span class="op">:</span> recipes<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb2-1044"><a href="#cb2-1044" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>recipe<span class="op">.</span>column_name<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb2-1045"><a href="#cb2-1045" aria-hidden="true" tabindex="-1"></a>            recipe<span class="op">.</span>column_name <span class="op">=</span> <span class="st">"column_"</span> <span class="op">+</span> <span class="bu">std::</span>to_string<span class="op">(</span>_column_recipes<span class="op">.</span>size<span class="op">());</span></span>
-<span id="cb2-1046"><a href="#cb2-1046" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb2-1047"><a href="#cb2-1047" aria-hidden="true" tabindex="-1"></a>        _column_recipes<span class="op">.</span>push_back<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>recipe<span class="op">));</span></span>
-<span id="cb2-1048"><a href="#cb2-1048" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb2-1049"><a href="#cb2-1049" aria-hidden="true" tabindex="-1"></a>    _refreshColumnList<span class="op">();</span></span>
-<span id="cb2-1050"><a href="#cb2-1050" aria-hidden="true" tabindex="-1"></a>    _updateStatus<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Column(s) added: %1 columns total"</span><span class="op">)</span></span>
-<span id="cb2-1051"><a href="#cb2-1051" aria-hidden="true" tabindex="-1"></a>                          <span class="op">.</span>arg<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>_column_recipes<span class="op">.</span>size<span class="op">())));</span></span>
-<span id="cb2-1052"><a href="#cb2-1052" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb2-1053"><a href="#cb2-1053" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-1054"><a href="#cb2-1054" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> TensorDesigner<span class="op">::</span>_onDialogAcceptedEdit<span class="op">(</span><span class="dt">int</span> row<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb2-1055"><a href="#cb2-1055" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_active_dialog<span class="op">)</span> <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb2-1056"><a href="#cb2-1056" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>row <span class="op">&lt;</span> <span class="dv">0</span> <span class="op">||</span> row <span class="op">&gt;=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>_column_recipes<span class="op">.</span>size<span class="op">()))</span> <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb2-1057"><a href="#cb2-1057" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-1058"><a href="#cb2-1058" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> recipes <span class="op">=</span> _active_dialog<span class="op">-&gt;</span>getRecipes<span class="op">();</span></span>
-<span id="cb2-1059"><a href="#cb2-1059" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>recipes<span class="op">.</span>empty<span class="op">())</span> <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb2-1060"><a href="#cb2-1060" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-1061"><a href="#cb2-1061" aria-hidden="true" tabindex="-1"></a>    _column_recipes<span class="op">[</span>row<span class="op">]</span> <span class="op">=</span> <span class="bu">std::</span>move<span class="op">(</span>recipes<span class="op">[</span><span class="dv">0</span><span class="op">]);</span></span>
-<span id="cb2-1062"><a href="#cb2-1062" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>recipes<span class="op">.</span>size<span class="op">()</span> <span class="op">&gt;</span> <span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb2-1063"><a href="#cb2-1063" aria-hidden="true" tabindex="-1"></a>        _column_recipes<span class="op">.</span>insert<span class="op">(</span>_column_recipes<span class="op">.</span>begin<span class="op">()</span> <span class="op">+</span> row <span class="op">+</span> <span class="dv">1</span><span class="op">,</span></span>
-<span id="cb2-1064"><a href="#cb2-1064" aria-hidden="true" tabindex="-1"></a>                               <span class="bu">std::</span>make_move_iterator<span class="op">(</span>recipes<span class="op">.</span>begin<span class="op">()</span> <span class="op">+</span> <span class="dv">1</span><span class="op">),</span></span>
-<span id="cb2-1065"><a href="#cb2-1065" aria-hidden="true" tabindex="-1"></a>                               <span class="bu">std::</span>make_move_iterator<span class="op">(</span>recipes<span class="op">.</span>end<span class="op">()));</span></span>
-<span id="cb2-1066"><a href="#cb2-1066" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb2-1067"><a href="#cb2-1067" aria-hidden="true" tabindex="-1"></a>    _refreshColumnList<span class="op">();</span></span>
-<span id="cb2-1068"><a href="#cb2-1068" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb2-1069"><a href="#cb2-1069" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-1070"><a href="#cb2-1070" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
-<span id="cb2-1071"><a href="#cb2-1071" aria-hidden="true" tabindex="-1"></a><span class="co">// Inspector pin helpers</span></span>
-<span id="cb2-1072"><a href="#cb2-1072" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
-<span id="cb2-1073"><a href="#cb2-1073" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-1074"><a href="#cb2-1074" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> TensorDesigner<span class="op">::</span>_pinInspectorForDialog<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb2-1075"><a href="#cb2-1075" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_inspector_state<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb2-1076"><a href="#cb2-1076" aria-hidden="true" tabindex="-1"></a>        _was_pinned_before_dialog <span class="op">=</span> _inspector_state<span class="op">-&gt;</span>isPinned<span class="op">();</span></span>
-<span id="cb2-1077"><a href="#cb2-1077" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>_was_pinned_before_dialog<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb2-1078"><a href="#cb2-1078" aria-hidden="true" tabindex="-1"></a>            _inspector_state<span class="op">-&gt;</span>setPinned<span class="op">(</span><span class="kw">true</span><span class="op">);</span></span>
-<span id="cb2-1079"><a href="#cb2-1079" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb2-1080"><a href="#cb2-1080" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb2-1081"><a href="#cb2-1081" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb2-1082"><a href="#cb2-1082" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-1083"><a href="#cb2-1083" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> TensorDesigner<span class="op">::</span>_unpinInspectorAfterDialog<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb2-1084"><a href="#cb2-1084" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_inspector_state <span class="op">&amp;&amp;</span> <span class="op">!</span>_was_pinned_before_dialog<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb2-1085"><a href="#cb2-1085" aria-hidden="true" tabindex="-1"></a>        _inspector_state<span class="op">-&gt;</span>setPinned<span class="op">(</span><span class="kw">false</span><span class="op">);</span></span>
-<span id="cb2-1086"><a href="#cb2-1086" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb2-1087"><a href="#cb2-1087" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-1039"><a href="#cb2-1039" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> TensorDesigner<span class="op">::</span>_updateStatus<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> message<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-1040"><a href="#cb2-1040" aria-hidden="true" tabindex="-1"></a>    _status_label<span class="op">-&gt;</span>setText<span class="op">(</span>message<span class="op">);</span></span>
+<span id="cb2-1041"><a href="#cb2-1041" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-1042"><a href="#cb2-1042" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-1043"><a href="#cb2-1043" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb2-1044"><a href="#cb2-1044" aria-hidden="true" tabindex="-1"></a><span class="co">// Dialog result handlers</span></span>
+<span id="cb2-1045"><a href="#cb2-1045" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb2-1046"><a href="#cb2-1046" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-1047"><a href="#cb2-1047" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> TensorDesigner<span class="op">::</span>_onDialogAcceptedAdd<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb2-1048"><a href="#cb2-1048" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_active_dialog<span class="op">)</span> <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb2-1049"><a href="#cb2-1049" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-1050"><a href="#cb2-1050" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> recipes <span class="op">=</span> _active_dialog<span class="op">-&gt;</span>getRecipes<span class="op">();</span></span>
+<span id="cb2-1051"><a href="#cb2-1051" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="op">&amp;</span> recipe<span class="op">:</span> recipes<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-1052"><a href="#cb2-1052" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>recipe<span class="op">.</span>column_name<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb2-1053"><a href="#cb2-1053" aria-hidden="true" tabindex="-1"></a>            recipe<span class="op">.</span>column_name <span class="op">=</span> <span class="st">"column_"</span> <span class="op">+</span> <span class="bu">std::</span>to_string<span class="op">(</span>_column_recipes<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb2-1054"><a href="#cb2-1054" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb2-1055"><a href="#cb2-1055" aria-hidden="true" tabindex="-1"></a>        _column_recipes<span class="op">.</span>push_back<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>recipe<span class="op">));</span></span>
+<span id="cb2-1056"><a href="#cb2-1056" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-1057"><a href="#cb2-1057" aria-hidden="true" tabindex="-1"></a>    _refreshColumnList<span class="op">();</span></span>
+<span id="cb2-1058"><a href="#cb2-1058" aria-hidden="true" tabindex="-1"></a>    _updateStatus<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Column(s) added: %1 columns total"</span><span class="op">)</span></span>
+<span id="cb2-1059"><a href="#cb2-1059" aria-hidden="true" tabindex="-1"></a>                          <span class="op">.</span>arg<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>_column_recipes<span class="op">.</span>size<span class="op">())));</span></span>
+<span id="cb2-1060"><a href="#cb2-1060" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-1061"><a href="#cb2-1061" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-1062"><a href="#cb2-1062" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> TensorDesigner<span class="op">::</span>_onDialogAcceptedEdit<span class="op">(</span><span class="dt">int</span> row<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-1063"><a href="#cb2-1063" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_active_dialog<span class="op">)</span> <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb2-1064"><a href="#cb2-1064" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>row <span class="op">&lt;</span> <span class="dv">0</span> <span class="op">||</span> row <span class="op">&gt;=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>_column_recipes<span class="op">.</span>size<span class="op">()))</span> <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb2-1065"><a href="#cb2-1065" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-1066"><a href="#cb2-1066" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> recipes <span class="op">=</span> _active_dialog<span class="op">-&gt;</span>getRecipes<span class="op">();</span></span>
+<span id="cb2-1067"><a href="#cb2-1067" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>recipes<span class="op">.</span>empty<span class="op">())</span> <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb2-1068"><a href="#cb2-1068" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-1069"><a href="#cb2-1069" aria-hidden="true" tabindex="-1"></a>    _column_recipes<span class="op">[</span>row<span class="op">]</span> <span class="op">=</span> <span class="bu">std::</span>move<span class="op">(</span>recipes<span class="op">[</span><span class="dv">0</span><span class="op">]);</span></span>
+<span id="cb2-1070"><a href="#cb2-1070" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>recipes<span class="op">.</span>size<span class="op">()</span> <span class="op">&gt;</span> <span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-1071"><a href="#cb2-1071" aria-hidden="true" tabindex="-1"></a>        _column_recipes<span class="op">.</span>insert<span class="op">(</span>_column_recipes<span class="op">.</span>begin<span class="op">()</span> <span class="op">+</span> row <span class="op">+</span> <span class="dv">1</span><span class="op">,</span></span>
+<span id="cb2-1072"><a href="#cb2-1072" aria-hidden="true" tabindex="-1"></a>                               <span class="bu">std::</span>make_move_iterator<span class="op">(</span>recipes<span class="op">.</span>begin<span class="op">()</span> <span class="op">+</span> <span class="dv">1</span><span class="op">),</span></span>
+<span id="cb2-1073"><a href="#cb2-1073" aria-hidden="true" tabindex="-1"></a>                               <span class="bu">std::</span>make_move_iterator<span class="op">(</span>recipes<span class="op">.</span>end<span class="op">()));</span></span>
+<span id="cb2-1074"><a href="#cb2-1074" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-1075"><a href="#cb2-1075" aria-hidden="true" tabindex="-1"></a>    _refreshColumnList<span class="op">();</span></span>
+<span id="cb2-1076"><a href="#cb2-1076" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-1077"><a href="#cb2-1077" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-1078"><a href="#cb2-1078" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb2-1079"><a href="#cb2-1079" aria-hidden="true" tabindex="-1"></a><span class="co">// Inspector pin helpers</span></span>
+<span id="cb2-1080"><a href="#cb2-1080" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb2-1081"><a href="#cb2-1081" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-1082"><a href="#cb2-1082" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> TensorDesigner<span class="op">::</span>_pinInspectorForDialog<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb2-1083"><a href="#cb2-1083" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_inspector_state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-1084"><a href="#cb2-1084" aria-hidden="true" tabindex="-1"></a>        _was_pinned_before_dialog <span class="op">=</span> _inspector_state<span class="op">-&gt;</span>isPinned<span class="op">();</span></span>
+<span id="cb2-1085"><a href="#cb2-1085" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>_was_pinned_before_dialog<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-1086"><a href="#cb2-1086" aria-hidden="true" tabindex="-1"></a>            _inspector_state<span class="op">-&gt;</span>setPinned<span class="op">(</span><span class="kw">true</span><span class="op">);</span></span>
+<span id="cb2-1087"><a href="#cb2-1087" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb2-1088"><a href="#cb2-1088" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-1089"><a href="#cb2-1089" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-1090"><a href="#cb2-1090" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-1091"><a href="#cb2-1091" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> TensorDesigner<span class="op">::</span>_unpinInspectorAfterDialog<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb2-1092"><a href="#cb2-1092" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_inspector_state <span class="op">&amp;&amp;</span> <span class="op">!</span>_was_pinned_before_dialog<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-1093"><a href="#cb2-1093" aria-hidden="true" tabindex="-1"></a>        _inspector_state<span class="op">-&gt;</span>setPinned<span class="op">(</span><span class="kw">false</span><span class="op">);</span></span>
+<span id="cb2-1094"><a href="#cb2-1094" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-1095"><a href="#cb2-1095" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-03 at 14:20:43 +0000</p>
+<p>Updated on 2026-08-03 at 15:21:54 +0000</p>
 
 
 </section>

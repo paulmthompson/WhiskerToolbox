@@ -416,7 +416,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classTensorTableModel.html#function-settensordata">setTensorData</a></strong>(<a href="../../api_generated/Classes/classTensorData.html">TensorData</a> * tensor_data)<br>Bind (or unbind) the model to a <a href="">TensorData</a> object.</td>
+<td><strong><a href="../../api_generated/Classes/classTensorTableModel.html#function-settensordata">setTensorData</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> &gt; tensor_data)<br>Bind (or unbind) the model to a <a href="">TensorData</a> object.</td>
 </tr>
 <tr class="odd">
 <td>void</td>
@@ -484,7 +484,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-settensordata" class="level3">
 <h3 class="anchored" data-anchor-id="function-settensordata">function setTensorData</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setTensorData<span class="op">(</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="op">*</span> tensor_data</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TensorData <span class="op">&gt;</span> tensor_data</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Bind (or unbind) the model to a <a href="">TensorData</a> object.</p>
 <p>Resets the model and auto-selects sensible row/column dimensions (row = 0, col = 1 if ndim &gt;= 2).</p>
@@ -580,7 +580,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> role</span>
 <span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-03 at 14:20:37 +0000</p>
+<p>Updated on 2026-08-03 at 15:21:48 +0000</p>
 
 
 </section>
