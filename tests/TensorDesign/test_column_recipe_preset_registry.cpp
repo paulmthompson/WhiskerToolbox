@@ -226,8 +226,62 @@ TEST_CASE("ColumnAggregatorRegistry getAggregatorsFor filters by EffectiveRowTyp
         // Verify that event_count is NOT included
         auto it_count = std::ranges::find_if(aggregators, [](auto const * desc) { return desc->id == "event_count"; });
         CHECK(it_count == aggregators.end());
-        // Verify that raster_events_relative is included (it supports both)
-        auto it_raster = std::ranges::find_if(aggregators, [](auto const * desc) { return desc->id == "raster_events_relative"; });
-        CHECK(it_raster != aggregators.end());
+        // Verify that raster_events_relative is NOT included (interval-only gather fragment)
+        auto it_raster = std::ranges::find_if(aggregators, [](auto const * desc) {
+            return desc->id == "raster_events_relative";
+        });
+        CHECK(it_raster == aggregators.end());
+    }
+}
+
+TEST_CASE("ColumnAggregatorRegistry composition rules filter tensor columns",
+          "[TensorDesign][presets][Phase9f]") {
+    auto modifier_registry = Neuralyzer::TensorDesign::createBuiltInRowModifierRegistry();
+    auto aggregator_registry = createBuiltInColumnAggregatorRegistry();
+
+    auto const * bind_modifier = modifier_registry.find("bind_interval_start");
+    auto const * window_modifier = modifier_registry.find("window_around_interval_start");
+    auto const * interval_start_modifier = modifier_registry.find("interval_start");
+    REQUIRE(bind_modifier != nullptr);
+    REQUIRE(window_modifier != nullptr);
+    REQUIRE(interval_start_modifier != nullptr);
+
+    auto const * raster = aggregator_registry.find("raster_events_relative");
+    auto const * trial_count = aggregator_registry.find("trial_relative_event_count");
+    REQUIRE(raster != nullptr);
+    REQUIRE(trial_count != nullptr);
+
+    SECTION("tensor_column_only excludes raster_events_relative") {
+        Neuralyzer::TensorDesign::AggregatorQueryContext const ctx{
+                .effective_row_type = Neuralyzer::TensorDesign::EffectiveRowType::Interval,
+                .selected_modifier = bind_modifier,
+                .tensor_column_only = true};
+        auto aggregators = aggregator_registry.getAggregatorsFor(ctx);
+        auto it_raster = std::ranges::find_if(aggregators, [](auto const * desc) {
+            return desc->id == "raster_events_relative";
+        });
+        CHECK(it_raster == aggregators.end());
+        auto it_trial = std::ranges::find_if(aggregators, [](auto const * desc) {
+            return desc->id == "trial_relative_event_count";
+        });
+        CHECK(it_trial != aggregators.end());
+    }
+
+    SECTION("isCompatibleComposition enforces modifier pairing") {
+        CHECK(aggregator_registry.isCompatibleComposition(bind_modifier, *trial_count));
+        CHECK_FALSE(aggregator_registry.isCompatibleComposition(window_modifier, *raster));
+        CHECK_FALSE(aggregator_registry.isCompatibleComposition(interval_start_modifier, *raster));
+        CHECK_FALSE(aggregator_registry.isCompatibleComposition(nullptr, *trial_count));
+    }
+
+    SECTION("raster_events_relative metadata") {
+        CHECK(raster->composition_rules.output_kind ==
+              Neuralyzer::TensorDesign::ColumnOutputKind::GatheredDataObject);
+        CHECK(raster->composition_rules.gathered_output_type ==
+              Neuralyzer::TensorDesign::GatheredOutputType::DigitalEventSeries);
+        CHECK(raster->composition_rules.requires_pipeline_value_bindings);
+        CHECK(raster->supported_row_types ==
+              std::vector<Neuralyzer::TensorDesign::EffectiveRowType>{
+                      Neuralyzer::TensorDesign::EffectiveRowType::Interval});
     }
 }

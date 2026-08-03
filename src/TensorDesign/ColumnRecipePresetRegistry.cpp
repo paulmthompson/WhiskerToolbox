@@ -187,17 +187,20 @@ namespace {
             .store_key = bindingStoreKey(args)};
 }
 
-// DELETED
+[[nodiscard]] std::string normalizeEventsRelativePipelineJson(std::string_view store_key) {
+    return R"({"steps": [{"step_id": "normalize", "transform_name": "NormalizeDigitalEventSeriesRelative", "parameters": {"alignment_time": 0}, "param_bindings": {"alignment_time": ")" +
+           std::string(store_key) + R"("}}]})";
+}
 
-// DELETED
-
-// DELETED
-
-// DELETED
-
-// DELETED
-
-// DELETED
+[[nodiscard]] bool modifierIdInList(
+        RowModifierDescriptor const * modifier,
+        std::vector<std::string> const & compatible_modifier_ids) {
+    if (compatible_modifier_ids.empty()) {
+        return true;
+    }
+    auto const modifier_id = modifier != nullptr ? modifier->id : std::string{};
+    return std::ranges::find(compatible_modifier_ids, modifier_id) != compatible_modifier_ids.end();
+}
 
 }// namespace
 
@@ -213,6 +216,7 @@ namespace {
             .display_name = "At interval start",
             .description = "Convert an interval to an event at its start.",
             .output_row_type = EffectiveRowType::Timestamp,
+            .supported_row_types = {EffectiveRowType::Interval},
             .parameters = ParameterSchema{.params_type_name = "IntervalStartArgs"},
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandIntervalStartModifier};
@@ -234,6 +238,7 @@ namespace {
             .display_name = "Window around interval start",
             .description = "Create a window around the interval start.",
             .output_row_type = EffectiveRowType::Interval,
+            .supported_row_types = {EffectiveRowType::Interval},
             .parameters = rowModifierWindowSchema(),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandWindowAroundIntervalStartModifier};
@@ -252,6 +257,7 @@ namespace {
             .display_name = "Bind interval start",
             .description = "Bind the interval start time to a variable for use in the column pipeline, without modifying the row shape.",
             .output_row_type = EffectiveRowType::Unchanged,
+            .supported_row_types = {EffectiveRowType::Interval},
             .parameters = ParameterSchema{.params_type_name = "BindIntervalStartArgs",
                                           .fields = {
                                                   ParameterFieldDescriptor{
@@ -288,6 +294,10 @@ namespace {
             .display_name = "Mean Value",
             .description = "Calculate the mean of an analog signal over the row interval.",
             .supported_row_types = {EffectiveRowType::Interval},
+            .composition_rules = {
+                    .output_kind = ColumnOutputKind::ScalarFloat,
+                    .required_row_geometry = EffectiveRowType::Interval,
+                    .compatible_modifier_ids = {"", "window_around_interval_start"}},
             .parameters = outputSourceSchema("MeanValueArgs"),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandMeanValueAggregator};
@@ -309,6 +319,10 @@ namespace {
             .display_name = "Event Count",
             .description = "Count the total number of events within the row interval.",
             .supported_row_types = {EffectiveRowType::Interval},
+            .composition_rules = {
+                    .output_kind = ColumnOutputKind::ScalarFloat,
+                    .required_row_geometry = EffectiveRowType::Interval,
+                    .compatible_modifier_ids = {"", "window_around_interval_start"}},
             .parameters = outputSourceSchema("EventCountArgs"),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandEventCountAggregator};
@@ -330,6 +344,10 @@ namespace {
             .display_name = "Event Presence",
             .description = "Report whether any event is present within the row interval.",
             .supported_row_types = {EffectiveRowType::Interval},
+            .composition_rules = {
+                    .output_kind = ColumnOutputKind::ScalarFloat,
+                    .required_row_geometry = EffectiveRowType::Interval,
+                    .compatible_modifier_ids = {"", "window_around_interval_start"}},
             .parameters = outputSourceSchema("EventPresenceArgs"),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandEventPresenceAggregator};
@@ -351,6 +369,10 @@ namespace {
             .display_name = "Analog Sample",
             .description = "Sample an analog signal at a specific timestamp.",
             .supported_row_types = {EffectiveRowType::Timestamp},
+            .composition_rules = {
+                    .output_kind = ColumnOutputKind::ScalarFloat,
+                    .required_row_geometry = EffectiveRowType::Timestamp,
+                    .compatible_modifier_ids = {"interval_start"}},
             .parameters = outputSourceSchema("AnalogSampleArgs"),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandAnalogSampleAggregator};
@@ -360,9 +382,8 @@ namespace {
         ColumnRecipePresetArgs const & args) {
     if (args.source_key.empty() || args.name_prefix.empty()) return std::nullopt;
     return ColumnAggregatorExpansion{.columns = {
-            pointCoordinateRecipe(args.name_prefix + "_x", args.source_key, "x", "X"),
-            pointCoordinateRecipe(args.name_prefix + "_y", args.source_key, "y", "Y")
-    }};
+                                             pointCoordinateRecipe(args.name_prefix + "_x", args.source_key, "x", "X"),
+                                             pointCoordinateRecipe(args.name_prefix + "_y", args.source_key, "y", "Y")}};
 }
 
 [[nodiscard]] ColumnAggregatorDescriptor pointXyAggregatorDescriptor() {
@@ -371,6 +392,10 @@ namespace {
             .display_name = "Point XY",
             .description = "Expand a PointData keypoint into x and y columns at the row timestamp.",
             .supported_row_types = {EffectiveRowType::Timestamp},
+            .composition_rules = {
+                    .output_kind = ColumnOutputKind::ScalarFloat,
+                    .required_row_geometry = EffectiveRowType::Timestamp,
+                    .compatible_modifier_ids = {"interval_start"}},
             .parameters = pointXySchema(),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandPointXyAggregator};
@@ -395,6 +420,10 @@ namespace {
             .display_name = "Multi-Point XY",
             .description = "Expand multiple PointData keypoints into x and y columns at the row timestamp.",
             .supported_row_types = {EffectiveRowType::Timestamp},
+            .composition_rules = {
+                    .output_kind = ColumnOutputKind::ScalarFloat,
+                    .required_row_geometry = EffectiveRowType::Timestamp,
+                    .compatible_modifier_ids = {"interval_start"}},
             .parameters = multiPointXySchema(),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandMultiPointXyAggregator};
@@ -402,12 +431,13 @@ namespace {
 
 [[nodiscard]] std::optional<ColumnAggregatorExpansion> expandRasterEventsRelativeAggregator(
         ColumnRecipePresetArgs const & args) {
-    if (args.output_name.empty() || args.source_key.empty() || bindingSourceKey(args).empty()) return std::nullopt;
+    if (args.output_name.empty() || args.source_key.empty() || bindingSourceKey(args).empty()) {
+        return std::nullopt;
+    }
     TensorBuilders::ColumnRecipe recipe;
     recipe.column_name = args.output_name;
     recipe.source_key = args.source_key;
-    auto const store_key = args.store_key;
-    recipe.pipeline_json = R"({"steps": [{"step_id": "normalize", "transform_name": "NormalizeDigitalEventSeriesRelative", "parameters": {"alignment_time": 0}, "param_bindings": {"alignment_time": ")" + store_key + R"("}}]})";
+    recipe.pipeline_json = normalizeEventsRelativePipelineJson(args.store_key);
     return ColumnAggregatorExpansion{.columns = {std::move(recipe)}};
 }
 
@@ -415,8 +445,15 @@ namespace {
     return ColumnAggregatorDescriptor{
             .id = "raster_events_relative",
             .display_name = "Raster Events (Relative)",
-            .description = "Convert events to relative times aligned to a bound timestamp variable. Returns a DigitalEventSeries.",
-            .supported_row_types = {EffectiveRowType::Interval, EffectiveRowType::Timestamp},
+            .description = "Gather events over each row interval and normalize to alignment time. "
+                           "Intermediate gather transform; use trial_relative_event_count for a scalar tensor column.",
+            .supported_row_types = {EffectiveRowType::Interval},
+            .composition_rules = {
+                    .output_kind = ColumnOutputKind::GatheredDataObject,
+                    .gathered_output_type = GatheredOutputType::DigitalEventSeries,
+                    .requires_pipeline_value_bindings = true,
+                    .required_row_geometry = EffectiveRowType::Interval,
+                    .compatible_modifier_ids = {"bind_interval_start"}},
             .parameters = trialRelativeEventSchema("RasterEventsRelativeAggregatorArgs"),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandRasterEventsRelativeAggregator};
@@ -431,8 +468,11 @@ namespace {
     TensorBuilders::ColumnRecipe recipe;
     recipe.column_name = args.output_name;
     recipe.source_key = args.source_key;
-    auto const store_key = args.store_key;
-    recipe.pipeline_json = R"({"steps": [{"step_id": "normalize", "transform_name": "NormalizeDigitalEventSeriesRelative", "parameters": {"alignment_time": 0}, "param_bindings": {"alignment_time": ")" + store_key + R"("}}], "range_reduction": {"reduction_name": "EventCountInWindow", "parameters": {"window_start": )" + std::to_string(args.window_start) + R"(, "window_end": )" + std::to_string(args.window_end) + R"(}}})";
+    recipe.pipeline_json = normalizeEventsRelativePipelineJson(args.store_key);
+    recipe.pipeline_json.erase(recipe.pipeline_json.size() - 1);
+    recipe.pipeline_json += R"(, "range_reduction": {"reduction_name": "EventCountInWindow", "parameters": {"window_start": )" +
+                            std::to_string(args.window_start) + R"(, "window_end": )" + std::to_string(args.window_end) +
+                            R"(}}})";
     return ColumnAggregatorExpansion{.columns = {std::move(recipe)}};
 }
 
@@ -442,6 +482,11 @@ namespace {
             .display_name = "Trial Relative Event Count",
             .description = "Count events in a relative window aligned to a bound timestamp variable.",
             .supported_row_types = {EffectiveRowType::Interval},
+            .composition_rules = {
+                    .output_kind = ColumnOutputKind::ScalarFloat,
+                    .requires_pipeline_value_bindings = true,
+                    .required_row_geometry = EffectiveRowType::Interval,
+                    .compatible_modifier_ids = {"bind_interval_start"}},
             .parameters = trialRelativeEventSchema("TrialRelativeEventCountAggregatorArgs"),
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandTrialRelativeEventCountAggregator};
@@ -519,14 +564,16 @@ ColumnRecipePresetDescriptor wrapAggregator(ColumnAggregatorDescriptor const & a
 
 ColumnRecipePresetRegistry createBuiltInColumnRecipePresetRegistry() {
     ColumnRecipePresetRegistry registry;
-    
-    // Phase 9e: Expose bare ColumnAggregators as Presets (empty row_pipeline_json)
+
+    // Phase 9e: Expose scalar ColumnAggregators as tensor presets (empty row_pipeline_json).
     auto agg_registry = createBuiltInColumnAggregatorRegistry();
-    for (auto const * agg : agg_registry.descriptors()) {
+    for (auto const * agg: agg_registry.descriptors()) {
+        if (agg->composition_rules.output_kind != ColumnOutputKind::ScalarFloat) {
+            continue;
+        }
         static_cast<void>(registry.registerPreset(wrapAggregator(*agg)));
     }
 
-    // DELETED
     return registry;
 }
 
@@ -597,6 +644,16 @@ std::vector<RowModifierDescriptor const *> RowModifierRegistry::descriptors() co
     return result;
 }
 
+std::vector<RowModifierDescriptor const *> RowModifierRegistry::getModifiersFor(EffectiveRowType row_type) const {
+    std::vector<RowModifierDescriptor const *> results;
+    for (auto const & desc: _descriptors) {
+        if (std::ranges::find(desc.supported_row_types, row_type) != desc.supported_row_types.end()) {
+            results.push_back(&desc);
+        }
+    }
+    return results;
+}
+
 RowModifierRegistry createBuiltInRowModifierRegistry() {
     RowModifierRegistry registry;
     static_cast<void>(registry.registerModifier(intervalStartModifierDescriptor()));
@@ -633,7 +690,7 @@ ColumnAggregatorDescriptor const * ColumnAggregatorRegistry::find(std::string co
 std::vector<ColumnAggregatorDescriptor const *> ColumnAggregatorRegistry::descriptors() const {
     std::vector<ColumnAggregatorDescriptor const *> results;
     results.reserve(_descriptors.size());
-    for (auto const & desc : _descriptors) {
+    for (auto const & desc: _descriptors) {
         results.push_back(&desc);
     }
     return results;
@@ -645,6 +702,74 @@ std::vector<ColumnAggregatorDescriptor const *> ColumnAggregatorRegistry::getAgg
         if (std::ranges::find(desc.supported_row_types, row_type) != desc.supported_row_types.end()) {
             results.push_back(&desc);
         }
+    }
+    return results;
+}
+
+bool ColumnAggregatorRegistry::isCompatibleComposition(
+        RowModifierDescriptor const * modifier,
+        ColumnAggregatorDescriptor const & aggregator) {
+    auto const & rules = aggregator.composition_rules;
+
+    if (rules.requires_pipeline_value_bindings) {
+        if (modifier == nullptr || modifier->id != "bind_interval_start") {
+            return false;
+        }
+    }
+
+    if (rules.required_row_geometry == EffectiveRowType::Interval && modifier != nullptr &&
+        modifier->output_row_type == EffectiveRowType::Timestamp) {
+        return false;
+    }
+
+    if (rules.required_row_geometry == EffectiveRowType::Timestamp) {
+        if (modifier == nullptr || modifier->output_row_type != EffectiveRowType::Timestamp) {
+            return false;
+        }
+    }
+
+    if (!rules.compatible_modifier_ids.empty()) {
+        auto const allows_no_modifier =
+                std::ranges::find(rules.compatible_modifier_ids, std::string{}) !=
+                rules.compatible_modifier_ids.end();
+        if (modifier == nullptr) {
+            if (!allows_no_modifier) {
+                return false;
+            }
+        } else if (!modifierIdInList(modifier, rules.compatible_modifier_ids)) {
+            return false;
+        }
+    }
+
+    if (modifier != nullptr && modifier->output_row_type == EffectiveRowType::Timestamp) {
+        auto const supports_timestamp = std::ranges::find(
+                                                aggregator.supported_row_types,
+                                                EffectiveRowType::Timestamp) !=
+                                        aggregator.supported_row_types.end();
+        if (!supports_timestamp) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+std::vector<ColumnAggregatorDescriptor const *> ColumnAggregatorRegistry::getAggregatorsFor(
+        AggregatorQueryContext const & ctx) const {
+    std::vector<ColumnAggregatorDescriptor const *> results;
+    for (auto const & desc: _descriptors) {
+        if (ctx.tensor_column_only &&
+            desc.composition_rules.output_kind != ColumnOutputKind::ScalarFloat) {
+            continue;
+        }
+        if (std::ranges::find(desc.supported_row_types, ctx.effective_row_type) ==
+            desc.supported_row_types.end()) {
+            continue;
+        }
+        if (!isCompatibleComposition(ctx.selected_modifier, desc)) {
+            continue;
+        }
+        results.push_back(&desc);
     }
     return results;
 }

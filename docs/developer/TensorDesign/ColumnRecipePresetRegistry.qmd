@@ -273,6 +273,15 @@ Expansion is the same as `raster_events_relative_to_interval_start`, plus an `Ev
 
 It also verifies direct preset-authored JSON, such as `columns[].preset = "point_xy"`, through both `parseDesignJson()` and `buildTensorFromDesignJson()`.
 
+`tests/fuzz/integration/TensorDesign/fuzz_tensor_design_registry.cpp` adds an allowlisted scalar-composition fuzz target. Each fuzz input selects one explicit `(row_modifier, column_aggregator)` pair from a curated table rather than the full registry Cartesian product. The allowlist is organized in tiers that mirror the former monolithic presets:
+
+- **Tier 0:** no modifier + `mean_value`, `event_count`, or `event_presence` over full row intervals.
+- **Tier 1:** `interval_start` + `analog_sample`, `point_xy`, or `multi_point_xy`.
+- **Tier 2:** `window_around_interval_start` + interval reducers, with fuzzed `pre`/`post`.
+- **Tier 3:** `bind_interval_start` + `trial_relative_event_count`.
+
+`raster_events_relative` is intentionally excluded because it produces per-row `DigitalEventSeries` output (relative spike times) rather than scalar float tensor columns. Add new allowlist entries incrementally as deterministic Catch2 coverage lands for each composition.
+
 ## TensorDesigner UI
 
 TensorDesigner exposes **Add Preset...** next to **Add Column**. The dialog lists built-in registry presets, shows each preset description and parameter field names, collects the shared preset parameters, expands the selected preset through `ColumnRecipePresetRegistry`, and appends all generated raw `ColumnRecipe`s to the current design.

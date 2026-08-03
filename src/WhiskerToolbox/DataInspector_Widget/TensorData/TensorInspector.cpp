@@ -99,6 +99,7 @@ void TensorInspector::_onDataChanged() {
 }
 
 void TensorInspector::_onTensorCreated(QString const & key) {
+    setActiveKey(key.toStdString());
     emit tensorCreated(key);
 }
 

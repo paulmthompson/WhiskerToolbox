@@ -18,9 +18,9 @@
 #include "TensorData/TensorDesigner.hpp"
 #include "TensorData/TensorInspector.hpp"
 
-#include "TransformsV2/io/PipelineLibrary.hpp"
 #include "TimeFrameData/TimeFrameDataView.hpp"
 #include "TimeFrameData/TimeFrameInspector.hpp"
+#include "TransformsV2/io/PipelineLibrary.hpp"
 
 #include "Commands/Core/CommandRecorder.hpp"
 #include "DataManager/DataManager.hpp"
@@ -29,6 +29,8 @@
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QLabel>
+#include <QPointer>
+#include <QTimer>
 #include <QVBoxLayout>
 
 DataInspectorPropertiesWidget::DataInspectorPropertiesWidget(
@@ -49,7 +51,8 @@ DataInspectorPropertiesWidget::DataInspectorPropertiesWidget(
     if (_data_manager) {
         _dm_observer_id = _data_manager->addObserver([this]() {
             _onDataManagerChanged();
-        }, "DataInspectorPropertiesWidget");
+        },
+                                                     "DataInspectorPropertiesWidget");
     }
 }
 
@@ -220,25 +223,37 @@ void DataInspectorPropertiesWidget::_onStateChanged() {
 
 void DataInspectorPropertiesWidget::_onDataManagerChanged() {
     // Check whether the currently inspected data key was deleted from DataManager.
-    // If so, clear the inspector state so both Properties and View widgets reset.
+    // Defer the check: setData() replaces an existing key by erasing it, notifying
+    // observers, then re-inserting under the same key. Without deferral, we would
+    // tear down the active inspector (e.g. TensorInspector mid-build) while the
+    // key is only transiently absent.
     if (_current_key.empty() || !_data_manager) {
         return;
     }
 
-    // For TimeFrame keys, skip — deleteData only affects data keys
     if (_current_type == DM_DataType::Time) {
         return;
     }
 
-    auto const data_variant = _data_manager->getDataVariant(_current_key);
-    if (!data_variant.has_value()) {
-        // Key no longer exists — clear the state (cascades to View widget too)
-        if (_state) {
-            _state->setInspectedDataKey(QString());
-        } else {
-            _updateInspectorForKey(QString());
+    std::string const key_snapshot = _current_key;
+    QPointer<DataInspectorPropertiesWidget> const guard(this);
+    QTimer::singleShot(0, this, [guard, key_snapshot]() {
+        if (!guard || guard->_current_key != key_snapshot || !guard->_data_manager) {
+            return;
         }
-    }
+
+        if (guard->_current_type == DM_DataType::Time) {
+            return;
+        }
+
+        if (!guard->_data_manager->getDataVariant(key_snapshot).has_value()) {
+            if (guard->_state) {
+                guard->_state->setInspectedDataKey(QString());
+            } else {
+                guard->_updateInspectorForKey(QString());
+            }
+        }
+    });
 }
 
 void DataInspectorPropertiesWidget::_updateInspectorForKey(QString const & key) {
@@ -248,25 +263,45 @@ void DataInspectorPropertiesWidget::_updateInspectorForKey(QString const & key) 
         return;// Already showing this data
     }
 
-    _current_key = key_std;
-    _updateHeaderDisplay();
-
-    // Clear existing inspector
-    _clearInspector();
-
     if (key.isEmpty() || !_data_manager) {
+        _current_key = key_std;
+        _updateHeaderDisplay();
+        _clearInspector();
         return;
     }
 
     // Check if data exists
     auto const data_variant = _data_manager->getDataVariant(key_std);
     if (!data_variant.has_value()) {
+        _current_key = key_std;
+        _updateHeaderDisplay();
+        _clearInspector();
         ui->dataKeyLabel->setText(tr("Data not found: %1").arg(key));
         return;
     }
 
     // Get the data type
     auto const data_type = _data_manager->getType(key_std);
+
+    // Reuse TensorInspector when navigating between tensor keys. Destroying the
+    // inspector during tensorCreated (while TensorDesigner is still emitting)
+    // would delete the sender widget and crash.
+    if (_current_inspector && _current_type == DM_DataType::Tensor &&
+        data_type == DM_DataType::Tensor) {
+        _current_key = key_std;
+        _updateHeaderDisplay();
+        ui->dataTypeLabel->setText(
+                QString::fromStdString(convert_data_type_to_string(data_type)));
+        _current_inspector->setActiveKey(key_std);
+        _connectInspectorToView();
+        return;
+    }
+
+    _current_key = key_std;
+    _updateHeaderDisplay();
+
+    // Clear existing inspector
+    _clearInspector();
 
     // Update type label
     QString const type_name = QString::fromStdString(convert_data_type_to_string(data_type));
@@ -473,10 +508,13 @@ void DataInspectorPropertiesWidget::_connectInspectorToView() {
         if (tensor_inspector->designer() && _state) {
             tensor_inspector->designer()->setInspectorState(_state);
         }
-        // When designer creates a tensor, navigate the inspector to it
+        // When designer creates a tensor, navigate the inspector to it on the next
+        // event-loop turn so TensorDesigner finishes emitting before we update.
         QObject::connect(tensor_inspector, &TensorInspector::tensorCreated,
                          this, [this](QString const & key) {
-                             inspectData(key);
+                             QTimer::singleShot(0, this, [this, key]() {
+                                 inspectData(key);
+                             });
                          });
     }
 

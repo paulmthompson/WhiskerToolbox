@@ -74,7 +74,8 @@ tests/fuzz/
 │       ├── DigitalTimeSeries/  # Digital event series JSON fuzzing
 │       └── transforms/         # Transform-level fuzzing
 └── integration/                # Integration-level fuzz tests
-    └── fuzz_transform_pipeline.cpp  # Pipeline execution fuzzing
+    ├── fuzz_transform_pipeline.cpp  # Pipeline execution fuzzing
+    └── TensorDesign/            # Registry-composed TensorDesign fuzzing
 ```
 
 ## Test Categories
@@ -98,6 +99,11 @@ Located in `integration/`, these tests focus on system-level behaviors:
   - Variable substitution edge cases
   - Multi-phase execution
   - Invalid transform combinations
+
+- **TensorDesign Registry Composition** (`integration/TensorDesign/`)
+  - Compatible row-modifier and column-aggregator pairs selected from registries
+  - Builds over heterogeneous DataManager source data, including multi-column expansions
+  - Window geometry variation for interval-start modifiers
 
 ## Writing New Fuzz Tests
 

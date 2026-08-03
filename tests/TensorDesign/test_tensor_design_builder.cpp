@@ -36,6 +36,7 @@ using Neuralyzer::TensorDesign::ColumnRecipePresetArgs;
 using Neuralyzer::TensorDesign::createBuiltInColumnRecipePresetRegistry;
 using Neuralyzer::TensorDesign::parseDesignJson;
 using Neuralyzer::TensorDesign::populateDataManager;
+using Neuralyzer::TensorDesign::resolveOutputTimeKey;
 using Neuralyzer::TensorDesign::serializeDesignJson;
 using Neuralyzer::TensorDesign::TensorDesignSpec;
 
@@ -1324,6 +1325,110 @@ TEST_CASE("populateDataManager registers tensor in DataManager", "[TensorDesign]
     auto const tensor = dm.getData<TensorData>("designed");
     REQUIRE(tensor != nullptr);
     REQUIRE(tensor->numRows() == 1);
+    REQUIRE(dm.getTimeKey("designed").str() == "time");
+}
+
+TEST_CASE("resolveOutputTimeKey prefers row source TimeKey over missing default", "[TensorDesign]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 20);
+    auto analog = createLinearAnalog(20);
+    dm.setData<AnalogTimeSeries>("signal", analog, TimeKey("time"));
+    auto intervals = createIntervalSeries({{0, 5}});
+    dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("time"));
+
+    TensorDesignSpec spec;
+    spec.tensor_key = "designed";
+    spec.row_source_key = "intervals";
+    spec.row_type = DesignRowType::Interval;
+
+    auto const resolved = resolveOutputTimeKey(dm, spec);
+    REQUIRE(resolved.has_value());
+    REQUIRE(resolved->str() == "time");
+}
+
+TEST_CASE("populateDataManager cross-timeframe row and column sources", "[TensorDesign]") {
+    DataManager dm;
+    REQUIRE(dm.setTime(TimeKey("time"), createIdentityTimeFrameForMax(1000), true));
+    REQUIRE(dm.setTime(TimeKey("master"), createIdentityTimeFrameForMax(1000), true));
+
+    auto intervals = createIntervalSeries({{100, 120}, {200, 230}});
+    auto contacts = createIntervalSeries({{100, 120}, {200, 230}});
+    auto spikes = createEventSeries({95, 105, 112, 190, 205, 220});
+    dm.setData<DigitalIntervalSeries>("intervals", intervals, TimeKey("time"));
+    dm.setData<DigitalIntervalSeries>("contacts", contacts, TimeKey("time"));
+    dm.setData<DigitalEventSeries>("spikes", spikes, TimeKey("master"));
+
+    TensorDesignSpec spec;
+    spec.tensor_key = "cross_tf_features";
+    spec.row_source_key = "intervals";
+    spec.row_type = DesignRowType::Interval;
+    spec.columns.push_back({
+            .column_name = "early_spike_count",
+            .source_key = "spikes",
+            .pipeline_json =
+                    R"({"steps": [{"step_id": "normalize", "transform_name": "NormalizeDigitalEventSeriesRelative", "parameters": {"alignment_time": 0}, "param_bindings": {"alignment_time": "row_alignment_time"}}], "range_reduction": {"reduction_name": "EventCountInWindow", "parameters": {"window_start": 0.0, "window_end": 15.0}}})",
+            .pipeline_value_bindings = {{
+                    .source_key = "contacts",
+                    .source_pipeline_json =
+                            R"({"steps": [{"step_id": "interval_start", "transform_name": "IntervalToEvent", "parameters": {"point": "start"}}]})",
+                    .store_key = "row_alignment_time",
+            }},
+    });
+
+    REQUIRE(populateDataManager(dm, spec));
+    auto const tensor = dm.getData<TensorData>("cross_tf_features");
+    REQUIRE(tensor != nullptr);
+    REQUIRE(tensor->numRows() == intervals->size());
+    REQUIRE(dm.getTimeKey("cross_tf_features").str() == "time");
+
+    auto const values = tensor->getColumn(0);
+    REQUIRE(values.size() == intervals->size());
+    CHECK_THAT(values[0], WithinAbs(2.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(1.0, 0.01));
+}
+
+TEST_CASE("populateDataManager cross-timeframe event_presence on master spikes", "[TensorDesign]") {
+    DataManager dm;
+    REQUIRE(dm.setTime(TimeKey("time"), createIdentityTimeFrameForMax(1000), true));
+    REQUIRE(dm.setTime(TimeKey("master"), createIdentityTimeFrameForMax(1000), true));
+
+    auto intervals = createIntervalSeries({{100, 120}, {200, 230}});
+    auto spikes = createEventSeries({105, 205});
+    dm.setData<DigitalIntervalSeries>("contact_0", intervals, TimeKey("time"));
+    dm.setData<DigitalEventSeries>("spikes_1", spikes, TimeKey("master"));
+
+    TensorDesignSpec spec;
+    spec.tensor_key = "presence_features";
+    spec.row_source_key = "contact_0";
+    spec.row_type = DesignRowType::Interval;
+    spec.columns.push_back({
+            .column_name = "spike_presence",
+            .source_key = "spikes_1",
+            .pipeline_json =
+                    R"({"steps": [], "range_reduction": {"reduction_name": "EventPresence"}})",
+    });
+
+    REQUIRE(populateDataManager(dm, spec));
+    auto const tensor = dm.getData<TensorData>("presence_features");
+    REQUIRE(tensor != nullptr);
+    REQUIRE(tensor->numRows() == intervals->size());
+    REQUIRE(dm.getTimeKey("presence_features").str() == "time");
+
+    auto const values = tensor->getColumn(0);
+    REQUIRE(values.size() == intervals->size());
+    CHECK_THAT(values[0], WithinAbs(1.0, 0.01));
+    CHECK_THAT(values[1], WithinAbs(1.0, 0.01));
+}
+
+TEST_CASE("setData rejects unknown TimeKey without orphan data key", "[TensorDesign][DataManager]") {
+    DataManager dm;
+    setDefaultIdentityTimeFrame(dm, 10);
+    auto analog = createLinearAnalog(10);
+
+    dm.setData<AnalogTimeSeries>("orphan_signal", analog, TimeKey("missing"));
+
+    REQUIRE(dm.getData<AnalogTimeSeries>("orphan_signal") == nullptr);
+    REQUIRE(dm.getTimeKey("orphan_signal").empty());
 }
 
 TEST_CASE("serializeDesignJson round-trips through parseDesignJson", "[TensorDesign]") {

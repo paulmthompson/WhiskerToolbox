@@ -141,7 +141,7 @@ auto buildResultFromTorch(
         TensorData const & input,
         std::vector<std::string> const & column_names) -> std::shared_ptr<TensorData> {
     assert(result_tensor.device().is_cpu());
-    assert(result_tensor.scalar_type() == at::Float);
+    assert(result_tensor.scalar_type() == c10::ScalarType::Float);
 
     auto const & row_desc = input.rows();
     auto storage = TensorStorageWrapper{

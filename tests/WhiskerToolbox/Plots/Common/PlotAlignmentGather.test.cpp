@@ -21,6 +21,7 @@
 using namespace Neuralyzer::Plots;
 using Neuralyzer::Test::GatherFixtures::createEventSeries;
 using Neuralyzer::Test::GatherFixtures::createIdentityTimeFrame;
+using Neuralyzer::Test::GatherFixtures::createIdentityTimeFrameForMax;
 using Neuralyzer::Test::GatherFixtures::createIntervalSeries;
 using Neuralyzer::Test::GatherFixtures::createTimeFrameForRate;
 using Neuralyzer::Test::GatherFixtures::kSpikeSamplesPerEventIndex;
@@ -39,6 +40,7 @@ std::shared_ptr<DataManager> createTestDataManager() {
 
     // Create a time key for digital series
     TimeKey const time_key("test_time");
+    dm->setTime(time_key, createIdentityTimeFrameForMax(400));
 
     // Add spike data
     auto spikes = createEventSeries({10, 50, 100, 150, 200, 250, 300, 350});
@@ -590,8 +592,9 @@ TEST_CASE("getFilteredAlignmentSource - prevent_overlap false returns unfiltered
     align_data.prevent_overlap = false;
 
     auto result = getFilteredAlignmentSource(dm, align_data);
-    CHECK(result.isValid());
-    CHECK(result.is_event_series);
+    REQUIRE(result.isValid());
+    REQUIRE(result.is_event_series);
+    REQUIRE(result.event_series != nullptr);
     // Should have all 3 events
     CHECK(result.event_series->size() == 3);
 }
@@ -607,14 +610,16 @@ TEST_CASE("getFilteredAlignmentSource - prevent_overlap true with events", "[Plo
     SECTION("Small window keeps all") {
         align_data.window_size = 100.0;// ±50, gap=150 > 100 → no overlap
         auto result = getFilteredAlignmentSource(dm, align_data);
-        CHECK(result.isValid());
+        REQUIRE(result.isValid());
+        REQUIRE(result.event_series != nullptr);
         CHECK(result.event_series->size() == 3);
     }
 
     SECTION("Large window prunes overlapping") {
         align_data.window_size = 400.0;// ±200, gap=150 < 400 → overlap
         auto result = getFilteredAlignmentSource(dm, align_data);
-        CHECK(result.isValid());
+        REQUIRE(result.isValid());
+        REQUIRE(result.event_series != nullptr);
         CHECK(result.event_series->size() == 1);
     }
 }
@@ -630,8 +635,9 @@ TEST_CASE("getFilteredAlignmentSource - prevent_overlap true with intervals", "[
     align_data.window_size = 200.0;// ±100
 
     auto result = getFilteredAlignmentSource(dm, align_data);
-    CHECK(result.isValid());
-    CHECK(result.is_interval_series);
+    REQUIRE(result.isValid());
+    REQUIRE(result.is_interval_series);
+    REQUIRE(result.interval_series != nullptr);
     // Times: 0, 150, 300. ±100 → 0 kept, 150 pruned (100 > 50), 300 kept
     CHECK(result.interval_series->size() == 2);
 }
