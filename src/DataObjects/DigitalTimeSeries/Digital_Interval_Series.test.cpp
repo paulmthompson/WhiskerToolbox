@@ -135,7 +135,7 @@ TEST_CASE("Digital Interval Overlap Left", "[DataManager]") {
 TEST_CASE("DigitalIntervalSeries - Range-based access", "[DataManager]") {
     DigitalIntervalSeries dis;
     std::vector<int> times;
-    for (int i: std::views::iota(0, 100)) {
+    for (int const i: std::views::iota(0, 100)) {
         times.push_back(i);
     }
     auto timeframe = std::make_shared<TimeFrame>(times);
@@ -186,7 +186,7 @@ TEST_CASE("DigitalIntervalSeries - Range-based access", "[DataManager]") {
     }
 
     SECTION("Cross-timeframe query returns absolute clock ticks") {
-        std::vector<int> sparse_times{0, 10, 20, 30, 40, 50};
+        std::vector<int> const sparse_times{0, 10, 20, 30, 40, 50};
         auto query_timeframe = std::make_shared<TimeFrame>(sparse_times);
 
         // Query indices 1..2 map to clock ticks [10, 20], excluding [30, 40].
@@ -280,6 +280,7 @@ TEST_CASE("DigitalIntervalSeries - view() method", "[DataManager][view]") {
 
     SECTION("Empty series") {
         DigitalIntervalSeries empty_dis;
+        empty_dis.setTimeFrame(timeframe);
 
         size_t count = 0;
         for ([[maybe_unused]] auto const interval: empty_dis.view()) {
@@ -345,7 +346,7 @@ TEST_CASE("DigitalIntervalSeries - getStoredInterval", "[DataManager][view]") {
 
 TEST_CASE("DigitalIntervalSeries - IntervalLayout", "[DataManager][interval][layout]") {
     SECTION("Default layout is Disjoint") {
-        DigitalIntervalSeries series;
+        DigitalIntervalSeries const series;
         REQUIRE(series.layout() == IntervalLayout::Disjoint);
     }
 
