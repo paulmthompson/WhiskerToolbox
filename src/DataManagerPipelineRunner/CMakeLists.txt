@@ -10,7 +10,10 @@ target_link_libraries(DataManagerPipelineRunner PRIVATE DeepLearning)
 # Force whole-archive linking so headless JSON workflows see the same registrations
 # as the GUI and command tests.
 if(APPLE)
+    # Link CMake targets for transitive static-lib deps (e.g. TransformsV2 -> MLCore).
+    # -force_load alone only injects the .a path and skips that propagation.
     target_link_libraries(DataManagerPipelineRunner PRIVATE
+            MediaData DataSynthesizer TransformsV2
             -Wl,-force_load,$<TARGET_FILE:MediaData>
             -Wl,-force_load,$<TARGET_FILE:DataSynthesizer>
             -Wl,-force_load,$<TARGET_FILE:TransformsV2>
