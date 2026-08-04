@@ -402,27 +402,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>bool</td>
-<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1ColumnAggregatorRegistry.html#function-registeraggregator">registerAggregator</a></strong>(<a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1ColumnAggregatorDescriptor.html">ColumnAggregatorDescriptor</a> descriptor)</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1ColumnAggregatorRegistry.html#function-registeraggregator">registerAggregator</a></strong>(std::unique_ptr&lt; <a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1IColumnAggregator.html">IColumnAggregator</a> &gt; aggregator)</td>
 </tr>
 <tr class="even">
-<td><a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1ColumnAggregatorDescriptor.html">ColumnAggregatorDescriptor</a> const *</td>
+<td><a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1IColumnAggregator.html">IColumnAggregator</a> const *</td>
 <td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1ColumnAggregatorRegistry.html#function-find">find</a></strong>(std::string const &amp; id) const</td>
 </tr>
 <tr class="odd">
-<td>std::vector&lt; <a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1ColumnAggregatorDescriptor.html">ColumnAggregatorDescriptor</a> const * &gt;</td>
+<td>std::vector&lt; <a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1IColumnAggregator.html">IColumnAggregator</a> const * &gt;</td>
 <td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1ColumnAggregatorRegistry.html#function-descriptors">descriptors</a></strong>() const</td>
 </tr>
 <tr class="even">
-<td>std::vector&lt; <a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1ColumnAggregatorDescriptor.html">ColumnAggregatorDescriptor</a> const * &gt;</td>
+<td>std::vector&lt; <a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1IColumnAggregator.html">IColumnAggregator</a> const * &gt;</td>
 <td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1ColumnAggregatorRegistry.html#function-getaggregatorsfor">getAggregatorsFor</a></strong>(<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1TensorDesign.html#enum-effectiverowtype">EffectiveRowType</a> row_type) const</td>
 </tr>
 <tr class="odd">
-<td>std::vector&lt; <a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1ColumnAggregatorDescriptor.html">ColumnAggregatorDescriptor</a> const * &gt;</td>
+<td>std::vector&lt; <a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1IColumnAggregator.html">IColumnAggregator</a> const * &gt;</td>
 <td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1ColumnAggregatorRegistry.html#function-getaggregatorsfor">getAggregatorsFor</a></strong>(<a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1AggregatorQueryContext.html">AggregatorQueryContext</a> const &amp; ctx) const</td>
 </tr>
 <tr class="even">
 <td>bool</td>
-<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1ColumnAggregatorRegistry.html#function-iscompatiblecomposition">isCompatibleComposition</a></strong>(<a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1RowModifierDescriptor.html">RowModifierDescriptor</a> const * modifier, <a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1ColumnAggregatorDescriptor.html">ColumnAggregatorDescriptor</a> const &amp; aggregator)</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1ColumnAggregatorRegistry.html#function-iscompatiblecomposition">isCompatibleComposition</a></strong>(<a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1IRowModifier.html">IRowModifier</a> const * modifier, <a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1IColumnAggregator.html">IColumnAggregator</a> const &amp; aggregator)</td>
 </tr>
 </tbody>
 </table>
@@ -432,39 +432,39 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-registeraggregator" class="level3">
 <h3 class="anchored" data-anchor-id="function-registeraggregator">function registerAggregator</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> registerAggregator<span class="op">(</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    ColumnAggregatorDescriptor descriptor</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span> IColumnAggregator <span class="op">&gt;</span> aggregator</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-find" class="level3">
 <h3 class="anchored" data-anchor-id="function-find">function find</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>ColumnAggregatorDescriptor <span class="at">const</span> <span class="op">*</span> find<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>IColumnAggregator <span class="at">const</span> <span class="op">*</span> find<span class="op">(</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> id</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-descriptors" class="level3">
 <h3 class="anchored" data-anchor-id="function-descriptors">function descriptors</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> ColumnAggregatorDescriptor <span class="at">const</span> <span class="op">*</span> <span class="op">&gt;</span> descriptors<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> IColumnAggregator <span class="at">const</span> <span class="op">*</span> <span class="op">&gt;</span> descriptors<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-getaggregatorsfor" class="level3">
 <h3 class="anchored" data-anchor-id="function-getaggregatorsfor">function getAggregatorsFor</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> ColumnAggregatorDescriptor <span class="at">const</span> <span class="op">*</span> <span class="op">&gt;</span> getAggregatorsFor<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> IColumnAggregator <span class="at">const</span> <span class="op">*</span> <span class="op">&gt;</span> getAggregatorsFor<span class="op">(</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    EffectiveRowType <span class="dt">row_type</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-getaggregatorsfor-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-getaggregatorsfor-1">function getAggregatorsFor</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> ColumnAggregatorDescriptor <span class="at">const</span> <span class="op">*</span> <span class="op">&gt;</span> getAggregatorsFor<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> IColumnAggregator <span class="at">const</span> <span class="op">*</span> <span class="op">&gt;</span> getAggregatorsFor<span class="op">(</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    AggregatorQueryContext <span class="at">const</span> <span class="op">&amp;</span> ctx</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-iscompatiblecomposition" class="level3">
 <h3 class="anchored" data-anchor-id="function-iscompatiblecomposition">function isCompatibleComposition</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="dt">bool</span> isCompatibleComposition<span class="op">(</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    RowModifierDescriptor <span class="at">const</span> <span class="op">*</span> modifier<span class="op">,</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    ColumnAggregatorDescriptor <span class="at">const</span> <span class="op">&amp;</span> aggregator</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    IRowModifier <span class="at">const</span> <span class="op">*</span> modifier<span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    IColumnAggregator <span class="at">const</span> <span class="op">&amp;</span> aggregator</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-04 at 13:20:49 +0000</p>
+<p>Updated on 2026-08-04 at 18:10:50 +0000</p>
 
 
 </section>

@@ -386,8 +386,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="neuralyzertensordesignaggregatorquerycontext" class="level1">
 <h1>Neuralyzer::TensorDesign::AggregatorQueryContext</h1>
-<p>Query context for filtering column aggregators by composition compatibility.</p>
-<p><code>#include &lt;ColumnRecipePresetRegistry.hpp&gt;</code></p>
+<p><code>#include &lt;PresetInterfaces.hpp&gt;</code></p>
 <section id="public-attributes" class="level2">
 <h2 class="anchored" data-anchor-id="public-attributes">Public Attributes</h2>
 <table class="caption-top table">
@@ -403,7 +402,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1AggregatorQueryContext.html#variable-effective-row-type">effective_row_type</a></strong></td>
 </tr>
 <tr class="even">
-<td><a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1RowModifierDescriptor.html">RowModifierDescriptor</a> const *</td>
+<td><a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1IRowModifier.html">IRowModifier</a> const *</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1AggregatorQueryContext.html#variable-selected-modifier">selected_modifier</a></strong></td>
 </tr>
 <tr class="odd">
@@ -421,13 +420,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="variable-selected_modifier" class="level3">
 <h3 class="anchored" data-anchor-id="variable-selected_modifier">variable selected_modifier</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>RowModifierDescriptor <span class="at">const</span>  <span class="op">*</span> selected_modifier <span class="op">{</span><span class="kw">nullptr</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>IRowModifier <span class="at">const</span>  <span class="op">*</span> selected_modifier <span class="op">{</span><span class="kw">nullptr</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-tensor_column_only" class="level3">
 <h3 class="anchored" data-anchor-id="variable-tensor_column_only">variable tensor_column_only</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> tensor_column_only <span class="op">{</span><span class="kw">true</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-04 at 13:20:49 +0000</p>
+<p>Updated on 2026-08-04 at 18:10:50 +0000</p>
 
 
 </section>

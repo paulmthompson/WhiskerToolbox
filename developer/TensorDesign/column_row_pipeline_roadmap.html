@@ -365,7 +365,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#phase-9d-design-authoring-presets" id="toc-phase-9d-design-authoring-presets" class="nav-link" data-scroll-target="#phase-9d-design-authoring-presets">Phase 9d: Design Authoring Presets</a></li>
   <li><a href="#phase-9e-decoupling-row-modifiers-and-column-aggregators" id="toc-phase-9e-decoupling-row-modifiers-and-column-aggregators" class="nav-link" data-scroll-target="#phase-9e-decoupling-row-modifiers-and-column-aggregators">Phase 9e: Decoupling Row Modifiers and Column Aggregators</a></li>
   <li><a href="#phase-9f-two-step-ui-column-stitcher" id="toc-phase-9f-two-step-ui-column-stitcher" class="nav-link" data-scroll-target="#phase-9f-two-step-ui-column-stitcher">Phase 9f: Two-Step UI Column Stitcher</a></li>
-  <li><a href="#phase-10-preset-library-files" id="toc-phase-10-preset-library-files" class="nav-link" data-scroll-target="#phase-10-preset-library-files">Phase 10: Preset Library Files</a></li>
+  <li><a href="#phase-9g-polymorphic-preset-architecture-and-json-dtos" id="toc-phase-9g-polymorphic-preset-architecture-and-json-dtos" class="nav-link" data-scroll-target="#phase-9g-polymorphic-preset-architecture-and-json-dtos">Phase 9g: Polymorphic Preset Architecture and JSON DTOs</a></li>
+  <li><a href="#phase-10-preset-library-files-and-user-authoring" id="toc-phase-10-preset-library-files-and-user-authoring" class="nav-link" data-scroll-target="#phase-10-preset-library-files-and-user-authoring">Phase 10: Preset Library Files and User Authoring</a></li>
   <li><a href="#phase-11-documentation-and-ui-follow-up" id="toc-phase-11-documentation-and-ui-follow-up" class="nav-link" data-scroll-target="#phase-11-documentation-and-ui-follow-up">Phase 11: Documentation And UI Follow-Up</a></li>
   <li><a href="#verification-checklist" id="toc-verification-checklist" class="nav-link" data-scroll-target="#verification-checklist">Verification Checklist</a></li>
   <li><a href="#suggested-build-and-test-commands" id="toc-suggested-build-and-test-commands" class="nav-link" data-scroll-target="#suggested-build-and-test-commands">Suggested Build And Test Commands</a></li>
@@ -396,7 +397,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 
 <p><strong>Status:</strong> Implementation roadmap for <a href="../../developer/TensorDesign/column_row_pipeline.html">Column Row Pipeline Design</a>.</p>
-<p>Phases 1-6 and 9a-9e are implemented. Phase 7 and preset-library work remain planned.</p>
+<p>Phases 1-6 and 9a-9g are implemented. Phase 7 and preset-library work (Phase 10) remain planned.</p>
 <p>This roadmap breaks the per-column row-pipeline refactor into small, testable steps. The design goal is to let each tensor column derive its own row-aligned gather inputs through TransformPipelines while keeping <code>GatherResult</code> a container/direct-gather executor rather than a pipeline runner.</p>
 <section id="end-state" class="level2">
 <h2 class="anchored" data-anchor-id="end-state">End State</h2>
@@ -848,27 +849,60 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>The <code>TensorDesigner</code> list view accurately displays the generated columns.</li>
 </ul>
 </section>
-<section id="phase-10-preset-library-files" class="level2">
-<h2 class="anchored" data-anchor-id="phase-10-preset-library-files">Phase 10: Preset Library Files</h2>
-<p>Goal: distribute Neuralyzer with useful built-in recipe generators and let users save/import their own preset definitions using a library pattern similar to TransformsV2 <code>PipelineLibrary</code>.</p>
+<section id="phase-9g-polymorphic-preset-architecture-and-json-dtos" class="level2">
+<h2 class="anchored" data-anchor-id="phase-9g-polymorphic-preset-architecture-and-json-dtos">Phase 9g: Polymorphic Preset Architecture and JSON DTOs</h2>
+<p>Status: done.</p>
+<p>Goal: Refactor the monolithic <code>ColumnRecipePresetRegistry</code> into a modular architecture that separates behavioral execution (the Strategy pattern) from serialization (Flat DTOs for <code>reflect-cpp</code>). This allows complex presets to be defined in their own C++ files with custom UI callbacks, while enabling simple presets to be data-driven.</p>
 <p>Tasks:</p>
 <ol type="1">
-<li>Add Qt-free helpers for tensor column preset files, modeled after <code>src/TransformsV2/io/PipelineLibrary.hpp</code>.</li>
-<li>Define default user preset directory, for example <code>{config_dir}/presets/tensor_design/columns/</code>.</li>
-<li>Define bundled preset lookup, for example <code>resources/presets/tensor_design/columns/</code> or another installed resource directory.</li>
-<li>Implement catalog listing that merges bundled and user presets with source metadata.</li>
-<li>Implement load/save/delete for user preset JSON files.</li>
-<li>Add bundled JSON presets for simple fixed-shape registry entries.</li>
-<li>Support compiled/static presets for expansions requiring loops, such as arbitrary-length multi-keypoint x/y.</li>
-<li>Reject duplicate preset IDs across bundled and user entries in the initial implementation.</li>
-<li>Add tests for path helpers, catalog merge behavior, load/save/delete, duplicate ID policy, and expansion.</li>
+<li><strong>Define Polymorphic Interfaces</strong>:
+<ul>
+<li>Create <code>IRowModifier</code> and <code>IColumnAggregator</code> base classes replacing the <code>std::function</code> structs.</li>
+<li>Include standard metadata methods (<code>id()</code>, <code>parameters()</code>, <code>expand()</code>).</li>
+<li>Include optional UI hook methods (e.g., <code>virtual std::vector&lt;std::string&gt; getDynamicOptions(std::string const&amp; field_name) const</code>) to support dynamic <code>AutoParam</code> combo boxes without hardcoding UI logic into the registry.</li>
+</ul></li>
+<li><strong>Refactor Existing Complex Presets</strong>:
+<ul>
+<li>Extract complex presets (like <code>MultiPointXyAggregator</code>) into their own <code>.hpp</code>/<code>.cpp</code> files implementing the new interfaces.</li>
+<li>Update the registry to store <code>std::unique_ptr&lt;IColumnAggregator&gt;</code> and <code>std::unique_ptr&lt;IRowModifier&gt;</code>.</li>
+</ul></li>
+<li><strong>Define Flat DTOs for JSON Presets</strong>:
+<ul>
+<li>Create <code>JsonColumnPresetDto</code> (and a Row Modifier equivalent) as flat, inheritance-free structs designed specifically for <code>reflect-cpp</code> parsing. These structs will hold <code>id</code>, <code>ParameterSchema</code>, and raw JSON template strings (e.g., <code>pipeline_json_template</code>).</li>
+</ul></li>
+<li><strong>Implement the JSON Preset Strategy</strong>:
+<ul>
+<li>Create a <code>JsonColumnAggregator : public IColumnAggregator</code> class that accepts a parsed <code>JsonColumnPresetDto</code> in its constructor.</li>
+<li>Implement <code>expand()</code> to perform simple string replacement, injecting user-provided parameters into the DTO’s JSON templates.</li>
+</ul></li>
 </ol>
 <p>Exit criteria:</p>
 <ul>
-<li>A fresh Neuralyzer install has useful TensorDesign column presets without user setup.</li>
-<li>Users can save and import lab-specific presets.</li>
-<li>The preset library uses a schema distinct from raw <code>PipelineDescriptor</code> JSON but follows the existing PipelineLibrary mechanics where practical.</li>
-<li>The library can represent both simple fixed-column templates and delegate complex multi-column templates to compiled registry entries.</li>
+<li>The registry monolithic file is eliminated; presets are modularized into independent files.</li>
+<li><code>reflect-cpp</code> serialization boundaries are strictly separated from C++ behavioral polymorphism.</li>
+<li>Custom C++ presets can provide specialized UI behaviors (like populating data keys) via interface methods.</li>
+<li>The foundation is laid to load simple presets from JSON files (Phase 10).</li>
+</ul>
+</section>
+<section id="phase-10-preset-library-files-and-user-authoring" class="level2">
+<h2 class="anchored" data-anchor-id="phase-10-preset-library-files-and-user-authoring">Phase 10: Preset Library Files and User Authoring</h2>
+<p>Goal: Distribute Neuralyzer with useful built-in JSON recipe generators and let users author, save, and import their own preset definitions using a library pattern.</p>
+<p>Tasks:</p>
+<ol type="1">
+<li>Add Qt-free helpers for tensor column preset files, scanning default directories (<code>{config_dir}/presets/tensor_design/columns/</code> for users and <code>resources/...</code> for bundled).</li>
+<li>Implement catalog initialization that parses JSON files into <code>JsonColumnPresetDto</code> via <code>reflect-cpp</code>, wraps them in <code>JsonColumnAggregator</code> classes (from Phase 9g), and registers them.</li>
+<li>Implement load/save/delete for user preset JSON files.</li>
+<li><strong>UI Save Workflow</strong>: Add a “Save as Custom Preset…” action in the TensorDesigner Advanced Pipeline editor.</li>
+<li>In the Save dialog, allow users to name the preset and declare simple parameters (e.g., exposing a window offset as an <code>int</code>).</li>
+<li>Serialize the resulting <code>JsonColumnPresetDto</code> to the user’s config directory so it appears in the “Add Preset” dialog in future sessions.</li>
+<li>Reject duplicate preset IDs across bundled and user entries in the initial implementation.</li>
+<li>Add tests for path helpers, catalog merge behavior, load/save/delete, duplicate ID policy, and template expansion.</li>
+</ol>
+<p>Exit criteria:</p>
+<ul>
+<li>A fresh Neuralyzer install has useful TensorDesign JSON column presets without user setup.</li>
+<li>Users can parameterize and save custom JSON pipelines directly from the UI, generating reusable template files.</li>
+<li>The preset library correctly loads and seamlessly integrates User JSON presets alongside complex C++ Built-in presets.</li>
 <li>User presets do not silently override bundled presets; lab-specific variants use unique IDs until explicit namespacing is introduced.</li>
 </ul>
 </section>

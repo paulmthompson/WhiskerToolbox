@@ -400,18 +400,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>bool</td>
-<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1RowModifierRegistry.html#function-registermodifier">registerModifier</a></strong>(<a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1RowModifierDescriptor.html">RowModifierDescriptor</a> descriptor)</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1RowModifierRegistry.html#function-registermodifier">registerModifier</a></strong>(std::unique_ptr&lt; <a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1IRowModifier.html">IRowModifier</a> &gt; modifier)</td>
 </tr>
 <tr class="even">
-<td><a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1RowModifierDescriptor.html">RowModifierDescriptor</a> const *</td>
+<td><a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1IRowModifier.html">IRowModifier</a> const *</td>
 <td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1RowModifierRegistry.html#function-find">find</a></strong>(std::string const &amp; id) const</td>
 </tr>
 <tr class="odd">
-<td>std::vector&lt; <a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1RowModifierDescriptor.html">RowModifierDescriptor</a> const * &gt;</td>
+<td>std::vector&lt; <a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1IRowModifier.html">IRowModifier</a> const * &gt;</td>
 <td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1RowModifierRegistry.html#function-descriptors">descriptors</a></strong>() const</td>
 </tr>
 <tr class="even">
-<td>std::vector&lt; <a href="../../api_generated/Classes/structNeuralyzer_1_1TensorDesign_1_1RowModifierDescriptor.html">RowModifierDescriptor</a> const * &gt;</td>
+<td>std::vector&lt; <a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1IRowModifier.html">IRowModifier</a> const * &gt;</td>
 <td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1TensorDesign_1_1RowModifierRegistry.html#function-getmodifiersfor">getModifiersFor</a></strong>(<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1TensorDesign.html#enum-effectiverowtype">EffectiveRowType</a> row_type) const</td>
 </tr>
 </tbody>
@@ -422,26 +422,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-registermodifier" class="level3">
 <h3 class="anchored" data-anchor-id="function-registermodifier">function registerModifier</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> registerModifier<span class="op">(</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    RowModifierDescriptor descriptor</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span> IRowModifier <span class="op">&gt;</span> modifier</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-find" class="level3">
 <h3 class="anchored" data-anchor-id="function-find">function find</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>RowModifierDescriptor <span class="at">const</span> <span class="op">*</span> find<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>IRowModifier <span class="at">const</span> <span class="op">*</span> find<span class="op">(</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> id</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-descriptors" class="level3">
 <h3 class="anchored" data-anchor-id="function-descriptors">function descriptors</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> RowModifierDescriptor <span class="at">const</span> <span class="op">*</span> <span class="op">&gt;</span> descriptors<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> IRowModifier <span class="at">const</span> <span class="op">*</span> <span class="op">&gt;</span> descriptors<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-getmodifiersfor" class="level3">
 <h3 class="anchored" data-anchor-id="function-getmodifiersfor">function getModifiersFor</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> RowModifierDescriptor <span class="at">const</span> <span class="op">*</span> <span class="op">&gt;</span> getModifiersFor<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> IRowModifier <span class="at">const</span> <span class="op">*</span> <span class="op">&gt;</span> getModifiersFor<span class="op">(</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    EffectiveRowType <span class="dt">row_type</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-04 at 13:20:49 +0000</p>
+<p>Updated on 2026-08-04 at 18:10:50 +0000</p>
 
 
 </section>
