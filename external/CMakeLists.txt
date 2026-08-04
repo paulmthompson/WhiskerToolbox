@@ -247,8 +247,14 @@ find_package(fmt CONFIG REQUIRED)
 
 add_library(tapkee_headers INTERFACE)
 target_include_directories(tapkee_headers SYSTEM INTERFACE "${tapkee_SOURCE_DIR}/include")
-#target_link_libraries(tapkee_headers INTERFACE Eigen3::Eigen fmt::fmt-header-only)
-target_link_libraries(tapkee_headers INTERFACE Eigen3::Eigen fmt::fmt)
+
+#Some kind of fmt error in building with mac. linux doesn't care
+if (WIN32)
+  target_link_libraries(tapkee_headers INTERFACE Eigen3::Eigen fmt::fmt-header-only)
+else()
+  target_link_libraries(tapkee_headers INTERFACE Eigen3::Eigen fmt::fmt)
+endif()
+
 # Build without LGPL-licensed CoverTree (stay BSD-compatible)
 target_compile_definitions(tapkee_headers INTERFACE GPL_FREE)
 add_library(tapkee::tapkee ALIAS tapkee_headers)
