@@ -222,8 +222,11 @@ size_t SparseTimeIndexStorage::size() const {
 }
 
 std::optional<size_t> SparseTimeIndexStorage::findArrayPositionForTimeIndex(TimeFrameIndex time_index) const {
-    auto it = std::find(_time_indices.begin(), _time_indices.end(), time_index);
-    if (it != _time_indices.end()) {
+    // _time_indices is guaranteed to be sorted (enforced in the constructor).
+    // Using std::lower_bound (O(log N)) instead of std::find (O(N)) prevents
+    // O(N^2) scaling issues when querying time indices for large time series.
+    auto it = std::lower_bound(_time_indices.begin(), _time_indices.end(), time_index);
+    if (it != _time_indices.end() && *it == time_index) {
         return static_cast<size_t>(std::distance(_time_indices.begin(), it));
     }
     return std::nullopt;
