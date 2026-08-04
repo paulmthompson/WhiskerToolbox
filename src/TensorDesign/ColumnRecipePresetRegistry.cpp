@@ -100,10 +100,11 @@ namespace {
             .type_name = "std::vector<std::string>",
             .raw_type_name = "std::vector<std::string>",
             .display_name = "Source Keys",
+            .tooltip = "PointData keys to expand into x and y columns.",
             .is_vector = true,
             .vector_element_type = "std::string",
-            .dynamic_combo = true,
-            .tooltip = "PointData keys to expand into x and y columns."});
+            .dynamic_combo = true
+    });
     return schema;
 }
 
@@ -114,7 +115,9 @@ namespace {
             .type_name = "data_key",
             .raw_type_name = "std::string",
             .display_name = "Binding Source Key",
-            .tooltip = "Interval source used to derive one interval-start alignment event per row."});
+            .tooltip = "Interval source used to derive one interval-start alignment event per row."
+    });
+
     schema.fields.push_back(ParameterFieldDescriptor{
             .name = "store_key",
             .type_name = "std::string",
@@ -139,10 +142,6 @@ namespace {
 [[nodiscard]] std::string intervalStartPipelineJson() {
     return R"({"steps": [{"step_id": "interval_start", "transform_name": "IntervalToEvent", "parameters": {"point": "start"}}]})";
 }
-
-// DELETED
-
-// DELETED
 
 [[nodiscard]] TensorBuilders::ColumnRecipe pointCoordinateRecipe(
         std::string column_name,
@@ -276,8 +275,6 @@ namespace {
             .source = ColumnRecipePresetSource::BuiltIn,
             .expand = expandBindIntervalStartModifier};
 }
-
-// --- Phase 9e: Column Aggregators ---
 
 [[nodiscard]] std::optional<ColumnAggregatorExpansion> expandMeanValueAggregator(
         ColumnRecipePresetArgs const & args) {
@@ -567,7 +564,7 @@ ColumnRecipePresetDescriptor wrapAggregator(ColumnAggregatorDescriptor const & a
 ColumnRecipePresetRegistry createBuiltInColumnRecipePresetRegistry() {
     ColumnRecipePresetRegistry registry;
 
-    // Phase 9e: Expose scalar ColumnAggregators as tensor presets (empty row_pipeline_json).
+    //  Expose scalar ColumnAggregators as tensor presets (empty row_pipeline_json).
     auto agg_registry = createBuiltInColumnAggregatorRegistry();
     for (auto const * agg: agg_registry.descriptors()) {
         if (agg->composition_rules.output_kind != ColumnOutputKind::ScalarFloat) {
