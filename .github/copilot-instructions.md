@@ -17,6 +17,9 @@ Check the `out/build/` directory to see which environment is currently configure
 - If `out/build/GCC/Release/` exists, use `linux-gcc-release`.
 - If `out/build/GCC/Debug/` exists, use `linux-gcc-debug`.
 
+Prefer CMakeUserPresets.json to base CMakePresets.json if available. For instance, if a CMakeUserPresets.json with "my-clang-release"
+exists, it most likely was used to build in the out/build/Clang/Release directory. Use this instead
+
 The project has already been configured. To rebuild after code changes, use the preset you determined above. For example, if Clang Release is configured:
 
 ```bash
@@ -26,7 +29,7 @@ cmake --build --preset linux-clang-release > build_log.txt 2>&1
 If you need to reconfigure (e.g. after CMakeLists.txt changes):
 
 ```bash
-cmake --preset linux-clang-release -DENABLE_ORTOOLS=OFF -DENABLE_TIME_TRACE=ON > config_log.txt 2>&1
+cmake --preset linux-clang-release > config_log.txt 2>&1
 cmake --build --preset linux-clang-release > build_log.txt 2>&1
 ```
 
@@ -164,9 +167,11 @@ The overall structure of the project is divided into several static and dynamic 
 - **`DataSynthesizer` (`src/DataSynthesizer`)**: Registry-based data generation system. Provides `GeneratorRegistry` (singleton mapping generator names to factory functions), `GeneratorMetadata`, and an RAII `RegisterGenerator<Params>` helper for compile-time static registration. Generators produce `DataTypeVariant` from parameters alone (no input data). Uses the same `--whole-archive` linking pattern as TransformsV2. No Qt dependency.
 - **`MediaProcessingPipeline` (`src/MediaProcessingPipeline`)**: Qt-free library providing a `ProcessingStepRegistry` (singleton mapping chain keys to `ProcessingStep` descriptors) and `ParameterUIHints` specializations for all `ImageProcessing` option structs. Bridges `ImageProcessing` with `ParameterSchema`/`AutoParamWidget` without adding an rfl dependency to `ImageProcessing`. Depends on `ImageProcessing`, `ParameterSchema`, and `reflectcpp`.
 - **`TriageSession` (`src/TriageSession`)**: Mark/Commit/Recall state machine for triage workflows. Consumes the Command Architecture to execute user-configured pipelines over frame ranges. No Qt dependency.
+- **`TensorDesign` (`src/TensorDesign`)**: Qt-free tensor operations in `DataManager`. `TensorDesignBuilder` assembles lazy-column tensors from JSON design specifications via `TensorColumnBuilders`. `TensorColumnViews` provides tensor↔analog bridge utilities (`createTensorColumnViews`, `populateTensorFromAnalogKeys`, `discoverAnalogKeyGroups`). Depends on `TransformsV2`, `DataManager`, and `TensorData`.
 - **`AutoParamWidget` (`src/WhiskerToolbox/AutoParamWidget`)**: Generic Qt form widget that takes a `ParameterSchema` and dynamically generates appropriate input widgets for each field. Depends on `Qt6::Widgets` and `ParameterSchema` only — no TransformsV2 dependency.
 - **`KeymapSystem` (`src/WhiskerToolbox/KeymapSystem`)**: Configurable, context-aware keyboard shortcut system. Provides action registration, scope-based resolution (EditorFocused > AlwaysRouted > Global), user override management, conflict detection, and composition-based dispatch via `KeyActionAdapter`. Depends on `Qt6::Core`, `Qt6::Gui`, and `EditorState`.
 - **`ColormapControls` (`src/WhiskerToolbox/Plots/Common/ColormapControls`)**: Composable Qt widget for selecting a colormap preset (with gradient icon previews) and configuring color range (Auto/Manual/Symmetric with vmin/vmax). Depends on `Qt6::Widgets` and `CorePlotting`. Used by HeatmapWidget and planned for SpectrogramWidget.
+- **`MultiLaneVerticalAxisWidget` (`src/WhiskerToolbox/Plots/Common/MultiLaneVerticalAxisWidget`)**: Composable Qt widget that renders per-lane channel name labels and horizontal separator lines for stacked-lane plot layouts. Driven by `MultiLaneVerticalAxisState` with viewport-aware culling. Depends on `Qt6::Widgets` only. Used by DataViewer_Widget.
 - **`LayoutTesting` (`src/WhiskerToolbox/LayoutTesting`)**: Debug-only library for detecting layout constraint violations (zero-dimension widgets, below-minimumSizeHint, extreme aspect ratios, label text truncation, spinbox content overflow, combo box content overflow). Provides a global event-filter monitor with violation diffing and a static `getViolations()` API for Catch2 tests. Depends on `Qt6::Widgets` only.
 - **`WhiskerToolbox` (`src/WhiskerToolbox`)**: The main Qt6 GUI application. Driven by a shared `DataManager` instance and built on the `Qt6AdvancedDocking` system. Follows the EditorState architecture pattern with state management, registration, SelectionContext integration, and Zone-based placement.
 - **`EditorState` (`src/WhiskerToolbox/EditorState`)**: Core infrastructure for widget state management, inter-widget communication, and workspace serialization. Every widget houses its serializable state in a subclass of `EditorState`. Supports JSON serialization (reflect-cpp), dirty tracking, and Qt signal-based change notification.

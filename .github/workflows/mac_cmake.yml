@@ -47,7 +47,7 @@ jobs:
         uses: lukka/run-vcpkg@v11
         if: runner.os == 'macOS'
         with:
-          vcpkgGitCommitId: 'ce613c41372b23b1f51333815feb3edd87ef8a8b' #2025.04.09 needed for libffi, highs 1.10
+          vcpkgGitCommitId: '9e593bb18ea69cc5095e012465dcd675a822ed0d' #2026-07-27 for libaec fix
 
       - name: Set up Homebrew
         id: set-up-homebrew

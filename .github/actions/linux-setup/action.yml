@@ -35,7 +35,7 @@ runs:
     - name: Setup vcpkg
       uses: lukka/run-vcpkg@v11
       with:
-        vcpkgGitCommitId: 'ce613c41372b23b1f51333815feb3edd87ef8a8b' #2025.04.09 needed for libffi fix, highs 1.10
+        vcpkgGitCommitId: '9e593bb18ea69cc5095e012465dcd675a822ed0d' #2026-07-27 for libaec fix
 
     - name: Export GitHub Actions cache environment variables
       uses: actions/github-script@v7
