@@ -155,13 +155,10 @@ namespace {
     recipe.column_name = std::move(column_name);
     recipe.source_key = std::move(source_key);
     recipe.row_pipeline_json = std::move(row_pipeline_json);
+    std::string const reduction = reduce_mean ? "Mean" : "First";
     recipe.pipeline_json = R"({"steps": [{"step_id": ")" + std::string(step_id) +
-                           R"(", "transform_name": "PointCoordinate", "parameters": {"coordinate": ")" +
-                           coordinate + R"("}}])";
-    if (reduce_mean) {
-        recipe.pipeline_json += R"(, "range_reduction": {"reduction_name": "MeanValue"})";
-    }
-    recipe.pipeline_json += "}";
+                           R"(", "transform_name": "PointCoordinateReduction", "parameters": {"coordinate": ")" +
+                           coordinate + R"(", "reduction": ")" + reduction + R"("}}]})";
     return recipe;
 }
 

@@ -104,12 +104,12 @@ TEST_CASE("point_xy aggregator expands to x and y ColumnRecipes", "[TensorDesign
     CHECK(expansion.columns[0].column_name == "nose_x");
     CHECK(expansion.columns[0].source_key == "Nose");
     CHECK(expansion.columns[0].pipeline_json ==
-          R"({"steps": [{"step_id": "x", "transform_name": "PointCoordinate", "parameters": {"coordinate": "X"}}]})");
+          R"({"steps": [{"step_id": "x", "transform_name": "PointCoordinateReduction", "parameters": {"coordinate": "X", "reduction": "First"}}]})");
 
     CHECK(expansion.columns[1].column_name == "nose_y");
     CHECK(expansion.columns[1].source_key == "Nose");
     CHECK(expansion.columns[1].pipeline_json ==
-          R"({"steps": [{"step_id": "y", "transform_name": "PointCoordinate", "parameters": {"coordinate": "Y"}}]})");
+          R"({"steps": [{"step_id": "y", "transform_name": "PointCoordinateReduction", "parameters": {"coordinate": "Y", "reduction": "First"}}]})");
 }
 
 TEST_CASE("multi_point_xy aggregator expands multiple keys to x and y ColumnRecipes",

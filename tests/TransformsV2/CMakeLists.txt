@@ -78,6 +78,7 @@ add_executable(test_TransformsV2
     ${CMAKE_SOURCE_DIR}/tests/shared/RegisterCommandsListener.cpp
 
     test_tensor_column_views.test.cpp
+    PointCoordinateReduction.test.cpp
 )
 
 target_include_directories(test_TransformsV2 PRIVATE

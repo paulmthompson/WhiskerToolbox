@@ -66,6 +66,8 @@ set(TRANSFORM_V2_SOURCES
         algorithms/IntervalToEvent/IntervalToEvent.cpp
         algorithms/PointCoordinate/PointCoordinate.hpp
         algorithms/PointCoordinate/PointCoordinate.cpp
+        algorithms/PointCoordinateReduction/PointCoordinateReduction.hpp
+        algorithms/PointCoordinateReduction/PointCoordinateReduction.cpp
         algorithms/PruneOverlappingIntervals/PruneOverlappingIntervals.hpp
         algorithms/PruneOverlappingIntervals/PruneOverlappingIntervals.cpp
         algorithms/IntervalReduction/IntervalReduction.hpp
