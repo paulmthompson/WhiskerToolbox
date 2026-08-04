@@ -241,13 +241,13 @@ void ColumnConfigDialog::_updateAggregatorOptions() {
     _aggregator_combo->clear();
 
     auto eff_row_type = _getBaseEffectiveRowType();
-    Neuralyzer::TensorDesign::RowModifierDescriptor const * selected_modifier = nullptr;
+    Neuralyzer::TensorDesign::IRowModifier const * selected_modifier = nullptr;
     if (_row_modifier_check->isChecked()) {
         auto const mod_id = _row_modifier_combo->currentData().toString().toStdString();
         selected_modifier = _modifier_registry.find(mod_id);
         if (selected_modifier != nullptr &&
-            selected_modifier->output_row_type != Neuralyzer::TensorDesign::EffectiveRowType::Unchanged) {
-            eff_row_type = selected_modifier->output_row_type;
+            selected_modifier->output_row_type() != Neuralyzer::TensorDesign::EffectiveRowType::Unchanged) {
+            eff_row_type = selected_modifier->output_row_type();
         }
     }
 
@@ -257,8 +257,8 @@ void ColumnConfigDialog::_updateAggregatorOptions() {
             .tensor_column_only = true};
     auto aggregators = _aggregator_registry.getAggregatorsFor(query_ctx);
     for (auto const * agg: aggregators) {
-        _aggregator_combo->addItem(QString::fromStdString(agg->display_name), QString::fromStdString(agg->id));
-        _aggregator_combo->setItemData(_aggregator_combo->count() - 1, QString::fromStdString(agg->description), Qt::ToolTipRole);
+        _aggregator_combo->addItem(QString::fromStdString(agg->display_name()), QString::fromStdString(agg->id()));
+        _aggregator_combo->setItemData(_aggregator_combo->count() - 1, QString::fromStdString(agg->description()), Qt::ToolTipRole);
     }
     _aggregator_combo->blockSignals(false);
 
@@ -285,7 +285,7 @@ void ColumnConfigDialog::_onRowModifierChanged(int index) {
     if (index >= 0) {
         auto const mod_id = _row_modifier_combo->currentData().toString().toStdString();
         if (auto const * mod_desc = _modifier_registry.find(mod_id)) {
-            auto filtered_schema = mod_desc->parameters;
+            auto filtered_schema = mod_desc->parameters();
             std::erase_if(filtered_schema.fields, [](auto const & field) {
                 return field.name == "source_key" || field.name == "output_name";
             });
@@ -293,8 +293,10 @@ void ColumnConfigDialog::_onRowModifierChanged(int index) {
             if (_data_manager) {
                 auto const keys = _data_manager->getAllKeys();
                 for (auto const & field : filtered_schema.fields) {
-                    if (field.type_name == "data_key" || field.type_name == "std::vector<std::string>") {
+                    if (field.type_name == "data_key") {
                         _row_modifier_params->updateAllowedValues(field.name, keys);
+                    } else if (field.dynamic_combo) {
+                        _row_modifier_params->updateAllowedValues(field.name, mod_desc->getDynamicOptions(field.name, _data_manager.get()));
                     }
                 }
             }
@@ -307,7 +309,7 @@ void ColumnConfigDialog::_onAggregatorChanged(int index) {
     if (index >= 0) {
         auto const agg_id = _aggregator_combo->currentData().toString().toStdString();
         if (auto const * agg_desc = _aggregator_registry.find(agg_id)) {
-            auto filtered_schema = agg_desc->parameters;
+            auto filtered_schema = agg_desc->parameters();
             std::erase_if(filtered_schema.fields, [](auto const & field) {
                 return field.name == "source_key" || field.name == "output_name";
             });
@@ -315,8 +317,10 @@ void ColumnConfigDialog::_onAggregatorChanged(int index) {
             if (_data_manager) {
                 auto const keys = _data_manager->getAllKeys();
                 for (auto const & field : filtered_schema.fields) {
-                    if (field.type_name == "data_key" || field.type_name == "std::vector<std::string>") {
+                    if (field.type_name == "data_key") {
                         _aggregator_params->updateAllowedValues(field.name, keys);
+                    } else if (field.dynamic_combo) {
+                        _aggregator_params->updateAllowedValues(field.name, agg_desc->getDynamicOptions(field.name, _data_manager.get()));
                     }
                 }
             }
@@ -374,8 +378,8 @@ void ColumnConfigDialog::_setupUi() {
     auto const base_type = _getBaseEffectiveRowType();
     auto const valid_modifiers = _modifier_registry.getModifiersFor(base_type);
     for (auto const * mod: valid_modifiers) {
-        _row_modifier_combo->addItem(QString::fromStdString(mod->display_name), QString::fromStdString(mod->id));
-        _row_modifier_combo->setItemData(_row_modifier_combo->count() - 1, QString::fromStdString(mod->description), Qt::ToolTipRole);
+        _row_modifier_combo->addItem(QString::fromStdString(mod->display_name()), QString::fromStdString(mod->id()));
+        _row_modifier_combo->setItemData(_row_modifier_combo->count() - 1, QString::fromStdString(mod->description()), Qt::ToolTipRole);
     }
     if (valid_modifiers.empty()) {
         _row_modifier_check->setEnabled(false);

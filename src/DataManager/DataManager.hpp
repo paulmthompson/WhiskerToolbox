@@ -211,7 +211,7 @@ public:
     * auto keys = dm.getAllKeys(); // Returns ["media", "points1", "line1"]
     * @endcode
     */
-    [[nodiscard]] std::vector<std::string> getAllKeys();
+    [[nodiscard]] std::vector<std::string> getAllKeys() const;
 
     /**
     * @brief Get all keys associated with a specific data type
@@ -234,7 +234,7 @@ public:
     * @endcode
     */
     template<typename T>
-    [[nodiscard]] std::vector<std::string> getKeys() {
+    [[nodiscard]] std::vector<std::string> getKeys() const {
         std::vector<std::string> keys;
         for (auto const & [key, value]: _data) {
             if (std::holds_alternative<std::shared_ptr<T>>(value)) {

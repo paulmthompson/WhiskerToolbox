@@ -80,13 +80,13 @@ namespace {
 
     auto stitch = [&](std::string const & mod_id, std::string const & agg_id, ColumnRecipePresetArgs const & agg_args) -> bool {
         auto agg_desc = agg_registry.find(agg_id);
-        if (!agg_desc || !agg_desc->expand) return false;
+        if (!agg_desc) return false;
         auto agg_exp = agg_desc->expand(agg_args);
         if (!agg_exp) return false;
         
         if (!mod_id.empty()) {
             auto mod_desc = row_registry.find(mod_id);
-            if (!mod_desc || !mod_desc->expand) return false;
+            if (!mod_desc) return false;
             auto mod_exp = mod_desc->expand(agg_args);
             if (!mod_exp) return false;
             for (auto & col : agg_exp->columns) {

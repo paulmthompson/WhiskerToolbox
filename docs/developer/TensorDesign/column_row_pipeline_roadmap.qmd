@@ -5,7 +5,7 @@ format: html
 
 **Status:** Implementation roadmap for [Column Row Pipeline Design](column_row_pipeline.qmd).
 
-Phases 1-6 and 9a-9e are implemented. Phase 7 and preset-library work remain planned.
+Phases 1-6 and 9a-9g are implemented. Phase 7 and preset-library work (Phase 10) remain planned.
 
 This roadmap breaks the per-column row-pipeline refactor into small, testable steps. The design goal is to let each tensor column derive its own row-aligned gather inputs through TransformPipelines while keeping `GatherResult` a container/direct-gather executor rather than a pipeline runner.
 
@@ -455,28 +455,54 @@ Exit criteria:
 - Combinatorial explosion of UI presets is completely eliminated; the UI is highly composable.
 - The `TensorDesigner` list view accurately displays the generated columns.
 
-## Phase 10: Preset Library Files
+## Phase 9g: Polymorphic Preset Architecture and JSON DTOs
 
-Goal: distribute Neuralyzer with useful built-in recipe generators and let users save/import their own preset definitions using a library pattern similar to TransformsV2 `PipelineLibrary`.
+Status: done.
+
+Goal: Refactor the monolithic `ColumnRecipePresetRegistry` into a modular architecture that separates behavioral execution (the Strategy pattern) from serialization (Flat DTOs for `reflect-cpp`). This allows complex presets to be defined in their own C++ files with custom UI callbacks, while enabling simple presets to be data-driven.
 
 Tasks:
 
-1. Add Qt-free helpers for tensor column preset files, modeled after `src/TransformsV2/io/PipelineLibrary.hpp`.
-2. Define default user preset directory, for example `{config_dir}/presets/tensor_design/columns/`.
-3. Define bundled preset lookup, for example `resources/presets/tensor_design/columns/` or another installed resource directory.
-4. Implement catalog listing that merges bundled and user presets with source metadata.
-5. Implement load/save/delete for user preset JSON files.
-6. Add bundled JSON presets for simple fixed-shape registry entries.
-7. Support compiled/static presets for expansions requiring loops, such as arbitrary-length multi-keypoint x/y.
-8. Reject duplicate preset IDs across bundled and user entries in the initial implementation.
-9. Add tests for path helpers, catalog merge behavior, load/save/delete, duplicate ID policy, and expansion.
+1. **Define Polymorphic Interfaces**:
+   - Create `IRowModifier` and `IColumnAggregator` base classes replacing the `std::function` structs.
+   - Include standard metadata methods (`id()`, `parameters()`, `expand()`).
+   - Include optional UI hook methods (e.g., `virtual std::vector<std::string> getDynamicOptions(std::string const& field_name) const`) to support dynamic `AutoParam` combo boxes without hardcoding UI logic into the registry.
+2. **Refactor Existing Complex Presets**:
+   - Extract complex presets (like `MultiPointXyAggregator`) into their own `.hpp`/`.cpp` files implementing the new interfaces.
+   - Update the registry to store `std::unique_ptr<IColumnAggregator>` and `std::unique_ptr<IRowModifier>`.
+3. **Define Flat DTOs for JSON Presets**:
+   - Create `JsonColumnPresetDto` (and a Row Modifier equivalent) as flat, inheritance-free structs designed specifically for `reflect-cpp` parsing. These structs will hold `id`, `ParameterSchema`, and raw JSON template strings (e.g., `pipeline_json_template`).
+4. **Implement the JSON Preset Strategy**:
+   - Create a `JsonColumnAggregator : public IColumnAggregator` class that accepts a parsed `JsonColumnPresetDto` in its constructor.
+   - Implement `expand()` to perform simple string replacement, injecting user-provided parameters into the DTO's JSON templates.
 
 Exit criteria:
 
-- A fresh Neuralyzer install has useful TensorDesign column presets without user setup.
-- Users can save and import lab-specific presets.
-- The preset library uses a schema distinct from raw `PipelineDescriptor` JSON but follows the existing PipelineLibrary mechanics where practical.
-- The library can represent both simple fixed-column templates and delegate complex multi-column templates to compiled registry entries.
+- The registry monolithic file is eliminated; presets are modularized into independent files.
+- `reflect-cpp` serialization boundaries are strictly separated from C++ behavioral polymorphism.
+- Custom C++ presets can provide specialized UI behaviors (like populating data keys) via interface methods.
+- The foundation is laid to load simple presets from JSON files (Phase 10).
+
+## Phase 10: Preset Library Files and User Authoring
+
+Goal: Distribute Neuralyzer with useful built-in JSON recipe generators and let users author, save, and import their own preset definitions using a library pattern.
+
+Tasks:
+
+1. Add Qt-free helpers for tensor column preset files, scanning default directories (`{config_dir}/presets/tensor_design/columns/` for users and `resources/...` for bundled).
+2. Implement catalog initialization that parses JSON files into `JsonColumnPresetDto` via `reflect-cpp`, wraps them in `JsonColumnAggregator` classes (from Phase 9g), and registers them.
+3. Implement load/save/delete for user preset JSON files.
+4. **UI Save Workflow**: Add a "Save as Custom Preset..." action in the TensorDesigner Advanced Pipeline editor.
+5. In the Save dialog, allow users to name the preset and declare simple parameters (e.g., exposing a window offset as an `int`).
+6. Serialize the resulting `JsonColumnPresetDto` to the user's config directory so it appears in the "Add Preset" dialog in future sessions.
+7. Reject duplicate preset IDs across bundled and user entries in the initial implementation.
+8. Add tests for path helpers, catalog merge behavior, load/save/delete, duplicate ID policy, and template expansion.
+
+Exit criteria:
+
+- A fresh Neuralyzer install has useful TensorDesign JSON column presets without user setup.
+- Users can parameterize and save custom JSON pipelines directly from the UI, generating reusable template files.
+- The preset library correctly loads and seamlessly integrates User JSON presets alongside complex C++ Built-in presets.
 - User presets do not silently override bundled presets; lab-specific variants use unique IDs until explicit namespacing is introduced.
 
 ## Phase 11: Documentation And UI Follow-Up

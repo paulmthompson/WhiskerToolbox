@@ -23,6 +23,7 @@
 #include "TimeFrame/TimeIndexStorage.hpp"
 
 #include <nlohmann/json.hpp>
+#include <type_traits>
 
 #include <QComboBox>
 #include <QDialog>
@@ -141,8 +142,14 @@ namespace {
 template<typename Descriptor>
 [[nodiscard]] QString presetParameterHint(Descriptor const & descriptor) {
     QStringList names;
-    for (auto const & field: descriptor.parameters.fields) {
-        names << QString::fromStdString(field.name);
+    if constexpr (std::is_same_v<std::decay_t<Descriptor>, Neuralyzer::TensorDesign::DesignPresetDescriptor>) {
+        for (auto const & field: descriptor.parameters.fields) {
+            names << QString::fromStdString(field.name);
+        }
+    } else {
+        for (auto const & field: descriptor.parameters().fields) {
+            names << QString::fromStdString(field.name);
+        }
     }
     return names.join(QStringLiteral(", "));
 }
@@ -523,8 +530,8 @@ void TensorDesigner::_onAddPresetClicked() {
     auto * preset_combo = new QComboBox(&dialog);
     for (auto const * descriptor: descriptors) {
         preset_combo->addItem(
-                QString::fromStdString(descriptor->display_name),
-                QString::fromStdString(descriptor->id));
+                QString::fromStdString(descriptor->display_name()),
+                QString::fromStdString(descriptor->id()));
     }
     form->addRow(QStringLiteral("Preset"), preset_combo);
 
@@ -576,7 +583,7 @@ void TensorDesigner::_onAddPresetClicked() {
             hint_label->clear();
             return;
         }
-        description_label->setText(QString::fromStdString(descriptor->description));
+        description_label->setText(QString::fromStdString(descriptor->description()));
         hint_label->setText(presetParameterHint(*descriptor));
     };
     update_description();
@@ -658,7 +665,7 @@ void TensorDesigner::_onEditColumnClicked() {
 
     auto * dialog = new ColumnConfigDialog(_data_manager,
                                            _row_type,
-                                           _column_recipes[row],
+                                           _column_recipes[static_cast<size_t>(row)],
                                            _operation_context,
                                            _pipeline_library_dir,
                                            _row_source_key,
@@ -1066,7 +1073,7 @@ void TensorDesigner::_onDialogAcceptedEdit(int row) {
     auto recipes = _active_dialog->getRecipes();
     if (recipes.empty()) return;
 
-    _column_recipes[row] = std::move(recipes[0]);
+    _column_recipes[static_cast<size_t>(row)] = std::move(recipes[0]);
     if (recipes.size() > 1) {
         _column_recipes.insert(_column_recipes.begin() + row + 1,
                                std::make_move_iterator(recipes.begin() + 1),

@@ -4,6 +4,7 @@
  */
 
 #include "TensorDesign/ColumnRecipePresetRegistry.hpp"
+#include "TensorDesign/Presets/BuiltInPresets.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -33,11 +34,11 @@ TEST_CASE("mean_value aggregator expands to raw ColumnRecipe", "[TensorDesign][p
 
     auto const * descriptor = registry.find("mean_value");
     REQUIRE(descriptor != nullptr);
-    CHECK(descriptor->id == "mean_value");
-    CHECK(descriptor->display_name == "Mean Value");
-    CHECK(descriptor->source == ColumnRecipePresetSource::BuiltIn);
-    REQUIRE(descriptor->parameters.field("output_name") != nullptr);
-    REQUIRE(descriptor->parameters.field("source_key") != nullptr);
+    CHECK(descriptor->id() == "mean_value");
+    CHECK(descriptor->display_name() == "Mean Value");
+    CHECK(descriptor->source() == ColumnRecipePresetSource::BuiltIn);
+    REQUIRE(descriptor->parameters().field("output_name") != nullptr);
+    REQUIRE(descriptor->parameters().field("source_key") != nullptr);
 
     auto expansion = requireValue(descriptor->expand(
             ColumnRecipePresetArgs{
@@ -137,8 +138,8 @@ TEST_CASE("interval_start RowModifier expands to row pipeline json", "[TensorDes
     auto registry = Neuralyzer::TensorDesign::createBuiltInRowModifierRegistry();
     auto const * descriptor = registry.find("interval_start");
     REQUIRE(descriptor != nullptr);
-    CHECK(descriptor->id == "interval_start");
-    CHECK(descriptor->display_name == "At interval start");
+    CHECK(descriptor->id() == "interval_start");
+    CHECK(descriptor->display_name() == "At interval start");
 
     auto expansion = requireValue(descriptor->expand(ColumnRecipePresetArgs{}));
     CHECK(expansion.row_pipeline_json ==
@@ -199,7 +200,7 @@ TEST_CASE("ColumnRecipePresetRegistry rejects duplicate preset ids", "[TensorDes
     auto const * existing = registry.find("mean_value");
     REQUIRE(existing != nullptr);
 
-    CHECK_FALSE(registry.registerPreset(*existing));
+    CHECK_FALSE(registry.registerPreset(std::make_unique<Neuralyzer::TensorDesign::MeanValueAggregator>()));
 }
 
 TEST_CASE("ColumnAggregatorRegistry getAggregatorsFor filters by EffectiveRowType",
@@ -210,10 +211,10 @@ TEST_CASE("ColumnAggregatorRegistry getAggregatorsFor filters by EffectiveRowTyp
         auto aggregators = registry.getAggregatorsFor(Neuralyzer::TensorDesign::EffectiveRowType::Interval);
         REQUIRE_FALSE(aggregators.empty());
         // Verify that mean_value is included
-        auto it_mean = std::ranges::find_if(aggregators, [](auto const * desc) { return desc->id == "mean_value"; });
+        auto it_mean = std::ranges::find_if(aggregators, [](auto const * desc) { return desc->id() == "mean_value"; });
         CHECK(it_mean != aggregators.end());
         // Verify that point_xy is NOT included
-        auto it_point = std::ranges::find_if(aggregators, [](auto const * desc) { return desc->id == "point_xy"; });
+        auto it_point = std::ranges::find_if(aggregators, [](auto const * desc) { return desc->id() == "point_xy"; });
         CHECK(it_point == aggregators.end());
     }
 
@@ -221,14 +222,14 @@ TEST_CASE("ColumnAggregatorRegistry getAggregatorsFor filters by EffectiveRowTyp
         auto aggregators = registry.getAggregatorsFor(Neuralyzer::TensorDesign::EffectiveRowType::Timestamp);
         REQUIRE_FALSE(aggregators.empty());
         // Verify that point_xy is included
-        auto it_point = std::ranges::find_if(aggregators, [](auto const * desc) { return desc->id == "point_xy"; });
+        auto it_point = std::ranges::find_if(aggregators, [](auto const * desc) { return desc->id() == "point_xy"; });
         CHECK(it_point != aggregators.end());
         // Verify that event_count is NOT included
-        auto it_count = std::ranges::find_if(aggregators, [](auto const * desc) { return desc->id == "event_count"; });
+        auto it_count = std::ranges::find_if(aggregators, [](auto const * desc) { return desc->id() == "event_count"; });
         CHECK(it_count == aggregators.end());
         // Verify that raster_events_relative is NOT included (interval-only gather fragment)
         auto it_raster = std::ranges::find_if(aggregators, [](auto const * desc) {
-            return desc->id == "raster_events_relative";
+            return desc->id() == "raster_events_relative";
         });
         CHECK(it_raster == aggregators.end());
     }
@@ -258,11 +259,11 @@ TEST_CASE("ColumnAggregatorRegistry composition rules filter tensor columns",
                 .tensor_column_only = true};
         auto aggregators = aggregator_registry.getAggregatorsFor(ctx);
         auto it_raster = std::ranges::find_if(aggregators, [](auto const * desc) {
-            return desc->id == "raster_events_relative";
+            return desc->id() == "raster_events_relative";
         });
         CHECK(it_raster == aggregators.end());
         auto it_trial = std::ranges::find_if(aggregators, [](auto const * desc) {
-            return desc->id == "trial_relative_event_count";
+            return desc->id() == "trial_relative_event_count";
         });
         CHECK(it_trial != aggregators.end());
     }
@@ -275,12 +276,12 @@ TEST_CASE("ColumnAggregatorRegistry composition rules filter tensor columns",
     }
 
     SECTION("raster_events_relative metadata") {
-        CHECK(raster->composition_rules.output_kind ==
+        CHECK(raster->composition_rules().output_kind ==
               Neuralyzer::TensorDesign::ColumnOutputKind::GatheredDataObject);
-        CHECK(raster->composition_rules.gathered_output_type ==
+        CHECK(raster->composition_rules().gathered_output_type ==
               Neuralyzer::TensorDesign::GatheredOutputType::DigitalEventSeries);
-        CHECK(raster->composition_rules.requires_pipeline_value_bindings);
-        CHECK(raster->supported_row_types ==
+        CHECK(raster->composition_rules().requires_pipeline_value_bindings);
+        CHECK(raster->supported_row_types() ==
               std::vector<Neuralyzer::TensorDesign::EffectiveRowType>{
                       Neuralyzer::TensorDesign::EffectiveRowType::Interval});
     }

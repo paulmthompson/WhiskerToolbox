@@ -645,7 +645,7 @@ void DataManager_NotifyTableObservers(DataManager & dm, TableEvent const & ev) {
     dm.notifyTableObservers(ev);
 }
 
-std::vector<std::string> DataManager::getAllKeys() {
+std::vector<std::string> DataManager::getAllKeys() const {
     std::vector<std::string> keys;
     keys.reserve(_data.size());
     for (auto const & [key, value]: _data) {

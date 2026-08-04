@@ -151,7 +151,7 @@ Neuralyzer::TensorDesign::ColumnRecipePresetArgs createArgs(
     return args;
 }
 
-[[nodiscard]] Neuralyzer::TensorDesign::RowModifierDescriptor const * findModifier(
+[[nodiscard]] Neuralyzer::TensorDesign::IRowModifier const * findModifier(
         Neuralyzer::TensorDesign::RowModifierRegistry const & registry,
         std::string_view modifier_id) {
     if (modifier_id.empty()) {
@@ -160,7 +160,7 @@ Neuralyzer::TensorDesign::ColumnRecipePresetArgs createArgs(
     return registry.find(std::string(modifier_id));
 }
 
-[[nodiscard]] Neuralyzer::TensorDesign::ColumnAggregatorDescriptor const * findAggregator(
+[[nodiscard]] Neuralyzer::TensorDesign::IColumnAggregator const * findAggregator(
         Neuralyzer::TensorDesign::ColumnAggregatorRegistry const & registry,
         std::string_view aggregator_id) {
     return registry.find(std::string(aggregator_id));

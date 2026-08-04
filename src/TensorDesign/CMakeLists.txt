@@ -13,6 +13,12 @@ add_library(TensorDesign STATIC
     TensorDesignBuilder.cpp
     TensorColumnViews.hpp
     TensorColumnViews.cpp
+    Presets/PresetInterfaces.hpp
+    Presets/BuiltInPresets.hpp
+    Presets/BuiltInPresets.cpp
+    Presets/JsonPresetDto.hpp
+    Presets/JsonColumnAggregator.hpp
+    Presets/JsonColumnAggregator.cpp
 )
 
 target_include_directories(TensorDesign PUBLIC
@@ -28,6 +34,7 @@ set_target_properties(TensorDesign PROPERTIES
 )
 
 target_link_libraries(TensorDesign PUBLIC DataManager)
+target_link_libraries(TensorDesign PRIVATE PointData)
 target_link_libraries(TensorDesign PUBLIC TransformsV2)
 target_link_libraries(TensorDesign PUBLIC WhiskerToolbox::TensorData)
 target_link_libraries(TensorDesign PUBLIC nlohmann_json::nlohmann_json)
