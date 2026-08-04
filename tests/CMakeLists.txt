@@ -20,7 +20,12 @@ add_subdirectory(CoreGeometry)
 add_subdirectory(CoreMath)
 add_subdirectory(CorePlotting)
 add_subdirectory(SpatialIndex)
-add_subdirectory(StateEstimation)
+
+#Some stack smashing errors occur when linking the StateEstimation tests with ASAN AND COVERAGE on with gcc-debug.
+if (NOT enableAddressSanitizer AND NOT CODE_COVERAGE)
+    add_subdirectory(StateEstimation)
+endif()
+
 add_subdirectory(DataManager)
 add_subdirectory(DataManagerPipelineRunner)
 add_subdirectory(TriageSession)

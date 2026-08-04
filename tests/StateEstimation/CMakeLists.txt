@@ -45,22 +45,9 @@ StateEstimation
 Eigen3::Eigen
 )
 
-if(ENABLE_ORTOOLS)
-    target_link_libraries(test_StateEstimation PRIVATE ortools::ortools Boost::random Boost::serialization)
-endif()
-
 target_include_directories(test_StateEstimation PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/StateEstimation>"
 )
-
-if (APPLE)
-    set_target_properties(test_StateEstimation PROPERTIES
-            BUILD_RPATH "${CMAKE_BINARY_DIR};${CMAKE_BINARY_DIR}/_deps/catch2-build/src"
-            INSTALL_RPATH "@executable_path/../Frameworks"
-    )
-    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-endif()
 
 if (WIN32)
     catch_discover_tests(test_StateEstimation
