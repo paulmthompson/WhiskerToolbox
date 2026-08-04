@@ -360,8 +360,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#point_xy" id="toc-point_xy" class="nav-link" data-scroll-target="#point_xy"><code>point_xy</code></a></li>
   <li><a href="#multi_point_xy" id="toc-multi_point_xy" class="nav-link" data-scroll-target="#multi_point_xy"><code>multi_point_xy</code></a></li>
   <li><a href="#point_xy_at_interval_start" id="toc-point_xy_at_interval_start" class="nav-link" data-scroll-target="#point_xy_at_interval_start"><code>point_xy_at_interval_start</code></a></li>
-  <li><a href="#raster_events_relative_to_interval_start" id="toc-raster_events_relative_to_interval_start" class="nav-link" data-scroll-target="#raster_events_relative_to_interval_start"><code>raster_events_relative_to_interval_start</code></a></li>
-  <li><a href="#trial_relative_event_count_from_interval_start" id="toc-trial_relative_event_count_from_interval_start" class="nav-link" data-scroll-target="#trial_relative_event_count_from_interval_start"><code>trial_relative_event_count_from_interval_start</code></a></li>
+  <li><a href="#raster_events_relative-gather-fragment-not-a-tensor-preset" id="toc-raster_events_relative-gather-fragment-not-a-tensor-preset" class="nav-link" data-scroll-target="#raster_events_relative-gather-fragment-not-a-tensor-preset"><code>raster_events_relative</code> (gather fragment, not a tensor preset)</a></li>
+  <li><a href="#trial_relative_event_count" id="toc-trial_relative_event_count" class="nav-link" data-scroll-target="#trial_relative_event_count"><code>trial_relative_event_count</code></a></li>
   </ul></li>
   <li><a href="#test-coverage" id="toc-test-coverage" class="nav-link" data-scroll-target="#test-coverage">Test Coverage</a></li>
   <li><a href="#tensordesigner-ui" id="toc-tensordesigner-ui" class="nav-link" data-scroll-target="#tensordesigner-ui">TensorDesigner UI</a></li>
@@ -406,8 +406,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>ColumnRecipePresetArgs</code>: currently a small shared argument struct with fields used by the initial compiled presets: <code>output_name</code>, <code>source_key</code>, <code>name_prefix</code>, <code>source_keys</code>, <code>pre</code>, and <code>post</code>.</li>
 <li><code>ColumnRecipePresetExpansion</code>: a vector of raw <code>TensorBuilders::ColumnRecipe</code> objects.</li>
 <li><code>ColumnRecipePresetRegistry</code>: register, find, list, and expand operations.</li>
-<li><code>createBuiltInColumnRecipePresetRegistry()</code>: constructs a registry containing the compiled built-in presets available in this phase.</li>
+<li><code>createBuiltInColumnRecipePresetRegistry()</code>: constructs a registry containing scalar tensor column presets (<code>ColumnOutputKind::ScalarFloat</code> aggregators only).</li>
 </ul>
+<p>Phase 9f also decouples row modifiers and column aggregators:</p>
+<ul>
+<li><code>ColumnOutputKind</code>: <code>ScalarFloat</code> (terminal <code>TensorData</code> column) vs <code>GatheredDataObject</code> (per-row gather transform fragment).</li>
+<li><code>AggregatorCompositionRules</code>: per-aggregator metadata (<code>output_kind</code>, <code>gathered_output_type</code>, <code>requires_pipeline_value_bindings</code>, <code>required_row_geometry</code>, <code>compatible_modifier_ids</code>).</li>
+<li><code>AggregatorQueryContext</code>: filters aggregators by effective row type, selected modifier, and <code>tensor_column_only</code>.</li>
+<li><code>ColumnAggregatorRegistry::getAggregatorsFor(AggregatorQueryContext)</code> and <code>isCompatibleComposition()</code>: replace naive <code>supported_row_types</code> Cartesian filtering.</li>
+</ul>
+<p><code>raster_events_relative</code> is registered as <code>GatheredDataObject</code> and is <strong>not</strong> exposed through <code>createBuiltInColumnRecipePresetRegistry()</code>. Use <code>trial_relative_event_count</code> for a scalar tensor column that composes the same normalize step with <code>EventCountInWindow</code>.</p>
 <p>Duplicate preset ids are rejected by <code>registerPreset()</code>. This matches the initial policy in the row-pipeline design: user presets should not silently override built-in presets.</p>
 </section>
 <section id="json-authoring" class="level2">
@@ -664,8 +672,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="ot">]</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>This preset combines interval-row sample geometry with point coordinate projection.</p>
 </section>
-<section id="raster_events_relative_to_interval_start" class="level3">
-<h3 class="anchored" data-anchor-id="raster_events_relative_to_interval_start"><code>raster_events_relative_to_interval_start</code></h3>
+<section id="raster_events_relative-gather-fragment-not-a-tensor-preset" class="level3">
+<h3 class="anchored" data-anchor-id="raster_events_relative-gather-fragment-not-a-tensor-preset"><code>raster_events_relative</code> (gather fragment, not a tensor preset)</h3>
 <p>Parameters:</p>
 <table class="caption-top table">
 <colgroup>
@@ -689,7 +697,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><code>binding_source_key</code></td>
-<td>Interval source used to derive one interval-start alignment event per row. Defaults to <code>source_key</code> if omitted, but interval-row workflows should usually pass the row interval key.</td>
+<td>Interval source used to derive one interval-start alignment event per row.</td>
 </tr>
 <tr class="even">
 <td><code>store_key</code></td>
@@ -699,14 +707,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <p>Expansion:</p>
 <ul>
-<li>Leaves <code>row_pipeline_json</code> empty, so events are gathered over the full row interval.</li>
-<li>Adds a <code>pipeline_value_bindings</code> entry deriving interval-start events from <code>binding_source_key</code> with <code>IntervalToEvent(start)</code>.</li>
+<li>Requires <code>bind_interval_start</code> row modifier for <code>pipeline_value_bindings</code>.</li>
 <li>Runs <code>NormalizeDigitalEventSeriesRelative</code> with <code>alignment_time</code> bound from the row store.</li>
+<li>Produces per-row <code>DigitalEventSeries</code> relative event times <strong>without</strong> a terminal range reduction.</li>
 </ul>
-<p>This preset produces row-relative event times without a terminal reduction.</p>
+<p>This is a gather-layer transform fragment (<code>ColumnOutputKind::GatheredDataObject</code>). It is not registered in <code>createBuiltInColumnRecipePresetRegistry()</code> because <code>TensorData</code> columns are scalar floats only.</p>
 </section>
-<section id="trial_relative_event_count_from_interval_start" class="level3">
-<h3 class="anchored" data-anchor-id="trial_relative_event_count_from_interval_start"><code>trial_relative_event_count_from_interval_start</code></h3>
+<section id="trial_relative_event_count" class="level3">
+<h3 class="anchored" data-anchor-id="trial_relative_event_count"><code>trial_relative_event_count</code></h3>
 <p>Parameters:</p>
 <table class="caption-top table">
 <colgroup>
@@ -746,7 +754,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
-<p>Expansion is the same as <code>raster_events_relative_to_interval_start</code>, plus an <code>EventCountInWindow</code> terminal range reduction over <code>[window_start, window_end]</code>.</p>
+<p>Expansion is the same normalize step as <code>raster_events_relative</code>, plus an <code>EventCountInWindow</code> terminal range reduction over <code>[window_start, window_end]</code>. Pair with the <code>bind_interval_start</code> row modifier.</p>
 </section>
 </section>
 <section id="test-coverage" class="level2">

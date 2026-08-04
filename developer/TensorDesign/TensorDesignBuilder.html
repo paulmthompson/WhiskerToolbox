@@ -445,8 +445,8 @@ DataManager  ←─────────────────┘</code></p
 </tr>
 <tr class="even">
 <td><code>output_time_key</code></td>
-<td>No (default <code>"default"</code>)</td>
-<td><code>TimeKey</code> when registering in DataManager</td>
+<td>No</td>
+<td><code>TimeKey</code> when registering in DataManager. When omitted or <code>"default"</code>, <code>resolveOutputTimeKey()</code> derives the row source’s <code>TimeKey</code>, then falls back to <code>"time"</code> or <code>"default"</code> if registered. TensorDesigner uses the same resolution when building tensors.</td>
 </tr>
 <tr class="odd">
 <td><code>row_source.data_key</code></td>

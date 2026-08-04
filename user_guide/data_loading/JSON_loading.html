@@ -1466,6 +1466,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>TimeFrame stores integer values. Set <code>sampling_rate</code> to convert fractional seconds to integers (e.g., 14000.0 for 14kHz sampling).</p>
 </div>
 </div>
+</section>
+<section id="default-time-clock-fallback" class="level4">
+<h4 class="anchored" data-anchor-id="default-time-clock-fallback">Default <code>time</code> clock (fallback)</h4>
+<p>If your JSON does not define <code>data_type: "time"</code> with <code>name: "time"</code>, Neuralyzer attempts to populate the default <code>time</code> TimeFrame <strong>after the full config is loaded</strong>:</p>
+<ul>
+<li>When video (or other media) was loaded and <code>time</code> is still empty, an identity frame index vector <code>[0, 1, …, N-1]</code> is created from the best available media (any media key—not only <code>"media"</code>).</li>
+<li>If you load <strong>only</strong> points, lines, or other non-media data, <code>time</code> stays empty unless you add an explicit time entry (for example <code>format: "max_value"</code> from an analog or digital event series).</li>
+</ul>
+<p>Define <code>time</code> explicitly in JSON when you need a custom clock, a derived timebase, or a points-only session without video.</p>
 
 
 </section>

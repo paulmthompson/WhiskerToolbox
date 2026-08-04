@@ -547,6 +547,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
+<p><strong>TensorData materialization stops at scalar float.</strong> <code>pipeline_json</code> may produce a gathered <code>DataObject</code> (for example a relative <code>DigitalEventSeries</code> after <code>NormalizeDigitalEventSeriesRelative</code>), but <code>LazyColumnTensorStorage</code> column providers must collapse each row to a single <code>float</code>. Gather-layer <code>DataObject</code> output is valid for intermediate transforms and future GatherResult tooling; only aggregators with <code>ColumnOutputKind::ScalarFloat</code> are exposed as tensor column presets.</p>
 <p>This keeps the dependency direction aligned with the GatherResult refactor:</p>
 <pre class="text"><code>TensorDesign / TransformsV2 extensions -&gt; GatherResult -&gt; DataObjects</code></pre>
 <p>not:</p>

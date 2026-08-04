@@ -813,7 +813,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Introduce an <code>EffectiveRowType</code> enum (e.g., <code>Interval</code>, <code>Event</code>) in the C++ backend.</li>
 <li>Update <code>RowModifierDescriptor</code> to declare its <code>output_row_type</code>.</li>
 <li>Update <code>ColumnAggregatorDescriptor</code> to declare its <code>supported_row_types</code> (e.g., Event Rate only supports <code>Interval</code>).</li>
-<li>Add query methods to the registries (e.g., <code>registry.getAggregatorsFor(EffectiveRowType::Event)</code>) so the UI remains stateless and driven purely by the backend.</li>
+<li>Add query methods to the registries (e.g., <code>ColumnAggregatorRegistry::getAggregatorsFor(AggregatorQueryContext)</code>) so the UI remains stateless and driven purely by the backend composition rules.</li>
 </ul></li>
 <li><strong>Create a Two-Step Column Builder Dialog</strong> (replacing or augmenting the existing <code>ColumnConfigDialog</code>).
 <ul>
