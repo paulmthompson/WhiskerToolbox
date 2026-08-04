@@ -1647,43 +1647,57 @@ void OpenGLWidget::computeAndApplyLayout() {
 
 void OpenGLWidget::loadSpikeSorterConfiguration(std::string const & group_name,
                                                 std::vector<ChannelPosition> const & positions,
-                                                bool key_one_based) {
+                                                bool key_one_based,
+                                                std::vector<std::string> group_keys) {
+    std::vector<std::string> resolved_group_keys = std::move(group_keys);
+    if (resolved_group_keys.empty()) {
+        for (auto const & [key, _]: _data_store->analogSeries()) {
+            auto const identity = parseSeriesIdentity(key);
+            if (identity.group == group_name) {
+                resolved_group_keys.push_back(key);
+            }
+        }
+    }
+
+    if (resolved_group_keys.empty()) {
+        spdlog::warn(
+                "loadSpikeSorterConfiguration: no analog series found for group '{}'",
+                group_name);
+        return;
+    }
+
     // Build a transient ChannelPositionMap for rank derivation only
     ChannelPositionMap config_map;
     config_map[group_name] = positions;
 
-    // Collect analog series keys belonging to this group
-    std::vector<std::string> group_keys;
-    for (auto const & [key, _]: _data_store->analogSeries()) {
-        auto const identity = parseSeriesIdentity(key);
-        if (identity.group == group_name) {
-            group_keys.push_back(key);
-        }
-    }
-
     // Convert electrode Y positions to integer ranks
-    SortableRankMap const ranks = buildSwindaleSpikeSorterRanks(group_keys, config_map, key_one_based);
+    SortableRankMap const ranks = buildSwindaleSpikeSorterRanks(
+            resolved_group_keys, config_map, key_one_based);
 
-    // Write lane_order overrides via state.
-    // setSeriesLaneOverride emits seriesLaneOverrideChanged, which already triggers
-    // layout invalidation and repaint via existing signal connections.
+    std::vector<std::pair<std::string, SeriesLaneOverrideData>> batch_updates;
+    batch_updates.reserve(ranks.size());
     for (auto const & [key, rank]: ranks) {
         SeriesLaneOverrideData override_data;
         override_data.lane_id = key;// unique per channel; required for lane_order to persist
         override_data.lane_order = rank;
-        _state->setSeriesLaneOverride(key, override_data);
+        batch_updates.emplace_back(key, override_data);
     }
+
+    _state->setSeriesLaneOverridesBatch(batch_updates);
 }
 
 void OpenGLWidget::clearSpikeSorterConfiguration(std::string const & group_name) {
-    // Remove lane_order overrides for every analog series in the group.
-    // clearSeriesLaneOverride emits seriesLaneOverrideChanged, which already triggers
-    // layout invalidation and repaint via existing signal connections.
-    for (auto const & [key, _]: _data_store->analogSeries()) {
+    std::vector<std::string> keys_to_clear;
+    keys_to_clear.reserve(_state->allSeriesLaneOverrides().size());
+    for (auto const & [key, _]: _state->allSeriesLaneOverrides()) {
         auto const identity = parseSeriesIdentity(key);
         if (identity.group == group_name) {
-            _state->clearSeriesLaneOverride(key);
+            keys_to_clear.push_back(key);
         }
+    }
+
+    for (auto const & key: keys_to_clear) {
+        _state->clearSeriesLaneOverride(key);
     }
 }
 

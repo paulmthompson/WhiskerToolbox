@@ -526,6 +526,17 @@ public:
     void setSeriesLaneOverride(std::string const & series_key, SeriesLaneOverrideData const & override_data);
 
     /**
+     * @brief Set or update multiple per-series lane placement overrides in one batch.
+     *
+     * Normalizes all overrides once after applying updates, avoiding repeated
+     * normalization when loading spikesorter configuration for many channels.
+     *
+     * @param updates Series key and override pairs to apply
+     */
+    void setSeriesLaneOverridesBatch(
+            std::vector<std::pair<std::string, SeriesLaneOverrideData>> const & updates);
+
+    /**
      * @brief Remove a per-series lane placement override
      * @param series_key Data key for the series
      */

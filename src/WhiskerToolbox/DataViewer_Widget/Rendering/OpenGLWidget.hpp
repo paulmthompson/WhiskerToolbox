@@ -300,7 +300,8 @@ public:
      */
     void loadSpikeSorterConfiguration(std::string const & group_name,
                                       std::vector<ChannelPosition> const & positions,
-                                      bool key_one_based = true);
+                                      bool key_one_based = true,
+                                      std::vector<std::string> group_keys = {});
 
     /**
      * @brief Clear spike sorter configuration for a group

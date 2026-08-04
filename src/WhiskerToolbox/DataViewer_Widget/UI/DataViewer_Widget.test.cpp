@@ -818,6 +818,173 @@ TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Ap
     REQUIRE(key_center[3].first == keys[1]);
 }
 
+namespace {
+
+[[nodiscard]] std::vector<std::string> sortedAnalogKeysByLayoutCenter(
+        DataViewer_Widget & widget,
+        std::vector<std::string> const & keys) {
+    std::vector<std::pair<std::string, float>> key_center;
+    key_center.reserve(keys.size());
+    for (auto const & key: keys) {
+        auto layout = TestHelpers::getAnalogLayoutTransform(widget, key);
+        REQUIRE(layout.has_value());
+        key_center.emplace_back(key, static_cast<float>(layout->offset));
+    }
+    std::sort(key_center.begin(), key_center.end(), [](auto const & a, auto const & b) {
+        return a.second > b.second;
+    });
+    std::vector<std::string> ordered;
+    ordered.reserve(key_center.size());
+    for (auto const & entry: key_center) {
+        ordered.push_back(entry.first);
+    }
+    return ordered;
+}
+
+char const * kDualGroupSpikeSorterConfig =
+        "poly2\n"
+        "1 1 0 300\n"
+        "2 2 0 100\n"
+        "3 3 0 200\n"
+        "4 4 0 400\n";
+
+}// namespace
+
+class DataViewerWidgetDualVoltageGroupTestFixture {
+protected:
+    DataViewerWidgetDualVoltageGroupTestFixture() {
+        if (!QApplication::instance()) {
+            static int argc = 1;
+            static char * argv[] = {const_cast<char *>("test")};
+            m_app = std::make_unique<QApplication>(argc, argv);
+        }
+
+        m_data_manager = std::make_shared<DataManager>();
+
+        std::vector<int> t(4000);
+        std::iota(std::begin(t), std::end(t), 0);
+        auto new_timeframe = std::make_shared<TimeFrame>(t);
+        m_time_key = TimeKey("time");
+        m_data_manager->removeTime(TimeKey("time"));
+        m_data_manager->setTime(TimeKey("time"), new_timeframe);
+        m_data_manager->setTime(TimeKey("master"), new_timeframe, true);
+
+        populateDualVoltageGroups(4);
+
+        m_widget = std::make_unique<DataViewer_Widget>(m_data_manager, nullptr);
+    }
+
+    ~DataViewerWidgetDualVoltageGroupTestFixture() = default;
+
+    DataViewer_Widget & getWidget() { return *m_widget; }
+    [[nodiscard]] std::vector<std::string> const & getVoltageKeys() const { return m_voltage_keys; }
+    [[nodiscard]] std::vector<std::string> const & getVoltageRawKeys() const { return m_voltage_raw_keys; }
+
+private:
+    void populateDualVoltageGroups(int count) {
+        constexpr int kNumSamples = 1000;
+        std::vector<float> base(kNumSamples);
+        for (int i = 0; i < kNumSamples; ++i) {
+            base[static_cast<size_t>(i)] = std::sin(static_cast<float>(i) * 0.01f);
+        }
+
+        m_voltage_keys.clear();
+        m_voltage_raw_keys.clear();
+        m_voltage_keys.reserve(static_cast<size_t>(count));
+        m_voltage_raw_keys.reserve(static_cast<size_t>(count));
+
+        for (int i = 0; i < count; ++i) {
+            std::vector<float> voltage_values = base;
+            std::vector<float> voltage_raw_values = base;
+            float const scale = 1.0f + static_cast<float>(i) * 0.1f;
+            for (auto & v: voltage_values) {
+                v *= scale;
+            }
+            for (auto & v: voltage_raw_values) {
+                v *= scale * 1.05f;
+            }
+
+            auto voltage_series = std::make_shared<AnalogTimeSeries>(voltage_values, voltage_values.size());
+            auto voltage_raw_series = std::make_shared<AnalogTimeSeries>(voltage_raw_values, voltage_raw_values.size());
+            std::string const voltage_key = "voltage_" + std::to_string(i);
+            std::string const voltage_raw_key = "voltage_raw_" + std::to_string(i);
+            m_data_manager->setData<AnalogTimeSeries>(voltage_key, voltage_series, m_time_key);
+            m_data_manager->setData<AnalogTimeSeries>(voltage_raw_key, voltage_raw_series, m_time_key);
+            m_voltage_keys.push_back(voltage_key);
+            m_voltage_raw_keys.push_back(voltage_raw_key);
+        }
+    }
+
+    std::unique_ptr<QApplication> m_app;
+    std::shared_ptr<DataManager> m_data_manager;
+    std::unique_ptr<DataViewer_Widget> m_widget;
+    TimeKey m_time_key{"time"};
+    std::vector<std::string> m_voltage_keys;
+    std::vector<std::string> m_voltage_raw_keys;
+};
+
+TEST_CASE_METHOD(DataViewerWidgetDualVoltageGroupTestFixture,
+                 "DataViewer_Widget - SpikeSorter ordering works for second analog group",
+                 "[DataViewer_Widget][Analog][Config][SpikeSorter]") {
+    auto & widget = getWidget();
+    auto const voltage_keys = getVoltageKeys();
+    auto const voltage_raw_keys = getVoltageRawKeys();
+    REQUIRE(voltage_keys.size() == 4);
+    REQUIRE(voltage_raw_keys.size() == 4);
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    widget.addFeatures(voltage_keys, std::vector<std::string>(voltage_keys.size(), "#FF6B6B"));
+    QApplication::processEvents();
+
+    bool const load_voltage = QMetaObject::invokeMethod(
+            &widget,
+            "_loadSpikeSorterConfigurationFromText",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString("voltage")),
+            Q_ARG(QString, QString(kDualGroupSpikeSorterConfig)));
+    REQUIRE(load_voltage);
+    QApplication::processEvents();
+
+    std::vector<std::string> const expected_order = sortedAnalogKeysByLayoutCenter(widget, voltage_keys);
+
+    widget.removeFeatures(voltage_keys);
+    QApplication::processEvents();
+
+    widget.addFeatures(voltage_raw_keys, std::vector<std::string>(voltage_raw_keys.size(), "#4ECDC4"));
+    QApplication::processEvents();
+
+    bool const load_voltage_raw = QMetaObject::invokeMethod(
+            &widget,
+            "_loadSpikeSorterConfigurationFromText",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString("voltage_raw")),
+            Q_ARG(QString, QString(kDualGroupSpikeSorterConfig)));
+    REQUIRE(load_voltage_raw);
+    QApplication::processEvents();
+
+    std::vector<std::string> const voltage_raw_order =
+            sortedAnalogKeysByLayoutCenter(widget, voltage_raw_keys);
+    REQUIRE(voltage_raw_order.size() == expected_order.size());
+
+    for (size_t i = 0; i < expected_order.size(); ++i) {
+        std::string const expected_suffix = expected_order[i].substr(std::string("voltage").size());
+        std::string const actual_suffix = voltage_raw_order[i].substr(std::string("voltage_raw").size());
+        REQUIRE(expected_suffix == actual_suffix);
+    }
+
+    widget.removeFeatures(voltage_raw_keys);
+    QApplication::processEvents();
+
+    widget.addFeatures(voltage_keys, std::vector<std::string>(voltage_keys.size(), "#FF6B6B"));
+    QApplication::processEvents();
+
+    std::vector<std::string> const restored_voltage_order =
+            sortedAnalogKeysByLayoutCenter(widget, voltage_keys);
+    REQUIRE(restored_voltage_order == expected_order);
+}
+
 TEST_CASE_METHOD(DataViewerWidgetMultiAnalogTestFixture, "DataViewer_Widget - Analog ordering deterministic without overrides or config", "[DataViewer_Widget][Analog][Ordering][Deterministic]") {
     auto & widget = getWidget();
     auto const keys = getAnalogKeys();

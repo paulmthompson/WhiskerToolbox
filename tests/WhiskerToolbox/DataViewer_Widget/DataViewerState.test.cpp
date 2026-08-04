@@ -523,25 +523,47 @@ TEST_CASE("DataViewerState mixed-lane override API", "[DataViewerState]") {
         REQUIRE(state.getSeriesLaneOverride("channel_1") == nullptr);
     }
 
-    SECTION("conflicting lane_order values are resolved deterministically") {
+    SECTION("conflicting lane_order values are resolved deterministically within a group") {
         SeriesLaneOverrideData a;
-        a.lane_id = "lane_a";
+        a.lane_id = "voltage_0";
         a.lane_order = 10;
 
         SeriesLaneOverrideData b;
-        b.lane_id = "lane_b";
+        b.lane_id = "voltage_1";
         b.lane_order = 10;
 
-        state.setSeriesLaneOverride("alpha", a);
-        state.setSeriesLaneOverride("beta", b);
+        state.setSeriesLaneOverride("voltage_0", a);
+        state.setSeriesLaneOverride("voltage_1", b);
 
-        auto const * alpha = state.getSeriesLaneOverride("alpha");
-        auto const * beta = state.getSeriesLaneOverride("beta");
-        REQUIRE(alpha != nullptr);
-        REQUIRE(beta != nullptr);
-        REQUIRE(alpha->lane_order.has_value());
-        REQUIRE(beta->lane_order.has_value());
-        REQUIRE(alpha->lane_order != beta->lane_order);
+        auto const * first = state.getSeriesLaneOverride("voltage_0");
+        auto const * second = state.getSeriesLaneOverride("voltage_1");
+        REQUIRE(first != nullptr);
+        REQUIRE(second != nullptr);
+        REQUIRE(first->lane_order.has_value());
+        REQUIRE(second->lane_order.has_value());
+        REQUIRE(first->lane_order != second->lane_order);
+    }
+
+    SECTION("lane_order deduplication is scoped per series group") {
+        SeriesLaneOverrideData voltage_override;
+        voltage_override.lane_id = "voltage_0";
+        voltage_override.lane_order = 0;
+
+        SeriesLaneOverrideData voltage_raw_override;
+        voltage_raw_override.lane_id = "voltage_raw_0";
+        voltage_raw_override.lane_order = 0;
+
+        state.setSeriesLaneOverride("voltage_0", voltage_override);
+        state.setSeriesLaneOverride("voltage_raw_0", voltage_raw_override);
+
+        auto const * voltage = state.getSeriesLaneOverride("voltage_0");
+        auto const * voltage_raw = state.getSeriesLaneOverride("voltage_raw_0");
+        REQUIRE(voltage != nullptr);
+        REQUIRE(voltage_raw != nullptr);
+        REQUIRE(voltage->lane_order.has_value());
+        REQUIRE(voltage_raw->lane_order.has_value());
+        REQUIRE(voltage->lane_order == std::optional<int>{0});
+        REQUIRE(voltage_raw->lane_order == std::optional<int>{0});
     }
 
     SECTION("set/get lane override") {

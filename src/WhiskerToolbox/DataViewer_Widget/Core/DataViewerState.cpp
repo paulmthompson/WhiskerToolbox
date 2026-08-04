@@ -3,9 +3,11 @@
 #include "Plots/Common/MultiLaneVerticalAxisWidget/Core/MultiLaneVerticalAxisState.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <cmath>
 #include <set>
 #include <tuple>
+#include <unordered_map>
 
 namespace {
 
@@ -109,6 +111,24 @@ void normalizeAllOrderingConstraints(DataViewerStateData & data) {
     return true;
 }
 
+/**
+ * @brief Extract probe group name from a series key for lane-order bucketing.
+ *
+ * Matches the group component of parseSeriesIdentity (last underscore + numeric suffix).
+ */
+[[nodiscard]] std::string seriesGroupForLaneOverrideKey(std::string const & key) {
+    auto const pos = key.rfind('_');
+    if (pos == std::string::npos || pos + 1 >= key.size()) {
+        return key;
+    }
+    for (size_t i = pos + 1; i < key.size(); ++i) {
+        if (std::isdigit(static_cast<unsigned char>(key[i])) == 0) {
+            return key;
+        }
+    }
+    return key.substr(0, pos);
+}
+
 void normalizeAllLaneOverrides(DataViewerStateData & data) {
     std::map<std::string, SeriesLaneOverrideData> normalized_series;
     for (auto const & [series_key, override_data]: data.series_lane_overrides) {
@@ -118,18 +138,33 @@ void normalizeAllLaneOverrides(DataViewerStateData & data) {
         }
     }
 
-    // Resolve conflicting lane_order values deterministically by series key ordering.
-    std::set<int> used_lane_orders;
-    for (auto & [_, override_data]: normalized_series) {
-        if (!override_data.lane_order.has_value()) {
-            continue;
+    // Resolve conflicting lane_order values within each probe group so independent
+    // analog groups (e.g. voltage_* and voltage_raw_*) can both use ranks 0..N.
+    std::unordered_map<std::string, std::map<std::string, SeriesLaneOverrideData>> overrides_by_group;
+    overrides_by_group.reserve(normalized_series.size());
+    for (auto & [series_key, override_data]: normalized_series) {
+        auto const group = seriesGroupForLaneOverrideKey(series_key);
+        overrides_by_group[group].emplace(series_key, std::move(override_data));
+    }
+
+    normalized_series.clear();
+    for (auto & [group, group_overrides]: overrides_by_group) {
+        (void) group;
+        std::set<int> used_lane_orders;
+        for (auto & [_, override_data]: group_overrides) {
+            if (!override_data.lane_order.has_value()) {
+                continue;
+            }
+            int lane_order = *override_data.lane_order;
+            while (used_lane_orders.contains(lane_order)) {
+                ++lane_order;
+            }
+            override_data.lane_order = lane_order;
+            used_lane_orders.insert(lane_order);
         }
-        int lane_order = *override_data.lane_order;
-        while (used_lane_orders.contains(lane_order)) {
-            ++lane_order;
+        for (auto & [series_key, override_data]: group_overrides) {
+            normalized_series.emplace(series_key, std::move(override_data));
         }
-        override_data.lane_order = lane_order;
-        used_lane_orders.insert(lane_order);
     }
     data.series_lane_overrides = std::move(normalized_series);
 
@@ -538,6 +573,54 @@ void DataViewerState::setSeriesLaneOverride(std::string const & series_key, Seri
         emit seriesLaneOverrideChanged(QString::fromStdString(series_key));
         emit stateChanged();
     }
+}
+
+void DataViewerState::setSeriesLaneOverridesBatch(
+        std::vector<std::pair<std::string, SeriesLaneOverrideData>> const & updates) {
+    if (updates.empty()) {
+        return;
+    }
+
+    std::vector<std::string> changed_keys;
+    changed_keys.reserve(updates.size());
+
+    for (auto const & [series_key, override_data]: updates) {
+        auto normalized = normalizeSeriesLaneOverride(override_data);
+
+        bool entry_changed = false;
+        if (isDefaultSeriesLaneOverride(normalized)) {
+            auto it = _data.series_lane_overrides.find(series_key);
+            if (it != _data.series_lane_overrides.end()) {
+                _data.series_lane_overrides.erase(it);
+                entry_changed = true;
+            }
+        } else {
+            auto it = _data.series_lane_overrides.find(series_key);
+            if (it == _data.series_lane_overrides.end() || it->second.lane_id != normalized.lane_id ||
+                it->second.lane_order != normalized.lane_order ||
+                !isNearlyEqual(it->second.lane_weight, normalized.lane_weight) ||
+                it->second.overlay_mode != normalized.overlay_mode ||
+                it->second.overlay_z != normalized.overlay_z) {
+                _data.series_lane_overrides[series_key] = normalized;
+                entry_changed = true;
+            }
+        }
+
+        if (entry_changed) {
+            changed_keys.push_back(series_key);
+        }
+    }
+
+    if (changed_keys.empty()) {
+        return;
+    }
+
+    normalizeAllLaneOverrides(_data);
+    markDirty();
+    for (auto const & series_key: changed_keys) {
+        emit seriesLaneOverrideChanged(QString::fromStdString(series_key));
+    }
+    emit stateChanged();
 }
 
 void DataViewerState::clearSeriesLaneOverride(std::string const & series_key) {

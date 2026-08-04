@@ -842,11 +842,11 @@ void DataViewer_Widget::_updateCoordinateDisplay(float time_coordinate, float ca
     QString coordinate_text;
     if (series_info.isEmpty()) {
         coordinate_text = QString("Time: %1  Index: %2  Y: %3  Canvas: %4x%5")
-                                  .arg(actual_time.getValue(), 10)    // Right-aligned, width 10
-                                  .arg(time_index, 10)     // Right-aligned, width 10
-                                  .arg(canvas_y, 8, 'f', 1)// Right-aligned, width 8, 1 decimal
-                                  .arg(canvas_width, 5)    // Right-aligned, width 5
-                                  .arg(canvas_height, 5);  // Right-aligned, width 5
+                                  .arg(actual_time.getValue(), 10)// Right-aligned, width 10
+                                  .arg(time_index, 10)            // Right-aligned, width 10
+                                  .arg(canvas_y, 8, 'f', 1)       // Right-aligned, width 8, 1 decimal
+                                  .arg(canvas_width, 5)           // Right-aligned, width 5
+                                  .arg(canvas_height, 5);         // Right-aligned, width 5
     } else {
         // For series info, still use fixed-width for numeric values but allow series info to vary
         coordinate_text = QString("Time: %1  Index: %2  %3  Canvas: %4x%5")
@@ -1264,7 +1264,8 @@ void DataViewer_Widget::_loadSpikeSorterConfigurationForGroup(QString const & gr
     ui->openGLWidget->loadSpikeSorterConfiguration(
             group_name.toStdString(),
             positions,
-            key_one_based);
+            key_one_based,
+            group_keys);
     ui->openGLWidget->updateCanvas();
 }
 
@@ -1396,7 +1397,8 @@ void DataViewer_Widget::_loadSpikeSorterConfigurationFromText(QString const & gr
     ui->openGLWidget->loadSpikeSorterConfiguration(
             group_name.toStdString(),
             positions,
-            key_one_based);
+            key_one_based,
+            group_keys);
     ui->openGLWidget->updateCanvas();
 }
 
