@@ -201,7 +201,7 @@ struct DLCPointLoaderOptions {
 static_assert(Neuralyzer::ValidLoaderOptions<DLCPointLoaderOptions>,
               "DLCPointLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields");
 
-DATAMANAGERIO_EXPORT std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLCPointLoaderOptions const & opts);
+DATAMANAGERIO_EXPORT std::map<std::string, std::vector<std::pair<TimeFrameIndex, Point2D<float>>>> load_dlc_csv(DLCPointLoaderOptions const & opts);
 
 template<>
 struct ParameterUIHints<DLCPointLoaderOptions> {

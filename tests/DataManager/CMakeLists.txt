@@ -323,3 +323,10 @@ copy_files(test_data_manager
 )
 
 enable_whiskertoolbox_test_pch(test_data_manager)
+
+add_executable(profile_dlc profile_dlc.cpp)
+target_link_libraries(profile_dlc PRIVATE DataManagerIO)
+target_include_directories(profile_dlc PRIVATE
+        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager>"
+        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/..>"
+)

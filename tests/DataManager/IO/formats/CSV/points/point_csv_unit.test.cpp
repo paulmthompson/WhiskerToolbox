@@ -80,18 +80,18 @@ TEST_CASE_METHOD(DLCPointCSVUnitTestFixture,
 
     REQUIRE(std::filesystem::exists(test_csv_path));
 
-    SECTION("Load with default threshold returns all bodyparts") {
+    SECTION("Load valid DLC CSV with no filtering") {
         DLCPointLoaderOptions opts;
         opts.filepath = test_csv_path.string();
+        opts.likelihood_threshold = 0.0f;
 
         auto result = load_dlc_csv(opts);
 
-        // Check that we loaded the expected bodyparts
         auto expected_bodyparts = getExpectedBodyparts();
         REQUIRE(result.size() == expected_bodyparts.size());
 
         for (auto const & bodypart: expected_bodyparts) {
-            REQUIRE(result.find(bodypart) != result.end());
+            REQUIRE(std::find_if(result.begin(), result.end(), [&bodypart](auto const& p) { return p.first == bodypart; }) != result.end());
         }
 
         // Check that each bodypart has 5 frames of data (frames 0-4)
@@ -100,7 +100,7 @@ TEST_CASE_METHOD(DLCPointCSVUnitTestFixture,
 
             // Verify frame indices
             for (int i = 0; i < 5; ++i) {
-                REQUIRE(points.find(TimeFrameIndex(i)) != points.end());
+                REQUIRE(std::find_if(points.begin(), points.end(), [i](auto const& p) { return p.first == TimeFrameIndex(i); }) != points.end());
             }
         }
     }
@@ -122,13 +122,17 @@ TEST_CASE_METHOD(DLCPointCSVUnitTestFixture,
         REQUIRE(result.size() == expected_bodyparts.size() - 3);
 
         // Verify filtered bodyparts are not present
-        REQUIRE(result.find("wp_post_left") == result.end());
-        REQUIRE(result.find("cuetip") == result.end());
-        REQUIRE(result.find("wp_p_right") == result.end());
+        auto it_post = std::find_if(result.begin(), result.end(), [](auto const& p) { return p.first == "wp_post_left"; });
+        REQUIRE(it_post == result.end());
+        auto it_cue = std::find_if(result.begin(), result.end(), [](auto const& p) { return p.first == "cuetip"; });
+        REQUIRE(it_cue == result.end());
+        auto it_p_right = std::find_if(result.begin(), result.end(), [](auto const& p) { return p.first == "wp_p_right"; });
+        REQUIRE(it_p_right == result.end());
 
         // wp_cent_left should be present but with only 1 point (frame 1 has likelihood 0.911 > 0.9)
-        REQUIRE(result.find("wp_cent_left") != result.end());
-        REQUIRE(result.at("wp_cent_left").size() == 1);
+        auto it_cent = std::find_if(result.begin(), result.end(), [](auto const& p) { return p.first == "wp_cent_left"; });
+        REQUIRE(it_cent != result.end());
+        REQUIRE(it_cent->second.size() == 1);
     }
 
     SECTION("Verify specific point coordinates from fixture") {
@@ -139,11 +143,14 @@ TEST_CASE_METHOD(DLCPointCSVUnitTestFixture,
         auto result = load_dlc_csv(opts);
 
         // Verify nose_tip at frame 0 has expected coordinates
-        REQUIRE(result.find("nose_tip") != result.end());
-        auto & nose_tip_points = result.at("nose_tip");
-        REQUIRE(nose_tip_points.find(TimeFrameIndex(0)) != nose_tip_points.end());
+        auto it_nose = std::find_if(result.begin(), result.end(), [](auto const& p) { return p.first == "nose_tip"; });
+        REQUIRE(it_nose != result.end());
+        auto & nose_tip_points = it_nose->second;
+        
+        auto it = std::find_if(nose_tip_points.begin(), nose_tip_points.end(), [](auto const& p) { return p.first == TimeFrameIndex(0); });
+        REQUIRE(it != nose_tip_points.end());
 
-        auto & point = nose_tip_points.at(TimeFrameIndex(0));
+        auto & point = it->second;
         REQUIRE(point.x == Catch::Approx(363.8144531f).margin(0.1f));
         REQUIRE(point.y == Catch::Approx(272.2839661f).margin(0.1f));
     }

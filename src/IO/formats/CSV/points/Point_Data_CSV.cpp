@@ -7,6 +7,7 @@
 #include "Points/Point_Data.hpp"
 
 #include <cassert>
+#include <charconv>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -159,12 +160,12 @@ bool save(PointData const * point_data, CSVPointSaverOptions const & opts) {
     return ok;
 }
 
-std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLCPointLoaderOptions const & opts) {
-    std::fstream file;
-    file.open(opts.filepath, std::fstream::in);
+std::map<std::string, std::vector<std::pair<TimeFrameIndex, Point2D<float>>>> load_dlc_csv(DLCPointLoaderOptions const & opts) {
+    std::string const & filepath = opts.filepath;
 
+    std::ifstream file(filepath);
     if (!file.is_open()) {
-        std::cerr << "Error: Could not open file " << opts.filepath << std::endl;
+        std::cerr << "Error: Could not open file " << filepath << std::endl;
         return {};
     }
 
@@ -199,57 +200,118 @@ std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> load_dlc_csv(DLC
         }
     }
 
-    // Parse data rows
-    std::map<std::string, std::map<TimeFrameIndex, Point2D<float>>> data;
+    // Map column index to unique bodypart index
+    std::vector<int> col_to_bodypart_idx(bodyparts.size(), -1);
+    std::vector<std::string> unique_bodyparts;
+    std::map<std::string, int> bodypart_name_to_idx;
+
+    for (size_t i = 0; i < bodyparts.size(); ++i) {
+        if (static_cast<int>(i) == frame_column) continue;
+        
+        std::string const & bp = bodyparts[i];
+        if (bp.empty()) continue;
+        
+        if (bodypart_name_to_idx.find(bp) == bodypart_name_to_idx.end()) {
+            bodypart_name_to_idx[bp] = static_cast<int>(unique_bodyparts.size());
+            unique_bodyparts.push_back(bp);
+        }
+        col_to_bodypart_idx[i] = bodypart_name_to_idx[bp];
+    }
+
+    struct ParsedPoint {
+        Point2D<float> point;
+        float likelihood = 1.0f;
+        bool has_likelihood = false;
+        bool has_x = false;
+        bool has_y = false;
+        
+        void reset() {
+            point.x = 0; point.y = 0;
+            likelihood = 1.0f;
+            has_likelihood = false;
+            has_x = false;
+            has_y = false;
+        }
+    };
+    
+    std::vector<ParsedPoint> row_points(unique_bodyparts.size());
+    std::map<std::string, std::vector<std::pair<TimeFrameIndex, Point2D<float>>>> data;
+
+    // Cache pointers to the inner vectors to avoid O(log N) string lookups per row
+    std::vector<std::vector<std::pair<TimeFrameIndex, Point2D<float>>>*> inner_vectors(unique_bodyparts.size());
+    for (size_t i = 0; i < unique_bodyparts.size(); ++i) {
+        inner_vectors[i] = &data[unique_bodyparts[i]];
+    }
 
     while (getline(file, ln)) {
         strip_cr(ln);// Handle Windows CRLF line endings
-        std::stringstream ss(ln);
+        size_t start = 0;
         size_t col_no = 0;
         TimeFrameIndex frame_no(0);
 
-        // Temporary storage for current row's points
-        std::map<std::string, Point2D<float>> temp_points;
-        std::map<std::string, float> temp_likelihoods;
+        // Reset temporary storage for current row
+        for(auto& p : row_points) {
+            p.reset();
+        }
 
-        while (getline(ss, ele, ',')) {
-            if (static_cast<int>(col_no) == frame_column) {
-                // For DLC CSV, frame column should already be a pure number, no extraction needed
-                frame_no = TimeFrameIndex(std::stoi(ele));
-            } else if (col_no < dims.size() && col_no < bodyparts.size()) {
-                std::string const & bodypart = bodyparts[col_no];
-                std::string const & coord_type = dims[col_no];
+        while (start <= ln.size()) {
+            size_t end = ln.find(',', start);
+            if (end == std::string::npos) {
+                end = ln.size();
+            }
 
-                if (coord_type == "x") {
-                    temp_points[bodypart].x = std::stof(ele);
-                } else if (coord_type == "y") {
-                    temp_points[bodypart].y = std::stof(ele);
-                } else if (coord_type == "likelihood") {
-                    temp_likelihoods[bodypart] = std::stof(ele);
+            if (end > start) {
+                char const * ptr = ln.c_str() + start;
+                char const * ptr_end = ln.c_str() + end;
+                if (static_cast<int>(col_no) == frame_column) {
+                    int frame_val = 0;
+                    std::from_chars(ptr, ptr_end, frame_val);
+                    frame_no = TimeFrameIndex(frame_val);
+                } else if (col_no < dims.size() && col_no < bodyparts.size()) {
+                    int bp_idx = col_to_bodypart_idx[col_no];
+                    if (bp_idx >= 0) {
+                        std::string const & coord_type = dims[col_no];
+                        
+                        float val = 0.0f;
+                        std::from_chars(ptr, ptr_end, val);
+
+                        if (coord_type == "x") {
+                            row_points[bp_idx].point.x = val;
+                            row_points[bp_idx].has_x = true;
+                        } else if (coord_type == "y") {
+                            row_points[bp_idx].point.y = val;
+                            row_points[bp_idx].has_y = true;
+                        } else if (coord_type == "likelihood") {
+                            row_points[bp_idx].likelihood = val;
+                            row_points[bp_idx].has_likelihood = true;
+                        }
+                    }
                 }
             }
+            start = end + 1;
             ++col_no;
         }
 
         // Only add points that meet the likelihood threshold
-        for (auto const & [bodypart, point]: temp_points) {
-            auto likelihood_it = temp_likelihoods.find(bodypart);
-            if (likelihood_it != temp_likelihoods.end()) {
-                if (likelihood_it->second >= likelihood_threshold) {
-                    data[bodypart][frame_no] = point;
+        for (size_t i = 0; i < unique_bodyparts.size(); ++i) {
+            auto const & rp = row_points[i];
+            if (rp.has_x || rp.has_y) {
+                if (!rp.has_likelihood || rp.likelihood >= likelihood_threshold) {
+                    inner_vectors[i]->push_back({frame_no, rp.point});
                 }
-            } else {
-                // If no likelihood found, add the point (backward compatibility)
-                data[bodypart][frame_no] = point;
             }
         }
     }
 
     file.close();
 
-    std::cout << "Loaded DLC CSV with " << data.size() << " bodyparts" << std::endl;
-    for (auto const & [bodypart, points]: data) {
-        std::cout << "  " << bodypart << ": " << points.size() << " points" << std::endl;
+    // Prune bodyparts with 0 points (created by pre-caching inner vectors)
+    for (auto it = data.begin(); it != data.end(); ) {
+        if (it->second.empty()) {
+            it = data.erase(it);
+        } else {
+            ++it;
+        }
     }
 
     return data;
