@@ -285,8 +285,10 @@ TEST_CASE("SceneHitTester selectBestHit priority", "[CorePlotting][SceneHitTeste
 // ===========================================================================
 // EventPlotWidget Click Selection Tests
 // ===========================================================================
-// These tests simulate the logic in EventPlotOpenGLWidget::handleClickSelection
-// which uses SceneHitTester to find events when the user clicks on the raster plot.
+// These tests simulate QuadTree hit testing for raster plots. EventPlotWidget
+// derives trial index from hit world Y via trialIndexFromWorldY (see
+// PlotInteractionHelpers.test.cpp); series_key in production is the event name,
+// not "trial_N". The helpers below mirror the legacy per-trial series_key scheme.
 
 namespace {
 

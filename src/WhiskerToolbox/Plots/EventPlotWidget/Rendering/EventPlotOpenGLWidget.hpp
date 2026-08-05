@@ -29,6 +29,7 @@
 #include "CorePlotting/SceneGraph/RenderablePrimitives.hpp"
 #include "CorePlotting/SceneGraph/SceneBuilder.hpp"
 #include "PlotDataExport/RasterCSVExport.hpp"
+#include "Plots/Common/PlotInteractionHelpers.hpp"
 #include "Plots/Common/TooltipManager/PlotTooltipManager.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
 
@@ -277,10 +278,10 @@ private:
 
     /**
      * @brief Find event near screen position (for hit testing)
-     * @return Pair of (trial_index, event_name) or nullopt if none found.
+     * @return Hit details including trial index and event relative time, or nullopt.
      *         event_name is the plot event name (from EventPlotState), not the DataManager key.
      */
-    [[nodiscard]] std::optional<std::pair<int, std::string>> findEventNear(
+    [[nodiscard]] std::optional<Neuralyzer::Plots::EventPlotEventHit> findEventNear(
             QPoint const & screen_pos, float tolerance_pixels = 10.0f) const;
 
     /**

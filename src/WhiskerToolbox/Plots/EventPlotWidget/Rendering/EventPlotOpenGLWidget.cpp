@@ -57,17 +57,6 @@ struct SeriesTrialKey {
     }
 }
 
-/// Derive trial index from world-space Y coordinate.
-/// Trials are laid out in equal-height rows within [-1, +1].
-/// Row 0 is at the top (y ≈ +1), row (num_trials-1) at the bottom (y ≈ -1).
-[[nodiscard]] int trialIndexFromWorldY(float world_y, size_t num_trials) {
-    if (num_trials == 0) return -1;
-    float const row_height = 2.0f / static_cast<float>(num_trials);
-    // y = +1 → trial 0, y = -1 → trial (num_trials-1)
-    int const trial = static_cast<int>((1.0f - world_y) / row_height);
-    return std::clamp(trial, 0, static_cast<int>(num_trials) - 1);
-}
-
 }// anonymous namespace
 
 EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
@@ -94,11 +83,10 @@ EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
                 if (!hit) {
                     return std::nullopt;
                 }
-                QPointF const world = screenToWorld(pos);
                 Neuralyzer::Plots::PlotTooltipHit result;
-                result.world_x = static_cast<float>(world.x());
-                result.world_y = static_cast<float>(world.y());
-                result.user_data = *hit;// std::pair<int, std::string>
+                result.world_x = hit->relative_time_ms;
+                result.world_y = hit->world_y;
+                result.user_data = *hit;
                 return result;
             });
 
@@ -106,9 +94,9 @@ EventPlotOpenGLWidget::EventPlotOpenGLWidget(QWidget * parent)
     _tooltip_mgr->setTextProvider(
             [](Neuralyzer::Plots::PlotTooltipHit const & hit) -> QString {
                 auto const & data =
-                        std::any_cast<std::pair<int, std::string> const &>(hit.user_data);
+                        std::any_cast<Neuralyzer::Plots::EventPlotEventHit const &>(hit.user_data);
                 return QString("Trial %1\nTime: %2 ms")
-                        .arg(data.first + 1)
+                        .arg(data.trial_index + 1)
                         .arg(hit.world_x, 0, 'f', 1);
             });
 }
@@ -419,7 +407,7 @@ void EventPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
     if (event->button() == Qt::LeftButton) {
         QPointF const world = screenToWorld(event->pos());
         int const num_trials = static_cast<int>(_cached_alignment_times.size());
-        int const trial_from_y = trialIndexFromWorldY(
+        int const trial_from_y = Neuralyzer::Plots::trialIndexFromWorldY(
                 static_cast<float>(world.y()), _cached_alignment_times.size());
 
         spdlog::debug("[EventPlotGL] doubleClick screen=({}, {}) world=({:.4f}, {:.4f}) "
@@ -429,38 +417,37 @@ void EventPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
                       _widget_width, _widget_height,
                       num_trials, trial_from_y);
 
-        // Find event near click position
         auto hit = findEventNear(event->pos());
         if (hit) {
-            int const trial_index = hit->first;
-            auto const relative_time = static_cast<float>(world.x());
+            int const trial_index = hit->trial_index;
+            auto const relative_time = hit->relative_time_ms;
 
             spdlog::debug("[EventPlotGL] doubleClick hit: trial={} series='{}' relativeTime={:.4f}",
-                          trial_index, hit->second, relative_time);
+                          trial_index, hit->event_name, relative_time);
 
             // Convert relative time to absolute time
             // The alignment time is the absolute time of t=0 for this trial
             if (trial_index >= 0 &&
                 static_cast<size_t>(trial_index) < _cached_alignment_times.size()) {
                 ClockTicks const alignment_time = _cached_alignment_times[trial_index];
-                int64_t const absolute_time = alignment_time.getValue() + static_cast<int64_t>(relative_time);
+                int64_t const absolute_time = Neuralyzer::Plots::absoluteTimeFromHit(
+                        alignment_time.getValue(), relative_time);
 
                 spdlog::debug("[EventPlotGL] doubleClick time: alignmentTime={} absoluteTime={}",
                               alignment_time.getValue(), absolute_time);
 
                 // Resolve the data key from the hit's event name
-                // hit->second encodes the event name via the scene key
                 QString series_key;
-                if (_state && !hit->second.empty()) {
+                if (_state && !hit->event_name.empty()) {
                     auto options = _state->getPlotEventOptions(
-                            QString::fromStdString(hit->second));
+                            QString::fromStdString(hit->event_name));
                     if (options) {
                         series_key = QString::fromStdString(options->event_key);
                         spdlog::debug("[EventPlotGL] doubleClick resolved seriesKey='{}'",
                                       series_key.toStdString());
                     } else {
                         spdlog::debug("[EventPlotGL] doubleClick: no plot options for '{}'",
-                                      hit->second);
+                                      hit->event_name);
                     }
                 }
 
@@ -766,7 +753,7 @@ void EventPlotOpenGLWidget::handleZoom(float delta, bool y_only, bool both_axes)
             *_state, _cached_view_state, delta, y_only, both_axes);
 }
 
-std::optional<std::pair<int, std::string>> EventPlotOpenGLWidget::findEventNear(
+std::optional<Neuralyzer::Plots::EventPlotEventHit> EventPlotOpenGLWidget::findEventNear(
         QPoint const & screen_pos, float tolerance_pixels) const {
     // Convert screen position to world coordinates
     QPointF const world = screenToWorld(screen_pos);
@@ -813,7 +800,7 @@ std::optional<std::pair<int, std::string>> EventPlotOpenGLWidget::findEventNear(
     if (result.hasHit() && result.hit_type == CorePlotting::HitType::DigitalEvent) {
         // series_key is now just the event name (batches are merged per series).
         // Derive trial index from the hit Y coordinate using layout geometry.
-        int const trial_index = trialIndexFromWorldY(
+        int const trial_index = Neuralyzer::Plots::trialIndexFromWorldY(
                 result.world_y, _cached_alignment_times.size());
 
         spdlog::debug("[EventPlotGL] findEventNear: DigitalEvent hit -> trialIndex={} "
@@ -821,7 +808,11 @@ std::optional<std::pair<int, std::string>> EventPlotOpenGLWidget::findEventNear(
                       trial_index, result.world_x, result.world_y);
 
         if (trial_index >= 0) {
-            return std::make_pair(trial_index, result.series_key);
+            return Neuralyzer::Plots::EventPlotEventHit{
+                    trial_index,
+                    result.series_key,
+                    result.world_x,
+                    result.world_y};
         }
     }
 
@@ -838,7 +829,7 @@ void EventPlotOpenGLWidget::handleClickSelection(QPoint const & screen_pos) {
     float const world_tolerance = 10.0f * world_per_pixel_x;// 10 pixel tolerance
 
     int const num_trials = static_cast<int>(_cached_alignment_times.size());
-    int const trial_from_y = trialIndexFromWorldY(
+    int const trial_from_y = Neuralyzer::Plots::trialIndexFromWorldY(
             static_cast<float>(world.y()), _cached_alignment_times.size());
 
     spdlog::debug("[EventPlotGL] clickSelection: screen=({}, {}) world=({:.4f}, {:.4f}) "
@@ -871,7 +862,7 @@ void EventPlotOpenGLWidget::handleClickSelection(QPoint const & screen_pos) {
     if (result.hasHit() && result.hit_type == CorePlotting::HitType::DigitalEvent) {
         // series_key is now just the event name (batches are merged per series).
         // Derive trial index from the hit Y coordinate.
-        int const trial_index = trialIndexFromWorldY(
+        int const trial_index = Neuralyzer::Plots::trialIndexFromWorldY(
                 result.world_y, _cached_alignment_times.size());
 
         spdlog::debug("[EventPlotGL] clickSelection: DigitalEvent hit -> trialIndex={} "

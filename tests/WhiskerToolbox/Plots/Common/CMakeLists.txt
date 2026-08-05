@@ -57,6 +57,7 @@ add_executable(test_plot_interaction_helpers
 
 target_link_libraries(test_plot_interaction_helpers PRIVATE
     Catch2::Catch2WithMain
+    CorePlotting
     Qt6::Core
     glm::glm
 )

@@ -40,14 +40,20 @@
  * @see PlotAlignmentGather.hpp for trial-aligned data gathering helpers
  */
 
+#include "CorePlotting/CoordinateTransform/AxisMapping.hpp"
+
 #include <QPoint>
 #include <QPointF>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <algorithm>
 #include <cmath>
 #include <concepts>
+#include <cstddef>
+#include <cstdint>
+#include <string>
 
 namespace Neuralyzer::Plots {
 
@@ -98,6 +104,76 @@ concept ViewStateWithBounds = ViewStateLike<T> && requires(T const & vs) {
     { vs.y_min } -> std::convertible_to<double>;
     { vs.y_max } -> std::convertible_to<double>;
 };
+
+// =============================================================================
+// Trial Row Mapping (EventPlot / raster plots)
+// =============================================================================
+
+/**
+ * @brief Result of hit-testing an event in a raster plot.
+ */
+struct EventPlotEventHit {
+    int trial_index{-1};         ///< Display row index (0 = bottom row)
+    std::string event_name;      ///< Plot event name from EventPlotState
+    float relative_time_ms{0.0f};///< Event time relative to alignment (world X)
+    float world_y{0.0f};         ///< Event world Y coordinate
+};
+
+/**
+ * @brief Derive trial index from world-space Y coordinate.
+ *
+ * Matches RowLayoutStrategy row placement and trialIndexAxis labeling:
+ * trial 0 at world y ≈ -1 (bottom), trial (N-1) at world y ≈ +1 (top).
+ *
+ * @param world_y World Y coordinate in the raster plot viewport.
+ * @param num_trials Number of trials (rows).
+ * @return Trial index in [0, num_trials), or -1 if num_trials == 0.
+ */
+[[nodiscard]] inline int trialIndexFromWorldY(float world_y, std::size_t num_trials) {
+    if (num_trials == 0) {
+        return -1;
+    }
+    auto const mapping = CorePlotting::trialIndexAxis(num_trials);
+    int const trial = static_cast<int>(mapping.worldToDomain(static_cast<double>(world_y)));
+    return std::clamp(trial, 0, static_cast<int>(num_trials) - 1);
+}
+
+/**
+ * @brief Compute world Y center for a raster row using RowLayoutStrategy geometry.
+ *
+ * @param row_index Zero-based row index (0 = bottom row).
+ * @param num_trials Total number of rows.
+ * @param viewport_y_min Minimum viewport Y (default -1).
+ * @param viewport_y_max Maximum viewport Y (default +1).
+ * @return World Y coordinate at the center of the row.
+ */
+[[nodiscard]] inline float rowWorldYCenter(
+        int row_index,
+        std::size_t num_trials,
+        float viewport_y_min = -1.0f,
+        float viewport_y_max = 1.0f) {
+    if (num_trials == 0) {
+        return (viewport_y_min + viewport_y_max) * 0.5f;
+    }
+    float const viewport_height = viewport_y_max - viewport_y_min;
+    float const row_height = viewport_height / static_cast<float>(num_trials);
+    return viewport_y_min + row_height * (static_cast<float>(row_index) + 0.5f);
+}
+
+/**
+ * @brief Convert a hit event's relative time and trial alignment to absolute time.
+ *
+ * Used by EventPlot double-click navigation: absolute = alignment + relative.
+ *
+ * @param alignment_time Absolute alignment time for the trial (ClockTicks value).
+ * @param relative_time_ms Event time relative to alignment (world X from hit test).
+ * @return Absolute time in the same units as alignment_time.
+ */
+[[nodiscard]] inline int64_t absoluteTimeFromHit(
+        int64_t alignment_time,
+        float relative_time_ms) {
+    return alignment_time + static_cast<int64_t>(relative_time_ms);
+}
 
 // =============================================================================
 // Coordinate Transforms
