@@ -408,6 +408,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-getfilteredalignmentsource" id="toc-function-getfilteredalignmentsource" class="nav-link" data-scroll-target="#function-getfilteredalignmentsource">function getFilteredAlignmentSource</a></li>
   <li><a href="#function-countnonoverlappingalignmentevents" id="toc-function-countnonoverlappingalignmentevents" class="nav-link" data-scroll-target="#function-countnonoverlappingalignmentevents">function countNonOverlappingAlignmentEvents</a></li>
   <li><a href="#function-preparealignmentwindows" id="toc-function-preparealignmentwindows" class="nav-link" data-scroll-target="#function-preparealignmentwindows">function prepareAlignmentWindows</a></li>
+  <li><a href="#function-trialindexfromworldy" id="toc-function-trialindexfromworldy" class="nav-link" data-scroll-target="#function-trialindexfromworldy">function trialIndexFromWorldY</a></li>
+  <li><a href="#function-rowworldycenter" id="toc-function-rowworldycenter" class="nav-link" data-scroll-target="#function-rowworldycenter">function rowWorldYCenter</a></li>
+  <li><a href="#function-absolutetimefromhit" id="toc-function-absolutetimefromhit" class="nav-link" data-scroll-target="#function-absolutetimefromhit">function absoluteTimeFromHit</a></li>
   <li><a href="#function-screentondc" id="toc-function-screentondc" class="nav-link" data-scroll-target="#function-screentondc">function screenToNDC</a></li>
   <li><a href="#function-screentoworld" id="toc-function-screentoworld" class="nav-link" data-scroll-target="#function-screentoworld">function screenToWorld</a></li>
   <li><a href="#function-worldtoscreen" id="toc-function-worldtoscreen" class="nav-link" data-scroll-target="#function-worldtoscreen">function worldToScreen</a></li>
@@ -493,49 +496,53 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1GaussianKernelParams.html">Neuralyzer::Plots::GaussianKernelParams</a></strong> <br>Parameters for Gaussian kernel smoothing (stub — not yet implemented)</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1EventPlotEventHit.html">Neuralyzer::Plots::EventPlotEventHit</a></strong> <br>Result of hit-testing an event in a raster plot.</td>
 </tr>
 <tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1GaussianKernelParams.html">Neuralyzer::Plots::GaussianKernelParams</a></strong> <br>Parameters for Gaussian kernel smoothing (stub — not yet implemented)</td>
+</tr>
+<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1HeatmapPipelineConfig.html">Neuralyzer::Plots::HeatmapPipelineConfig</a></strong> <br>Configuration for the heatmap data pipeline.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1HeatmapPipelineResult.html">Neuralyzer::Plots::HeatmapPipelineResult</a></strong> <br>Result of the heatmap data pipeline.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1NormalizedRow.html">Neuralyzer::Plots::NormalizedRow</a></strong> <br>One row of normalized values (deprecated — use <a href="">RateEstimate</a> + applyScaling instead)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PerTrialData.html">Neuralyzer::Plots::PerTrialData</a></strong> <br>Optional per-trial breakdown, for uncertainty and variability analysis.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PlotTooltipContent.html">Neuralyzer::Plots::PlotTooltipContent</a></strong> <br>Content to display in the tooltip.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PlotTooltipHit.html">Neuralyzer::Plots::PlotTooltipHit</a></strong> <br>Result of a tooltip hit test.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotTooltipManager.html">Neuralyzer::Plots::PlotTooltipManager</a></strong> <br>Manages tooltip lifecycle for plot widgets.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PreparedAlignmentWindows.html">Neuralyzer::Plots::PreparedAlignmentWindows</a></strong> <br>Prepared row metadata for a plot-aligned gather.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1RateEstimate.html">Neuralyzer::Plots::RateEstimate</a></strong> <br>The universal output of any rate estimation method.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1RateEstimateWithTrials.html">Neuralyzer::Plots::RateEstimateWithTrials</a></strong> <br>Extended output when per-trial data is requested.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1UnitGatherContext.html">Neuralyzer::Plots::UnitGatherContext</a></strong> <br>Bundles a <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> with its <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> and source key.</td>
 </tr>
@@ -762,50 +769,62 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-preparealignmentwindows">prepareAlignmentWindows</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, <a href="../../api_generated/Classes/structPlotAlignmentData.html">PlotAlignmentData</a> const &amp; alignment_data, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; window_time_frame)<br>Prepare windows from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> and <a href="../../api_generated/Classes/structPlotAlignmentData.html">PlotAlignmentData</a>.</td>
 </tr>
 <tr class="odd">
+<td>int</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-trialindexfromworldy">trialIndexFromWorldY</a></strong>(float world_y, std::size_t num_trials)<br>Derive trial index from world-space Y coordinate.</td>
+</tr>
+<tr class="even">
+<td>float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-rowworldycenter">rowWorldYCenter</a></strong>(int row_index, std::size_t num_trials, float viewport_y_min =-1.0f, float viewport_y_max =1.0f)<br>Compute world Y center for a raster row using RowLayoutStrategy geometry.</td>
+</tr>
+<tr class="odd">
+<td>int64_t</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-absolutetimefromhit">absoluteTimeFromHit</a></strong>(int64_t alignment_time, float relative_time_ms)<br>Convert a hit event’s relative time and trial alignment to absolute time.</td>
+</tr>
+<tr class="even">
 <td>glm::vec2</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-screentondc">screenToNDC</a></strong>(QPoint const &amp; screen_pos, int widget_width, int widget_height)<br>Convert screen pixel coordinates to normalized device coordinates (NDC).</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>QPointF</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-screentoworld">screenToWorld</a></strong>(glm::mat4 const &amp; projection_matrix, int widget_width, int widget_height, QPoint const &amp; screen_pos)<br>Convert screen pixel coordinates to world coordinates.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>QPoint</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-worldtoscreen">worldToScreen</a></strong>(glm::mat4 const &amp; projection_matrix, int widget_width, int widget_height, float world_x, float world_y)<br>Convert world coordinates to screen pixel coordinates.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>template &lt;ViewStateLike ViewState&gt; <br>glm::mat4</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-computeorthoprojection">computeOrthoProjection</a></strong>(ViewState const &amp; view_state, float x_range, float x_center, float y_range, float y_center)<br>Compute an orthographic projection matrix from zoom/pan view state.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>template &lt;ViewStateWithBounds ViewState&gt; <br>glm::mat4</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-computeorthoprojection">computeOrthoProjection</a></strong>(ViewState const &amp; view_state)<br>Compute orthographic projection from view state with bounds.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>template &lt;ZoomPanSettable State,ViewStateLike ViewState&gt; <br>void</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-handlepanning">handlePanning</a></strong>(State &amp; state, ViewState const &amp; view_state, int delta_x, int delta_y, float x_range, float y_range, int widget_width, int widget_height)<br>Apply a pixel-space drag delta as a pan update to the state.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>template &lt;ZoomPanSettable State,ViewStateWithBounds ViewState&gt; <br>void</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-handlepanning">handlePanning</a></strong>(State &amp; state, ViewState const &amp; view_state, int delta_x, int delta_y, int widget_width, int widget_height)<br>Apply pan from view state with bounds (derives x_range/y_range).</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>template &lt;ZoomPanSettable State,ViewStateLike ViewState&gt; <br>void</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-handlezoom">handleZoom</a></strong>(State &amp; state, ViewState const &amp; view_state, float delta, bool y_only, bool both_axes)<br>Apply a scroll-wheel zoom step to the state.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-extractedgeevents">extractEdgeEvents</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; intervals, <a href="../../api_generated/Files/PlotAlignmentData_8hpp.html#enum-intervalalignmenttype">IntervalAlignmentType</a> edge)<br>Extract edge events from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1HeatmapPipelineResult.html">HeatmapPipelineResult</a></td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-runheatmappipeline">runHeatmapPipeline</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, std::vector&lt; std::string &gt; const &amp; unit_keys, <a href="../../api_generated/Classes/structPlotAlignmentData.html">PlotAlignmentData</a> const &amp; alignment_data, <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1HeatmapPipelineConfig.html">HeatmapPipelineConfig</a> const &amp; config)<br>Execute the heatmap data pipeline without an OpenGL context.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>std::vector&lt; std::size_t &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-computesortorder">computeSortOrder</a></strong>(<a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1HeatmapPipelineResult.html">HeatmapPipelineResult</a> const &amp; result, std::vector&lt; std::string &gt; const &amp; unit_keys, <a href="../../api_generated/Files/HeatmapState_8hpp.html#enum-heatmapsortmode">HeatmapSortMode</a> sort_mode, bool ascending)<br>Compute a permutation vector that sorts the pipeline rows.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>void</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-applysortorder">applySortOrder</a></strong>(<a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1HeatmapPipelineResult.html">HeatmapPipelineResult</a> &amp; result, std::vector&lt; std::string &gt; &amp; unit_keys, std::vector&lt; std::size_t &gt; const &amp; sort_indices)<br>Apply a precomputed permutation to the pipeline result and unit keys.</td>
 </tr>
@@ -1623,13 +1642,61 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Return</strong>: Prepared window/alignment metadata, or an invalid result on error.</p>
 <p><strong>Postcondition</strong>: Event and interval display-window paths use physical window units.</p>
 </section>
+<section id="function-trialindexfromworldy" class="level3">
+<h3 class="anchored" data-anchor-id="function-trialindexfromworldy">function trialIndexFromWorldY</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">int</span> trialIndexFromWorldY<span class="op">(</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> world_y<span class="op">,</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t num_trials</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Derive trial index from world-space Y coordinate.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>world_y</strong> World Y coordinate in the raster plot viewport.</li>
+<li><strong>num_trials</strong> Number of trials (rows).</li>
+</ul>
+<p><strong>Return</strong>: Trial index in [0, num_trials), or -1 if num_trials == 0.</p>
+<p>Matches RowLayoutStrategy row placement and trialIndexAxis labeling: trial 0 at world y ≈ -1 (bottom), trial (N-1) at world y ≈ +1 (top).</p>
+</section>
+<section id="function-rowworldycenter" class="level3">
+<h3 class="anchored" data-anchor-id="function-rowworldycenter">function rowWorldYCenter</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">float</span> rowWorldYCenter<span class="op">(</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> row_index<span class="op">,</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>size_t num_trials<span class="op">,</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> viewport_y_min <span class="op">=-</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> viewport_y_max <span class="op">=</span><span class="fl">1.0</span><span class="bu">f</span></span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Compute world Y center for a raster row using RowLayoutStrategy geometry.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>row_index</strong> Zero-based row index (0 = bottom row).</li>
+<li><strong>num_trials</strong> Total number of rows.</li>
+<li><strong>viewport_y_min</strong> Minimum viewport Y (default -1).</li>
+<li><strong>viewport_y_max</strong> Maximum viewport Y (default +1).</li>
+</ul>
+<p><strong>Return</strong>: World Y coordinate at the center of the row.</p>
+</section>
+<section id="function-absolutetimefromhit" class="level3">
+<h3 class="anchored" data-anchor-id="function-absolutetimefromhit">function absoluteTimeFromHit</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">int64_t</span> absoluteTimeFromHit<span class="op">(</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> alignment_time<span class="op">,</span></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> relative_time_ms</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Convert a hit event’s relative time and trial alignment to absolute time.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>alignment_time</strong> Absolute alignment time for the trial (<a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> value).</li>
+<li><strong>relative_time_ms</strong> Event time relative to alignment (world X from hit test).</li>
+</ul>
+<p><strong>Return</strong>: Absolute time in the same units as alignment_time.</p>
+<p>Used by EventPlot double-click navigation: absolute = alignment + relative.</p>
+</section>
 <section id="function-screentondc" class="level3">
 <h3 class="anchored" data-anchor-id="function-screentondc">function screenToNDC</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb48"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> glm<span class="op">::</span>vec2 screenToNDC<span class="op">(</span></span>
-<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">,</span></span>
-<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
-<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height</span>
-<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> glm<span class="op">::</span>vec2 screenToNDC<span class="op">(</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">,</span></span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Convert screen pixel coordinates to normalized device coordinates (NDC).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1642,12 +1709,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-screentoworld" class="level3">
 <h3 class="anchored" data-anchor-id="function-screentoworld">function screenToWorld</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="ex">QPointF</span> screenToWorld<span class="op">(</span></span>
-<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> projection_matrix<span class="op">,</span></span>
-<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
-<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height<span class="op">,</span></span>
-<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos</span>
-<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="ex">QPointF</span> screenToWorld<span class="op">(</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> projection_matrix<span class="op">,</span></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height<span class="op">,</span></span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos</span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Convert screen pixel coordinates to world coordinates.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1661,13 +1728,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-worldtoscreen" class="level3">
 <h3 class="anchored" data-anchor-id="function-worldtoscreen">function worldToScreen</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="ex">QPoint</span> worldToScreen<span class="op">(</span></span>
-<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> projection_matrix<span class="op">,</span></span>
-<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
-<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height<span class="op">,</span></span>
-<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> world_x<span class="op">,</span></span>
-<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> world_y</span>
-<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="ex">QPoint</span> worldToScreen<span class="op">(</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> projection_matrix<span class="op">,</span></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height<span class="op">,</span></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> world_x<span class="op">,</span></span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> world_y</span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Convert world coordinates to screen pixel coordinates.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1681,14 +1748,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-computeorthoprojection" class="level3">
 <h3 class="anchored" data-anchor-id="function-computeorthoprojection">function computeOrthoProjection</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ViewStateLike ViewState<span class="op">&gt;</span></span>
-<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>mat4 computeOrthoProjection<span class="op">(</span></span>
-<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
-<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_range<span class="op">,</span></span>
-<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_center<span class="op">,</span></span>
-<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_range<span class="op">,</span></span>
-<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_center</span>
-<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ViewStateLike ViewState<span class="op">&gt;</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>mat4 computeOrthoProjection<span class="op">(</span></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_range<span class="op">,</span></span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_center<span class="op">,</span></span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_range<span class="op">,</span></span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_center</span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Compute an orthographic projection matrix from zoom/pan view state.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1707,10 +1774,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-computeorthoprojection-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-computeorthoprojection-1">function computeOrthoProjection</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ViewStateWithBounds ViewState<span class="op">&gt;</span></span>
-<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>mat4 computeOrthoProjection<span class="op">(</span></span>
-<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state</span>
-<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ViewStateWithBounds ViewState<span class="op">&gt;</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>mat4 computeOrthoProjection<span class="op">(</span></span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state</span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Compute orthographic projection from view state with bounds.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1725,18 +1792,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-handlepanning" class="level3">
 <h3 class="anchored" data-anchor-id="function-handlepanning">function handlePanning</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ZoomPanSettable State<span class="op">,</span></span>
-<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>ViewStateLike ViewState<span class="op">&gt;</span></span>
-<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> handlePanning<span class="op">(</span></span>
-<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>    State <span class="op">&amp;</span> state<span class="op">,</span></span>
-<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
-<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> delta_x<span class="op">,</span></span>
-<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> delta_y<span class="op">,</span></span>
-<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_range<span class="op">,</span></span>
-<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_range<span class="op">,</span></span>
-<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
-<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height</span>
-<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb56"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ZoomPanSettable State<span class="op">,</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>ViewStateLike ViewState<span class="op">&gt;</span></span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> handlePanning<span class="op">(</span></span>
+<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>    State <span class="op">&amp;</span> state<span class="op">,</span></span>
+<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
+<span id="cb56-6"><a href="#cb56-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> delta_x<span class="op">,</span></span>
+<span id="cb56-7"><a href="#cb56-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> delta_y<span class="op">,</span></span>
+<span id="cb56-8"><a href="#cb56-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_range<span class="op">,</span></span>
+<span id="cb56-9"><a href="#cb56-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_range<span class="op">,</span></span>
+<span id="cb56-10"><a href="#cb56-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
+<span id="cb56-11"><a href="#cb56-11" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height</span>
+<span id="cb56-12"><a href="#cb56-12" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply a pixel-space drag delta as a pan update to the state.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1758,16 +1825,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-handlepanning-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-handlepanning-1">function handlePanning</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ZoomPanSettable State<span class="op">,</span></span>
-<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>ViewStateWithBounds ViewState<span class="op">&gt;</span></span>
-<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> handlePanning<span class="op">(</span></span>
-<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>    State <span class="op">&amp;</span> state<span class="op">,</span></span>
-<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
-<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> delta_x<span class="op">,</span></span>
-<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> delta_y<span class="op">,</span></span>
-<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
-<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height</span>
-<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb57"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ZoomPanSettable State<span class="op">,</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>ViewStateWithBounds ViewState<span class="op">&gt;</span></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> handlePanning<span class="op">(</span></span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>    State <span class="op">&amp;</span> state<span class="op">,</span></span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> delta_x<span class="op">,</span></span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> delta_y<span class="op">,</span></span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_width<span class="op">,</span></span>
+<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> widget_height</span>
+<span id="cb57-10"><a href="#cb57-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply pan from view state with bounds (derives x_range/y_range).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1787,15 +1854,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-handlezoom" class="level3">
 <h3 class="anchored" data-anchor-id="function-handlezoom">function handleZoom</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ZoomPanSettable State<span class="op">,</span></span>
-<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>ViewStateLike ViewState<span class="op">&gt;</span></span>
-<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> handleZoom<span class="op">(</span></span>
-<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>    State <span class="op">&amp;</span> state<span class="op">,</span></span>
-<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
-<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> delta<span class="op">,</span></span>
-<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> y_only<span class="op">,</span></span>
-<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> both_axes</span>
-<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ZoomPanSettable State<span class="op">,</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>ViewStateLike ViewState<span class="op">&gt;</span></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> handleZoom<span class="op">(</span></span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>    State <span class="op">&amp;</span> state<span class="op">,</span></span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> delta<span class="op">,</span></span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> y_only<span class="op">,</span></span>
+<span id="cb58-8"><a href="#cb58-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> both_axes</span>
+<span id="cb58-9"><a href="#cb58-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply a scroll-wheel zoom step to the state.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1819,10 +1886,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-extractedgeevents" class="level3">
 <h3 class="anchored" data-anchor-id="function-extractedgeevents">function extractEdgeEvents</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb56"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> extractEdgeEvents<span class="op">(</span></span>
-<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> intervals<span class="op">,</span></span>
-<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>    IntervalAlignmentType edge</span>
-<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> extractEdgeEvents<span class="op">(</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> intervals<span class="op">,</span></span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>    IntervalAlignmentType edge</span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Extract edge events from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1834,12 +1901,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-runheatmappipeline" class="level3">
 <h3 class="anchored" data-anchor-id="function-runheatmappipeline">function runHeatmapPipeline</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb57"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>HeatmapPipelineResult runHeatmapPipeline<span class="op">(</span></span>
-<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
-<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
-<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data<span class="op">,</span></span>
-<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineConfig <span class="at">const</span> <span class="op">&amp;</span> config</span>
-<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb60"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>HeatmapPipelineResult runHeatmapPipeline<span class="op">(</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data<span class="op">,</span></span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineConfig <span class="at">const</span> <span class="op">&amp;</span> config</span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Execute the heatmap data pipeline without an OpenGL context.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1859,12 +1926,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-computesortorder" class="level3">
 <h3 class="anchored" data-anchor-id="function-computesortorder">function computeSortOrder</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> computeSortOrder<span class="op">(</span></span>
-<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineResult <span class="at">const</span> <span class="op">&amp;</span> result<span class="op">,</span></span>
-<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
-<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>    HeatmapSortMode sort_mode<span class="op">,</span></span>
-<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> ascending</span>
-<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb61"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> computeSortOrder<span class="op">(</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineResult <span class="at">const</span> <span class="op">&amp;</span> result<span class="op">,</span></span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>    HeatmapSortMode sort_mode<span class="op">,</span></span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> ascending</span>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Compute a permutation vector that sorts the pipeline rows.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1878,11 +1945,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-applysortorder" class="level3">
 <h3 class="anchored" data-anchor-id="function-applysortorder">function applySortOrder</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> applySortOrder<span class="op">(</span></span>
-<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineResult <span class="op">&amp;</span> result<span class="op">,</span></span>
-<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
-<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> sort_indices</span>
-<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb62"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> applySortOrder<span class="op">(</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineResult <span class="op">&amp;</span> result<span class="op">,</span></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> sort_indices</span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply a precomputed permutation to the pipeline result and unit keys.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1892,7 +1959,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p>Reorders <code>result.rows</code>, <code>result.rate_estimates</code>, and <code>unit_keys</code> in-place according to the given index permutation.</p>
 <hr>
-<p>Updated on 2026-08-05 at 12:26:58 +0000</p>
+<p>Updated on 2026-08-05 at 14:45:28 +0000</p>
 
 
 </section>

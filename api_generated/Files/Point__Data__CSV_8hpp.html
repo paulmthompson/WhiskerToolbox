@@ -472,7 +472,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Files/Point__Data__CSV_8hpp.html#function-load-multiple-points-from-csv">load_multiple_points_from_csv</a></strong>(std::string const &amp; filename, int frame_column)</td>
 </tr>
 <tr class="even">
-<td>DATAMANAGERIO_EXPORT std::map&lt; std::string, std::map&lt; <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>, <a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt; &gt; &gt;</td>
+<td>DATAMANAGERIO_EXPORT std::map&lt; std::string, std::vector&lt; std::pair&lt; <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a>, <a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt; &gt; &gt; &gt;</td>
 <td><strong><a href="../../api_generated/Files/Point__Data__CSV_8hpp.html#function-load-dlc-csv">load_dlc_csv</a></strong>(<a href="../../api_generated/Classes/structDLCPointLoaderOptions.html">DLCPointLoaderOptions</a> const &amp; opts)</td>
 </tr>
 <tr class="odd">
@@ -543,7 +543,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-load_dlc_csv" class="level3">
 <h3 class="anchored" data-anchor-id="function-load_dlc_csv">function load_dlc_csv</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>DATAMANAGERIO_EXPORT <span class="bu">std::</span>map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>map<span class="op">&lt;</span> TimeFrameIndex<span class="op">,</span> Point2D<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> load_dlc_csv<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>DATAMANAGERIO_EXPORT <span class="bu">std::</span>map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>pair<span class="op">&lt;</span> TimeFrameIndex<span class="op">,</span> Point2D<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="op">&gt;</span> load_dlc_csv<span class="op">(</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    DLCPointLoaderOptions <span class="at">const</span> <span class="op">&amp;</span> opts</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
@@ -706,7 +706,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-139"><a href="#cb6-139" aria-hidden="true" tabindex="-1"></a><span class="kw">static_assert</span><span class="op">(</span>Neuralyzer<span class="op">::</span>ValidLoaderOptions<span class="op">&lt;</span>DLCPointLoaderOptions<span class="op">&gt;,</span></span>
 <span id="cb6-140"><a href="#cb6-140" aria-hidden="true" tabindex="-1"></a>              <span class="st">"DLCPointLoaderOptions must have 'filepath' field and must not have 'data_type' or 'name' fields"</span><span class="op">);</span></span>
 <span id="cb6-141"><a href="#cb6-141" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-142"><a href="#cb6-142" aria-hidden="true" tabindex="-1"></a>DATAMANAGERIO_EXPORT <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>map<span class="op">&lt;</span>TimeFrameIndex<span class="op">,</span> Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;&gt;&gt;</span> load_dlc_csv<span class="op">(</span>DLCPointLoaderOptions <span class="at">const</span> <span class="op">&amp;</span> opts<span class="op">);</span></span>
+<span id="cb6-142"><a href="#cb6-142" aria-hidden="true" tabindex="-1"></a>DATAMANAGERIO_EXPORT <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>pair<span class="op">&lt;</span>TimeFrameIndex<span class="op">,</span> Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;&gt;&gt;&gt;</span> load_dlc_csv<span class="op">(</span>DLCPointLoaderOptions <span class="at">const</span> <span class="op">&amp;</span> opts<span class="op">);</span></span>
 <span id="cb6-143"><a href="#cb6-143" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-144"><a href="#cb6-144" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;&gt;</span></span>
 <span id="cb6-145"><a href="#cb6-145" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ParameterUIHints<span class="op">&lt;</span>DLCPointLoaderOptions<span class="op">&gt;</span> <span class="op">{</span></span>
@@ -734,7 +734,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-167"><a href="#cb6-167" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-168"><a href="#cb6-168" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// POINT_DATA_CSV_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-05 at 12:27:01 +0000</p>
+<p>Updated on 2026-08-05 at 14:45:31 +0000</p>
 
 
 </section>
