@@ -24,7 +24,7 @@ jobs:
           compiler: gcc
 
       - name: Configure CMake with coverage
-        run: cmake --preset linux-gcc-debug -DCODE_COVERAGE=ON -DenableAddressSanitizer=ON ENABLE_ORTOOLS=OFF
+        run: cmake --preset linux-gcc-debug -DCODE_COVERAGE=ON -DenableAddressSanitizer=ON -DENABLE_ORTOOLS=OFF
 
       - name: Clean vcpkg build files
         run: |
