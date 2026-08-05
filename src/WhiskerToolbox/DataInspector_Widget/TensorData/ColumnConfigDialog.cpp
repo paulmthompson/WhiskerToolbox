@@ -199,6 +199,7 @@ void ColumnConfigDialog::_onSourceKeyChanged(int /*index*/) {
         _source_type_label->clear();
     }
     _updateAutoName();
+    _updateAggregatorOptions();
 }
 
 void ColumnConfigDialog::_onColumnNameEdited(QString const & /*text*/) {
@@ -251,10 +252,17 @@ void ColumnConfigDialog::_updateAggregatorOptions() {
         }
     }
 
+    DM_DataType source_type = DM_DataType::Unknown;
+    int const source_idx = _source_combo->currentIndex();
+    if (source_idx >= 0 && _data_manager) {
+        source_type = _data_manager->getType(_source_combo->currentData().toString().toStdString());
+    }
+
     Neuralyzer::TensorDesign::AggregatorQueryContext const query_ctx{
             .effective_row_type = eff_row_type,
             .selected_modifier = selected_modifier,
-            .tensor_column_only = true};
+            .tensor_column_only = true,
+            .source_type = source_type};
     auto aggregators = _aggregator_registry.getAggregatorsFor(query_ctx);
     for (auto const * agg: aggregators) {
         _aggregator_combo->addItem(QString::fromStdString(agg->display_name()), QString::fromStdString(agg->id()));

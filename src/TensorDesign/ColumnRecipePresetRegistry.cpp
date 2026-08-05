@@ -277,8 +277,9 @@ std::vector<IColumnAggregator const *> ColumnAggregatorRegistry::getAggregatorsF
         AggregatorQueryContext const & ctx) const {
     std::vector<IColumnAggregator const *> results;
     for (auto const & desc: _aggregators) {
+        auto const & rules = desc->composition_rules();
         if (ctx.tensor_column_only &&
-            desc->composition_rules().output_kind != ColumnOutputKind::ScalarFloat) {
+            rules.output_kind != ColumnOutputKind::ScalarFloat) {
             continue;
         }
         auto types = desc->supported_row_types();
@@ -287,6 +288,11 @@ std::vector<IColumnAggregator const *> ColumnAggregatorRegistry::getAggregatorsF
         }
         if (!isCompatibleComposition(ctx.selected_modifier, *desc)) {
             continue;
+        }
+        if (ctx.source_type != DM_DataType::Unknown && !rules.supported_data_types.empty()) {
+            if (std::ranges::find(rules.supported_data_types, ctx.source_type) == rules.supported_data_types.end()) {
+                continue;
+            }
         }
         results.push_back(desc.get());
     }

@@ -248,7 +248,8 @@ AggregatorCompositionRules MeanValueAggregator::composition_rules() const {
     return {
             .output_kind = ColumnOutputKind::ScalarFloat,
             .required_row_geometry = EffectiveRowType::Interval,
-            .compatible_modifier_ids = {"", "window_around_interval_start"}};
+            .compatible_modifier_ids = {"", "window_around_interval_start"},
+            .supported_data_types = {DM_DataType::Analog, DM_DataType::RaggedAnalog}};
 }
 ParameterSchema MeanValueAggregator::parameters() const { return outputSourceSchema("MeanValueArgs"); }
 std::optional<ColumnAggregatorExpansion> MeanValueAggregator::expand(ColumnRecipePresetArgs const & args) const {
@@ -269,7 +270,8 @@ AggregatorCompositionRules EventCountAggregator::composition_rules() const {
     return {
             .output_kind = ColumnOutputKind::ScalarFloat,
             .required_row_geometry = EffectiveRowType::Interval,
-            .compatible_modifier_ids = {"", "window_around_interval_start"}};
+            .compatible_modifier_ids = {"", "window_around_interval_start"},
+            .supported_data_types = {DM_DataType::DigitalEvent, DM_DataType::DigitalInterval}};
 }
 ParameterSchema EventCountAggregator::parameters() const { return outputSourceSchema("EventCountArgs"); }
 std::optional<ColumnAggregatorExpansion> EventCountAggregator::expand(ColumnRecipePresetArgs const & args) const {
@@ -290,7 +292,8 @@ AggregatorCompositionRules EventPresenceAggregator::composition_rules() const {
     return {
             .output_kind = ColumnOutputKind::ScalarFloat,
             .required_row_geometry = EffectiveRowType::Interval,
-            .compatible_modifier_ids = {"", "window_around_interval_start"}};
+            .compatible_modifier_ids = {"", "window_around_interval_start"},
+            .supported_data_types = {DM_DataType::DigitalEvent, DM_DataType::DigitalInterval}};
 }
 ParameterSchema EventPresenceAggregator::parameters() const { return outputSourceSchema("EventPresenceArgs"); }
 std::optional<ColumnAggregatorExpansion> EventPresenceAggregator::expand(ColumnRecipePresetArgs const & args) const {
@@ -311,7 +314,8 @@ AggregatorCompositionRules AnalogSampleAggregator::composition_rules() const {
     return {
             .output_kind = ColumnOutputKind::ScalarFloat,
             .required_row_geometry = EffectiveRowType::Timestamp,
-            .compatible_modifier_ids = {"", "interval_start"}};
+            .compatible_modifier_ids = {"", "interval_start"},
+            .supported_data_types = {DM_DataType::Analog, DM_DataType::RaggedAnalog}};
 }
 ParameterSchema AnalogSampleAggregator::parameters() const { return outputSourceSchema("AnalogSampleArgs"); }
 std::optional<ColumnAggregatorExpansion> AnalogSampleAggregator::expand(ColumnRecipePresetArgs const & args) const {
@@ -332,7 +336,8 @@ AggregatorCompositionRules PointXyAggregator::composition_rules() const {
     return {
             .output_kind = ColumnOutputKind::ScalarFloat,
             .required_row_geometry = EffectiveRowType::Timestamp,
-            .compatible_modifier_ids = {"", "interval_start"}};
+            .compatible_modifier_ids = {"", "interval_start"},
+            .supported_data_types = {DM_DataType::Points}};
 }
 ParameterSchema PointXyAggregator::parameters() const { return pointXySchema(); }
 std::optional<ColumnAggregatorExpansion> PointXyAggregator::expand(ColumnRecipePresetArgs const & args) const {
@@ -352,7 +357,8 @@ AggregatorCompositionRules MultiPointXyAggregator::composition_rules() const {
     return {
             .output_kind = ColumnOutputKind::ScalarFloat,
             .required_row_geometry = EffectiveRowType::Timestamp,
-            .compatible_modifier_ids = {"", "interval_start"}};
+            .compatible_modifier_ids = {"", "interval_start"},
+            .supported_data_types = {DM_DataType::Points}};
 }
 ParameterSchema MultiPointXyAggregator::parameters() const { return multiPointXySchema(); }
 std::optional<ColumnAggregatorExpansion> MultiPointXyAggregator::expand(ColumnRecipePresetArgs const & args) const {
@@ -384,7 +390,8 @@ AggregatorCompositionRules RasterEventsRelativeAggregator::composition_rules() c
             .gathered_output_type = GatheredOutputType::DigitalEventSeries,
             .requires_pipeline_value_bindings = true,
             .required_row_geometry = EffectiveRowType::Interval,
-            .compatible_modifier_ids = {"bind_interval_start"}};
+            .compatible_modifier_ids = {"bind_interval_start"},
+            .supported_data_types = {DM_DataType::DigitalEvent, DM_DataType::DigitalInterval}};
 }
 ParameterSchema RasterEventsRelativeAggregator::parameters() const { return trialRelativeEventSchema("RasterEventsRelativeAggregatorArgs"); }
 std::optional<ColumnAggregatorExpansion> RasterEventsRelativeAggregator::expand(ColumnRecipePresetArgs const & args) const {
@@ -408,7 +415,8 @@ AggregatorCompositionRules TrialRelativeEventCountAggregator::composition_rules(
             .output_kind = ColumnOutputKind::ScalarFloat,
             .requires_pipeline_value_bindings = true,
             .required_row_geometry = EffectiveRowType::Interval,
-            .compatible_modifier_ids = {"bind_interval_start"}};
+            .compatible_modifier_ids = {"bind_interval_start"},
+            .supported_data_types = {DM_DataType::DigitalEvent, DM_DataType::DigitalInterval}};
 }
 ParameterSchema TrialRelativeEventCountAggregator::parameters() const { return trialRelativeEventSchema("TrialRelativeEventCountAggregatorArgs"); }
 std::optional<ColumnAggregatorExpansion> TrialRelativeEventCountAggregator::expand(ColumnRecipePresetArgs const & args) const {

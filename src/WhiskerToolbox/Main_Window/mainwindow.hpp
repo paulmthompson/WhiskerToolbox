@@ -119,9 +119,14 @@ public:
 protected:
     void keyPressEvent(QKeyEvent * event) override;
     bool eventFilter(QObject * obj, QEvent * event) override;
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dropEvent(QDropEvent *event) override;
 
 private:
     Ui::MainWindow * ui;
+
+    void _loadJSONFromFile(const QString& filename);
+    void _loadVideoFromFile(const QString& filename);
 
     ads::CDockManager * _m_DockManager;
 

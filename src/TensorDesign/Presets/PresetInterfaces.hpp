@@ -3,6 +3,7 @@
 
 #include "ParameterSchema/ParameterSchema.hpp"
 #include "TransformsV2/core/TensorColumnBuilders.hpp"
+#include "DataTypeEnum/DM_DataType.hpp"
 
 #include <cstdint>
 #include <optional>
@@ -80,6 +81,7 @@ struct AggregatorCompositionRules {
     bool requires_pipeline_value_bindings{false};
     EffectiveRowType required_row_geometry{EffectiveRowType::Interval};
     std::vector<std::string> compatible_modifier_ids;
+    std::vector<DM_DataType> supported_data_types;
 };
 
 class IColumnAggregator {
@@ -103,6 +105,7 @@ struct AggregatorQueryContext {
     EffectiveRowType effective_row_type{EffectiveRowType::Interval};
     IRowModifier const * selected_modifier{nullptr};
     bool tensor_column_only{true};
+    DM_DataType source_type{DM_DataType::Unknown};
 };
 
 } // namespace Neuralyzer::TensorDesign

@@ -99,6 +99,10 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QOpenGLWidget>
+#include <QDragEnterEvent>
+#include <QDropEvent>
+#include <QMimeData>
+#include <QUrl>
 #include <QPlainTextEdit>
 #include <QProgressDialog>
 #include <QSplitter>
@@ -124,6 +128,7 @@ MainWindow::MainWindow(QWidget * parent)
 
 {
     ui->setupUi(this);
+    setAcceptDrops(true);
 
     // Load application preferences and session memory (before UI setup)
     _state_manager->loadAll();
@@ -515,6 +520,14 @@ If a video is selected, that video will be loaded and the first frame will be
 drawn on the video screen.
 
 */
+void MainWindow::_loadVideoFromFile(const QString& filename) {
+    // Use the conditional video loader
+    if (loadVideoData(filename.toStdString(), _data_manager.get())) {
+        _state_manager->workspace()->recordVideoLoad(filename);
+        loadData();
+    }
+}
+
 void MainWindow::Load_Video() {
     auto const initial_dir = _state_manager->session()->lastUsedPath(
             QStringLiteral("load_video"), QDir::currentPath());
@@ -529,12 +542,7 @@ void MainWindow::Load_Video() {
     }
 
     _state_manager->session()->rememberPath(QStringLiteral("load_video"), vid_name);
-
-    // Use the conditional video loader
-    if (loadVideoData(vid_name.toStdString(), _data_manager.get())) {
-        _state_manager->workspace()->recordVideoLoad(vid_name);
-        loadData();
-    }
+    _loadVideoFromFile(vid_name);
 }
 
 void MainWindow::Load_Images() {
@@ -560,21 +568,7 @@ void MainWindow::Load_Images() {
     loadData();
 }
 
-void MainWindow::_loadJSONConfig() {
-    auto const initial_dir = _state_manager->session()->lastUsedPath(
-            QStringLiteral("load_json_config"), QDir::currentPath());
-    auto filename = QFileDialog::getOpenFileName(
-            this,
-            "Load JSON File",
-            initial_dir,
-            "All files (*.*) ;; JSON (*.json)");
-
-    if (filename.isNull()) {
-        return;
-    }
-
-    _state_manager->session()->rememberPath(QStringLiteral("load_json_config"), filename);
-
+void MainWindow::_loadJSONFromFile(const QString& filename) {
     // Create progress dialog without cancel button
     QProgressDialog progress("Preparing to load data...", nullptr, 0, 100, this);
     progress.setWindowModality(Qt::WindowModal);
@@ -623,6 +617,23 @@ void MainWindow::_loadJSONConfig() {
     // Handle media-related updates (TimeScrollBar, Media_Widget refresh)
     // TODO: These should eventually be moved to widgets listening to DataManager observers
     processLoadedData(data_info);
+}
+
+void MainWindow::_loadJSONConfig() {
+    auto const initial_dir = _state_manager->session()->lastUsedPath(
+            QStringLiteral("load_json_config"), QDir::currentPath());
+    auto filename = QFileDialog::getOpenFileName(
+            this,
+            "Load JSON File",
+            initial_dir,
+            "All files (*.*) ;; JSON (*.json)");
+
+    if (filename.isNull()) {
+        return;
+    }
+
+    _state_manager->session()->rememberPath(QStringLiteral("load_json_config"), filename);
+    _loadJSONFromFile(filename);
 }
 
 void MainWindow::processLoadedData(std::vector<DataInfo> const & data_info) {
@@ -748,6 +759,31 @@ void MainWindow::keyPressEvent(QKeyEvent * event) {
     // The event filter handles most key events now
     // This is mainly for direct main window key events
     QMainWindow::keyPressEvent(event);
+}
+
+void MainWindow::dragEnterEvent(QDragEnterEvent *event) {
+    if (event->mimeData()->hasUrls()) {
+        event->acceptProposedAction();
+    }
+}
+
+void MainWindow::dropEvent(QDropEvent *event) {
+    auto urls = event->mimeData()->urls();
+    if (urls.isEmpty()) return;
+
+    for (const QUrl &url : urls) {
+        if (!url.isLocalFile()) continue;
+        QString filePath = url.toLocalFile();
+        QFileInfo fileInfo(filePath);
+        QString ext = fileInfo.suffix().toLower();
+
+        if (ext == "json") {
+            _loadJSONFromFile(filePath);
+        } else if (ext == "mp4" || ext == "h5" || ext == "mat") {
+            _loadVideoFromFile(filePath);
+        }
+    }
+    event->acceptProposedAction();
 }
 
 //=================================
