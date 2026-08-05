@@ -92,6 +92,34 @@ ColumnConfigDialog::~ColumnConfigDialog() {
 // =============================================================================
 
 std::vector<ColumnRecipe> ColumnConfigDialog::getRecipes() const {
+    // Interval property takes priority — no pipeline needed
+    if (_interval_property_group && _interval_property_group->isChecked()) {
+        ColumnRecipe recipe;
+        recipe.column_name = _name_edit->text().toStdString();
+        // Source key is optional for interval property, but we can set it if selected
+        int const source_idx = _source_combo->currentIndex();
+        if (source_idx >= 0) {
+            recipe.source_key = _source_combo->currentData().toString().toStdString();
+        }
+
+        int const prop_idx = _interval_property_combo->currentIndex();
+        switch (prop_idx) {
+            case 0:
+                recipe.interval_property = IntervalProperty::Start;
+                break;
+            case 1:
+                recipe.interval_property = IntervalProperty::End;
+                break;
+            case 2:
+                recipe.interval_property = IntervalProperty::Duration;
+                break;
+            default:
+                break;
+        }
+        recipe.pipeline_json.clear();
+        return {recipe};
+    }
+
     if (_advanced_mode_check && !_advanced_mode_check->isChecked()) {
         // Preset mode
         Neuralyzer::TensorDesign::ColumnRecipePresetArgs args;
@@ -156,29 +184,10 @@ std::vector<ColumnRecipe> ColumnConfigDialog::getRecipes() const {
         recipe.source_key = _source_combo->currentData().toString().toStdString();
     }
 
-
-    // Interval property takes priority — no pipeline needed
-    if (_interval_property_group && _interval_property_group->isChecked()) {
-        int const prop_idx = _interval_property_combo->currentIndex();
-        switch (prop_idx) {
-            case 0:
-                recipe.interval_property = IntervalProperty::Start;
-                break;
-            case 1:
-                recipe.interval_property = IntervalProperty::End;
-                break;
-            case 2:
-                recipe.interval_property = IntervalProperty::Duration;
-                break;
-            default:
-                break;
-        }
-        recipe.pipeline_json.clear();
-        return {recipe};
-    }
-
     // Pipeline JSON
     recipe.pipeline_json = _pipeline_json_edit->toPlainText().trimmed().toStdString();
+
+    return {recipe};
 
     return {recipe};
 }
@@ -212,9 +221,13 @@ void ColumnConfigDialog::_updateAutoName() {
     }
 
     QString name;
-    int const source_idx = _source_combo->currentIndex();
-    if (source_idx >= 0) {
-        name = _source_combo->currentData().toString();
+    if (_interval_property_group && _interval_property_group->isChecked()) {
+        name = QString::fromStdString(_row_source_key);
+    } else {
+        int const source_idx = _source_combo->currentIndex();
+        if (source_idx >= 0) {
+            name = _source_combo->currentData().toString();
+        }
     }
 
     // If interval property is active, append property name
@@ -340,6 +353,8 @@ void ColumnConfigDialog::_onIntervalPropertyToggled(bool checked) {
     // When interval property is checked, the source/pipeline sections
     // become irrelevant (but remain visible for context)
     _source_combo->setEnabled(!checked);
+    _preset_group->setEnabled(!checked);
+    _advanced_mode_check->setEnabled(!checked);
     _pipeline_json_edit->setEnabled(!checked);
     _validate_btn->setEnabled(!checked);
     if (_load_from_library_btn) {
@@ -557,6 +572,8 @@ void ColumnConfigDialog::_connectSignals() {
     if (_interval_property_group) {
         connect(_interval_property_group, &QGroupBox::toggled,
                 this, &ColumnConfigDialog::_onIntervalPropertyToggled);
+        connect(_interval_property_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+                this, &ColumnConfigDialog::_updateAutoName);
     }
 
     // OperationContext delivery and close signals
