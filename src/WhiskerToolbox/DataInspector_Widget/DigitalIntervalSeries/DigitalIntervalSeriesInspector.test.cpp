@@ -510,6 +510,11 @@ TEST_CASE("DigitalIntervalSeriesDataView table model updates on external data ch
         REQUIRE(interval1.start == TimeFrameIndex(30));
         REQUIRE(interval1.end == TimeFrameIndex(40));
 
+        REQUIRE(model->data(model->index(0, 0), Qt::DisplayRole).toString() == "10");
+        REQUIRE(model->data(model->index(0, 1), Qt::DisplayRole).toString() == "20");
+        REQUIRE(model->data(model->index(1, 0), Qt::DisplayRole).toString() == "30");
+        REQUIRE(model->data(model->index(1, 1), Qt::DisplayRole).toString() == "40");
+
         REQUIRE(model->data(model->index(0, 2), Qt::DisplayRole).toLongLong() == 11);
         REQUIRE(model->data(model->index(1, 2), Qt::DisplayRole).toLongLong() == 11);
     }

@@ -96,9 +96,9 @@ QVariant IntervalTableModel::data(QModelIndex const & index, int role) const {
 
     switch (index.column()) {
         case 0:
-            return QVariant::fromValue(row.interval.start);
+            return QString::number(row.interval.start.getValue());
         case 1:
-            return QVariant::fromValue(row.interval.end);
+            return QString::number(row.interval.end.getValue());
         case 2:
             return QVariant::fromValue(inclusiveIntervalDuration(row.interval));
         case 3:
