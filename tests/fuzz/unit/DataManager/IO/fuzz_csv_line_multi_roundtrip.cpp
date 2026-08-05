@@ -116,7 +116,11 @@ void FuzzCsvLineMultiRoundTrip(
     load_opts.y_column = 1;
     load_opts.has_header = true;
 
-    auto const loaded_map = load(load_opts);
+    auto const loaded = load(load_opts);
+    std::map<TimeFrameIndex, std::vector<Line2D>> loaded_map;
+    for (auto const & [t, l] : loaded) {
+        loaded_map[t].push_back(l);
+    }
 
     // Compare: same number of frames
     ASSERT_EQ(loaded_map.size(), input_map.size());

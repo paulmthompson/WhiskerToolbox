@@ -189,14 +189,18 @@ TEST_CASE("LineInspector saves data from DataManager", "[LineInspector][save]") 
         CSVSingleFileLineLoaderOptions load_opts;
         load_opts.filepath = filepath.string();
         auto loaded = load(load_opts);
+        std::map<TimeFrameIndex, std::vector<Line2D>> loaded_map;
+        for (auto const& [t, l] : loaded) {
+            loaded_map[t].push_back(l);
+        }
 
-        REQUIRE(loaded.size() == 3);  // 3 frames with data
-        REQUIRE(loaded.count(TimeFrameIndex(0)) == 1);
-        REQUIRE(loaded.count(TimeFrameIndex(10)) == 1);
-        REQUIRE(loaded.count(TimeFrameIndex(20)) == 1);
+        REQUIRE(loaded_map.size() == 3);  // 3 frames with data
+        REQUIRE(loaded_map.count(TimeFrameIndex(0)) == 1);
+        REQUIRE(loaded_map.count(TimeFrameIndex(10)) == 1);
+        REQUIRE(loaded_map.count(TimeFrameIndex(20)) == 1);
 
         // Verify line content at frame 0
-        auto const & lines_at_0 = loaded.at(TimeFrameIndex(0));
+        auto const & lines_at_0 = loaded_map.at(TimeFrameIndex(0));
         REQUIRE(lines_at_0.size() == 1);
         REQUIRE(lines_at_0[0].size() == 3);  // 3 points per line
         REQUIRE(lines_at_0[0][0].x == Catch::Approx(10.0f));

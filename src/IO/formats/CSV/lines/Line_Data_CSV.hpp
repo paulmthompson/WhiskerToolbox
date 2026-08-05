@@ -214,7 +214,7 @@ DATAMANAGERIO_EXPORT bool save(LineData const * line_data,
  * @param opts Options controlling the load behavior
  * @return A map of timestamps to vectors of Line2D objects
  */
-DATAMANAGERIO_EXPORT std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions const & opts);
+DATAMANAGERIO_EXPORT std::vector<std::pair<TimeFrameIndex, Line2D>> load(CSVMultiFileLineLoaderOptions const & opts);
 
 /**
  * @brief Load LineData from a single CSV file containing all timestamps
@@ -226,7 +226,7 @@ DATAMANAGERIO_EXPORT std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMulti
  * @param opts Options controlling the load behavior
  * @return A map of timestamps to vectors of Line2D objects
  */
-DATAMANAGERIO_EXPORT std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVSingleFileLineLoaderOptions const & opts);
+DATAMANAGERIO_EXPORT std::vector<std::pair<TimeFrameIndex, Line2D>> load(CSVSingleFileLineLoaderOptions const & opts);
 
 template<>
 struct ParameterUIHints<CSVMultiFileLineLoaderOptions> {
@@ -290,9 +290,9 @@ struct ParameterUIHints<CSVSingleFileLineLoaderOptions> {
     }
 };
 
-std::vector<float> parse_string_to_float_vector(std::string const & str, std::string const & delimiter = ",");
+std::vector<float> parse_string_to_float_vector(std::string_view str, std::string const & delimiter = ",");
 
-std::map<TimeFrameIndex, std::vector<Line2D>> load_line_csv(std::string const & filepath);
+std::vector<std::pair<TimeFrameIndex, Line2D>> load_line_csv(std::string const & filepath);
 
 Line2D load_line_from_csv(std::string const & filename);
 

@@ -32,7 +32,15 @@ void verifyLineMatch(Line2D const & expected, Line2D const & actual, float toler
     }
 }
 
-}// namespace
+std::map<TimeFrameIndex, std::vector<Line2D>> to_map(std::vector<std::pair<TimeFrameIndex, Line2D>> const & vec) {
+    std::map<TimeFrameIndex, std::vector<Line2D>> m;
+    for (auto const & [t, l] : vec) {
+        m[t].push_back(l);
+    }
+    return m;
+}
+
+} // namespace
 
 TEST_CASE("DM - IO - LineData CSV Unit - Single file round-trip", "[LineData][CSV][IO][unit]") {
 
@@ -56,7 +64,7 @@ TEST_CASE("DM - IO - LineData CSV Unit - Single file round-trip", "[LineData][CS
         CSVSingleFileLineLoaderOptions load_opts;
         load_opts.filepath = (test_dir / "single_point.csv").string();
 
-        auto loaded = load(load_opts);
+        auto loaded = to_map(load(load_opts));
         REQUIRE(loaded.size() == 1);
         REQUIRE(loaded.count(TimeFrameIndex(5)) == 1);
         REQUIRE(loaded[TimeFrameIndex(5)].size() == 1);
@@ -81,7 +89,7 @@ TEST_CASE("DM - IO - LineData CSV Unit - Single file round-trip", "[LineData][CS
         CSVSingleFileLineLoaderOptions load_opts;
         load_opts.filepath = (test_dir / "multi_points.csv").string();
 
-        auto loaded = load(load_opts);
+        auto loaded = to_map(load(load_opts));
         REQUIRE(loaded.size() == 1);
         REQUIRE(loaded[TimeFrameIndex(0)].size() == 1);
         verifyLineMatch(line, loaded[TimeFrameIndex(0)][0]);
@@ -106,7 +114,7 @@ TEST_CASE("DM - IO - LineData CSV Unit - Single file round-trip", "[LineData][CS
         CSVSingleFileLineLoaderOptions load_opts;
         load_opts.filepath = (test_dir / "multi_frame.csv").string();
 
-        auto loaded = load(load_opts);
+        auto loaded = to_map(load(load_opts));
         REQUIRE(loaded.size() == 2);
         REQUIRE(loaded[TimeFrameIndex(0)].size() == 2);
         REQUIRE(loaded[TimeFrameIndex(5)].size() == 1);
@@ -130,7 +138,7 @@ TEST_CASE("DM - IO - LineData CSV Unit - Single file round-trip", "[LineData][CS
         CSVSingleFileLineLoaderOptions load_opts;
         load_opts.filepath = (test_dir / "empty.csv").string();
 
-        auto loaded = load(load_opts);
+        auto loaded = to_map(load(load_opts));
         REQUIRE(loaded.empty());
     }
 
@@ -151,7 +159,7 @@ TEST_CASE("DM - IO - LineData CSV Unit - Single file round-trip", "[LineData][CS
         CSVSingleFileLineLoaderOptions load_opts;
         load_opts.filepath = (test_dir / "negative.csv").string();
 
-        auto loaded = load(load_opts);
+        auto loaded = to_map(load(load_opts));
         REQUIRE(loaded.size() == 1);
         verifyLineMatch(input[TimeFrameIndex(1)][0], loaded[TimeFrameIndex(1)][0]);
     }
@@ -186,7 +194,7 @@ TEST_CASE("DM - IO - LineData CSV Unit - Multi file round-trip", "[LineData][CSV
         CSVMultiFileLineLoaderOptions load_opts;
         load_opts.parent_dir = test_dir.string();
 
-        auto loaded = load(load_opts);
+        auto loaded = to_map(load(load_opts));
         REQUIRE(loaded.size() == 1);
         REQUIRE(loaded.count(TimeFrameIndex(42)) == 1);
         REQUIRE(loaded[TimeFrameIndex(42)].size() == 1);
@@ -218,7 +226,7 @@ TEST_CASE("DM - IO - LineData CSV Unit - Multi file round-trip", "[LineData][CSV
         CSVMultiFileLineLoaderOptions load_opts;
         load_opts.parent_dir = test_dir.string();
 
-        auto loaded = load(load_opts);
+        auto loaded = to_map(load(load_opts));
         REQUIRE(loaded.size() == 2);
         verifyLineMatch(input[TimeFrameIndex(0)][0], loaded[TimeFrameIndex(0)][0]);
         verifyLineMatch(input[TimeFrameIndex(100)][0], loaded[TimeFrameIndex(100)][0]);
@@ -246,7 +254,7 @@ TEST_CASE("DM - IO - LineData CSV Unit - Multi file round-trip", "[LineData][CSV
         load_opts.parent_dir = test_dir.string();
         load_opts.has_header = false;
 
-        auto loaded = load(load_opts);
+        auto loaded = to_map(load(load_opts));
         REQUIRE(loaded.size() == 1);
         verifyLineMatch(input[TimeFrameIndex(7)][0], loaded[TimeFrameIndex(7)][0]);
     }

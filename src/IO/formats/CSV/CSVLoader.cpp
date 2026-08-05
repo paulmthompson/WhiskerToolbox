@@ -187,7 +187,7 @@ std::string CSVLoader::getLoaderName() const {
 LoadResult CSVLoader::loadLineDataCSV(std::string const & filepath,
                                       nlohmann::json const & config) {
     try {
-        std::map<TimeFrameIndex, std::vector<Line2D>> line_map;
+        std::vector<std::pair<TimeFrameIndex, Line2D>> line_map;
 
         if (config.contains("multi_file") && config["multi_file"] == true) {
             // Multi-file CSV loading
@@ -241,8 +241,8 @@ LoadResult CSVLoader::loadLineDataCSV(std::string const & filepath,
             line_map = ::load(opts);
         }
 
-        // Create LineData directly
-        auto line_data = std::make_shared<LineData>(line_map);
+        // Create LineData directly using the range constructor
+        auto line_data = std::make_shared<LineData>(std::move(line_map));
 
         // Apply image size if specified in config
         // Check new-style height/width fields first, fall back to legacy image_width/image_height

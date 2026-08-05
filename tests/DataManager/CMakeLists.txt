@@ -330,3 +330,10 @@ target_include_directories(profile_dlc PRIVATE
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager>"
         "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/..>"
 )
+
+add_executable(profile_line profile_line.cpp)
+target_link_libraries(profile_line PRIVATE DataManagerIO)
+target_include_directories(profile_line PRIVATE
+        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataManager>"
+        "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/..>"
+)

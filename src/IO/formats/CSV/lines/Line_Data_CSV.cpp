@@ -14,6 +14,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <charconv>
 
 void save_line_as_csv(Line2D const & line, std::string const & filename, int const point_precision) {
     std::fstream myfile;
@@ -127,7 +128,7 @@ bool save(
     return !any_failure;
 }
 
-std::vector<float> parse_string_to_float_vector(std::string const & str, std::string const & delimiter) {
+std::vector<float> parse_string_to_float_vector(std::string_view str, std::string const & delimiter) {
     std::vector<float> result;
 
     // Reserve space to avoid reallocations - estimate based on string length
@@ -135,14 +136,14 @@ std::vector<float> parse_string_to_float_vector(std::string const & str, std::st
     result.reserve(str.length() / 6 + 1);
 
     char const delim_char = delimiter.empty() ? ',' : delimiter[0];
-    char const * start = str.c_str();
+    char const * start = str.data();
     char const * end = start + str.length();
-    char * parse_end;
 
     // Use strtof directly instead of creating string_view or substring
     while (start < end) {
-        float const value = std::strtof(start, &parse_end);
-        if (parse_end == start) {
+        float value = 0.0f;
+        auto [parse_end, ec] = std::from_chars(start, end, value);
+        if (ec != std::errc()) {
             // No conversion happened, skip character
             ++start;
             continue;
@@ -158,9 +159,9 @@ std::vector<float> parse_string_to_float_vector(std::string const & str, std::st
     return result;
 }
 
-std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVSingleFileLineLoaderOptions const & opts) {
+std::vector<std::pair<TimeFrameIndex, Line2D>> load(CSVSingleFileLineLoaderOptions const & opts) {
     auto t1 = std::chrono::high_resolution_clock::now();
-    std::map<TimeFrameIndex, std::vector<Line2D>> data_map;
+    std::vector<std::pair<TimeFrameIndex, Line2D>> frame_data;
     std::ifstream file(opts.filepath);
     if (!file.is_open()) {
         throw std::runtime_error("Could not open file: " + opts.filepath);
@@ -199,8 +200,9 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVSingleFileLineLoaderOption
             continue;
         }
 
-        // Parse frame number
-        int const frame_num = std::stoi(line.substr(pos, comma_pos - pos));
+        // Parse frame number directly using from_chars to avoid substring copy
+        int frame_num = 0;
+        std::from_chars(line.data() + pos, line.data() + comma_pos, frame_num);
         pos = comma_pos + 1;
 
         // Find first quote for X coordinates
@@ -230,9 +232,9 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVSingleFileLineLoaderOption
         size_t const y_start = quote3 + 1;
         size_t const y_len = quote4 - y_start;
 
-        // Parse coordinates directly from the line string to avoid copies
-        std::string const x_str = line.substr(x_start, x_len);
-        std::string const y_str = line.substr(y_start, y_len);
+        // Parse coordinates directly using string_view to avoid copies
+        std::string_view const x_str(line.data() + x_start, x_len);
+        std::string_view const y_str(line.data() + y_start, y_len);
 
         std::vector<float> const x_values = parse_string_to_float_vector(x_str, coordinate_delimiter);
         std::vector<float> const y_values = parse_string_to_float_vector(y_str, coordinate_delimiter);
@@ -242,8 +244,7 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVSingleFileLineLoaderOption
             continue;
         }
 
-        // Use emplace or operator[] to avoid extra lookup
-        data_map[TimeFrameIndex(frame_num)].emplace_back(create_line(x_values, y_values));
+        frame_data.emplace_back(TimeFrameIndex(frame_num), create_line(x_values, y_values));
         loaded_lines += 1;
     }
 
@@ -252,10 +253,10 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVSingleFileLineLoaderOption
 
     auto duration = std::chrono::duration<double>(t2 - t1).count();
     std::cout << "Loaded " << loaded_lines << " lines from " << opts.filepath << " in " << duration << "s" << std::endl;
-    return data_map;
+    return frame_data;
 }
 
-std::map<TimeFrameIndex, std::vector<Line2D>> load_line_csv(std::string const & filepath) {
+std::vector<std::pair<TimeFrameIndex, Line2D>> load_line_csv(std::string const & filepath) {
     // Wrapper function for backward compatibility
     // Uses the new options-based load function with default settings
     CSVSingleFileLineLoaderOptions opts;
@@ -266,37 +267,33 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load_line_csv(std::string const & 
 
 Line2D load_line_from_csv(std::string const & filename) {
     std::string csv_line;
-
     auto line_output = Line2D();
 
-    std::fstream myfile;
-    myfile.open(filename, std::fstream::in);
+    std::ifstream myfile(filename);
+    if (!myfile.is_open()) return line_output;
 
-    std::string x_str;
-    std::string y_str;
+    while (std::getline(myfile, csv_line)) {
+        size_t const comma_pos = csv_line.find(',');
+        if (comma_pos == std::string::npos) continue;
 
-    while (getline(myfile, csv_line)) {
+        float x = 0.0f;
+        float y = 0.0f;
+        std::from_chars(csv_line.data(), csv_line.data() + comma_pos, x);
+        std::from_chars(csv_line.data() + comma_pos + 1, csv_line.data() + csv_line.length(), y);
 
-        std::stringstream ss(csv_line);
-
-        getline(ss, x_str, ',');
-        getline(ss, y_str);
-
-        //std::cout << x_str << " , " << y_str << std::endl;
-
-        line_output.push_back(Point2D<float>{std::stof(x_str), std::stof(y_str)});
+        line_output.push_back(Point2D<float>{x, y});
     }
 
     return line_output;
 }
 
-std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions const & opts) {
-    std::map<TimeFrameIndex, std::vector<Line2D>> data_map;
+std::vector<std::pair<TimeFrameIndex, Line2D>> load(CSVMultiFileLineLoaderOptions const & opts) {
+    std::vector<std::pair<TimeFrameIndex, Line2D>> frame_data;
 
     // Check if directory exists
     if (!std::filesystem::exists(opts.parent_dir)) {
         std::cerr << "Error: Directory does not exist: " << opts.parent_dir << std::endl;
-        return data_map;
+        return frame_data;
     }
 
     int files_loaded = 0;
@@ -325,10 +322,9 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions
         std::string const frame_str = filename.substr(0, filename.length() - 4);
 
         // Try to parse frame number
-        int frame_number;
-        try {
-            frame_number = std::stoi(frame_str);
-        } catch (std::exception const & e) {
+        int frame_number = 0;
+        auto [ptr, ec] = std::from_chars(frame_str.data(), frame_str.data() + frame_str.length(), frame_number);
+        if (ec != std::errc() || ptr != frame_str.data() + frame_str.length()) {
             std::cerr << "Warning: Could not parse frame number from filename: " << filename << std::endl;
             files_skipped++;
             continue;
@@ -371,8 +367,9 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions
 
                 // Parse the column value if it's one we need
                 if (col_idx == x_column || col_idx == y_column) {
-                    try {
-                        float const value = std::stof(line.substr(pos, next_pos - pos));
+                    float value = 0.0f;
+                    auto [parse_end_col, ec_col] = std::from_chars(line.data() + pos, line.data() + next_pos, value);
+                    if (ec_col == std::errc()) {
                         if (col_idx == x_column) {
                             x = value;
                             x_found = true;
@@ -380,7 +377,7 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions
                             y = value;
                             y_found = true;
                         }
-                    } catch (std::exception const & e) {
+                    } else {
                         std::cerr << "Warning: Could not parse coordinate from line: " << line << " (file: " << filename << ")" << std::endl;
                         break;
                     }
@@ -404,7 +401,7 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions
 
         // Add the line to the data map if we have points
         if (!line_points.empty()) {
-            data_map[TimeFrameIndex(frame_number)].emplace_back(line_points);
+            frame_data.emplace_back(TimeFrameIndex(frame_number), Line2D{line_points});
             files_loaded++;
         } else {
             std::cerr << "Warning: No valid points found in file: " << filename << std::endl;
@@ -418,5 +415,5 @@ std::map<TimeFrameIndex, std::vector<Line2D>> load(CSVMultiFileLineLoaderOptions
     }
     std::cout << std::endl;
 
-    return data_map;
+    return frame_data;
 }
