@@ -373,6 +373,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#function-keypressevent" id="toc-function-keypressevent" class="nav-link" data-scroll-target="#function-keypressevent">function keyPressEvent</a></li>
   <li><a href="#function-eventfilter" id="toc-function-eventfilter" class="nav-link" data-scroll-target="#function-eventfilter">function eventFilter</a></li>
+  <li><a href="#function-dragenterevent" id="toc-function-dragenterevent" class="nav-link" data-scroll-target="#function-dragenterevent">function dragEnterEvent</a></li>
+  <li><a href="#function-dropevent" id="toc-function-dropevent" class="nav-link" data-scroll-target="#function-dropevent">function dropEvent</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -492,6 +494,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>bool</td>
 <td><strong><a href="../../api_generated/Classes/classMainWindow.html#function-eventfilter">eventFilter</a></strong>(QObject * obj, QEvent * event) override</td>
 </tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMainWindow.html#function-dragenterevent">dragEnterEvent</a></strong>(QDragEnterEvent * event) override</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMainWindow.html#function-dropevent">dropEvent</a></strong>(QDropEvent * event) override</td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -610,8 +620,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QObject</span> <span class="op">*</span> obj<span class="op">,</span></span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QEvent</span> <span class="op">*</span> event</span>
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-dragenterevent" class="level3">
+<h3 class="anchored" data-anchor-id="function-dragenterevent">function dragEnterEvent</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> dragEnterEvent<span class="op">(</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QDragEnterEvent</span> <span class="op">*</span> event</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-dropevent" class="level3">
+<h3 class="anchored" data-anchor-id="function-dropevent">function dropEvent</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> dropEvent<span class="op">(</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QDropEvent</span> <span class="op">*</span> event</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-04 at 20:28:33 +0000</p>
+<p>Updated on 2026-08-05 at 12:26:57 +0000</p>
 
 
 </section>
