@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>TriageSessionWidgetModule – Neuralyzer</title>
+<title>Neuralyzer::Plots::PlotZoomProfile – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -25,6 +25,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -313,7 +348,22 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#triagesessionwidgetmodule" id="toc-triagesessionwidgetmodule" class="nav-link active" data-scroll-target="#triagesessionwidgetmodule">TriageSessionWidgetModule</a></li>
+  <li><a href="#neuralyzerplotsplotzoomprofile" id="toc-neuralyzerplotsplotzoomprofile" class="nav-link active" data-scroll-target="#neuralyzerplotsplotzoomprofile">Neuralyzer::Plots::PlotZoomProfile</a>
+  <ul class="collapse">
+  <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
+  <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-enabled" id="toc-function-enabled" class="nav-link" data-scroll-target="#function-enabled">function enabled</a></li>
+  <li><a href="#function-instance" id="toc-function-instance" class="nav-link" data-scroll-target="#function-instance">function instance</a></li>
+  <li><a href="#function-beginwheel" id="toc-function-beginwheel" class="nav-link" data-scroll-target="#function-beginwheel">function beginWheel</a></li>
+  <li><a href="#function-endwheelsync" id="toc-function-endwheelsync" class="nav-link" data-scroll-target="#function-endwheelsync">function endWheelSync</a></li>
+  <li><a href="#function-beginpaintgl" id="toc-function-beginpaintgl" class="nav-link" data-scroll-target="#function-beginpaintgl">function beginPaintGL</a></li>
+  <li><a href="#function-endpaintgl" id="toc-function-endpaintgl" class="nav-link" data-scroll-target="#function-endpaintgl">function endPaintGL</a></li>
+  <li><a href="#function-beginaxispaint" id="toc-function-beginaxispaint" class="nav-link" data-scroll-target="#function-beginaxispaint">function beginAxisPaint</a></li>
+  <li><a href="#function-endaxispaint" id="toc-function-endaxispaint" class="nav-link" data-scroll-target="#function-endaxispaint">function endAxisPaint</a></li>
+  <li><a href="#function-pendinggeneration" id="toc-function-pendinggeneration" class="nav-link" data-scroll-target="#function-pendinggeneration">function pendingGeneration</a></li>
+  </ul></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -323,7 +373,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">TriageSessionWidgetModule</h1>
+<h1 class="title">Neuralyzer::Plots::PlotZoomProfile</h1>
 </div>
 
 
@@ -340,12 +390,123 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="triagesessionwidgetmodule" class="level1">
-<h1>TriageSessionWidgetModule</h1>
+<section id="neuralyzerplotsplotzoomprofile" class="level1">
+<h1>Neuralyzer::Plots::PlotZoomProfile</h1>
+<p>Runtime-gated zoom/paint profiler (singleton).</p>
+<p><code>#include &lt;PlotZoomProfile.hpp&gt;</code></p>
+<section id="public-functions" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfile.html#function-enabled">enabled</a></strong>()<br>True when <code>NEURALYZER_PLOT_ZOOM_PROFILE</code> is <code>1</code> or <code>true</code>.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfile.html">PlotZoomProfile</a> &amp;</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfile.html#function-instance">instance</a></strong>()<br>Profiler singleton.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfile.html#function-beginwheel">beginWheel</a></strong>()<br>Begin profiling a wheel interaction (increments generation).</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfile.html#function-endwheelsync">endWheelSync</a></strong>()<br>End synchronous wheel path and log <code>wheel_sync_us</code>.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfile.html#function-beginpaintgl">beginPaintGL</a></strong>()<br>Begin paintGL timing for the pending wheel generation.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfile.html#function-endpaintgl">endPaintGL</a></strong>(bool rebuilt_scene)<br>End paintGL timing and log <code>paint_gl_us</code> and <code>rebuild</code>.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfile.html#function-beginaxispaint">beginAxisPaint</a></strong>(std::string_view axis_label)<br>Begin axis paintEvent timing.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfile.html#function-endaxispaint">endAxisPaint</a></strong>()<br>End axis paintEvent timing and log <code>axis_paint_us</code>.</td>
+</tr>
+<tr class="odd">
+<td>std::uint64_t</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfile.html#function-pendinggeneration">pendingGeneration</a></strong>() const<br>Generation counter for the most recent wheel interaction.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
+<section id="function-enabled" class="level3">
+<h3 class="anchored" data-anchor-id="function-enabled">function enabled</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="dt">bool</span> enabled<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>True when <code>NEURALYZER_PLOT_ZOOM_PROFILE</code> is <code>1</code> or <code>true</code>.</p>
+</section>
+<section id="function-instance" class="level3">
+<h3 class="anchored" data-anchor-id="function-instance">function instance</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> PlotZoomProfile <span class="op">&amp;</span> instance<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Profiler singleton.</p>
+</section>
+<section id="function-beginwheel" class="level3">
+<h3 class="anchored" data-anchor-id="function-beginwheel">function beginWheel</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> beginWheel<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Begin profiling a wheel interaction (increments generation).</p>
+</section>
+<section id="function-endwheelsync" class="level3">
+<h3 class="anchored" data-anchor-id="function-endwheelsync">function endWheelSync</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> endWheelSync<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>End synchronous wheel path and log <code>wheel_sync_us</code>.</p>
+</section>
+<section id="function-beginpaintgl" class="level3">
+<h3 class="anchored" data-anchor-id="function-beginpaintgl">function beginPaintGL</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> beginPaintGL<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Begin paintGL timing for the pending wheel generation.</p>
+</section>
+<section id="function-endpaintgl" class="level3">
+<h3 class="anchored" data-anchor-id="function-endpaintgl">function endPaintGL</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> endPaintGL<span class="op">(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> rebuilt_scene</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>End paintGL timing and log <code>paint_gl_us</code> and <code>rebuild</code>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>rebuilt_scene</strong> True when rebuildScene() ran during this frame.</li>
+</ul>
+</section>
+<section id="function-beginaxispaint" class="level3">
+<h3 class="anchored" data-anchor-id="function-beginaxispaint">function beginAxisPaint</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> beginAxisPaint<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string_view axis_label</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Begin axis paintEvent timing.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>axis_label</strong> Short label such as “horizontal” or “vertical”.</li>
+</ul>
+</section>
+<section id="function-endaxispaint" class="level3">
+<h3 class="anchored" data-anchor-id="function-endaxispaint">function endAxisPaint</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> endAxisPaint<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>End axis paintEvent timing and log <code>axis_paint_us</code>.</p>
+</section>
+<section id="function-pendinggeneration" class="level3">
+<h3 class="anchored" data-anchor-id="function-pendinggeneration">function pendingGeneration</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>uint64_t pendingGeneration<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Generation counter for the most recent wheel interaction.</p>
 <hr>
-<p>Updated on 2026-08-05 at 14:45:27 +0000</p>
+<p>Updated on 2026-08-06 at 14:34:03 +0000</p>
 
 
+</section>
+</section>
 </section>
 
 </main> <!-- /main -->

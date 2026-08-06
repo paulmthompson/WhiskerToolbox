@@ -776,39 +776,39 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-392"><a href="#cb1-392" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
 <span id="cb1-393"><a href="#cb1-393" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-394"><a href="#cb1-394" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-395"><a href="#cb1-395" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> <span class="at">const</span> delta <span class="op">=</span> event<span class="op">-&gt;</span>angleDelta<span class="op">().</span>y<span class="op">()</span> <span class="op">/</span> <span class="fl">120.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb1-396"><a href="#cb1-396" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> y_only <span class="op">=</span> <span class="op">(</span>event<span class="op">-&gt;</span>modifiers<span class="op">()</span> <span class="op">&amp;</span> <span class="ex">Qt::ShiftModifier</span><span class="op">)</span> <span class="op">!=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb1-397"><a href="#cb1-397" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> both_axes <span class="op">=</span> <span class="op">(</span>event<span class="op">-&gt;</span>modifiers<span class="op">()</span> <span class="op">&amp;</span> <span class="ex">Qt::ControlModifier</span><span class="op">)</span> <span class="op">!=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb1-398"><a href="#cb1-398" aria-hidden="true" tabindex="-1"></a>    handleZoom<span class="op">(</span>delta<span class="op">,</span> y_only<span class="op">,</span> both_axes<span class="op">);</span></span>
-<span id="cb1-399"><a href="#cb1-399" aria-hidden="true" tabindex="-1"></a>    event<span class="op">-&gt;</span>accept<span class="op">();</span></span>
-<span id="cb1-400"><a href="#cb1-400" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-401"><a href="#cb1-401" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-402"><a href="#cb1-402" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>keyReleaseEvent<span class="op">(</span><span class="ex">QKeyEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-403"><a href="#cb1-403" aria-hidden="true" tabindex="-1"></a>    <span class="co">// If Ctrl is released during selection drag, cancel the selection</span></span>
-<span id="cb1-404"><a href="#cb1-404" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>event<span class="op">-&gt;</span>key<span class="op">()</span> <span class="op">==</span> <span class="ex">Qt::Key_Control</span> <span class="op">&amp;&amp;</span> _is_selecting<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-405"><a href="#cb1-405" aria-hidden="true" tabindex="-1"></a>        cancelSelection<span class="op">();</span></span>
-<span id="cb1-406"><a href="#cb1-406" aria-hidden="true" tabindex="-1"></a>        event<span class="op">-&gt;</span>accept<span class="op">();</span></span>
-<span id="cb1-407"><a href="#cb1-407" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-408"><a href="#cb1-408" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-409"><a href="#cb1-409" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QOpenGLWidget::keyReleaseEvent</span><span class="op">(</span>event<span class="op">);</span></span>
-<span id="cb1-410"><a href="#cb1-410" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-411"><a href="#cb1-411" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-412"><a href="#cb1-412" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
-<span id="cb1-413"><a href="#cb1-413" aria-hidden="true" tabindex="-1"></a><span class="co">// Slots</span></span>
-<span id="cb1-414"><a href="#cb1-414" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
-<span id="cb1-415"><a href="#cb1-415" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-416"><a href="#cb1-416" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>onStateChanged<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-417"><a href="#cb1-417" aria-hidden="true" tabindex="-1"></a>    _scene_dirty <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb1-418"><a href="#cb1-418" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
-<span id="cb1-419"><a href="#cb1-419" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-420"><a href="#cb1-420" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-421"><a href="#cb1-421" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>onViewStateChanged<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-422"><a href="#cb1-422" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_state<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-423"><a href="#cb1-423" aria-hidden="true" tabindex="-1"></a>        _cached_view_state <span class="op">=</span> _state<span class="op">-&gt;</span>viewState<span class="op">();</span></span>
-<span id="cb1-424"><a href="#cb1-424" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-425"><a href="#cb1-425" aria-hidden="true" tabindex="-1"></a>    updateMatrices<span class="op">();</span></span>
-<span id="cb1-426"><a href="#cb1-426" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
-<span id="cb1-427"><a href="#cb1-427" aria-hidden="true" tabindex="-1"></a>    <span class="ex">emit</span> viewBoundsChanged<span class="op">();</span></span>
+<span id="cb1-395"><a href="#cb1-395" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> <span class="at">const</span> delta <span class="op">=</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>wheelDeltaToZoomSteps<span class="op">(</span></span>
+<span id="cb1-396"><a href="#cb1-396" aria-hidden="true" tabindex="-1"></a>            event<span class="op">-&gt;</span>pixelDelta<span class="op">().</span>y<span class="op">(),</span> event<span class="op">-&gt;</span>angleDelta<span class="op">().</span>y<span class="op">(),</span> event<span class="op">-&gt;</span>angleDelta<span class="op">().</span>x<span class="op">());</span></span>
+<span id="cb1-397"><a href="#cb1-397" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> y_only <span class="op">=</span> <span class="op">(</span>event<span class="op">-&gt;</span>modifiers<span class="op">()</span> <span class="op">&amp;</span> <span class="ex">Qt::ShiftModifier</span><span class="op">)</span> <span class="op">!=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-398"><a href="#cb1-398" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> both_axes <span class="op">=</span> <span class="op">(</span>event<span class="op">-&gt;</span>modifiers<span class="op">()</span> <span class="op">&amp;</span> <span class="ex">Qt::ControlModifier</span><span class="op">)</span> <span class="op">!=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-399"><a href="#cb1-399" aria-hidden="true" tabindex="-1"></a>    handleZoom<span class="op">(</span>delta<span class="op">,</span> y_only<span class="op">,</span> both_axes<span class="op">);</span></span>
+<span id="cb1-400"><a href="#cb1-400" aria-hidden="true" tabindex="-1"></a>    event<span class="op">-&gt;</span>accept<span class="op">();</span></span>
+<span id="cb1-401"><a href="#cb1-401" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-402"><a href="#cb1-402" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-403"><a href="#cb1-403" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>keyReleaseEvent<span class="op">(</span><span class="ex">QKeyEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-404"><a href="#cb1-404" aria-hidden="true" tabindex="-1"></a>    <span class="co">// If Ctrl is released during selection drag, cancel the selection</span></span>
+<span id="cb1-405"><a href="#cb1-405" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>event<span class="op">-&gt;</span>key<span class="op">()</span> <span class="op">==</span> <span class="ex">Qt::Key_Control</span> <span class="op">&amp;&amp;</span> _is_selecting<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-406"><a href="#cb1-406" aria-hidden="true" tabindex="-1"></a>        cancelSelection<span class="op">();</span></span>
+<span id="cb1-407"><a href="#cb1-407" aria-hidden="true" tabindex="-1"></a>        event<span class="op">-&gt;</span>accept<span class="op">();</span></span>
+<span id="cb1-408"><a href="#cb1-408" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-409"><a href="#cb1-409" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-410"><a href="#cb1-410" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QOpenGLWidget::keyReleaseEvent</span><span class="op">(</span>event<span class="op">);</span></span>
+<span id="cb1-411"><a href="#cb1-411" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-412"><a href="#cb1-412" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-413"><a href="#cb1-413" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb1-414"><a href="#cb1-414" aria-hidden="true" tabindex="-1"></a><span class="co">// Slots</span></span>
+<span id="cb1-415"><a href="#cb1-415" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb1-416"><a href="#cb1-416" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-417"><a href="#cb1-417" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>onStateChanged<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-418"><a href="#cb1-418" aria-hidden="true" tabindex="-1"></a>    _scene_dirty <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-419"><a href="#cb1-419" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
+<span id="cb1-420"><a href="#cb1-420" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-421"><a href="#cb1-421" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-422"><a href="#cb1-422" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>onViewStateChanged<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-423"><a href="#cb1-423" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-424"><a href="#cb1-424" aria-hidden="true" tabindex="-1"></a>        _cached_view_state <span class="op">=</span> _state<span class="op">-&gt;</span>viewState<span class="op">();</span></span>
+<span id="cb1-425"><a href="#cb1-425" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-426"><a href="#cb1-426" aria-hidden="true" tabindex="-1"></a>    updateMatrices<span class="op">();</span></span>
+<span id="cb1-427"><a href="#cb1-427" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
 <span id="cb1-428"><a href="#cb1-428" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-429"><a href="#cb1-429" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-430"><a href="#cb1-430" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> LinePlotOpenGLWidget<span class="op">::</span>onWindowSizeChanged<span class="op">(</span><span class="dt">double</span> <span class="co">/* window_size */</span><span class="op">)</span> <span class="op">{</span></span>
@@ -1285,7 +1285,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-901"><a href="#cb1-901" aria-hidden="true" tabindex="-1"></a>    _line_renderer<span class="op">.</span>updateLineColorOverrides<span class="op">(</span>per_line_colors<span class="op">);</span></span>
 <span id="cb1-902"><a href="#cb1-902" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-05 at 14:45:33 +0000</p>
+<p>Updated on 2026-08-06 at 14:34:08 +0000</p>
 
 
 </section>

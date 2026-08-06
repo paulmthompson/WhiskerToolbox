@@ -766,32 +766,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-382"><a href="#cb1-382" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-383"><a href="#cb1-383" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-384"><a href="#cb1-384" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> PSTHPlotOpenGLWidget<span class="op">::</span>wheelEvent<span class="op">(</span><span class="ex">QWheelEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-385"><a href="#cb1-385" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> <span class="at">const</span> delta <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>event<span class="op">-&gt;</span>angleDelta<span class="op">().</span>y<span class="op">())</span> <span class="op">/</span> <span class="fl">120.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb1-386"><a href="#cb1-386" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> shift_pressed <span class="op">=</span> event<span class="op">-&gt;</span>modifiers<span class="op">()</span> <span class="op">&amp;</span> <span class="ex">Qt::ShiftModifier</span><span class="op">;</span></span>
-<span id="cb1-387"><a href="#cb1-387" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> ctrl_pressed <span class="op">=</span> event<span class="op">-&gt;</span>modifiers<span class="op">()</span> <span class="op">&amp;</span> <span class="ex">Qt::ControlModifier</span><span class="op">;</span></span>
-<span id="cb1-388"><a href="#cb1-388" aria-hidden="true" tabindex="-1"></a>    handleZoom<span class="op">(</span>delta<span class="op">,</span> shift_pressed<span class="op">,</span> ctrl_pressed<span class="op">);</span></span>
-<span id="cb1-389"><a href="#cb1-389" aria-hidden="true" tabindex="-1"></a>    event<span class="op">-&gt;</span>accept<span class="op">();</span></span>
-<span id="cb1-390"><a href="#cb1-390" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-391"><a href="#cb1-391" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-392"><a href="#cb1-392" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
-<span id="cb1-393"><a href="#cb1-393" aria-hidden="true" tabindex="-1"></a><span class="co">// Private Methods</span></span>
-<span id="cb1-394"><a href="#cb1-394" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
-<span id="cb1-395"><a href="#cb1-395" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-396"><a href="#cb1-396" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> PSTHPlotOpenGLWidget<span class="op">::</span>onStateChanged<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-397"><a href="#cb1-397" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_updating_y_max_from_rebuild<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-398"><a href="#cb1-398" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-399"><a href="#cb1-399" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-400"><a href="#cb1-400" aria-hidden="true" tabindex="-1"></a>    _scene_dirty <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb1-401"><a href="#cb1-401" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
-<span id="cb1-402"><a href="#cb1-402" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-403"><a href="#cb1-403" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-404"><a href="#cb1-404" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> PSTHPlotOpenGLWidget<span class="op">::</span>onViewStateChanged<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-405"><a href="#cb1-405" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_state<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-406"><a href="#cb1-406" aria-hidden="true" tabindex="-1"></a>        _cached_view_state <span class="op">=</span> _state<span class="op">-&gt;</span>viewState<span class="op">();</span></span>
-<span id="cb1-407"><a href="#cb1-407" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-408"><a href="#cb1-408" aria-hidden="true" tabindex="-1"></a>    updateMatrices<span class="op">();</span></span>
-<span id="cb1-409"><a href="#cb1-409" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
-<span id="cb1-410"><a href="#cb1-410" aria-hidden="true" tabindex="-1"></a>    <span class="ex">emit</span> viewBoundsChanged<span class="op">();</span></span>
+<span id="cb1-385"><a href="#cb1-385" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> <span class="at">const</span> delta <span class="op">=</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>wheelDeltaToZoomSteps<span class="op">(</span></span>
+<span id="cb1-386"><a href="#cb1-386" aria-hidden="true" tabindex="-1"></a>            event<span class="op">-&gt;</span>pixelDelta<span class="op">().</span>y<span class="op">(),</span> event<span class="op">-&gt;</span>angleDelta<span class="op">().</span>y<span class="op">(),</span> event<span class="op">-&gt;</span>angleDelta<span class="op">().</span>x<span class="op">());</span></span>
+<span id="cb1-387"><a href="#cb1-387" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> shift_pressed <span class="op">=</span> event<span class="op">-&gt;</span>modifiers<span class="op">()</span> <span class="op">&amp;</span> <span class="ex">Qt::ShiftModifier</span><span class="op">;</span></span>
+<span id="cb1-388"><a href="#cb1-388" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> ctrl_pressed <span class="op">=</span> event<span class="op">-&gt;</span>modifiers<span class="op">()</span> <span class="op">&amp;</span> <span class="ex">Qt::ControlModifier</span><span class="op">;</span></span>
+<span id="cb1-389"><a href="#cb1-389" aria-hidden="true" tabindex="-1"></a>    handleZoom<span class="op">(</span>delta<span class="op">,</span> shift_pressed<span class="op">,</span> ctrl_pressed<span class="op">);</span></span>
+<span id="cb1-390"><a href="#cb1-390" aria-hidden="true" tabindex="-1"></a>    event<span class="op">-&gt;</span>accept<span class="op">();</span></span>
+<span id="cb1-391"><a href="#cb1-391" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-392"><a href="#cb1-392" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-393"><a href="#cb1-393" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb1-394"><a href="#cb1-394" aria-hidden="true" tabindex="-1"></a><span class="co">// Private Methods</span></span>
+<span id="cb1-395"><a href="#cb1-395" aria-hidden="true" tabindex="-1"></a><span class="co">// =============================================================================</span></span>
+<span id="cb1-396"><a href="#cb1-396" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-397"><a href="#cb1-397" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> PSTHPlotOpenGLWidget<span class="op">::</span>onStateChanged<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-398"><a href="#cb1-398" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_updating_y_max_from_rebuild<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-399"><a href="#cb1-399" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-400"><a href="#cb1-400" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-401"><a href="#cb1-401" aria-hidden="true" tabindex="-1"></a>    _scene_dirty <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-402"><a href="#cb1-402" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
+<span id="cb1-403"><a href="#cb1-403" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-404"><a href="#cb1-404" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-405"><a href="#cb1-405" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> PSTHPlotOpenGLWidget<span class="op">::</span>onViewStateChanged<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-406"><a href="#cb1-406" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-407"><a href="#cb1-407" aria-hidden="true" tabindex="-1"></a>        _cached_view_state <span class="op">=</span> _state<span class="op">-&gt;</span>viewState<span class="op">();</span></span>
+<span id="cb1-408"><a href="#cb1-408" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-409"><a href="#cb1-409" aria-hidden="true" tabindex="-1"></a>    updateMatrices<span class="op">();</span></span>
+<span id="cb1-410"><a href="#cb1-410" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
 <span id="cb1-411"><a href="#cb1-411" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-412"><a href="#cb1-412" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-413"><a href="#cb1-413" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> PSTHPlotOpenGLWidget<span class="op">::</span>rebuildScene<span class="op">()</span> <span class="op">{</span></span>
@@ -1030,7 +1030,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-646"><a href="#cb1-646" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>_state<span class="op">,</span> _cached_view_state<span class="op">,</span> delta<span class="op">,</span> y_only<span class="op">,</span> both_axes<span class="op">);</span></span>
 <span id="cb1-647"><a href="#cb1-647" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-05 at 14:45:33 +0000</p>
+<p>Updated on 2026-08-06 at 14:34:08 +0000</p>
 
 
 </section>

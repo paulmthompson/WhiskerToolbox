@@ -669,25 +669,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-285"><a href="#cb1-285" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-286"><a href="#cb1-286" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-287"><a href="#cb1-287" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> TemporalProjectionOpenGLWidget<span class="op">::</span>wheelEvent<span class="op">(</span><span class="ex">QWheelEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-288"><a href="#cb1-288" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> <span class="at">const</span> delta <span class="op">=</span> event<span class="op">-&gt;</span>angleDelta<span class="op">().</span>y<span class="op">()</span> <span class="op">/</span> <span class="fl">120.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb1-289"><a href="#cb1-289" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> y_only <span class="op">=</span> <span class="op">(</span>event<span class="op">-&gt;</span>modifiers<span class="op">()</span> <span class="op">&amp;</span> <span class="ex">Qt::ShiftModifier</span><span class="op">)</span> <span class="op">!=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb1-290"><a href="#cb1-290" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> both_axes <span class="op">=</span> <span class="op">(</span>event<span class="op">-&gt;</span>modifiers<span class="op">()</span> <span class="op">&amp;</span> <span class="ex">Qt::ControlModifier</span><span class="op">)</span> <span class="op">!=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb1-291"><a href="#cb1-291" aria-hidden="true" tabindex="-1"></a>    handleZoom<span class="op">(</span>delta<span class="op">,</span> y_only<span class="op">,</span> both_axes<span class="op">);</span></span>
-<span id="cb1-292"><a href="#cb1-292" aria-hidden="true" tabindex="-1"></a>    event<span class="op">-&gt;</span>accept<span class="op">();</span></span>
-<span id="cb1-293"><a href="#cb1-293" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-294"><a href="#cb1-294" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-295"><a href="#cb1-295" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> TemporalProjectionOpenGLWidget<span class="op">::</span>onStateChanged<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-296"><a href="#cb1-296" aria-hidden="true" tabindex="-1"></a>    _scene_dirty <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb1-297"><a href="#cb1-297" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
-<span id="cb1-298"><a href="#cb1-298" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-299"><a href="#cb1-299" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-300"><a href="#cb1-300" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> TemporalProjectionOpenGLWidget<span class="op">::</span>onViewStateChanged<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-301"><a href="#cb1-301" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_state<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-302"><a href="#cb1-302" aria-hidden="true" tabindex="-1"></a>        _cached_view_state <span class="op">=</span> _state<span class="op">-&gt;</span>viewState<span class="op">();</span></span>
-<span id="cb1-303"><a href="#cb1-303" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-304"><a href="#cb1-304" aria-hidden="true" tabindex="-1"></a>    updateMatrices<span class="op">();</span></span>
-<span id="cb1-305"><a href="#cb1-305" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
-<span id="cb1-306"><a href="#cb1-306" aria-hidden="true" tabindex="-1"></a>    <span class="ex">emit</span> viewBoundsChanged<span class="op">();</span></span>
+<span id="cb1-288"><a href="#cb1-288" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> <span class="at">const</span> delta <span class="op">=</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>wheelDeltaToZoomSteps<span class="op">(</span></span>
+<span id="cb1-289"><a href="#cb1-289" aria-hidden="true" tabindex="-1"></a>            event<span class="op">-&gt;</span>pixelDelta<span class="op">().</span>y<span class="op">(),</span> event<span class="op">-&gt;</span>angleDelta<span class="op">().</span>y<span class="op">(),</span> event<span class="op">-&gt;</span>angleDelta<span class="op">().</span>x<span class="op">());</span></span>
+<span id="cb1-290"><a href="#cb1-290" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> y_only <span class="op">=</span> <span class="op">(</span>event<span class="op">-&gt;</span>modifiers<span class="op">()</span> <span class="op">&amp;</span> <span class="ex">Qt::ShiftModifier</span><span class="op">)</span> <span class="op">!=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-291"><a href="#cb1-291" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> both_axes <span class="op">=</span> <span class="op">(</span>event<span class="op">-&gt;</span>modifiers<span class="op">()</span> <span class="op">&amp;</span> <span class="ex">Qt::ControlModifier</span><span class="op">)</span> <span class="op">!=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-292"><a href="#cb1-292" aria-hidden="true" tabindex="-1"></a>    handleZoom<span class="op">(</span>delta<span class="op">,</span> y_only<span class="op">,</span> both_axes<span class="op">);</span></span>
+<span id="cb1-293"><a href="#cb1-293" aria-hidden="true" tabindex="-1"></a>    event<span class="op">-&gt;</span>accept<span class="op">();</span></span>
+<span id="cb1-294"><a href="#cb1-294" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-295"><a href="#cb1-295" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-296"><a href="#cb1-296" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> TemporalProjectionOpenGLWidget<span class="op">::</span>onStateChanged<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-297"><a href="#cb1-297" aria-hidden="true" tabindex="-1"></a>    _scene_dirty <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-298"><a href="#cb1-298" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
+<span id="cb1-299"><a href="#cb1-299" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-300"><a href="#cb1-300" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-301"><a href="#cb1-301" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> TemporalProjectionOpenGLWidget<span class="op">::</span>onViewStateChanged<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-302"><a href="#cb1-302" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-303"><a href="#cb1-303" aria-hidden="true" tabindex="-1"></a>        _cached_view_state <span class="op">=</span> _state<span class="op">-&gt;</span>viewState<span class="op">();</span></span>
+<span id="cb1-304"><a href="#cb1-304" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-305"><a href="#cb1-305" aria-hidden="true" tabindex="-1"></a>    updateMatrices<span class="op">();</span></span>
+<span id="cb1-306"><a href="#cb1-306" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
 <span id="cb1-307"><a href="#cb1-307" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-308"><a href="#cb1-308" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-309"><a href="#cb1-309" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> TemporalProjectionOpenGLWidget<span class="op">::</span>onDataKeysChanged<span class="op">()</span> <span class="op">{</span></span>
@@ -958,7 +958,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-574"><a href="#cb1-574" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-575"><a href="#cb1-575" aria-hidden="true" tabindex="-1"></a><span class="ex">QPointF</span> TemporalProjectionOpenGLWidget<span class="op">::</span>screenToWorld<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
 <span id="cb1-576"><a href="#cb1-576" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>screenToWorld<span class="op">(</span>_projection_matrix<span class="op">,</span> _widget_width<span class="op">,</span></span>
-<span id="cb1-577"><a href="#cb1-577" aria-hidden="true" tabindex="-1"></a>                                                _widget_height<span class="op">,</span> screen_pos<span class="op">);</span></span>
+<span id="cb1-577"><a href="#cb1-577" aria-hidden="true" tabindex="-1"></a>                                            _widget_height<span class="op">,</span> screen_pos<span class="op">);</span></span>
 <span id="cb1-578"><a href="#cb1-578" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-579"><a href="#cb1-579" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-580"><a href="#cb1-580" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> TemporalProjectionOpenGLWidget<span class="op">::</span>keyPressEvent<span class="op">(</span><span class="ex">QKeyEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="op">{</span></span>
@@ -1020,7 +1020,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-636"><a href="#cb1-636" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-637"><a href="#cb1-637" aria-hidden="true" tabindex="-1"></a>glm<span class="op">::</span>vec2 TemporalProjectionOpenGLWidget<span class="op">::</span>screenToNDC<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
 <span id="cb1-638"><a href="#cb1-638" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>screenToNDC<span class="op">(</span>screen_pos<span class="op">,</span> _widget_width<span class="op">,</span></span>
-<span id="cb1-639"><a href="#cb1-639" aria-hidden="true" tabindex="-1"></a>                                              _widget_height<span class="op">);</span></span>
+<span id="cb1-639"><a href="#cb1-639" aria-hidden="true" tabindex="-1"></a>                                          _widget_height<span class="op">);</span></span>
 <span id="cb1-640"><a href="#cb1-640" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-641"><a href="#cb1-641" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-642"><a href="#cb1-642" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> TemporalProjectionOpenGLWidget<span class="op">::</span>handleClickSelection<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">)</span> <span class="op">{</span></span>
@@ -1029,7 +1029,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-645"><a href="#cb1-645" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-646"><a href="#cb1-646" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Configure hit tester with reasonable tolerance</span></span>
 <span id="cb1-647"><a href="#cb1-647" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> <span class="at">const</span> world_per_pixel_x <span class="op">=</span> <span class="op">(</span>_cached_view_state<span class="op">.</span>x_max <span class="op">-</span> _cached_view_state<span class="op">.</span>x_min<span class="op">)</span> <span class="op">/</span></span>
-<span id="cb1-648"><a href="#cb1-648" aria-hidden="true" tabindex="-1"></a>                              <span class="op">(</span>_widget_width <span class="op">*</span> _cached_view_state<span class="op">.</span>x_zoom<span class="op">);</span></span>
+<span id="cb1-648"><a href="#cb1-648" aria-hidden="true" tabindex="-1"></a>                                    <span class="op">(</span>_widget_width <span class="op">*</span> _cached_view_state<span class="op">.</span>x_zoom<span class="op">);</span></span>
 <span id="cb1-649"><a href="#cb1-649" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> <span class="at">const</span> world_tolerance <span class="op">=</span> <span class="fl">10.0</span><span class="bu">f</span> <span class="op">*</span> world_per_pixel_x<span class="op">;</span><span class="co">// 10 pixel tolerance</span></span>
 <span id="cb1-650"><a href="#cb1-650" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-651"><a href="#cb1-651" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>HitTestConfig config<span class="op">;</span></span>
@@ -1364,7 +1364,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-980"><a href="#cb1-980" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
 <span id="cb1-981"><a href="#cb1-981" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-05 at 14:45:33 +0000</p>
+<p>Updated on 2026-08-06 at 14:34:08 +0000</p>
 
 
 </section>

@@ -571,7 +571,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a>LoadResult CSVLoader<span class="op">::</span>loadLineDataCSV<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> filepath<span class="op">,</span></span>
 <span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a>                                      nlohmann<span class="op">::</span>json <span class="at">const</span> <span class="op">&amp;</span> config<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span> <span class="op">{</span></span>
-<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>map<span class="op">&lt;</span>TimeFrameIndex<span class="op">,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>Line2D<span class="op">&gt;&gt;</span> line_map<span class="op">;</span></span>
+<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>pair<span class="op">&lt;</span>TimeFrameIndex<span class="op">,</span> Line2D<span class="op">&gt;&gt;</span> line_map<span class="op">;</span></span>
 <span id="cb1-191"><a href="#cb1-191" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-192"><a href="#cb1-192" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>config<span class="op">.</span>contains<span class="op">(</span><span class="st">"multi_file"</span><span class="op">)</span> <span class="op">&amp;&amp;</span> config<span class="op">[</span><span class="st">"multi_file"</span><span class="op">]</span> <span class="op">==</span> <span class="kw">true</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-193"><a href="#cb1-193" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Multi-file CSV loading</span></span>
@@ -625,8 +625,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a>            line_map <span class="op">=</span> <span class="op">::</span>load<span class="op">(</span>opts<span class="op">);</span></span>
 <span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create LineData directly</span></span>
-<span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_data <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>LineData<span class="op">&gt;(</span>line_map<span class="op">);</span></span>
+<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create LineData directly using the range constructor</span></span>
+<span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_data <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>LineData<span class="op">&gt;(</span><span class="bu">std::</span>move<span class="op">(</span>line_map<span class="op">));</span></span>
 <span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-247"><a href="#cb1-247" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Apply image size if specified in config</span></span>
 <span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Check new-style height/width fields first, fall back to legacy image_width/image_height</span></span>
@@ -1413,7 +1413,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-1029"><a href="#cb1-1029" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-1030"><a href="#cb1-1030" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-05 at 14:45:31 +0000</p>
+<p>Updated on 2026-08-06 at 14:34:06 +0000</p>
 
 
 </section>

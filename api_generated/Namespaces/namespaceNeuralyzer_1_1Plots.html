@@ -354,10 +354,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#classes" id="toc-classes" class="nav-link" data-scroll-target="#classes">Classes</a></li>
   <li><a href="#types" id="toc-types" class="nav-link" data-scroll-target="#types">Types</a></li>
   <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
+  <li><a href="#attributes" id="toc-attributes" class="nav-link" data-scroll-target="#attributes">Attributes</a></li>
   <li><a href="#types-documentation" id="toc-types-documentation" class="nav-link" data-scroll-target="#types-documentation">Types Documentation</a>
   <ul class="collapse">
   <li><a href="#enum-scalingmode" id="toc-enum-scalingmode" class="nav-link" data-scroll-target="#enum-scalingmode">enum ScalingMode</a></li>
   <li><a href="#enum-alignmentpoint" id="toc-enum-alignmentpoint" class="nav-link" data-scroll-target="#enum-alignmentpoint">enum AlignmentPoint</a></li>
+  <li><a href="#enum-viewaxisrefresh" id="toc-enum-viewaxisrefresh" class="nav-link" data-scroll-target="#enum-viewaxisrefresh">enum ViewAxisRefresh</a></li>
   <li><a href="#using-estimationparams" id="toc-using-estimationparams" class="nav-link" data-scroll-target="#using-estimationparams">using EstimationParams</a></li>
   <li><a href="#using-heatmapscaling" id="toc-using-heatmapscaling" class="nav-link" data-scroll-target="#using-heatmapscaling">using HeatmapScaling</a></li>
   <li><a href="#using-tooltiphittestfn" id="toc-using-tooltiphittestfn" class="nav-link" data-scroll-target="#using-tooltiphittestfn">using TooltipHitTestFn</a></li>
@@ -418,11 +420,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-computeorthoprojection-1" id="toc-function-computeorthoprojection-1" class="nav-link" data-scroll-target="#function-computeorthoprojection-1">function computeOrthoProjection</a></li>
   <li><a href="#function-handlepanning" id="toc-function-handlepanning" class="nav-link" data-scroll-target="#function-handlepanning">function handlePanning</a></li>
   <li><a href="#function-handlepanning-1" id="toc-function-handlepanning-1" class="nav-link" data-scroll-target="#function-handlepanning-1">function handlePanning</a></li>
+  <li><a href="#function-wheeldeltatozoomsteps" id="toc-function-wheeldeltatozoomsteps" class="nav-link" data-scroll-target="#function-wheeldeltatozoomsteps">function wheelDeltaToZoomSteps</a></li>
+  <li><a href="#function-adaptivezoommultiplier" id="toc-function-adaptivezoommultiplier" class="nav-link" data-scroll-target="#function-adaptivezoommultiplier">function adaptiveZoomMultiplier</a></li>
   <li><a href="#function-handlezoom" id="toc-function-handlezoom" class="nav-link" data-scroll-target="#function-handlezoom">function handleZoom</a></li>
+  <li><a href="#function-affectsaxis" id="toc-function-affectsaxis" class="nav-link" data-scroll-target="#function-affectsaxis">function affectsAxis</a></li>
+  <li><a href="#function-makeviewaxissyncsnapshot" id="toc-function-makeviewaxissyncsnapshot" class="nav-link" data-scroll-target="#function-makeviewaxissyncsnapshot">function makeViewAxisSyncSnapshot</a></li>
+  <li><a href="#function-computeviewaxisrefreshmask" id="toc-function-computeviewaxisrefreshmask" class="nav-link" data-scroll-target="#function-computeviewaxisrefreshmask">function computeViewAxisRefreshMask</a></li>
   <li><a href="#function-extractedgeevents" id="toc-function-extractedgeevents" class="nav-link" data-scroll-target="#function-extractedgeevents">function extractEdgeEvents</a></li>
   <li><a href="#function-runheatmappipeline" id="toc-function-runheatmappipeline" class="nav-link" data-scroll-target="#function-runheatmappipeline">function runHeatmapPipeline</a></li>
   <li><a href="#function-computesortorder" id="toc-function-computesortorder" class="nav-link" data-scroll-target="#function-computesortorder">function computeSortOrder</a></li>
   <li><a href="#function-applysortorder" id="toc-function-applysortorder" class="nav-link" data-scroll-target="#function-applysortorder">function applySortOrder</a></li>
+  </ul></li>
+  <li><a href="#attributes-documentation" id="toc-attributes-documentation" class="nav-link" data-scroll-target="#attributes-documentation">Attributes Documentation</a>
+  <ul class="collapse">
+  <li><a href="#variable-default_wheel_pixels_per_zoom_step" id="toc-variable-default_wheel_pixels_per_zoom_step" class="nav-link" data-scroll-target="#variable-default_wheel_pixels_per_zoom_step">variable DEFAULT_WHEEL_PIXELS_PER_ZOOM_STEP</a></li>
+  <li><a href="#variable-wheel_angle_delta_per_notch" id="toc-variable-wheel_angle_delta_per_notch" class="nav-link" data-scroll-target="#variable-wheel_angle_delta_per_notch">variable WHEEL_ANGLE_DELTA_PER_NOTCH</a></li>
+  <li><a href="#variable-adaptive_zoom_range_fraction" id="toc-variable-adaptive_zoom_range_fraction" class="nav-link" data-scroll-target="#variable-adaptive_zoom_range_fraction">variable ADAPTIVE_ZOOM_RANGE_FRACTION</a></li>
+  <li><a href="#variable-min_adaptive_visible_range_scale" id="toc-variable-min_adaptive_visible_range_scale" class="nav-link" data-scroll-target="#variable-min_adaptive_visible_range_scale">variable MIN_ADAPTIVE_VISIBLE_RANGE_SCALE</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -531,6 +545,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotTooltipManager.html">Neuralyzer::Plots::PlotTooltipManager</a></strong> <br>Manages tooltip lifecycle for plot widgets.</td>
 </tr>
 <tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfile.html">Neuralyzer::Plots::PlotZoomProfile</a></strong> <br>Runtime-gated zoom/paint profiler (singleton).</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfileAxisPaintScope.html">Neuralyzer::Plots::PlotZoomProfileAxisPaintScope</a></strong> <br>RAII scope for axis paintEvent profiling.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfilePaintGLScope.html">Neuralyzer::Plots::PlotZoomProfilePaintGLScope</a></strong> <br>RAII scope for paintGL profiling.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfileWheelScope.html">Neuralyzer::Plots::PlotZoomProfileWheelScope</a></strong> <br>RAII scope for wheelEvent synchronous profiling.</td>
+</tr>
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PreparedAlignmentWindows.html">Neuralyzer::Plots::PreparedAlignmentWindows</a></strong> <br>Prepared row metadata for a plot-aligned gather.</td>
 </tr>
@@ -545,6 +575,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1UnitGatherContext.html">Neuralyzer::Plots::UnitGatherContext</a></strong> <br>Bundles a <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> with its <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> and source key.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1ViewAxisSyncSnapshot.html">Neuralyzer::Plots::ViewAxisSyncSnapshot</a></strong> <br>Snapshot of view fields that affect axis display.</td>
 </tr>
 </tbody>
 </table>
@@ -568,22 +602,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-alignmentpoint">AlignmentPoint</a></strong> { Start, End, Center}<br>Plot-facing interval alignment point.</td>
 </tr>
 <tr class="odd">
+<td>enum class std::uint8_t</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-viewaxisrefresh">ViewAxisRefresh</a></strong> { None = 0, Horizontal = 1 &lt;&lt; 0, Vertical = 1 &lt;&lt; 1, Both = Horizontal</td>
+</tr>
+<tr class="even">
 <td>using std::variant&lt; <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1BinningParams.html">BinningParams</a>, <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1GaussianKernelParams.html">GaussianKernelParams</a>, <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1CausalExponentialParams.html">CausalExponentialParams</a> &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#using-estimationparams">EstimationParams</a></strong> <br>Tagged union of all supported rate estimation method parameter structs.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>using <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-scalingmode">ScalingMode</a></td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#using-heatmapscaling">HeatmapScaling</a></strong></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>using std::function&lt; std::optional&lt; <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PlotTooltipHit.html">PlotTooltipHit</a> &gt;(QPoint screen_pos)&gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#using-tooltiphittestfn">TooltipHitTestFn</a></strong> <br>Callback that performs a hit test at a screen position.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>using std::function&lt; QString(<a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PlotTooltipHit.html">PlotTooltipHit</a> const &amp;hit)&gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#using-tooltiptextfn">TooltipTextFn</a></strong> <br>Callback that generates tooltip text from a hit result.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>using std::function&lt; <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PlotTooltipContent.html">PlotTooltipContent</a>(<a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PlotTooltipHit.html">PlotTooltipHit</a> const &amp;hit)&gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#using-tooltipcontentfn">TooltipContentFn</a></strong> <br>Callback that generates rich tooltip content from a hit result.</td>
 </tr>
@@ -809,24 +847,73 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-handlepanning">handlePanning</a></strong>(State &amp; state, ViewState const &amp; view_state, int delta_x, int delta_y, int widget_width, int widget_height)<br>Apply pan from view state with bounds (derives x_range/y_range).</td>
 </tr>
 <tr class="odd">
+<td>float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-wheeldeltatozoomsteps">wheelDeltaToZoomSteps</a></strong>(int pixel_delta_y, int angle_delta_y, int angle_delta_x, float pixels_per_zoom_step =<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#variable-default-wheel-pixels-per-zoom-step">DEFAULT_WHEEL_PIXELS_PER_ZOOM_STEP</a>)<br>Convert raw wheel deltas to fractional zoom steps for <a href="">handleZoom()</a>.</td>
+</tr>
+<tr class="even">
+<td>float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-adaptivezoommultiplier">adaptiveZoomMultiplier</a></strong>(float delta)<br>Compute the zoom multiplier for adaptive range-proportional wheel zoom.</td>
+</tr>
+<tr class="odd">
 <td>template &lt;ZoomPanSettable State,ViewStateLike ViewState&gt; <br>void</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-handlezoom">handleZoom</a></strong>(State &amp; state, ViewState const &amp; view_state, float delta, bool y_only, bool both_axes)<br>Apply a scroll-wheel zoom step to the state.</td>
 </tr>
 <tr class="even">
+<td>constexpr bool</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-affectsaxis">affectsAxis</a></strong>(<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-viewaxisrefresh">ViewAxisRefresh</a> mask, <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-viewaxisrefresh">ViewAxisRefresh</a> axis)<br>Test whether <code>mask</code> includes <code>axis</code>.</td>
+</tr>
+<tr class="odd">
+<td>template &lt;ViewStateZoomPanLike ViewState&gt; <br><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1ViewAxisSyncSnapshot.html">ViewAxisSyncSnapshot</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-makeviewaxissyncsnapshot">makeViewAxisSyncSnapshot</a></strong>(ViewState const &amp; view_state)<br>Capture zoom/pan fields from a view state.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-viewaxisrefresh">ViewAxisRefresh</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-computeviewaxisrefreshmask">computeViewAxisRefreshMask</a></strong>(<a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1ViewAxisSyncSnapshot.html">ViewAxisSyncSnapshot</a> const &amp; before, <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1ViewAxisSyncSnapshot.html">ViewAxisSyncSnapshot</a> const &amp; after)<br>Determine which axes need refresh between two snapshots.</td>
+</tr>
+<tr class="odd">
 <td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-extractedgeevents">extractEdgeEvents</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; intervals, <a href="../../api_generated/Files/PlotAlignmentData_8hpp.html#enum-intervalalignmenttype">IntervalAlignmentType</a> edge)<br>Extract edge events from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1HeatmapPipelineResult.html">HeatmapPipelineResult</a></td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-runheatmappipeline">runHeatmapPipeline</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, std::vector&lt; std::string &gt; const &amp; unit_keys, <a href="../../api_generated/Classes/structPlotAlignmentData.html">PlotAlignmentData</a> const &amp; alignment_data, <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1HeatmapPipelineConfig.html">HeatmapPipelineConfig</a> const &amp; config)<br>Execute the heatmap data pipeline without an OpenGL context.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>std::vector&lt; std::size_t &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-computesortorder">computeSortOrder</a></strong>(<a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1HeatmapPipelineResult.html">HeatmapPipelineResult</a> const &amp; result, std::vector&lt; std::string &gt; const &amp; unit_keys, <a href="../../api_generated/Files/HeatmapState_8hpp.html#enum-heatmapsortmode">HeatmapSortMode</a> sort_mode, bool ascending)<br>Compute a permutation vector that sorts the pipeline rows.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>void</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-applysortorder">applySortOrder</a></strong>(<a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1HeatmapPipelineResult.html">HeatmapPipelineResult</a> &amp; result, std::vector&lt; std::string &gt; &amp; unit_keys, std::vector&lt; std::size_t &gt; const &amp; sort_indices)<br>Apply a precomputed permutation to the pipeline result and unit keys.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="attributes" class="level2">
+<h2 class="anchored" data-anchor-id="attributes">Attributes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>constexpr float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#variable-default-wheel-pixels-per-zoom-step">DEFAULT_WHEEL_PIXELS_PER_ZOOM_STEP</a></strong> <br>Pixels of vertical trackpad movement equivalent to one mouse-wheel notch.</td>
+</tr>
+<tr class="even">
+<td>constexpr float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#variable-wheel-angle-delta-per-notch">WHEEL_ANGLE_DELTA_PER_NOTCH</a></strong> <br>Qt angleDelta units per physical wheel notch (8 degrees x 15).</td>
+</tr>
+<tr class="odd">
+<td>constexpr float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#variable-adaptive-zoom-range-fraction">ADAPTIVE_ZOOM_RANGE_FRACTION</a></strong> <br>Visible-range fraction removed per zoom step (matches <a href="">DataViewer</a> adaptive normal mode).</td>
+</tr>
+<tr class="even">
+<td>constexpr float</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#variable-min-adaptive-visible-range-scale">MIN_ADAPTIVE_VISIBLE_RANGE_SCALE</a></strong> <br>Minimum visible-range scale factor in a single wheel event (prevents runaway zoom).</td>
 </tr>
 </tbody>
 </table>
@@ -914,6 +1001,41 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </table>
 <p>Plot-facing interval alignment point.</p>
 <p>This mirrors the UI choices without depending on <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> interval adapters.</p>
+</section>
+<section id="enum-viewaxisrefresh" class="level3">
+<h3 class="anchored" data-anchor-id="enum-viewaxisrefresh">enum ViewAxisRefresh</h3>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Enumerator</th>
+<th>Value</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>None</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Horizontal</td>
+<td>1 &lt;&lt; 0</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Vertical</td>
+<td>1 &lt;&lt; 1</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Both</td>
+<td>Horizontal | Vertical</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>Which plot axes need refresh after a view-state change.</p>
 </section>
 <section id="using-estimationparams" class="level3">
 <h3 class="anchored" data-anchor-id="using-estimationparams">using EstimationParams</h3>
@@ -1852,17 +1974,49 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p>Convenience overload for view states that have x_min, x_max, y_min, y_max. Derives x_range and y_range and calls the 8-arg handlePanning.</p>
 </section>
+<section id="function-wheeldeltatozoomsteps" class="level3">
+<h3 class="anchored" data-anchor-id="function-wheeldeltatozoomsteps">function wheelDeltaToZoomSteps</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">float</span> wheelDeltaToZoomSteps<span class="op">(</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> pixel_delta_y<span class="op">,</span></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> angle_delta_y<span class="op">,</span></span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> angle_delta_x<span class="op">,</span></span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> pixels_per_zoom_step <span class="op">=</span>DEFAULT_WHEEL_PIXELS_PER_ZOOM_STEP</span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Convert raw wheel deltas to fractional zoom steps for <a href="">handleZoom()</a>.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>pixel_delta_y</strong> Vertical pixel delta from QWheelEvent::pixelDelta().</li>
+<li><strong>angle_delta_y</strong> Vertical angle delta from QWheelEvent::angleDelta().</li>
+<li><strong>angle_delta_x</strong> Horizontal angle delta from QWheelEvent::angleDelta().</li>
+<li><strong>pixels_per_zoom_step</strong> Pixels of vertical movement per one zoom step.</li>
+</ul>
+<p><strong>Return</strong>: Fractional zoom steps; positive = zoom in.</p>
+<p>Prefers <code>pixel_delta_y</code> when non-zero (trackpads and smooth scrolling). Otherwise uses <code>angle_delta_y</code>, falling back to <code>angle_delta_x</code> on platforms (e.g.&nbsp;WSL/X11) that redirect vertical scroll to the horizontal axis.</p>
+</section>
+<section id="function-adaptivezoommultiplier" class="level3">
+<h3 class="anchored" data-anchor-id="function-adaptivezoommultiplier">function adaptiveZoomMultiplier</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">float</span> adaptiveZoomMultiplier<span class="op">(</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> delta</span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Compute the zoom multiplier for adaptive range-proportional wheel zoom.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>delta</strong> Fractional wheel steps from <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-wheeldeltatozoomsteps">wheelDeltaToZoomSteps()</a>.</li>
+</ul>
+<p><strong>Return</strong>: Multiplier to apply to the current axis zoom value.</p>
+<p>Each zoom step changes the visible axis range by <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#variable-adaptive-zoom-range-fraction">ADAPTIVE_ZOOM_RANGE_FRACTION</a> of the current visible span (3% per step, matching <a href="../../api_generated/Namespaces/namespaceDataViewer.html">DataViewer</a> adaptive normal mode). Positive <code>delta</code> zooms in; negative <code>delta</code> zooms out.</p>
+</section>
 <section id="function-handlezoom" class="level3">
 <h3 class="anchored" data-anchor-id="function-handlezoom">function handleZoom</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ZoomPanSettable State<span class="op">,</span></span>
-<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>ViewStateLike ViewState<span class="op">&gt;</span></span>
-<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> handleZoom<span class="op">(</span></span>
-<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>    State <span class="op">&amp;</span> state<span class="op">,</span></span>
-<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
-<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> delta<span class="op">,</span></span>
-<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> y_only<span class="op">,</span></span>
-<span id="cb58-8"><a href="#cb58-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> both_axes</span>
-<span id="cb58-9"><a href="#cb58-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb60"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ZoomPanSettable State<span class="op">,</span></span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>ViewStateLike ViewState<span class="op">&gt;</span></span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> handleZoom<span class="op">(</span></span>
+<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>    State <span class="op">&amp;</span> state<span class="op">,</span></span>
+<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state<span class="op">,</span></span>
+<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> delta<span class="op">,</span></span>
+<span id="cb60-7"><a href="#cb60-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> y_only<span class="op">,</span></span>
+<span id="cb60-8"><a href="#cb60-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> both_axes</span>
+<span id="cb60-9"><a href="#cb60-9" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply a scroll-wheel zoom step to the state.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1877,19 +2031,44 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>State</strong> A type satisfying ZoomPanSettable.</li>
 <li><strong>ViewState</strong> A type satisfying ViewStateLike.</li>
 </ul>
-<p>The zoom factor is <code>1.1^delta</code>. Modifier keys select the axis:</p>
+<p>Uses adaptive range-proportional scaling: each wheel step changes the visible span by 3% of the current range (same feel as <a href="../../api_generated/Namespaces/namespaceDataViewer.html">DataViewer</a> adaptive mode). Modifier keys select the axis:</p>
 <ul>
 <li>Default (no modifier): X-axis only</li>
 <li><code>y_only</code> (Shift): Y-axis only</li>
 <li><code>both_axes</code> (Ctrl): Both axes simultaneously</li>
 </ul>
 </section>
+<section id="function-affectsaxis" class="level3">
+<h3 class="anchored" data-anchor-id="function-affectsaxis">function affectsAxis</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb61"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> affectsAxis<span class="op">(</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>    ViewAxisRefresh mask<span class="op">,</span></span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>    ViewAxisRefresh axis</span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Test whether <code>mask</code> includes <code>axis</code>.</p>
+</section>
+<section id="function-makeviewaxissyncsnapshot" class="level3">
+<h3 class="anchored" data-anchor-id="function-makeviewaxissyncsnapshot">function makeViewAxisSyncSnapshot</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb62"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ViewStateZoomPanLike ViewState<span class="op">&gt;</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>ViewAxisSyncSnapshot makeViewAxisSyncSnapshot<span class="op">(</span></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state</span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Capture zoom/pan fields from a view state.</p>
+<p>Capture zoom/pan and data bounds from a view state.</p>
+</section>
+<section id="function-computeviewaxisrefreshmask" class="level3">
+<h3 class="anchored" data-anchor-id="function-computeviewaxisrefreshmask">function computeViewAxisRefreshMask</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb63"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> ViewAxisRefresh computeViewAxisRefreshMask<span class="op">(</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>    ViewAxisSyncSnapshot <span class="at">const</span> <span class="op">&amp;</span> before<span class="op">,</span></span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>    ViewAxisSyncSnapshot <span class="at">const</span> <span class="op">&amp;</span> after</span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Determine which axes need refresh between two snapshots.</p>
+</section>
 <section id="function-extractedgeevents" class="level3">
 <h3 class="anchored" data-anchor-id="function-extractedgeevents">function extractEdgeEvents</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> extractEdgeEvents<span class="op">(</span></span>
-<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> intervals<span class="op">,</span></span>
-<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>    IntervalAlignmentType edge</span>
-<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb64"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> extractEdgeEvents<span class="op">(</span></span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> intervals<span class="op">,</span></span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a>    IntervalAlignmentType edge</span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Extract edge events from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1901,12 +2080,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-runheatmappipeline" class="level3">
 <h3 class="anchored" data-anchor-id="function-runheatmappipeline">function runHeatmapPipeline</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb60"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>HeatmapPipelineResult runHeatmapPipeline<span class="op">(</span></span>
-<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
-<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
-<span id="cb60-4"><a href="#cb60-4" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data<span class="op">,</span></span>
-<span id="cb60-5"><a href="#cb60-5" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineConfig <span class="at">const</span> <span class="op">&amp;</span> config</span>
-<span id="cb60-6"><a href="#cb60-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb65"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a>HeatmapPipelineResult runHeatmapPipeline<span class="op">(</span></span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
+<span id="cb65-4"><a href="#cb65-4" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data<span class="op">,</span></span>
+<span id="cb65-5"><a href="#cb65-5" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineConfig <span class="at">const</span> <span class="op">&amp;</span> config</span>
+<span id="cb65-6"><a href="#cb65-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Execute the heatmap data pipeline without an OpenGL context.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1926,12 +2105,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-computesortorder" class="level3">
 <h3 class="anchored" data-anchor-id="function-computesortorder">function computeSortOrder</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb61"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> computeSortOrder<span class="op">(</span></span>
-<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineResult <span class="at">const</span> <span class="op">&amp;</span> result<span class="op">,</span></span>
-<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
-<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a>    HeatmapSortMode sort_mode<span class="op">,</span></span>
-<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> ascending</span>
-<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb66"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> computeSortOrder<span class="op">(</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineResult <span class="at">const</span> <span class="op">&amp;</span> result<span class="op">,</span></span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a>    HeatmapSortMode sort_mode<span class="op">,</span></span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> ascending</span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Compute a permutation vector that sorts the pipeline rows.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1945,11 +2124,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-applysortorder" class="level3">
 <h3 class="anchored" data-anchor-id="function-applysortorder">function applySortOrder</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb62"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> applySortOrder<span class="op">(</span></span>
-<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineResult <span class="op">&amp;</span> result<span class="op">,</span></span>
-<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
-<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> sort_indices</span>
-<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb67"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> applySortOrder<span class="op">(</span></span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineResult <span class="op">&amp;</span> result<span class="op">,</span></span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> sort_indices</span>
+<span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply a precomputed permutation to the pipeline result and unit keys.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1958,8 +2137,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>sort_indices</strong> Permutation from <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-computesortorder">computeSortOrder()</a></li>
 </ul>
 <p>Reorders <code>result.rows</code>, <code>result.rate_estimates</code>, and <code>unit_keys</code> in-place according to the given index permutation.</p>
+</section>
+</section>
+<section id="attributes-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="attributes-documentation">Attributes Documentation</h2>
+<section id="variable-default_wheel_pixels_per_zoom_step" class="level3">
+<h3 class="anchored" data-anchor-id="variable-default_wheel_pixels_per_zoom_step">variable DEFAULT_WHEEL_PIXELS_PER_ZOOM_STEP</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb68"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">float</span> DEFAULT_WHEEL_PIXELS_PER_ZOOM_STEP <span class="op">=</span> <span class="fl">20.0</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Pixels of vertical trackpad movement equivalent to one mouse-wheel notch.</p>
+</section>
+<section id="variable-wheel_angle_delta_per_notch" class="level3">
+<h3 class="anchored" data-anchor-id="variable-wheel_angle_delta_per_notch">variable WHEEL_ANGLE_DELTA_PER_NOTCH</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb69"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">float</span> WHEEL_ANGLE_DELTA_PER_NOTCH <span class="op">=</span> <span class="fl">120.0</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Qt angleDelta units per physical wheel notch (8 degrees x 15).</p>
+</section>
+<section id="variable-adaptive_zoom_range_fraction" class="level3">
+<h3 class="anchored" data-anchor-id="variable-adaptive_zoom_range_fraction">variable ADAPTIVE_ZOOM_RANGE_FRACTION</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb70"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">float</span> ADAPTIVE_ZOOM_RANGE_FRACTION <span class="op">=</span> <span class="fl">0.03</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Visible-range fraction removed per zoom step (matches <a href="">DataViewer</a> adaptive normal mode).</p>
+</section>
+<section id="variable-min_adaptive_visible_range_scale" class="level3">
+<h3 class="anchored" data-anchor-id="variable-min_adaptive_visible_range_scale">variable MIN_ADAPTIVE_VISIBLE_RANGE_SCALE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb71"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">float</span> MIN_ADAPTIVE_VISIBLE_RANGE_SCALE <span class="op">=</span> <span class="fl">0.01</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Minimum visible-range scale factor in a single wheel event (prevents runaway zoom).</p>
 <hr>
-<p>Updated on 2026-08-05 at 14:45:28 +0000</p>
+<p>Updated on 2026-08-06 at 14:34:03 +0000</p>
 
 
 </section>

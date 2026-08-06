@@ -614,25 +614,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-230"><a href="#cb1-230" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> OnionSkinViewOpenGLWidget<span class="op">::</span>wheelEvent<span class="op">(</span><span class="ex">QWheelEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> <span class="at">const</span> delta <span class="op">=</span> event<span class="op">-&gt;</span>angleDelta<span class="op">().</span>y<span class="op">()</span> <span class="op">/</span> <span class="fl">120.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> y_only <span class="op">=</span> <span class="op">(</span>event<span class="op">-&gt;</span>modifiers<span class="op">()</span> <span class="op">&amp;</span> <span class="ex">Qt::ShiftModifier</span><span class="op">)</span> <span class="op">!=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> both_axes <span class="op">=</span> <span class="op">(</span>event<span class="op">-&gt;</span>modifiers<span class="op">()</span> <span class="op">&amp;</span> <span class="ex">Qt::ControlModifier</span><span class="op">)</span> <span class="op">!=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a>    handleZoom<span class="op">(</span>delta<span class="op">,</span> y_only<span class="op">,</span> both_axes<span class="op">);</span></span>
-<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a>    event<span class="op">-&gt;</span>accept<span class="op">();</span></span>
-<span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-239"><a href="#cb1-239" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> OnionSkinViewOpenGLWidget<span class="op">::</span>onStateChanged<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a>    _scene_dirty <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
-<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> OnionSkinViewOpenGLWidget<span class="op">::</span>onViewStateChanged<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_state<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-247"><a href="#cb1-247" aria-hidden="true" tabindex="-1"></a>        _cached_view_state <span class="op">=</span> _state<span class="op">-&gt;</span>viewState<span class="op">();</span></span>
-<span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-249"><a href="#cb1-249" aria-hidden="true" tabindex="-1"></a>    updateMatrices<span class="op">();</span></span>
-<span id="cb1-250"><a href="#cb1-250" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
-<span id="cb1-251"><a href="#cb1-251" aria-hidden="true" tabindex="-1"></a>    <span class="ex">emit</span> viewBoundsChanged<span class="op">();</span></span>
+<span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> <span class="at">const</span> delta <span class="op">=</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>wheelDeltaToZoomSteps<span class="op">(</span></span>
+<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a>            event<span class="op">-&gt;</span>pixelDelta<span class="op">().</span>y<span class="op">(),</span> event<span class="op">-&gt;</span>angleDelta<span class="op">().</span>y<span class="op">(),</span> event<span class="op">-&gt;</span>angleDelta<span class="op">().</span>x<span class="op">());</span></span>
+<span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> y_only <span class="op">=</span> <span class="op">(</span>event<span class="op">-&gt;</span>modifiers<span class="op">()</span> <span class="op">&amp;</span> <span class="ex">Qt::ShiftModifier</span><span class="op">)</span> <span class="op">!=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> both_axes <span class="op">=</span> <span class="op">(</span>event<span class="op">-&gt;</span>modifiers<span class="op">()</span> <span class="op">&amp;</span> <span class="ex">Qt::ControlModifier</span><span class="op">)</span> <span class="op">!=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a>    handleZoom<span class="op">(</span>delta<span class="op">,</span> y_only<span class="op">,</span> both_axes<span class="op">);</span></span>
+<span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a>    event<span class="op">-&gt;</span>accept<span class="op">();</span></span>
+<span id="cb1-239"><a href="#cb1-239" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> OnionSkinViewOpenGLWidget<span class="op">::</span>onStateChanged<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a>    _scene_dirty <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
+<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> OnionSkinViewOpenGLWidget<span class="op">::</span>onViewStateChanged<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-247"><a href="#cb1-247" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a>        _cached_view_state <span class="op">=</span> _state<span class="op">-&gt;</span>viewState<span class="op">();</span></span>
+<span id="cb1-249"><a href="#cb1-249" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-250"><a href="#cb1-250" aria-hidden="true" tabindex="-1"></a>    updateMatrices<span class="op">();</span></span>
+<span id="cb1-251"><a href="#cb1-251" aria-hidden="true" tabindex="-1"></a>    update<span class="op">();</span></span>
 <span id="cb1-252"><a href="#cb1-252" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-253"><a href="#cb1-253" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-254"><a href="#cb1-254" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> OnionSkinViewOpenGLWidget<span class="op">::</span>onDataKeysChanged<span class="op">()</span> <span class="op">{</span></span>
@@ -1086,7 +1086,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-702"><a href="#cb1-702" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-703"><a href="#cb1-703" aria-hidden="true" tabindex="-1"></a><span class="ex">QPointF</span> OnionSkinViewOpenGLWidget<span class="op">::</span>screenToWorld<span class="op">(</span><span class="ex">QPoint</span> <span class="at">const</span> <span class="op">&amp;</span> screen_pos<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
 <span id="cb1-704"><a href="#cb1-704" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>screenToWorld<span class="op">(</span>_projection_matrix<span class="op">,</span> _widget_width<span class="op">,</span></span>
-<span id="cb1-705"><a href="#cb1-705" aria-hidden="true" tabindex="-1"></a>                                                _widget_height<span class="op">,</span> screen_pos<span class="op">);</span></span>
+<span id="cb1-705"><a href="#cb1-705" aria-hidden="true" tabindex="-1"></a>                                            _widget_height<span class="op">,</span> screen_pos<span class="op">);</span></span>
 <span id="cb1-706"><a href="#cb1-706" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-707"><a href="#cb1-707" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-708"><a href="#cb1-708" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> OnionSkinViewOpenGLWidget<span class="op">::</span>findNearestPointAtCurrentTime<span class="op">(</span></span>
@@ -1110,7 +1110,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-726"><a href="#cb1-726" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> best_id<span class="op">;</span></span>
 <span id="cb1-727"><a href="#cb1-727" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-05 at 14:45:33 +0000</p>
+<p>Updated on 2026-08-06 at 14:34:08 +0000</p>
 
 
 </section>
