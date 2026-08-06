@@ -285,7 +285,8 @@ void TemporalProjectionOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) 
 }
 
 void TemporalProjectionOpenGLWidget::wheelEvent(QWheelEvent * event) {
-    float const delta = event->angleDelta().y() / 120.0f;
+    float const delta = Neuralyzer::Plots::wheelDeltaToZoomSteps(
+            event->pixelDelta().y(), event->angleDelta().y(), event->angleDelta().x());
     bool const y_only = (event->modifiers() & Qt::ShiftModifier) != 0;
     bool const both_axes = (event->modifiers() & Qt::ControlModifier) != 0;
     handleZoom(delta, y_only, both_axes);
@@ -303,7 +304,6 @@ void TemporalProjectionOpenGLWidget::onViewStateChanged() {
     }
     updateMatrices();
     update();
-    emit viewBoundsChanged();
 }
 
 void TemporalProjectionOpenGLWidget::onDataKeysChanged() {
@@ -574,7 +574,7 @@ void TemporalProjectionOpenGLWidget::handleZoom(float delta, bool y_only, bool b
 
 QPointF TemporalProjectionOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
     return Neuralyzer::Plots::screenToWorld(_projection_matrix, _widget_width,
-                                                _widget_height, screen_pos);
+                                            _widget_height, screen_pos);
 }
 
 void TemporalProjectionOpenGLWidget::keyPressEvent(QKeyEvent * event) {
@@ -636,7 +636,7 @@ void TemporalProjectionOpenGLWidget::clearSelection() {
 
 glm::vec2 TemporalProjectionOpenGLWidget::screenToNDC(QPoint const & screen_pos) const {
     return Neuralyzer::Plots::screenToNDC(screen_pos, _widget_width,
-                                              _widget_height);
+                                          _widget_height);
 }
 
 void TemporalProjectionOpenGLWidget::handleClickSelection(QPoint const & screen_pos) {
@@ -645,7 +645,7 @@ void TemporalProjectionOpenGLWidget::handleClickSelection(QPoint const & screen_
 
     // Configure hit tester with reasonable tolerance
     float const world_per_pixel_x = (_cached_view_state.x_max - _cached_view_state.x_min) /
-                              (_widget_width * _cached_view_state.x_zoom);
+                                    (_widget_width * _cached_view_state.x_zoom);
     float const world_tolerance = 10.0f * world_per_pixel_x;// 10 pixel tolerance
 
     CorePlotting::HitTestConfig config;

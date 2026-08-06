@@ -30,8 +30,13 @@ ScatterPlotState::ScatterPlotState(QObject * parent)
     };
     connect(_horizontal_axis_state.get(), &HorizontalAxisState::rangeChanged,
             this, syncHorizontalData);
+    // rangeUpdated (from setRangeSilent) only syncs serialization data.
+    // setRangeSilent is called during view-only sync (zoom/pan) and must not
+    // emit stateChanged(), which would trigger a full scene rebuild every wheel tick.
     connect(_horizontal_axis_state.get(), &HorizontalAxisState::rangeUpdated,
-            this, syncHorizontalData);
+            this, [this]() {
+                _data.horizontal_axis = _horizontal_axis_state->data();
+            });
 
     auto syncVerticalData = [this]() {
         _data.vertical_axis = _vertical_axis_state->data();
@@ -41,7 +46,9 @@ ScatterPlotState::ScatterPlotState(QObject * parent)
     connect(_vertical_axis_state.get(), &VerticalAxisState::rangeChanged,
             this, syncVerticalData);
     connect(_vertical_axis_state.get(), &VerticalAxisState::rangeUpdated,
-            this, syncVerticalData);
+            this, [this]() {
+                _data.vertical_axis = _vertical_axis_state->data();
+            });
 
     // Sync glyph style state with serializable data
     _glyph_style_state->setStyleSilent(_data.glyph_style);
@@ -89,16 +96,16 @@ void ScatterPlotState::setBackgroundColor(QString const & hex_color) {
 void ScatterPlotState::setXZoom(double zoom) {
     if (_data.view_state.x_zoom != zoom) {
         _data.view_state.x_zoom = zoom;
-        markDirty();
         emit viewStateChanged();
+        // View-only: projection matrix update, no scene rebuild.
     }
 }
 
 void ScatterPlotState::setYZoom(double zoom) {
     if (_data.view_state.y_zoom != zoom) {
         _data.view_state.y_zoom = zoom;
-        markDirty();
         emit viewStateChanged();
+        // View-only: projection matrix update, no scene rebuild.
     }
 }
 
@@ -106,8 +113,8 @@ void ScatterPlotState::setPan(double x_pan, double y_pan) {
     if (_data.view_state.x_pan != x_pan || _data.view_state.y_pan != y_pan) {
         _data.view_state.x_pan = x_pan;
         _data.view_state.y_pan = y_pan;
-        markDirty();
         emit viewStateChanged();
+        // View-only: projection matrix update, no scene rebuild.
     }
 }
 

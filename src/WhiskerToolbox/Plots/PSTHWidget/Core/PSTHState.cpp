@@ -269,7 +269,6 @@ void PSTHState::setBackgroundColor(QString const & hex_color) {
 void PSTHState::setXZoom(double zoom) {
     if (_data.view_state.x_zoom != zoom) {
         _data.view_state.x_zoom = zoom;
-        markDirty();
         emit viewStateChanged();
     }
 }
@@ -277,7 +276,6 @@ void PSTHState::setXZoom(double zoom) {
 void PSTHState::setYZoom(double zoom) {
     if (_data.view_state.y_zoom != zoom) {
         _data.view_state.y_zoom = zoom;
-        markDirty();
         emit viewStateChanged();
     }
 }
@@ -286,7 +284,6 @@ void PSTHState::setPan(double x_pan, double y_pan) {
     if (_data.view_state.x_pan != x_pan || _data.view_state.y_pan != y_pan) {
         _data.view_state.x_pan = x_pan;
         _data.view_state.y_pan = y_pan;
-        markDirty();
         emit viewStateChanged();
     }
 }

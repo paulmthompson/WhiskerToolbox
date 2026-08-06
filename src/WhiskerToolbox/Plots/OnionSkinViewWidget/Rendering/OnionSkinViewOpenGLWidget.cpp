@@ -230,7 +230,8 @@ void OnionSkinViewOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
 }
 
 void OnionSkinViewOpenGLWidget::wheelEvent(QWheelEvent * event) {
-    float const delta = event->angleDelta().y() / 120.0f;
+    float const delta = Neuralyzer::Plots::wheelDeltaToZoomSteps(
+            event->pixelDelta().y(), event->angleDelta().y(), event->angleDelta().x());
     bool const y_only = (event->modifiers() & Qt::ShiftModifier) != 0;
     bool const both_axes = (event->modifiers() & Qt::ControlModifier) != 0;
     handleZoom(delta, y_only, both_axes);
@@ -248,7 +249,6 @@ void OnionSkinViewOpenGLWidget::onViewStateChanged() {
     }
     updateMatrices();
     update();
-    emit viewBoundsChanged();
 }
 
 void OnionSkinViewOpenGLWidget::onDataKeysChanged() {
@@ -702,7 +702,7 @@ void OnionSkinViewOpenGLWidget::handleZoom(float delta, bool y_only, bool both_a
 
 QPointF OnionSkinViewOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
     return Neuralyzer::Plots::screenToWorld(_projection_matrix, _widget_width,
-                                                _widget_height, screen_pos);
+                                            _widget_height, screen_pos);
 }
 
 std::optional<EntityId> OnionSkinViewOpenGLWidget::findNearestPointAtCurrentTime(

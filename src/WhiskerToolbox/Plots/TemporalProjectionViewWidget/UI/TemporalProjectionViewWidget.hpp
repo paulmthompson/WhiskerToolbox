@@ -12,12 +12,14 @@
  */
 
 #include "DataTypeEnum/DM_DataType.hpp"
+#include "Plots/Common/PlotViewAxisRefresh.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QResizeEvent>
 #include <QWidget>
 
 #include <memory>
+#include <optional>
 
 class DataManager;
 class GroupManager;
@@ -77,7 +79,7 @@ public:
      *
      * @param position The new TimePosition
      */
-    void _onTimeChanged(const TimePosition& position);
+    void _onTimeChanged(TimePosition const & position);
 
 signals:
     void timePositionSelected(TimePosition position);
@@ -112,6 +114,8 @@ private:
 
     /// DataManager-level observer ID for detecting key additions/removals
     int _dm_observer_id{-1};
+
+    std::optional<Neuralyzer::Plots::ViewAxisSyncSnapshot> _view_axis_snapshot;
 };
 
 #endif// TEMPORAL_PROJECTION_VIEW_WIDGET_HPP

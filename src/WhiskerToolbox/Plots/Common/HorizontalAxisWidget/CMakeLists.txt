@@ -24,6 +24,7 @@ target_link_libraries(HorizontalAxisWidget PRIVATE
     Qt6::Widgets 
     Qt6::Core 
     Qt6::Gui
+    PlotZoomProfile
 )
 
 target_link_libraries(HorizontalAxisWidget PUBLIC CorePlotting)

@@ -63,8 +63,6 @@ HeatmapState::HeatmapState(QObject * parent)
     connect(_relative_time_axis_state.get(), &RelativeTimeAxisState::rangeUpdated,
             this, [this]() {
                 _data.time_axis = _relative_time_axis_state->data();
-                markDirty();
-                emit stateChanged();
             });
 
     // Sync vertical axis state to data
@@ -76,7 +74,9 @@ HeatmapState::HeatmapState(QObject * parent)
     connect(_vertical_axis_state.get(), &VerticalAxisState::rangeChanged,
             this, syncVerticalAxisData);
     connect(_vertical_axis_state.get(), &VerticalAxisState::rangeUpdated,
-            this, syncVerticalAxisData);
+            this, [this]() {
+                _data.vertical_axis = _vertical_axis_state->data();
+            });
 }
 
 QString HeatmapState::getDisplayName() const { return QString::fromStdString(_data.display_name); }
@@ -127,7 +127,6 @@ void HeatmapState::setWindowSize(double window_size) {
 void HeatmapState::setXZoom(double zoom) {
     if (_data.view_state.x_zoom != zoom) {
         _data.view_state.x_zoom = zoom;
-        markDirty();
         emit viewStateChanged();
     }
 }
@@ -135,7 +134,6 @@ void HeatmapState::setXZoom(double zoom) {
 void HeatmapState::setYZoom(double zoom) {
     if (_data.view_state.y_zoom != zoom) {
         _data.view_state.y_zoom = zoom;
-        markDirty();
         emit viewStateChanged();
     }
 }
@@ -144,7 +142,6 @@ void HeatmapState::setPan(double x_pan, double y_pan) {
     if (_data.view_state.x_pan != x_pan || _data.view_state.y_pan != y_pan) {
         _data.view_state.x_pan = x_pan;
         _data.view_state.y_pan = y_pan;
-        markDirty();
         emit viewStateChanged();
     }
 }

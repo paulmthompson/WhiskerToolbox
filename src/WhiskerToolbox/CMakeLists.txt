@@ -100,6 +100,7 @@ add_subdirectory(TriageSession_Widget)
 add_subdirectory(Plots/Common/PlotAlignmentWidget)
 
 # Qt, CorePlotting - Shared relative time axis widget
+add_subdirectory(Plots/Common/PlotZoomProfile)
 add_subdirectory(Plots/Common/RelativeTimeAxisWidget)
 add_subdirectory(Plots/Common/VerticalAxisWidget)
 add_subdirectory(Plots/Common/MultiLaneVerticalAxisWidget)

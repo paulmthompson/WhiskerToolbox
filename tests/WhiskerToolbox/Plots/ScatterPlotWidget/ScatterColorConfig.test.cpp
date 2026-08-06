@@ -19,6 +19,8 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
+#include <QSignalSpy>
+
 #include <string>
 
 // =============================================================================
@@ -186,4 +188,32 @@ TEST_CASE("ScatterPlotState default color config round-trips as fixed",
     REQUIRE(restored.color_mode == "fixed");
     REQUIRE_FALSE(restored.color_source.has_value());
     REQUIRE(restored.mapping_mode == "continuous");
+}
+
+TEST_CASE("ScatterPlotState zoom is view-only and does not emit stateChanged",
+          "[ScatterPlotState][ViewState]") {
+    ScatterPlotState state;
+
+    SECTION("setXZoom emits viewStateChanged only") {
+        QSignalSpy const view_spy(&state, &ScatterPlotState::viewStateChanged);
+        QSignalSpy const state_spy(&state, &ScatterPlotState::stateChanged);
+
+        state.setXZoom(2.0);
+
+        REQUIRE(state.viewState().x_zoom == 2.0);
+        REQUIRE(view_spy.count() == 1);
+        REQUIRE(state_spy.count() == 0);
+    }
+
+    SECTION("setPan emits viewStateChanged only") {
+        QSignalSpy const view_spy(&state, &ScatterPlotState::viewStateChanged);
+        QSignalSpy const state_spy(&state, &ScatterPlotState::stateChanged);
+
+        state.setPan(5.0, -3.0);
+
+        REQUIRE(state.viewState().x_pan == 5.0);
+        REQUIRE(state.viewState().y_pan == -3.0);
+        REQUIRE(view_spy.count() == 1);
+        REQUIRE(state_spy.count() == 0);
+    }
 }

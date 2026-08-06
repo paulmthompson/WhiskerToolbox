@@ -392,7 +392,8 @@ void LinePlotOpenGLWidget::wheelEvent(QWheelEvent * event) {
         return;
     }
 
-    float const delta = event->angleDelta().y() / 120.0f;
+    float const delta = Neuralyzer::Plots::wheelDeltaToZoomSteps(
+            event->pixelDelta().y(), event->angleDelta().y(), event->angleDelta().x());
     bool const y_only = (event->modifiers() & Qt::ShiftModifier) != 0;
     bool const both_axes = (event->modifiers() & Qt::ControlModifier) != 0;
     handleZoom(delta, y_only, both_axes);
@@ -424,7 +425,6 @@ void LinePlotOpenGLWidget::onViewStateChanged() {
     }
     updateMatrices();
     update();
-    emit viewBoundsChanged();
 }
 
 void LinePlotOpenGLWidget::onWindowSizeChanged(double /* window_size */) {

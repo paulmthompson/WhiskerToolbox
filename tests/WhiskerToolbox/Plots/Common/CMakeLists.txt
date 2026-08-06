@@ -80,6 +80,35 @@ set_target_compiler_warnings(test_plot_interaction_helpers)
 
 enable_whiskertoolbox_shared_test_pch(test_plot_interaction_helpers)
 
+# ── PlotZoomProfile tests ─────────────────────────────────────────────────────
+
+add_executable(test_plot_zoom_profile
+    ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/Plots/Common/PlotZoomProfile.test.cpp
+)
+
+target_link_libraries(test_plot_zoom_profile PRIVATE
+    Catch2::Catch2WithMain
+    PlotZoomProfile
+)
+
+target_include_directories(test_plot_zoom_profile PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Plots/Common>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>"
+)
+
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(test_plot_zoom_profile PROPERTIES
+        ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+    )
+else()
+    add_test(NAME test_plot_zoom_profile COMMAND test_plot_zoom_profile)
+endif()
+
+set_target_compiler_warnings(test_plot_zoom_profile)
+
+enable_whiskertoolbox_shared_test_pch(test_plot_zoom_profile)
+
 # ── Common DataManager integration tests (template-based) ────────────────────
 
 # ── EventRateEstimation tests ─────────────────────────────────────────────────

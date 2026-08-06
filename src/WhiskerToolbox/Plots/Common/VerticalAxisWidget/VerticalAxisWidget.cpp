@@ -1,5 +1,7 @@
 #include "VerticalAxisWidget.hpp"
 
+#include "PlotZoomProfile.hpp"
+
 #include <QPainter>
 #include <QPainterPath>
 #include <QString>
@@ -7,68 +9,59 @@
 #include <cmath>
 
 VerticalAxisWidget::VerticalAxisWidget(QWidget * parent)
-    : QWidget(parent)
-{
+    : QWidget(parent) {
     setMinimumWidth(kAxisWidth);
     setMaximumWidth(kAxisWidth);
     setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
 }
 
-void VerticalAxisWidget::setRangeGetter(RangeGetter getter)
-{
+void VerticalAxisWidget::setRangeGetter(RangeGetter getter) {
     _range_getter = std::move(getter);
     _use_getter = true;
     update();
 }
 
-void VerticalAxisWidget::setRange(double min, double max)
-{
+void VerticalAxisWidget::setRange(double min, double max) {
     _min_value = min;
     _max_value = max;
     _use_getter = false;
     update();
 }
 
-void VerticalAxisWidget::setAxisMapping(CorePlotting::AxisMapping mapping)
-{
+void VerticalAxisWidget::setAxisMapping(CorePlotting::AxisMapping mapping) {
     _axis_mapping = std::move(mapping);
     update();
 }
 
-void VerticalAxisWidget::clearAxisMapping()
-{
+void VerticalAxisWidget::clearAxisMapping() {
     _axis_mapping.reset();
     update();
 }
 
-CorePlotting::AxisMapping const * VerticalAxisWidget::axisMapping() const
-{
+CorePlotting::AxisMapping const * VerticalAxisWidget::axisMapping() const {
     if (_axis_mapping.has_value()) {
         return &_axis_mapping.value();
     }
     return nullptr;
 }
 
-void VerticalAxisWidget::setInverted(bool inverted)
-{
+void VerticalAxisWidget::setInverted(bool inverted) {
     if (_inverted != inverted) {
         _inverted = inverted;
         update();
     }
 }
 
-bool VerticalAxisWidget::isInverted() const
-{
+bool VerticalAxisWidget::isInverted() const {
     return _inverted;
 }
 
-QSize VerticalAxisWidget::sizeHint() const
-{
+QSize VerticalAxisWidget::sizeHint() const {
     return QSize(kAxisWidth, 200);
 }
 
-void VerticalAxisWidget::paintEvent(QPaintEvent * /* event */)
-{
+void VerticalAxisWidget::paintEvent(QPaintEvent * /* event */) {
+    Neuralyzer::Plots::PlotZoomProfileAxisPaintScope const axis_profile{"vertical"};
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
@@ -178,8 +171,7 @@ void VerticalAxisWidget::paintEvent(QPaintEvent * /* event */)
     }
 }
 
-double VerticalAxisWidget::computeTickInterval(double range) const
-{
+double VerticalAxisWidget::computeTickInterval(double range) const {
     // Aim for roughly 5-10 ticks
     double target_ticks = 7.0;
     double raw_interval = range / target_ticks;
@@ -202,8 +194,7 @@ double VerticalAxisWidget::computeTickInterval(double range) const
     return nice * magnitude;
 }
 
-int VerticalAxisWidget::valueToPixelY(double value, double min, double max) const
-{
+int VerticalAxisWidget::valueToPixelY(double value, double min, double max) const {
     if (max <= min) {
         return 0;
     }

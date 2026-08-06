@@ -1,5 +1,7 @@
 #include "HorizontalAxisWidget.hpp"
 
+#include "PlotZoomProfile.hpp"
+
 #include <QPainter>
 #include <QPainterPath>
 #include <QString>
@@ -7,55 +9,48 @@
 #include <cmath>
 
 HorizontalAxisWidget::HorizontalAxisWidget(QWidget * parent)
-    : QWidget(parent)
-{
+    : QWidget(parent) {
     setMinimumHeight(kAxisHeight);
     setMaximumHeight(kAxisHeight);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 }
 
-void HorizontalAxisWidget::setRangeGetter(RangeGetter getter)
-{
+void HorizontalAxisWidget::setRangeGetter(RangeGetter getter) {
     _range_getter = std::move(getter);
     _use_getter = true;
     update();
 }
 
-void HorizontalAxisWidget::setRange(double min, double max)
-{
+void HorizontalAxisWidget::setRange(double min, double max) {
     _min_value = min;
     _max_value = max;
     _use_getter = false;
     update();
 }
 
-void HorizontalAxisWidget::setAxisMapping(CorePlotting::AxisMapping mapping)
-{
+void HorizontalAxisWidget::setAxisMapping(CorePlotting::AxisMapping mapping) {
     _axis_mapping = std::move(mapping);
     update();
 }
 
-void HorizontalAxisWidget::clearAxisMapping()
-{
+void HorizontalAxisWidget::clearAxisMapping() {
     _axis_mapping.reset();
     update();
 }
 
-CorePlotting::AxisMapping const * HorizontalAxisWidget::axisMapping() const
-{
+CorePlotting::AxisMapping const * HorizontalAxisWidget::axisMapping() const {
     if (_axis_mapping.has_value()) {
         return &_axis_mapping.value();
     }
     return nullptr;
 }
 
-QSize HorizontalAxisWidget::sizeHint() const
-{
+QSize HorizontalAxisWidget::sizeHint() const {
     return QSize(200, kAxisHeight);
 }
 
-void HorizontalAxisWidget::paintEvent(QPaintEvent * /* event */)
-{
+void HorizontalAxisWidget::paintEvent(QPaintEvent * /* event */) {
+    Neuralyzer::Plots::PlotZoomProfileAxisPaintScope const axis_profile{"horizontal"};
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
 
@@ -159,8 +154,7 @@ void HorizontalAxisWidget::paintEvent(QPaintEvent * /* event */)
     painter.drawText(max_rect, Qt::AlignRight | Qt::AlignVCenter, max_label);
 }
 
-double HorizontalAxisWidget::computeTickInterval(double range) const
-{
+double HorizontalAxisWidget::computeTickInterval(double range) const {
     // Aim for roughly 5-10 ticks
     double target_ticks = 7.0;
     double raw_interval = range / target_ticks;
@@ -183,8 +177,7 @@ double HorizontalAxisWidget::computeTickInterval(double range) const
     return nice * magnitude;
 }
 
-int HorizontalAxisWidget::valueToPixelX(double value, double min, double max) const
-{
+int HorizontalAxisWidget::valueToPixelX(double value, double min, double max) const {
     if (max <= min) {
         return 0;
     }

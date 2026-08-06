@@ -2,6 +2,7 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include "Plots/Common/PlotInteractionHelpers.hpp"
+#include "Plots/Common/PlotViewAxisRefresh.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -228,6 +229,114 @@ TEST_CASE("handlePanning respects zoom level",
 }
 
 // =============================================================================
+// wheelDeltaToZoomSteps tests
+// =============================================================================
+
+TEST_CASE("wheelDeltaToZoomSteps maps one angle notch to one step",
+          "[PlotInteractionHelpers]") {
+    REQUIRE_THAT(
+            Neuralyzer::Plots::wheelDeltaToZoomSteps(0, 120, 0),
+            Catch::Matchers::WithinAbs(1.0, 0.001));
+}
+
+TEST_CASE("wheelDeltaToZoomSteps supports fractional angle notches",
+          "[PlotInteractionHelpers]") {
+    REQUIRE_THAT(
+            Neuralyzer::Plots::wheelDeltaToZoomSteps(0, 60, 0),
+            Catch::Matchers::WithinAbs(0.5, 0.001));
+}
+
+TEST_CASE("wheelDeltaToZoomSteps falls back to horizontal angle delta",
+          "[PlotInteractionHelpers]") {
+    REQUIRE_THAT(
+            Neuralyzer::Plots::wheelDeltaToZoomSteps(0, 0, 120),
+            Catch::Matchers::WithinAbs(1.0, 0.001));
+}
+
+TEST_CASE("wheelDeltaToZoomSteps prefers pixel delta over angle delta",
+          "[PlotInteractionHelpers]") {
+    REQUIRE_THAT(
+            Neuralyzer::Plots::wheelDeltaToZoomSteps(20, 120, 0),
+            Catch::Matchers::WithinAbs(1.0, 0.001));
+}
+
+TEST_CASE("wheelDeltaToZoomSteps maps trackpad pixels to fractional steps",
+          "[PlotInteractionHelpers]") {
+    REQUIRE_THAT(
+            Neuralyzer::Plots::wheelDeltaToZoomSteps(10, 0, 0),
+            Catch::Matchers::WithinAbs(0.5, 0.001));
+}
+
+TEST_CASE("wheelDeltaToZoomSteps returns zero when all deltas are zero",
+          "[PlotInteractionHelpers]") {
+    REQUIRE(Neuralyzer::Plots::wheelDeltaToZoomSteps(0, 0, 0) == 0.0f);
+}
+
+// =============================================================================
+// ViewAxisRefresh tests
+// =============================================================================
+
+TEST_CASE("computeViewAxisRefreshMask detects horizontal-only zoom change",
+          "[PlotInteractionHelpers][ViewAxisRefresh]") {
+    Neuralyzer::Plots::ViewAxisSyncSnapshot const before{
+            .x_zoom = 1.0,
+            .y_zoom = 1.0,
+    };
+    Neuralyzer::Plots::ViewAxisSyncSnapshot after = before;
+    after.x_zoom = 1.1;
+
+    auto const mask =
+            Neuralyzer::Plots::computeViewAxisRefreshMask(before, after);
+    REQUIRE(Neuralyzer::Plots::affectsAxis(
+            mask, Neuralyzer::Plots::ViewAxisRefresh::Horizontal));
+    REQUIRE_FALSE(Neuralyzer::Plots::affectsAxis(
+            mask, Neuralyzer::Plots::ViewAxisRefresh::Vertical));
+}
+
+TEST_CASE("computeViewAxisRefreshMask detects vertical-only pan change",
+          "[PlotInteractionHelpers][ViewAxisRefresh]") {
+    Neuralyzer::Plots::ViewAxisSyncSnapshot const before;
+    Neuralyzer::Plots::ViewAxisSyncSnapshot after = before;
+    after.y_pan = 5.0;
+
+    auto const mask =
+            Neuralyzer::Plots::computeViewAxisRefreshMask(before, after);
+    REQUIRE_FALSE(Neuralyzer::Plots::affectsAxis(
+            mask, Neuralyzer::Plots::ViewAxisRefresh::Horizontal));
+    REQUIRE(Neuralyzer::Plots::affectsAxis(
+            mask, Neuralyzer::Plots::ViewAxisRefresh::Vertical));
+}
+
+TEST_CASE("computeViewAxisRefreshMask returns none when unchanged",
+          "[PlotInteractionHelpers][ViewAxisRefresh]") {
+    Neuralyzer::Plots::ViewAxisSyncSnapshot const snapshot;
+    auto const mask = Neuralyzer::Plots::computeViewAxisRefreshMask(
+            snapshot, snapshot);
+    REQUIRE(mask == Neuralyzer::Plots::ViewAxisRefresh::None);
+}
+
+// =============================================================================
+// adaptiveZoomMultiplier tests
+// =============================================================================
+
+TEST_CASE("adaptiveZoomMultiplier applies 3% visible-range step per notch",
+          "[PlotInteractionHelpers]") {
+    float const factor = Neuralyzer::Plots::adaptiveZoomMultiplier(1.0f);
+    REQUIRE_THAT(factor, Catch::Matchers::WithinAbs(1.0f / 0.97f, 0.001));
+}
+
+TEST_CASE("adaptiveZoomMultiplier zooms out for negative delta",
+          "[PlotInteractionHelpers]") {
+    float const factor = Neuralyzer::Plots::adaptiveZoomMultiplier(-1.0f);
+    REQUIRE_THAT(factor, Catch::Matchers::WithinAbs(1.0f / 1.03f, 0.001));
+}
+
+TEST_CASE("adaptiveZoomMultiplier is identity for zero delta",
+          "[PlotInteractionHelpers]") {
+    REQUIRE(Neuralyzer::Plots::adaptiveZoomMultiplier(0.0f) == 1.0f);
+}
+
+// =============================================================================
 // handleZoom tests
 // =============================================================================
 
@@ -240,7 +349,7 @@ TEST_CASE("handleZoom x-only by default",
 
     Neuralyzer::Plots::handleZoom(state, vs, 1.0f, false, false);
 
-    REQUIRE_THAT(state.last_x_zoom, Catch::Matchers::WithinAbs(1.1, 0.01));
+    REQUIRE_THAT(state.last_x_zoom, Catch::Matchers::WithinAbs(1.0 / 0.97, 0.01));
     REQUIRE_THAT(state.last_y_zoom, Catch::Matchers::WithinAbs(1.0, 0.01));
 }
 
@@ -254,7 +363,7 @@ TEST_CASE("handleZoom y-only when y_only is true",
     Neuralyzer::Plots::handleZoom(state, vs, 1.0f, true, false);
 
     REQUIRE_THAT(state.last_x_zoom, Catch::Matchers::WithinAbs(1.0, 0.01));
-    REQUIRE_THAT(state.last_y_zoom, Catch::Matchers::WithinAbs(1.1, 0.01));
+    REQUIRE_THAT(state.last_y_zoom, Catch::Matchers::WithinAbs(1.0 / 0.97, 0.01));
 }
 
 TEST_CASE("handleZoom both axes when both_axes is true",
@@ -266,8 +375,8 @@ TEST_CASE("handleZoom both axes when both_axes is true",
 
     Neuralyzer::Plots::handleZoom(state, vs, 1.0f, false, true);
 
-    REQUIRE_THAT(state.last_x_zoom, Catch::Matchers::WithinAbs(1.1, 0.01));
-    REQUIRE_THAT(state.last_y_zoom, Catch::Matchers::WithinAbs(1.1, 0.01));
+    REQUIRE_THAT(state.last_x_zoom, Catch::Matchers::WithinAbs(1.0 / 0.97, 0.01));
+    REQUIRE_THAT(state.last_y_zoom, Catch::Matchers::WithinAbs(1.0 / 0.97, 0.01));
 }
 
 TEST_CASE("handleZoom negative delta zooms out",

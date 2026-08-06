@@ -1,8 +1,8 @@
 #include "OnionSkinViewState.hpp"
 
 #include "Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp"
-#include "Plots/Common/LineStyleControls/Core/LineStyleState.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisState.hpp"
+#include "Plots/Common/LineStyleControls/Core/LineStyleState.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
 
 #include <rfl/json.hpp>
@@ -12,8 +12,7 @@
 OnionSkinViewState::OnionSkinViewState(QObject * parent)
     : EditorState(parent),
       _horizontal_axis_state(std::make_unique<HorizontalAxisState>(this)),
-      _vertical_axis_state(std::make_unique<VerticalAxisState>(this))
-{
+      _vertical_axis_state(std::make_unique<VerticalAxisState>(this)) {
     _data.instance_id = getInstanceId().toStdString();
     _data.horizontal_axis = _horizontal_axis_state->data();
     _data.vertical_axis = _vertical_axis_state->data();
@@ -31,7 +30,9 @@ OnionSkinViewState::OnionSkinViewState(QObject * parent)
     connect(_horizontal_axis_state.get(), &HorizontalAxisState::rangeChanged,
             this, syncHorizontalData);
     connect(_horizontal_axis_state.get(), &HorizontalAxisState::rangeUpdated,
-            this, syncHorizontalData);
+            this, [this]() {
+                _data.horizontal_axis = _horizontal_axis_state->data();
+            });
 
     auto syncVerticalData = [this]() {
         _data.vertical_axis = _vertical_axis_state->data();
@@ -41,16 +42,16 @@ OnionSkinViewState::OnionSkinViewState(QObject * parent)
     connect(_vertical_axis_state.get(), &VerticalAxisState::rangeChanged,
             this, syncVerticalData);
     connect(_vertical_axis_state.get(), &VerticalAxisState::rangeUpdated,
-            this, syncVerticalData);
+            this, [this]() {
+                _data.vertical_axis = _vertical_axis_state->data();
+            });
 }
 
-QString OnionSkinViewState::getDisplayName() const
-{
+QString OnionSkinViewState::getDisplayName() const {
     return QString::fromStdString(_data.display_name);
 }
 
-void OnionSkinViewState::setDisplayName(QString const & name)
-{
+void OnionSkinViewState::setDisplayName(QString const & name) {
     if (_data.display_name != name.toStdString()) {
         _data.display_name = name.toStdString();
         markDirty();
@@ -58,36 +59,29 @@ void OnionSkinViewState::setDisplayName(QString const & name)
     }
 }
 
-void OnionSkinViewState::setXZoom(double zoom)
-{
+void OnionSkinViewState::setXZoom(double zoom) {
     if (_data.view_state.x_zoom != zoom) {
         _data.view_state.x_zoom = zoom;
-        markDirty();
         emit viewStateChanged();
     }
 }
 
-void OnionSkinViewState::setYZoom(double zoom)
-{
+void OnionSkinViewState::setYZoom(double zoom) {
     if (_data.view_state.y_zoom != zoom) {
         _data.view_state.y_zoom = zoom;
-        markDirty();
         emit viewStateChanged();
     }
 }
 
-void OnionSkinViewState::setPan(double x_pan, double y_pan)
-{
+void OnionSkinViewState::setPan(double x_pan, double y_pan) {
     if (_data.view_state.x_pan != x_pan || _data.view_state.y_pan != y_pan) {
         _data.view_state.x_pan = x_pan;
         _data.view_state.y_pan = y_pan;
-        markDirty();
         emit viewStateChanged();
     }
 }
 
-void OnionSkinViewState::setXBounds(double x_min, double x_max)
-{
+void OnionSkinViewState::setXBounds(double x_min, double x_max) {
     if (_data.view_state.x_min != x_min || _data.view_state.x_max != x_max) {
         _data.view_state.x_min = x_min;
         _data.view_state.x_max = x_max;
@@ -99,8 +93,7 @@ void OnionSkinViewState::setXBounds(double x_min, double x_max)
     }
 }
 
-void OnionSkinViewState::setYBounds(double y_min, double y_max)
-{
+void OnionSkinViewState::setYBounds(double y_min, double y_max) {
     if (_data.view_state.y_min != y_min || _data.view_state.y_max != y_max) {
         _data.view_state.y_min = y_min;
         _data.view_state.y_max = y_max;
@@ -115,18 +108,16 @@ void OnionSkinViewState::setYBounds(double y_min, double y_max)
 
 // === Data Key Management — Point ===
 
-std::vector<QString> OnionSkinViewState::getPointDataKeys() const
-{
+std::vector<QString> OnionSkinViewState::getPointDataKeys() const {
     std::vector<QString> result;
     result.reserve(_data.point_data_keys.size());
-    for (auto const & key : _data.point_data_keys) {
+    for (auto const & key: _data.point_data_keys) {
         result.push_back(QString::fromStdString(key));
     }
     return result;
 }
 
-void OnionSkinViewState::addPointDataKey(QString const & key)
-{
+void OnionSkinViewState::addPointDataKey(QString const & key) {
     std::string const key_str = key.toStdString();
     auto it = std::find(_data.point_data_keys.begin(), _data.point_data_keys.end(), key_str);
     if (it == _data.point_data_keys.end()) {
@@ -138,8 +129,7 @@ void OnionSkinViewState::addPointDataKey(QString const & key)
     }
 }
 
-void OnionSkinViewState::removePointDataKey(QString const & key)
-{
+void OnionSkinViewState::removePointDataKey(QString const & key) {
     std::string const key_str = key.toStdString();
     auto it = std::find(_data.point_data_keys.begin(), _data.point_data_keys.end(), key_str);
     if (it != _data.point_data_keys.end()) {
@@ -152,8 +142,7 @@ void OnionSkinViewState::removePointDataKey(QString const & key)
     }
 }
 
-void OnionSkinViewState::clearPointDataKeys()
-{
+void OnionSkinViewState::clearPointDataKeys() {
     if (!_data.point_data_keys.empty()) {
         _data.point_data_keys.clear();
         _data.point_key_glyph_styles.clear();
@@ -166,18 +155,16 @@ void OnionSkinViewState::clearPointDataKeys()
 
 // === Data Key Management — Line ===
 
-std::vector<QString> OnionSkinViewState::getLineDataKeys() const
-{
+std::vector<QString> OnionSkinViewState::getLineDataKeys() const {
     std::vector<QString> result;
     result.reserve(_data.line_data_keys.size());
-    for (auto const & key : _data.line_data_keys) {
+    for (auto const & key: _data.line_data_keys) {
         result.push_back(QString::fromStdString(key));
     }
     return result;
 }
 
-void OnionSkinViewState::addLineDataKey(QString const & key)
-{
+void OnionSkinViewState::addLineDataKey(QString const & key) {
     std::string const key_str = key.toStdString();
     auto it = std::find(_data.line_data_keys.begin(), _data.line_data_keys.end(), key_str);
     if (it == _data.line_data_keys.end()) {
@@ -189,8 +176,7 @@ void OnionSkinViewState::addLineDataKey(QString const & key)
     }
 }
 
-void OnionSkinViewState::removeLineDataKey(QString const & key)
-{
+void OnionSkinViewState::removeLineDataKey(QString const & key) {
     std::string const key_str = key.toStdString();
     auto it = std::find(_data.line_data_keys.begin(), _data.line_data_keys.end(), key_str);
     if (it != _data.line_data_keys.end()) {
@@ -203,8 +189,7 @@ void OnionSkinViewState::removeLineDataKey(QString const & key)
     }
 }
 
-void OnionSkinViewState::clearLineDataKeys()
-{
+void OnionSkinViewState::clearLineDataKeys() {
     if (!_data.line_data_keys.empty()) {
         _data.line_data_keys.clear();
         _data.line_key_line_styles.clear();
@@ -217,18 +202,16 @@ void OnionSkinViewState::clearLineDataKeys()
 
 // === Data Key Management — Mask ===
 
-std::vector<QString> OnionSkinViewState::getMaskDataKeys() const
-{
+std::vector<QString> OnionSkinViewState::getMaskDataKeys() const {
     std::vector<QString> result;
     result.reserve(_data.mask_data_keys.size());
-    for (auto const & key : _data.mask_data_keys) {
+    for (auto const & key: _data.mask_data_keys) {
         result.push_back(QString::fromStdString(key));
     }
     return result;
 }
 
-void OnionSkinViewState::addMaskDataKey(QString const & key)
-{
+void OnionSkinViewState::addMaskDataKey(QString const & key) {
     std::string const key_str = key.toStdString();
     auto it = std::find(_data.mask_data_keys.begin(), _data.mask_data_keys.end(), key_str);
     if (it == _data.mask_data_keys.end()) {
@@ -240,8 +223,7 @@ void OnionSkinViewState::addMaskDataKey(QString const & key)
     }
 }
 
-void OnionSkinViewState::removeMaskDataKey(QString const & key)
-{
+void OnionSkinViewState::removeMaskDataKey(QString const & key) {
     std::string const key_str = key.toStdString();
     auto it = std::find(_data.mask_data_keys.begin(), _data.mask_data_keys.end(), key_str);
     if (it != _data.mask_data_keys.end()) {
@@ -254,8 +236,7 @@ void OnionSkinViewState::removeMaskDataKey(QString const & key)
     }
 }
 
-void OnionSkinViewState::clearMaskDataKeys()
-{
+void OnionSkinViewState::clearMaskDataKeys() {
     if (!_data.mask_data_keys.empty()) {
         _data.mask_data_keys.clear();
         _data.mask_key_line_styles.clear();
@@ -268,8 +249,7 @@ void OnionSkinViewState::clearMaskDataKeys()
 
 // === Temporal Window Parameters ===
 
-void OnionSkinViewState::setWindowBehind(int behind)
-{
+void OnionSkinViewState::setWindowBehind(int behind) {
     behind = std::max(0, behind);
     if (_data.window_behind != behind) {
         _data.window_behind = behind;
@@ -279,8 +259,7 @@ void OnionSkinViewState::setWindowBehind(int behind)
     }
 }
 
-void OnionSkinViewState::setWindowAhead(int ahead)
-{
+void OnionSkinViewState::setWindowAhead(int ahead) {
     ahead = std::max(0, ahead);
     if (_data.window_ahead != ahead) {
         _data.window_ahead = ahead;
@@ -292,8 +271,7 @@ void OnionSkinViewState::setWindowAhead(int ahead)
 
 // === Alpha Curve Settings ===
 
-void OnionSkinViewState::setAlphaCurve(QString const & curve)
-{
+void OnionSkinViewState::setAlphaCurve(QString const & curve) {
     std::string const curve_str = curve.toStdString();
     if (_data.alpha_curve != curve_str) {
         _data.alpha_curve = curve_str;
@@ -303,8 +281,7 @@ void OnionSkinViewState::setAlphaCurve(QString const & curve)
     }
 }
 
-void OnionSkinViewState::setMinAlpha(float alpha)
-{
+void OnionSkinViewState::setMinAlpha(float alpha) {
     alpha = std::clamp(alpha, 0.0f, 1.0f);
     if (_data.min_alpha != alpha) {
         _data.min_alpha = alpha;
@@ -314,8 +291,7 @@ void OnionSkinViewState::setMinAlpha(float alpha)
     }
 }
 
-void OnionSkinViewState::setMaxAlpha(float alpha)
-{
+void OnionSkinViewState::setMaxAlpha(float alpha) {
     alpha = std::clamp(alpha, 0.0f, 1.0f);
     if (_data.max_alpha != alpha) {
         _data.max_alpha = alpha;
@@ -327,8 +303,7 @@ void OnionSkinViewState::setMaxAlpha(float alpha)
 
 // === Rendering Parameters ===
 
-void OnionSkinViewState::setHighlightCurrent(bool highlight)
-{
+void OnionSkinViewState::setHighlightCurrent(bool highlight) {
     if (_data.highlight_current != highlight) {
         _data.highlight_current = highlight;
         markDirty();
@@ -339,8 +314,7 @@ void OnionSkinViewState::setHighlightCurrent(bool highlight)
 
 // === Per-Key Point Glyph Style ===
 
-void OnionSkinViewState::_createGlyphStyleStateForKey(std::string const & key)
-{
+void OnionSkinViewState::_createGlyphStyleStateForKey(std::string const & key) {
     // Look up existing serialized style or use default
     CorePlotting::GlyphStyleData style{CorePlotting::GlyphType::Circle, 8.0f, "#007bff", 1.0f};
     auto it = _data.point_key_glyph_styles.find(key);
@@ -371,8 +345,7 @@ void OnionSkinViewState::_createGlyphStyleStateForKey(std::string const & key)
     _point_glyph_style_states[key] = std::move(state);
 }
 
-GlyphStyleState * OnionSkinViewState::glyphStyleStateForKey(QString const & key)
-{
+GlyphStyleState * OnionSkinViewState::glyphStyleStateForKey(QString const & key) {
     auto it = _point_glyph_style_states.find(key.toStdString());
     if (it != _point_glyph_style_states.end()) {
         return it->second.get();
@@ -380,8 +353,7 @@ GlyphStyleState * OnionSkinViewState::glyphStyleStateForKey(QString const & key)
     return nullptr;
 }
 
-CorePlotting::GlyphStyleData OnionSkinViewState::getPointKeyGlyphStyle(QString const & key) const
-{
+CorePlotting::GlyphStyleData OnionSkinViewState::getPointKeyGlyphStyle(QString const & key) const {
     auto it = _data.point_key_glyph_styles.find(key.toStdString());
     if (it != _data.point_key_glyph_styles.end()) {
         return it->second;
@@ -392,8 +364,7 @@ CorePlotting::GlyphStyleData OnionSkinViewState::getPointKeyGlyphStyle(QString c
 
 // === Per-Key Line Style ===
 
-void OnionSkinViewState::_createLineStyleStateForKey(std::string const & key)
-{
+void OnionSkinViewState::_createLineStyleStateForKey(std::string const & key) {
     // Look up existing serialized style or use default
     CorePlotting::LineStyleData style{"#46b346", 2.0f, 1.0f};
     auto it = _data.line_key_line_styles.find(key);
@@ -424,8 +395,7 @@ void OnionSkinViewState::_createLineStyleStateForKey(std::string const & key)
     _line_style_states[key] = std::move(state);
 }
 
-LineStyleState * OnionSkinViewState::lineStyleStateForKey(QString const & key)
-{
+LineStyleState * OnionSkinViewState::lineStyleStateForKey(QString const & key) {
     auto it = _line_style_states.find(key.toStdString());
     if (it != _line_style_states.end()) {
         return it->second.get();
@@ -433,8 +403,7 @@ LineStyleState * OnionSkinViewState::lineStyleStateForKey(QString const & key)
     return nullptr;
 }
 
-CorePlotting::LineStyleData OnionSkinViewState::getLineKeyLineStyle(QString const & key) const
-{
+CorePlotting::LineStyleData OnionSkinViewState::getLineKeyLineStyle(QString const & key) const {
     auto it = _data.line_key_line_styles.find(key.toStdString());
     if (it != _data.line_key_line_styles.end()) {
         return it->second;
@@ -445,8 +414,7 @@ CorePlotting::LineStyleData OnionSkinViewState::getLineKeyLineStyle(QString cons
 
 // === Per-Key Mask Contour Style ===
 
-void OnionSkinViewState::_createMaskStyleStateForKey(std::string const & key)
-{
+void OnionSkinViewState::_createMaskStyleStateForKey(std::string const & key) {
     // Look up existing serialized style or use default (orange for masks)
     CorePlotting::LineStyleData style{"#cc8033", 2.0f, 1.0f};
     auto it = _data.mask_key_line_styles.find(key);
@@ -477,8 +445,7 @@ void OnionSkinViewState::_createMaskStyleStateForKey(std::string const & key)
     _mask_line_style_states[key] = std::move(state);
 }
 
-LineStyleState * OnionSkinViewState::maskStyleStateForKey(QString const & key)
-{
+LineStyleState * OnionSkinViewState::maskStyleStateForKey(QString const & key) {
     auto it = _mask_line_style_states.find(key.toStdString());
     if (it != _mask_line_style_states.end()) {
         return it->second.get();
@@ -486,8 +453,7 @@ LineStyleState * OnionSkinViewState::maskStyleStateForKey(QString const & key)
     return nullptr;
 }
 
-CorePlotting::LineStyleData OnionSkinViewState::getMaskKeyLineStyle(QString const & key) const
-{
+CorePlotting::LineStyleData OnionSkinViewState::getMaskKeyLineStyle(QString const & key) const {
     auto it = _data.mask_key_line_styles.find(key.toStdString());
     if (it != _data.mask_key_line_styles.end()) {
         return it->second;
@@ -498,27 +464,25 @@ CorePlotting::LineStyleData OnionSkinViewState::getMaskKeyLineStyle(QString cons
 
 // === Serialization ===
 
-std::string OnionSkinViewState::toJson() const
-{
+std::string OnionSkinViewState::toJson() const {
     OnionSkinViewStateData data_to_serialize = _data;
     data_to_serialize.instance_id = getInstanceId().toStdString();
     // Sync per-key glyph styles from live state objects into serializable data
-    for (auto const & [key, state_ptr] : _point_glyph_style_states) {
+    for (auto const & [key, state_ptr]: _point_glyph_style_states) {
         data_to_serialize.point_key_glyph_styles[key] = state_ptr->data();
     }
     // Sync per-key line styles from live state objects into serializable data
-    for (auto const & [key, state_ptr] : _line_style_states) {
+    for (auto const & [key, state_ptr]: _line_style_states) {
         data_to_serialize.line_key_line_styles[key] = state_ptr->data();
     }
     // Sync per-key mask contour styles from live state objects into serializable data
-    for (auto const & [key, state_ptr] : _mask_line_style_states) {
+    for (auto const & [key, state_ptr]: _mask_line_style_states) {
         data_to_serialize.mask_key_line_styles[key] = state_ptr->data();
     }
     return rfl::json::write(data_to_serialize);
 }
 
-bool OnionSkinViewState::fromJson(std::string const & json)
-{
+bool OnionSkinViewState::fromJson(std::string const & json) {
     auto result = rfl::json::read<OnionSkinViewStateData>(json);
     if (result) {
         _data = *result;
@@ -534,17 +498,17 @@ bool OnionSkinViewState::fromJson(std::string const & json)
         _data.view_state.y_max = _vertical_axis_state->getYMax();
         // Recreate per-key GlyphStyleState objects from deserialized data
         _point_glyph_style_states.clear();
-        for (auto const & key : _data.point_data_keys) {
+        for (auto const & key: _data.point_data_keys) {
             _createGlyphStyleStateForKey(key);
         }
         // Recreate per-key LineStyleState objects from deserialized data
         _line_style_states.clear();
-        for (auto const & key : _data.line_data_keys) {
+        for (auto const & key: _data.line_data_keys) {
             _createLineStyleStateForKey(key);
         }
         // Recreate per-key mask contour LineStyleState objects from deserialized data
         _mask_line_style_states.clear();
-        for (auto const & key : _data.mask_data_keys) {
+        for (auto const & key: _data.mask_data_keys) {
             _createMaskStyleStateForKey(key);
         }
         emit stateChanged();

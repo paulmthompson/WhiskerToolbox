@@ -135,6 +135,8 @@ void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state) {
         return;
     }
 
+    _view_axis_snapshot.reset();
+
     createTimeAxisIfNeeded();
     wireTimeAxis();
     wireVerticalAxis();
@@ -163,7 +165,8 @@ void EventPlotWidget::setState(std::shared_ptr<EventPlotState> state) {
     if (_data_manager && _dm_observer_id == -1) {
         _dm_observer_id = _data_manager->addObserver([this]() {
             _pruneRemovedKeys();
-        }, "EventPlotWidget");
+        },
+                                                     "EventPlotWidget");
     }
 
     // Initialize axis ranges from current view state
@@ -260,26 +263,36 @@ void EventPlotWidget::wireVerticalAxis() {
 }
 
 void EventPlotWidget::connectViewChangeSignals() {
-    // Single handler consolidates all view-change reactions:
-    //   • repaint both axis widgets
-    //   • sync time & vertical range controls (silent — avoids feedback loops)
     auto onViewChanged = [this]() {
-        if (_axis_widget) {
-            _axis_widget->update();
+        if (!_state) {
+            return;
         }
-        if (_vertical_axis_widget) {
-            _vertical_axis_widget->update();
+
+        auto const after =
+                Neuralyzer::Plots::makeViewAxisSyncSnapshot(_state->viewState());
+        auto const mask = _view_axis_snapshot.has_value()
+                                  ? Neuralyzer::Plots::computeViewAxisRefreshMask(
+                                            *_view_axis_snapshot, after)
+                                  : Neuralyzer::Plots::ViewAxisRefresh::Both;
+        _view_axis_snapshot = after;
+
+        if (Neuralyzer::Plots::affectsAxis(
+                    mask, Neuralyzer::Plots::ViewAxisRefresh::Horizontal)) {
+            if (_axis_widget) {
+                _axis_widget->update();
+            }
+            syncTimeAxisRange();
         }
-        syncTimeAxisRange();
-        syncVerticalAxisRange();
+        if (Neuralyzer::Plots::affectsAxis(
+                    mask, Neuralyzer::Plots::ViewAxisRefresh::Vertical)) {
+            if (_vertical_axis_widget) {
+                _vertical_axis_widget->update();
+            }
+            syncVerticalAxisRange();
+        }
     };
 
-    // ViewState changes come from EventPlotState (zoom/pan/bounds setters)
     connect(_state.get(), &EventPlotState::viewStateChanged,
-            this, onViewChanged);
-
-    // viewBoundsChanged comes from the OpenGL widget (resize, interaction)
-    connect(_opengl_widget, &EventPlotOpenGLWidget::viewBoundsChanged,
             this, onViewChanged);
 }
 

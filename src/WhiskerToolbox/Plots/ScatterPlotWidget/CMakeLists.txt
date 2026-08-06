@@ -51,6 +51,7 @@ target_link_libraries(ScatterPlotWidget PRIVATE WhiskerToolbox::AnalogTimeSeries
 target_link_libraries(ScatterPlotWidget PRIVATE WhiskerToolbox::TensorData)
 target_link_libraries(ScatterPlotWidget PRIVATE WhiskerToolbox::DigitalTimeSeries)
 
+target_link_libraries(ScatterPlotWidget PRIVATE PlotZoomProfile)
 target_link_libraries(ScatterPlotWidget PRIVATE HorizontalAxisWidget)
 target_link_libraries(ScatterPlotWidget PRIVATE VerticalAxisWidget)
 target_link_libraries(ScatterPlotWidget PRIVATE Collapsible_Widget)

@@ -113,6 +113,8 @@ void HeatmapWidget::setState(std::shared_ptr<HeatmapState> state) {
         return;
     }
 
+    _view_axis_snapshot.reset();
+
     createTimeAxisIfNeeded();
     wireTimeAxis();
     wireVerticalAxis();
@@ -172,7 +174,8 @@ void HeatmapWidget::setState(std::shared_ptr<HeatmapState> state) {
     if (_data_manager && _dm_observer_id == -1) {
         _dm_observer_id = _data_manager->addObserver([this]() {
             _pruneRemovedKeys();
-        }, "HeatmapWidget");
+        },
+                                                     "HeatmapWidget");
     }
 
     // Initialize axis ranges from current view state
@@ -280,20 +283,35 @@ void HeatmapWidget::wireVerticalAxis() {
 
 void HeatmapWidget::connectViewChangeSignals() {
     auto onViewChanged = [this]() {
-        if (_axis_widget) {
-            _axis_widget->update();
+        if (!_state) {
+            return;
         }
-        if (_vertical_axis_widget) {
-            _vertical_axis_widget->update();
+
+        auto const after =
+                Neuralyzer::Plots::makeViewAxisSyncSnapshot(_state->viewState());
+        auto const mask = _view_axis_snapshot.has_value()
+                                  ? Neuralyzer::Plots::computeViewAxisRefreshMask(
+                                            *_view_axis_snapshot, after)
+                                  : Neuralyzer::Plots::ViewAxisRefresh::Both;
+        _view_axis_snapshot = after;
+
+        if (Neuralyzer::Plots::affectsAxis(
+                    mask, Neuralyzer::Plots::ViewAxisRefresh::Horizontal)) {
+            if (_axis_widget) {
+                _axis_widget->update();
+            }
+            syncTimeAxisRange();
         }
-        syncTimeAxisRange();
-        syncVerticalAxisRange();
+        if (Neuralyzer::Plots::affectsAxis(
+                    mask, Neuralyzer::Plots::ViewAxisRefresh::Vertical)) {
+            if (_vertical_axis_widget) {
+                _vertical_axis_widget->update();
+            }
+            syncVerticalAxisRange();
+        }
     };
 
     connect(_state.get(), &HeatmapState::viewStateChanged,
-            this, onViewChanged);
-
-    connect(_opengl_widget, &HeatmapOpenGLWidget::viewBoundsChanged,
             this, onViewChanged);
 }
 

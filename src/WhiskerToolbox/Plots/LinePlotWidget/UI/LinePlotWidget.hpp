@@ -9,11 +9,13 @@
  */
 
 #include "DataTypeEnum/DM_DataType.hpp"
+#include "Plots/Common/PlotViewAxisRefresh.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QWidget>
 
 #include <memory>
+#include <optional>
 
 class DataManager;
 class GroupManager;
@@ -125,6 +127,8 @@ private:
 
     /// DataManager-level observer ID for detecting key additions/removals
     int _dm_observer_id{-1};
+
+    std::optional<Neuralyzer::Plots::ViewAxisSyncSnapshot> _view_axis_snapshot;
 };
 
 #endif// LINE_PLOT_WIDGET_HPP

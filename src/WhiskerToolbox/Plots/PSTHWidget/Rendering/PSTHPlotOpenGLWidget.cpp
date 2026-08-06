@@ -383,7 +383,8 @@ void PSTHPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
 }
 
 void PSTHPlotOpenGLWidget::wheelEvent(QWheelEvent * event) {
-    float const delta = static_cast<float>(event->angleDelta().y()) / 120.0f;
+    float const delta = Neuralyzer::Plots::wheelDeltaToZoomSteps(
+            event->pixelDelta().y(), event->angleDelta().y(), event->angleDelta().x());
     bool const shift_pressed = event->modifiers() & Qt::ShiftModifier;
     bool const ctrl_pressed = event->modifiers() & Qt::ControlModifier;
     handleZoom(delta, shift_pressed, ctrl_pressed);
@@ -408,7 +409,6 @@ void PSTHPlotOpenGLWidget::onViewStateChanged() {
     }
     updateMatrices();
     update();
-    emit viewBoundsChanged();
 }
 
 void PSTHPlotOpenGLWidget::rebuildScene() {

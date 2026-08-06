@@ -25,7 +25,9 @@
  * Neuralyzer::Plots::handlePanning(*_state, _cached_view_state,
  *     delta_x, delta_y, _widget_width, _widget_height);
  *
- * // In handleZoom():
+ * // In wheelEvent():
+ * float const delta = Neuralyzer::Plots::wheelDeltaToZoomSteps(
+ *     event->pixelDelta().y(), event->angleDelta().y(), event->angleDelta().x());
  * Neuralyzer::Plots::handleZoom(*_state, _cached_view_state, delta, y_only, both_axes);
  *
  * // In screenToWorld():
@@ -407,13 +409,79 @@ void handlePanning(
 }
 
 // =============================================================================
+// Wheel input normalization
+// =============================================================================
+
+/// Pixels of vertical trackpad movement equivalent to one mouse-wheel notch.
+constexpr float DEFAULT_WHEEL_PIXELS_PER_ZOOM_STEP = 20.0f;
+
+/// Qt angleDelta units per physical wheel notch (8 degrees x 15).
+constexpr float WHEEL_ANGLE_DELTA_PER_NOTCH = 120.0f;
+
+/**
+ * @brief Convert raw wheel deltas to fractional zoom steps for handleZoom().
+ *
+ * Prefers @p pixel_delta_y when non-zero (trackpads and smooth scrolling).
+ * Otherwise uses @p angle_delta_y, falling back to @p angle_delta_x on
+ * platforms (e.g. WSL/X11) that redirect vertical scroll to the horizontal
+ * axis.
+ *
+ * @param pixel_delta_y  Vertical pixel delta from QWheelEvent::pixelDelta().
+ * @param angle_delta_y  Vertical angle delta from QWheelEvent::angleDelta().
+ * @param angle_delta_x  Horizontal angle delta from QWheelEvent::angleDelta().
+ * @param pixels_per_zoom_step Pixels of vertical movement per one zoom step.
+ * @return Fractional zoom steps; positive = zoom in.
+ */
+[[nodiscard]] inline float wheelDeltaToZoomSteps(
+        int pixel_delta_y,
+        int angle_delta_y,
+        int angle_delta_x,
+        float pixels_per_zoom_step = DEFAULT_WHEEL_PIXELS_PER_ZOOM_STEP) {
+    if (pixel_delta_y != 0) {
+        return static_cast<float>(pixel_delta_y) / pixels_per_zoom_step;
+    }
+
+    int const angle_y = (angle_delta_y != 0) ? angle_delta_y : angle_delta_x;
+    return static_cast<float>(angle_y) / WHEEL_ANGLE_DELTA_PER_NOTCH;
+}
+
+// =============================================================================
 // Zooming
 // =============================================================================
+
+/// Visible-range fraction removed per zoom step (matches DataViewer adaptive normal mode).
+constexpr float ADAPTIVE_ZOOM_RANGE_FRACTION = 0.03f;
+
+/// Minimum visible-range scale factor in a single wheel event (prevents runaway zoom).
+constexpr float MIN_ADAPTIVE_VISIBLE_RANGE_SCALE = 0.01f;
+
+/**
+ * @brief Compute the zoom multiplier for adaptive range-proportional wheel zoom.
+ *
+ * Each zoom step changes the visible axis range by @ref ADAPTIVE_ZOOM_RANGE_FRACTION
+ * of the current visible span (3% per step, matching DataViewer adaptive normal mode).
+ * Positive @p delta zooms in; negative @p delta zooms out.
+ *
+ * @param delta Fractional wheel steps from wheelDeltaToZoomSteps().
+ * @return Multiplier to apply to the current axis zoom value.
+ */
+[[nodiscard]] inline float adaptiveZoomMultiplier(float delta) {
+    if (delta == 0.0f) {
+        return 1.0f;
+    }
+
+    float const visible_scale = std::max(
+            1.0f - ADAPTIVE_ZOOM_RANGE_FRACTION * delta,
+            MIN_ADAPTIVE_VISIBLE_RANGE_SCALE);
+    return 1.0f / visible_scale;
+}
 
 /**
  * @brief Apply a scroll-wheel zoom step to the state.
  *
- * The zoom factor is `1.1^delta`. Modifier keys select the axis:
+ * Uses adaptive range-proportional scaling: each wheel step changes the visible
+ * span by 3% of the current range (same feel as DataViewer adaptive mode).
+ * Modifier keys select the axis:
  * - Default (no modifier): X-axis only
  * - @p y_only (Shift): Y-axis only
  * - @p both_axes (Ctrl): Both axes simultaneously
@@ -433,7 +501,7 @@ void handleZoom(
         float delta,
         bool y_only,
         bool both_axes) {
-    float const factor = std::pow(1.1f, delta);
+    float const factor = adaptiveZoomMultiplier(delta);
 
     if (y_only) {
         state.setYZoom(view_state.y_zoom * factor);

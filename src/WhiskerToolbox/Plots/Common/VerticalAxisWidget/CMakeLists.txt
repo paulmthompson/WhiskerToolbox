@@ -20,12 +20,12 @@ set_target_properties(VerticalAxisWidget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-target_link_libraries(VerticalAxisWidget PRIVATE 
-    Qt6::Widgets 
-    Qt6::Core 
+target_link_libraries(VerticalAxisWidget PRIVATE
+    Qt6::Widgets
+    Qt6::Core
     Qt6::Gui
+    PlotZoomProfile
 )
-
 target_link_libraries(VerticalAxisWidget PUBLIC CorePlotting)
 
 target_include_directories(VerticalAxisWidget PUBLIC

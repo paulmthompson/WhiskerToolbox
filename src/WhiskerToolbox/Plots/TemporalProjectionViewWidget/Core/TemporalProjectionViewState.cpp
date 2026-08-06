@@ -1,8 +1,8 @@
 #include "TemporalProjectionViewState.hpp"
 
 #include "Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp"
-#include "Plots/Common/LineStyleControls/Core/LineStyleState.hpp"
 #include "Plots/Common/HorizontalAxisWidget/Core/HorizontalAxisState.hpp"
+#include "Plots/Common/LineStyleControls/Core/LineStyleState.hpp"
 #include "Plots/Common/VerticalAxisWidget/Core/VerticalAxisState.hpp"
 
 #include <rfl/json.hpp>
@@ -14,8 +14,7 @@ TemporalProjectionViewState::TemporalProjectionViewState(QObject * parent)
       _horizontal_axis_state(std::make_unique<HorizontalAxisState>(this)),
       _vertical_axis_state(std::make_unique<VerticalAxisState>(this)),
       _glyph_style_state(std::make_unique<GlyphStyleState>(this)),
-      _line_style_state(std::make_unique<LineStyleState>(this))
-{
+      _line_style_state(std::make_unique<LineStyleState>(this)) {
     _data.instance_id = getInstanceId().toStdString();
     _data.horizontal_axis = _horizontal_axis_state->data();
     _data.vertical_axis = _vertical_axis_state->data();
@@ -33,7 +32,9 @@ TemporalProjectionViewState::TemporalProjectionViewState(QObject * parent)
     connect(_horizontal_axis_state.get(), &HorizontalAxisState::rangeChanged,
             this, syncHorizontalData);
     connect(_horizontal_axis_state.get(), &HorizontalAxisState::rangeUpdated,
-            this, syncHorizontalData);
+            this, [this]() {
+                _data.horizontal_axis = _horizontal_axis_state->data();
+            });
 
     auto syncVerticalData = [this]() {
         _data.vertical_axis = _vertical_axis_state->data();
@@ -43,7 +44,9 @@ TemporalProjectionViewState::TemporalProjectionViewState(QObject * parent)
     connect(_vertical_axis_state.get(), &VerticalAxisState::rangeChanged,
             this, syncVerticalData);
     connect(_vertical_axis_state.get(), &VerticalAxisState::rangeUpdated,
-            this, syncVerticalData);
+            this, [this]() {
+                _data.vertical_axis = _vertical_axis_state->data();
+            });
 
     // Sync glyph style state with serializable data
     _glyph_style_state->setStyleSilent(_data.point_glyph_style);
@@ -66,13 +69,11 @@ TemporalProjectionViewState::TemporalProjectionViewState(QObject * parent)
             });
 }
 
-QString TemporalProjectionViewState::getDisplayName() const
-{
+QString TemporalProjectionViewState::getDisplayName() const {
     return QString::fromStdString(_data.display_name);
 }
 
-void TemporalProjectionViewState::setDisplayName(QString const & name)
-{
+void TemporalProjectionViewState::setDisplayName(QString const & name) {
     if (_data.display_name != name.toStdString()) {
         _data.display_name = name.toStdString();
         markDirty();
@@ -80,36 +81,29 @@ void TemporalProjectionViewState::setDisplayName(QString const & name)
     }
 }
 
-void TemporalProjectionViewState::setXZoom(double zoom)
-{
+void TemporalProjectionViewState::setXZoom(double zoom) {
     if (_data.view_state.x_zoom != zoom) {
         _data.view_state.x_zoom = zoom;
-        markDirty();
         emit viewStateChanged();
     }
 }
 
-void TemporalProjectionViewState::setYZoom(double zoom)
-{
+void TemporalProjectionViewState::setYZoom(double zoom) {
     if (_data.view_state.y_zoom != zoom) {
         _data.view_state.y_zoom = zoom;
-        markDirty();
         emit viewStateChanged();
     }
 }
 
-void TemporalProjectionViewState::setPan(double x_pan, double y_pan)
-{
+void TemporalProjectionViewState::setPan(double x_pan, double y_pan) {
     if (_data.view_state.x_pan != x_pan || _data.view_state.y_pan != y_pan) {
         _data.view_state.x_pan = x_pan;
         _data.view_state.y_pan = y_pan;
-        markDirty();
         emit viewStateChanged();
     }
 }
 
-void TemporalProjectionViewState::setXBounds(double x_min, double x_max)
-{
+void TemporalProjectionViewState::setXBounds(double x_min, double x_max) {
     if (_data.view_state.x_min != x_min || _data.view_state.x_max != x_max) {
         _data.view_state.x_min = x_min;
         _data.view_state.x_max = x_max;
@@ -121,8 +115,7 @@ void TemporalProjectionViewState::setXBounds(double x_min, double x_max)
     }
 }
 
-void TemporalProjectionViewState::setYBounds(double y_min, double y_max)
-{
+void TemporalProjectionViewState::setYBounds(double y_min, double y_max) {
     if (_data.view_state.y_min != y_min || _data.view_state.y_max != y_max) {
         _data.view_state.y_min = y_min;
         _data.view_state.y_max = y_max;
@@ -135,15 +128,13 @@ void TemporalProjectionViewState::setYBounds(double y_min, double y_max)
     }
 }
 
-std::string TemporalProjectionViewState::toJson() const
-{
+std::string TemporalProjectionViewState::toJson() const {
     TemporalProjectionViewStateData data_to_serialize = _data;
     data_to_serialize.instance_id = getInstanceId().toStdString();
     return rfl::json::write(data_to_serialize);
 }
 
-bool TemporalProjectionViewState::fromJson(std::string const & json)
-{
+bool TemporalProjectionViewState::fromJson(std::string const & json) {
     auto result = rfl::json::read<TemporalProjectionViewStateData>(json);
     if (result) {
         _data = *result;
@@ -167,18 +158,16 @@ bool TemporalProjectionViewState::fromJson(std::string const & json)
 
 // === Data Key Management ===
 
-std::vector<QString> TemporalProjectionViewState::getPointDataKeys() const
-{
+std::vector<QString> TemporalProjectionViewState::getPointDataKeys() const {
     std::vector<QString> result;
     result.reserve(_data.point_data_keys.size());
-    for (auto const & key : _data.point_data_keys) {
+    for (auto const & key: _data.point_data_keys) {
         result.push_back(QString::fromStdString(key));
     }
     return result;
 }
 
-void TemporalProjectionViewState::addPointDataKey(QString const & key)
-{
+void TemporalProjectionViewState::addPointDataKey(QString const & key) {
     std::string const key_str = key.toStdString();
     auto it = std::find(_data.point_data_keys.begin(), _data.point_data_keys.end(), key_str);
     if (it == _data.point_data_keys.end()) {
@@ -189,8 +178,7 @@ void TemporalProjectionViewState::addPointDataKey(QString const & key)
     }
 }
 
-void TemporalProjectionViewState::removePointDataKey(QString const & key)
-{
+void TemporalProjectionViewState::removePointDataKey(QString const & key) {
     std::string const key_str = key.toStdString();
     auto it = std::find(_data.point_data_keys.begin(), _data.point_data_keys.end(), key_str);
     if (it != _data.point_data_keys.end()) {
@@ -201,8 +189,7 @@ void TemporalProjectionViewState::removePointDataKey(QString const & key)
     }
 }
 
-void TemporalProjectionViewState::clearPointDataKeys()
-{
+void TemporalProjectionViewState::clearPointDataKeys() {
     if (!_data.point_data_keys.empty()) {
         _data.point_data_keys.clear();
         markDirty();
@@ -211,18 +198,16 @@ void TemporalProjectionViewState::clearPointDataKeys()
     }
 }
 
-std::vector<QString> TemporalProjectionViewState::getLineDataKeys() const
-{
+std::vector<QString> TemporalProjectionViewState::getLineDataKeys() const {
     std::vector<QString> result;
     result.reserve(_data.line_data_keys.size());
-    for (auto const & key : _data.line_data_keys) {
+    for (auto const & key: _data.line_data_keys) {
         result.push_back(QString::fromStdString(key));
     }
     return result;
 }
 
-void TemporalProjectionViewState::addLineDataKey(QString const & key)
-{
+void TemporalProjectionViewState::addLineDataKey(QString const & key) {
     std::string const key_str = key.toStdString();
     auto it = std::find(_data.line_data_keys.begin(), _data.line_data_keys.end(), key_str);
     if (it == _data.line_data_keys.end()) {
@@ -233,8 +218,7 @@ void TemporalProjectionViewState::addLineDataKey(QString const & key)
     }
 }
 
-void TemporalProjectionViewState::removeLineDataKey(QString const & key)
-{
+void TemporalProjectionViewState::removeLineDataKey(QString const & key) {
     std::string const key_str = key.toStdString();
     auto it = std::find(_data.line_data_keys.begin(), _data.line_data_keys.end(), key_str);
     if (it != _data.line_data_keys.end()) {
@@ -245,8 +229,7 @@ void TemporalProjectionViewState::removeLineDataKey(QString const & key)
     }
 }
 
-void TemporalProjectionViewState::clearLineDataKeys()
-{
+void TemporalProjectionViewState::clearLineDataKeys() {
     if (!_data.line_data_keys.empty()) {
         _data.line_data_keys.clear();
         markDirty();
@@ -257,8 +240,7 @@ void TemporalProjectionViewState::clearLineDataKeys()
 
 // === Rendering Parameters ===
 
-void TemporalProjectionViewState::setPointSize(float size)
-{
+void TemporalProjectionViewState::setPointSize(float size) {
     if (_data.point_glyph_style.size != size) {
         _data.point_glyph_style.size = size;
         _glyph_style_state->setStyleSilent(_data.point_glyph_style);
@@ -268,8 +250,7 @@ void TemporalProjectionViewState::setPointSize(float size)
     }
 }
 
-void TemporalProjectionViewState::setLineWidth(float width)
-{
+void TemporalProjectionViewState::setLineWidth(float width) {
     if (_data.line_style.thickness != width) {
         _data.line_style.thickness = width;
         _line_style_state->setStyleSilent(_data.line_style);
@@ -281,8 +262,7 @@ void TemporalProjectionViewState::setLineWidth(float width)
 
 // === Selection Mode ===
 
-void TemporalProjectionViewState::setSelectionMode(QString const & mode)
-{
+void TemporalProjectionViewState::setSelectionMode(QString const & mode) {
     std::string const mode_str = mode.toStdString();
     if (_data.selection_mode != mode_str) {
         _data.selection_mode = mode_str;
@@ -294,8 +274,7 @@ void TemporalProjectionViewState::setSelectionMode(QString const & mode)
 
 // === Color by Group ===
 
-void TemporalProjectionViewState::setColorByGroup(bool enabled)
-{
+void TemporalProjectionViewState::setColorByGroup(bool enabled) {
     if (_data.color_by_group != enabled) {
         _data.color_by_group = enabled;
         markDirty();

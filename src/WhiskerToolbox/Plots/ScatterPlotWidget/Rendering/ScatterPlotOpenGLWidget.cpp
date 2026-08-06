@@ -29,6 +29,7 @@
 #include "KeymapSystem/KeymapManager.hpp"
 #include "Plots/Common/GlyphStyleWidget/Core/GlyphStyleState.hpp"
 #include "Plots/Common/PlotInteractionHelpers.hpp"
+#include "Plots/Common/PlotZoomProfile/PlotZoomProfile.hpp"
 #include "Plots/Common/TooltipManager/PlotTooltipManager.hpp"
 #include "PlottingOpenGL/Renderers/PreviewRenderer.hpp"
 #include "PlottingOpenGL/SceneRenderer.hpp"
@@ -227,6 +228,7 @@ void ScatterPlotOpenGLWidget::initializeGL() {
 }
 
 void ScatterPlotOpenGLWidget::paintGL() {
+    Neuralyzer::Plots::PlotZoomProfilePaintGLScope paint_profile;
     updateBackgroundColor();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -245,6 +247,7 @@ void ScatterPlotOpenGLWidget::paintGL() {
 
     if (_scene_dirty) {
         rebuildScene();
+        paint_profile.setRebuiltScene(true);
         _scene_dirty = false;
     }
 
@@ -380,6 +383,8 @@ void ScatterPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
 }
 
 void ScatterPlotOpenGLWidget::wheelEvent(QWheelEvent * event) {
+    Neuralyzer::Plots::PlotZoomProfileWheelScope const wheel_profile;
+
     // Disable zoom while a polygon selection is in progress to avoid
     // world-coordinate mismatch with the screen-space preview overlay.
     if (_polygon_controller->isActive()) {
@@ -387,7 +392,8 @@ void ScatterPlotOpenGLWidget::wheelEvent(QWheelEvent * event) {
         return;
     }
 
-    float const delta = event->angleDelta().y() / 120.0f;
+    float const delta = Neuralyzer::Plots::wheelDeltaToZoomSteps(
+            event->pixelDelta().y(), event->angleDelta().y(), event->angleDelta().x());
     bool const y_only = (event->modifiers() & Qt::ShiftModifier) != 0;
     bool const both_axes = (event->modifiers() & Qt::ControlModifier) != 0;
     handleZoom(delta, y_only, both_axes);
@@ -448,7 +454,6 @@ void ScatterPlotOpenGLWidget::onViewStateChanged() {
         _scene_dirty = true;
     }
     update();
-    emit viewBoundsChanged();
 }
 
 void ScatterPlotOpenGLWidget::updateBackgroundColor() {

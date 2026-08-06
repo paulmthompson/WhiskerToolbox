@@ -467,7 +467,8 @@ void EventPlotOpenGLWidget::mouseDoubleClickEvent(QMouseEvent * event) {
 }
 
 void EventPlotOpenGLWidget::wheelEvent(QWheelEvent * event) {
-    float const delta = event->angleDelta().y() / 120.0f;
+    float const delta = Neuralyzer::Plots::wheelDeltaToZoomSteps(
+            event->pixelDelta().y(), event->angleDelta().y(), event->angleDelta().x());
 
     // Zoom mode based on modifiers:
     // - Default: X-axis only (time-focused exploration)
@@ -507,7 +508,6 @@ void EventPlotOpenGLWidget::onViewStateChanged() {
     }
     updateMatrices();
     update();
-    emit viewBoundsChanged();
 }
 
 // =============================================================================

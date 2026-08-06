@@ -2,12 +2,14 @@
 #define HEATMAP_WIDGET_HPP
 
 #include "DataTypeEnum/DM_DataType.hpp"
+#include "Plots/Common/PlotViewAxisRefresh.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <QWidget>
 
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -95,6 +97,8 @@ private:
 
     /// DataManager-level observer ID for detecting key additions/removals
     int _dm_observer_id = -1;
+
+    std::optional<Neuralyzer::Plots::ViewAxisSyncSnapshot> _view_axis_snapshot;
 
     /// Per-key callback IDs for data change notifications (key → callback ID)
     std::map<std::string, int> _data_callback_ids;
