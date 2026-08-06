@@ -324,6 +324,40 @@ copy_files(test_data_manager
 
 enable_whiskertoolbox_test_pch(test_data_manager)
 
+if(ENABLE_SPIKE2_SONPY)
+    add_executable(test_spike2_python_loader
+        IO/spike2_python_loader.test.cpp
+    )
+
+    target_link_libraries(test_spike2_python_loader PRIVATE
+        Catch2::Catch2WithMain
+        DataManagerIO_Spike2SonPy
+        WhiskerToolbox::PythonRuntime
+        WhiskerToolbox::AnalogTimeSeries
+        WhiskerToolbox::DigitalTimeSeries
+    )
+
+    add_custom_command(TARGET test_spike2_python_loader POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/resources/python
+            ${CMAKE_CURRENT_BINARY_DIR}/resources/python
+    )
+
+    if(ENABLE_DETAILED_TEST_DISCOVERY)
+        catch_discover_tests(test_spike2_python_loader PROPERTIES ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0")
+    else()
+        add_test(NAME test_spike2_python_loader_all
+            COMMAND test_spike2_python_loader
+        )
+        set_property(TEST test_spike2_python_loader_all
+            PROPERTY ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+        )
+    endif()
+
+    set_target_compiler_warnings(test_spike2_python_loader)
+    enable_whiskertoolbox_shared_test_pch(test_spike2_python_loader)
+endif()
+
 add_executable(profile_dlc profile_dlc.cpp)
 target_link_libraries(profile_dlc PRIVATE DataManagerIO)
 target_include_directories(profile_dlc PRIVATE

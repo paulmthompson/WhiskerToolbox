@@ -128,6 +128,54 @@ endif()
 add_subdirectory(formats/Numpy)
 target_link_libraries(DataManagerIO PRIVATE DataManagerNumpy)
 
+option(ENABLE_SPIKE2_SONPY "Enable optional Spike2 import via embedded Python and CED SonPy" ON)
+
+if(ENABLE_SPIKE2_SONPY)
+    add_library(DataManagerIO_Spike2SonPy STATIC
+        formats/Spike2/Spike2PythonFormatLoader.hpp
+        formats/Spike2/Spike2PythonFormatLoader.cpp
+    )
+
+    target_include_directories(DataManagerIO_Spike2SonPy PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/..
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_CURRENT_BINARY_DIR}
+    )
+
+    target_link_libraries(DataManagerIO_Spike2SonPy
+        PUBLIC
+            DataManagerIO_Core
+            WhiskerToolbox::PythonRuntime
+        PRIVATE
+            DataTypeEnum
+            ParameterSchema
+            AnalogTimeSeries
+            DigitalTimeSeries
+            TimeFrame
+            nlohmann_json::nlohmann_json
+    )
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        target_compile_options(DataManagerIO_Spike2SonPy PRIVATE ${CLANG_OPTIONS})
+    endif()
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(DataManagerIO_Spike2SonPy PRIVATE ${GCC_WARNINGS})
+    endif()
+
+    if (MSVC)
+        target_compile_options(DataManagerIO_Spike2SonPy PRIVATE ${MSVC_WARNINGS})
+    endif()
+
+    add_custom_command(TARGET DataManagerIO_Spike2SonPy POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_SOURCE_DIR}/resources/python
+            ${CMAKE_BINARY_DIR}/resources/python
+    )
+
+    enable_whiskertoolbox_pch(DataManagerIO_Spike2SonPy)
+endif()
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(DataManagerIO PRIVATE ${CLANG_OPTIONS})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
