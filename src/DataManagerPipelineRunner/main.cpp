@@ -8,10 +8,19 @@
 #include "DataSynthesizer/register_datasynthesizer_commands.hpp"
 #include "DeepLearning/register_deeplearning_commands.hpp"
 #include "JsonPipeline/JsonPipelineRunner.hpp"
+#include "JsonPythonEnvironment.hpp"
+#include "PythonEngine.hpp"
 #include "TransformsV2/register_transformsv2_commands.hpp"
+
+#include "IO/core/LoaderRegistry.hpp"
+
+#ifdef ENABLE_SPIKE2_SONPY
+#include "IO/formats/Spike2/Spike2PythonFormatLoader.hpp"
+#endif
 
 #include <exception>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <string_view>
 
@@ -21,10 +30,10 @@ namespace {
  * @brief Parsed command-line arguments for the pipeline runner.
  */
 struct CliParseResult {
-    bool m_valid = false;                                              ///< True when arguments are valid.
-    bool m_show_help = false;                                          ///< True when usage should be printed.
-    std::string m_error;                                               ///< Error message when parsing fails.
-    std::string m_config_path;                                         ///< Pipeline JSON config path.
+    bool m_valid = false;                                          ///< True when arguments are valid.
+    bool m_show_help = false;                                      ///< True when usage should be printed.
+    std::string m_error;                                           ///< Error message when parsing fails.
+    std::string m_config_path;                                     ///< Pipeline JSON config path.
     Neuralyzer::DataManagerPipeline::JsonPipelineOptions m_options;///< Runner options.
 };
 
@@ -135,6 +144,21 @@ void printFailureSummary(Neuralyzer::DataManagerPipeline::JsonPipelineResult con
     std::cerr << ": " << result.m_error_message << '\n';
 }
 
+void registerPythonJsonSupport(PythonEngine & engine) {
+    setJsonPythonEnvironmentConfigurator([&engine](nlohmann::json const & config, std::string & error_message) {
+        return configurePythonEnvironmentFromJson(engine, config, error_message);
+    });
+}
+
+void registerOptionalPythonLoaders(PythonEngine & engine) {
+#ifdef ENABLE_SPIKE2_SONPY
+    LoaderRegistry::getInstance().registerLoader(
+            std::make_unique<Spike2PythonFormatLoader>(engine));
+#else
+    (void) engine;
+#endif
+}
+
 }// namespace
 
 /**
@@ -163,6 +187,10 @@ int main(int argc, char ** argv) {
         Neuralyzer::DataSynthesizer::register_datasynthesizer_commands();
         Neuralyzer::Transforms::V2::register_transformsv2_commands();
         dl::register_deeplearning_commands();
+
+        PythonEngine python_engine;
+        registerPythonJsonSupport(python_engine);
+        registerOptionalPythonLoaders(python_engine);
 
         DataManager data_manager;
         auto const result = Neuralyzer::DataManagerPipeline::runJsonPipelineFile(

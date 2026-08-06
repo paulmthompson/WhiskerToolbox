@@ -2,9 +2,10 @@
 #include "PythonBridge.hpp"
 #include "PythonEngine.hpp"
 
-#include "PythonViewWidget.hpp"
 #include "PythonConsoleWidget.hpp"
 #include "PythonEditorWidget.hpp"
+#include "PythonRuntimeService.hpp"
+#include "PythonViewWidget.hpp"
 #include "Python_Widget/Core/PythonWidgetState.hpp"
 
 #include <QTabWidget>
@@ -15,13 +16,13 @@
 PythonViewWidget::PythonViewWidget(std::shared_ptr<PythonWidgetState> state,
                                    std::shared_ptr<DataManager> data_manager,
                                    QWidget * parent)
-    : QWidget(parent)
-    , _state(std::move(state))
-    , _data_manager(std::move(data_manager)) {
+    : QWidget(parent),
+      _state(std::move(state)),
+      _data_manager(std::move(data_manager)) {
 
     // Create engine and bridge
     try {
-        _engine = std::make_unique<PythonEngine>();
+        _engine = &PythonRuntimeService::instance().engine();
         _bridge = std::make_unique<PythonBridge>(_data_manager, *_engine);
         _bridge->exposeDataManager();
 
@@ -62,9 +63,9 @@ PythonViewWidget::PythonViewWidget(std::shared_ptr<PythonWidgetState> state,
 }
 
 PythonViewWidget::~PythonViewWidget() {
-    // Bridge must be destroyed before engine (it holds a reference)
+    // Bridge must be destroyed before the shared engine shuts down.
     _bridge.reset();
-    _engine.reset();
+    _engine = nullptr;
 }
 
 void PythonViewWidget::_setupUI() {
@@ -93,9 +94,7 @@ void PythonViewWidget::_connectSignals() {
 
     // Editor output → console output area
     connect(_editor, &PythonEditorWidget::outputGenerated,
-            this, [this](QString const & stdout_text,
-                         QString const & stderr_text,
-                         bool /*success*/) {
+            this, [this](QString const & stdout_text, QString const & stderr_text, bool /*success*/) {
                 // Show script output in the console tab
                 if (!stdout_text.isEmpty() || !stderr_text.isEmpty()) {
                     // Switch to console to see output

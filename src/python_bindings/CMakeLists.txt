@@ -65,6 +65,8 @@ add_library(PythonRuntime STATIC
     PythonEngine.cpp
     PythonResult.hpp
     OutputRedirector.hpp
+    JsonPythonEnvironment.hpp
+    JsonPythonEnvironment.cpp
 )
 
 target_link_libraries(PythonRuntime

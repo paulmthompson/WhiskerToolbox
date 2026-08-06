@@ -9,8 +9,8 @@
  * - Console tab (PythonConsoleWidget) — interactive REPL
  * - Editor tab (PythonEditorWidget) — script file editor
  *
- * It owns the PythonEngine and PythonBridge (singleton pattern, since
- * allow_multiple = false for PythonWidget).
+ * It uses the application-wide PythonEngine and owns the PythonBridge that
+ * connects that engine to the current DataManager.
  *
  * @see PythonConsoleWidget for the REPL console
  * @see PythonEditorWidget for the script editor
@@ -60,8 +60,8 @@ private:
     std::shared_ptr<PythonWidgetState> _state;
     std::shared_ptr<DataManager> _data_manager;
 
-    // Owned: engine → bridge (order matters for destruction)
-    std::unique_ptr<PythonEngine> _engine;
+    // Bridge is owned by the widget; the engine is owned by PythonRuntimeService.
+    PythonEngine * _engine{nullptr};
     std::unique_ptr<PythonBridge> _bridge;
 
     // UI
@@ -70,4 +70,4 @@ private:
     PythonEditorWidget * _editor{nullptr};
 };
 
-#endif // PYTHON_VIEW_WIDGET_HPP
+#endif// PYTHON_VIEW_WIDGET_HPP

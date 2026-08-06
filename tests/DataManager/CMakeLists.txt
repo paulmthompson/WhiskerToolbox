@@ -147,6 +147,7 @@ add_executable(test_data_manager
         IO/atomic_write.test.cpp
         IO/saver_registry.test.cpp
         IO/loader_registry.test.cpp
+        IO/json_python_environment_config.test.cpp
         
         # IO Integration tests (format-centric organization)
         IO/formats/CSV/analog/analog_csv_integration.test.cpp

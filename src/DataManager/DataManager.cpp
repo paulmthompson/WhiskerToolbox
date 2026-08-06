@@ -55,6 +55,11 @@ using namespace nlohmann;
 
 namespace {
 
+JsonPythonEnvironmentConfigurator & jsonPythonEnvironmentConfigurator() {
+    static JsonPythonEnvironmentConfigurator configurator;
+    return configurator;
+}
+
 /**
  * @brief Record filesystem provenance for a successfully loaded data key.
  * @param dm DataManager owning the session lineage registry.
@@ -84,6 +89,14 @@ void recordLoadedFileSource(
 }
 
 }// namespace
+
+void setJsonPythonEnvironmentConfigurator(JsonPythonEnvironmentConfigurator configurator) {
+    jsonPythonEnvironmentConfigurator() = std::move(configurator);
+}
+
+void clearJsonPythonEnvironmentConfigurator() {
+    jsonPythonEnvironmentConfigurator() = nullptr;
+}
 
 /**
  * @brief Try loading data using new registry system first, fallback to legacy if needed
@@ -1085,6 +1098,21 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
     json const * working_ptr = &j;
 
     if (j.is_object() && j.contains("data") && j["data"].is_array()) {
+        if (j.contains("python")) {
+            auto & configurator = jsonPythonEnvironmentConfigurator();
+            if (!configurator) {
+                std::cerr << "Error: JSON contains a top-level 'python' block, but no Python environment configurator is registered." << std::endl;
+                return data_info_list;
+            }
+
+            std::string error_message;
+            if (!configurator(j["python"], error_message)) {
+                std::cerr << "Error: Failed to configure Python environment for JSON loading: "
+                          << error_message << std::endl;
+                return data_info_list;
+            }
+        }
+
         std::map<std::string, std::string> variables;
         if (j.contains("variables") && j["variables"].is_object()) {
             for (auto const & [k, v]: j["variables"].items()) {

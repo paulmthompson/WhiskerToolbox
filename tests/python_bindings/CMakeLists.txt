@@ -14,6 +14,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 
 add_executable(test_python_engine
     ${CMAKE_SOURCE_DIR}/src/python_bindings/PythonEngine.test.cpp
+    ${CMAKE_SOURCE_DIR}/src/python_bindings/JsonPythonEnvironment.test.cpp
 )
 
 target_link_libraries(test_python_engine PRIVATE

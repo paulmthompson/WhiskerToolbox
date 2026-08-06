@@ -1,5 +1,6 @@
 #include "Main_Window/mainwindow.hpp"
 
+#include "Spike2LoaderRegistration.hpp"
 #include "color_scheme.hpp"
 
 #include <QApplication>
@@ -73,6 +74,10 @@ int main(int argc, char * argv[]) {
     // Explicitly trigger NpyExplorer registration (static lib needs explicit reference)
     NpyExplorerRegistration::registerNpyExplorer();
 
+    // Register optional Python-backed loader support before JSON-driven data loading.
+    registerJsonPythonEnvironmentConfigurator();
+    registerSpike2PythonLoaderIfAvailable();
+
 #ifdef Q_OS_LINUX
     // Force X11 backend on Linux for proper Qt Advanced Docking System support.
     // Wayland has issues with translucent overlay widgets and frameless window repositioning
@@ -133,10 +138,10 @@ int main(int argc, char * argv[]) {
     // widget to main window did
 
     // Force the MainWindow to create its native OS window handle immediately.
-    //w.winId(); 
-    
+    //w.winId();
+
     // Explicitly tell the native window it will be hosting OpenGL content.
-    // This prevents Qt from destroying and recreating the window later 
+    // This prevents Qt from destroying and recreating the window later
     // when the first QOpenGLWidget is dynamically docked.
     //if (auto* handle = w.windowHandle()) {
     //    handle->setSurfaceType(QSurface::OpenGLSurface);

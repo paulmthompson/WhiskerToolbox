@@ -432,6 +432,23 @@ private:
 using JsonLoadProgressCallback = std::function<bool(int current, int total, std::string const & message)>;
 
 /**
+ * @brief Optional callback used to configure embedded Python before JSON data loading.
+ *
+ * Applications that provide Python-backed loaders can install a configurator so a
+ * top-level JSON `python` block can activate a venv/conda environment before
+ * registry loaders run. Core DataManager remains independent of PythonRuntime.
+ *
+ * @param python_config Top-level JSON object from `python`.
+ * @param error_message Filled with a user-facing error when the callback returns false.
+ * @return true if loading may continue.
+ */
+using JsonPythonEnvironmentConfigurator = std::function<bool(nlohmann::json const & python_config,
+                                                             std::string & error_message)>;
+
+void setJsonPythonEnvironmentConfigurator(JsonPythonEnvironmentConfigurator configurator);
+void clearJsonPythonEnvironmentConfigurator();
+
+/**
  * @brief Populate the default @c time TimeFrame when it is still empty after JSON loading.
  *
  * Scans all loaded @c MediaData keys with a positive frame count and builds an identity
