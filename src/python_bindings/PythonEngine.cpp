@@ -1,7 +1,6 @@
 #include "PythonEngine.hpp"
 
 #include "OutputRedirector.hpp"
-#include "bind_module.hpp"
 
 #include <pybind11/embed.h>
 
@@ -180,10 +179,6 @@ static std::unique_ptr<py::scoped_interpreter> createInterpreter() {
 
 PythonEngine::PythonEngine()
     : _interpreter(createInterpreter()) {
-    // Force the linker to include bindings.o (and all bind_*.o files
-    // it references) even when linking from a static archive.
-    ensure_whiskertoolbox_bindings_linked();
-
     try {
         _initNamespace();
         _installRedirectors();

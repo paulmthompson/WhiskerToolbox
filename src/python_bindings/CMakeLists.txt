@@ -59,17 +59,52 @@ message(STATUS "[PythonBridge] Python prefix:  ${_python_prefix}")
 message(STATUS "[PythonBridge] Python stdlib:  ${_python_stdlib}")
 message(STATUS "[PythonBridge] Python version: ${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}")
 
-# --- PythonBridge: embedded interpreter + engine + type bindings ---
-# All bindings use PYBIND11_EMBEDDED_MODULE (compiled into the app, no .so).
-add_library(PythonBridge STATIC
-    # Engine (Phase 1)
+# --- PythonRuntime: embedded interpreter without WhiskerToolbox bindings ---
+add_library(PythonRuntime STATIC
     PythonEngine.hpp
     PythonEngine.cpp
     PythonResult.hpp
     OutputRedirector.hpp
-    # Bridge (Phase 3)
-    PythonBridge.hpp
-    PythonBridge.cpp
+)
+
+target_link_libraries(PythonRuntime
+    PUBLIC pybind11::embed Python3::Python
+)
+
+target_include_directories(PythonRuntime PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+    "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+)
+
+set_target_compiler_warnings(PythonRuntime)
+
+add_library(WhiskerToolbox::PythonRuntime ALIAS PythonRuntime)
+
+# ---------------------------------------------------------------------------
+# Tell PythonEngine where the stdlib lives relative to the executable.
+# At runtime the engine resolves this relative to the exe directory.
+# ---------------------------------------------------------------------------
+target_compile_definitions(PythonRuntime PRIVATE
+    WT_PYTHON_VERSION_MAJOR=${Python3_VERSION_MAJOR}
+    WT_PYTHON_VERSION_MINOR=${Python3_VERSION_MINOR}
+)
+
+# On Windows the stdlib dir name relative to exe is "Lib";
+# on Linux it is "lib/pythonX.Y".  The engine uses these at runtime.
+if (WIN32)
+    target_compile_definitions(PythonRuntime PRIVATE
+        WT_PYTHON_STDLIB_REL_DIR="Lib"
+    )
+else()
+    target_compile_definitions(PythonRuntime PRIVATE
+        WT_PYTHON_STDLIB_REL_DIR="lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}"
+    )
+endif()
+enable_whiskertoolbox_pch(PythonRuntime)
+
+# --- PythonBindings: embedded whiskertoolbox_python module ---
+# All bindings use PYBIND11_EMBEDDED_MODULE (compiled into the app, no .so).
+add_library(PythonBindings STATIC
     # Module entry point + force-linkage helper
     bind_module.hpp
     bindings.cpp
@@ -90,18 +125,49 @@ add_library(PythonBridge STATIC
     bind_datamanager.cpp
 )
 
-target_link_libraries(PythonBridge
-    PUBLIC  pybind11::embed Python3::Python
+target_link_libraries(PythonBindings
+    PUBLIC WhiskerToolbox::PythonRuntime
 )
 
-target_link_libraries(PythonBridge PRIVATE DataManager)
-target_link_libraries(PythonBridge PRIVATE WhiskerToolbox::TensorData)
-target_link_libraries(PythonBridge PRIVATE WhiskerToolbox::LineData)
-target_link_libraries(PythonBridge PRIVATE WhiskerToolbox::MaskData)
-target_link_libraries(PythonBridge PRIVATE WhiskerToolbox::MediaData)
-target_link_libraries(PythonBridge PRIVATE WhiskerToolbox::AnalogTimeSeries)
-target_link_libraries(PythonBridge PRIVATE WhiskerToolbox::DigitalTimeSeries)
-target_link_libraries(PythonBridge PRIVATE WhiskerToolbox::PointData)
+target_link_libraries(PythonBindings PRIVATE DataManager)
+target_link_libraries(PythonBindings PRIVATE WhiskerToolbox::TensorData)
+target_link_libraries(PythonBindings PRIVATE WhiskerToolbox::LineData)
+target_link_libraries(PythonBindings PRIVATE WhiskerToolbox::MaskData)
+target_link_libraries(PythonBindings PRIVATE WhiskerToolbox::MediaData)
+target_link_libraries(PythonBindings PRIVATE WhiskerToolbox::AnalogTimeSeries)
+target_link_libraries(PythonBindings PRIVATE WhiskerToolbox::DigitalTimeSeries)
+target_link_libraries(PythonBindings PRIVATE WhiskerToolbox::PointData)
+
+target_include_directories(PythonBindings PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+    "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+)
+
+set_target_compiler_warnings(PythonBindings)
+
+add_library(WhiskerToolbox::PythonBindings ALIAS PythonBindings)
+
+enable_whiskertoolbox_pch(PythonBindings)
+
+# --- PythonBridge: high-level DataManager bridge ---
+add_library(PythonBridge STATIC
+    PythonBridge.hpp
+    PythonBridge.cpp
+)
+
+target_link_libraries(PythonBridge
+    PUBLIC WhiskerToolbox::PythonRuntime
+    PRIVATE
+        WhiskerToolbox::PythonBindings
+        DataManager
+        WhiskerToolbox::TensorData
+        WhiskerToolbox::LineData
+        WhiskerToolbox::MaskData
+        WhiskerToolbox::MediaData
+        WhiskerToolbox::AnalogTimeSeries
+        WhiskerToolbox::DigitalTimeSeries
+        WhiskerToolbox::PointData
+)
 
 target_include_directories(PythonBridge PUBLIC
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
@@ -112,24 +178,4 @@ set_target_compiler_warnings(PythonBridge)
 
 add_library(WhiskerToolbox::PythonBridge ALIAS PythonBridge)
 
-# ---------------------------------------------------------------------------
-# Tell PythonEngine where the stdlib lives relative to the executable.
-# At runtime the engine resolves this relative to the exe directory.
-# ---------------------------------------------------------------------------
-target_compile_definitions(PythonBridge PRIVATE
-    WT_PYTHON_VERSION_MAJOR=${Python3_VERSION_MAJOR}
-    WT_PYTHON_VERSION_MINOR=${Python3_VERSION_MINOR}
-)
-
-# On Windows the stdlib dir name relative to exe is "Lib";
-# on Linux it is "lib/pythonX.Y".  The engine uses these at runtime.
-if (WIN32)
-    target_compile_definitions(PythonBridge PRIVATE
-        WT_PYTHON_STDLIB_REL_DIR="Lib"
-    )
-else()
-    target_compile_definitions(PythonBridge PRIVATE
-        WT_PYTHON_STDLIB_REL_DIR="lib/python${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}"
-    )
-endif()
 enable_whiskertoolbox_pch(PythonBridge)

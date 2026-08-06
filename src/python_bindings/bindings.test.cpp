@@ -11,6 +11,7 @@
 
 #include "PythonEngine.hpp"
 #include "PythonResult.hpp"
+#include "bind_module.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
@@ -19,6 +20,7 @@
 // ── shared engine ──────────────────────────────────────────────────────────
 
 static PythonEngine & engine() {
+    ensure_whiskertoolbox_bindings_linked();
     static PythonEngine eng;
     return eng;
 }
@@ -41,7 +43,7 @@ static PythonResult run(std::string const & code) {
 TEST_CASE("Module imports successfully", "[bindings]") {
     Fixture f;
     auto r = run("import whiskertoolbox_python as wt");
-    (void)r;
+    (void) r;
 }
 
 // ── Geometry ───────────────────────────────────────────────────────────────
@@ -170,7 +172,7 @@ TEST_CASE("DigitalEventSeries construction and mutation", "[bindings][digital_ev
 
     run("des = wt.DigitalEventSeries()");
     run("des.addEvent(wt.TimeFrameIndex(10))");
-    run("des.addEvent(20)"); // int convenience
+    run("des.addEvent(20)");// int convenience
     auto r = run("print(des.size())");
     REQUIRE(r.stdout_text == "2\n");
 
@@ -196,7 +198,7 @@ TEST_CASE("DigitalIntervalSeries construction", "[bindings][digital_interval]") 
     run("import whiskertoolbox_python as wt");
 
     run("dis = wt.DigitalIntervalSeries()");
-    run("dis.addInterval(0, 100)"); // int convenience
+    run("dis.addInterval(0, 100)");// int convenience
     run("dis.addEvent(wt.Interval(200, 300))");
     auto r = run("print(dis.size())");
     REQUIRE(r.stdout_text == "2\n");

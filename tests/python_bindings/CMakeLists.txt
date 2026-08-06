@@ -18,7 +18,7 @@ add_executable(test_python_engine
 
 target_link_libraries(test_python_engine PRIVATE
     Catch2::Catch2WithMain
-    WhiskerToolbox::PythonBridge
+    WhiskerToolbox::PythonRuntime
 )
 
 # Suppress LeakSanitizer — CPython's internal memory arena has benign leaks
@@ -46,7 +46,7 @@ add_executable(test_python_bindings
 
 target_link_libraries(test_python_bindings PRIVATE
     Catch2::Catch2WithMain
-    WhiskerToolbox::PythonBridge
+    WhiskerToolbox::PythonBindings
 )
 
 if(ENABLE_DETAILED_TEST_DISCOVERY)

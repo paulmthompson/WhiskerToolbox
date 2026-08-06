@@ -11,8 +11,8 @@
 
 #include <pybind11/embed.h>
 
-// Force-linkage: called by PythonEngine to guarantee this TU is included
-// when linking from a static archive.
+// Force-linkage: called by PythonBridge or another binding consumer to
+// guarantee this TU is included when linking from a static archive.
 void ensure_whiskertoolbox_bindings_linked() {
     // intentionally empty
 }

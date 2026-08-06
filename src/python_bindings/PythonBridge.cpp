@@ -1,9 +1,10 @@
 #include "PythonBridge.hpp"
 
 #include "PythonEngine.hpp"
+#include "bind_module.hpp"
 
-#include "DataManager/DataManager.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "Lines/Line_Data.hpp"
@@ -43,10 +44,14 @@ void PythonBridge::exposeDataManager() {
         return;
     }
 
+    // Force the linker to include bindings.o (and all bind_*.o files it
+    // references) only for consumers that need the WhiskerToolbox bindings.
+    ensure_whiskertoolbox_bindings_linked();
+
     // Import the embedded module FIRST — this registers all pybind11 types
     // (DataManager, AnalogTimeSeries, etc.) so that py::cast() works.
     auto result = _engine.execute("import whiskertoolbox_python as wt");
-    (void)result; // If import fails the user will see the error on next interaction
+    (void) result;// If import fails the user will see the error on next interaction
 
     // Now inject the live DataManager shared_ptr into the Python namespace as `dm`.
     // Because bind_datamanager.cpp registers DataManager with shared_ptr holder,
@@ -69,21 +74,21 @@ bool PythonBridge::exposeData(std::string const & key, std::string const & pytho
     // needing complete type definitions for all variant alternatives in
     // this TU.
     auto r = _engine.execute(
-        python_name + " = dm.getData('" + key + "')");
+            python_name + " = dm.getData('" + key + "')");
     if (!r.success) {
         return false;
     }
 
     // Verify it's not None (key missing or unbound type)
     auto check = _engine.execute(
-        "_wt_expose_check = (" + python_name + " is not None)");
+            "_wt_expose_check = (" + python_name + " is not None)");
     if (!check.success) {
         return false;
     }
 
     try {
         auto val = _engine.globals()["_wt_expose_check"];
-        bool ok = val.cast<bool>();
+        bool const ok = val.cast<bool>();
         // Clean up temp variable
         _engine.globals().attr("pop")("_wt_expose_check", py::none());
         return ok;
@@ -120,10 +125,10 @@ namespace {
 /// Returns true if the object was of the requested type and was registered.
 template<typename T>
 bool tryImportAs(
-    py::object const & obj,
-    DataManager & dm,
-    std::string const & key,
-    std::string const & time_key) {
+        py::object const & obj,
+        DataManager & dm,
+        std::string const & key,
+        std::string const & time_key) {
     try {
         auto ptr = obj.cast<std::shared_ptr<T>>();
         if (ptr) {
@@ -136,7 +141,7 @@ bool tryImportAs(
     return false;
 }
 
-} // anonymous namespace
+}// anonymous namespace
 
 std::vector<std::string> PythonBridge::importNewData(std::string const & default_time_key) {
     std::vector<std::string> imported;
@@ -146,16 +151,15 @@ std::vector<std::string> PythonBridge::importNewData(std::string const & default
 
     // Build a set of keys already in the DataManager so we can skip them
     auto existing_keys = _dm->getAllKeys();
-    std::unordered_set<std::string> existing(existing_keys.begin(), existing_keys.end());
+    std::unordered_set<std::string> const existing(existing_keys.begin(), existing_keys.end());
 
     // Also skip well-known namespace entries
     static std::unordered_set<std::string> const skip_names = {
-        "dm", "wt", "__builtins__", "__name__", "__doc__",
-        "_wt_stdout", "_wt_stderr", "__file__"
-    };
+            "dm", "wt", "__builtins__", "__name__", "__doc__",
+            "_wt_stdout", "_wt_stderr", "__file__"};
 
     auto const & globals = _engine.globals();
-    for (auto const & item : globals) {
+    for (auto const & item: globals) {
         auto name = item.first.cast<std::string>();
 
         // Skip dunder, internal, and already-registered names
@@ -163,7 +167,7 @@ std::vector<std::string> PythonBridge::importNewData(std::string const & default
         if (skip_names.count(name)) continue;
         if (existing.count(name)) continue;
 
-        py::object obj = py::reinterpret_borrow<py::object>(item.second);
+        auto const obj = py::reinterpret_borrow<py::object>(item.second);
 
         // Skip module objects
         try {
@@ -173,14 +177,14 @@ std::vector<std::string> PythonBridge::importNewData(std::string const & default
         } catch (...) {}
 
         // Try to cast to each supported data type (order: most common first)
-        bool registered =
-            tryImportAs<AnalogTimeSeries>(obj, *_dm, name, default_time_key) ||
-            tryImportAs<DigitalEventSeries>(obj, *_dm, name, default_time_key) ||
-            tryImportAs<DigitalIntervalSeries>(obj, *_dm, name, default_time_key) ||
-            tryImportAs<LineData>(obj, *_dm, name, default_time_key) ||
-            tryImportAs<MaskData>(obj, *_dm, name, default_time_key) ||
-            tryImportAs<PointData>(obj, *_dm, name, default_time_key) ||
-            tryImportAs<TensorData>(obj, *_dm, name, default_time_key);
+        bool const registered =
+                tryImportAs<AnalogTimeSeries>(obj, *_dm, name, default_time_key) ||
+                tryImportAs<DigitalEventSeries>(obj, *_dm, name, default_time_key) ||
+                tryImportAs<DigitalIntervalSeries>(obj, *_dm, name, default_time_key) ||
+                tryImportAs<LineData>(obj, *_dm, name, default_time_key) ||
+                tryImportAs<MaskData>(obj, *_dm, name, default_time_key) ||
+                tryImportAs<PointData>(obj, *_dm, name, default_time_key) ||
+                tryImportAs<TensorData>(obj, *_dm, name, default_time_key);
 
         if (registered) {
             imported.push_back(name);
