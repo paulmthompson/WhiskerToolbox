@@ -355,10 +355,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#public-attributes-documentation" id="toc-public-attributes-documentation" class="nav-link" data-scroll-target="#public-attributes-documentation">Public Attributes Documentation</a>
   <ul class="collapse">
   <li><a href="#variable-filepath" id="toc-variable-filepath" class="nav-link" data-scroll-target="#variable-filepath">variable filepath</a></li>
-  <li><a href="#variable-preset" id="toc-variable-preset" class="nav-link" data-scroll-target="#variable-preset">variable preset</a></li>
-  <li><a href="#variable-include_raw_analog" id="toc-variable-include_raw_analog" class="nav-link" data-scroll-target="#variable-include_raw_analog">variable include_raw_analog</a></li>
-  <li><a href="#variable-include_event_channels" id="toc-variable-include_event_channels" class="nav-link" data-scroll-target="#variable-include_event_channels">variable include_event_channels</a></li>
-  <li><a href="#variable-include_level_channels" id="toc-variable-include_level_channels" class="nav-link" data-scroll-target="#variable-include_level_channels">variable include_level_channels</a></li>
+  <li><a href="#variable-channel" id="toc-variable-channel" class="nav-link" data-scroll-target="#variable-channel">variable channel</a></li>
+  <li><a href="#variable-processing" id="toc-variable-processing" class="nav-link" data-scroll-target="#variable-processing">variable processing</a></li>
+  <li><a href="#variable-threshold" id="toc-variable-threshold" class="nav-link" data-scroll-target="#variable-threshold">variable threshold</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -389,7 +388,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="spike2sonpyloaderoptions" class="level1">
 <h1>Spike2SonPyLoaderOptions</h1>
-<p><a href="">Loader</a> options shared by the Spike2/SonPy loader skeleton. <a href="#detailed-description">More…</a></p>
+<p><a href="">Loader</a> options for Spike2/SonPy JSON entries. <a href="#detailed-description">More…</a></p>
 <p><code>#include &lt;Spike2PythonFormatLoader.hpp&gt;</code></p>
 <section id="public-attributes" class="level2">
 <h2 class="anchored" data-anchor-id="public-attributes">Public Attributes</h2>
@@ -406,20 +405,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/structSpike2SonPyLoaderOptions.html#variable-filepath">filepath</a></strong></td>
 </tr>
 <tr class="even">
-<td>std::string</td>
-<td><strong><a href="../../api_generated/Classes/structSpike2SonPyLoaderOptions.html#variable-preset">preset</a></strong></td>
+<td>std::optional&lt; int &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structSpike2SonPyLoaderOptions.html#variable-channel">channel</a></strong></td>
 </tr>
 <tr class="odd">
-<td>bool</td>
-<td><strong><a href="../../api_generated/Classes/structSpike2SonPyLoaderOptions.html#variable-include-raw-analog">include_raw_analog</a></strong></td>
+<td><a href="../../api_generated/Classes/structSpike2ProcessingOptions.html">Spike2ProcessingOptions</a></td>
+<td><strong><a href="../../api_generated/Classes/structSpike2SonPyLoaderOptions.html#variable-processing">processing</a></strong></td>
 </tr>
 <tr class="even">
-<td>bool</td>
-<td><strong><a href="../../api_generated/Classes/structSpike2SonPyLoaderOptions.html#variable-include-event-channels">include_event_channels</a></strong></td>
-</tr>
-<tr class="odd">
-<td>bool</td>
-<td><strong><a href="../../api_generated/Classes/structSpike2SonPyLoaderOptions.html#variable-include-level-channels">include_level_channels</a></strong></td>
+<td>std::optional&lt; float &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structSpike2SonPyLoaderOptions.html#variable-threshold">threshold</a></strong></td>
 </tr>
 </tbody>
 </table>
@@ -427,8 +422,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="detailed-description" class="level2">
 <h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> Spike2SonPyLoaderOptions<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><a href="">Loader</a> options shared by the Spike2/SonPy loader skeleton.</p>
-<p>Phase 2 only validates SonPy availability and advertises these options. Later phases will use them to drive the Python helper and C++ array conversion.</p>
+<p><a href="">Loader</a> options for Spike2/SonPy JSON entries.</p>
+<p>Each JSON <code>data[]</code> entry selects one channel and output type. Use <code>channel</code>, optional <code>processing</code>, and optional <code>threshold</code> for ADC-derived outputs.</p>
 </section>
 <section id="public-attributes-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-attributes-documentation">Public Attributes Documentation</h2>
@@ -436,23 +431,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="variable-filepath">variable filepath</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string filepath<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="variable-preset" class="level3">
-<h3 class="anchored" data-anchor-id="variable-preset">variable preset</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string preset <span class="op">{</span><span class="st">"native_channels"</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="variable-channel" class="level3">
+<h3 class="anchored" data-anchor-id="variable-channel">variable channel</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="dt">int</span> <span class="op">&gt;</span> channel<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="variable-include_raw_analog" class="level3">
-<h3 class="anchored" data-anchor-id="variable-include_raw_analog">variable include_raw_analog</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> include_raw_analog <span class="op">{</span><span class="kw">true</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="variable-processing" class="level3">
+<h3 class="anchored" data-anchor-id="variable-processing">variable processing</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>Spike2ProcessingOptions processing<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="variable-include_event_channels" class="level3">
-<h3 class="anchored" data-anchor-id="variable-include_event_channels">variable include_event_channels</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> include_event_channels <span class="op">{</span><span class="kw">true</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="variable-include_level_channels" class="level3">
-<h3 class="anchored" data-anchor-id="variable-include_level_channels">variable include_level_channels</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> include_level_channels <span class="op">{</span><span class="kw">true</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="variable-threshold" class="level3">
+<h3 class="anchored" data-anchor-id="variable-threshold">variable threshold</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> threshold<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-07 at 02:38:00 +0000</p>
+<p>Updated on 2026-08-07 at 13:14:05 +0000</p>
 
 
 </section>

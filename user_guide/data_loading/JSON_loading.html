@@ -1053,6 +1053,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#digital-event-series" id="toc-digital-event-series" class="nav-link active" data-scroll-target="#digital-event-series">Digital Event Series</a></li>
   <li><a href="#digital-interval-series" id="toc-digital-interval-series" class="nav-link" data-scroll-target="#digital-interval-series">Digital Interval Series</a></li>
   <li><a href="#timeframe" id="toc-timeframe" class="nav-link" data-scroll-target="#timeframe">TimeFrame</a></li>
+  <li><a href="#forward-declared-clocks" id="toc-forward-declared-clocks" class="nav-link" data-scroll-target="#forward-declared-clocks">Forward-declared clocks</a></li>
+  <li><a href="#spike2-.smr-.smrx" id="toc-spike2-.smr-.smrx" class="nav-link" data-scroll-target="#spike2-.smr-.smrx">Spike2 (<code>.smr</code> / <code>.smrx</code>)</a></li>
   </ul>
 </nav>
     </div>
@@ -1475,9 +1477,71 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>If you load <strong>only</strong> points, lines, or other non-media data, <code>time</code> stays empty unless you add an explicit time entry (for example <code>format: "max_value"</code> from an analog or digital event series).</li>
 </ul>
 <p>Define <code>time</code> explicitly in JSON when you need a custom clock, a derived timebase, or a points-only session without video.</p>
-
-
 </section>
+</section>
+<section id="forward-declared-clocks" class="level3">
+<h3 class="anchored" data-anchor-id="forward-declared-clocks">Forward-declared clocks</h3>
+<p>When multiple data objects share a custom clock (for example a DAQ master clock), declare clock names at the top of the JSON object before the <code>data</code> array:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"clocks"</span><span class="fu">:</span> <span class="ot">[</span><span class="st">"master"</span><span class="ot">,</span> <span class="st">"time"</span><span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"data"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"filepath"</span><span class="fu">:</span> <span class="st">"breath.bin"</span><span class="fu">,</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"data_type"</span><span class="fu">:</span> <span class="st">"analog"</span><span class="fu">,</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"breath"</span><span class="fu">,</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"binary"</span><span class="fu">,</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"clock"</span><span class="fu">:</span> <span class="st">"master"</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"max_value"</span><span class="fu">,</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"data_type"</span><span class="fu">:</span> <span class="st">"time"</span><span class="fu">,</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"master"</span><span class="fu">,</span></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_data"</span><span class="fu">:</span> <span class="st">"breath"</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"derived"</span><span class="fu">,</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"data_type"</span><span class="fu">:</span> <span class="st">"time"</span><span class="fu">,</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"time"</span><span class="fu">,</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_timeframe"</span><span class="fu">:</span> <span class="st">"master"</span><span class="fu">,</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_series"</span><span class="fu">:</span> <span class="st">"camera_frames"</span><span class="fu">,</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"source_type"</span><span class="fu">:</span> <span class="st">"event"</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Element</th>
+<th>Description</th>
+<th>Required?</th>
+<th>Type</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>clocks</td>
+<td>Clock names to register as empty TimeFrames before loading data</td>
+<td>No</td>
+<td>array of strings</td>
+<td>Each name must be populated by a later <code>data_type: "time"</code> entry (or equivalent). Load fails if any declared clock is still empty after all entries are processed.</td>
+</tr>
+</tbody>
+</table>
+<p>Data entries may reference a <code>clock</code> before that clock is populated. When the clock is already declared in <code>clocks</code>, data is registered on that clock immediately; otherwise clock bindings are deferred until after all <code>data</code> entries are loaded. The implicit default <code>time</code> clock is not validated unless it appears in <code>clocks</code>.</p>
+</section>
+<section id="spike2-.smr-.smrx" class="level3">
+<h3 class="anchored" data-anchor-id="spike2-.smr-.smrx">Spike2 (<code>.smr</code> / <code>.smrx</code>)</h3>
+<p>See the <a href="../../user_guide/acquisition_systems/spike2.html">Spike2 (CED) acquisition guide</a> for SonPy setup, ADC analog/event/interval loading, and clock assignment examples.</p>
+
+
 </section>
 
 </main> <!-- /main -->
