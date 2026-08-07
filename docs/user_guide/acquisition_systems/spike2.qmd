@@ -1,0 +1,239 @@
+---
+title: "Spike2 (CED)"
+---
+
+[CED Spike2](https://ced.co.uk/products/spike2) records electrophysiology and behavioral signals into `.smr` or `.smrx` files. Neuralyzer loads Spike2 data through the optional [SonPy](https://pypi.org/project/sonpy/) Python package.
+
+Many labs record TTL-like signals on **ADC inputs** (continuous waveforms) rather than native Spike2 event/level channels. For those files, use `threshold` to derive `digital_event` or `digital_interval` series from the ADC trace. Use `data_type: "analog"` when you want the waveform itself (for example, a breathing sensor).
+
+## Prerequisites
+
+Configure a Python environment that matches your Neuralyzer build (same major/minor Python version) and has SonPy installed:
+
+```json
+{
+  "python": {
+    "venv_path": "/path/to/sonpy-env",
+    "required_imports": ["sonpy", "numpy"],
+    "fail_on_missing_imports": true
+  }
+}
+```
+
+Place this `python` block at the top of your JSON config, before the `data` array.
+
+## One entry per channel and output
+
+Use **one `data[]` entry per SonPy channel and per output type**. Multiple entries may reference the same `.smrx` file. SonPy reads each channel independently.
+
+Every Spike2 entry requires:
+
+| Field | Description |
+|---|---|
+| `format` | `"spike2"` |
+| `filepath` | Path to `.smr` or `.smrx` (relative to the JSON file) |
+| `channel` | SonPy channel index (integer) |
+| `name` | Name registered in the DataManager |
+| `data_type` | `"analog"`, `"digital_event"`, or `"digital_interval"` |
+
+Optional fields:
+
+| Field | Description |
+|---|---|
+| `processing.invert` | Multiply samples by −1 before output or thresholding |
+| `processing.subtract_mean` | Subtract the channel mean before output or thresholding |
+| `threshold` | Values above this level form digital intervals; event times are interval starts |
+| `clock` | [TimeFrame](../../concepts/timeframe.qmd) to assign (see below) |
+
+When `threshold` is omitted, `digital_event` and `digital_interval` entries read **native** Spike2 event/level channels instead of thresholding an ADC waveform.
+
+## Loading analog time series from an ADC channel
+
+Load a breathing sensor or other continuous ADC trace as an `AnalogTimeSeries`:
+
+```json
+{
+  "name": "breath",
+  "format": "spike2",
+  "data_type": "analog",
+  "filepath": "recording.smrx",
+  "channel": 3,
+  "processing": { "invert": true, "subtract_mean": true },
+  "clock": "master"
+}
+```
+
+Omit `processing` when you want the raw ADC values.
+
+## Loading digital events from an ADC channel
+
+Threshold an ADC waveform to get rising-edge event times (for example, camera frame triggers):
+
+```json
+{
+  "name": "camera_frames",
+  "format": "spike2",
+  "data_type": "digital_event",
+  "filepath": "recording.smrx",
+  "channel": 0,
+  "processing": { "invert": true, "subtract_mean": true },
+  "threshold": 2.0,
+  "clock": "master"
+}
+```
+
+## Loading digital intervals from ADC channels
+
+Use the same `channel`, `processing`, and `threshold` settings as for events, but set `data_type` to `"digital_interval"`. Add one entry per channel:
+
+```json
+{
+  "name": "sound_intervals",
+  "format": "spike2",
+  "data_type": "digital_interval",
+  "filepath": "recording.smrx",
+  "channel": 1,
+  "threshold": 1.0,
+  "clock": "master"
+},
+{
+  "name": "laser_intervals",
+  "format": "spike2",
+  "data_type": "digital_interval",
+  "filepath": "recording.smrx",
+  "channel": 2,
+  "threshold": 4.0,
+  "clock": "master"
+}
+```
+
+To also get **event** series (start times only) from the same ADC channels, add separate `digital_event` entries with the same `channel`, `processing`, and `threshold`.
+
+## Assigning clocks
+
+Spike2 data is stored in the file's native tick timebase. Neuralyzer [TimeFrames](../../concepts/timeframe.qmd) let you define how data aligns with video, derived event clocks, and other signals.
+
+### Forward-declare clocks
+
+List clock names at the top of the JSON so data can reference them before they are populated:
+
+```json
+{
+  "clocks": ["master", "time"],
+  "data": [ ... ]
+}
+```
+
+### Master clock from an analog series
+
+Span `master` from sample 0 through the last index of a loaded analog series:
+
+```json
+{
+  "format": "max_value",
+  "data_type": "time",
+  "name": "master",
+  "source_data": "breath"
+}
+```
+
+Register analog Spike2 data on `master` with `"clock": "master"` so its samples share that timebase.
+
+### Derived clock from digital events
+
+Build a secondary `time` TimeFrame by sampling `master` at each event in a digital event series (for example, camera frames):
+
+```json
+{
+  "format": "derived",
+  "data_type": "time",
+  "name": "time",
+  "source_timeframe": "master",
+  "source_series": "camera_frames",
+  "source_type": "event"
+}
+```
+
+Assign video or other data acquired on the camera clock with `"clock": "time"`.
+
+### Deferred clock binding
+
+Data entries may list `"clock": "master"` or `"clock": "time"` even when those TimeFrames are defined later in the `data` array. If the clock appears in `clocks`, data is registered on it immediately; otherwise binding is deferred until the end of loading.
+
+## Complete example
+
+Session with breath (ADC), camera frames (thresholded ADC events), two interval channels, master/derived clocks, and video on the derived clock:
+
+```json
+{
+  "python": {
+    "venv_path": "/path/to/sonpy-env",
+    "required_imports": ["sonpy", "numpy"],
+    "fail_on_missing_imports": true
+  },
+  "clocks": ["master", "time"],
+  "data": [
+    {
+      "name": "breath",
+      "format": "spike2",
+      "data_type": "analog",
+      "filepath": "recording.smrx",
+      "channel": 3,
+      "clock": "master"
+    },
+    {
+      "name": "camera_frames",
+      "format": "spike2",
+      "data_type": "digital_event",
+      "filepath": "recording.smrx",
+      "channel": 0,
+      "processing": { "invert": true, "subtract_mean": true },
+      "threshold": 2.0,
+      "clock": "master"
+    },
+    {
+      "name": "sound_intervals",
+      "format": "spike2",
+      "data_type": "digital_interval",
+      "filepath": "recording.smrx",
+      "channel": 1,
+      "threshold": 1.0,
+      "clock": "master"
+    },
+    {
+      "name": "laser_intervals",
+      "format": "spike2",
+      "data_type": "digital_interval",
+      "filepath": "recording.smrx",
+      "channel": 2,
+      "threshold": 4.0,
+      "clock": "master"
+    },
+    {
+      "format": "max_value",
+      "data_type": "time",
+      "name": "master",
+      "source_data": "breath"
+    },
+    {
+      "format": "derived",
+      "data_type": "time",
+      "name": "time",
+      "source_timeframe": "master",
+      "source_series": "camera_frames",
+      "source_type": "event"
+    },
+    {
+      "name": "media",
+      "data_type": "video",
+      "filepath": "behavior.mp4",
+      "clock": "time"
+    }
+  ]
+}
+```
+
+## See also
+
+- [JSON Loading Reference](../data_loading/JSON_loading.qmd) — general JSON schema and clock fields
+- [Developer: Spike2 via SonPy](../../developer/DataManager/IO/spike2_sonpy_loader_plan.qmd) — implementation details and SonPy installation

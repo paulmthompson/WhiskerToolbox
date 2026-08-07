@@ -4,16 +4,16 @@ from __future__ import annotations
 
 from typing import Any
 
-
 # Matches the SonPy ReadFloats max-count used for full-channel waveform extraction.
 DEFAULT_CHUNK_SAMPLES = 50_000_000
 
-_DEFAULT_ADC_DIGITAL_OPTIONS: dict[str, Any] = {
+_DATA_TYPE_ANALOG = "analog"
+_DATA_TYPE_DIGITAL_EVENT = "digital_event"
+_DATA_TYPE_DIGITAL_INTERVAL = "digital_interval"
+
+_DEFAULT_PROCESSING: dict[str, bool] = {
     "invert": False,
     "subtract_mean": False,
-    "threshold": 1.0,
-    "interval_name": None,
-    "event_name": None,
 }
 
 
@@ -23,34 +23,51 @@ def load_spike2(path: str, config: dict[str, Any]) -> dict[str, Any]:
     Parameters
     ----------
     path:
-        Path to the `.smr` or `.smrx` file.
+        Path to the ``.smr`` or ``.smrx`` file.
     config:
         Loader configuration. If ``fake_payload`` is present, it is returned
-        directly. This supports C++ conversion tests before SonPy extraction is
-        implemented.
-
-        ``adc_digital_channels`` maps channel titles or numeric channel indices
-        to threshold-extraction options for inverted (or normal) digital signals
-        recorded on ADC inputs. Each entry may set ``invert``, ``subtract_mean``,
-        ``threshold``, ``interval_name``, and optional ``event_name``.
+        after optional threshold processing. Each entry requires ``channel``,
+        ``data_type`` (``analog``, ``digital_event``, ``digital_interval``),
+        and optional ``processing`` (``invert``, ``subtract_mean``) and
+        ``threshold`` for ADC-derived digital outputs.
     """
+    norm = _normalize_config(config)
 
-    fake_payload = config.get("fake_payload")
-    if fake_payload is not None:
-        payload = _normalize_payload(fake_payload)
+    if config.get("fake_payload") is not None:
+        payload = _normalize_payload(config["fake_payload"])
+        payload = _process_fake_payload(payload, norm)
     else:
-        payload = _load_native_channels(path, config)
+        payload = _build_payload_from_file(path, norm)
 
-    np = _import_numpy()
-    if config.get("adc_digital_channels"):
-        _apply_adc_digital_channels(np, payload, config)
-    if config.get("preset") == "colleague_task_events":
-        _apply_colleague_task_events(np, payload, config)
-
-    return payload
+    return _filter_payload_by_data_type(payload, norm)
 
 
-def _load_native_channels(path: str, config: dict[str, Any]) -> dict[str, Any]:
+def _normalize_config(config: dict[str, Any]) -> dict[str, Any]:
+    """Normalize per-entry Spike2 extraction config."""
+    data_type = str(config.get("data_type", _DATA_TYPE_ANALOG))
+
+    if "channel" not in config:
+        raise ValueError("Spike2 config requires 'channel'.")
+
+    channel = int(config["channel"])
+    processing = {**_DEFAULT_PROCESSING, **config.get("processing", {})}
+    threshold = config.get("threshold")
+    has_threshold = threshold is not None
+
+    return {
+        "data_type": data_type,
+        "channel": channel,
+        "processing": processing,
+        "threshold": float(threshold) if threshold is not None else None,
+        "read_adc": data_type == _DATA_TYPE_ANALOG or has_threshold,
+        "read_native_events": data_type == _DATA_TYPE_DIGITAL_EVENT and not has_threshold,
+        "read_native_intervals": data_type == _DATA_TYPE_DIGITAL_INTERVAL and not has_threshold,
+        "chunk_samples": int(config.get("chunk_samples", DEFAULT_CHUNK_SAMPLES)),
+        "max_events": int(config.get("max_events", 50_000_000)),
+    }
+
+
+def _build_payload_from_file(path: str, norm: dict[str, Any]) -> dict[str, Any]:
     sonpy = _import_sonpy()
     np = _import_numpy()
 
@@ -59,34 +76,136 @@ def _load_native_channels(path: str, config: dict[str, Any]) -> dict[str, Any]:
     if open_error != int(sonpy.Son_OK):
         raise RuntimeError(f"Failed to open Spike2 file {path!r}: {sonpy.GetErrorString(open_error)}")
 
-    payload = {"analog": [], "events": [], "intervals": [], "metadata": _file_metadata(son_file)}
-    max_channels = int(son_file.MaxChannels())
+    return _read_single_channel_payload(sonpy, np, son_file, norm["channel"], norm)
 
-    requested_titles = set(config.get("channel_titles", []))
-    requested_channels = {int(channel) for channel in config.get("channel_numbers", [])}
-    include_raw_analog = bool(config.get("include_raw_analog", True))
-    include_event_channels = bool(config.get("include_event_channels", True))
-    include_level_channels = bool(config.get("include_level_channels", True))
 
-    for channel in range(0, max_channels + 1):
-        channel_type = son_file.ChannelType(channel)
-        if channel_type == sonpy.Off:
-            continue
+def _read_single_channel_payload(sonpy, np, son_file, channel: int, norm: dict[str, Any]) -> dict[str, Any]:
+    channel_type = son_file.ChannelType(channel)
+    if channel_type == sonpy.Off:
+        raise RuntimeError(f"Spike2 channel {channel} is not active in file {son_file.GetName()!r}")
 
-        info = _channel_info(sonpy, son_file, channel, channel_type)
-        if requested_titles and info["title"] not in requested_titles:
-            continue
-        if requested_channels and info["channel"] not in requested_channels:
-            continue
+    info = _channel_info(sonpy, son_file, channel, channel_type)
+    payload: dict[str, Any] = {
+        "analog": [],
+        "events": [],
+        "intervals": [],
+        "metadata": _file_metadata(son_file),
+    }
 
-        if include_raw_analog and channel_type in (sonpy.Adc, sonpy.RealWave):
-            payload["analog"].append(_read_wave_channel(np, son_file, info, config))
-        elif include_event_channels and channel_type in (sonpy.EventFall, sonpy.EventRise):
-            payload["events"].append(_read_event_channel(son_file, info, config))
-        elif include_level_channels and channel_type == sonpy.EventBoth:
-            payload["intervals"].append(_read_level_channel(son_file, info, config))
+    data_type = norm["data_type"]
+    threshold = norm["threshold"]
+
+    if norm["read_adc"]:
+        if channel_type not in (sonpy.Adc, sonpy.RealWave):
+            raise RuntimeError(
+                f"Channel {channel} ({info['title']!r}) is not an ADC waveform channel; "
+                "cannot produce analog or threshold-derived digital output."
+            )
+        wave = _read_wave_channel(np, son_file, info, norm)
+        values = _apply_analog_processing(np.asarray(wave["values"], dtype=np.float32), norm["processing"], np)
+        wave["values"] = values
+        if data_type == _DATA_TYPE_ANALOG:
+            payload["analog"].append(wave)
+        else:
+            starts, ends = _threshold_intervals(np, np.asarray(wave["times"], dtype=np.int64), values, threshold)
+            _append_threshold_results(payload, wave, starts, ends, data_type)
+        return payload
+
+    if norm["read_native_events"]:
+        if channel_type not in (sonpy.EventFall, sonpy.EventRise):
+            raise RuntimeError(f"Channel {channel} ({info['title']!r}) is not a native event channel.")
+        payload["events"].append(_read_event_channel(son_file, info, norm))
+        return payload
+
+    if norm["read_native_intervals"]:
+        if channel_type != sonpy.EventBoth:
+            raise RuntimeError(f"Channel {channel} ({info['title']!r}) is not a native level channel.")
+        payload["intervals"].append(_read_level_channel(son_file, info, norm))
+        return payload
+
+    raise RuntimeError(f"Unsupported data_type {data_type!r} for Spike2 channel import.")
+
+
+def _process_fake_payload(payload: dict[str, Any], norm: dict[str, Any]) -> dict[str, Any]:
+    """Apply threshold extraction to fake payloads for C++ conversion tests."""
+    if norm["threshold"] is not None and payload["analog"]:
+        np = _import_numpy()
+        item = payload["analog"][0]
+        values = _apply_analog_processing(
+            np.asarray(item["values"], dtype=np.float32),
+            norm["processing"],
+            np,
+        )
+        starts, ends = _threshold_intervals(
+            np,
+            np.asarray(item["times"], dtype=np.int64),
+            values,
+            norm["threshold"],
+        )
+        _append_threshold_results(payload, item, starts, ends, norm["data_type"])
 
     return payload
+
+
+def _append_threshold_results(
+    payload: dict[str, Any],
+    item: dict[str, Any],
+    starts,
+    ends,
+    data_type: str,
+) -> None:
+    title = item["title"]
+    safe_title = _safe_name(title)
+    starts_list = starts.tolist() if hasattr(starts, "tolist") else list(starts)
+    ends_list = ends.tolist() if hasattr(ends, "tolist") else list(ends)
+    if data_type == _DATA_TYPE_DIGITAL_INTERVAL:
+        payload["intervals"].append(
+            {
+                "name": f"{safe_title}_interval",
+                "channel": item["channel"],
+                "source_title": title,
+                "starts": starts_list,
+                "ends": ends_list,
+            }
+        )
+    elif data_type == _DATA_TYPE_DIGITAL_EVENT:
+        payload["events"].append(
+            {
+                "name": f"{safe_title}_events",
+                "channel": item["channel"],
+                "source_title": title,
+                "times": starts_list,
+            }
+        )
+
+
+def _filter_payload_by_data_type(payload: dict[str, Any], norm: dict[str, Any]) -> dict[str, Any]:
+    data_type = norm["data_type"]
+    filtered = {
+        "analog": [],
+        "events": [],
+        "intervals": [],
+        "metadata": dict(payload.get("metadata", {})),
+    }
+    if data_type == _DATA_TYPE_ANALOG:
+        filtered["analog"] = list(payload.get("analog", []))
+    elif data_type == _DATA_TYPE_DIGITAL_EVENT:
+        filtered["events"] = list(payload.get("events", []))
+    elif data_type == _DATA_TYPE_DIGITAL_INTERVAL:
+        filtered["intervals"] = list(payload.get("intervals", []))
+    else:
+        return _normalize_payload(payload)
+    return filtered
+
+
+def _apply_analog_processing(values, processing: dict[str, bool], np):
+    """Apply invert and subtract-mean preprocessing to waveform samples."""
+    result = np.asarray(values, dtype=np.float32).copy()
+    if processing.get("subtract_mean", False) and result.size > 0:
+        result = result - np.mean(result)
+    if processing.get("invert", False):
+        result = -result
+    return result
 
 
 def _import_sonpy():
@@ -142,16 +261,8 @@ def _channel_info(sonpy, son_file, channel: int, channel_type) -> dict[str, Any]
     }
 
 
-def _read_wave_channel(np, son_file, info: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
-    """Read an ADC or RealWave channel using SonPy ``ReadFloats``.
-
-  Extraction matches the canonical SonPy workflow::
-
-      max_time = int(f.ChannelMaxTime(ch))
-      first_time = int(f.FirstTime(ch, 0, max_time + 1))
-      divide = int(f.ChannelDivide(ch))
-      values = f.ReadFloats(ch, max_count, first_time, max_time + divide)
-    """
+def _read_wave_channel(np, son_file, info: dict[str, Any], norm: dict[str, Any]) -> dict[str, Any]:
+    """Read an ADC or RealWave channel using SonPy ``ReadFloats``."""
     channel = info["channel"]
     divide = int(info["divide_ticks"])
     max_time = int(info["max_time_ticks"])
@@ -162,7 +273,7 @@ def _read_wave_channel(np, son_file, info: dict[str, Any], config: dict[str, Any
     else:
         first_time = int(first_time)
         stop = max_time + divide
-        max_read = int(config.get("chunk_samples", DEFAULT_CHUNK_SAMPLES))
+        max_read = int(norm.get("chunk_samples", DEFAULT_CHUNK_SAMPLES))
         values_parts: list = []
         times_parts: list = []
         cursor = first_time
@@ -190,26 +301,25 @@ def _read_wave_channel(np, son_file, info: dict[str, Any], config: dict[str, Any
     }
 
 
-def _read_event_channel(son_file, info: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
+def _read_event_channel(son_file, info: dict[str, Any], norm: dict[str, Any]) -> dict[str, Any]:
     channel = info["channel"]
-    max_events = int(config.get("max_events", 50_000_000))
+    max_events = int(norm.get("max_events", 50_000_000))
     max_time = int(info["max_time_ticks"])
     times = son_file.ReadEvents(channel, max_events, 0, max_time + 1 if max_time >= 0 else max_time)
     return {
         "name": _safe_name(info["title"]),
         **info,
-        "times": [int(t) for t in times],
+        "times": [int(value) for value in times],
     }
 
 
-def _read_level_channel(son_file, info: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
-    # SonPy exposes EventBoth data as events/markers. Phase 4 returns transition
-    # intervals by pairing adjacent transition times. If initial level semantics
-    # are needed, this can be refined with marker-code aware reading.
+def _read_level_channel(son_file, info: dict[str, Any], norm: dict[str, Any]) -> dict[str, Any]:
     channel = info["channel"]
-    max_events = int(config.get("max_events", 50_000_000))
+    max_events = int(norm.get("max_events", 50_000_000))
     max_time = int(info["max_time_ticks"])
-    transitions = [int(t) for t in son_file.ReadEvents(channel, max_events, 0, max_time + 1 if max_time >= 0 else max_time)]
+    transitions = [
+        int(value) for value in son_file.ReadEvents(channel, max_events, 0, max_time + 1 if max_time >= 0 else max_time)
+    ]
     starts = transitions[0::2]
     ends = transitions[1::2]
     if len(starts) > len(ends):
@@ -220,117 +330,6 @@ def _read_level_channel(son_file, info: dict[str, Any], config: dict[str, Any]) 
         "starts": starts,
         "ends": ends,
     }
-
-
-def _apply_adc_digital_channels(np, payload: dict[str, Any], config: dict[str, Any]) -> None:
-    """Derive digital intervals (and optional events) from ADC channels."""
-    specs = config.get("adc_digital_channels", {})
-    if not specs:
-        return
-
-    analog_by_title = {item["title"]: item for item in payload["analog"]}
-    analog_by_channel = {item["channel"]: item for item in payload["analog"]}
-
-    for key, options in specs.items():
-        item = _resolve_analog_channel(key, analog_by_title, analog_by_channel)
-        if item is None:
-            continue
-        merged = {**_DEFAULT_ADC_DIGITAL_OPTIONS, **options}
-        _append_adc_digital_results(payload, item, merged)
-
-
-def _apply_colleague_task_events(np, payload: dict[str, Any], config: dict[str, Any]) -> None:
-    defaults = {
-        "Sound": {
-            "threshold": 1.0,
-            "invert": False,
-            "subtract_mean": False,
-            "event_name": "Trial_start",
-            "interval_name": "Sound_interval",
-        },
-        "Camera": {
-            "threshold": 2.0,
-            "invert": True,
-            "subtract_mean": True,
-            "event_name": "Frame_start",
-            "interval_name": "Camera_interval",
-        },
-        "imaging": {
-            "threshold": 2.0,
-            "invert": False,
-            "subtract_mean": False,
-            "event_name": "ImgFrame_start",
-            "interval_name": "Imaging_interval",
-        },
-        "Laser": {
-            "threshold": 4.0,
-            "invert": False,
-            "subtract_mean": False,
-            "event_name": None,
-            "interval_name": "US_start_stop",
-        },
-    }
-    overrides = config.get("threshold_channels", {})
-    specs = {title: {**options, **overrides.get(title, {})} for title, options in defaults.items()}
-    _apply_adc_digital_specs(np, payload, specs)
-
-
-def _apply_adc_digital_specs(np, payload: dict[str, Any], specs: dict[str, Any]) -> None:
-    analog_by_title = {item["title"]: item for item in payload["analog"]}
-    analog_by_channel = {item["channel"]: item for item in payload["analog"]}
-
-    for key, options in specs.items():
-        item = _resolve_analog_channel(key, analog_by_title, analog_by_channel)
-        if item is None:
-            continue
-        merged = {**_DEFAULT_ADC_DIGITAL_OPTIONS, **options}
-        _append_adc_digital_results(payload, item, merged)
-
-
-def _resolve_analog_channel(key, analog_by_title: dict, analog_by_channel: dict):
-    key_text = str(key)
-    if key_text.isdigit():
-        item = analog_by_channel.get(int(key_text))
-        if item is not None:
-            return item
-    return analog_by_title.get(key_text)
-
-
-def _append_adc_digital_results(payload: dict[str, Any], item: dict[str, Any], options: dict[str, Any]) -> None:
-    np = _import_numpy()
-    starts, ends = _extract_adc_digital_intervals(np, item, options)
-    title = item["title"]
-    interval_name = options.get("interval_name") or f"{_safe_name(title)}_interval"
-    payload["intervals"].append(
-        {
-            "name": interval_name,
-            "channel": item["channel"],
-            "source_title": title,
-            "starts": starts,
-            "ends": ends,
-        }
-    )
-    event_name = options.get("event_name")
-    if event_name:
-        payload["events"].append(
-            {
-                "name": event_name,
-                "channel": item["channel"],
-                "source_title": title,
-                "times": starts,
-            }
-        )
-
-
-def _extract_adc_digital_intervals(np, item: dict[str, Any], options: dict[str, Any]):
-    """@pre item contains aligned ``times`` and ``values`` arrays."""
-    values = np.asarray(item["values"], dtype=np.float32).copy()
-    if options.get("subtract_mean", False):
-        values = values - np.mean(values)
-    if options.get("invert", False):
-        values = -values
-    times = np.asarray(item["times"], dtype=np.int64)
-    return _threshold_intervals(np, times, values, float(options["threshold"]))
 
 
 def _threshold_intervals(np, times, values, threshold: float):
@@ -354,7 +353,6 @@ def _safe_name(name: str) -> str:
 
 def _normalize_payload(payload: dict[str, Any]) -> dict[str, Any]:
     """Ensure the payload has the expected top-level lists."""
-
     return {
         "analog": list(payload.get("analog", [])),
         "events": list(payload.get("events", [])),

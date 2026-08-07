@@ -31,9 +31,10 @@ std::string helperPath() {
 };// namespace
 
 TEST_CASE("Spike2PythonFormatLoader converts fake analog payload", "[io][spike2]") {
-    Spike2PythonFormatLoader loader(engine());
+    Spike2PythonFormatLoader const loader(engine());
     auto config = nlohmann::json{
             {"python_helper_path", helperPath()},
+            {"channel", 0},
             {"fake_payload", {
                                      {"analog", {{{"name", "Breath_raw"}, {"times", {10, 12, 14}}, {"values", {1.5, 2.5, 3.5}}}}},
                              }}};
@@ -53,9 +54,10 @@ TEST_CASE("Spike2PythonFormatLoader converts fake analog payload", "[io][spike2]
 }
 
 TEST_CASE("Spike2PythonFormatLoader converts fake digital event payload", "[io][spike2]") {
-    Spike2PythonFormatLoader loader(engine());
+    Spike2PythonFormatLoader const loader(engine());
     auto config = nlohmann::json{
             {"python_helper_path", helperPath()},
+            {"channel", 0},
             {"fake_payload", {
                                      {"events", {{{"name", "Frame_start"}, {"times", {3, 8, 13}}}}},
                              }}};
@@ -73,23 +75,19 @@ TEST_CASE("Spike2PythonFormatLoader converts fake digital event payload", "[io][
     REQUIRE(events->getStoredEvent(2) == TimeFrameIndex{13});
 }
 
-TEST_CASE("Spike2PythonFormatLoader derives adc digital intervals from fake analog payload", "[io][spike2]") {
-    Spike2PythonFormatLoader loader(engine());
+TEST_CASE("Spike2PythonFormatLoader derives digital intervals from channel threshold config", "[io][spike2]") {
+    Spike2PythonFormatLoader const loader(engine());
     auto config = nlohmann::json{
             {"python_helper_path", helperPath()},
-            {"fake_payload", {
-                                     {"analog",
-                                      {{{"name", "Camera_raw"},
-                                        {"title", "Camera"},
-                                        {"channel", 0},
-                                        {"times", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}},
-                                        {"values", {0.1, 0.1, 3.2, 3.2, 3.2, 0.1, 0.1, 3.2, 3.2, 0.1}}}}},
-                             }},
-            {"adc_digital_channels",
-             {{"0",
-               {{"threshold", 1.0},
-                {"interval_name", "Camera_interval"},
-                {"event_name", "Frame_start"}}}}}};
+            {"fake_payload",
+             {{"analog",
+               {{{"name", "Camera_raw"},
+                 {"title", "Camera"},
+                 {"channel", 0},
+                 {"times", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}},
+                 {"values", {0.1, 0.1, 3.2, 3.2, 3.2, 0.1, 0.1, 3.2, 3.2, 0.1}}}}}}},
+            {"channel", 0},
+            {"threshold", 1.0}};
 
     auto interval_result = loader.loadBatch("fake.smrx", DM_DataType::DigitalInterval, config);
     INFO(interval_result.error_message);
@@ -103,23 +101,40 @@ TEST_CASE("Spike2PythonFormatLoader derives adc digital intervals from fake anal
     REQUIRE(intervals->getStoredInterval(0).end == TimeFrameIndex{4});
     REQUIRE(intervals->getStoredInterval(1).start == TimeFrameIndex{7});
     REQUIRE(intervals->getStoredInterval(1).end == TimeFrameIndex{8});
+}
 
-    auto event_result = loader.loadBatch("fake.smrx", DM_DataType::DigitalEvent, config);
-    INFO(event_result.error_message);
-    REQUIRE(event_result.success);
-    REQUIRE(event_result.results.size() == 1);
-    REQUIRE(event_result.results.front().name == "Frame_start");
+TEST_CASE("Spike2PythonFormatLoader derives digital events from channel threshold config", "[io][spike2]") {
+    Spike2PythonFormatLoader const loader(engine());
+    auto config = nlohmann::json{
+            {"python_helper_path", helperPath()},
+            {"fake_payload",
+             {{"analog",
+               {{{"name", "Camera_raw"},
+                 {"title", "Camera"},
+                 {"channel", 0},
+                 {"times", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}},
+                 {"values", {0.1, 0.1, 3.2, 3.2, 3.2, 0.1, 0.1, 3.2, 3.2, 0.1}}}}}}},
+            {"channel", 0},
+            {"threshold", 1.0},
+            {"processing", {{"invert", false}, {"subtract_mean", false}}}};
 
-    auto events = std::get<std::shared_ptr<DigitalEventSeries>>(event_result.results.front().data);
+    auto result = loader.loadBatch("fake.smrx", DM_DataType::DigitalEvent, config);
+
+    INFO(result.error_message);
+    REQUIRE(result.success);
+    REQUIRE(result.results.size() == 1);
+
+    auto events = std::get<std::shared_ptr<DigitalEventSeries>>(result.results.front().data);
     REQUIRE(events->size() == 2);
     REQUIRE(events->getStoredEvent(0) == TimeFrameIndex{2});
     REQUIRE(events->getStoredEvent(1) == TimeFrameIndex{7});
 }
 
 TEST_CASE("Spike2PythonFormatLoader converts fake interval payload", "[io][spike2]") {
-    Spike2PythonFormatLoader loader(engine());
+    Spike2PythonFormatLoader const loader(engine());
     auto config = nlohmann::json{
             {"python_helper_path", helperPath()},
+            {"channel", 0},
             {"fake_payload", {
                                      {"intervals", {{{"name", "US_start_stop"}, {"starts", {20, 40}}, {"ends", {25, 45}}}}},
                              }}};

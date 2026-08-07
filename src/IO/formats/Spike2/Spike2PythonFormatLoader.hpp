@@ -9,6 +9,7 @@
 #include "IO/core/IFormatLoader.hpp"
 #include "ParameterSchema/ParameterSchema.hpp"
 
+#include <optional>
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
@@ -18,17 +19,36 @@
 class PythonEngine;
 
 /**
- * @brief Loader options shared by the Spike2/SonPy loader skeleton.
+ * @brief Analog preprocessing options for Spike2 ADC waveform channels.
+ */
+struct Spike2ProcessingOptions {
+    bool invert{false};
+    bool subtract_mean{false};
+};
+
+/**
+ * @brief Loader options for Spike2/SonPy JSON entries.
  *
- * Phase 2 only validates SonPy availability and advertises these options. Later
- * phases will use them to drive the Python helper and C++ array conversion.
+ * Each JSON ``data[]`` entry selects one channel and output type. Use ``channel``,
+ * optional ``processing``, and optional ``threshold`` for ADC-derived outputs.
  */
 struct Spike2SonPyLoaderOptions {
     std::string filepath;
-    std::string preset{"native_channels"};
-    bool include_raw_analog{true};
-    bool include_event_channels{true};
-    bool include_level_channels{true};
+    std::optional<int> channel;
+    Spike2ProcessingOptions processing;
+    std::optional<float> threshold;
+};
+
+template<>
+struct ParameterUIHints<Spike2ProcessingOptions> {
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("invert")) {
+            f->tooltip = "Multiply waveform samples by -1 before output or thresholding";
+        }
+        if (auto * f = schema.field("subtract_mean")) {
+            f->tooltip = "Subtract the channel mean from each waveform sample before output or thresholding";
+        }
+    }
 };
 
 template<>
@@ -37,18 +57,14 @@ struct ParameterUIHints<Spike2SonPyLoaderOptions> {
         if (auto * f = schema.field("filepath")) {
             f->tooltip = "Path to a CED Spike2 .smr or .smrx file";
         }
-        if (auto * f = schema.field("preset")) {
-            f->tooltip = "Import preset. Use native_channels for direct channel import or colleague_task_events for the threshold-derived workflow.";
-            f->allowed_values = {"native_channels", "colleague_task_events"};
+        if (auto * f = schema.field("channel")) {
+            f->tooltip = "SonPy channel index to read for this data entry";
         }
-        if (auto * f = schema.field("include_raw_analog")) {
-            f->tooltip = "Import waveform and realwave channels as AnalogTimeSeries objects";
+        if (auto * f = schema.field("processing")) {
+            f->tooltip = "Optional invert and subtract-mean preprocessing applied to ADC waveforms";
         }
-        if (auto * f = schema.field("include_event_channels")) {
-            f->tooltip = "Import event rise/fall channels as DigitalEventSeries objects";
-        }
-        if (auto * f = schema.field("include_level_channels")) {
-            f->tooltip = "Import event-both/level channels as DigitalIntervalSeries objects";
+        if (auto * f = schema.field("threshold")) {
+            f->tooltip = "Threshold for deriving digital events or intervals from an ADC waveform";
         }
     }
 };

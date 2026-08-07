@@ -90,6 +90,19 @@ std::vector<TimeFrameIndex> toTimeFrameIndices(py::handle array_like) {
     return out;
 }
 
+std::string dataTypeToConfigString(DM_DataType dataType) {
+    switch (dataType) {
+        case DM_DataType::Analog:
+            return "analog";
+        case DM_DataType::DigitalEvent:
+            return "digital_event";
+        case DM_DataType::DigitalInterval:
+            return "digital_interval";
+        default:
+            return "analog";
+    }
+}
+
 std::vector<float> toFloatVector(py::handle array_like) {
     auto sequence = py::reinterpret_borrow<py::sequence>(array_like);
     std::vector<float> out;
@@ -156,7 +169,7 @@ LoadResult Spike2PythonFormatLoader::load(std::string const & filepath,
     if (batch.success && !batch.results.empty()) {
         return std::move(batch.results.front());
     }
-    return LoadResult(batch.error_message);
+    return {batch.error_message};
 }
 
 bool Spike2PythonFormatLoader::supportsBatchLoading(std::string const & format,
@@ -209,7 +222,11 @@ BatchLoadResult Spike2PythonFormatLoader::loadFromPythonPayload(std::string cons
         prependSysPath(helper_path);
 
         py::module_ const helper = py::module_::import(kSpike2HelperModule);
-        py::dict const py_config = jsonToPyDict(config);
+        nlohmann::json loader_config = config;
+        if (!loader_config.contains("data_type")) {
+            loader_config["data_type"] = dataTypeToConfigString(dataType);
+        }
+        py::dict const py_config = jsonToPyDict(loader_config);
         auto const payload = helper.attr("load_spike2")(filepath, py_config).cast<py::dict>();
 
         std::vector<LoadResult> results;
