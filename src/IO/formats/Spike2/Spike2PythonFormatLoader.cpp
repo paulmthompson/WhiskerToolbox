@@ -16,6 +16,7 @@
 #include <pybind11/embed.h>
 
 #include <filesystem>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -41,18 +42,45 @@ std::string missingSonPyMessage(std::string const & filepath) {
 }
 
 std::filesystem::path defaultPythonHelperPath() {
-    auto current = std::filesystem::current_path();
-    for (;;) {
-        auto const candidate = current / "resources" / "python";
-        if (std::filesystem::is_directory(candidate / "whiskertoolbox_io")) {
+    auto const isHelperRoot = [](std::filesystem::path const & candidate) {
+        return std::filesystem::is_directory(candidate / "whiskertoolbox_io");
+    };
+
+    auto const tryCandidate = [&](std::filesystem::path const & candidate) -> std::optional<std::filesystem::path> {
+        if (isHelperRoot(candidate)) {
             return candidate;
         }
-        if (!current.has_parent_path() || current == current.parent_path()) {
-            break;
-        }
-        current = current.parent_path();
+        return std::nullopt;
+    };
+
+    // 1. Next to the executable (build-tree POST_BUILD and macOS bundle layout).
+    auto const exe_dir = PythonEngine::executableDirectory();
+    if (auto const found = tryCandidate(exe_dir / "resources" / "python")) {
+        return *found;
     }
-    return std::filesystem::current_path() / "resources" / "python";
+
+    // 2. Installed layout: prefix/bin/exe with prefix/resources/python.
+    if (auto const found = tryCandidate((exe_dir / ".." / "resources" / "python").lexically_normal())) {
+        return *found;
+    }
+
+    // 3. Walk up from the executable directory (monorepo / build-tree fallbacks).
+    for (auto current = exe_dir; current.has_parent_path() && current != current.parent_path();
+         current = current.parent_path()) {
+        if (auto const found = tryCandidate(current / "resources" / "python")) {
+            return *found;
+        }
+    }
+
+    // 4. Walk up from the current working directory (running from source tree).
+    for (auto current = std::filesystem::current_path(); current.has_parent_path() && current != current.parent_path();
+         current = current.parent_path()) {
+        if (auto const found = tryCandidate(current / "resources" / "python")) {
+            return *found;
+        }
+    }
+
+    return exe_dir / "resources" / "python";
 }
 
 void prependSysPath(std::filesystem::path const & path) {

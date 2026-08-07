@@ -38,6 +38,14 @@ Within a group, ranks are assigned by:
 
 Ranks are written to `DataViewerState` as explicit `lane_order` overrides and consumed by `OrderingPolicyResolver` / `StackedLayoutStrategy`.
 
+## Per-group override persistence
+
+`lane_order` overrides are keyed by series name and persist in `DataViewerState` when a group is hidden in the feature tree (unchecked). Re-enabling the same group restores the saved spikesorter ordering without reloading the configuration file.
+
+`lane_order` deduplication in `DataViewerState::normalizeAllLaneOverrides` is scoped per probe group (`parseSeriesIdentity(series_key).group`). Independent groups such as `voltage_*` and `voltage_raw_*` may both use ranks `0..N` without colliding.
+
+`clearSpikeSorterConfiguration` clears overrides from state by group identity, including series that are not currently displayed in the viewer.
+
 ## Tests
 
 Unit tests live in `tests/WhiskerToolbox/DataViewer_Widget/SwindaleSpikeSorterLoader.test.cpp`, including a full poly2 fixture with 0-based `voltage_0`..`voltage_31` keys.

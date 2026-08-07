@@ -39,3 +39,9 @@ if(ENABLE_SPIKE2_SONPY)
 endif()
 
 set_target_compiler_warnings(DataManagerPipelineRunner)
+
+add_custom_command(TARGET DataManagerPipelineRunner POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/resources
+        $<TARGET_FILE_DIR:DataManagerPipelineRunner>/resources
+    )

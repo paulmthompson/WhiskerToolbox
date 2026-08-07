@@ -4,9 +4,17 @@ title: "Spike2 (CED)"
 
 [CED Spike2](https://ced.co.uk/products/spike2) records electrophysiology and behavioral signals into `.smr` or `.smrx` files. Neuralyzer loads Spike2 data through the optional [SonPy](https://pypi.org/project/sonpy/) Python package.
 
+::: {.callout-warning}
+## SonPy platform support
+
+SonPy is advertised as cross-platform, but at the time of writing we have only been able to use it successfully on **Windows**. Attempts on Linux and macOS have failed; a bug report has been submitted to CED. Until that is resolved, plan on a Windows Python environment (local or remote) for Spike2 loading via the JSON `python` block below.
+:::
+
 Many labs record TTL-like signals on **ADC inputs** (continuous waveforms) rather than native Spike2 event/level channels. For those files, use `threshold` to derive `digital_event` or `digital_interval` series from the ADC trace. Use `data_type: "analog"` when you want the waveform itself (for example, a breathing sensor).
 
 ## Prerequisites
+
+Neuralyzer ships `resources/python/whiskertoolbox_io/spike2_sonpy.py` next to the application binary (build tree and `cmake --install` layouts). You do not need `python_helper_path` in JSON unless you override the bundled helper.
 
 Configure a Python environment that matches your Neuralyzer build (same major/minor Python version) and has SonPy installed:
 

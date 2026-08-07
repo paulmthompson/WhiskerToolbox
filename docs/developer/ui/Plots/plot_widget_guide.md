@@ -483,19 +483,48 @@ covering LinePlotWidget, EventPlotWidget, and ACFWidget.
 
 ## Shared Helpers Reference
 
-### PlotInteractionHelpers (No Qt dependency)
+### PlotInteractionHelpers
 
-Template functions for zoom, pan, projection, and coordinate conversion. Used by
-all OpenGL rendering widgets.
+Template functions for zoom, pan, projection, coordinate conversion, and wheel
+input normalization. Used by all OpenGL rendering widgets.
 
 | Function | Purpose |
 |----------|---------|
+| `wheelDeltaToZoomSteps(...)` | Normalize `QWheelEvent` pixel/angle deltas to fractional zoom steps |
 | `computeOrthoProjection(view_state, ...)` | Build orthographic projection matrix |
 | `handlePanning(state, view_state, delta, ...)` | Convert pixel drag to world-space pan |
+| `adaptiveZoomMultiplier(delta)` | 3% adaptive visible-range zoom multiplier |
 | `handleZoom(state, view_state, delta, y_only, both)` | Apply scroll-wheel zoom with axis selection |
 | `screenToWorld(proj, w, h, pos)` | Pixel → world coordinate transform |
 | `worldToScreen(proj, w, h, x, y)` | World → pixel coordinate transform |
 | `screenToNDC(pos, w, h)` | Pixel → normalized device coordinates |
+
+`wheelDeltaToZoomSteps` prefers `pixelDelta().y()` for trackpads, then falls back to
+`angleDelta().y()` with a horizontal-axis fallback for WSL/X11. `handleZoom` applies
+adaptive 3%-of-visible-range scaling per step (matching DataViewer normal mode).
+
+Plot container widgets use `PlotViewAxisRefresh.hpp` to repaint and sync only the
+axis affected by a view change (horizontal for X zoom/pan, vertical for Y zoom/pan),
+and listen to `viewStateChanged` once rather than duplicating via `viewBoundsChanged`.
+
+### Optional zoom profiling (`PlotZoomProfile`)
+
+Set `NEURALYZER_PLOT_ZOOM_PROFILE=1` before launching WhiskerToolbox to log
+per-wheel timing to spdlog (`info` level):
+
+| Field | Meaning |
+|-------|---------|
+| `gen` | Correlates wheel, paintGL, and axis paint lines |
+| `wheel_sync_us` | Synchronous path: zoom math, signals, axis sync, `update()` scheduling |
+| `paint_gl_us` | Full `paintGL()` duration |
+| `rebuild` | `1` if `rebuildScene()` ran (should be `0` for normal zoom) |
+| `axis_paint_us` | Axis `paintEvent` duration (`axis=horizontal` or `vertical`) |
+
+`update()` itself is not timed — it only schedules paint. Compare `wheel_sync_us`
++ `paint_gl_us` + axis lines to judge whether you are under a ~10 ms CPU budget.
+
+Currently instrumented: ScatterPlot OpenGL widget and shared horizontal/vertical
+axis widgets.
 
 These are constrained by C++20 concepts (`ViewStateLike`, `ZoomPanSettable`,
 `ViewStateWithBounds`) so they work with any plot's view state type.

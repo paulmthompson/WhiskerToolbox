@@ -13,6 +13,18 @@ add_custom_command(TARGET WhiskerToolbox POST_BUILD
         $<TARGET_FILE_DIR:WhiskerToolbox>/resources
     )
 
+# Ship bundled Python helpers (for example Spike2/SonPy) with installed binaries.
+if(APPLE)
+    set(_WT_RESOURCES_INSTALL_DESTINATION "WhiskerToolbox.app/Contents/MacOS/resources")
+else()
+    set(_WT_RESOURCES_INSTALL_DESTINATION "resources")
+endif()
+
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/resources/
+        DESTINATION ${_WT_RESOURCES_INSTALL_DESTINATION}
+        USE_SOURCE_PERMISSIONS
+        PATTERN "__pycache__" EXCLUDE
+        PATTERN "*.pyc" EXCLUDE)
 
 # Example that follows the above guidelines
 set(CPACK_PACKAGE_NAME WhiskerToolbox)

@@ -12,10 +12,14 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#elif defined(__APPLE__)
+#include <mach-o/dyld.h>
 #else
 #include <climits>
 #include <unistd.h>
 #endif
+
+#include <vector>
 
 namespace py = pybind11;
 
@@ -37,7 +41,7 @@ PYBIND11_EMBEDDED_MODULE(_wt_internal, m) {
 // ---------------------------------------------------------------------------
 // Helper: find the directory containing the running executable.
 // ---------------------------------------------------------------------------
-static std::filesystem::path getExecutableDir() {
+std::filesystem::path PythonEngine::executableDirectory() {
 #ifdef _WIN32
     wchar_t buf[MAX_PATH];
     DWORD const len = GetModuleFileNameW(nullptr, buf, MAX_PATH);
@@ -45,17 +49,15 @@ static std::filesystem::path getExecutableDir() {
         return std::filesystem::path(buf).parent_path();
     }
 #elif defined(__APPLE__)
-    // macOS: use _NSGetExecutablePath via /proc is unavailable,
-    // but for a bundled app QCoreApplication::applicationDirPath() is the
-    // right answer.  As a fallback we try /proc/self/exe (Linux).
-    char buf[PATH_MAX];
-    ssize_t const len = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
-    if (len > 0) {
-        buf[len] = '\0';
-        return std::filesystem::path(buf).parent_path();
+    uint32_t size = 0;
+    _NSGetExecutablePath(nullptr, &size);
+    if (size > 0) {
+        std::vector<char> buf(size);
+        if (_NSGetExecutablePath(buf.data(), &size) == 0) {
+            return std::filesystem::path(buf.data()).parent_path();
+        }
     }
 #else
-    // Linux
     char buf[PATH_MAX];
     ssize_t const len = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
     if (len > 0) {
@@ -66,20 +68,8 @@ static std::filesystem::path getExecutableDir() {
     return std::filesystem::current_path();
 }
 
-// ---------------------------------------------------------------------------
-// Helper: locate the Python stdlib relative to the executable directory.
-//
-// WT_PYTHON_STDLIB_REL_DIR is a compile-time string set by CMake, e.g.
-//   "Lib"                           (Windows)
-//   "lib/python3.12"                (Linux)
-//
-// If the stdlib does not exist next to the exe (e.g. during development
-// when running from the build tree), we also probe the vcpkg-installed
-// prefix to find it — this way the interpreter works both in the build
-// tree and in an installed/packaged layout.
-// ---------------------------------------------------------------------------
 static std::filesystem::path findPythonHome() {
-    auto const exe_dir = getExecutableDir();
+    auto const exe_dir = PythonEngine::executableDirectory();
 
     // Helper: verify the candidate directory actually contains the Python
     // standard library.  We probe for the 'encodings' package because
