@@ -73,6 +73,49 @@ TEST_CASE("Spike2PythonFormatLoader converts fake digital event payload", "[io][
     REQUIRE(events->getStoredEvent(2) == TimeFrameIndex{13});
 }
 
+TEST_CASE("Spike2PythonFormatLoader derives adc digital intervals from fake analog payload", "[io][spike2]") {
+    Spike2PythonFormatLoader loader(engine());
+    auto config = nlohmann::json{
+            {"python_helper_path", helperPath()},
+            {"fake_payload", {
+                                     {"analog",
+                                      {{{"name", "Camera_raw"},
+                                        {"title", "Camera"},
+                                        {"channel", 0},
+                                        {"times", {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}},
+                                        {"values", {0.1, 0.1, 3.2, 3.2, 3.2, 0.1, 0.1, 3.2, 3.2, 0.1}}}}},
+                             }},
+            {"adc_digital_channels",
+             {{"0",
+               {{"threshold", 1.0},
+                {"interval_name", "Camera_interval"},
+                {"event_name", "Frame_start"}}}}}};
+
+    auto interval_result = loader.loadBatch("fake.smrx", DM_DataType::DigitalInterval, config);
+    INFO(interval_result.error_message);
+    REQUIRE(interval_result.success);
+    REQUIRE(interval_result.results.size() == 1);
+    REQUIRE(interval_result.results.front().name == "Camera_interval");
+
+    auto intervals = std::get<std::shared_ptr<DigitalIntervalSeries>>(interval_result.results.front().data);
+    REQUIRE(intervals->size() == 2);
+    REQUIRE(intervals->getStoredInterval(0).start == TimeFrameIndex{2});
+    REQUIRE(intervals->getStoredInterval(0).end == TimeFrameIndex{4});
+    REQUIRE(intervals->getStoredInterval(1).start == TimeFrameIndex{7});
+    REQUIRE(intervals->getStoredInterval(1).end == TimeFrameIndex{8});
+
+    auto event_result = loader.loadBatch("fake.smrx", DM_DataType::DigitalEvent, config);
+    INFO(event_result.error_message);
+    REQUIRE(event_result.success);
+    REQUIRE(event_result.results.size() == 1);
+    REQUIRE(event_result.results.front().name == "Frame_start");
+
+    auto events = std::get<std::shared_ptr<DigitalEventSeries>>(event_result.results.front().data);
+    REQUIRE(events->size() == 2);
+    REQUIRE(events->getStoredEvent(0) == TimeFrameIndex{2});
+    REQUIRE(events->getStoredEvent(1) == TimeFrameIndex{7});
+}
+
 TEST_CASE("Spike2PythonFormatLoader converts fake interval payload", "[io][spike2]") {
     Spike2PythonFormatLoader loader(engine());
     auto config = nlohmann::json{

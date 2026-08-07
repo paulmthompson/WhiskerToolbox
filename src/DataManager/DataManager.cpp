@@ -41,6 +41,7 @@
 #include "Entity/Lineage/LineageRegistry.hpp"
 #include "Lineage/LineageRecorder.hpp"
 
+#include <cassert>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -160,12 +161,6 @@ bool tryRegistryThenLegacyLoad(
                             std::string const & channel_name = name;
                             dm->setData<AnalogTimeSeries>(channel_name, analog_data, TimeKey("time"));
                             recordLoadedFileSource(dm, channel_name, file_path, item);
-
-                            if (item.contains("clock")) {
-                                std::string const clock_str = item["clock"];
-                                auto const clock = TimeKey(clock_str);
-                                dm->setTimeKey(channel_name, clock);
-                            }
                         }
                         break;
                     }
@@ -180,12 +175,6 @@ bool tryRegistryThenLegacyLoad(
                             std::string const & channel_name = name;
                             dm->setData<DigitalEventSeries>(channel_name, event_data, TimeKey("time"));
                             recordLoadedFileSource(dm, channel_name, file_path, item);
-
-                            if (item.contains("clock")) {
-                                std::string const clock_str = item["clock"];
-                                auto const clock = TimeKey(clock_str);
-                                dm->setTimeKey(channel_name, clock);
-                            }
                         }
                         break;
                     }
@@ -324,22 +313,10 @@ bool tryBatchLoadFromRegistry(
                     auto tensor_data = std::get<std::shared_ptr<TensorData>>(result.data);
                     dm->setData<TensorData>(name, tensor_data, TimeKey("time"));
                     recordLoadedFileSource(dm, name, file_path, item);
-
-                    if (item.contains("clock")) {
-                        std::string const clock_str = item["clock"];
-                        auto const clock = TimeKey(clock_str);
-                        dm->setTimeKey(name, clock);
-                    }
                 } else if (std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(result.data)) {
                     auto analog_data = std::get<std::shared_ptr<AnalogTimeSeries>>(result.data);
                     dm->setData<AnalogTimeSeries>(channel_name, analog_data, TimeKey("time"));
                     recordLoadedFileSource(dm, channel_name, file_path, item);
-
-                    if (item.contains("clock")) {
-                        std::string const clock_str = item["clock"];
-                        auto const clock = TimeKey(clock_str);
-                        dm->setTimeKey(channel_name, clock);
-                    }
                 }
                 break;
             }
@@ -348,12 +325,6 @@ bool tryBatchLoadFromRegistry(
                     auto event_data = std::get<std::shared_ptr<DigitalEventSeries>>(result.data);
                     dm->setData<DigitalEventSeries>(channel_name, event_data, TimeKey("time"));
                     recordLoadedFileSource(dm, channel_name, file_path, item);
-
-                    if (item.contains("clock")) {
-                        std::string const clock_str = item["clock"];
-                        auto const clock = TimeKey(clock_str);
-                        dm->setTimeKey(channel_name, clock);
-                    }
                 }
                 break;
             }
@@ -370,12 +341,6 @@ bool tryBatchLoadFromRegistry(
                     auto interval_data = std::get<std::shared_ptr<DigitalIntervalSeries>>(result.data);
                     dm->setData<DigitalIntervalSeries>(channel_name, interval_data, TimeKey("time"));
                     recordLoadedFileSource(dm, channel_name, file_path, item);
-
-                    if (item.contains("clock")) {
-                        std::string const clock_str = item["clock"];
-                        auto const clock = TimeKey(clock_str);
-                        dm->setTimeKey(channel_name, clock);
-                    }
                 }
                 break;
             }
@@ -1080,10 +1045,82 @@ DM_DataType stringToDataType(std::string const & data_type_str) {
     return DM_DataType::Unknown;
 }
 
+/**
+ * @brief Parse the top-level JSON `clocks` array into clock names.
+ * @param clocks_json JSON value for the `clocks` key.
+ * @param out Parsed clock names in declaration order.
+ * @return false if `clocks` is not an array of strings.
+ */
+bool parseDeclaredClockNames(json const & clocks_json, std::vector<std::string> & out) {
+    if (!clocks_json.is_array()) {
+        std::cerr << "Error: 'clocks' must be a JSON array of clock names" << std::endl;
+        return false;
+    }
+
+    for (auto const & entry: clocks_json) {
+        if (!entry.is_string()) {
+            std::cerr << "Error: each entry in 'clocks' must be a string" << std::endl;
+            return false;
+        }
+        out.push_back(entry.get<std::string>());
+    }
+    return true;
+}
+
+/**
+ * @brief Register forward-declared empty TimeFrames for each clock name.
+ * @param dm DataManager receiving the clock placeholders.
+ * @param clock_names Names from the top-level `clocks` array.
+ * @pre dm must not be null.
+ * @return false if a name duplicates an already-populated TimeFrame or registration fails.
+ */
+bool registerDeclaredClocks(DataManager * dm, std::vector<std::string> const & clock_names) {
+    assert(dm != nullptr && "registerDeclaredClocks: dm must not be null");
+
+    for (auto const & name: clock_names) {
+        auto const existing = dm->getTime(TimeKey(name));
+        if (existing) {
+            if (existing->getTotalFrameCount() > 0) {
+                std::cerr << "Error: Cannot forward-declare clock '" << name
+                          << "' because a populated TimeFrame already exists" << std::endl;
+                return false;
+            }
+            continue;
+        }
+
+        if (!dm->setTime(TimeKey(name), std::make_shared<TimeFrame>(), false)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * @brief Verify that every declared clock was populated during JSON load.
+ * @param dm DataManager to inspect.
+ * @param clock_names Names from the top-level `clocks` array.
+ * @return false if any declared clock is missing or still empty.
+ */
+bool validateDeclaredClocks(DataManager & dm, std::vector<std::string> const & clock_names) {
+    for (auto const & name: clock_names) {
+        auto const timeframe = dm.getTime(TimeKey(name));
+        if (!timeframe) {
+            std::cerr << "Error: Declared clock '" << name << "' was not registered" << std::endl;
+            return false;
+        }
+        if (timeframe->getTotalFrameCount() == 0) {
+            std::cerr << "Error: Declared clock '" << name << "' was not populated during load" << std::endl;
+            return false;
+        }
+    }
+    return true;
+}
+
 std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & j, std::string const & base_path, JsonLoadProgressCallback const & progress_callback) {
     std::vector<DataInfo> data_info_list;
 
     std::map<std::string, std::string> clock_mappings;
+    std::vector<std::string> declared_clocks;
     bool saw_video_in_config = false;
 
     // Support the extended format where the root is an object rather than a plain array:
@@ -1130,6 +1167,15 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
         data_str = substituteVariablesInJsonString(data_str, variables);
         resolved = json::parse(data_str);
         working_ptr = &resolved;
+    }
+
+    if (j.is_object() && j.contains("clocks")) {
+        if (!parseDeclaredClockNames(j["clocks"], declared_clocks)) {
+            return data_info_list;
+        }
+        if (!registerDeclaredClocks(dm, declared_clocks)) {
+            return data_info_list;
+        }
     }
 
     json const & working = *working_ptr;
@@ -1660,9 +1706,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
         }
         if (item.contains("clock")) {
             std::string const clock_str = item["clock"];
-            auto clock = TimeKey(clock_str);
-            std::cout << "Setting time for " << name << " to " << clock << std::endl;
-            dm->setTimeKey(name, clock);
+            std::cout << "Deferring clock binding for " << name << " to " << clock_str << std::endl;
             clock_mappings[name] = clock_str;
         }
 
@@ -1682,7 +1726,15 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
 
     for (auto const & [data_name, clock_name]: clock_mappings) {
         std::cout << "Data item '" << data_name << "' is mapped to clock '" << clock_name << "'" << std::endl;
-        dm->setTimeKey(data_name, TimeKey(clock_name));
+        if (!dm->setTimeKey(data_name, TimeKey(clock_name))) {
+            std::cerr << "Error: Failed to bind data item '" << data_name << "' to clock '" << clock_name << "'"
+                      << std::endl;
+            return data_info_list;
+        }
+    }
+
+    if (!declared_clocks.empty() && !validateDeclaredClocks(*dm, declared_clocks)) {
+        return data_info_list;
     }
 
     // Process all transformation objects found in the JSON array
