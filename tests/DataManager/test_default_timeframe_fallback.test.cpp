@@ -184,10 +184,11 @@ TEST_CASE("load_data_from_json_config - deferred clock binding allows data befor
           "[DataManager][timeframe][json][clocks]") {
     DataManager dm;
 
-    std::vector<float> values(5, 1.0f);
+    std::vector<float> const values(5, 1.0f);
     std::vector<TimeFrameIndex> time_indices;
-    for (int i = 0; i < 5; ++i) {
-        time_indices.push_back(TimeFrameIndex(i));
+    time_indices.reserve(5);
+for (int i = 0; i < 5; ++i) {
+        time_indices.emplace_back(i);
     }
     auto analog = std::make_shared<AnalogTimeSeries>(values, time_indices);
     dm.setData<AnalogTimeSeries>("src", analog, TimeKey("time"));
@@ -216,6 +217,31 @@ TEST_CASE("load_data_from_json_config - deferred clock binding allows data befor
     load_data_from_json_config(&dm, config, testDataBasePath());
 
     REQUIRE(dm.getTime(TimeKey("master"))->getTotalFrameCount() == 5);
+    REQUIRE(dm.getTimeKey("breath") == TimeKey("master"));
+    REQUIRE(dm.getData<AnalogTimeSeries>("breath") != nullptr);
+}
+
+TEST_CASE("load_data_from_json_config - declared clock assigns data at registration time",
+          "[DataManager][timeframe][json][clocks]") {
+    DataManager dm;
+
+    json const config = json::parse(R"({
+        "clocks": ["master"],
+        "data": [
+            {
+                "filepath": "Analog/single_column.csv",
+                "data_type": "analog",
+                "name": "breath",
+                "format": "csv",
+                "single_column_format": true,
+                "has_header": false,
+                "clock": "master"
+            }
+        ]
+    })");
+
+    load_data_from_json_config(&dm, config, testDataBasePath());
+
     REQUIRE(dm.getTimeKey("breath") == TimeKey("master"));
     REQUIRE(dm.getData<AnalogTimeSeries>("breath") != nullptr);
 }

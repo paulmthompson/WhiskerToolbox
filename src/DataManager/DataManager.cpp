@@ -48,6 +48,7 @@
 #include <numeric>
 #include <optional>
 #include <regex>
+#include <unordered_set>
 #include <utility>
 
 #include <spdlog/spdlog.h>
@@ -89,6 +90,53 @@ void recordLoadedFileSource(
             *dm->getLineageRegistry(), data_key, std::move(origin));
 }
 
+/**
+ * @brief Check whether a JSON clock name is available for immediate registration.
+ * @param dm DataManager owning registered TimeFrames.
+ * @param clock_name Clock name from a data entry's `clock` field.
+ * @param declared_clock_names Names from the top-level `clocks` array.
+ * @return true when the clock is declared (or implicit `time`) and registered in @p dm.
+ */
+bool isDeclaredClockAvailable(
+        DataManager * dm,
+        std::string const & clock_name,
+        std::unordered_set<std::string> const & declared_clock_names) {
+    assert(dm != nullptr && "isDeclaredClockAvailable: dm must not be null");
+
+    if (clock_name == "time") {
+        return dm->getTime(TimeKey("time")) != nullptr;
+    }
+
+    if (!declared_clock_names.contains(clock_name)) {
+        return false;
+    }
+
+    return dm->getTime(TimeKey(clock_name)) != nullptr;
+}
+
+/**
+ * @brief Resolve the TimeKey to use when registering a JSON data entry.
+ * @param dm DataManager receiving the loaded data.
+ * @param item JSON load descriptor for one data entry.
+ * @param declared_clock_names Names from the top-level `clocks` array.
+ * @return `item["clock"]` when declared and registered; otherwise `"time"`.
+ */
+TimeKey resolveRegistrationTimeKey(
+        DataManager * dm,
+        json const & item,
+        std::unordered_set<std::string> const & declared_clock_names) {
+    if (!item.contains("clock") || !item["clock"].is_string()) {
+        return TimeKey("time");
+    }
+
+    std::string const clock_name = item["clock"].get<std::string>();
+    if (!isDeclaredClockAvailable(dm, clock_name, declared_clock_names)) {
+        return TimeKey("time");
+    }
+
+    return TimeKey(clock_name);
+}
+
 }// namespace
 
 void setJsonPythonEnvironmentConfigurator(JsonPythonEnvironmentConfigurator configurator) {
@@ -108,6 +156,7 @@ bool tryRegistryThenLegacyLoad(
         DM_DataType data_type,
         nlohmann::json const & item,
         std::string const & name,
+        TimeKey const & registration_time_key,
         std::vector<DataInfo> & data_info_list) {
     // Extract format if available
     if (item.contains("format")) {
@@ -127,7 +176,7 @@ bool tryRegistryThenLegacyLoad(
                         if (std::holds_alternative<std::shared_ptr<LineData>>(result.data)) {
                             auto line_data = std::get<std::shared_ptr<LineData>>(result.data);
 
-                            dm->setData<LineData>(name, line_data, TimeKey("time"));
+                            dm->setData<LineData>(name, line_data, registration_time_key);
                             recordLoadedFileSource(dm, name, file_path, item);
 
                             std::string const color = item.value("color", "0000FF");
@@ -140,7 +189,7 @@ bool tryRegistryThenLegacyLoad(
                         if (std::holds_alternative<std::shared_ptr<MaskData>>(result.data)) {
                             auto mask_data = std::get<std::shared_ptr<MaskData>>(result.data);
 
-                            dm->setData<MaskData>(name, mask_data, TimeKey("time"));
+                            dm->setData<MaskData>(name, mask_data, registration_time_key);
                             recordLoadedFileSource(dm, name, file_path, item);
 
                             std::string const color = item.value("color", "0000FF");
@@ -159,7 +208,7 @@ bool tryRegistryThenLegacyLoad(
                             // For single channel, use the base name
                             //std::string const channel_name = name + "_0";
                             std::string const & channel_name = name;
-                            dm->setData<AnalogTimeSeries>(channel_name, analog_data, TimeKey("time"));
+                            dm->setData<AnalogTimeSeries>(channel_name, analog_data, registration_time_key);
                             recordLoadedFileSource(dm, channel_name, file_path, item);
                         }
                         break;
@@ -173,7 +222,7 @@ bool tryRegistryThenLegacyLoad(
 
                             //std::string const channel_name = name + "_0";
                             std::string const & channel_name = name;
-                            dm->setData<DigitalEventSeries>(channel_name, event_data, TimeKey("time"));
+                            dm->setData<DigitalEventSeries>(channel_name, event_data, registration_time_key);
                             recordLoadedFileSource(dm, channel_name, file_path, item);
                         }
                         break;
@@ -183,7 +232,7 @@ bool tryRegistryThenLegacyLoad(
                         if (std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(result.data)) {
                             auto interval_data = std::get<std::shared_ptr<DigitalIntervalSeries>>(result.data);
 
-                            dm->setData<DigitalIntervalSeries>(name, interval_data, TimeKey("time"));
+                            dm->setData<DigitalIntervalSeries>(name, interval_data, registration_time_key);
                             recordLoadedFileSource(dm, name, file_path, item);
                         }
                         break;
@@ -195,7 +244,7 @@ bool tryRegistryThenLegacyLoad(
                         if (std::holds_alternative<std::shared_ptr<PointData>>(result.data)) {
                             auto point_data = std::get<std::shared_ptr<PointData>>(result.data);
 
-                            dm->setData<PointData>(name, point_data, TimeKey("time"));
+                            dm->setData<PointData>(name, point_data, registration_time_key);
                             recordLoadedFileSource(dm, name, file_path, item);
 
                             std::string const color = item.value("color", "#0000FF");
@@ -208,7 +257,7 @@ bool tryRegistryThenLegacyLoad(
                         if (std::holds_alternative<std::shared_ptr<TensorData>>(result.data)) {
                             auto tensor_data = std::get<std::shared_ptr<TensorData>>(result.data);
 
-                            dm->setData<TensorData>(name, tensor_data, TimeKey("time"));
+                            dm->setData<TensorData>(name, tensor_data, registration_time_key);
                             recordLoadedFileSource(dm, name, file_path, item);
                         }
                         break;
@@ -249,7 +298,8 @@ bool tryBatchLoadFromRegistry(
         std::string const & file_path,
         DM_DataType data_type,
         nlohmann::json const & item,
-        std::string const & name) {
+        std::string const & name,
+        TimeKey const & registration_time_key) {
 
     if (!item.contains("format")) {
         return false;
@@ -311,11 +361,11 @@ bool tryBatchLoadFromRegistry(
                 if (std::holds_alternative<std::shared_ptr<TensorData>>(result.data)) {
                     // Tensor-backed batch: register the TensorData under base name
                     auto tensor_data = std::get<std::shared_ptr<TensorData>>(result.data);
-                    dm->setData<TensorData>(name, tensor_data, TimeKey("time"));
+                    dm->setData<TensorData>(name, tensor_data, registration_time_key);
                     recordLoadedFileSource(dm, name, file_path, item);
                 } else if (std::holds_alternative<std::shared_ptr<AnalogTimeSeries>>(result.data)) {
                     auto analog_data = std::get<std::shared_ptr<AnalogTimeSeries>>(result.data);
-                    dm->setData<AnalogTimeSeries>(channel_name, analog_data, TimeKey("time"));
+                    dm->setData<AnalogTimeSeries>(channel_name, analog_data, registration_time_key);
                     recordLoadedFileSource(dm, channel_name, file_path, item);
                 }
                 break;
@@ -323,7 +373,7 @@ bool tryBatchLoadFromRegistry(
             case DM_DataType::DigitalEvent: {
                 if (std::holds_alternative<std::shared_ptr<DigitalEventSeries>>(result.data)) {
                     auto event_data = std::get<std::shared_ptr<DigitalEventSeries>>(result.data);
-                    dm->setData<DigitalEventSeries>(channel_name, event_data, TimeKey("time"));
+                    dm->setData<DigitalEventSeries>(channel_name, event_data, registration_time_key);
                     recordLoadedFileSource(dm, channel_name, file_path, item);
                 }
                 break;
@@ -331,7 +381,7 @@ bool tryBatchLoadFromRegistry(
             case DM_DataType::Points: {
                 if (std::holds_alternative<std::shared_ptr<PointData>>(result.data)) {
                     auto point_data = std::get<std::shared_ptr<PointData>>(result.data);
-                    dm->setData<PointData>(channel_name, point_data, TimeKey("time"));
+                    dm->setData<PointData>(channel_name, point_data, registration_time_key);
                     recordLoadedFileSource(dm, channel_name, file_path, item);
                 }
                 break;
@@ -339,7 +389,7 @@ bool tryBatchLoadFromRegistry(
             case DM_DataType::DigitalInterval: {
                 if (std::holds_alternative<std::shared_ptr<DigitalIntervalSeries>>(result.data)) {
                     auto interval_data = std::get<std::shared_ptr<DigitalIntervalSeries>>(result.data);
-                    dm->setData<DigitalIntervalSeries>(channel_name, interval_data, TimeKey("time"));
+                    dm->setData<DigitalIntervalSeries>(channel_name, interval_data, registration_time_key);
                     recordLoadedFileSource(dm, channel_name, file_path, item);
                 }
                 break;
@@ -1121,6 +1171,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
 
     std::map<std::string, std::string> clock_mappings;
     std::vector<std::string> declared_clocks;
+    std::unordered_set<std::string> declared_clock_names;
     bool saw_video_in_config = false;
 
     // Support the extended format where the root is an object rather than a plain array:
@@ -1176,6 +1227,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
         if (!registerDeclaredClocks(dm, declared_clocks)) {
             return data_info_list;
         }
+        declared_clock_names.insert(declared_clocks.begin(), declared_clocks.end());
     }
 
     json const & working = *working_ptr;
@@ -1427,6 +1479,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
         }
 
         std::string const name = item["name"];
+        TimeKey const registration_time_key = resolveRegistrationTimeKey(dm, item, declared_clock_names);
 
         auto file_exists = processFilePath(item["filepath"], base_path);
         if (!file_exists) {
@@ -1442,7 +1495,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 auto media_data = MediaDataFactory::loadMediaData(data_type, file_path, item);
                 if (media_data) {
                     auto item_key = item.value("name", "media");
-                    dm->setData<MediaData>(item_key, media_data, TimeKey("time"));
+                    dm->setData<MediaData>(item_key, media_data, registration_time_key);
                     recordLoadedFileSource(dm, item_key, file_path, item);
                     data_info_list.push_back({name, "VideoData", ""});
                 } else {
@@ -1455,7 +1508,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 auto media_data = MediaDataFactory::loadMediaData(data_type, file_path, item);
                 if (media_data) {
                     auto item_key = item.value("name", "media");
-                    dm->setData<MediaData>(item_key, media_data, TimeKey("time"));
+                    dm->setData<MediaData>(item_key, media_data, registration_time_key);
                     recordLoadedFileSource(dm, item_key, file_path, item);
                     data_info_list.push_back({name, "ImageData", ""});
                 } else {
@@ -1476,7 +1529,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                     for (auto const & [bodypart, point_data]: multi_point_data) {
                         std::string const bodypart_name = name + "_" + bodypart;
 
-                        dm->setData<PointData>(bodypart_name, point_data, TimeKey("time"));
+                        dm->setData<PointData>(bodypart_name, point_data, registration_time_key);
                         recordLoadedFileSource(dm, bodypart_name, file_path, item);
                         // Use empty color string to let Media_Window auto-assign colors
                         data_info_list.push_back({bodypart_name, "PointData", ""});
@@ -1485,7 +1538,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 }
 
                 // Use registry system for regular CSV point data
-                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list)) {
+                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, registration_time_key, data_info_list)) {
                     break;// Successfully loaded with plugin
                 }
 
@@ -1497,7 +1550,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             case DM_DataType::Mask: {
 
                 // Use registry system for all mask formats (hdf5, image)
-                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list)) {
+                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, registration_time_key, data_info_list)) {
                     break;// Successfully loaded with plugin
                 }
 
@@ -1509,7 +1562,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             case DM_DataType::Line: {
 
                 // Use registry system for all line formats (csv, capnp, hdf5)
-                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list)) {
+                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, registration_time_key, data_info_list)) {
                     break;// Successfully loaded with plugin
                 }
 
@@ -1522,12 +1575,12 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
 
                 // Use batch loading for multi-channel binary files
                 // Format-centric loaders (BinaryFormatLoader, CSVLoader) handle all formats
-                if (tryBatchLoadFromRegistry(dm, file_path, data_type, item, name)) {
+                if (tryBatchLoadFromRegistry(dm, file_path, data_type, item, name, registration_time_key)) {
                     break;// Successfully loaded all channels with batch loader
                 }
 
                 // Try single-item registry loading for simple cases
-                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list)) {
+                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, registration_time_key, data_info_list)) {
                     break;// Successfully loaded with plugin
                 }
 
@@ -1540,12 +1593,12 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
 
                 // Use batch loading for multi-series CSV files
                 // Format-centric loaders (BinaryFormatLoader, CSVLoader) handle all formats
-                if (tryBatchLoadFromRegistry(dm, file_path, data_type, item, name)) {
+                if (tryBatchLoadFromRegistry(dm, file_path, data_type, item, name, registration_time_key)) {
                     break;// Successfully loaded all series with batch loader
                 }
 
                 // Try single-item registry loading for simple cases
-                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list)) {
+                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, registration_time_key, data_info_list)) {
                     break;// Successfully loaded with plugin
                 }
 
@@ -1557,12 +1610,12 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             case DM_DataType::DigitalInterval: {
 
                 // Try batch loading first for multi-column binary_state CSV files
-                if (tryBatchLoadFromRegistry(dm, file_path, data_type, item, name)) {
+                if (tryBatchLoadFromRegistry(dm, file_path, data_type, item, name, registration_time_key)) {
                     break;// Successfully loaded all series with batch loader
                 }
 
                 // Use registry system for all digital interval formats (uint16, csv, binary_state)
-                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list)) {
+                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, registration_time_key, data_info_list)) {
                     break;// Successfully loaded with plugin
                 }
 
@@ -1574,7 +1627,7 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
             case DM_DataType::Tensor: {
 
                 // Try loading through the IO registry (handles numpy via DataManagerNumpy)
-                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, data_info_list)) {
+                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, registration_time_key, data_info_list)) {
                     break;
                 }
 
@@ -1704,10 +1757,13 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 std::cout << "Unsupported data type: " << data_type_str << std::endl;
                 continue;
         }
-        if (item.contains("clock")) {
-            std::string const clock_str = item["clock"];
-            std::cout << "Deferring clock binding for " << name << " to " << clock_str << std::endl;
-            clock_mappings[name] = clock_str;
+        if (item.contains("clock") && item["clock"].is_string()) {
+            std::string const clock_str = item["clock"].get<std::string>();
+            bool const skip_base_key = item.contains("format") && item["format"] == "dlc_csv";
+            if (!skip_base_key && dm->getTimeKey(name) != TimeKey(clock_str)) {
+                std::cout << "Deferring clock binding for " << name << " to " << clock_str << std::endl;
+                clock_mappings[name] = clock_str;
+            }
         }
 
         // Increment progress counter
