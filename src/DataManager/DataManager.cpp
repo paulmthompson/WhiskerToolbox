@@ -95,7 +95,8 @@ void recordLoadedFileSource(
  * @param dm DataManager owning registered TimeFrames.
  * @param clock_name Clock name from a data entry's `clock` field.
  * @param declared_clock_names Names from the top-level `clocks` array.
- * @return true when the clock is declared (or implicit `time`) and registered in @p dm.
+ * @return true when the clock is registered in @p dm (populated or forward-declared placeholder),
+ *         or forward-declared in `clocks` but not yet registered.
  */
 bool isDeclaredClockAvailable(
         DataManager * dm,
@@ -103,15 +104,11 @@ bool isDeclaredClockAvailable(
         std::unordered_set<std::string> const & declared_clock_names) {
     assert(dm != nullptr && "isDeclaredClockAvailable: dm must not be null");
 
-    if (clock_name == "time") {
-        return dm->getTime(TimeKey("time")) != nullptr;
+    if (dm->getTime(TimeKey(clock_name)) != nullptr) {
+        return true;
     }
 
-    if (!declared_clock_names.contains(clock_name)) {
-        return false;
-    }
-
-    return dm->getTime(TimeKey(clock_name)) != nullptr;
+    return declared_clock_names.contains(clock_name);
 }
 
 /**
