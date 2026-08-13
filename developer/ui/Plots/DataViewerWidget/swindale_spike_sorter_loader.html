@@ -319,6 +319,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#file-format" id="toc-file-format" class="nav-link" data-scroll-target="#file-format">File format</a></li>
   <li><a href="#key-numbering" id="toc-key-numbering" class="nav-link" data-scroll-target="#key-numbering">Key numbering</a></li>
   <li><a href="#ordering-policy" id="toc-ordering-policy" class="nav-link" data-scroll-target="#ordering-policy">Ordering policy</a></li>
+  <li><a href="#per-group-override-persistence" id="toc-per-group-override-persistence" class="nav-link" data-scroll-target="#per-group-override-persistence">Per-group override persistence</a></li>
   <li><a href="#tests" id="toc-tests" class="nav-link" data-scroll-target="#tests">Tests</a></li>
   </ul></li>
   </ul>
@@ -371,6 +372,12 @@ ul.task-list li input[type="checkbox"] {
 <li>Lexicographic key tie-break</li>
 </ol>
 <p>Ranks are written to <code>DataViewerState</code> as explicit <code>lane_order</code> overrides and consumed by <code>OrderingPolicyResolver</code> / <code>StackedLayoutStrategy</code>.</p>
+</section>
+<section id="per-group-override-persistence" class="level2">
+<h2 class="anchored" data-anchor-id="per-group-override-persistence">Per-group override persistence</h2>
+<p><code>lane_order</code> overrides are keyed by series name and persist in <code>DataViewerState</code> when a group is hidden in the feature tree (unchecked). Re-enabling the same group restores the saved spikesorter ordering without reloading the configuration file.</p>
+<p><code>lane_order</code> deduplication in <code>DataViewerState::normalizeAllLaneOverrides</code> is scoped per probe group (<code>parseSeriesIdentity(series_key).group</code>). Independent groups such as <code>voltage_*</code> and <code>voltage_raw_*</code> may both use ranks <code>0..N</code> without colliding.</p>
+<p><code>clearSpikeSorterConfiguration</code> clears overrides from state by group identity, including series that are not currently displayed in the viewer.</p>
 </section>
 <section id="tests" class="level2">
 <h2 class="anchored" data-anchor-id="tests">Tests</h2>

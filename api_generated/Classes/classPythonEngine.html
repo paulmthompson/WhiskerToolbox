@@ -381,6 +381,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-getuservariablenames" id="toc-function-getuservariablenames" class="nav-link" data-scroll-target="#function-getuservariablenames">function getUserVariableNames</a></li>
   <li><a href="#function-pythonversion" id="toc-function-pythonversion" class="nav-link" data-scroll-target="#function-pythonversion">function pythonVersion</a></li>
   <li><a href="#function-discovervenvs" id="toc-function-discovervenvs" class="nav-link" data-scroll-target="#function-discovervenvs">function discoverVenvs</a></li>
+  <li><a href="#function-executabledirectory" id="toc-function-executabledirectory" class="nav-link" data-scroll-target="#function-executabledirectory">function executableDirectory</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -533,6 +534,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>std::vector&lt; std::filesystem::path &gt;</td>
 <td><strong><a href="../../api_generated/Classes/classPythonEngine.html#function-discovervenvs">discoverVenvs</a></strong>(std::vector&lt; std::filesystem::path &gt; const &amp; extra_paths ={})<br>Discover virtual environments in common locations.</td>
+</tr>
+<tr class="odd">
+<td>std::filesystem::path</td>
+<td><strong><a href="../../api_generated/Classes/classPythonEngine.html#function-executabledirectory">executableDirectory</a></strong>()<br>Directory containing the running executable.</td>
 </tr>
 </tbody>
 </table>
@@ -761,8 +766,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>~/.pyenv/versions/</li>
 </ul>
 <p>Only returns paths that look like valid Python venvs (contain a pyvenv.cfg or bin/python).</p>
+</section>
+<section id="function-executabledirectory" class="level3">
+<h3 class="anchored" data-anchor-id="function-executabledirectory">function executableDirectory</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>filesystem::path executableDirectory<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Directory containing the running executable.</p>
+<p>Used to locate bundled resources (for example <code>resources/python</code>) in installed and build-tree layouts. Falls back to the current working directory when the executable path cannot be resolved.</p>
 <hr>
-<p>Updated on 2026-08-07 at 13:14:06 +0000</p>
+<p>Updated on 2026-08-13 at 01:13:51 +0000</p>
 
 
 </section>

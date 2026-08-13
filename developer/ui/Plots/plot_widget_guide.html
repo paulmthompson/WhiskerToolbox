@@ -1565,7 +1565,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </ul></li>
   <li><a href="#shared-helpers-reference" id="toc-shared-helpers-reference" class="nav-link" data-scroll-target="#shared-helpers-reference">Shared Helpers Reference</a>
   <ul class="collapse">
-  <li><a href="#plotinteractionhelpers-no-qt-dependency" id="toc-plotinteractionhelpers-no-qt-dependency" class="nav-link" data-scroll-target="#plotinteractionhelpers-no-qt-dependency">PlotInteractionHelpers (No Qt dependency)</a></li>
+  <li><a href="#plotinteractionhelpers" id="toc-plotinteractionhelpers" class="nav-link" data-scroll-target="#plotinteractionhelpers">PlotInteractionHelpers</a></li>
+  <li><a href="#optional-zoom-profiling-plotzoomprofile" id="toc-optional-zoom-profiling-plotzoomprofile" class="nav-link" data-scroll-target="#optional-zoom-profiling-plotzoomprofile">Optional zoom profiling (<code>PlotZoomProfile</code>)</a></li>
   <li><a href="#plotalignmentgather-template-data-gatherers" id="toc-plotalignmentgather-template-data-gatherers" class="nav-link" data-scroll-target="#plotalignmentgather-template-data-gatherers">PlotAlignmentGather (Template data gatherers)</a></li>
   <li><a href="#lineselectionhelpers" id="toc-lineselectionhelpers" class="nav-link" data-scroll-target="#lineselectionhelpers">LineSelectionHelpers</a></li>
   </ul></li>
@@ -2167,9 +2168,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="shared-helpers-reference" class="level2">
 <h2 class="anchored" data-anchor-id="shared-helpers-reference">Shared Helpers Reference</h2>
-<section id="plotinteractionhelpers-no-qt-dependency" class="level3">
-<h3 class="anchored" data-anchor-id="plotinteractionhelpers-no-qt-dependency">PlotInteractionHelpers (No Qt dependency)</h3>
-<p>Template functions for zoom, pan, projection, and coordinate conversion. Used by all OpenGL rendering widgets.</p>
+<section id="plotinteractionhelpers" class="level3">
+<h3 class="anchored" data-anchor-id="plotinteractionhelpers">PlotInteractionHelpers</h3>
+<p>Template functions for zoom, pan, projection, coordinate conversion, and wheel input normalization. Used by all OpenGL rendering widgets.</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 52%">
@@ -2183,12 +2184,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
+<td><code>wheelDeltaToZoomSteps(...)</code></td>
+<td>Normalize <code>QWheelEvent</code> pixel/angle deltas to fractional zoom steps</td>
+</tr>
+<tr class="even">
 <td><code>computeOrthoProjection(view_state, ...)</code></td>
 <td>Build orthographic projection matrix</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>handlePanning(state, view_state, delta, ...)</code></td>
 <td>Convert pixel drag to world-space pan</td>
+</tr>
+<tr class="even">
+<td><code>adaptiveZoomMultiplier(delta)</code></td>
+<td>3% adaptive visible-range zoom multiplier</td>
 </tr>
 <tr class="odd">
 <td><code>handleZoom(state, view_state, delta, y_only, both)</code></td>
@@ -2208,6 +2217,48 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 </tbody>
 </table>
+<p><code>wheelDeltaToZoomSteps</code> prefers <code>pixelDelta().y()</code> for trackpads, then falls back to <code>angleDelta().y()</code> with a horizontal-axis fallback for WSL/X11. <code>handleZoom</code> applies adaptive 3%-of-visible-range scaling per step (matching DataViewer normal mode).</p>
+<p>Plot container widgets use <code>PlotViewAxisRefresh.hpp</code> to repaint and sync only the axis affected by a view change (horizontal for X zoom/pan, vertical for Y zoom/pan), and listen to <code>viewStateChanged</code> once rather than duplicating via <code>viewBoundsChanged</code>.</p>
+</section>
+<section id="optional-zoom-profiling-plotzoomprofile" class="level3">
+<h3 class="anchored" data-anchor-id="optional-zoom-profiling-plotzoomprofile">Optional zoom profiling (<code>PlotZoomProfile</code>)</h3>
+<p>Set <code>NEURALYZER_PLOT_ZOOM_PROFILE=1</code> before launching WhiskerToolbox to log per-wheel timing to spdlog (<code>info</code> level):</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 43%">
+<col style="width: 56%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>gen</code></td>
+<td>Correlates wheel, paintGL, and axis paint lines</td>
+</tr>
+<tr class="even">
+<td><code>wheel_sync_us</code></td>
+<td>Synchronous path: zoom math, signals, axis sync, <code>update()</code> scheduling</td>
+</tr>
+<tr class="odd">
+<td><code>paint_gl_us</code></td>
+<td>Full <code>paintGL()</code> duration</td>
+</tr>
+<tr class="even">
+<td><code>rebuild</code></td>
+<td><code>1</code> if <code>rebuildScene()</code> ran (should be <code>0</code> for normal zoom)</td>
+</tr>
+<tr class="odd">
+<td><code>axis_paint_us</code></td>
+<td>Axis <code>paintEvent</code> duration (<code>axis=horizontal</code> or <code>vertical</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><code>update()</code> itself is not timed — it only schedules paint. Compare <code>wheel_sync_us</code> + <code>paint_gl_us</code> + axis lines to judge whether you are under a ~10 ms CPU budget.</p>
+<p>Currently instrumented: ScatterPlot OpenGL widget and shared horizontal/vertical axis widgets.</p>
 <p>These are constrained by C++20 concepts (<code>ViewStateLike</code>, <code>ZoomPanSettable</code>, <code>ViewStateWithBounds</code>) so they work with any plot’s view state type.</p>
 </section>
 <section id="plotalignmentgather-template-data-gatherers" class="level3">
