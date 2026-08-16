@@ -7,24 +7,25 @@
  * 2. The position of an existing point can be changed
  */
 
+#include "Media_Widget/UI/SubWidgets/MediaPoint_Widget/MediaPoint_Widget.hpp"
 #include "Media_Widget/Core/MediaWidgetState.hpp"
+#include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
 #include "Media_Widget/MediaWidgetRegistration.hpp"
 #include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
-#include "Media_Widget/UI/Media_Widget.hpp"
 #include "Media_Widget/UI/MediaPropertiesWidget.hpp"
-#include "Media_Widget/UI/SubWidgets/MediaPoint_Widget/MediaPoint_Widget.hpp"
+#include "Media_Widget/UI/Media_Widget.hpp"
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "DataManager/DataManager.hpp"
-#include "Points/Point_Data.hpp"
 #include "EditorState/EditorRegistry.hpp"
 #include "EditorState/StrongTypes.hpp"
 #include "Feature_Table_Widget/Feature_Table_Widget.hpp"
+#include "Points/Point_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
-#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
 
 #include <QApplication>
 #include <QStackedWidget>
@@ -57,7 +58,7 @@ std::shared_ptr<DataManager> createDataManagerWithPoints(
         std::string const & point_key,
         int num_frames,
         ImageSize const & image_size) {
-    
+
     auto dm = std::make_shared<DataManager>();
 
     // Create timeframe
@@ -84,7 +85,7 @@ MediaPoint_Widget * selectPointFeature(
         MediaPropertiesWidget & widget,
         std::string const & point_key,
         QApplication * app) {
-    
+
     auto feature_table = widget.findChild<Feature_Table_Widget *>("feature_table_widget");
     if (!feature_table) return nullptr;
 
@@ -137,6 +138,28 @@ MediaPoint_Widget * selectPointFeature(
 }
 
 /**
+ * @brief Wire Media_Window for point hit-testing and display options
+ */
+void setupMediaWindowForPointEditing(Media_Window * media_window,
+                                     MediaWidgetState * state,
+                                     std::string const & point_key,
+                                     ImageSize const & image_size) {
+    if (!media_window || !state) {
+        return;
+    }
+
+    media_window->setMediaWidgetState(state);
+    media_window->setCanvasSize(image_size);
+    media_window->resolveCanvasCoordinateSystem();
+    media_window->addPointDataToScene(point_key);
+
+    if (auto point_opts = state->displayOptions().getMutable<PointDisplayOptions>(
+                QString::fromStdString(point_key))) {
+        point_opts->is_visible() = true;
+    }
+}
+
+/**
  * @brief Simulate a point click with modifiers on a MediaPoint_Widget
  * 
  * @param point_widget The MediaPoint_Widget to interact with
@@ -152,14 +175,14 @@ void simulatePointClick(MediaPoint_Widget * point_widget,
 
     // Get the Media_Window from the widget's scene
     // We need to invoke the slot that handles the click
-    QMetaObject::invokeMethod(point_widget, "_handlePointClickWithModifiers", 
+    QMetaObject::invokeMethod(point_widget, "_handlePointClickWithModifiers",
                               Qt::DirectConnection,
                               Q_ARG(qreal, x_media),
                               Q_ARG(qreal, y_media),
                               Q_ARG(Qt::KeyboardModifiers, modifiers));
 }
 
-}  // namespace
+}// namespace
 
 // ============================================================================
 // Point Addition Tests
@@ -182,6 +205,7 @@ TEST_CASE("Points can be added by clicking in media widget and appear in data ma
 
     auto state = std::make_shared<MediaWidgetState>();
     auto media_window = std::make_unique<Media_Window>(data_manager);
+    setupMediaWindowForPointEditing(media_window.get(), state.get(), "test_points", {640, 480});
 
     // Set the current position to a non-zero frame
     TimePosition position(TimeFrameIndex{kTargetFrame}, time_frame);
@@ -239,6 +263,7 @@ TEST_CASE("Multiple points can be added at the same frame",
 
     auto state = std::make_shared<MediaWidgetState>();
     auto media_window = std::make_unique<Media_Window>(data_manager);
+    setupMediaWindowForPointEditing(media_window.get(), state.get(), "test_points", {640, 480});
 
     TimePosition position(TimeFrameIndex{kTargetFrame}, time_frame);
     state->current_position = position;
@@ -298,12 +323,13 @@ TEST_CASE("Position of existing point can be changed",
     REQUIRE(point_data != nullptr);
     constexpr float kInitialX = 150.0f;
     constexpr float kInitialY = 175.0f;
-    point_data->addAtTime(TimeFrameIndex{kTargetFrame}, 
-                          Point2D<float>{kInitialX, kInitialY}, 
+    point_data->addAtTime(TimeFrameIndex{kTargetFrame},
+                          Point2D<float>{kInitialX, kInitialY},
                           NotifyObservers::No);
 
     auto state = std::make_shared<MediaWidgetState>();
     auto media_window = std::make_unique<Media_Window>(data_manager);
+    setupMediaWindowForPointEditing(media_window.get(), state.get(), "test_points", {640, 480});
 
     TimePosition position(TimeFrameIndex{kTargetFrame}, time_frame);
     state->current_position = position;
@@ -318,7 +344,6 @@ TEST_CASE("Position of existing point can be changed",
         REQUIRE(point_widget != nullptr);
 
         // First, select the point by clicking near it (without modifiers)
-        // The selection threshold is 10 pixels, so click within that range
         simulatePointClick(point_widget, kInitialX + 5.0, kInitialY + 5.0, Qt::NoModifier);
         app->processEvents();
 
@@ -357,15 +382,16 @@ TEST_CASE("Point movement works across different frames",
     // Pre-add points at different frames
     auto point_data = data_manager->getData<PointData>("test_points");
     REQUIRE(point_data != nullptr);
-    point_data->addAtTime(TimeFrameIndex{kFrame1}, 
-                          Point2D<float>{100.0f, 100.0f}, 
+    point_data->addAtTime(TimeFrameIndex{kFrame1},
+                          Point2D<float>{100.0f, 100.0f},
                           NotifyObservers::No);
-    point_data->addAtTime(TimeFrameIndex{kFrame2}, 
-                          Point2D<float>{200.0f, 200.0f}, 
+    point_data->addAtTime(TimeFrameIndex{kFrame2},
+                          Point2D<float>{200.0f, 200.0f},
                           NotifyObservers::No);
 
     auto state = std::make_shared<MediaWidgetState>();
     auto media_window = std::make_unique<Media_Window>(data_manager);
+    setupMediaWindowForPointEditing(media_window.get(), state.get(), "test_points", {640, 480});
 
     {
         MediaPropertiesWidget props_widget(state, data_manager, media_window.get());
@@ -378,16 +404,16 @@ TEST_CASE("Point movement works across different frames",
 
         // Move point at frame 20
         state->current_position = TimePosition(TimeFrameIndex{kFrame1}, time_frame);
-        simulatePointClick(point_widget, 105.0, 105.0, Qt::NoModifier);  // Select
+        simulatePointClick(point_widget, 105.0, 105.0, Qt::NoModifier);// Select
         app->processEvents();
-        simulatePointClick(point_widget, 150.0, 150.0, Qt::ControlModifier);  // Move
+        simulatePointClick(point_widget, 150.0, 150.0, Qt::ControlModifier);// Move
         app->processEvents();
 
         // Move point at frame 60
         state->current_position = TimePosition(TimeFrameIndex{kFrame2}, time_frame);
-        simulatePointClick(point_widget, 205.0, 205.0, Qt::NoModifier);  // Select
+        simulatePointClick(point_widget, 205.0, 205.0, Qt::NoModifier);// Select
         app->processEvents();
-        simulatePointClick(point_widget, 300.0, 300.0, Qt::ControlModifier);  // Move
+        simulatePointClick(point_widget, 300.0, 300.0, Qt::ControlModifier);// Move
         app->processEvents();
 
         // Verify both points were moved correctly
@@ -402,6 +428,137 @@ TEST_CASE("Point movement works across different frames",
         REQUIRE(points_at_frame2.size() == 1);
         REQUIRE(points_at_frame2[0].x == Catch::Approx(300.0f));
         REQUIRE(points_at_frame2[0].y == Catch::Approx(300.0f));
+    }
+}
+
+TEST_CASE("Point selection uses Media_Window hit-test threshold and enables Ctrl+move",
+          "[MediaWidget][MediaPoint_Widget][Integration]") {
+    auto * app = ensureQApplication();
+    REQUIRE(app != nullptr);
+
+    qRegisterMetaType<qreal>("qreal");
+    qRegisterMetaType<Qt::KeyboardModifiers>("Qt::KeyboardModifiers");
+
+    constexpr int kNumFrames = 100;
+    constexpr int kTargetFrame = 10;
+
+    auto data_manager = createDataManagerWithPoints("test_points", kNumFrames, {640, 480});
+    auto time_frame = data_manager->getTime(TimeKey("time"));
+    REQUIRE(time_frame != nullptr);
+
+    auto point_data = data_manager->getData<PointData>("test_points");
+    REQUIRE(point_data != nullptr);
+    constexpr float kInitialX = 200.0f;
+    constexpr float kInitialY = 200.0f;
+    point_data->addAtTime(TimeFrameIndex{kTargetFrame},
+                          Point2D<float>{kInitialX, kInitialY},
+                          NotifyObservers::No);
+
+    auto state = std::make_shared<MediaWidgetState>();
+    auto media_window = std::make_unique<Media_Window>(data_manager);
+    setupMediaWindowForPointEditing(media_window.get(), state.get(), "test_points", {640, 480});
+
+    TimePosition position(TimeFrameIndex{kTargetFrame}, time_frame);
+    state->current_position = position;
+
+    {
+        MediaPropertiesWidget props_widget(state, data_manager, media_window.get());
+        props_widget.resize(900, 700);
+        props_widget.show();
+        app->processEvents();
+
+        auto point_widget = selectPointFeature(props_widget, "test_points", app);
+        REQUIRE(point_widget != nullptr);
+
+        // Click 12 pixels away: within Media_Window's 15px threshold but outside the old 10px widget threshold
+        simulatePointClick(point_widget, kInitialX + 12.0, kInitialY, Qt::NoModifier);
+        app->processEvents();
+
+        constexpr qreal kNewX = 300.0;
+        constexpr qreal kNewY = 300.0;
+        simulatePointClick(point_widget, kNewX, kNewY, Qt::ControlModifier);
+        app->processEvents();
+
+        auto target_idx = TimeIndexAndFrame(TimeFrameIndex{kTargetFrame}, time_frame.get());
+        auto points_at_target = point_data->getAtTime(target_idx);
+        REQUIRE(points_at_target.size() == 1);
+        REQUIRE(points_at_target[0].x == Catch::Approx(kNewX));
+        REQUIRE(points_at_target[0].y == Catch::Approx(kNewY));
+    }
+}
+
+TEST_CASE("Point move and add convert coordinates when ImageSize differs from canvas",
+          "[MediaWidget][MediaPoint_Widget][Integration]") {
+    auto * app = ensureQApplication();
+    REQUIRE(app != nullptr);
+
+    qRegisterMetaType<qreal>("qreal");
+    qRegisterMetaType<Qt::KeyboardModifiers>("Qt::KeyboardModifiers");
+
+    constexpr int kNumFrames = 100;
+    constexpr int kTargetFrame = 15;
+    ImageSize const kImageSize{1920, 1080};
+    ImageSize const kCanvasSize{640, 480};
+
+    auto data_manager = createDataManagerWithPoints("test_points", kNumFrames, kImageSize);
+    auto time_frame = data_manager->getTime(TimeKey("time"));
+    REQUIRE(time_frame != nullptr);
+
+    auto point_data = data_manager->getData<PointData>("test_points");
+    REQUIRE(point_data != nullptr);
+    constexpr float kInitialX = 960.0f;
+    constexpr float kInitialY = 540.0f;
+    point_data->addAtTime(TimeFrameIndex{kTargetFrame},
+                          Point2D<float>{kInitialX, kInitialY},
+                          NotifyObservers::No);
+
+    auto state = std::make_shared<MediaWidgetState>();
+    state->setCanvasCoordOverride(kCanvasSize.width, kCanvasSize.height);
+    auto media_window = std::make_unique<Media_Window>(data_manager);
+    setupMediaWindowForPointEditing(media_window.get(), state.get(), "test_points", kCanvasSize);
+
+    TimePosition position(TimeFrameIndex{kTargetFrame}, time_frame);
+    state->current_position = position;
+
+    {
+        MediaPropertiesWidget props_widget(state, data_manager, media_window.get());
+        props_widget.resize(900, 700);
+        props_widget.show();
+        app->processEvents();
+
+        auto point_widget = selectPointFeature(props_widget, "test_points", app);
+        REQUIRE(point_widget != nullptr);
+
+        // Center of 1920x1080 maps to center of 640x480 canvas in media coordinates
+        constexpr qreal kSelectX = 320.0;
+        constexpr qreal kSelectY = 240.0;
+        simulatePointClick(point_widget, kSelectX, kSelectY, Qt::NoModifier);
+        app->processEvents();
+
+        constexpr qreal kMoveMediaX = 400.0;
+        constexpr qreal kMoveMediaY = 266.6666667;
+        constexpr float kExpectedMoveX = 1200.0f;
+        constexpr float kExpectedMoveY = 600.0f;
+        simulatePointClick(point_widget, kMoveMediaX, kMoveMediaY, Qt::ControlModifier);
+        app->processEvents();
+
+        auto target_idx = TimeIndexAndFrame(TimeFrameIndex{kTargetFrame}, time_frame.get());
+        auto points_at_target = point_data->getAtTime(target_idx);
+        REQUIRE(points_at_target.size() == 1);
+        REQUIRE(points_at_target[0].x == Catch::Approx(kExpectedMoveX));
+        REQUIRE(points_at_target[0].y == Catch::Approx(kExpectedMoveY));
+
+        constexpr qreal kAddMediaX = 500.0;
+        constexpr qreal kAddMediaY = 300.0;
+        constexpr float kExpectedAddX = 1500.0f;
+        constexpr float kExpectedAddY = 675.0f;
+        simulatePointClick(point_widget, kAddMediaX, kAddMediaY, Qt::AltModifier);
+        app->processEvents();
+
+        points_at_target = point_data->getAtTime(target_idx);
+        REQUIRE(points_at_target.size() == 2);
+        REQUIRE(points_at_target[1].x == Catch::Approx(kExpectedAddX));
+        REQUIRE(points_at_target[1].y == Catch::Approx(kExpectedAddY));
     }
 }
 

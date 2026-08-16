@@ -6,6 +6,7 @@
  * @brief Widget for point data display options and interaction in Media_Widget
  */
 
+#include "CoreGeometry/points.hpp"
 #include "Entity/EntityTypes.hpp"
 
 #include <QWidget>
@@ -47,13 +48,14 @@ private:
 
     // Point selection state
     EntityId _selected_point_id = EntityId(0);
-    float _selection_threshold = 10.0f;// pixels
 
     // Helper methods for point interaction
-    EntityId _findNearestPoint(qreal x_media, qreal y_media, float max_distance);
+    void _selectPointAtClick(qreal x_media, qreal y_media);
     void _selectPoint(EntityId point_id);
     void _clearPointSelection();
-    void _moveSelectedPoint(qreal x_media, qreal y_media);
+    [[nodiscard]] EntityId _resolveMoveTargetId();
+    [[nodiscard]] Point2D<float> _mediaCoordsToDataCoords(qreal x_media, qreal y_media) const;
+    void _movePoint(EntityId point_id, qreal x_media, qreal y_media);
     void _assignPoint(qreal x_media, qreal y_media);
     void _addPointAtCurrentTime(qreal x_media, qreal y_media);
 

@@ -22,15 +22,19 @@
 #include <iostream>
 
 MediaPropertiesWidget::MediaPropertiesWidget(std::shared_ptr<MediaWidgetState> state,
-                                               std::shared_ptr<DataManager> data_manager,
-                                               Media_Window * media_window,
-                                               QWidget * parent)
+                                             std::shared_ptr<DataManager> data_manager,
+                                             Media_Window * media_window,
+                                             QWidget * parent)
     : QWidget(parent),
       ui(new Ui::MediaPropertiesWidget),
       _state(std::move(state)),
       _data_manager(std::move(data_manager)),
       _media_window(media_window) {
     ui->setupUi(this);
+
+    if (_media_window && _state) {
+        _media_window->setMediaWidgetState(_state.get());
+    }
 
     ui->scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
@@ -72,10 +76,10 @@ void MediaPropertiesWidget::_updateChildWidths() {
 
 void MediaPropertiesWidget::setMediaWindow(Media_Window * media_window) {
     _media_window = media_window;
-    
+
     // Connect text widget to the new media window
     _connectTextWidgetToScene();
-    
+
     // Update existing stacked widgets with the new Media_Window reference
     // The widgets need the media window for drawing operations
     if (_media_window && ui->stackedWidget) {
@@ -86,7 +90,7 @@ void MediaPropertiesWidget::setMediaWindow(Media_Window * media_window) {
             ui->stackedWidget->removeWidget(w);
             delete w;
         }
-        
+
         _createStackedWidgets();
     }
 }
@@ -124,13 +128,13 @@ void MediaPropertiesWidget::_connectTextWidgetToScene() {
         _media_window->setTextWidget(_text_widget);
 
         // Connect text widget signals to update canvas when overlays change
-        connect(_text_widget, &MediaText_Widget::textOverlayAdded, 
+        connect(_text_widget, &MediaText_Widget::textOverlayAdded,
                 _media_window, &Media_Window::UpdateCanvas);
-        connect(_text_widget, &MediaText_Widget::textOverlayRemoved, 
+        connect(_text_widget, &MediaText_Widget::textOverlayRemoved,
                 _media_window, &Media_Window::UpdateCanvas);
-        connect(_text_widget, &MediaText_Widget::textOverlayUpdated, 
+        connect(_text_widget, &MediaText_Widget::textOverlayUpdated,
                 _media_window, &Media_Window::UpdateCanvas);
-        connect(_text_widget, &MediaText_Widget::textOverlaysCleared, 
+        connect(_text_widget, &MediaText_Widget::textOverlaysCleared,
                 _media_window, &Media_Window::UpdateCanvas);
     }
 }
@@ -141,15 +145,13 @@ void MediaPropertiesWidget::_setupFeatureTable() {
     }
 
     ui->feature_table_widget->setColumns({"Feature", "Enabled", "Type"});
-    ui->feature_table_widget->setTypeFilter({
-        DM_DataType::Line, 
-        DM_DataType::Mask, 
-        DM_DataType::Points, 
-        DM_DataType::DigitalInterval, 
-        DM_DataType::Tensor, 
-        DM_DataType::Video, 
-        DM_DataType::Images
-    });
+    ui->feature_table_widget->setTypeFilter({DM_DataType::Line,
+                                             DM_DataType::Mask,
+                                             DM_DataType::Points,
+                                             DM_DataType::DigitalInterval,
+                                             DM_DataType::Tensor,
+                                             DM_DataType::Video,
+                                             DM_DataType::Images});
     ui->feature_table_widget->setDataManager(_data_manager);
     ui->feature_table_widget->populateTable();
 
@@ -166,7 +168,6 @@ void MediaPropertiesWidget::_setupFeatureTable() {
             this, [this](QString const & feature) {
                 _addFeatureToDisplay(feature, false);
             });
-
 }
 
 
@@ -293,7 +294,7 @@ void MediaPropertiesWidget::_connectStateSignals() {
 
     // Listen for external state changes (e.g., from workspace restore)
     // and update UI accordingly
-    
+
     // Connect to displayedDataKeyChanged to sync feature table selection
     connect(_state.get(), &MediaWidgetState::displayedDataKeyChanged,
             this, [this](QString const & key) {
