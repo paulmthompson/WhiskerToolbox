@@ -116,6 +116,58 @@ protected:
 
         return filepath;
     }
+
+    std::filesystem::path createMultiFileDigitalEventDirectory() {
+        auto dir = temp_dir / "multi_file_events";
+        std::filesystem::create_directories(dir);
+
+        {
+            std::ofstream file(dir / "23a.txt");
+            file << "100\n200\n300\n";
+        }
+        {
+            std::ofstream file(dir / "24a.txt");
+            file << "150\n250\n";
+        }
+        {
+            std::ofstream file(dir / "25a.txt");
+            file << "175\n275\n375\n475\n";
+        }
+
+        return dir;
+    }
+
+    std::filesystem::path createMultiFileDigitalEventDirectoryWithCsvSibling() {
+        auto dir = temp_dir / "multi_file_mixed_ext";
+        std::filesystem::create_directories(dir);
+
+        {
+            std::ofstream file(dir / "a.txt");
+            file << "10\n20\n";
+        }
+        {
+            std::ofstream file(dir / "b.csv");
+            file << "30\n40\n";
+        }
+
+        return dir;
+    }
+
+    std::filesystem::path createAlphabeticalOrderEventDirectory() {
+        auto dir = temp_dir / "multi_file_order";
+        std::filesystem::create_directories(dir);
+
+        {
+            std::ofstream file(dir / "b.txt");
+            file << "200\n";
+        }
+        {
+            std::ofstream file(dir / "a.txt");
+            file << "100\n";
+        }
+
+        return dir;
+    }
 };
 
 // ============================================================================
@@ -333,6 +385,128 @@ TEST_CASE_METHOD(BatchLoadingTestFixture,
         }
 
         REQUIRE(total_events == 9);// 3 + 2 + 4
+    }
+}
+
+// ============================================================================
+// CSVLoader Batch Loading Tests - Multi-File Digital Events
+// ============================================================================
+
+TEST_CASE_METHOD(BatchLoadingTestFixture,
+                 "CSVLoader - Multi-file DigitalEvent batch loading",
+                 "[BatchLoading][CSV][DigitalEvent][MultiFile]") {
+
+    CSVLoader loader;
+
+    SECTION("loadBatch returns all series from directory of txt files") {
+        auto dir_path = createMultiFileDigitalEventDirectory();
+        REQUIRE(std::filesystem::exists(dir_path));
+
+        json config;
+        config["format"] = "csv";
+        config["multi_file"] = true;
+        config["event_column"] = 0;
+
+        BatchLoadResult result = loader.loadBatch(dir_path.string(),
+                                                  DM_DataType::DigitalEvent,
+                                                  config);
+
+        REQUIRE(result.success);
+        REQUIRE(result.results.size() == 3);
+
+        size_t total_events = 0;
+        for (auto const & res: result.results) {
+            REQUIRE(res.success);
+            REQUIRE(std::holds_alternative<std::shared_ptr<DigitalEventSeries>>(res.data));
+            auto event_data = std::get<std::shared_ptr<DigitalEventSeries>>(res.data);
+            REQUIRE(event_data != nullptr);
+            total_events += event_data->size();
+        }
+
+        REQUIRE(total_events == 9);// 3 + 2 + 4
+    }
+
+    SECTION("loadBatch applies scale across all files") {
+        auto dir = temp_dir / "multi_file_scale";
+        std::filesystem::create_directories(dir);
+
+        {
+            std::ofstream file(dir / "ch0.txt");
+            file << "0.01\n0.02\n";
+        }
+        {
+            std::ofstream file(dir / "ch1.txt");
+            file << "0.03\n";
+        }
+
+        json config;
+        config["format"] = "csv";
+        config["multi_file"] = true;
+        config["event_column"] = 0;
+        config["scale"] = 30000.0f;
+
+        BatchLoadResult result = loader.loadBatch(dir.string(),
+                                                  DM_DataType::DigitalEvent,
+                                                  config);
+
+        REQUIRE(result.success);
+        REQUIRE(result.results.size() == 2);
+
+        auto const & series0 = std::get<std::shared_ptr<DigitalEventSeries>>(result.results[0].data);
+        auto const & series1 = std::get<std::shared_ptr<DigitalEventSeries>>(result.results[1].data);
+
+        REQUIRE(series0->size() == 2);
+        REQUIRE(series0->getStoredEvent(0).getValue() == 300);
+        REQUIRE(series0->getStoredEvent(1).getValue() == 600);
+
+        REQUIRE(series1->size() == 1);
+        REQUIRE(series1->getStoredEvent(0).getValue() == 900);
+    }
+
+    SECTION("file_pattern filters to txt only") {
+        auto dir_path = createMultiFileDigitalEventDirectoryWithCsvSibling();
+        REQUIRE(std::filesystem::exists(dir_path));
+
+        json config;
+        config["format"] = "csv";
+        config["multi_file"] = true;
+        config["event_column"] = 0;
+        config["file_pattern"] = "*.txt";
+
+        BatchLoadResult result = loader.loadBatch(dir_path.string(),
+                                                  DM_DataType::DigitalEvent,
+                                                  config);
+
+        REQUIRE(result.success);
+        REQUIRE(result.results.size() == 1);
+
+        auto event_data = std::get<std::shared_ptr<DigitalEventSeries>>(result.results[0].data);
+        REQUIRE(event_data->size() == 2);
+        REQUIRE(event_data->getStoredEvent(0).getValue() == 10);
+        REQUIRE(event_data->getStoredEvent(1).getValue() == 20);
+    }
+
+    SECTION("files are loaded in alphabetical order") {
+        auto dir_path = createAlphabeticalOrderEventDirectory();
+        REQUIRE(std::filesystem::exists(dir_path));
+
+        json config;
+        config["format"] = "csv";
+        config["multi_file"] = true;
+        config["event_column"] = 0;
+
+        BatchLoadResult result = loader.loadBatch(dir_path.string(),
+                                                  DM_DataType::DigitalEvent,
+                                                  config);
+
+        REQUIRE(result.success);
+        REQUIRE(result.results.size() == 2);
+
+        auto const & first = std::get<std::shared_ptr<DigitalEventSeries>>(result.results[0].data);
+        auto const & second = std::get<std::shared_ptr<DigitalEventSeries>>(result.results[1].data);
+
+        REQUIRE(first->getStoredEvent(0).getValue() == 100); // a.txt
+        REQUIRE(second->getStoredEvent(0).getValue() == 200);// b.txt
     }
 }
 

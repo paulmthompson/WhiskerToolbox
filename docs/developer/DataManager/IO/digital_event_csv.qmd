@@ -1,0 +1,62 @@
+---
+title: "CSV Digital Event I/O"
+---
+
+## Overview
+
+The CSV digital event loader reads `DigitalEventSeries` timestamps from CSV or TXT files.
+Two batch modes are supported:
+
+- **Identifier column**: One file with multiple columns; events are grouped by a label column.
+- **Multi-file directory**: One timestamp file per series; files are loaded in alphabetical order
+  and registered as `{name}_0`, `{name}_1`, …
+
+## File Location
+
+```
+src/IO/formats/CSV/digitaltimeseries/
+├── Digital_Event_Series_CSV.hpp
+└── Digital_Event_Series_CSV.cpp
+```
+
+## Option Structs
+
+- `CSVEventLoaderOptions` — Single file; optional `identifier_column` for multi-series split.
+- `CSVEventMultiFileLoaderOptions` — Directory of per-channel files (`.csv` / `.txt`).
+
+## JSON Examples
+
+### Multi-column CSV (identifier column)
+
+```json
+{
+  "filepath": "spikes.csv",
+  "data_type": "digital_event",
+  "name": "spikes",
+  "format": "csv",
+  "scale": 30000,
+  "identifier_column": 1,
+  "clock": "master"
+}
+```
+
+### Multi-file directory (one series per file)
+
+```json
+{
+  "filepath": "spikes",
+  "data_type": "digital_event",
+  "name": "spikes",
+  "format": "csv",
+  "multi_file": true,
+  "scale": 30000,
+  "event_column": 0,
+  "delimiter": "\t",
+  "file_pattern": "*.txt",
+  "clock": "master"
+}
+```
+
+`filepath` must resolve to a directory when `multi_file` is true. Without `file_pattern`,
+all `.csv` and `.txt` files in the directory are loaded. Files are sorted alphabetically by
+filename before numbering suffixes.

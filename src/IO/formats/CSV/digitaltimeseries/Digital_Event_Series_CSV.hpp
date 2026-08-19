@@ -55,6 +55,31 @@ struct CSVEventLoaderOptions {
 };
 
 /**
+ * @struct CSVEventMultiFileLoaderOptions
+ *
+ * @brief Options for loading DigitalEventSeries from a directory of CSV or TXT files.
+ *
+ * Each matching file produces one DigitalEventSeries (single timestamp column per file).
+ * Files are processed in alphabetical order by filename for deterministic output.
+ *
+ * @var CSVEventMultiFileLoaderOptions::parent_dir
+ * Directory containing event timestamp files.
+ *
+ * @var CSVEventMultiFileLoaderOptions::file_pattern
+ * Optional glob pattern (e.g. "*.txt", "23*.txt"). When empty, loads .csv and .txt files.
+ */
+struct CSVEventMultiFileLoaderOptions {
+    std::string parent_dir;
+    std::string delimiter = ",";
+    bool has_header = false;
+    int event_column = 0;
+    std::string base_name = "events";
+    float scale = 1.0f;
+    bool scale_divide = false;
+    std::string file_pattern;
+};
+
+/**
  * @struct CSVEventSaverOptions
  *
  * @brief Options for saving DigitalEventSeries data to a CSV file.
@@ -105,6 +130,16 @@ struct CSVEventSaverOptions {
  */
 DATAMANAGERIO_EXPORT std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventLoaderOptions const & options);
 
+/**
+ * @brief Load digital event series from a directory of CSV or TXT files.
+ *
+ * @param options Configuration options for multi-file loading
+ * @return Vector of shared pointers to DigitalEventSeries objects, one per matched file
+ *         in alphabetical filename order
+ */
+DATAMANAGERIO_EXPORT std::vector<std::shared_ptr<DigitalEventSeries>> load(
+        CSVEventMultiFileLoaderOptions const & options);
+
 template<>
 struct ParameterUIHints<CSVEventLoaderOptions> {
     /// @brief Annotate schema fields for AutoParamWidget (import UI).
@@ -135,6 +170,38 @@ struct ParameterUIHints<CSVEventLoaderOptions> {
         }
         if (auto * f = schema.field("scale_divide")) {
             f->tooltip = "If true, divide timestamps by scale instead of multiplying";
+        }
+    }
+};
+
+template<>
+struct ParameterUIHints<CSVEventMultiFileLoaderOptions> {
+    static void annotate(ParameterSchema & schema) {
+        if (auto * f = schema.field("parent_dir")) {
+            f->tooltip = "Directory containing per-channel event timestamp files (.csv or .txt)";
+        }
+        if (auto * f = schema.field("delimiter")) {
+            f->tooltip = "Character separating columns within each file";
+            f->allowed_values = {",", "\t", ";", "|", " "};
+        }
+        if (auto * f = schema.field("has_header")) {
+            f->tooltip = "Whether each file's first row is a header line to skip";
+        }
+        if (auto * f = schema.field("event_column")) {
+            f->tooltip = "0-based column index for event time values in each file";
+        }
+        if (auto * f = schema.field("base_name")) {
+            f->tooltip = "Prefix used in loader log messages for each series";
+        }
+        if (auto * f = schema.field("scale")) {
+            f->tooltip =
+                    "Factor applied to timestamps before conversion to integer indices (multiply unless scale_divide is true)";
+        }
+        if (auto * f = schema.field("scale_divide")) {
+            f->tooltip = "If true, divide timestamps by scale instead of multiplying";
+        }
+        if (auto * f = schema.field("file_pattern")) {
+            f->tooltip = "Optional glob pattern (e.g. *.txt); when empty, loads .csv and .txt files";
         }
     }
 };

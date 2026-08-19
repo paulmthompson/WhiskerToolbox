@@ -3,6 +3,7 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "IO/core/AtomicWrite.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <filesystem>
 #include <fstream>
@@ -10,6 +11,7 @@
 #include <iostream>
 #include <map>
 #include <numeric>
+#include <regex>
 #include <sstream>
 
 namespace {
@@ -156,6 +158,89 @@ std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventLoaderOptions cons
 
         std::cout << "Successfully loaded " << single_events.size() << " events from "
                   << options.filepath << std::endl;
+    }
+
+    return result;
+}
+
+std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventMultiFileLoaderOptions const & options) {
+    std::vector<std::shared_ptr<DigitalEventSeries>> result;
+
+    if (options.event_column < 0) {
+        std::cerr << "Error loading digital event series: event_column must be non-negative, got "
+                  << options.event_column << std::endl;
+        return result;
+    }
+
+    if (!std::filesystem::exists(options.parent_dir)) {
+        std::cerr << "Error loading digital event series: Directory does not exist: "
+                  << options.parent_dir << std::endl;
+        return result;
+    }
+
+    std::vector<std::filesystem::path> matched_files;
+    auto const matches_pattern = [&](std::string const & filename) {
+        if (options.file_pattern.empty()) {
+            return filename.size() >= 4 &&
+                   (filename.ends_with(".csv") || filename.ends_with(".txt"));
+        }
+
+        std::string const regex_pattern =
+                std::regex_replace(options.file_pattern, std::regex("\\*"), ".*");
+        std::regex const file_regex(regex_pattern);
+        return std::regex_match(filename, file_regex);
+    };
+
+    for (auto const & entry: std::filesystem::directory_iterator(options.parent_dir)) {
+        if (!entry.is_regular_file()) {
+            continue;
+        }
+
+        std::string const filename = entry.path().filename().string();
+        if (matches_pattern(filename)) {
+            matched_files.push_back(entry.path());
+        }
+    }
+
+    if (matched_files.empty()) {
+        std::cerr << "Error loading digital event series: No matching files in directory: "
+                  << options.parent_dir << std::endl;
+        return result;
+    }
+
+    std::sort(matched_files.begin(), matched_files.end());
+
+    for (auto const & file_path: matched_files) {
+        CSVEventLoaderOptions single_opts;
+        single_opts.filepath = file_path.string();
+        single_opts.delimiter = options.delimiter;
+        single_opts.has_header = options.has_header;
+        single_opts.event_column = options.event_column;
+        single_opts.identifier_column = -1;
+        single_opts.base_name = options.base_name;
+        single_opts.scale = options.scale;
+        single_opts.scale_divide = options.scale_divide;
+
+        auto const loaded = load(single_opts);
+        if (loaded.empty()) {
+            std::cerr << "Warning: No events loaded from file: " << file_path.string() << std::endl;
+            continue;
+        }
+
+        if (loaded.size() > 1) {
+            std::cerr << "Warning: File " << file_path.string() << " produced "
+                      << loaded.size() << " series; using the first" << std::endl;
+        }
+
+        result.push_back(loaded.front());
+    }
+
+    if (result.empty()) {
+        std::cerr << "Error loading digital event series: No events loaded from directory: "
+                  << options.parent_dir << std::endl;
+    } else {
+        std::cout << "Successfully loaded " << result.size() << " event series from directory "
+                  << options.parent_dir << std::endl;
     }
 
     return result;

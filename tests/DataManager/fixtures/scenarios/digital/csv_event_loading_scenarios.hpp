@@ -281,6 +281,25 @@ two_series_events() {
             {"type2", DigitalEventSeriesBuilder().withEvents({150, 250, 350, 450}).build()}};
 }
 
+/**
+ * @brief Write multiple single-column event files into a directory for multi_file loading tests.
+ *
+ * @param directory Target directory (created if missing)
+ * @param files Pairs of filename and event series to write
+ * @return true if all files were written successfully
+ */
+inline bool writeMultiFileEventDirectory(
+        std::filesystem::path const & directory,
+        std::vector<std::pair<std::string, std::shared_ptr<DigitalEventSeries>>> const & files) {
+    std::filesystem::create_directories(directory);
+    for (auto const & [filename, events]: files) {
+        if (!writeCSVNoHeader(events.get(), (directory / filename).string())) {
+            return false;
+        }
+    }
+    return true;
+}
+
 }// namespace digital_event_scenarios
 
 #endif// DIGITAL_EVENT_CSV_LOADING_SCENARIOS_HPP

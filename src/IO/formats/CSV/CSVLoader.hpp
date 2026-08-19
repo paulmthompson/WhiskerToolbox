@@ -21,6 +21,7 @@
  * 
  * This loader supports batch loading for:
  * - DigitalEvent CSV with identifier column (returns one series per identifier)
+ * - DigitalEvent CSV with multi_file=true (returns one series per file in a directory)
  * - Points DLC format with all_bodyparts=true (returns one PointData per bodypart)
  * - DigitalInterval with csv_layout="binary_state" and all_columns=true (returns one series per column)
  * 
@@ -51,7 +52,7 @@ public:
      * @brief Check if batch loading is supported for this format/type
      * 
      * Returns true for:
-     * - DigitalEvent with identifier column
+     * - DigitalEvent with identifier column or multi_file=true
      * - Points with DLC format and all_bodyparts=true
      * - DigitalInterval with csv_layout="binary_state" (multiple columns)
      */
@@ -61,7 +62,8 @@ public:
     /**
      * @brief Load all data objects from a multi-series CSV file
      * 
-     * For DigitalEvent, returns one DigitalEventSeries per unique identifier.
+     * For DigitalEvent, returns one DigitalEventSeries per unique identifier or per file
+     * when multi_file is true.
      * For Points with DLC format, returns one PointData per bodypart.
      * For DigitalInterval with binary_state layout, returns one series per data column.
      */

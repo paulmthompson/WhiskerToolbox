@@ -511,6 +511,70 @@ TEST_CASE("DigitalEvent CSV Integration - Multi-Series with Identifier",
 }
 
 //=============================================================================
+// Test Case 6b: Multi-file directory loading (one series per file)
+//=============================================================================
+
+TEST_CASE("DigitalEvent CSV Integration - Multi-File Directory Loading",
+          "[digitalevent][csv][integration][datamanager][batch][multifile]") {
+    TempCSVEventTestDirectory temp_dir;
+
+    SECTION("Three txt files load as spikes_0, spikes_1, spikes_2") {
+        auto spikes_dir = temp_dir.getFilePath("spikes");
+        REQUIRE(digital_event_scenarios::writeMultiFileEventDirectory(
+                spikes_dir,
+                {{"23a.txt", DigitalEventSeriesBuilder().withEvents({100, 200, 300}).build()},
+                 {"24a.txt", DigitalEventSeriesBuilder().withEvents({150, 250}).build()},
+                 {"25a.txt", DigitalEventSeriesBuilder().withEvents({175, 275, 375, 475}).build()}}));
+
+        json config = json::array({{{"data_type", "digital_event"},
+                                    {"name", "spikes"},
+                                    {"filepath", spikes_dir.string()},
+                                    {"format", "csv"},
+                                    {"multi_file", true},
+                                    {"event_column", 0}}});
+
+        DataManager dm;
+        load_data_from_json_config(&dm, config, temp_dir.getPathString());
+
+        auto spikes0 = dm.getData<DigitalEventSeries>("spikes_0");
+        auto spikes1 = dm.getData<DigitalEventSeries>("spikes_1");
+        auto spikes2 = dm.getData<DigitalEventSeries>("spikes_2");
+
+        REQUIRE(spikes0 != nullptr);
+        REQUIRE(spikes1 != nullptr);
+        REQUIRE(spikes2 != nullptr);
+
+        REQUIRE(spikes0->size() == 3);
+        REQUIRE(spikes1->size() == 2);
+        REQUIRE(spikes2->size() == 4);
+    }
+
+    SECTION("Single file in directory registers as name_0") {
+        auto spikes_dir = temp_dir.getFilePath("single_spike");
+        REQUIRE(digital_event_scenarios::writeMultiFileEventDirectory(
+                spikes_dir,
+                {{"only.txt", DigitalEventSeriesBuilder().withEvents({42, 84}).build()}}));
+
+        json config = json::array({{{"data_type", "digital_event"},
+                                    {"name", "spikes"},
+                                    {"filepath", spikes_dir.string()},
+                                    {"format", "csv"},
+                                    {"multi_file", true},
+                                    {"event_column", 0}}});
+
+        DataManager dm;
+        load_data_from_json_config(&dm, config, temp_dir.getPathString());
+
+        REQUIRE(dm.getData<DigitalEventSeries>("spikes") == nullptr);
+        auto spikes0 = dm.getData<DigitalEventSeries>("spikes_0");
+        REQUIRE(spikes0 != nullptr);
+        REQUIRE(spikes0->size() == 2);
+        REQUIRE(spikes0->getStoredEvent(0).getValue() == 42);
+        REQUIRE(spikes0->getStoredEvent(1).getValue() == 84);
+    }
+}
+
+//=============================================================================
 // Test Case 7: Scaling options
 //=============================================================================
 

@@ -320,6 +320,16 @@ bool tryBatchLoadFromRegistry(
         }
     }
 
+    // For DigitalEvent, only use batch loading when multi_file or identifier column is specified
+    if (data_type == DM_DataType::DigitalEvent) {
+        bool const multi_file = item.value("multi_file", false);
+        bool const has_identifier = item.contains("identifier_column") && item["identifier_column"].get<int>() >= 0;
+        bool const has_label = item.contains("label_column") && item["label_column"].get<int>() >= 0;
+        if (!multi_file && !has_identifier && !has_label) {
+            return false;// Fall back to single-object loading
+        }
+    }
+
     std::cout << "Using batch loading for " << name << " (format: " << format << ")" << std::endl;
 
     BatchLoadResult batch_result = registry.tryLoadBatch(format, io_data_type, file_path, item);
@@ -340,7 +350,9 @@ bool tryBatchLoadFromRegistry(
 
         std::string channel_name;
 
-        if (batch_result.results.size() == 1) {
+        if (item.value("multi_file", false)) {
+            channel_name = name + "_" + std::to_string(i);
+        } else if (batch_result.results.size() == 1) {
             // Single result without a name - use base name
             channel_name = name;
         } else {

@@ -151,3 +151,24 @@ After all JSON entries are processed (including `clock` remapping and transforma
 
 The same helper is used from `MainWindow::_updateFrameCount` for File → Load Video / Load Images.
 
+## Digital event multi-file loading
+
+When spike timestamps are stored as one file per channel (e.g. `23a.txt`, `24a.txt`, `25a.txt`),
+set `multi_file: true` and point `filepath` at the containing directory. Each matching file
+becomes one `DigitalEventSeries` registered as `{name}_0`, `{name}_1`, … in alphabetical filename
+order. Optional `file_pattern` (glob) filters files; default extensions are `.csv` and `.txt`.
+
+```json
+{
+  "filepath": "spikes",
+  "data_type": "digital_event",
+  "name": "spikes",
+  "format": "csv",
+  "multi_file": true,
+  "scale": 30000,
+  "event_column": 0,
+  "clock": "master"
+}
+```
+
+See [CSV Digital Event I/O](IO/digital_event_csv.qmd) for full loader options.

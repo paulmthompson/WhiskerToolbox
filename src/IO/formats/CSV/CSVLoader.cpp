@@ -604,6 +604,37 @@ LoadResult CSVLoader::loadDigitalEventCSV(std::string const & filepath,
 BatchLoadResult CSVLoader::loadDigitalEventCSVBatch(std::string const & filepath,
                                                     nlohmann::json const & config) {
     try {
+        if (config.value("multi_file", false)) {
+            CSVEventMultiFileLoaderOptions opts;
+            opts.parent_dir = filepath;
+
+            if (config.contains("delimiter")) opts.delimiter = config["delimiter"];
+            if (config.contains("has_header")) opts.has_header = config["has_header"];
+            if (config.contains("event_column")) opts.event_column = config["event_column"];
+            if (config.contains("base_name")) opts.base_name = config["base_name"];
+            if (config.contains("file_pattern")) opts.file_pattern = config["file_pattern"];
+            if (config.contains("scale")) opts.scale = config["scale"];
+            if (config.contains("scale_divide")) opts.scale_divide = config["scale_divide"];
+
+            auto loaded_series = ::load(opts);
+
+            if (loaded_series.empty()) {
+                return BatchLoadResult::error("No data loaded from directory: " + filepath);
+            }
+
+            std::vector<LoadResult> results;
+            results.reserve(loaded_series.size());
+
+            for (auto & series: loaded_series) {
+                results.emplace_back(std::move(series));
+            }
+
+            std::cout << "CSVLoader: Batch loaded " << results.size()
+                      << " digital event series from directory " << filepath << std::endl;
+
+            return BatchLoadResult::fromVector(std::move(results));
+        }
+
         CSVEventLoaderOptions opts;
         opts.filepath = filepath;
 
