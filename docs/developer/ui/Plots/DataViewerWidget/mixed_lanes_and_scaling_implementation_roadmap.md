@@ -371,33 +371,47 @@ Allow a developer or user to save the current DataViewer lane configuration — 
 
 ```json
 {
-  "version": 1,
-  "displayed_series": [
-    {"key": "voltage_1", "color": "#FF0000"}
+  "version": 2,
+  "mode": "Merge",
+  "lanes": [
+    {
+      "lane_id": "channel_11",
+      "display_label": "11",
+      "series": [
+        {"key": "voltage_11", "type": "Analog", "color": "#FFFFFF", "visible": true},
+        {"key": "voltage_raw_11", "type": "Analog", "color": "#888888", "visible": false}
+      ]
+    }
   ],
-  "series_lane_overrides": {
-    "voltage_1": {"lane_id": "", "lane_order": 100, "lane_weight": 1.0, "overlay_mode": "Auto", "overlay_z": 0}
-  },
-  "lane_overrides": {}
+  "event_associations": [
+    {
+      "event_key": "spikes_11a",
+      "target_lane_id": "channel_11",
+      "placement": "Above",
+      "glyph_shape": "Box"
+    }
+  ]
 }
 ```
 
-`series_lane_overrides` and `lane_overrides` reuse the existing `SeriesLaneOverrideData` and `LaneOverrideData` structs directly via `rfl::json`.
+The profile uses stable lane IDs and exact series keys. The loader derives the
+concrete `series_lane_overrides` needed by the layout engine, so users can add a
+new event association without calculating absolute `lane_order` values.
 
 ### Implementation Tasks
 
-- [x] Create `LaneLayoutFile.hpp/.cpp` (`DataViewer_Widget/Ordering/`): define `LaneLayoutDisplayedSeries { std::string key; std::string color; }` and `LaneLayoutFile { int version; std::vector<LaneLayoutDisplayedSeries> displayed_series; std::map<std::string, SeriesLaneOverrideData> series_lane_overrides; std::map<std::string, LaneOverrideData> lane_overrides; }`. Implement `serializeLaneLayout()` and `deserializeLaneLayout()` via `rfl::json`.
+- [x] Define `LaneLayoutFile` in `DataViewerStateData.hpp` as a versioned profile with `lanes` and `event_associations`.
 - [x] Edit `DataViewerPropertiesWidget.ui`: add a `QGroupBox` "Layout Presets" (after the "Actions" group) with buttons `save_lane_layout_button` ("Save Lane Layout") and `load_lane_layout_button` ("Load Lane Layout").
 - [x] Add signals to `DataViewerPropertiesWidget.hpp`: `void saveLaneLayoutRequested()` and `void loadLaneLayoutRequested()`.
 - [x] Wire buttons in `DataViewerPropertiesWidget.cpp` → emit signals.
 - [x] Wire signals in `DataViewerWidgetRegistration.cpp` → new `DataViewer_Widget` slots.
-- [x] Implement `DataViewer_Widget::_saveLaneLayout()`: collect currently-displayed keys and their colors from `OpenGLWidget`, build `LaneLayoutFile` from `_state->data()` overrides, serialize, open `QFileDialog::getSaveFileName` (filter `*.dvlayout`) and write.
-- [x] Implement `DataViewer_Widget::_loadLaneLayout()`: open `QFileDialog::getOpenFileName`, parse with `deserializeLaneLayout`, for each entry in `displayed_series` call `DataManager::getType(key)` — skip if not found, call `addFeature(key, color)` if not already displayed. Apply all `setSeriesLaneOverride` and `setLaneOverride` entries from the file, then call `updateCanvas()`.
+- [x] Implement `DataViewer_Widget::_saveLaneLayout()`: build a profile from stable lane IDs, lane membership, colors, visibility, and event associations; serialize and write JSON.
+- [x] Implement `DataViewer_Widget::_loadLaneLayout()`: parse the profile, add/update named series, map lanes and associations into `DataViewerState` overrides, then call `updateCanvas()`.
 - [x] Add tests in `LaneLayoutFile.test.cpp` or `DataViewer_Widget.test.cpp`: roundtrip serialize/deserialize; verify that auto-add adds missing series and skips absent ones.
 
 ### Primary Files
 
-- `src/WhiskerToolbox/DataViewer_Widget/Ordering/LaneLayoutFile.hpp/.cpp` — new
+- `src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerStateData.hpp` — `LaneLayoutFile` profile schema
 - `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.ui` — new GroupBox + buttons
 - `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.hpp` — new signals
 - `src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.cpp` — button wiring

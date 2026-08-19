@@ -53,8 +53,10 @@
 #include <iostream>
 #include <limits>
 #include <map>
+#include <optional>
 #include <sstream>
 #include <unordered_map>
+#include <utility>
 
 namespace {
 
@@ -158,6 +160,106 @@ struct LaneAggregate {
     }
 
     return primary_label + " +" + std::to_string(lane.series_ids.size() - 1);
+}
+
+constexpr int kDerivedLaneOrderStep = 100;
+constexpr int kAssociationLaneOrderOffset = 10;
+constexpr char kAutoLanePrefix[] = "__auto_lane__";
+
+[[nodiscard]] std::optional<LaneLayoutSeriesType> laneLayoutSeriesTypeForDataType(DM_DataType type) {
+    switch (type) {
+        case DM_DataType::Analog:
+            return LaneLayoutSeriesType::Analog;
+        case DM_DataType::DigitalEvent:
+            return LaneLayoutSeriesType::DigitalEvent;
+        case DM_DataType::DigitalInterval:
+            return LaneLayoutSeriesType::DigitalInterval;
+        default:
+            return std::nullopt;
+    }
+}
+
+[[nodiscard]] bool laneLayoutTypeMatchesDataType(LaneLayoutSeriesType expected, DM_DataType actual) {
+    auto const actual_profile_type = laneLayoutSeriesTypeForDataType(actual);
+    return actual_profile_type.has_value() && *actual_profile_type == expected;
+}
+
+[[nodiscard]] int derivedLaneOrder(size_t lane_count, size_t lane_index) {
+    return static_cast<int>(lane_count - lane_index) * kDerivedLaneOrderStep;
+}
+
+[[nodiscard]] std::string laneIdForAssociation(std::string const & target_lane_id,
+                                               std::string const & event_key) {
+    return target_lane_id + "__event__" + event_key;
+}
+
+[[nodiscard]] std::string effectiveLaneIdForSave(DataViewerState const * state,
+                                                 std::string const & key) {
+    if (state != nullptr) {
+        if (auto const * override_data = state->getSeriesLaneOverride(key);
+            override_data != nullptr && !override_data->lane_id.empty()) {
+            return override_data->lane_id;
+        }
+    }
+    return std::string(kAutoLanePrefix) + key;
+}
+
+struct LaneOrderLookup {
+    std::string const & key;
+    std::string const & lane_id;
+};
+
+[[nodiscard]] std::optional<int> effectiveLaneOrderForSave(DataViewerState const * state,
+                                                           std::unordered_map<std::string, int> const & visual_orders,
+                                                           LaneOrderLookup const & lookup) {
+    if (state != nullptr) {
+        if (auto const * override_data = state->getSeriesLaneOverride(lookup.key);
+            override_data != nullptr && override_data->lane_order.has_value()) {
+            return override_data->lane_order;
+        }
+    }
+
+    if (auto const it = visual_orders.find(lookup.lane_id); it != visual_orders.end()) {
+        return it->second;
+    }
+
+    return std::nullopt;
+}
+
+[[nodiscard]] LaneLayoutSeriesEntry makeAnalogProfileEntry(std::string const & key,
+                                                           AnalogSeriesOptionsData const & opts) {
+    LaneLayoutSeriesEntry entry;
+    entry.key = key;
+    entry.type = LaneLayoutSeriesType::Analog;
+    entry.color = opts.hex_color();
+    entry.visible = opts.get_is_visible();
+    return entry;
+}
+
+[[nodiscard]] LaneLayoutSeriesEntry makeEventProfileEntry(std::string const & key,
+                                                          DigitalEventSeriesOptionsData const & opts) {
+    LaneLayoutSeriesEntry entry;
+    entry.key = key;
+    entry.type = LaneLayoutSeriesType::DigitalEvent;
+    entry.color = opts.hex_color();
+    entry.visible = opts.get_is_visible();
+    entry.event_plotting_mode = opts.plotting_mode;
+    entry.event_glyph_shape = opts.glyph_shape;
+    return entry;
+}
+
+[[nodiscard]] LaneLayoutSeriesEntry makeIntervalProfileEntry(std::string const & key,
+                                                             DigitalIntervalSeriesOptionsData const & opts) {
+    LaneLayoutSeriesEntry entry;
+    entry.key = key;
+    entry.type = LaneLayoutSeriesType::DigitalInterval;
+    entry.color = opts.hex_color();
+    entry.visible = opts.get_is_visible();
+    return entry;
+}
+
+[[nodiscard]] LaneLayoutEventPlacement placementFromOrders(int event_order, int target_order) {
+    return event_order >= target_order ? LaneLayoutEventPlacement::Above : LaneLayoutEventPlacement::Below;
 }
 
 }// anonymous namespace
@@ -869,6 +971,182 @@ OpenGLWidget * DataViewer_Widget::getOpenGLWidget() const {
     return ui->openGLWidget;
 }
 
+std::string DataViewer_Widget::buildLaneLayoutJson() const {
+    LaneLayoutFile layout_file;
+    layout_file.version = 2;
+    layout_file.mode = LaneLayoutLoadMode::Merge;
+
+    std::unordered_map<std::string, int> visual_orders;
+    if (_state != nullptr) {
+        if (auto * axis_state = _state->multiLaneAxisState(); axis_state != nullptr) {
+            auto const & lanes = axis_state->lanes();
+            int const n = static_cast<int>(lanes.size());
+            for (int i = n - 1; i >= 0; --i) {
+                int const visual_idx = (n - 1) - i;
+                visual_orders[lanes[static_cast<size_t>(i)].lane_id] =
+                        (n - visual_idx) * kDerivedLaneOrderStep;
+            }
+        }
+    }
+
+    struct LaneAccumulator {
+        LaneLayoutLaneEntry lane;
+        std::optional<int> order;
+        bool contains_analog{false};
+    };
+
+    std::map<std::string, LaneAccumulator> lanes_by_id;
+    std::vector<std::pair<LaneLayoutEventAssociation, std::optional<int>>> event_associations_with_order;
+
+    auto ensure_lane = [&](std::string const & lane_id) -> LaneAccumulator & {
+        auto & accumulator = lanes_by_id[lane_id];
+        accumulator.lane.lane_id = lane_id;
+        if (auto const * lane_override = _state->getLaneOverride(lane_id); lane_override != nullptr) {
+            accumulator.lane.display_label = lane_override->display_label;
+            if (lane_override->lane_weight.has_value()) {
+                accumulator.lane.lane_weight = *lane_override->lane_weight;
+            }
+        }
+        return accumulator;
+    };
+
+    auto add_lane_series = [&](LaneLayoutSeriesEntry entry,
+                               std::string const & lane_id,
+                               std::optional<int> lane_order,
+                               bool contains_analog) {
+        auto & accumulator = ensure_lane(lane_id);
+        accumulator.lane.series.push_back(std::move(entry));
+        if (!accumulator.order.has_value()) {
+            accumulator.order = lane_order;
+            accumulator.lane.lane_order = lane_order;
+        }
+        accumulator.contains_analog = accumulator.contains_analog || contains_analog;
+    };
+
+    auto const & options = _state->seriesOptions();
+    for (auto const & qkey: options.keys<AnalogSeriesOptionsData>()) {
+        std::string const key = qkey.toStdString();
+        auto const * opts = options.get<AnalogSeriesOptionsData>(qkey);
+        if (opts == nullptr) {
+            continue;
+        }
+        std::string const lane_id = effectiveLaneIdForSave(_state.get(), key);
+        auto const lane_order = effectiveLaneOrderForSave(_state.get(), visual_orders, LaneOrderLookup{key, lane_id});
+        add_lane_series(makeAnalogProfileEntry(key, *opts), lane_id, lane_order, true);
+    }
+
+    for (auto const & qkey: options.keys<DigitalIntervalSeriesOptionsData>()) {
+        std::string const key = qkey.toStdString();
+        auto const * opts = options.get<DigitalIntervalSeriesOptionsData>(qkey);
+        if (opts == nullptr) {
+            continue;
+        }
+        std::string const lane_id = effectiveLaneIdForSave(_state.get(), key);
+        auto const lane_order = effectiveLaneOrderForSave(_state.get(), visual_orders, LaneOrderLookup{key, lane_id});
+        add_lane_series(makeIntervalProfileEntry(key, *opts), lane_id, lane_order, false);
+    }
+
+    struct DeferredEventLane {
+        LaneLayoutSeriesEntry entry;
+        std::string lane_id;
+        std::optional<int> lane_order;
+    };
+    std::vector<DeferredEventLane> deferred_event_lanes;
+
+    for (auto const & qkey: options.keys<DigitalEventSeriesOptionsData>()) {
+        std::string const key = qkey.toStdString();
+        auto const * opts = options.get<DigitalEventSeriesOptionsData>(qkey);
+        if (opts == nullptr) {
+            continue;
+        }
+
+        std::string const lane_id = effectiveLaneIdForSave(_state.get(), key);
+        auto const lane_order = effectiveLaneOrderForSave(_state.get(), visual_orders, LaneOrderLookup{key, lane_id});
+        auto const * override_data = _state->getSeriesLaneOverride(key);
+
+        if (override_data != nullptr && override_data->overlay_mode == LaneOverlayMode::Overlay) {
+            LaneLayoutEventAssociation association;
+            association.event_key = key;
+            association.target_lane_id = lane_id;
+            association.placement = LaneLayoutEventPlacement::Overlay;
+            association.color = opts->hex_color();
+            association.visible = opts->get_is_visible();
+            association.glyph_shape = opts->glyph_shape;
+            event_associations_with_order.emplace_back(std::move(association), lane_order);
+            continue;
+        }
+
+        deferred_event_lanes.push_back(
+                DeferredEventLane{makeEventProfileEntry(key, *opts), lane_id, lane_order});
+    }
+
+    std::vector<std::pair<std::string, int>> analog_lane_orders;
+    for (auto const & [lane_id, accumulator]: lanes_by_id) {
+        if (accumulator.contains_analog && accumulator.order.has_value()) {
+            analog_lane_orders.emplace_back(lane_id, *accumulator.order);
+        }
+    }
+
+    for (auto & event_lane: deferred_event_lanes) {
+        if (event_lane.lane_order.has_value() && !analog_lane_orders.empty()) {
+            auto closest = std::min_element(
+                    analog_lane_orders.begin(),
+                    analog_lane_orders.end(),
+                    [event_order = *event_lane.lane_order](auto const & lhs, auto const & rhs) {
+                        return std::abs(lhs.second - event_order) < std::abs(rhs.second - event_order);
+                    });
+
+            LaneLayoutEventAssociation association;
+            association.event_key = event_lane.entry.key;
+            association.target_lane_id = closest->first;
+            association.placement = placementFromOrders(*event_lane.lane_order, closest->second);
+            association.color = event_lane.entry.color;
+            association.visible = event_lane.entry.visible;
+            association.glyph_shape = event_lane.entry.event_glyph_shape;
+            event_associations_with_order.emplace_back(std::move(association), event_lane.lane_order);
+            continue;
+        }
+
+        add_lane_series(std::move(event_lane.entry), event_lane.lane_id, event_lane.lane_order, false);
+    }
+
+    std::vector<LaneAccumulator> lane_accumulators;
+    lane_accumulators.reserve(lanes_by_id.size());
+    for (auto & [_, accumulator]: lanes_by_id) {
+        lane_accumulators.push_back(std::move(accumulator));
+    }
+
+    std::sort(lane_accumulators.begin(), lane_accumulators.end(), [](auto const & lhs, auto const & rhs) {
+        int const lhs_order = lhs.order.value_or(std::numeric_limits<int>::min());
+        int const rhs_order = rhs.order.value_or(std::numeric_limits<int>::min());
+        if (lhs_order != rhs_order) {
+            return lhs_order > rhs_order;
+        }
+        return lhs.lane.lane_id < rhs.lane.lane_id;
+    });
+
+    layout_file.lanes.reserve(lane_accumulators.size());
+    for (auto & accumulator: lane_accumulators) {
+        layout_file.lanes.push_back(std::move(accumulator.lane));
+    }
+
+    std::sort(event_associations_with_order.begin(), event_associations_with_order.end(), [](auto const & lhs, auto const & rhs) {
+        int const lhs_order = lhs.second.value_or(std::numeric_limits<int>::min());
+        int const rhs_order = rhs.second.value_or(std::numeric_limits<int>::min());
+        if (lhs_order != rhs_order) {
+            return lhs_order > rhs_order;
+        }
+        return lhs.first.event_key < rhs.first.event_key;
+    });
+
+    layout_file.event_associations.reserve(event_associations_with_order.size());
+    for (auto & [association, _]: event_associations_with_order) {
+        layout_file.event_associations.push_back(std::move(association));
+    }
+
+    return rfl::json::write(layout_file);
+}
+
 void DataViewer_Widget::_plotSelectedFeatureWithoutUpdate(std::string const & key, std::string const & color) {
     std::cout << "Attempting to plot feature (batch): " << key << std::endl;
 
@@ -1283,39 +1561,7 @@ void DataViewer_Widget::_saveLaneLayout() {
             "JSON Files (*.json);;All Files (*)");
     if (path.isEmpty()) return;
 
-    // Collect currently-displayed series and their colors from the series options registry
-    LaneLayoutFile layout_file;
-    auto const & opts = _state->seriesOptions();
-
-    for (auto const & qkey: opts.keys<AnalogSeriesOptionsData>()) {
-        auto const * series_opts = opts.get<AnalogSeriesOptionsData>(qkey);
-        if (series_opts != nullptr) {
-            layout_file.displayed_series.push_back(
-                    LaneLayoutDisplayedSeries{qkey.toStdString(), series_opts->hex_color()});
-        }
-    }
-    for (auto const & qkey: opts.keys<DigitalEventSeriesOptionsData>()) {
-        auto const * series_opts = opts.get<DigitalEventSeriesOptionsData>(qkey);
-        if (series_opts != nullptr) {
-            layout_file.displayed_series.push_back(
-                    LaneLayoutDisplayedSeries{qkey.toStdString(), series_opts->hex_color()});
-        }
-    }
-    for (auto const & qkey: opts.keys<DigitalIntervalSeriesOptionsData>()) {
-        auto const * series_opts = opts.get<DigitalIntervalSeriesOptionsData>(qkey);
-        if (series_opts != nullptr) {
-            layout_file.displayed_series.push_back(
-                    LaneLayoutDisplayedSeries{qkey.toStdString(), series_opts->hex_color()});
-        }
-    }
-
-    // Copy lane placement overrides from state
-    auto const & d = _state->data();
-    layout_file.series_lane_overrides = d.series_lane_overrides;
-    layout_file.lane_overrides = d.lane_overrides;
-    layout_file.ordering_constraints = d.ordering_constraints;
-
-    std::string const json = rfl::json::write(layout_file);
+    std::string const json = buildLaneLayoutJson();
     QFile file(path);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QMessageBox::warning(this, "Save Failed", "Could not open file for writing.");
@@ -1338,45 +1584,195 @@ void DataViewer_Widget::_loadLaneLayout() {
         return;
     }
 
-    std::string const json = file.readAll().toStdString();
-    auto result = rfl::json::read<LaneLayoutFile>(json);
+    _loadLaneLayoutFromText(QString::fromStdString(file.readAll().toStdString()));
+}
+
+void DataViewer_Widget::_loadLaneLayoutFromText(QString const & text) {
+    auto result = rfl::json::read<LaneLayoutFile>(text.toStdString());
     if (!result) {
         QMessageBox::warning(this, "Parse Failed", "Could not parse lane layout JSON.");
         return;
     }
 
-    auto const & layout = result.value();
+    _applyLaneLayoutProfile(result.value());
+    ui->openGLWidget->updateCanvas();
+}
 
-    // Add series that exist in DataManager but are not currently displayed
-    for (auto const & entry: layout.displayed_series) {
-        DM_DataType const type = _data_manager->getType(entry.key);
-        if (type == DM_DataType::Unknown) {
-            continue;// silently skip missing series
+void DataViewer_Widget::_applyLaneLayoutProfile(LaneLayoutFile const & layout) {
+    if (!_data_manager || !_state) {
+        return;
+    }
+
+    auto clear_layout_state = [this]() {
+        auto const series_overrides = _state->allSeriesLaneOverrides();
+        for (auto const & [key, _]: series_overrides) {
+            _state->clearSeriesLaneOverride(key);
         }
 
-        // Skip series that are already displayed (check options registry)
-        auto const qkey = QString::fromStdString(entry.key);
-        bool const already_displayed =
-                _state->seriesOptions().has<AnalogSeriesOptionsData>(qkey) ||
-                _state->seriesOptions().has<DigitalEventSeriesOptionsData>(qkey) ||
-                _state->seriesOptions().has<DigitalIntervalSeriesOptionsData>(qkey);
-        if (already_displayed) {
+        auto const lane_overrides = _state->allLaneOverrides();
+        for (auto const & [lane_id, _]: lane_overrides) {
+            _state->clearLaneOverride(lane_id);
+        }
+
+        _state->clearOrderingConstraints();
+    };
+
+    if (layout.mode == LaneLayoutLoadMode::Replace) {
+        ui->openGLWidget->clearSeries();
+        clear_layout_state();
+    }
+
+    auto is_loaded = [this](std::string const & key, DM_DataType type) {
+        if (type == DM_DataType::Analog) {
+            return ui->openGLWidget->getAnalogSeriesMap().contains(key);
+        }
+        if (type == DM_DataType::DigitalEvent) {
+            return ui->openGLWidget->getDigitalEventSeriesMap().contains(key);
+        }
+        if (type == DM_DataType::DigitalInterval) {
+            return ui->openGLWidget->getDigitalIntervalSeriesMap().contains(key);
+        }
+        return false;
+    };
+
+    auto ensure_loaded = [this, &is_loaded](std::string const & key,
+                                            DM_DataType type,
+                                            std::string const & color) {
+        if (is_loaded(key, type)) {
+            return;
+        }
+        _plotSelectedFeatureWithoutUpdate(key, color);
+    };
+
+    auto apply_series_options = [this](LaneLayoutSeriesEntry const & entry) {
+        QString const qkey = QString::fromStdString(entry.key);
+        if (entry.type == LaneLayoutSeriesType::Analog) {
+            AnalogSeriesOptionsData opts;
+            if (auto const * existing = _state->seriesOptions().get<AnalogSeriesOptionsData>(qkey)) {
+                opts = *existing;
+            }
+            opts.hex_color() = entry.color;
+            opts.is_visible() = entry.visible;
+            _state->seriesOptions().set(qkey, opts);
+            return;
+        }
+
+        if (entry.type == LaneLayoutSeriesType::DigitalEvent) {
+            DigitalEventSeriesOptionsData opts;
+            if (auto const * existing = _state->seriesOptions().get<DigitalEventSeriesOptionsData>(qkey)) {
+                opts = *existing;
+            }
+            opts.hex_color() = entry.color;
+            opts.is_visible() = entry.visible;
+            opts.plotting_mode = entry.event_plotting_mode.value_or(EventPlottingModeData::Stacked);
+            if (entry.event_glyph_shape.has_value()) {
+                opts.glyph_shape = *entry.event_glyph_shape;
+            }
+            _state->seriesOptions().set(qkey, opts);
+            return;
+        }
+
+        if (entry.type == LaneLayoutSeriesType::DigitalInterval) {
+            DigitalIntervalSeriesOptionsData opts;
+            if (auto const * existing = _state->seriesOptions().get<DigitalIntervalSeriesOptionsData>(qkey)) {
+                opts = *existing;
+            }
+            opts.hex_color() = entry.color;
+            opts.is_visible() = entry.visible;
+            opts.extend_full_canvas = false;
+            _state->seriesOptions().set(qkey, opts);
+        }
+    };
+
+    std::unordered_map<std::string, int> lane_orders;
+    _is_batch_add = true;
+
+    for (size_t lane_index = 0; lane_index < layout.lanes.size(); ++lane_index) {
+        auto const & lane = layout.lanes[lane_index];
+        if (lane.lane_id.empty()) {
             continue;
         }
 
-        addFeature(entry.key, entry.color);
+        int const lane_order = lane.lane_order.value_or(derivedLaneOrder(layout.lanes.size(), lane_index));
+        lane_orders[lane.lane_id] = lane_order;
+
+        LaneOverrideData lane_override;
+        lane_override.display_label = lane.display_label;
+        lane_override.lane_weight = lane.lane_weight;
+        _state->setLaneOverride(lane.lane_id, lane_override);
+
+        for (auto const & entry: lane.series) {
+            DM_DataType const actual_type = _data_manager->getType(entry.key);
+            if (!laneLayoutTypeMatchesDataType(entry.type, actual_type)) {
+                spdlog::warn("Lane layout profile: skipping '{}' because the DataManager type does not match the profile type", entry.key);
+                continue;
+            }
+
+            ensure_loaded(entry.key, actual_type, entry.color);
+            apply_series_options(entry);
+
+            SeriesLaneOverrideData override_data;
+            if (auto const * existing = _state->getSeriesLaneOverride(entry.key); existing != nullptr) {
+                override_data = *existing;
+            }
+            override_data.lane_id = lane.lane_id;
+            override_data.lane_order = lane_order;
+            override_data.lane_weight = lane.lane_weight;
+            override_data.overlay_mode = LaneOverlayMode::Auto;
+            override_data.overlay_z = 0;
+            _state->setSeriesLaneOverride(entry.key, override_data);
+        }
     }
 
-    // Apply all lane placement overrides
-    for (auto const & [key, od]: layout.series_lane_overrides) {
-        _state->setSeriesLaneOverride(key, od);
-    }
-    for (auto const & [lane_id, od]: layout.lane_overrides) {
-        _state->setLaneOverride(lane_id, od);
-    }
-    _state->setOrderingConstraints(layout.ordering_constraints);
+    for (auto const & association: layout.event_associations) {
+        DM_DataType const actual_type = _data_manager->getType(association.event_key);
+        if (actual_type != DM_DataType::DigitalEvent) {
+            spdlog::warn("Lane layout profile: skipping event association '{}' because it is not a DigitalEventSeries", association.event_key);
+            continue;
+        }
 
-    ui->openGLWidget->updateCanvas();
+        auto const target_order_it = lane_orders.find(association.target_lane_id);
+        if (target_order_it == lane_orders.end() && association.placement != LaneLayoutEventPlacement::Overlay) {
+            spdlog::warn("Lane layout profile: skipping event association '{}' because target lane '{}' was not declared",
+                         association.event_key,
+                         association.target_lane_id);
+            continue;
+        }
+
+        ensure_loaded(association.event_key, actual_type, association.color);
+
+        DigitalEventSeriesOptionsData opts;
+        QString const qkey = QString::fromStdString(association.event_key);
+        if (auto const * existing = _state->seriesOptions().get<DigitalEventSeriesOptionsData>(qkey)) {
+            opts = *existing;
+        }
+        opts.hex_color() = association.color;
+        opts.is_visible() = association.visible;
+        opts.plotting_mode = EventPlottingModeData::Stacked;
+        if (association.glyph_shape.has_value()) {
+            opts.glyph_shape = *association.glyph_shape;
+        }
+        _state->seriesOptions().set(qkey, opts);
+
+        SeriesLaneOverrideData override_data;
+        if (association.placement == LaneLayoutEventPlacement::Overlay) {
+            override_data.lane_id = association.target_lane_id;
+            if (target_order_it != lane_orders.end()) {
+                override_data.lane_order = target_order_it->second;
+            }
+            override_data.overlay_mode = LaneOverlayMode::Overlay;
+        } else {
+            int const target_order = target_order_it->second;
+            override_data.lane_id = laneIdForAssociation(association.target_lane_id, association.event_key);
+            override_data.lane_order = association.placement == LaneLayoutEventPlacement::Above
+                                               ? target_order + kAssociationLaneOrderOffset
+                                               : target_order - kAssociationLaneOrderOffset;
+            override_data.overlay_mode = LaneOverlayMode::Auto;
+        }
+        _state->setSeriesLaneOverride(association.event_key, override_data);
+    }
+
+    _is_batch_add = false;
 }
 
 std::vector<ChannelPosition> DataViewer_Widget::_parseSpikeSorterConfig(std::string const & text) {

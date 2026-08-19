@@ -1,0 +1,43 @@
+---
+title: "Lane Layout Profiles"
+format: html
+---
+
+# Lane Layout Profiles
+
+The Data Viewer can save and load lane layout profiles as JSON. A profile defines
+stable lane IDs, assigns data keys to those lanes, and places spike/event series
+relative to a lane without requiring you to calculate internal lane order values.
+
+Use **Save Lane Layout** to write the current profile and **Load Lane Layout** to
+apply one. In `Merge` mode, only keys named in the file are added or updated. In
+`Replace` mode, the current displayed series and lane state are cleared first.
+
+```json
+{
+  "version": 2,
+  "mode": "Merge",
+  "lanes": [
+    {
+      "lane_id": "channel_11",
+      "display_label": "11",
+      "series": [
+        { "key": "voltage_11", "type": "Analog", "color": "#FFFFFF", "visible": true },
+        { "key": "voltage_raw_11", "type": "Analog", "color": "#888888", "visible": false }
+      ]
+    }
+  ],
+  "event_associations": [
+    {
+      "event_key": "spikes_11a",
+      "target_lane_id": "channel_11",
+      "placement": "Above",
+      "glyph_shape": "Box"
+    }
+  ]
+}
+```
+
+If a lane omits `lane_order`, the file order is used from top to bottom. Event
+associations use exact keys, so names such as `spikes_11a` and `spikes_11b` can
+be placed independently above, below, or over the same channel lane.

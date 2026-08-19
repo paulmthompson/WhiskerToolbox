@@ -87,8 +87,8 @@ private:
 
     Ui::Feature_Tree_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
-    int _observer_id = -1;                       ///< DataManager observer callback ID for cleanup
-    std::string _grouping_pattern = "(.+)_\\d+$";// Default pattern: name_number
+    int _observer_id = -1;                                 ///< DataManager observer callback ID for cleanup
+    std::string _grouping_pattern = "^(.+)_\\d+[A-Za-z]?$";///< Default pattern: name_number or name_numberUnit
     std::vector<DM_DataType> _type_filters;
     bool _organize_by_datatype = true;
     bool _is_resizing = false;// Guard to prevent infinite resize loops

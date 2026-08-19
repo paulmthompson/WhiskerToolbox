@@ -428,40 +428,85 @@ struct DataViewerStateData {
     std::map<std::string, GroupScalingState> group_scaling;
 };
 
-// ==================== Lane Layout File ====================
+// ==================== Lane Layout Profile File ====================
 
 /**
- * @brief A displayed series entry in a saved lane layout file
- *
- * Stores the key and hex color of a series that was displayed at save time.
- * On load, if the key exists in the DataManager but is not currently displayed,
- * it will be added with the saved color.
+ * @brief Load behavior for a saved DataViewer lane profile.
  */
-struct LaneLayoutDisplayedSeries {
-    std::string key;  ///< Series key in DataManager
-    std::string color;///< Hex color string (e.g. "#FF0000")
+enum class LaneLayoutLoadMode {
+    Merge, ///< Add/update series named in the profile without removing unrelated displayed series
+    Replace///< Clear displayed series and layout state before applying the profile
 };
 
 /**
- * @brief Serializable snapshot of the DataViewer lane layout for save/load
+ * @brief Data object type stored in a lane profile series entry.
+ */
+enum class LaneLayoutSeriesType {
+    Analog,        ///< AnalogTimeSeries
+    DigitalEvent,  ///< DigitalEventSeries
+    DigitalInterval///< DigitalIntervalSeries
+};
+
+/**
+ * @brief Relative placement of an event series near a target lane.
+ */
+enum class LaneLayoutEventPlacement {
+    Above, ///< Event gets its own lane immediately above the target lane
+    Below, ///< Event gets its own lane immediately below the target lane
+    Overlay///< Event shares the target lane band
+};
+
+/**
+ * @brief One displayed series entry in a saved DataViewer lane profile.
+ */
+struct LaneLayoutSeriesEntry {
+    std::string key;                                                        ///< Series key in DataManager
+    LaneLayoutSeriesType type;                                              ///< Expected series type
+    std::string color = "#FFFFFF";                                          ///< Hex color string (e.g. "#FF0000")
+    bool visible = true;                                                    ///< Whether the series should render after load
+    std::optional<EventPlottingModeData> event_plotting_mode = std::nullopt;///< Optional event rendering mode
+    std::optional<EventGlyphShapeData> event_glyph_shape = std::nullopt;    ///< Optional event glyph shape
+};
+
+/**
+ * @brief Stable lane declaration in a saved DataViewer lane profile.
+ */
+struct LaneLayoutLaneEntry {
+    std::string lane_id;                         ///< Stable lane identifier referenced by associations
+    std::string display_label;                   ///< Optional axis label override
+    std::optional<int> lane_order = std::nullopt;///< Optional explicit order; derived from file order when absent
+    float lane_weight = 1.0f;                    ///< Relative lane height weight (> 0)
+    std::vector<LaneLayoutSeriesEntry> series;   ///< Series assigned to this lane
+};
+
+/**
+ * @brief Stable event-to-lane association in a saved DataViewer lane profile.
  *
- * Captures which series were displayed, their colors, and all lane-placement
- * overrides. Use rfl::json::write / rfl::json::read to serialize.
+ * Uses exact DataManager keys so unit labels such as "spikes_11a" do not need
+ * to be parsed from the key name.
+ */
+struct LaneLayoutEventAssociation {
+    std::string event_key;                                               ///< DigitalEventSeries key in DataManager
+    std::string target_lane_id;                                          ///< Existing lane_id to place relative to
+    LaneLayoutEventPlacement placement = LaneLayoutEventPlacement::Above;///< Relative placement policy
+    std::string color = "#FF0000";                                       ///< Hex color string used when the series is added
+    bool visible = true;                                                 ///< Whether the event series should render after load
+    std::optional<EventGlyphShapeData> glyph_shape = std::nullopt;       ///< Optional event glyph shape override
+};
+
+/**
+ * @brief Versioned DataViewer lane profile for save/load.
  *
- * @code
- * LaneLayoutFile layout;
- * layout.displayed_series = { ... };
- * layout.series_lane_overrides = state->data().series_lane_overrides;
- * auto json = rfl::json::write(layout);
- * auto result = rfl::json::read<LaneLayoutFile>(json);
- * @endcode
+ * Captures stable lane identifiers, displayed series membership, and
+ * event-to-lane associations. The loader derives concrete lane_order overrides
+ * from this profile, so users do not need to calculate absolute lane order when
+ * adding newly sorted event series.
  */
 struct LaneLayoutFile {
-    int version = 1;///< Schema version for future compatibility
-    std::vector<LaneLayoutDisplayedSeries> displayed_series;
-    std::map<std::string, SeriesLaneOverrideData> series_lane_overrides;
-    std::map<std::string, LaneOverrideData> lane_overrides;
-    std::vector<StackableOrderingConstraintData> ordering_constraints;
+    int version = 2;///< Current schema version
+    LaneLayoutLoadMode mode = LaneLayoutLoadMode::Merge;
+    std::vector<LaneLayoutLaneEntry> lanes;
+    std::vector<LaneLayoutEventAssociation> event_associations;
 };
 
 #endif// DATAVIEWER_STATE_DATA_HPP

@@ -1,0 +1,19 @@
+---
+title: "Feature_Tree_Widget"
+format: html
+---
+
+# Feature_Tree_Widget
+
+`Feature_Tree_Widget` displays `DataManager` keys with optional organization by
+data type and name-derived groups. The default grouping rule recognizes keys that
+end in `_number` or `_number` followed by one alphabetic unit label.
+
+Examples:
+
+- `voltage_11` groups under `voltage`
+- `voltage_raw_11` groups under `voltage_raw`
+- `spikes_11a`, `spikes_11b`, and `spikes_12a` group under `spikes`
+
+Callers can still override grouping with `setGroupingPattern(...)`; the default
+only affects widgets that do not provide their own pattern.

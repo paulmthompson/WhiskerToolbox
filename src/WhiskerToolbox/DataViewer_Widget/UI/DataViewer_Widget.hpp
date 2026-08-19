@@ -33,6 +33,7 @@ class QResizeEvent;
 class AnalogViewer_Widget;
 class IntervalViewer_Widget;
 class EventViewer_Widget;
+struct LaneLayoutFile;
 
 namespace Ui {
 class DataViewer_Widget;
@@ -77,6 +78,17 @@ public:
      * @return Pointer to the internal OpenGLWidget
      */
     [[nodiscard]] OpenGLWidget * getOpenGLWidget() const;
+
+    /**
+     * @brief Build the current lane layout profile JSON without opening a file dialog.
+     *
+     * Used by tests and by the interactive save path. The returned JSON uses
+     * stable lane IDs and event associations instead of exposing derived lane_order
+     * values for newly associated event series.
+     *
+     * @return Serialized lane layout profile JSON
+     */
+    [[nodiscard]] std::string buildLaneLayoutJson() const;
 
     /**
      * @brief Automatically arrange all visible series for optimal spacing
@@ -217,6 +229,16 @@ public slots:
     void _loadLaneLayout();
 
     /**
+     * @brief Load a lane layout profile from JSON text.
+     *
+     * Applies the same profile logic as @c _loadLaneLayout without opening a
+     * file dialog. Series absent from the DataManager are skipped.
+     *
+     * @param text Raw lane layout profile JSON
+     */
+    void _loadLaneLayoutFromText(QString const & text);
+
+    /**
      * @brief Load spike-to-analog pairing CSV via a file dialog and apply placement overrides.
      *
      * Opens @c SpikeToAnalogConfigDialog to collect all parse options, group prefixes,
@@ -334,6 +356,13 @@ private:
      * @param enabled true to enable unified scaling, false to revert
      */
     void _toggleGroupUnifiedScaling(std::string const & group_name, bool enabled);
+
+    /**
+     * @brief Apply a parsed lane layout profile to the current viewer.
+     *
+     * @param layout Parsed lane layout profile
+     */
+    void _applyLaneLayoutProfile(LaneLayoutFile const & layout);
 
     /**
      * @brief Find all analog series keys belonging to a group

@@ -79,7 +79,7 @@ private:
     void populateWithTestData() {
         // Create a default time frame
         auto timeframe = std::make_shared<TimeFrame>();
-        TimeKey time_key("time");
+        TimeKey const time_key("time");
         m_data_manager->setTime(time_key, timeframe);
 
         // Add some test PointData with grouping pattern
@@ -110,8 +110,8 @@ private:
         m_data_manager->setData<LineData>("test_lines_2", line_data2, time_key);
 
         // Add some test AnalogTimeSeries
-        std::vector<float> values = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
-        std::vector<int64_t> timestamps = {0, 1000, 2000, 3000, 4000};
+        std::vector<float> const values = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
+        std::vector<int64_t> const timestamps = {0, 1000, 2000, 3000, 4000};
         auto analog_data = std::make_shared<AnalogTimeSeries>(values, values.size());
         m_data_manager->setData<AnalogTimeSeries>("test_analog", analog_data, time_key);
 
@@ -192,7 +192,7 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - Basic Func
 
         for (int i = 0; i < tree->topLevelItemCount(); ++i) {
             QTreeWidgetItem * item = tree->topLevelItem(i);
-            std::string itemText = item->text(0).toStdString();
+            std::string const itemText = item->text(0).toStdString();
 
             if (itemText == "points") foundPointData = true;
             if (itemText == "line") foundLineData = true;
@@ -205,6 +205,60 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - Basic Func
         REQUIRE(foundAnalogTimeSeries);
         REQUIRE(foundDigitalEventSeries);
     }
+}
+
+TEST_CASE("Feature_Tree_Widget - default grouping supports spike unit suffixes",
+          "[Feature_Tree_Widget][Grouping]") {
+    if (!QApplication::instance()) {
+        static int argc = 1;
+        static char * argv[] = {const_cast<char *>("test")};
+        // NOLINTNEXTLINE(misc-const-correctness): QApplication must remain mutable for Qt.
+        static std::unique_ptr<QApplication> app = std::make_unique<QApplication>(argc, argv);
+    }
+
+    auto data_manager = std::make_shared<DataManager>();
+    TimeKey const time_key("time");
+    data_manager->setTime(time_key, std::make_shared<TimeFrame>());
+
+    auto make_events = []() {
+        auto events = std::make_shared<DigitalEventSeries>();
+        events->addEvent(TimeFrameIndex(10));
+        return events;
+    };
+
+    data_manager->setData<DigitalEventSeries>("spikes_11a", make_events(), time_key);
+    data_manager->setData<DigitalEventSeries>("spikes_11b", make_events(), time_key);
+    data_manager->setData<DigitalEventSeries>("spikes_12a", make_events(), time_key);
+
+    std::vector<float> const values{0.0f, 1.0f, 2.0f};
+    data_manager->setData<AnalogTimeSeries>(
+            "voltage_raw_11",
+            std::make_shared<AnalogTimeSeries>(values, values.size()),
+            time_key);
+    data_manager->setData<AnalogTimeSeries>(
+            "voltage_raw_12",
+            std::make_shared<AnalogTimeSeries>(values, values.size()),
+            time_key);
+
+    Feature_Tree_Widget widget;
+    widget.setDataManager(data_manager);
+    widget.setOrganizeByDataType(true);
+    widget.refreshTree();
+    QApplication::processEvents();
+
+    auto * tree = widget.treeWidget();
+    REQUIRE(tree != nullptr);
+
+    auto * spikes_group = findItemByText(tree, "spikes");
+    REQUIRE(spikes_group != nullptr);
+    REQUIRE(spikes_group->childCount() == 3);
+    REQUIRE(findItemByText(tree, "spikes_11a") != nullptr);
+    REQUIRE(findItemByText(tree, "spikes_11b") != nullptr);
+    REQUIRE(findItemByText(tree, "spikes_12a") != nullptr);
+
+    auto * voltage_raw_group = findItemByText(tree, "voltage_raw");
+    REQUIRE(voltage_raw_group != nullptr);
+    REQUIRE(voltage_raw_group->childCount() == 2);
 }
 
 TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - State Preservation", "[Feature_Tree_Widget]") {
@@ -248,7 +302,7 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - State Pres
             if (child->text(0).toStdString() == "test_points_1") {
                 testPoints1Item = child;
                 child->setCheckState(1, Qt::Checked);
-                enabledFeatures.push_back("test_points_1");
+                enabledFeatures.emplace_back("test_points_1");
 
                 // The issue is that setCheckState doesn't automatically emit itemChanged in the test environment
                 // Let's manually emit the signal to trigger the widget's _itemChanged slot
@@ -265,7 +319,7 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - State Pres
         // Add a new feature to trigger tree rebuild
         auto new_point_data = std::make_shared<PointData>();
         new_point_data->addAtTime(TimeFrameIndex(0), Point2D<float>{500.0f, 600.0f}, NotifyObservers::No);
-        TimeKey time_key("time");
+        TimeKey const time_key("time");
         dm.setData<PointData>("test_points_new", new_point_data, time_key);
 
         // Process Qt events to ensure the tree is rebuilt
@@ -351,9 +405,9 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - State Pres
         REQUIRE(initialSelected == "test_lines_1");
 
         // Add a new feature to trigger tree rebuild
-        std::vector<float> values = {10.0f, 20.0f, 30.0f};
+        std::vector<float> const values = {10.0f, 20.0f, 30.0f};
         auto new_analog_data = std::make_shared<AnalogTimeSeries>(values, values.size());
-        TimeKey time_key("time");
+        TimeKey const time_key("time");
         dm.setData<AnalogTimeSeries>("test_analog_new", new_analog_data, time_key);
 
         // Process Qt events to ensure the tree is rebuilt
@@ -385,7 +439,7 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - State Pres
         // Add a new feature to trigger tree rebuild
         auto new_event_data = std::make_shared<DigitalEventSeries>();
         new_event_data->addEvent(TimeFrameIndex(5000));
-        TimeKey time_key("time");
+        TimeKey const time_key("time");
         dm.setData<DigitalEventSeries>("test_events_new", new_event_data, time_key);
 
         // Process Qt events to ensure the tree is rebuilt
@@ -533,9 +587,9 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - No emissio
     });
 
     // Trigger a rebuild by adding analog data
-    std::vector<float> values = {10.0f, 20.0f, 30.0f};
+    std::vector<float> const values = {10.0f, 20.0f, 30.0f};
     auto new_analog_data = std::make_shared<AnalogTimeSeries>(values, values.size());
-    TimeKey time_key("time");
+    TimeKey const time_key("time");
     dm.setTime(time_key, std::make_shared<TimeFrame>());// ensure time exists
     dm.setData<AnalogTimeSeries>("probe_analog_1", new_analog_data, time_key);
 
@@ -587,8 +641,8 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - No emissio
     }
 
     if (leaf) {
-        int addFeaturesBefore = addFeaturesCount;
-        int addFeatureBefore = addFeatureCount;
+        int const addFeaturesBefore = addFeaturesCount;
+        int const addFeatureBefore = addFeatureCount;
 
         leaf->setCheckState(1, Qt::Checked);
         QApplication::processEvents();
@@ -604,8 +658,8 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - Group togg
     auto & dm = getDataManager();
 
     // Ensure there is a true name-group under the analog data type (e.g., analog_1, analog_2)
-    TimeKey time_key("time");
-    std::vector<float> values = {1.0f, 2.0f, 3.0f};
+    TimeKey const time_key("time");
+    std::vector<float> const values = {1.0f, 2.0f, 3.0f};
     auto s1 = std::make_shared<AnalogTimeSeries>(values, values.size());
     auto s2 = std::make_shared<AnalogTimeSeries>(values, values.size());
     dm.setData<AnalogTimeSeries>("analog_1", s1, time_key);
@@ -642,8 +696,8 @@ TEST_CASE_METHOD(FeatureTreeWidgetTestFixture, "Feature_Tree_Widget - Group togg
     }
     REQUIRE(nameGroup != nullptr);
 
-    int addFeaturesBefore = addFeaturesCount;
-    int addFeatureBefore = addFeatureCount;
+    int const addFeaturesBefore = addFeaturesCount;
+    int const addFeatureBefore = addFeatureCount;
 
     // Toggle the group checkbox (column 1). Qt will emit itemChanged itself.
     nameGroup->setCheckState(1, Qt::Checked);
