@@ -38,6 +38,25 @@ apply one. In `Merge` mode, only keys named in the file are added or updated. In
 }
 ```
 
-If a lane omits `lane_order`, the file order is used from top to bottom. Event
+If a lane omits `lane_order`, the file order is used from top to bottom. When
+`lane_order` is present, it is treated as a relative rank: larger values appear
+higher, and the loader adds internal spacing so event lanes can be inserted
+between densely ranked lanes such as `31`, `30`, `29`, and so on. Event
 associations use exact keys, so names such as `spikes_11a` and `spikes_11b` can
 be placed independently above, below, or over the same channel lane.
+
+The event association array key must be named `event_associations`.
+
+## Event Options
+
+`glyph_shape` can be:
+
+- `Tick`: a standard vertical tick at the event time.
+- `TopLine`: a horizontal marker along the top of the lane.
+- `Box`: a box centered on the event time.
+
+`placement` can be:
+
+- `Above`: place the event series in a lane immediately above `target_lane_id`.
+- `Below`: place the event series in a lane immediately below `target_lane_id`.
+- `Overlay`: draw the event series in the same lane as `target_lane_id`.

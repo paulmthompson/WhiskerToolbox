@@ -1588,7 +1588,7 @@ void DataViewer_Widget::_loadLaneLayout() {
 }
 
 void DataViewer_Widget::_loadLaneLayoutFromText(QString const & text) {
-    auto result = rfl::json::read<LaneLayoutFile>(text.toStdString());
+    auto result = rfl::json::read<LaneLayoutFile, rfl::DefaultIfMissing>(text.toStdString());
     if (!result) {
         QMessageBox::warning(this, "Parse Failed", "Could not parse lane layout JSON.");
         return;
@@ -1684,17 +1684,46 @@ void DataViewer_Widget::_applyLaneLayoutProfile(LaneLayoutFile const & layout) {
         }
     };
 
-    std::unordered_map<std::string, int> lane_orders;
-    _is_batch_add = true;
+    struct ProfileLaneOrder {
+        std::string lane_id;
+        int source_order;
+        size_t source_index;
+    };
 
+    std::vector<ProfileLaneOrder> profile_lane_orders;
+    profile_lane_orders.reserve(layout.lanes.size());
     for (size_t lane_index = 0; lane_index < layout.lanes.size(); ++lane_index) {
         auto const & lane = layout.lanes[lane_index];
         if (lane.lane_id.empty()) {
             continue;
         }
+        profile_lane_orders.push_back(ProfileLaneOrder{
+                lane.lane_id,
+                lane.lane_order.value_or(derivedLaneOrder(layout.lanes.size(), lane_index)),
+                lane_index});
+    }
 
-        int const lane_order = lane.lane_order.value_or(derivedLaneOrder(layout.lanes.size(), lane_index));
-        lane_orders[lane.lane_id] = lane_order;
+    std::sort(profile_lane_orders.begin(), profile_lane_orders.end(), [](auto const & lhs, auto const & rhs) {
+        if (lhs.source_order != rhs.source_order) {
+            return lhs.source_order > rhs.source_order;
+        }
+        return lhs.source_index < rhs.source_index;
+    });
+
+    std::unordered_map<std::string, int> lane_orders;
+    for (size_t visual_rank = 0; visual_rank < profile_lane_orders.size(); ++visual_rank) {
+        lane_orders[profile_lane_orders[visual_rank].lane_id] =
+                derivedLaneOrder(profile_lane_orders.size(), visual_rank);
+    }
+
+    _is_batch_add = true;
+
+    for (auto const & lane: layout.lanes) {
+        if (lane.lane_id.empty()) {
+            continue;
+        }
+
+        int const lane_order = lane_orders.at(lane.lane_id);
 
         LaneOverrideData lane_override;
         lane_override.display_label = lane.display_label;

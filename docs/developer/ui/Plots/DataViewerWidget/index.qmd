@@ -212,11 +212,16 @@ engine.
 only keys named in the profile. In replace mode, it clears the current displayed
 series and lane state before applying the file. If `lane_order` is omitted from a
 lane entry, order is derived from the order of the `lanes` array, top to bottom.
+Explicit `lane_order` values are treated as relative ranks and normalized to
+spaced internal orders before event associations are applied.
 
 Event associations use exact `DigitalEventSeries` keys and a `target_lane_id`, so
 unit labels such as `spikes_11a` do not require channel parsing. `Above` and
 `Below` create event lanes next to the target lane; `Overlay` shares the target
 lane.
+
+Valid `glyph_shape` values are `Tick`, `TopLine`, and `Box`. Valid association
+`placement` values are `Above`, `Below`, and `Overlay`.
 
 # Rendering Pipeline
 

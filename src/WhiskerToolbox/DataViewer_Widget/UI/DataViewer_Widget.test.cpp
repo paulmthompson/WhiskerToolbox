@@ -3040,6 +3040,47 @@ TEST_CASE("LaneLayoutFile - roundtrip serialize/deserialize",
     REQUIRE(restored.event_associations[0].glyph_shape == std::optional<EventGlyphShapeData>{EventGlyphShapeData::Box});
 }
 
+TEST_CASE("LaneLayoutFile - compact documented profile parses with defaults",
+          "[LaneLayoutFile][Serialization][Phase4D]") {
+    std::string const json = R"({
+  "version": 2,
+  "mode": "Merge",
+  "lanes": [
+    {
+      "lane_id": "channel_11",
+      "display_label": "11",
+      "series": [
+        { "key": "voltage_11", "type": "Analog", "color": "#FFFFFF", "visible": true },
+        { "key": "voltage_raw_11", "type": "Analog", "color": "#888888", "visible": false }
+      ]
+    }
+  ],
+  "event_associations": [
+    {
+      "event_key": "spikes_11a",
+      "target_lane_id": "channel_11",
+      "placement": "Above",
+      "glyph_shape": "Box"
+    }
+  ]
+})";
+
+    auto result = rfl::json::read<LaneLayoutFile, rfl::DefaultIfMissing>(json);
+    REQUIRE(result);
+
+    auto const & restored = result.value();
+    REQUIRE(restored.lanes.size() == 1);
+    REQUIRE(restored.lanes[0].lane_id == "channel_11");
+    REQUIRE(restored.lanes[0].lane_weight == Catch::Approx(1.0f));
+    REQUIRE_FALSE(restored.lanes[0].lane_order.has_value());
+
+    REQUIRE(restored.event_associations.size() == 1);
+    REQUIRE(restored.event_associations[0].event_key == "spikes_11a");
+    REQUIRE(restored.event_associations[0].color == "#FF0000");
+    REQUIRE(restored.event_associations[0].visible);
+    REQUIRE(restored.event_associations[0].glyph_shape == std::optional<EventGlyphShapeData>{EventGlyphShapeData::Box});
+}
+
 TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
                  "DataViewer_Widget - lane layout profile loads lanes and event associations",
                  "[DataViewer_Widget][LaneLayout][Phase4D]") {
@@ -3107,6 +3148,79 @@ TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
     REQUIRE(event_opts != nullptr);
     REQUIRE(event_opts->plotting_mode == EventPlottingModeData::Stacked);
     REQUIRE(event_opts->glyph_shape == EventGlyphShapeData::Box);
+
+    widget.close();
+}
+
+TEST_CASE_METHOD(DataViewerWidgetMixedStackingTestFixture,
+                 "DataViewer_Widget - lane layout profile places events next to dense explicit lane orders",
+                 "[DataViewer_Widget][LaneLayout][Phase4D]") {
+    auto & widget = getWidget();
+    auto const analog = getAnalogKeys();
+    auto const events = getEventKeys();
+    REQUIRE(analog.size() >= 3);
+    REQUIRE(!events.empty());
+
+    widget.openWidget();
+    QApplication::processEvents();
+
+    LaneLayoutFile layout_file;
+    layout_file.mode = LaneLayoutLoadMode::Merge;
+
+    LaneLayoutLaneEntry top_lane;
+    top_lane.lane_id = "channel_7";
+    top_lane.lane_order = 31;
+    top_lane.series.push_back(LaneLayoutSeriesEntry{
+            .key = analog[0],
+            .type = LaneLayoutSeriesType::Analog,
+            .color = "#FFFFFF",
+            .visible = true});
+    layout_file.lanes.push_back(top_lane);
+
+    LaneLayoutLaneEntry above_target_lane;
+    above_target_lane.lane_id = "channel_22";
+    above_target_lane.lane_order = 22;
+    above_target_lane.series.push_back(LaneLayoutSeriesEntry{
+            .key = analog[1],
+            .type = LaneLayoutSeriesType::Analog,
+            .color = "#FFFFFF",
+            .visible = true});
+    layout_file.lanes.push_back(above_target_lane);
+
+    LaneLayoutLaneEntry target_lane;
+    target_lane.lane_id = "channel_11";
+    target_lane.lane_order = 21;
+    target_lane.series.push_back(LaneLayoutSeriesEntry{
+            .key = analog[2],
+            .type = LaneLayoutSeriesType::Analog,
+            .color = "#FFFFFF",
+            .visible = true});
+    layout_file.lanes.push_back(target_lane);
+
+    LaneLayoutEventAssociation association;
+    association.event_key = events[0];
+    association.target_lane_id = "channel_11";
+    association.placement = LaneLayoutEventPlacement::Above;
+    association.glyph_shape = EventGlyphShapeData::Tick;
+    layout_file.event_associations.push_back(association);
+
+    bool const invoked = QMetaObject::invokeMethod(
+            &widget,
+            "_loadLaneLayoutFromText",
+            Qt::DirectConnection,
+            Q_ARG(QString, QString::fromStdString(rfl::json::write(layout_file))));
+    REQUIRE(invoked);
+    QApplication::processEvents();
+
+    auto const above_target_layout = TestHelpers::getAnalogLayoutTransform(widget, analog[1]);
+    auto const target_layout = TestHelpers::getAnalogLayoutTransform(widget, analog[2]);
+    auto const event_layout = TestHelpers::getEventLayoutTransform(widget, events[0]);
+    REQUIRE(above_target_layout.has_value());
+    REQUIRE(target_layout.has_value());
+    REQUIRE(event_layout.has_value());
+
+    REQUIRE(event_layout.value().offset > target_layout.value().offset);
+    REQUIRE(event_layout.value().offset < above_target_layout.value().offset);
 
     widget.close();
 }
