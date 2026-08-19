@@ -549,8 +549,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a>    Ui<span class="op">::</span>Feature_Tree_Widget <span class="op">*</span> ui<span class="op">;</span></span>
 <span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>DataManager<span class="op">&gt;</span> _data_manager<span class="op">;</span></span>
-<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> _observer_id <span class="op">=</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span>                       </span>
-<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string _grouping_pattern <span class="op">=</span> <span class="st">"(.+)_</span><span class="sc">\\</span><span class="st">d+$"</span><span class="op">;</span><span class="co">// Default pattern: name_number</span></span>
+<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> _observer_id <span class="op">=</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span>                                 </span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string _grouping_pattern <span class="op">=</span> <span class="st">"^(.+)_</span><span class="sc">\\</span><span class="st">d+[A-Za-z]?$"</span><span class="op">;</span></span>
 <span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>DM_DataType<span class="op">&gt;</span> _type_filters<span class="op">;</span></span>
 <span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> _organize_by_datatype <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
 <span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> _is_resizing <span class="op">=</span> <span class="kw">false</span><span class="op">;</span><span class="co">// Guard to prevent infinite resize loops</span></span>
@@ -604,7 +604,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// FEATURE_TREE_WIDGET_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-16 at 18:15:43 +0000</p>
+<p>Updated on 2026-08-19 at 19:16:26 +0000</p>
 
 
 </section>

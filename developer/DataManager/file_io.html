@@ -1554,6 +1554,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#extended-format-inline-variables-with-env-var-fallback" id="toc-extended-format-inline-variables-with-env-var-fallback" class="nav-link" data-scroll-target="#extended-format-inline-variables-with-env-var-fallback">Extended format — inline variables with env-var fallback</a></li>
   <li><a href="#loop-expansion-loop_var" id="toc-loop-expansion-loop_var" class="nav-link" data-scroll-target="#loop-expansion-loop_var">Loop expansion (<code>{loop_var}</code>)</a></li>
   <li><a href="#default-time-timeframe-fallback-json-load" id="toc-default-time-timeframe-fallback-json-load" class="nav-link" data-scroll-target="#default-time-timeframe-fallback-json-load">Default <code>time</code> TimeFrame fallback (JSON load)</a></li>
+  <li><a href="#digital-event-multi-file-loading" id="toc-digital-event-multi-file-loading" class="nav-link" data-scroll-target="#digital-event-multi-file-loading">Digital event multi-file loading</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -1909,6 +1910,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Does <strong>not</strong> infer time from point, line, or other non-media data. Points-only configs should include an explicit <code>data_type: "time"</code> entry (e.g.&nbsp;<code>format: "max_value"</code> from an analog or event series).</li>
 </ul>
 <p>The same helper is used from <code>MainWindow::_updateFrameCount</code> for File → Load Video / Load Images.</p>
+</section>
+<section id="digital-event-multi-file-loading" class="level2">
+<h2 class="anchored" data-anchor-id="digital-event-multi-file-loading">Digital event multi-file loading</h2>
+<p>When spike timestamps are stored as one file per channel (e.g.&nbsp;<code>23a.txt</code>, <code>24a.txt</code>, <code>25a.txt</code>), set <code>multi_file: true</code> and point <code>filepath</code> at the containing directory. Each matching file becomes one <code>DigitalEventSeries</code> registered as <code>{name}_0</code>, <code>{name}_1</code>, … (or <code>{name}_{file_stem}</code> when <code>append_filename: true</code>) in alphabetical filename order. Optional <code>file_pattern</code> (glob) filters files; default extensions are <code>.csv</code> and <code>.txt</code>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"filepath"</span><span class="fu">:</span> <span class="st">"spikes"</span><span class="fu">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"data_type"</span><span class="fu">:</span> <span class="st">"digital_event"</span><span class="fu">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"name"</span><span class="fu">:</span> <span class="st">"spikes"</span><span class="fu">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"format"</span><span class="fu">:</span> <span class="st">"csv"</span><span class="fu">,</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"multi_file"</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"append_filename"</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">,</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"scale"</span><span class="fu">:</span> <span class="dv">30000</span><span class="fu">,</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"event_column"</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">,</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"clock"</span><span class="fu">:</span> <span class="st">"master"</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>With <code>append_filename: true</code>, keys are <code>{name}_{file_stem}</code> (e.g.&nbsp;<code>spikes_23a</code> from <code>23a.txt</code>).</p>
+<p>See <a href="../../developer/DataManager/IO/digital_event_csv.html">CSV Digital Event I/O</a> for full loader options.</p>
 
 
 </section>

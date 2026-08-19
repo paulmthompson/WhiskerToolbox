@@ -485,6 +485,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>This loader supports batch loading for:</p>
 <ul>
 <li>DigitalEvent CSV with identifier column (returns one series per identifier)</li>
+<li>DigitalEvent CSV with multi_file=true (returns one series per file in a directory)</li>
 <li>Points DLC format with all_bodyparts=true (returns one <a href="../../api_generated/Classes/classPointData.html">PointData</a> per bodypart)</li>
 <li>DigitalInterval with csv_layout=“binary_state” and all_columns=true (returns one series per column)</li>
 </ul>
@@ -526,7 +527,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classIFormatLoader.html#function-supportsbatchloading">IFormatLoader::supportsBatchLoading</a></p>
 <p>Returns true for:</p>
 <ul>
-<li>DigitalEvent with identifier column</li>
+<li>DigitalEvent with identifier column or multi_file=true</li>
 <li>Points with DLC format and all_bodyparts=true</li>
 <li>DigitalInterval with csv_layout=“binary_state” (multiple columns)</li>
 </ul>
@@ -540,7 +541,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Load all data objects from a multi-series CSV file.</p>
 <p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classIFormatLoader.html#function-loadbatch">IFormatLoader::loadBatch</a></p>
-<p>For DigitalEvent, returns one <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> per unique identifier. For Points with DLC format, returns one <a href="../../api_generated/Classes/classPointData.html">PointData</a> per bodypart. For DigitalInterval with binary_state layout, returns one series per data column.</p>
+<p>For DigitalEvent, returns one <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> per unique identifier or per file when multi_file is true. For Points with DLC format, returns one <a href="../../api_generated/Classes/classPointData.html">PointData</a> per bodypart. For DigitalInterval with binary_state layout, returns one series per data column.</p>
 </section>
 <section id="function-save" class="level3">
 <h3 class="anchored" data-anchor-id="function-save">function save</h3>
@@ -575,7 +576,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Return metadata for all save operations this loader supports.</p>
 <p><strong>Reimplements</strong>: <a href="../../api_generated/Classes/classIFormatLoader.html#function-getsaverinfo">IFormatLoader::getSaverInfo</a></p>
 <hr>
-<p>Updated on 2026-08-16 at 18:15:38 +0000</p>
+<p>Updated on 2026-08-19 at 19:16:23 +0000</p>
 
 
 </section>

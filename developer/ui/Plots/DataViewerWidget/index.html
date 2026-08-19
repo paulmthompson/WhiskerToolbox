@@ -1549,6 +1549,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#signal-flow" id="toc-signal-flow" class="nav-link" data-scroll-target="#signal-flow">Signal Flow</a></li>
   <li><a href="#seriesoptionsregistry" id="toc-seriesoptionsregistry" class="nav-link" data-scroll-target="#seriesoptionsregistry">SeriesOptionsRegistry</a></li>
   <li><a href="#serialization" id="toc-serialization" class="nav-link" data-scroll-target="#serialization">Serialization</a></li>
+  <li><a href="#lane-layout-profiles" id="toc-lane-layout-profiles" class="nav-link" data-scroll-target="#lane-layout-profiles">Lane Layout Profiles</a></li>
   </ul></li>
   <li><a href="#rendering-pipeline" id="toc-rendering-pipeline" class="nav-link" data-scroll-target="#rendering-pipeline">Rendering Pipeline</a>
   <ul class="collapse">
@@ -1887,6 +1888,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Empty <code>lane_id</code> overrides are treated as legacy auto-lane behavior and removed.</li>
 </ul>
 </section>
+<section id="lane-layout-profiles" class="level2">
+<h2 class="anchored" data-anchor-id="lane-layout-profiles">Lane Layout Profiles</h2>
+<p>The <strong>Save Lane Layout</strong> and <strong>Load Lane Layout</strong> actions use a versioned lane profile JSON (<code>LaneLayoutFile</code>, version 2). The profile is intentionally more stable than raw <code>series_lane_overrides</code>: users define lane IDs once, assign exact series keys to those lanes, and add event associations relative to a target lane. The loader derives the concrete <code>lane_order</code> overrides needed by the layout engine.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"version"</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"mode"</span><span class="fu">:</span> <span class="st">"Merge"</span><span class="fu">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"lanes"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"lane_id"</span><span class="fu">:</span> <span class="st">"channel_11"</span><span class="fu">,</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"display_label"</span><span class="fu">:</span> <span class="st">"11"</span><span class="fu">,</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"series"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span> <span class="dt">"key"</span><span class="fu">:</span> <span class="st">"voltage_11"</span><span class="fu">,</span> <span class="dt">"type"</span><span class="fu">:</span> <span class="st">"Analog"</span><span class="fu">,</span> <span class="dt">"color"</span><span class="fu">:</span> <span class="st">"#FFFFFF"</span><span class="fu">,</span> <span class="dt">"visible"</span><span class="fu">:</span> <span class="kw">true</span> <span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span> <span class="dt">"key"</span><span class="fu">:</span> <span class="st">"voltage_raw_11"</span><span class="fu">,</span> <span class="dt">"type"</span><span class="fu">:</span> <span class="st">"Analog"</span><span class="fu">,</span> <span class="dt">"color"</span><span class="fu">:</span> <span class="st">"#888888"</span><span class="fu">,</span> <span class="dt">"visible"</span><span class="fu">:</span> <span class="kw">false</span> <span class="fu">}</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>      <span class="ot">]</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"event_associations"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"event_key"</span><span class="fu">:</span> <span class="st">"spikes_11a"</span><span class="fu">,</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"target_lane_id"</span><span class="fu">:</span> <span class="st">"channel_11"</span><span class="fu">,</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"placement"</span><span class="fu">:</span> <span class="st">"Above"</span><span class="fu">,</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"glyph_shape"</span><span class="fu">:</span> <span class="st">"Box"</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>mode</code> is either <code>Merge</code> or <code>Replace</code>. In merge mode, the loader adds and updates only keys named in the profile. In replace mode, it clears the current displayed series and lane state before applying the file. If <code>lane_order</code> is omitted from a lane entry, order is derived from the order of the <code>lanes</code> array, top to bottom. Explicit <code>lane_order</code> values are treated as relative ranks and normalized to spaced internal orders before event associations are applied.</p>
+<p>Event associations use exact <code>DigitalEventSeries</code> keys and a <code>target_lane_id</code>, so unit labels such as <code>spikes_11a</code> do not require channel parsing. <code>Above</code> and <code>Below</code> create event lanes next to the target lane; <code>Overlay</code> shares the target lane.</p>
+<p>Valid <code>glyph_shape</code> values are <code>Tick</code>, <code>TopLine</code>, and <code>Box</code>. Valid association <code>placement</code> values are <code>Above</code>, <code>Below</code>, and <code>Overlay</code>.</p>
+</section>
 </section>
 <section id="rendering-pipeline" class="level1">
 <h1>Rendering Pipeline</h1>
@@ -1910,14 +1940,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Layout positioning</strong> — from <code>LayoutEngine</code> (lane center + half-height)</li>
 <li><strong>Global scaling</strong> — <code>global_y_scale</code> applied to amplitude only (lane position is NOT affected)</li>
 </ol>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">// TransformComposers::composeAnalogYTransform</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> data_norm <span class="op">=</span> NormalizationHelpers<span class="op">::</span>forStdDevRange<span class="op">(</span>mean<span class="op">,</span> std_dev<span class="op">,</span> <span class="fl">3.0</span><span class="bu">f</span><span class="op">);</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> user_adj  <span class="op">=</span> NormalizationHelpers<span class="op">::</span>manual<span class="op">(</span>intrinsic_scale <span class="op">*</span> user_scale_factor<span class="op">,</span> offset<span class="op">);</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> data_transform <span class="op">=</span> user_adj<span class="op">.</span>compose<span class="op">(</span>data_norm<span class="op">);</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> effective_gain <span class="op">=</span> layout<span class="op">.</span>y_transform<span class="op">.</span>gain <span class="op">*</span> margin <span class="op">*</span> global_y_scale<span class="op">;</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> final_gain   <span class="op">=</span> data_transform<span class="op">.</span>gain <span class="op">*</span> effective_gain<span class="op">;</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> final_offset <span class="op">=</span> data_transform<span class="op">.</span>offset <span class="op">*</span> effective_gain <span class="op">+</span> layout<span class="op">.</span>y_transform<span class="op">.</span>offset<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">// TransformComposers::composeAnalogYTransform</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> data_norm <span class="op">=</span> NormalizationHelpers<span class="op">::</span>forStdDevRange<span class="op">(</span>mean<span class="op">,</span> std_dev<span class="op">,</span> <span class="fl">3.0</span><span class="bu">f</span><span class="op">);</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> user_adj  <span class="op">=</span> NormalizationHelpers<span class="op">::</span>manual<span class="op">(</span>intrinsic_scale <span class="op">*</span> user_scale_factor<span class="op">,</span> offset<span class="op">);</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> data_transform <span class="op">=</span> user_adj<span class="op">.</span>compose<span class="op">(</span>data_norm<span class="op">);</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> effective_gain <span class="op">=</span> layout<span class="op">.</span>y_transform<span class="op">.</span>gain <span class="op">*</span> margin <span class="op">*</span> global_y_scale<span class="op">;</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> final_gain   <span class="op">=</span> data_transform<span class="op">.</span>gain <span class="op">*</span> effective_gain<span class="op">;</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> final_offset <span class="op">=</span> data_transform<span class="op">.</span>offset <span class="op">*</span> effective_gain <span class="op">+</span> layout<span class="op">.</span>y_transform<span class="op">.</span>offset<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>All vertices use normalized coordinates (−1 to +1 in local space); the composed <code>LayoutTransform</code> handles all positioning and scaling. This is consistent across analog, event, and interval series.</p>
 </section>
 </section>
@@ -2243,10 +2273,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="state-management-1" class="level2">
 <h2 class="anchored" data-anchor-id="state-management-1">State Management</h2>
 <p>Group scaling state is stored in <code>DataViewerStateData::group_scaling</code>, a map of group name → <code>GroupScalingState</code>:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> GroupScalingState <span class="op">{</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> unified_scaling <span class="op">=</span> <span class="kw">true</span><span class="op">;</span>   <span class="co">// Enabled by default</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> group_std_dev <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span>    <span class="co">// Max std_dev across group</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> GroupScalingState <span class="op">{</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> unified_scaling <span class="op">=</span> <span class="kw">true</span><span class="op">;</span>   <span class="co">// Enabled by default</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> group_std_dev <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span>    <span class="co">// Max std_dev across group</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="user-controls" class="level2">
 <h2 class="anchored" data-anchor-id="user-controls">User Controls</h2>

@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>LaneLayoutDisplayedSeries – Neuralyzer</title>
+<title>LaneLayoutEventAssociation – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -348,14 +348,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#lanelayoutdisplayedseries" id="toc-lanelayoutdisplayedseries" class="nav-link active" data-scroll-target="#lanelayoutdisplayedseries">LaneLayoutDisplayedSeries</a>
+  <li><a href="#lanelayouteventassociation" id="toc-lanelayouteventassociation" class="nav-link active" data-scroll-target="#lanelayouteventassociation">LaneLayoutEventAssociation</a>
   <ul class="collapse">
   <li><a href="#public-attributes" id="toc-public-attributes" class="nav-link" data-scroll-target="#public-attributes">Public Attributes</a></li>
   <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
   <li><a href="#public-attributes-documentation" id="toc-public-attributes-documentation" class="nav-link" data-scroll-target="#public-attributes-documentation">Public Attributes Documentation</a>
   <ul class="collapse">
-  <li><a href="#variable-key" id="toc-variable-key" class="nav-link" data-scroll-target="#variable-key">variable key</a></li>
+  <li><a href="#variable-event_key" id="toc-variable-event_key" class="nav-link" data-scroll-target="#variable-event_key">variable event_key</a></li>
+  <li><a href="#variable-target_lane_id" id="toc-variable-target_lane_id" class="nav-link" data-scroll-target="#variable-target_lane_id">variable target_lane_id</a></li>
+  <li><a href="#variable-placement" id="toc-variable-placement" class="nav-link" data-scroll-target="#variable-placement">variable placement</a></li>
   <li><a href="#variable-color" id="toc-variable-color" class="nav-link" data-scroll-target="#variable-color">variable color</a></li>
+  <li><a href="#variable-visible" id="toc-variable-visible" class="nav-link" data-scroll-target="#variable-visible">variable visible</a></li>
+  <li><a href="#variable-glyph_shape" id="toc-variable-glyph_shape" class="nav-link" data-scroll-target="#variable-glyph_shape">variable glyph_shape</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -367,7 +371,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">LaneLayoutDisplayedSeries</h1>
+<h1 class="title">LaneLayoutEventAssociation</h1>
 </div>
 
 
@@ -384,9 +388,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="lanelayoutdisplayedseries" class="level1">
-<h1>LaneLayoutDisplayedSeries</h1>
-<p>A displayed series entry in a saved lane layout file. <a href="#detailed-description">More…</a></p>
+<section id="lanelayouteventassociation" class="level1">
+<h1>LaneLayoutEventAssociation</h1>
+<p>Stable event-to-lane association in a saved <a href="">DataViewer</a> lane profile. <a href="#detailed-description">More…</a></p>
 <p><code>#include &lt;DataViewerStateData.hpp&gt;</code></p>
 <section id="public-attributes" class="level2">
 <h2 class="anchored" data-anchor-id="public-attributes">Public Attributes</h2>
@@ -400,34 +404,70 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>std::string</td>
-<td><strong><a href="../../api_generated/Classes/structLaneLayoutDisplayedSeries.html#variable-key">key</a></strong> <br>Series key in <a href="">DataManager</a>.</td>
+<td><strong><a href="../../api_generated/Classes/structLaneLayoutEventAssociation.html#variable-event-key">event_key</a></strong> <br><a href="">DigitalEventSeries</a> key in <a href="">DataManager</a>.</td>
 </tr>
 <tr class="even">
 <td>std::string</td>
-<td><strong><a href="../../api_generated/Classes/structLaneLayoutDisplayedSeries.html#variable-color">color</a></strong> <br>Hex color string (e.g.&nbsp;“#FF0000”)</td>
+<td><strong><a href="../../api_generated/Classes/structLaneLayoutEventAssociation.html#variable-target-lane-id">target_lane_id</a></strong> <br>Existing lane_id to place relative to.</td>
+</tr>
+<tr class="odd">
+<td><a href="../../api_generated/Files/DataViewerStateData_8hpp.html#enum-lanelayouteventplacement">LaneLayoutEventPlacement</a></td>
+<td><strong><a href="../../api_generated/Classes/structLaneLayoutEventAssociation.html#variable-placement">placement</a></strong> <br>Relative placement policy.</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structLaneLayoutEventAssociation.html#variable-color">color</a></strong> <br>Hex color string used when the series is added.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structLaneLayoutEventAssociation.html#variable-visible">visible</a></strong> <br>Whether the event series should render after load.</td>
+</tr>
+<tr class="even">
+<td>std::optional&lt; <a href="../../api_generated/Files/DataViewerStateData_8hpp.html#enum-eventglyphshapedata">EventGlyphShapeData</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structLaneLayoutEventAssociation.html#variable-glyph-shape">glyph_shape</a></strong> <br>Optional event glyph shape override.</td>
 </tr>
 </tbody>
 </table>
 </section>
 <section id="detailed-description" class="level2">
 <h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> LaneLayoutDisplayedSeries<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>A displayed series entry in a saved lane layout file.</p>
-<p>Stores the key and hex color of a series that was displayed at save time. On load, if the key exists in the <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> but is not currently displayed, it will be added with the saved color.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> LaneLayoutEventAssociation<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Stable event-to-lane association in a saved <a href="">DataViewer</a> lane profile.</p>
+<p>Uses exact <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> keys so unit labels such as “spikes_11a” do not need to be parsed from the key name.</p>
 </section>
 <section id="public-attributes-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-attributes-documentation">Public Attributes Documentation</h2>
-<section id="variable-key" class="level3">
-<h3 class="anchored" data-anchor-id="variable-key">variable key</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Series key in <a href="">DataManager</a>.</p>
+<section id="variable-event_key" class="level3">
+<h3 class="anchored" data-anchor-id="variable-event_key">variable event_key</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string event_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><a href="">DigitalEventSeries</a> key in <a href="">DataManager</a>.</p>
+</section>
+<section id="variable-target_lane_id" class="level3">
+<h3 class="anchored" data-anchor-id="variable-target_lane_id">variable target_lane_id</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string target_lane_id<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Existing lane_id to place relative to.</p>
+</section>
+<section id="variable-placement" class="level3">
+<h3 class="anchored" data-anchor-id="variable-placement">variable placement</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>LaneLayoutEventPlacement placement <span class="op">=</span> LaneLayoutEventPlacement<span class="op">::</span>Above<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Relative placement policy.</p>
 </section>
 <section id="variable-color" class="level3">
 <h3 class="anchored" data-anchor-id="variable-color">variable color</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string color<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Hex color string (e.g.&nbsp;“#FF0000”)</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string color <span class="op">=</span> <span class="st">"#FF0000"</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Hex color string used when the series is added.</p>
+</section>
+<section id="variable-visible" class="level3">
+<h3 class="anchored" data-anchor-id="variable-visible">variable visible</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> visible <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether the event series should render after load.</p>
+</section>
+<section id="variable-glyph_shape" class="level3">
+<h3 class="anchored" data-anchor-id="variable-glyph_shape">variable glyph_shape</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> EventGlyphShapeData <span class="op">&gt;</span> glyph_shape <span class="op">=</span> <span class="bu">std::</span>nullopt<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Optional event glyph shape override.</p>
 <hr>
-<p>Updated on 2026-08-16 at 18:15:37 +0000</p>
+<p>Updated on 2026-08-19 at 19:16:22 +0000</p>
 
 
 </section>

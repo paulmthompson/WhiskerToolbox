@@ -355,10 +355,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#public-attributes-documentation" id="toc-public-attributes-documentation" class="nav-link" data-scroll-target="#public-attributes-documentation">Public Attributes Documentation</a>
   <ul class="collapse">
   <li><a href="#variable-version" id="toc-variable-version" class="nav-link" data-scroll-target="#variable-version">variable version</a></li>
-  <li><a href="#variable-displayed_series" id="toc-variable-displayed_series" class="nav-link" data-scroll-target="#variable-displayed_series">variable displayed_series</a></li>
-  <li><a href="#variable-series_lane_overrides" id="toc-variable-series_lane_overrides" class="nav-link" data-scroll-target="#variable-series_lane_overrides">variable series_lane_overrides</a></li>
-  <li><a href="#variable-lane_overrides" id="toc-variable-lane_overrides" class="nav-link" data-scroll-target="#variable-lane_overrides">variable lane_overrides</a></li>
-  <li><a href="#variable-ordering_constraints" id="toc-variable-ordering_constraints" class="nav-link" data-scroll-target="#variable-ordering_constraints">variable ordering_constraints</a></li>
+  <li><a href="#variable-mode" id="toc-variable-mode" class="nav-link" data-scroll-target="#variable-mode">variable mode</a></li>
+  <li><a href="#variable-lanes" id="toc-variable-lanes" class="nav-link" data-scroll-target="#variable-lanes">variable lanes</a></li>
+  <li><a href="#variable-event_associations" id="toc-variable-event_associations" class="nav-link" data-scroll-target="#variable-event_associations">variable event_associations</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -389,7 +388,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="lanelayoutfile" class="level1">
 <h1>LaneLayoutFile</h1>
-<p>Serializable snapshot of the <a href="">DataViewer</a> lane layout for save/load. <a href="#detailed-description">More…</a></p>
+<p>Versioned <a href="">DataViewer</a> lane profile for save/load. <a href="#detailed-description">More…</a></p>
 <p><code>#include &lt;DataViewerStateData.hpp&gt;</code></p>
 <section id="public-attributes" class="level2">
 <h2 class="anchored" data-anchor-id="public-attributes">Public Attributes</h2>
@@ -403,23 +402,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>int</td>
-<td><strong><a href="../../api_generated/Classes/structLaneLayoutFile.html#variable-version">version</a></strong> <br>Schema version for future compatibility.</td>
+<td><strong><a href="../../api_generated/Classes/structLaneLayoutFile.html#variable-version">version</a></strong> <br>Current schema version.</td>
 </tr>
 <tr class="even">
-<td>std::vector&lt; <a href="../../api_generated/Classes/structLaneLayoutDisplayedSeries.html">LaneLayoutDisplayedSeries</a> &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structLaneLayoutFile.html#variable-displayed-series">displayed_series</a></strong></td>
+<td><a href="../../api_generated/Files/DataViewerStateData_8hpp.html#enum-lanelayoutloadmode">LaneLayoutLoadMode</a></td>
+<td><strong><a href="../../api_generated/Classes/structLaneLayoutFile.html#variable-mode">mode</a></strong></td>
 </tr>
 <tr class="odd">
-<td>std::map&lt; std::string, <a href="../../api_generated/Classes/structSeriesLaneOverrideData.html">SeriesLaneOverrideData</a> &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structLaneLayoutFile.html#variable-series-lane-overrides">series_lane_overrides</a></strong></td>
+<td>std::vector&lt; <a href="../../api_generated/Classes/structLaneLayoutLaneEntry.html">LaneLayoutLaneEntry</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structLaneLayoutFile.html#variable-lanes">lanes</a></strong></td>
 </tr>
 <tr class="even">
-<td>std::map&lt; std::string, <a href="../../api_generated/Classes/structLaneOverrideData.html">LaneOverrideData</a> &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structLaneLayoutFile.html#variable-lane-overrides">lane_overrides</a></strong></td>
-</tr>
-<tr class="odd">
-<td>std::vector&lt; <a href="../../api_generated/Classes/structStackableOrderingConstraintData.html">StackableOrderingConstraintData</a> &gt;</td>
-<td><strong><a href="../../api_generated/Classes/structLaneLayoutFile.html#variable-ordering-constraints">ordering_constraints</a></strong></td>
+<td>std::vector&lt; <a href="../../api_generated/Classes/structLaneLayoutEventAssociation.html">LaneLayoutEventAssociation</a> &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structLaneLayoutFile.html#variable-event-associations">event_associations</a></strong></td>
 </tr>
 </tbody>
 </table>
@@ -427,38 +422,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="detailed-description" class="level2">
 <h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> LaneLayoutFile<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Serializable snapshot of the <a href="">DataViewer</a> lane layout for save/load.</p>
-<p>Captures which series were displayed, their colors, and all lane-placement overrides. Use rfl::json::write / rfl::json::read to serialize.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>LaneLayoutFile layout<span class="op">;</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>layout<span class="op">.</span>displayed_series <span class="op">=</span> <span class="op">{</span> <span class="op">...</span> <span class="op">};</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>layout<span class="op">.</span>series_lane_overrides <span class="op">=</span> state<span class="op">-&gt;</span>data<span class="op">().</span>series_lane_overrides<span class="op">;</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> json <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>write<span class="op">(</span>layout<span class="op">);</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> result <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>read<span class="op">&lt;</span>LaneLayoutFile<span class="op">&gt;(</span>json<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Versioned <a href="">DataViewer</a> lane profile for save/load.</p>
+<p>Captures stable lane identifiers, displayed series membership, and event-to-lane associations. The loader derives concrete lane_order overrides from this profile, so users do not need to calculate absolute lane order when adding newly sorted event series.</p>
 </section>
 <section id="public-attributes-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-attributes-documentation">Public Attributes Documentation</h2>
 <section id="variable-version" class="level3">
 <h3 class="anchored" data-anchor-id="variable-version">variable version</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> version <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Schema version for future compatibility.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> version <span class="op">=</span> <span class="dv">2</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Current schema version.</p>
 </section>
-<section id="variable-displayed_series" class="level3">
-<h3 class="anchored" data-anchor-id="variable-displayed_series">variable displayed_series</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> LaneLayoutDisplayedSeries <span class="op">&gt;</span> displayed_series<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="variable-mode" class="level3">
+<h3 class="anchored" data-anchor-id="variable-mode">variable mode</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>LaneLayoutLoadMode mode <span class="op">=</span> LaneLayoutLoadMode<span class="op">::</span>Merge<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="variable-series_lane_overrides" class="level3">
-<h3 class="anchored" data-anchor-id="variable-series_lane_overrides">variable series_lane_overrides</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> SeriesLaneOverrideData <span class="op">&gt;</span> series_lane_overrides<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="variable-lanes" class="level3">
+<h3 class="anchored" data-anchor-id="variable-lanes">variable lanes</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> LaneLayoutLaneEntry <span class="op">&gt;</span> lanes<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="variable-lane_overrides" class="level3">
-<h3 class="anchored" data-anchor-id="variable-lane_overrides">variable lane_overrides</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>map<span class="op">&lt;</span> <span class="bu">std::</span>string<span class="op">,</span> LaneOverrideData <span class="op">&gt;</span> lane_overrides<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="variable-ordering_constraints" class="level3">
-<h3 class="anchored" data-anchor-id="variable-ordering_constraints">variable ordering_constraints</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> StackableOrderingConstraintData <span class="op">&gt;</span> ordering_constraints<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="variable-event_associations" class="level3">
+<h3 class="anchored" data-anchor-id="variable-event_associations">variable event_associations</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> LaneLayoutEventAssociation <span class="op">&gt;</span> event_associations<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-16 at 18:15:37 +0000</p>
+<p>Updated on 2026-08-19 at 19:16:22 +0000</p>
 
 
 </section>

@@ -888,34 +888,46 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="json-schema" class="level3">
 <h3 class="anchored" data-anchor-id="json-schema">JSON Schema</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode json code-with-copy"><code class="sourceCode json"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">{</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"version"</span><span class="fu">:</span> <span class="dv">1</span><span class="fu">,</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"displayed_series"</span><span class="fu">:</span> <span class="ot">[</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span><span class="dt">"key"</span><span class="fu">:</span> <span class="st">"voltage_1"</span><span class="fu">,</span> <span class="dt">"color"</span><span class="fu">:</span> <span class="st">"#FF0000"</span><span class="fu">}</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"series_lane_overrides"</span><span class="fu">:</span> <span class="fu">{</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">"voltage_1"</span><span class="fu">:</span> <span class="fu">{</span><span class="dt">"lane_id"</span><span class="fu">:</span> <span class="st">""</span><span class="fu">,</span> <span class="dt">"lane_order"</span><span class="fu">:</span> <span class="dv">100</span><span class="fu">,</span> <span class="dt">"lane_weight"</span><span class="fu">:</span> <span class="fl">1.0</span><span class="fu">,</span> <span class="dt">"overlay_mode"</span><span class="fu">:</span> <span class="st">"Auto"</span><span class="fu">,</span> <span class="dt">"overlay_z"</span><span class="fu">:</span> <span class="dv">0</span><span class="fu">}</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">},</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"lane_overrides"</span><span class="fu">:</span> <span class="fu">{}</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><code>series_lane_overrides</code> and <code>lane_overrides</code> reuse the existing <code>SeriesLaneOverrideData</code> and <code>LaneOverrideData</code> structs directly via <code>rfl::json</code>.</p>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"version"</span><span class="fu">:</span> <span class="dv">2</span><span class="fu">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"mode"</span><span class="fu">:</span> <span class="st">"Merge"</span><span class="fu">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"lanes"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"lane_id"</span><span class="fu">:</span> <span class="st">"channel_11"</span><span class="fu">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"display_label"</span><span class="fu">:</span> <span class="st">"11"</span><span class="fu">,</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"series"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span><span class="dt">"key"</span><span class="fu">:</span> <span class="st">"voltage_11"</span><span class="fu">,</span> <span class="dt">"type"</span><span class="fu">:</span> <span class="st">"Analog"</span><span class="fu">,</span> <span class="dt">"color"</span><span class="fu">:</span> <span class="st">"#FFFFFF"</span><span class="fu">,</span> <span class="dt">"visible"</span><span class="fu">:</span> <span class="kw">true</span><span class="fu">}</span><span class="ot">,</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        <span class="fu">{</span><span class="dt">"key"</span><span class="fu">:</span> <span class="st">"voltage_raw_11"</span><span class="fu">,</span> <span class="dt">"type"</span><span class="fu">:</span> <span class="st">"Analog"</span><span class="fu">,</span> <span class="dt">"color"</span><span class="fu">:</span> <span class="st">"#888888"</span><span class="fu">,</span> <span class="dt">"visible"</span><span class="fu">:</span> <span class="kw">false</span><span class="fu">}</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>      <span class="ot">]</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span><span class="fu">,</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>  <span class="dt">"event_associations"</span><span class="fu">:</span> <span class="ot">[</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="fu">{</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"event_key"</span><span class="fu">:</span> <span class="st">"spikes_11a"</span><span class="fu">,</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"target_lane_id"</span><span class="fu">:</span> <span class="st">"channel_11"</span><span class="fu">,</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"placement"</span><span class="fu">:</span> <span class="st">"Above"</span><span class="fu">,</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>      <span class="dt">"glyph_shape"</span><span class="fu">:</span> <span class="st">"Box"</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">}</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>  <span class="ot">]</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="fu">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The profile uses stable lane IDs and exact series keys. The loader derives the concrete <code>series_lane_overrides</code> needed by the layout engine, so users can add a new event association without calculating absolute <code>lane_order</code> values.</p>
 </section>
 <section id="implementation-tasks-2" class="level3">
 <h3 class="anchored" data-anchor-id="implementation-tasks-2">Implementation Tasks</h3>
 <ul class="task-list">
-<li><label><input type="checkbox" checked="">Create <code>LaneLayoutFile.hpp/.cpp</code> (<code>DataViewer_Widget/Ordering/</code>): define <code>LaneLayoutDisplayedSeries { std::string key; std::string color; }</code> and <code>LaneLayoutFile { int version; std::vector&lt;LaneLayoutDisplayedSeries&gt; displayed_series; std::map&lt;std::string, SeriesLaneOverrideData&gt; series_lane_overrides; std::map&lt;std::string, LaneOverrideData&gt; lane_overrides; }</code>. Implement <code>serializeLaneLayout()</code> and <code>deserializeLaneLayout()</code> via <code>rfl::json</code>.</label></li>
+<li><label><input type="checkbox" checked="">Define <code>LaneLayoutFile</code> in <code>DataViewerStateData.hpp</code> as a versioned profile with <code>lanes</code> and <code>event_associations</code>.</label></li>
 <li><label><input type="checkbox" checked="">Edit <code>DataViewerPropertiesWidget.ui</code>: add a <code>QGroupBox</code> “Layout Presets” (after the “Actions” group) with buttons <code>save_lane_layout_button</code> (“Save Lane Layout”) and <code>load_lane_layout_button</code> (“Load Lane Layout”).</label></li>
 <li><label><input type="checkbox" checked="">Add signals to <code>DataViewerPropertiesWidget.hpp</code>: <code>void saveLaneLayoutRequested()</code> and <code>void loadLaneLayoutRequested()</code>.</label></li>
 <li><label><input type="checkbox" checked="">Wire buttons in <code>DataViewerPropertiesWidget.cpp</code> → emit signals.</label></li>
 <li><label><input type="checkbox" checked="">Wire signals in <code>DataViewerWidgetRegistration.cpp</code> → new <code>DataViewer_Widget</code> slots.</label></li>
-<li><label><input type="checkbox" checked="">Implement <code>DataViewer_Widget::_saveLaneLayout()</code>: collect currently-displayed keys and their colors from <code>OpenGLWidget</code>, build <code>LaneLayoutFile</code> from <code>_state-&gt;data()</code> overrides, serialize, open <code>QFileDialog::getSaveFileName</code> (filter <code>*.dvlayout</code>) and write.</label></li>
-<li><label><input type="checkbox" checked="">Implement <code>DataViewer_Widget::_loadLaneLayout()</code>: open <code>QFileDialog::getOpenFileName</code>, parse with <code>deserializeLaneLayout</code>, for each entry in <code>displayed_series</code> call <code>DataManager::getType(key)</code> — skip if not found, call <code>addFeature(key, color)</code> if not already displayed. Apply all <code>setSeriesLaneOverride</code> and <code>setLaneOverride</code> entries from the file, then call <code>updateCanvas()</code>.</label></li>
+<li><label><input type="checkbox" checked="">Implement <code>DataViewer_Widget::_saveLaneLayout()</code>: build a profile from stable lane IDs, lane membership, colors, visibility, and event associations; serialize and write JSON.</label></li>
+<li><label><input type="checkbox" checked="">Implement <code>DataViewer_Widget::_loadLaneLayout()</code>: parse the profile, add/update named series, map lanes and associations into <code>DataViewerState</code> overrides, then call <code>updateCanvas()</code>.</label></li>
 <li><label><input type="checkbox" checked="">Add tests in <code>LaneLayoutFile.test.cpp</code> or <code>DataViewer_Widget.test.cpp</code>: roundtrip serialize/deserialize; verify that auto-add adds missing series and skips absent ones.</label></li>
 </ul>
 </section>
 <section id="primary-files-6" class="level3">
 <h3 class="anchored" data-anchor-id="primary-files-6">Primary Files</h3>
 <ul>
-<li><code>src/WhiskerToolbox/DataViewer_Widget/Ordering/LaneLayoutFile.hpp/.cpp</code> — new</li>
+<li><code>src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerStateData.hpp</code> — <code>LaneLayoutFile</code> profile schema</li>
 <li><code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.ui</code> — new GroupBox + buttons</li>
 <li><code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.hpp</code> — new signals</li>
 <li><code>src/WhiskerToolbox/DataViewer_Widget/UI/DataViewerPropertiesWidget.cpp</code> — button wiring</li>
