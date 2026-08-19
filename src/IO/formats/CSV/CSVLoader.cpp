@@ -616,17 +616,23 @@ BatchLoadResult CSVLoader::loadDigitalEventCSVBatch(std::string const & filepath
             if (config.contains("scale")) opts.scale = config["scale"];
             if (config.contains("scale_divide")) opts.scale_divide = config["scale_divide"];
 
-            auto loaded_series = ::load(opts);
+            auto loaded_entries = ::load(opts);
 
-            if (loaded_series.empty()) {
+            if (loaded_entries.empty()) {
                 return BatchLoadResult::error("No data loaded from directory: " + filepath);
             }
 
-            std::vector<LoadResult> results;
-            results.reserve(loaded_series.size());
+            bool const append_filename = config.value("append_filename", false);
 
-            for (auto & series: loaded_series) {
-                results.emplace_back(std::move(series));
+            std::vector<LoadResult> results;
+            results.reserve(loaded_entries.size());
+
+            for (auto & entry: loaded_entries) {
+                LoadResult load_result(std::move(entry.series));
+                if (append_filename) {
+                    load_result.name = entry.file_stem;
+                }
+                results.emplace_back(std::move(load_result));
             }
 
             std::cout << "CSVLoader: Batch loaded " << results.size()

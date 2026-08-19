@@ -351,7 +351,11 @@ bool tryBatchLoadFromRegistry(
         std::string channel_name;
 
         if (item.value("multi_file", false)) {
-            channel_name = name + "_" + std::to_string(i);
+            if (item.value("append_filename", false) && !result.name.empty()) {
+                channel_name = name + "_" + result.name;
+            } else {
+                channel_name = name + "_" + std::to_string(i);
+            }
         } else if (batch_result.results.size() == 1) {
             // Single result without a name - use base name
             channel_name = name;

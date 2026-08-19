@@ -572,6 +572,40 @@ TEST_CASE("DigitalEvent CSV Integration - Multi-File Directory Loading",
         REQUIRE(spikes0->getStoredEvent(0).getValue() == 42);
         REQUIRE(spikes0->getStoredEvent(1).getValue() == 84);
     }
+
+    SECTION("append_filename registers spikes_23a, spikes_24a, spikes_25a") {
+        auto spikes_dir = temp_dir.getFilePath("spikes_named");
+        REQUIRE(digital_event_scenarios::writeMultiFileEventDirectory(
+                spikes_dir,
+                {{"23a.txt", DigitalEventSeriesBuilder().withEvents({100, 200}).build()},
+                 {"24a.txt", DigitalEventSeriesBuilder().withEvents({150, 250}).build()},
+                 {"25a.txt", DigitalEventSeriesBuilder().withEvents({175, 275}).build()}}));
+
+        json config = json::array({{{"data_type", "digital_event"},
+                                    {"name", "spikes"},
+                                    {"filepath", spikes_dir.string()},
+                                    {"format", "csv"},
+                                    {"multi_file", true},
+                                    {"append_filename", true},
+                                    {"event_column", 0}}});
+
+        DataManager dm;
+        load_data_from_json_config(&dm, config, temp_dir.getPathString());
+
+        auto spikes23a = dm.getData<DigitalEventSeries>("spikes_23a");
+        auto spikes24a = dm.getData<DigitalEventSeries>("spikes_24a");
+        auto spikes25a = dm.getData<DigitalEventSeries>("spikes_25a");
+
+        REQUIRE(spikes23a != nullptr);
+        REQUIRE(spikes24a != nullptr);
+        REQUIRE(spikes25a != nullptr);
+
+        REQUIRE(spikes23a->size() == 2);
+        REQUIRE(spikes24a->size() == 2);
+        REQUIRE(spikes25a->size() == 2);
+
+        REQUIRE(dm.getData<DigitalEventSeries>("spikes_0") == nullptr);
+    }
 }
 
 //=============================================================================

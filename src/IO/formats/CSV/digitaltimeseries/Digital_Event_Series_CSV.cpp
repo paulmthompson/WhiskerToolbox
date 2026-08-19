@@ -163,8 +163,8 @@ std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventLoaderOptions cons
     return result;
 }
 
-std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventMultiFileLoaderOptions const & options) {
-    std::vector<std::shared_ptr<DigitalEventSeries>> result;
+std::vector<CSVEventMultiFileLoadEntry> load(CSVEventMultiFileLoaderOptions const & options) {
+    std::vector<CSVEventMultiFileLoadEntry> result;
 
     if (options.event_column < 0) {
         std::cerr << "Error loading digital event series: event_column must be non-negative, got "
@@ -232,7 +232,7 @@ std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEventMultiFileLoaderOpt
                       << loaded.size() << " series; using the first" << std::endl;
         }
 
-        result.push_back(loaded.front());
+        result.push_back({file_path.stem().string(), loaded.front()});
     }
 
     if (result.empty()) {

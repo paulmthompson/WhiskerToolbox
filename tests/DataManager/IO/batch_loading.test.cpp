@@ -508,6 +508,27 @@ TEST_CASE_METHOD(BatchLoadingTestFixture,
         REQUIRE(first->getStoredEvent(0).getValue() == 100); // a.txt
         REQUIRE(second->getStoredEvent(0).getValue() == 200);// b.txt
     }
+
+    SECTION("append_filename sets result.name to file stem") {
+        auto dir_path = createMultiFileDigitalEventDirectory();
+        REQUIRE(std::filesystem::exists(dir_path));
+
+        json config;
+        config["format"] = "csv";
+        config["multi_file"] = true;
+        config["event_column"] = 0;
+        config["append_filename"] = true;
+
+        BatchLoadResult result = loader.loadBatch(dir_path.string(),
+                                                  DM_DataType::DigitalEvent,
+                                                  config);
+
+        REQUIRE(result.success);
+        REQUIRE(result.results.size() == 3);
+        REQUIRE(result.results[0].name == "23a");
+        REQUIRE(result.results[1].name == "24a");
+        REQUIRE(result.results[2].name == "25a");
+    }
 }
 
 // ============================================================================

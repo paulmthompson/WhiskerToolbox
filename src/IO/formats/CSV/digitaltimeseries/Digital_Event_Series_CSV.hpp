@@ -80,6 +80,14 @@ struct CSVEventMultiFileLoaderOptions {
 };
 
 /**
+ * @brief One DigitalEventSeries loaded from a single file in a multi-file directory load.
+ */
+struct CSVEventMultiFileLoadEntry {
+    std::string file_stem;
+    std::shared_ptr<DigitalEventSeries> series;
+};
+
+/**
  * @struct CSVEventSaverOptions
  *
  * @brief Options for saving DigitalEventSeries data to a CSV file.
@@ -134,10 +142,9 @@ DATAMANAGERIO_EXPORT std::vector<std::shared_ptr<DigitalEventSeries>> load(CSVEv
  * @brief Load digital event series from a directory of CSV or TXT files.
  *
  * @param options Configuration options for multi-file loading
- * @return Vector of shared pointers to DigitalEventSeries objects, one per matched file
- *         in alphabetical filename order
+ * @return One entry per matched file in alphabetical filename order, with file stem metadata
  */
-DATAMANAGERIO_EXPORT std::vector<std::shared_ptr<DigitalEventSeries>> load(
+DATAMANAGERIO_EXPORT std::vector<CSVEventMultiFileLoadEntry> load(
         CSVEventMultiFileLoaderOptions const & options);
 
 template<>

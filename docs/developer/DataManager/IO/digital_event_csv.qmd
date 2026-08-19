@@ -9,7 +9,7 @@ Two batch modes are supported:
 
 - **Identifier column**: One file with multiple columns; events are grouped by a label column.
 - **Multi-file directory**: One timestamp file per series; files are loaded in alphabetical order
-  and registered as `{name}_0`, `{name}_1`, …
+  and registered as `{name}_0`, `{name}_1`, … or `{name}_{file_stem}` when `append_filename` is true.
 
 ## File Location
 
@@ -49,6 +49,7 @@ src/IO/formats/CSV/digitaltimeseries/
   "name": "spikes",
   "format": "csv",
   "multi_file": true,
+  "append_filename": true,
   "scale": 30000,
   "event_column": 0,
   "delimiter": "\t",
@@ -56,6 +57,9 @@ src/IO/formats/CSV/digitaltimeseries/
   "clock": "master"
 }
 ```
+
+With `append_filename: true`, each series is registered as `{name}_{file_stem}` (e.g.
+`spikes_23a` from `23a.txt`). Without it, series use numeric suffixes (`spikes_0`, …).
 
 `filepath` must resolve to a directory when `multi_file` is true. Without `file_pattern`,
 all `.csv` and `.txt` files in the directory are loaded. Files are sorted alphabetically by
