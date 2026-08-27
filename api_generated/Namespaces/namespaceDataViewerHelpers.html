@@ -474,7 +474,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structCorePlotting_1_1RenderablePolyLineBatch.html">CorePlotting::RenderablePolyLineBatch</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceDataViewerHelpers.html#function-buildanalogseriesbatchcached">buildAnalogSeriesBatchCached</a></strong>(<a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> const &amp; series, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; master_time_frame, <a href="../../api_generated/Classes/structDataViewerHelpers_1_1AnalogBatchParams.html">AnalogBatchParams</a> const &amp; params, glm::mat4 const &amp; model_matrix, <a href="../../api_generated/Classes/classDataViewer_1_1AnalogVertexCache.html">DataViewer::AnalogVertexCache</a> &amp; cache)<br>Build analog batch using vertex cache for efficient scrolling.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceDataViewerHelpers.html#function-buildanalogseriesbatchcached">buildAnalogSeriesBatchCached</a></strong>(<a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> const &amp; series, std::shared_ptr&lt; <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> &gt; const &amp; master_time_frame, <a href="../../api_generated/Classes/structDataViewerHelpers_1_1AnalogBatchParams.html">AnalogBatchParams</a> const &amp; params, glm::mat4 const &amp; model_matrix, <a href="../../api_generated/Classes/classDataViewer_1_1AnalogVertexCache.html">DataViewer::AnalogVertexCache</a> &amp; cache, std::vector&lt; float &gt; * scratch_buffer =nullptr)<br>Build analog batch using vertex cache for efficient scrolling.</td>
 </tr>
 </tbody>
 </table>
@@ -631,8 +631,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> TimeFrame <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> master_time_frame<span class="op">,</span></span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    AnalogBatchParams <span class="at">const</span> <span class="op">&amp;</span> params<span class="op">,</span></span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    glm<span class="op">::</span>mat4 <span class="at">const</span> <span class="op">&amp;</span> model_matrix<span class="op">,</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    DataViewer<span class="op">::</span>AnalogVertexCache <span class="op">&amp;</span> cache</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>    DataViewer<span class="op">::</span>AnalogVertexCache <span class="op">&amp;</span> cache<span class="op">,</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="op">*</span> scratch_buffer <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Build analog batch using vertex cache for efficient scrolling.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -652,7 +653,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ol>
 <p>For typical scrolling (scroll by 10-100 points out of 100K visible), this is ~26-130x faster than regenerating all vertices.</p>
 <hr>
-<p>Updated on 2026-08-19 at 19:16:24 +0000</p>
+<p>Updated on 2026-08-27 at 20:53:31 +0000</p>
 
 
 </section>

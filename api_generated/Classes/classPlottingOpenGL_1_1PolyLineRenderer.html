@@ -364,8 +364,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-hasdata" id="toc-function-hasdata" class="nav-link" data-scroll-target="#function-hasdata">function hasData</a></li>
   <li><a href="#function-cleardata" id="toc-function-cleardata" class="nav-link" data-scroll-target="#function-cleardata">function clearData</a></li>
   <li><a href="#function-uploaddata" id="toc-function-uploaddata" class="nav-link" data-scroll-target="#function-uploaddata">function uploadData</a></li>
+  <li><a href="#function-uploadbatches" id="toc-function-uploadbatches" class="nav-link" data-scroll-target="#function-uploadbatches">function uploadBatches</a></li>
   <li><a href="#function-setlinethickness" id="toc-function-setlinethickness" class="nav-link" data-scroll-target="#function-setlinethickness">function setLineThickness</a></li>
   <li><a href="#function-isusingshadermanager" id="toc-function-isusingshadermanager" class="nav-link" data-scroll-target="#function-isusingshadermanager">function isUsingShaderManager</a></li>
+  <li><a href="#function-getlastuploadedbytes" id="toc-function-getlastuploadedbytes" class="nav-link" data-scroll-target="#function-getlastuploadedbytes">function getLastUploadedBytes</a></li>
+  <li><a href="#function-waslastuploadincremental" id="toc-function-waslastuploadincremental" class="nav-link" data-scroll-target="#function-waslastuploadincremental">function wasLastUploadIncremental</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -447,11 +450,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classPlottingOpenGL_1_1PolyLineRenderer.html#function-setlinethickness">setLineThickness</a></strong>(float thickness)<br>Set the line thickness for all lines in the batch.</td>
+<td><strong><a href="../../api_generated/Classes/classPlottingOpenGL_1_1PolyLineRenderer.html#function-uploadbatches">uploadBatches</a></strong>(std::span&lt; <a href="../../api_generated/Classes/structCorePlotting_1_1RenderablePolyLineBatch.html">CorePlotting::RenderablePolyLineBatch</a> const &gt; batches)<br>Upload multiple polyline batches to GPU memory in a single combined pass.</td>
 </tr>
 <tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classPlottingOpenGL_1_1PolyLineRenderer.html#function-setlinethickness">setLineThickness</a></strong>(float thickness)<br>Set the line thickness for all lines in the batch.</td>
+</tr>
+<tr class="even">
 <td>bool</td>
 <td><strong><a href="../../api_generated/Classes/classPlottingOpenGL_1_1PolyLineRenderer.html#function-isusingshadermanager">isUsingShaderManager</a></strong>() const<br>Check if using <a href="../../api_generated/Classes/classShaderManager.html">ShaderManager</a> (vs embedded fallback).</td>
+</tr>
+<tr class="odd">
+<td>size_t</td>
+<td><strong><a href="../../api_generated/Classes/classPlottingOpenGL_1_1PolyLineRenderer.html#function-getlastuploadedbytes">getLastUploadedBytes</a></strong>() const<br>Number of bytes uploaded during the last upload call.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classPlottingOpenGL_1_1PolyLineRenderer.html#function-waslastuploadincremental">wasLastUploadIncremental</a></strong>() const<br>Whether the last upload was fulfilled via incremental sub-buffer updates.</td>
 </tr>
 </tbody>
 </table>
@@ -606,26 +621,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <ul>
 <li><strong>batch</strong> The polyline batch to upload</li>
 </ul>
-<p><strong>Precondition</strong>:</p>
+<p>Appends the batch’s vertex data to an internal combined buffer and uploads the data to the VBO via persistent buffer management (<code>glBufferSubData</code>). Batch metadata (topology, colors, model matrix) is stored CPU-side.</p>
+</section>
+<section id="function-uploadbatches" class="level3">
+<h3 class="anchored" data-anchor-id="function-uploadbatches">function uploadBatches</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> uploadBatches<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>span<span class="op">&lt;</span> CorePlotting<span class="op">::</span>RenderablePolyLineBatch <span class="at">const</span> <span class="op">&gt;</span> batches</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Upload multiple polyline batches to GPU memory in a single combined pass.</p>
+<p><strong>Parameters</strong>:</p>
 <ul>
-<li><a href="../../api_generated/Classes/classPlottingOpenGL_1_1PolyLineRenderer.html#function-initialize">initialize()</a> must have been called and returned true before the first call (enforcement: runtime_check — early return if !m_initialized)</li>
-<li>A valid OpenGL context must be current on the calling thread (enforcement: none) [CRITICAL] — m_vbo.allocate() is called immediately (not deferred); unlike <a href="../../api_generated/Classes/classPlottingOpenGL_1_1RectangleRenderer.html">RectangleRenderer</a>, GPU upload happens at uploadData time.</li>
-<li>batch.vertices.size() % 2 == 0 (vertex buffer must contain complete xy pairs) (enforcement: none) [IMPORTANT] — an odd count silently drops the trailing float; batch.total_vertices is computed as vertices.size() / 2, so the partial vertex is ignored but the discarded float is still uploaded to the VBO.</li>
-<li>batch.line_start_indices.size() == batch.line_vertex_counts.size() (topology arrays must be parallel) (enforcement: none) [IMPORTANT] — both are iterated in parallel in <a href="../../api_generated/Classes/classPlottingOpenGL_1_1PolyLineRenderer.html#function-render">render()</a> without a size guard.</li>
-<li>For each i: batch.line_start_indices[i] + batch.line_vertex_counts[i] &lt;= batch.vertices.size() / 2 (no index exceeds the vertex buffer) (enforcement: none) [CRITICAL] — <a href="../../api_generated/Classes/classPlottingOpenGL_1_1PolyLineRenderer.html#function-render">render()</a> passes these directly to glDrawArrays; an out-of-range index causes the GPU to read beyond the VBO (undefined driver behaviour).</li>
-<li>batch.thickness &gt; 0 (required by glLineWidth in <a href="../../api_generated/Classes/classPlottingOpenGL_1_1PolyLineRenderer.html#function-render">render()</a>) (enforcement: none) [LOW]</li>
-<li>m_all_vertices.size() * sizeof(float) + batch.vertices.size() * sizeof(float) &lt;= INT_MAX (narrowing cast to int for m_vbo.allocate()) (enforcement: none) [LOW]</li>
+<li><strong>batches</strong> Span of batches to upload</li>
 </ul>
-<p>Appends the batch’s vertex data to an internal combined buffer and immediately re-uploads the entire buffer to the VBO via <code>glBufferData</code>. Batch metadata (topology, colors, model matrix) is stored CPU-side.</p>
-<p>Each call <strong>appends</strong> — call <a href="../../api_generated/Classes/classPlottingOpenGL_1_1PolyLineRenderer.html#function-cleardata">clearData()</a> between frames. Because the full combined vertex buffer is re-allocated and re-uploaded on every call, repeated calls within a frame are O(N²) in total bytes uploaded to the GPU.</p>
-<p>An empty <code>batch.vertices</code> is handled gracefully (early return). Per-line colors (<code>batch.colors</code>) whose size does not match <code>batch.line_start_indices.size()</code> fall back silently to the global color in <a href="../../api_generated/Classes/classPlottingOpenGL_1_1PolyLineRenderer.html#function-render">render()</a> — no precondition is required for that field.</p>
-<p>The batch can be modified or destroyed after this call without affecting the renderer.</p>
+<p>Pre-allocates combined buffer memory and uploads all vertex data in a single GPU buffer write (using glBufferSubData when persistent capacity allows).</p>
 </section>
 <section id="function-setlinethickness" class="level3">
 <h3 class="anchored" data-anchor-id="function-setlinethickness">function setLineThickness</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setLineThickness<span class="op">(</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> thickness</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setLineThickness<span class="op">(</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> thickness</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Set the line thickness for all lines in the batch.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -635,10 +649,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-isusingshadermanager" class="level3">
 <h3 class="anchored" data-anchor-id="function-isusingshadermanager">function isUsingShaderManager</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> isUsingShaderManager<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> isUsingShaderManager<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Check if using <a href="../../api_generated/Classes/classShaderManager.html">ShaderManager</a> (vs embedded fallback).</p>
+</section>
+<section id="function-getlastuploadedbytes" class="level3">
+<h3 class="anchored" data-anchor-id="function-getlastuploadedbytes">function getLastUploadedBytes</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">size_t</span> getLastUploadedBytes<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Number of bytes uploaded during the last upload call.</p>
+</section>
+<section id="function-waslastuploadincremental" class="level3">
+<h3 class="anchored" data-anchor-id="function-waslastuploadincremental">function wasLastUploadIncremental</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> wasLastUploadIncremental<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether the last upload was fulfilled via incremental sub-buffer updates.</p>
 <hr>
-<p>Updated on 2026-08-19 at 19:16:23 +0000</p>
+<p>Updated on 2026-08-27 at 20:53:30 +0000</p>
 
 
 </section>

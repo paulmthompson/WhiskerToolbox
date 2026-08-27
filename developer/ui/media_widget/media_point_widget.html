@@ -1621,12 +1621,12 @@ Media_Window::_plotPointData() (rendering)</code></pre>
 <tr class="odd">
 <td>Select point</td>
 <td>Click</td>
-<td>Finds nearest point within threshold, highlights in yellow</td>
+<td>Uses <code>Media_Window::findEntityAtPosition()</code> (same hit-test as rendering) and highlights in yellow</td>
 </tr>
 <tr class="even">
 <td>Move point</td>
 <td>Ctrl+Click</td>
-<td>Moves selected point to click position</td>
+<td>Moves selected point to click position (data coordinates)</td>
 </tr>
 <tr class="odd">
 <td>Add point</td>

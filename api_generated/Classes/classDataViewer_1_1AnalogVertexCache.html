@@ -368,6 +368,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-appendvertices" id="toc-function-appendvertices" class="nav-link" data-scroll-target="#function-appendvertices">function appendVertices</a></li>
   <li><a href="#function-setvertices" id="toc-function-setvertices" class="nav-link" data-scroll-target="#function-setvertices">function setVertices</a></li>
   <li><a href="#function-getverticesforrange" id="toc-function-getverticesforrange" class="nav-link" data-scroll-target="#function-getverticesforrange">function getVerticesForRange</a></li>
+  <li><a href="#function-extractverticesforrange" id="toc-function-extractverticesforrange" class="nav-link" data-scroll-target="#function-extractverticesforrange">function extractVerticesForRange</a></li>
+  <li><a href="#function-getverticesforrangedecimated" id="toc-function-getverticesforrangedecimated" class="nav-link" data-scroll-target="#function-getverticesforrangedecimated">function getVerticesForRangeDecimated</a></li>
+  <li><a href="#function-extractverticesforrangedecimated" id="toc-function-extractverticesforrangedecimated" class="nav-link" data-scroll-target="#function-extractverticesforrangedecimated">function extractVerticesForRangeDecimated</a></li>
   <li><a href="#function-size" id="toc-function-size" class="nav-link" data-scroll-target="#function-size">function size</a></li>
   <li><a href="#function-capacity" id="toc-function-capacity" class="nav-link" data-scroll-target="#function-capacity">function capacity</a></li>
   <li><a href="#function-utilizationratio" id="toc-function-utilizationratio" class="nav-link" data-scroll-target="#function-utilizationratio">function utilizationRatio</a></li>
@@ -470,14 +473,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classDataViewer_1_1AnalogVertexCache.html#function-getverticesforrange">getVerticesForRange</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end, <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> x_origin_master_absolute_time) const<br>Extract vertices for a specific time range.</td>
 </tr>
 <tr class="odd">
-<td>size_t</td>
-<td><strong><a href="../../api_generated/Classes/classDataViewer_1_1AnalogVertexCache.html#function-size">size</a></strong>() const<br>Get statistics about cache usage.</td>
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classDataViewer_1_1AnalogVertexCache.html#function-extractverticesforrange">extractVerticesForRange</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end, <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> x_origin_master_absolute_time, std::vector&lt; float &gt; &amp; out_buffer) const<br>Extract vertices for a specific time range into a caller-supplied buffer.</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; float &gt;</td>
+<td><strong><a href="../../api_generated/Classes/classDataViewer_1_1AnalogVertexCache.html#function-getverticesforrangedecimated">getVerticesForRangeDecimated</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end, int bucket_count, <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> x_origin_master_absolute_time) const<br>Extract vertices for a specific time range with fast-path min-max decimation.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classDataViewer_1_1AnalogVertexCache.html#function-extractverticesforrangedecimated">extractVerticesForRangeDecimated</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> start, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> end, int bucket_count, <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> x_origin_master_absolute_time, std::vector&lt; float &gt; &amp; out_buffer) const<br>Extract decimated vertices into a caller-supplied buffer.</td>
 </tr>
 <tr class="even">
 <td>size_t</td>
-<td><strong><a href="../../api_generated/Classes/classDataViewer_1_1AnalogVertexCache.html#function-capacity">capacity</a></strong>() const</td>
+<td><strong><a href="../../api_generated/Classes/classDataViewer_1_1AnalogVertexCache.html#function-size">size</a></strong>() const<br>Get statistics about cache usage.</td>
 </tr>
 <tr class="odd">
+<td>size_t</td>
+<td><strong><a href="../../api_generated/Classes/classDataViewer_1_1AnalogVertexCache.html#function-capacity">capacity</a></strong>() const</td>
+</tr>
+<tr class="even">
 <td>float</td>
 <td><strong><a href="../../api_generated/Classes/classDataViewer_1_1AnalogVertexCache.html#function-utilizationratio">utilizationRatio</a></strong>() const</td>
 </tr>
@@ -744,20 +759,77 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><code>start</code> is not found in the buffer (beyond the cached range)</li>
 </ul>
 </section>
+<section id="function-extractverticesforrange" class="level3">
+<h3 class="anchored" data-anchor-id="function-extractverticesforrange">function extractVerticesForRange</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> extractVerticesForRange<span class="op">(</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start<span class="op">,</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end<span class="op">,</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    ClockTicks x_origin_master_absolute_time<span class="op">,</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="op">&amp;</span> out_buffer</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Extract vertices for a specific time range into a caller-supplied buffer.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>start</strong> Start of range to extract (inclusive)</li>
+<li><strong>end</strong> End of range to extract (exclusive)</li>
+<li><strong>x_origin_master_absolute_time</strong> Absolute physical time at the current view’s left edge</li>
+<li><strong>out_buffer</strong> Output buffer to populate in-place</li>
+</ul>
+<p>Reuses the capacity of <code>out_buffer</code> (via .clear()), eliminating dynamic heap allocations.</p>
+</section>
+<section id="function-getverticesforrangedecimated" class="level3">
+<h3 class="anchored" data-anchor-id="function-getverticesforrangedecimated">function getVerticesForRangeDecimated</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> getVerticesForRangeDecimated<span class="op">(</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start<span class="op">,</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end<span class="op">,</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> bucket_count<span class="op">,</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    ClockTicks x_origin_master_absolute_time</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Extract vertices for a specific time range with fast-path min-max decimation.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>start</strong> Start of range to extract (inclusive)</li>
+<li><strong>end</strong> End of range to extract (exclusive)</li>
+<li><strong>bucket_count</strong> Number of temporal buckets to decimate into</li>
+<li><strong>x_origin_master_absolute_time</strong> Absolute physical time at the current view’s left edge</li>
+</ul>
+<p><strong>Return</strong>: Flat vertex array [x0,y0,x1,y1,…] of decimated points</p>
+<p>Directly downsamples cached vertices into min-max pairs across <code>bucket_count</code> buckets. Avoids intermediate buffer allocations and floating-point bucket hashing.</p>
+</section>
+<section id="function-extractverticesforrangedecimated" class="level3">
+<h3 class="anchored" data-anchor-id="function-extractverticesforrangedecimated">function extractVerticesForRangeDecimated</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> extractVerticesForRangeDecimated<span class="op">(</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex start<span class="op">,</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex end<span class="op">,</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> bucket_count<span class="op">,</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    ClockTicks x_origin_master_absolute_time<span class="op">,</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="op">&amp;</span> out_buffer</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Extract decimated vertices into a caller-supplied buffer.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>start</strong> Start of range to extract (inclusive)</li>
+<li><strong>end</strong> End of range to extract (exclusive)</li>
+<li><strong>bucket_count</strong> Number of temporal buckets to decimate into</li>
+<li><strong>x_origin_master_absolute_time</strong> Absolute physical time at the current view’s left edge</li>
+<li><strong>out_buffer</strong> Output buffer to populate in-place</li>
+</ul>
+<p>Reuses the capacity of <code>out_buffer</code> (via .clear()), eliminating dynamic heap allocations.</p>
+</section>
 <section id="function-size" class="level3">
 <h3 class="anchored" data-anchor-id="function-size">function size</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">size_t</span> size<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">size_t</span> size<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get statistics about cache usage.</p>
 </section>
 <section id="function-capacity" class="level3">
 <h3 class="anchored" data-anchor-id="function-capacity">function capacity</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">size_t</span> capacity<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">size_t</span> capacity<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-utilizationratio" class="level3">
 <h3 class="anchored" data-anchor-id="function-utilizationratio">function utilizationRatio</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">float</span> utilizationRatio<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">float</span> utilizationRatio<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-19 at 19:16:24 +0000</p>
+<p>Updated on 2026-08-27 at 20:53:31 +0000</p>
 
 
 </section>

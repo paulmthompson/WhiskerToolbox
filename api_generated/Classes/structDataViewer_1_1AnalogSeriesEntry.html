@@ -358,6 +358,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#variable-layout_transform" id="toc-variable-layout_transform" class="nav-link" data-scroll-target="#variable-layout_transform">variable layout_transform</a></li>
   <li><a href="#variable-data_cache" id="toc-variable-data_cache" class="nav-link" data-scroll-target="#variable-data_cache">variable data_cache</a></li>
   <li><a href="#variable-vertex_cache" id="toc-variable-vertex_cache" class="nav-link" data-scroll-target="#variable-vertex_cache">variable vertex_cache</a></li>
+  <li><a href="#variable-scratch_vertices" id="toc-variable-scratch_vertices" class="nav-link" data-scroll-target="#variable-scratch_vertices">variable scratch_vertices</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -416,6 +417,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><a href="../../api_generated/Classes/classDataViewer_1_1AnalogVertexCache.html">AnalogVertexCache</a></td>
 <td><strong><a href="../../api_generated/Classes/structDataViewer_1_1AnalogSeriesEntry.html#variable-vertex-cache">vertex_cache</a></strong> <br>Vertex cache for efficient scrolling (initialized lazily)</td>
 </tr>
+<tr class="odd">
+<td>std::vector&lt; float &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structDataViewer_1_1AnalogSeriesEntry.html#variable-scratch-vertices">scratch_vertices</a></strong> <br>Scratch vertex buffer to eliminate per-frame allocations during scene rebuilds.</td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -451,8 +456,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="variable-vertex_cache">variable vertex_cache</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>AnalogVertexCache vertex_cache<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Vertex cache for efficient scrolling (initialized lazily)</p>
+</section>
+<section id="variable-scratch_vertices" class="level3">
+<h3 class="anchored" data-anchor-id="variable-scratch_vertices">variable scratch_vertices</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> scratch_vertices<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Scratch vertex buffer to eliminate per-frame allocations during scene rebuilds.</p>
 <hr>
-<p>Updated on 2026-08-19 at 19:16:24 +0000</p>
+<p>Updated on 2026-08-27 at 20:53:31 +0000</p>
 
 
 </section>

@@ -383,7 +383,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#full-pipeline-results-with-normalization" id="toc-full-pipeline-results-with-normalization" class="nav-link" data-scroll-target="#full-pipeline-results-with-normalization">Full Pipeline Results (With Normalization)</a></li>
   <li><a href="#isolated-normalization-phase-analysis" id="toc-isolated-normalization-phase-analysis" class="nav-link" data-scroll-target="#isolated-normalization-phase-analysis">Isolated Normalization Phase Analysis</a></li>
   <li><a href="#phase-breakdown-where-does-the-overhead-come-from" id="toc-phase-breakdown-where-does-the-overhead-come-from" class="nav-link" data-scroll-target="#phase-breakdown-where-does-the-overhead-come-from">Phase Breakdown: Where Does the Overhead Come From?</a></li>
-  <li><a href="#context-aware-transform-infrastructure" id="toc-context-aware-transform-infrastructure" class="nav-link" data-scroll-target="#context-aware-transform-infrastructure">Context-Aware Transform Infrastructure</a></li>
+  <li><a href="#store-based-projection-infrastructure" id="toc-store-based-projection-infrastructure" class="nav-link" data-scroll-target="#store-based-projection-infrastructure">Store-Based Projection Infrastructure</a></li>
   <li><a href="#why-is-gather-slower-for-normalization" id="toc-why-is-gather-slower-for-normalization" class="nav-link" data-scroll-target="#why-is-gather-slower-for-normalization">Why Is Gather Slower for Normalization?</a></li>
   <li><a href="#performance-sweet-spot" id="toc-performance-sweet-spot" class="nav-link" data-scroll-target="#performance-sweet-spot">Performance Sweet Spot</a></li>
   <li><a href="#conclusion-on-normalization" id="toc-conclusion-on-normalization" class="nav-link" data-scroll-target="#conclusion-on-normalization">Conclusion on Normalization</a></li>
@@ -957,22 +957,22 @@ View 1000 (window around alignment 999) ──┘</code></pre>
 </tbody>
 </table>
 </section>
-<section id="context-aware-transform-infrastructure" class="level3">
-<h3 class="anchored" data-anchor-id="context-aware-transform-infrastructure">Context-Aware Transform Infrastructure</h3>
-<p>The gather approach uses the transform pipeline infrastructure:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">// Pattern: Context-aware value projection for each trial</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="kw">auto</span> projection_factory <span class="op">=</span> <span class="op">[](</span>TrialContext <span class="at">const</span><span class="op">&amp;</span> ctx<span class="op">)</span> <span class="op">-&gt;</span> ValueProjectionFn<span class="op">&lt;</span>EventWithId<span class="op">,</span> <span class="dt">float</span><span class="op">&gt;</span> <span class="op">{</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    NormalizeTimeParams params<span class="op">;</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>setContext<span class="op">(</span>ctx<span class="op">);</span>  <span class="co">// Inject trial alignment time</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">[</span>params<span class="op">](</span>EventWithId <span class="at">const</span><span class="op">&amp;</span> event<span class="op">)</span> <span class="op">-&gt;</span> <span class="dt">float</span> <span class="op">{</span></span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> normalizeTimeValue<span class="op">(</span>event<span class="op">.</span>time<span class="op">(),</span> params<span class="op">);</span></span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Build projections per trial</span></span>
+<section id="store-based-projection-infrastructure" class="level3">
+<h3 class="anchored" data-anchor-id="store-based-projection-infrastructure">Store-Based Projection Infrastructure</h3>
+<p>The gather approach uses <code>PipelineValueStore</code> populated by <code>buildGatherRowStore()</code>:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>ValueProjectionFactoryV2<span class="op">&lt;</span>EventWithId<span class="op">,</span> <span class="dt">float</span><span class="op">&gt;</span> projection_factory <span class="op">=</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="op">[](</span>PipelineValueStore <span class="at">const</span><span class="op">&amp;</span> store<span class="op">)</span> <span class="op">-&gt;</span> ValueProjectionFn<span class="op">&lt;</span>EventWithId<span class="op">,</span> <span class="dt">float</span><span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>        NormalizeTimeParams params<span class="op">;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int64_t</span> alignment <span class="op">=</span> store<span class="op">.</span>getInt<span class="op">(</span><span class="st">"alignment_time"</span><span class="op">).</span>value_or<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>setAlignmentTime<span class="op">(</span>TimeFrameIndex<span class="op">{</span>alignment<span class="op">});</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">[</span>params<span class="op">](</span>EventWithId <span class="at">const</span><span class="op">&amp;</span> event<span class="op">)</span> <span class="op">-&gt;</span> <span class="dt">float</span> <span class="op">{</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> normalizeTimeValue<span class="op">(</span>event<span class="op">.</span>time<span class="op">(),</span> params<span class="op">);</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> gathered<span class="op">.</span>size<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> ctx <span class="op">=</span> gathered<span class="op">.</span>buildContext<span class="op">(</span>i<span class="op">);</span>  <span class="co">// Get alignment info</span></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    projections<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> projection_factory<span class="op">(</span>ctx<span class="op">);</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> store <span class="op">=</span> buildGatherRowStore<span class="op">(</span>gathered<span class="op">,</span> i<span class="op">);</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    projections<span class="op">[</span>i<span class="op">]</span> <span class="op">=</span> projection_factory<span class="op">(</span>store<span class="op">);</span></span>
 <span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="why-is-gather-slower-for-normalization" class="level3">
@@ -980,7 +980,7 @@ View 1000 (window around alignment 999) ──┘</code></pre>
 <p>Several factors contribute to the 3.5x overhead:</p>
 <ol type="1">
 <li><strong>View Creation Overhead</strong>: Creating 1000 views takes ~240µs, amortized across the operation</li>
-<li><strong>Lambda Captures</strong>: Each trial’s projection captures its context parameters (NormalizeTimeParams)</li>
+<li><strong>Lambda Captures</strong>: Each trial’s projection captures its bound parameters (NormalizeTimeParams)</li>
 <li><strong>Virtual Dispatch</strong>: Type-erased storage adds indirection on each event access</li>
 <li><strong>Memory Layout</strong>: Events accessed via index indirection rather than contiguous array</li>
 <li><strong>Cache Locality</strong>: Jumping between indices and data arrays reduces cache efficiency</li>
@@ -1049,7 +1049,7 @@ View 1000 (window around alignment 999) ──┘</code></pre>
 <li><p><strong>Baseline normalization is simple and fast</strong> - Direct extraction + subtraction takes 429µs</p></li>
 <li><p><strong>Gather + projection adds abstraction overhead</strong> - 3.5x slower in isolation, but provides composability</p></li>
 <li><p><strong>The cost is reasonable for trial-aligned analysis</strong> - Additional 201µs for gather+normalization vs.&nbsp;gather alone is ~2.5% of the gather cost</p></li>
-<li><p><strong>Transform pipeline infrastructure is ready</strong> - Context-aware parameters enable flexible trial-based transformations</p></li>
+<li><p><strong>Transform pipeline infrastructure is ready</strong> - PipelineValueStore bindings enable flexible trial-based transformations</p></li>
 <li><p><strong>Use baseline for performance-critical tight loops</strong> - Use gather for analysis pipelines where composability matters more than raw speed</p></li>
 </ol>
 <p>For raster plot generation where you’re only doing visualization, stick with baseline or raw vectors. For interactive analysis dashboards where you compute multiple metrics per trial, gather+transforms provide better code organization and reusability with acceptable performance cost.</p>

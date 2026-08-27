@@ -461,33 +461,39 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTableWidget</span> <span class="op">*</span> _lane_table <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
 <span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- Rendering stats labels ---</span></span>
-<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _batch_counts_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
-<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _vertex_count_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
-<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _entity_count_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
-<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _rebuild_count_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
-<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- Coordinate inspector labels ---</span></span>
-<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _canvas_pos_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
-<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _ndc_pos_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
-<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _world_pos_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
-<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _data_pos_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
-<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _series_under_cursor_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
-<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- Overlay toggle checkboxes ---</span></span>
-<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QCheckBox</span> <span class="op">*</span> _lane_boundaries_cb <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
-<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QCheckBox</span> <span class="op">*</span> _origin_markers_cb <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
-<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QCheckBox</span> <span class="op">*</span> _crosshair_cb <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
-<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _buildUI<span class="op">();</span></span>
-<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _connectSignals<span class="op">();</span></span>
-<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _refreshViewState<span class="op">();</span></span>
-<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _refreshLaneTable<span class="op">();</span></span>
-<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _refreshRenderingStats<span class="op">();</span></span>
-<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// DATAVIEWER_DEBUG_PANEL_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _fps_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _frame_time_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _rebuild_time_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _upload_time_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _draw_time_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _vertex_bytes_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _batch_counts_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _vertex_count_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _entity_count_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _rebuild_count_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- Coordinate inspector labels ---</span></span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _canvas_pos_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _ndc_pos_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _world_pos_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _data_pos_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QLabel</span> <span class="op">*</span> _series_under_cursor_label <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>    <span class="co">// --- Overlay toggle checkboxes ---</span></span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QCheckBox</span> <span class="op">*</span> _lane_boundaries_cb <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QCheckBox</span> <span class="op">*</span> _origin_markers_cb <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QCheckBox</span> <span class="op">*</span> _crosshair_cb <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _buildUI<span class="op">();</span></span>
+<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _connectSignals<span class="op">();</span></span>
+<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _refreshViewState<span class="op">();</span></span>
+<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _refreshLaneTable<span class="op">();</span></span>
+<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _refreshRenderingStats<span class="op">();</span></span>
+<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// DATAVIEWER_DEBUG_PANEL_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-08-19 at 19:16:26 +0000</p>
+<p>Updated on 2026-08-27 at 20:53:34 +0000</p>
 
 
 </section>

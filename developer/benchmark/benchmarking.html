@@ -1581,7 +1581,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#whats-fast-enough" id="toc-whats-fast-enough" class="nav-link" data-scroll-target="#whats-fast-enough">What’s Fast Enough?</a></li>
   <li><a href="#profiling-result-interpretation" id="toc-profiling-result-interpretation" class="nav-link" data-scroll-target="#profiling-result-interpretation">Profiling Result Interpretation</a></li>
   </ul></li>
-  <li><a href="#continuous-performance-monitoring" id="toc-continuous-performance-monitoring" class="nav-link" data-scroll-target="#continuous-performance-monitoring">Continuous Performance Monitoring</a>
+  <li><a href="#local-performance-monitoring" id="toc-local-performance-monitoring" class="nav-link" data-scroll-target="#local-performance-monitoring">Local Performance Monitoring</a>
   <ul class="collapse">
   <li><a href="#save-baseline-results" id="toc-save-baseline-results" class="nav-link" data-scroll-target="#save-baseline-results">Save Baseline Results</a></li>
   </ul></li>
@@ -1618,23 +1618,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>This document describes the benchmarking infrastructure for Neuralyzer, including how to create benchmarks, run them, and analyze performance using various profiling tools.</p>
+<p>This document describes the local benchmarking infrastructure for Neuralyzer, including how to create benchmarks, run them outside the normal test suite, and analyze performance using profiling tools.</p>
 <section id="quick-start" class="level2">
 <h2 class="anchored" data-anchor-id="quick-start">Quick Start</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Build with benchmarks enabled (they're on by default)</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--preset</span> linux-clang-release <span class="at">-DENABLE_BENCHMARK</span><span class="op">=</span>ON</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> <span class="at">--preset</span> linux-clang-release</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Configure and build the local benchmark preset</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--preset</span> my-clang-release</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> <span class="at">--preset</span> my-clang-release</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Run all benchmarks</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> out/build/Clang/Release/benchmark</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">./benchmark_MaskArea</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Heaptrack regression guard (pass/fail, not CTest)</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> <span class="at">--preset</span> my-clang-release <span class="at">--target</span> record_benchmark_baselines</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> <span class="at">--preset</span> my-clang-release <span class="at">--target</span> check_benchmark_regressions</span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Run specific benchmarks with filtering</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="ex">./benchmark_MaskArea</span> <span class="at">--benchmark_filter</span><span class="op">=</span>Pipeline</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Optional: Google Benchmark JSON (stress executables are excluded)</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> <span class="at">--preset</span> my-clang-release <span class="at">--target</span> run_benchmarks</span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Run with different output formats</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="ex">./benchmark_MaskArea</span> <span class="at">--benchmark_format</span><span class="op">=</span>json <span class="op">&gt;</span> results.json</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="ex">./benchmark_MaskArea</span> <span class="at">--benchmark_format</span><span class="op">=</span>csv <span class="op">&gt;</span> results.csv</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Manual ScatterPlot stress run</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="ex">./out/build/Clang/Release/benchmark/benchmark_ScatterPlotView</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Manual DataViewer allocation probe (defaults: 1ch, scroll-by-1)</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="ex">./out/build/Clang/Release/benchmark/benchmark_DataViewerView</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Benchmarks are intentionally not registered as CTest tests. A normal command such as <code>ctest --preset my-clang-release</code> runs correctness tests only.</p>
 </section>
 <section id="architecture" class="level2">
 <h2 class="anchored" data-anchor-id="architecture">Architecture</h2>
@@ -1642,16 +1645,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="cmake-infrastructure">CMake Infrastructure</h3>
 <p>The benchmarking system is built on <code>cmake/BenchmarkUtils.cmake</code>, which provides:</p>
 <ul>
-<li><code>add_selective_benchmark()</code> - Create individual benchmark executables</li>
+<li><code>add_selective_benchmark()</code> - Create individual benchmark executables and register them with the local benchmark runner</li>
 <li><code>configure_benchmark_for_profiling()</code> - Add profiling tool support</li>
+<li><code>add_benchmark_suite_target()</code> - Create the <code>run_benchmarks</code> target that runs enabled benchmarks and writes JSON results</li>
 <li><code>print_benchmark_summary()</code> - Display configuration summary</li>
 </ul>
 <p>Each benchmark can be individually enabled/disabled via CMake options:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Disable a specific benchmark</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">-DBENCHMARK_MASK_AREA</span><span class="op">=</span>OFF ..</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--preset</span> my-clang-release <span class="at">-DBENCHMARK_SCATTERPLOTVIEW</span><span class="op">=</span>OFF</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Only build specific benchmarks</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">-DBENCHMARK_MASK_AREA</span><span class="op">=</span>ON <span class="at">-DBENCHMARK_OTHER</span><span class="op">=</span>OFF ..</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--preset</span> my-clang-release <span class="at">-DBENCHMARK_SCATTERPLOT</span><span class="op">=</span>ON <span class="at">-DBENCHMARK_OTHER</span><span class="op">=</span>OFF</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="test-data-fixtures" class="level3">
 <h3 class="anchored" data-anchor-id="test-data-fixtures">Test Data Fixtures</h3>
@@ -1790,7 +1794,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="perf-cpu-profiling">1. Perf (CPU Profiling)</h3>
 <p>Profile CPU usage and generate call graphs:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Record profile data</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">perf</span> record <span class="at">-g</span> ./benchmark_MaskArea <span class="at">--benchmark_filter</span><span class="op">=</span>Pipeline</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">perf</span> record <span class="at">-g</span> ./benchmark_ScatterPlot <span class="at">--benchmark_filter</span><span class="op">=</span>PanZoom</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># View interactive report</span></span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="ex">perf</span> report</span>
@@ -1809,20 +1813,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="heaptrack-memory-profiling">2. Heaptrack (Memory Profiling)</h3>
 <p>Analyze memory allocation patterns:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run with heaptrack</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">heaptrack</span> ./benchmark_MaskArea</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> <span class="at">--preset</span> my-clang-release <span class="at">--target</span> run_scatterplot_heaptrack</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># View results in GUI</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="ex">heaptrack_gui</span> heaptrack.benchmark_MaskArea.<span class="pp">*</span>.gz</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="ex">heaptrack_gui</span> heaptrack.benchmark_ScatterPlot.<span class="pp">*</span>.gz</span>
 <span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># View results in terminal</span></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="ex">heaptrack_print</span> heaptrack.benchmark_MaskArea.<span class="pp">*</span>.gz</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="ex">heaptrack_print</span> heaptrack.benchmark_ScatterPlot.<span class="pp">*</span>.gz</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>What heaptrack shows: - Total memory allocated - Peak memory usage - Number of allocations - Call stacks for allocations - Memory leaks - Temporary allocations</p>
 </section>
 <section id="valgrind-cachegrind-cache-analysis" class="level3">
 <h3 class="anchored" data-anchor-id="valgrind-cachegrind-cache-analysis">3. Valgrind Cachegrind (Cache Analysis)</h3>
 <p>Analyze cache behavior:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run cachegrind</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">valgrind</span> <span class="at">--tool</span><span class="op">=</span>cachegrind ./benchmark_MaskArea <span class="at">--benchmark_filter</span><span class="op">=</span>CacheBehavior</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">valgrind</span> <span class="at">--tool</span><span class="op">=</span>cachegrind ./benchmark_ScatterPlot <span class="at">--benchmark_filter</span><span class="op">=</span>PanZoom</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize results</span></span>
 <span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ex">cg_annotate</span> cachegrind.out.<span class="op">&lt;</span>pid<span class="op">&gt;</span></span>
@@ -1835,10 +1839,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="assembly-inspection">4. Assembly Inspection</h3>
 <p>View generated assembly for optimization:</p>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Method 1: objdump</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">objdump</span> <span class="at">-d</span> <span class="at">-C</span> <span class="at">-S</span> ./benchmark_MaskArea <span class="kw">|</span> <span class="fu">less</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">objdump</span> <span class="at">-d</span> <span class="at">-C</span> <span class="at">-S</span> ./benchmark_ScatterPlot <span class="kw">|</span> <span class="fu">less</span></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Search for specific function</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="ex">objdump</span> <span class="at">-d</span> <span class="at">-C</span> <span class="at">-S</span> ./benchmark_MaskArea <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-A</span> 50 <span class="st">"calculateMaskArea"</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="ex">objdump</span> <span class="at">-d</span> <span class="at">-C</span> <span class="at">-S</span> ./benchmark_ScatterPlot <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-A</span> 50 <span class="st">"updateProjectionOnly"</span></span>
 <span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Method 2: During compilation (if GENERATE_ASM=ON)</span></span>
 <span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Assembly files (.s) generated alongside object files</span></span>
@@ -1848,7 +1852,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="time-command-quick-stats" class="level3">
 <h3 class="anchored" data-anchor-id="time-command-quick-stats">5. Time Command (Quick Stats)</h3>
 <p>Get quick overview of resource usage:</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">/usr/bin/time</span> <span class="at">-v</span> ./benchmark_MaskArea</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">/usr/bin/time</span> <span class="at">-v</span> ./benchmark_ScatterPlot</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Key metrics:</span></span>
 <span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># - Maximum resident set size (peak memory)</span></span>
@@ -1869,51 +1873,51 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="workflow-1-optimize-a-hot-function" class="level3">
 <h3 class="anchored" data-anchor-id="workflow-1-optimize-a-hot-function">Workflow 1: Optimize a Hot Function</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Identify hot spots</span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">perf</span> record <span class="at">-g</span> ./benchmark_MaskArea</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">perf</span> record <span class="at">-g</span> ./benchmark_ScatterPlot</span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="ex">perf</span> report  <span class="co"># Identify slowest function</span></span>
 <span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. View assembly</span></span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="ex">objdump</span> <span class="at">-d</span> <span class="at">-C</span> <span class="at">-S</span> ./benchmark_MaskArea <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-A</span> 100 <span class="st">"mySlowFunction"</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="ex">objdump</span> <span class="at">-d</span> <span class="at">-C</span> <span class="at">-S</span> ./benchmark_ScatterPlot <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-A</span> 100 <span class="st">"mySlowFunction"</span></span>
 <span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Check cache behavior</span></span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="fu">valgrind</span> <span class="at">--tool</span><span class="op">=</span>cachegrind ./benchmark_MaskArea <span class="at">--benchmark_filter</span><span class="op">=</span>MyFunction</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="fu">valgrind</span> <span class="at">--tool</span><span class="op">=</span>cachegrind ./benchmark_ScatterPlot <span class="at">--benchmark_filter</span><span class="op">=</span>MyFunction</span>
 <span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Make changes and compare</span></span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="ex">./benchmark_MaskArea</span> <span class="at">--benchmark_filter</span><span class="op">=</span>MyFunction <span class="op">&gt;</span> before.txt</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="ex">./benchmark_ScatterPlot</span> <span class="at">--benchmark_filter</span><span class="op">=</span>MyFunction <span class="op">&gt;</span> before.txt</span>
 <span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="co"># ... make changes ...</span></span>
-<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="ex">./benchmark_MaskArea</span> <span class="at">--benchmark_filter</span><span class="op">=</span>MyFunction <span class="op">&gt;</span> after.txt</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="ex">./benchmark_ScatterPlot</span> <span class="at">--benchmark_filter</span><span class="op">=</span>MyFunction <span class="op">&gt;</span> after.txt</span>
 <span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a><span class="ex">compare.py</span> compare before.txt after.txt  <span class="co"># From Google Benchmark tools</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="workflow-2-fix-memory-issues" class="level3">
 <h3 class="anchored" data-anchor-id="workflow-2-fix-memory-issues">Workflow 2: Fix Memory Issues</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Identify allocation hot spots</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="ex">heaptrack</span> ./benchmark_MaskArea</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> <span class="at">--preset</span> my-clang-release <span class="at">--target</span> run_scatterplot_heaptrack</span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. View in GUI</span></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="ex">heaptrack_gui</span> heaptrack.benchmark_MaskArea.<span class="pp">*</span>.gz</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="ex">heaptrack_gui</span> heaptrack.benchmark_ScatterPlot.<span class="pp">*</span>.gz</span>
 <span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Look for:</span></span>
 <span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co"># - Temporary allocations in loops</span></span>
 <span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="co"># - Large peak allocations</span></span>
 <span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="co"># - Memory leaks</span></span>
 <span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Check for leaks with valgrind</span></span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="fu">valgrind</span> <span class="at">--leak-check</span><span class="op">=</span>full ./benchmark_MaskArea <span class="at">--benchmark_filter</span><span class="op">=</span>MyTest</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="fu">valgrind</span> <span class="at">--leak-check</span><span class="op">=</span>full ./benchmark_ScatterPlot <span class="at">--benchmark_filter</span><span class="op">=</span>MyTest</span>
 <span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Verify fix</span></span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="ex">heaptrack</span> ./benchmark_MaskArea</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> <span class="at">--preset</span> my-clang-release <span class="at">--target</span> run_scatterplot_heaptrack</span>
 <span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare before/after total allocations and peak memory</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="workflow-3-compare-algorithms" class="level3">
 <h3 class="anchored" data-anchor-id="workflow-3-compare-algorithms">Workflow 3: Compare Algorithms</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Benchmark different implementations</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./benchmark_MaskArea</span> <span class="at">--benchmark_filter</span><span class="op">=</span><span class="st">"Algorithm_v1|Algorithm_v2"</span> <span class="dt">\</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./benchmark_ScatterPlot</span> <span class="at">--benchmark_filter</span><span class="op">=</span><span class="st">"Algorithm_v1|Algorithm_v2"</span> <span class="dt">\</span></span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">--benchmark_format</span><span class="op">=</span>json <span class="op">&gt;</span> comparison.json</span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Use benchmark tools to compare</span></span>
 <span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="ex">tools/compare.py</span> benchmarks comparison.json baseline.json</span>
 <span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Or export to CSV for plotting</span></span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="ex">./benchmark_MaskArea</span> <span class="at">--benchmark_format</span><span class="op">=</span>csv <span class="op">&gt;</span> data.csv</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="ex">./benchmark_ScatterPlot</span> <span class="at">--benchmark_format</span><span class="op">=</span>csv <span class="op">&gt;</span> data.csv</span>
 <span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Import into spreadsheet/plotting tool</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </section>
@@ -2004,20 +2008,23 @@ BM_Pipeline/2                124.56 ms       124.12 ms            6</code></pre>
 <p><strong>Cachegrind:</strong> - L1 miss rate &lt; 5% is excellent - L2 miss rate &lt; 1% is good - Look for cache-unfriendly access patterns</p>
 </section>
 </section>
-<section id="continuous-performance-monitoring" class="level2">
-<h2 class="anchored" data-anchor-id="continuous-performance-monitoring">Continuous Performance Monitoring</h2>
+<section id="local-performance-monitoring" class="level2">
+<h2 class="anchored" data-anchor-id="local-performance-monitoring">Local Performance Monitoring</h2>
 <section id="save-baseline-results" class="level3">
 <h3 class="anchored" data-anchor-id="save-baseline-results">Save Baseline Results</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Save current performance as baseline</span></span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./benchmark_MaskArea</span> <span class="at">--benchmark_out</span><span class="op">=</span>baseline.json <span class="dt">\</span></span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">--benchmark_out_format</span><span class="op">=</span>json</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> <span class="at">--preset</span> my-clang-release <span class="at">--target</span> run_benchmarks</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> <span class="at">-r</span> out/build/Clang/Release/benchmark-results benchmark-baseline-local</span>
 <span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="co"># After changes, compare</span></span>
-<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="ex">./benchmark_MaskArea</span> <span class="at">--benchmark_out</span><span class="op">=</span>current.json <span class="dt">\</span></span>
-<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">--benchmark_out_format</span><span class="op">=</span>json</span>
-<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare results</span></span>
-<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a><span class="ex">tools/compare.py</span> benchmarks baseline.json current.json</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--build</span> <span class="at">--preset</span> my-clang-release <span class="at">--target</span> run_benchmarks</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare results</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a><span class="ex">benchmark/tools/compare_benchmark_json.py</span> <span class="dt">\</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>    benchmark-baseline-local <span class="dt">\</span></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>    out/build/Clang/Release/benchmark-results <span class="dt">\</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">--tolerance</span> 0.30</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Keep these baselines local to the machine, compiler, and preset that produced them. Timing numbers are hardware dependent. For memory regressions in interaction paths, run the focused benchmark executable under heaptrack and compare allocation totals and call stacks locally.</p>
 </section>
 </section>
 <section id="troubleshooting" class="level2">
@@ -2040,7 +2047,7 @@ BM_Pipeline/2                124.56 ms       124.12 ms            6</code></pre>
 <ol type="1">
 <li>Close other applications</li>
 <li>Disable CPU frequency scaling: <code>sudo cpupower frequency-set --governor performance</code></li>
-<li>Pin to specific CPU: <code>taskset -c 0 ./benchmark_MaskArea</code></li>
+<li>Pin to specific CPU: <code>taskset -c 0 ./benchmark_ScatterPlot</code></li>
 <li>Increase minimum iteration time: <code>--benchmark_min_time=5</code></li>
 </ol>
 </section>
@@ -2050,7 +2057,7 @@ BM_Pipeline/2                124.56 ms       124.12 ms            6</code></pre>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">-DENABLE_BENCHMARK</span><span class="op">=</span>ON ..</span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Specific benchmark disabled</span></span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">-DBENCHMARK_MASK_AREA</span><span class="op">=</span>ON ..</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">--preset</span> my-clang-release <span class="at">-DBENCHMARK_SCATTERPLOT</span><span class="op">=</span>ON</span>
 <span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Google Benchmark not found</span></span>
 <span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="co"># (Should auto-fetch with FetchContent, but can install manually)</span></span>
