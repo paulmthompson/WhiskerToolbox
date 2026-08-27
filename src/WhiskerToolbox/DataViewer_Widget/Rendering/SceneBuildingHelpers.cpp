@@ -389,8 +389,17 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
     // AnalogTimeSeries / TimeSeriesMapper treat the batch end index as inclusive, while
     // AnalogVertexCache::getVerticesForRange uses a half-open upper bound.
     TimeFrameIndex const extract_end_exclusive = cache_end + TimeFrameIndex{1};
-    auto flat_vertices = cache.getVerticesForRange(
-            cache_start, extract_end_exclusive, params.x_origin_master_absolute_time);
+    std::vector<float> flat_vertices;
+    if (params.min_max_decimation_bucket_count > 0) {
+        flat_vertices = cache.getVerticesForRangeDecimated(
+                cache_start, extract_end_exclusive,
+                params.min_max_decimation_bucket_count,
+                params.x_origin_master_absolute_time);
+    } else {
+        flat_vertices = cache.getVerticesForRange(
+                cache_start, extract_end_exclusive,
+                params.x_origin_master_absolute_time);
+    }
 
     // Gap detection is currently not supported with caching
     // (would require tracking original indices in the cache)
@@ -399,12 +408,6 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
         batch.line_start_indices.push_back(0);
         batch.line_vertex_counts.push_back(vertex_count);
         batch.vertices = std::move(flat_vertices);
-    }
-
-    if (params.min_max_decimation_bucket_count > 0 && !batch.vertices.empty()) {
-        batch = CorePlotting::decimatePolyLineBatchMinMax(
-                batch,
-                CorePlotting::MinMaxDecimationParams{params.min_max_decimation_bucket_count});
     }
 
     return batch;

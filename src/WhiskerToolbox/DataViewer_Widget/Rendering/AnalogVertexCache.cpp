@@ -190,6 +190,104 @@ std::vector<float> AnalogVertexCache::getVerticesForRange(TimeFrameIndex start,
     return result;
 }
 
+std::vector<float> AnalogVertexCache::getVerticesForRangeDecimated(
+        TimeFrameIndex start,
+        TimeFrameIndex end,
+        int bucket_count,
+        ClockTicks x_origin_master_absolute_time) const {
+    if (!m_valid || m_vertices.empty() || bucket_count <= 0) {
+        return getVerticesForRange(start, end, x_origin_master_absolute_time);
+    }
+
+    auto const start_idx = findIndexForTime(start);
+    if (start_idx < 0) {
+        return {};
+    }
+
+    // Find upper bound index in circular buffer
+    auto it_end = std::lower_bound(
+            m_vertices.begin() + start_idx, m_vertices.end(), end,
+            [](CachedAnalogVertex const & v, TimeFrameIndex t) {
+                return v.time_idx < t;
+            });
+    size_t const end_idx = static_cast<size_t>(std::distance(m_vertices.begin(), it_end));
+    size_t const total_samples = (end_idx > static_cast<size_t>(start_idx)) ? (end_idx - static_cast<size_t>(start_idx)) : 0;
+
+    if (total_samples <= static_cast<size_t>(bucket_count * 2)) {
+        return getVerticesForRange(start, end, x_origin_master_absolute_time);
+    }
+
+    std::vector<float> result;
+    result.reserve(static_cast<size_t>(bucket_count) * 4 + 4);
+
+    size_t const B = static_cast<size_t>(bucket_count);
+
+    auto appendDedupe = [&](int32_t t_int, float y) {
+        float const t_raw = std::bit_cast<float>(t_int);
+        if (result.size() >= 2) {
+            float const prev_t_raw = result[result.size() - 2];
+            float const prev_y = result[result.size() - 1];
+            if (std::bit_cast<int32_t>(prev_t_raw) == t_int && std::abs(prev_y - y) <= 1e-7f) {
+                return;
+            }
+        }
+        result.push_back(t_raw);
+        result.push_back(y);
+    };
+
+    // Always append first vertex
+    auto const & first_v = m_vertices[static_cast<size_t>(start_idx)];
+    appendDedupe(static_cast<int32_t>(first_v.x.getValue()), first_v.y);
+
+    for (size_t b = 0; b < B; ++b) {
+        size_t const chunk_start = static_cast<size_t>(start_idx) + (b * total_samples) / B;
+        size_t const chunk_end = static_cast<size_t>(start_idx) + ((b + 1) * total_samples) / B;
+
+        if (chunk_start >= chunk_end) {
+            continue;
+        }
+
+        size_t min_idx = chunk_start;
+        size_t max_idx = chunk_start;
+        float min_val = m_vertices[chunk_start].y;
+        float max_val = m_vertices[chunk_start].y;
+
+        for (size_t k = chunk_start + 1; k < chunk_end; ++k) {
+            float const y = m_vertices[k].y;
+            if (y < min_val) {
+                min_val = y;
+                min_idx = k;
+            }
+            if (y > max_val) {
+                max_val = y;
+                max_idx = k;
+            }
+        }
+
+        // Emit in chronological order
+        if (min_idx <= max_idx) {
+            auto const & v1 = m_vertices[min_idx];
+            appendDedupe(static_cast<int32_t>(v1.x.getValue()), v1.y);
+            if (min_idx != max_idx) {
+                auto const & v2 = m_vertices[max_idx];
+                appendDedupe(static_cast<int32_t>(v2.x.getValue()), v2.y);
+            }
+        } else {
+            auto const & v1 = m_vertices[max_idx];
+            appendDedupe(static_cast<int32_t>(v1.x.getValue()), v1.y);
+            auto const & v2 = m_vertices[min_idx];
+            appendDedupe(static_cast<int32_t>(v2.x.getValue()), v2.y);
+        }
+    }
+
+    // Always append last vertex
+    auto const & last_v = m_vertices[end_idx - 1];
+    appendDedupe(static_cast<int32_t>(last_v.x.getValue()), last_v.y);
+
+    static_cast<void>(x_origin_master_absolute_time);
+    return result;
+}
+
 std::ptrdiff_t AnalogVertexCache::findIndexForTime(TimeFrameIndex time_idx) const {
     if (m_vertices.empty()) {
         return -1;

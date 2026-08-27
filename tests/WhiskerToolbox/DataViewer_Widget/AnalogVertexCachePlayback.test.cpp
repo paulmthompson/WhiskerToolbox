@@ -109,3 +109,44 @@ TEST_CASE("AnalogVertexCache playback: large absolute times preserve visible sam
         CHECK_THAT(cached_batch.vertices[i], WithinAbs(ref_batch.vertices[i], 1e-3f));
     }
 }
+
+TEST_CASE("AnalogVertexCache playback: fast-path decimation reduces vertex count and preserves peaks", "[AnalogVertexCache][DataViewer]") {
+    int constexpr kFrames = 10000;
+    std::vector<int> times(static_cast<size_t>(kFrames));
+    for (int i = 0; i < kFrames; ++i) {
+        times[static_cast<size_t>(i)] = 1000000 + i;
+    }
+    auto master = std::make_shared<TimeFrame>(times);
+
+    std::vector<float> values(static_cast<size_t>(kFrames));
+    for (int i = 0; i < kFrames; ++i) {
+        values[static_cast<size_t>(i)] = std::sin(static_cast<float>(i) * 0.05f);
+    }
+    auto series = std::make_shared<AnalogTimeSeries>(std::move(values), static_cast<size_t>(kFrames));
+    series->setTimeFrame(master);
+
+    AnalogVertexCache cache;
+    glm::mat4 const model{1.0f};
+
+    DataViewerHelpers::AnalogBatchParams params{};
+    params.start_time = TimeFrameIndex{100};
+    params.end_time = TimeFrameIndex{5100};
+    params.x_origin_master_absolute_time = master->getTimeAtIndex(params.start_time);
+    params.detect_gaps = false;
+    params.min_max_decimation_bucket_count = 256;
+
+    auto const decimated_batch =
+            DataViewerHelpers::buildAnalogSeriesBatchCached(*series, master, params, model, cache);
+
+    REQUIRE_FALSE(decimated_batch.vertices.empty());
+    // Decimated vertex count should be much smaller than 5000 * 2 = 10000 floats
+    REQUIRE(decimated_batch.vertices.size() < 2000U);
+    REQUIRE(decimated_batch.vertices.size() >= 512U);
+    REQUIRE(decimated_batch.is_integer_time == true);
+
+    // Verify first and last integer timestamps
+    int32_t const expected_start = 1000000 + 100;
+    int32_t const expected_end = 1000000 + 5100;
+    REQUIRE(std::bit_cast<int32_t>(decimated_batch.vertices[0]) == expected_start);
+    REQUIRE(std::bit_cast<int32_t>(decimated_batch.vertices[decimated_batch.vertices.size() - 2U]) == expected_end);
+}

@@ -341,6 +341,24 @@ public:
                                                          ClockTicks x_origin_master_absolute_time) const;
 
     /**
+     * @brief Extract vertices for a specific time range with fast-path min-max decimation
+     *
+     * Directly downsamples cached vertices into min-max pairs across @p bucket_count buckets.
+     * Avoids intermediate buffer allocations and floating-point bucket hashing.
+     *
+     * @param start Start of range to extract (inclusive)
+     * @param end End of range to extract (exclusive)
+     * @param bucket_count Number of temporal buckets to decimate into
+     * @param x_origin_master_absolute_time Absolute physical time at the current view's left edge
+     * @return Flat vertex array [x0,y0,x1,y1,...] of decimated points
+     */
+    [[nodiscard]] std::vector<float> getVerticesForRangeDecimated(
+            TimeFrameIndex start,
+            TimeFrameIndex end,
+            int bucket_count,
+            ClockTicks x_origin_master_absolute_time) const;
+
+    /**
      * @brief Get statistics about cache usage
      */
     [[nodiscard]] size_t size() const { return m_vertices.size(); }
