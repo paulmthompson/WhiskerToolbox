@@ -257,8 +257,10 @@ void PolyLineRenderer::uploadBatches(std::span<CorePlotting::RenderablePolyLineB
         m_gpu_buffer_capacity = desired_capacity;
     }
 
-    // Sub-buffer write into persistent VBO
+    // Single-pass sub-buffer write into persistent VBO
     m_vbo.write(0, m_all_vertices.data(), static_cast<int>(required_bytes));
+    m_last_uploaded_bytes = required_bytes;
+    m_was_last_upload_incremental = false;
 
     m_vbo.release();
     m_vao.release();
@@ -311,6 +313,8 @@ void PolyLineRenderer::uploadData(CorePlotting::RenderablePolyLineBatch const & 
     }
 
     m_vbo.write(0, m_all_vertices.data(), static_cast<int>(required_bytes));
+    m_last_uploaded_bytes = required_bytes;
+    m_was_last_upload_incremental = false;
 
     m_vbo.release();
     m_vao.release();

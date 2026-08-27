@@ -62,6 +62,9 @@ struct AnalogSeriesEntry {
 
     /// Vertex cache for efficient scrolling (initialized lazily)
     mutable AnalogVertexCache vertex_cache;
+
+    /// Scratch vertex buffer to eliminate per-frame allocations during scene rebuilds
+    mutable std::vector<float> scratch_vertices;
 };
 
 /**

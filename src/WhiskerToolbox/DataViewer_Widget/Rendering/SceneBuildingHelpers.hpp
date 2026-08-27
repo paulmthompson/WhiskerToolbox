@@ -218,7 +218,8 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
         std::shared_ptr<TimeFrame> const & master_time_frame,
         AnalogBatchParams const & params,
         glm::mat4 const & model_matrix,
-        DataViewer::AnalogVertexCache & cache);
+        DataViewer::AnalogVertexCache & cache,
+        std::vector<float> * scratch_buffer = nullptr);
 
 /**
  * @brief Generate vertices for a specific time range (helper for cache population)

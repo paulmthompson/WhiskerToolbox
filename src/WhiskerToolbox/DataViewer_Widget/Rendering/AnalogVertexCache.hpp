@@ -341,6 +341,21 @@ public:
                                                          ClockTicks x_origin_master_absolute_time) const;
 
     /**
+     * @brief Extract vertices for a specific time range into a caller-supplied buffer.
+     *
+     * Reuses the capacity of @p out_buffer (via .clear()), eliminating dynamic heap allocations.
+     *
+     * @param start Start of range to extract (inclusive)
+     * @param end End of range to extract (exclusive)
+     * @param x_origin_master_absolute_time Absolute physical time at the current view's left edge
+     * @param out_buffer Output buffer to populate in-place
+     */
+    void extractVerticesForRange(TimeFrameIndex start,
+                                 TimeFrameIndex end,
+                                 ClockTicks x_origin_master_absolute_time,
+                                 std::vector<float> & out_buffer) const;
+
+    /**
      * @brief Extract vertices for a specific time range with fast-path min-max decimation
      *
      * Directly downsamples cached vertices into min-max pairs across @p bucket_count buckets.
@@ -359,16 +374,34 @@ public:
             ClockTicks x_origin_master_absolute_time) const;
 
     /**
+     * @brief Extract decimated vertices into a caller-supplied buffer.
+     *
+     * Reuses the capacity of @p out_buffer (via .clear()), eliminating dynamic heap allocations.
+     *
+     * @param start Start of range to extract (inclusive)
+     * @param end End of range to extract (exclusive)
+     * @param bucket_count Number of temporal buckets to decimate into
+     * @param x_origin_master_absolute_time Absolute physical time at the current view's left edge
+     * @param out_buffer Output buffer to populate in-place
+     */
+    void extractVerticesForRangeDecimated(TimeFrameIndex start,
+                                          TimeFrameIndex end,
+                                          int bucket_count,
+                                          ClockTicks x_origin_master_absolute_time,
+                                          std::vector<float> & out_buffer) const;
+
+    /**
      * @brief Get statistics about cache usage
      */
-    [[nodiscard]] size_t size() const { return m_vertices.size(); }
+    [[nodiscard]] size_t size() const { return m_time_indices.size(); }
     [[nodiscard]] size_t capacity() const { return m_capacity; }
     [[nodiscard]] float utilizationRatio() const {
-        return m_capacity > 0 ? static_cast<float>(m_vertices.size()) / static_cast<float>(m_capacity) : 0.0f;
+        return m_capacity > 0 ? static_cast<float>(m_time_indices.size()) / static_cast<float>(m_capacity) : 0.0f;
     }
 
 private:
-    boost::circular_buffer<CachedAnalogVertex> m_vertices;
+    boost::circular_buffer<TimeFrameIndex> m_time_indices;
+    boost::circular_buffer<float> m_flat_data;
     size_t m_capacity{0};
     TimeFrameIndex m_cached_start{0};
     TimeFrameIndex m_cached_end{0};

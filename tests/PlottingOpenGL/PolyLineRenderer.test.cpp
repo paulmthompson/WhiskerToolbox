@@ -57,6 +57,7 @@ TEST_CASE_METHOD(HeadlessGLFixture, "PolyLineRenderer: uploadBatches and multi-b
 
         renderer.uploadBatches(batches);
         REQUIRE(renderer.hasData());
+        CHECK_FALSE(renderer.wasLastUploadIncremental());
 
         // Render smoke test
         glm::mat4 const view{1.0f};

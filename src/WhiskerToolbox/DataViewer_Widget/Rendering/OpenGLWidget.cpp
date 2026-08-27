@@ -1259,6 +1259,15 @@ void OpenGLWidget::rebuildScene() {
     // Upload scene to renderer
     _scene_renderer->uploadScene(_cache_state.scene);
 
+    // Reclaim vertex buffer capacity back into channel entries to eliminate per-frame allocations
+    size_t batch_idx = 0;
+    for (auto & [key, analog_data]: _data_store->analogSeries()) {
+        if (batch_idx < _cache_state.scene.poly_line_batches.size()) {
+            analog_data.scratch_vertices = std::move(_cache_state.scene.poly_line_batches[batch_idx].vertices);
+            ++batch_idx;
+        }
+    }
+
     auto const t_upload = std::chrono::high_resolution_clock::now();
 
     // Calculate durations in floating point milliseconds
@@ -1269,14 +1278,13 @@ void OpenGLWidget::rebuildScene() {
     _perf_metrics.scene_rebuild_ms = ms_batches + ms_build;
     _perf_metrics.scene_upload_ms = ms_upload;
 
-    size_t total_bytes = 0;
-    for (auto const & b: _cache_state.scene.poly_line_batches) {
-        total_bytes += b.vertices.size() * sizeof(float);
-    }
+    size_t const total_bytes = _scene_renderer->polyLineRenderer().getLastUploadedBytes();
     _perf_metrics.total_vertex_bytes = total_bytes;
+    bool const is_incremental = _scene_renderer->polyLineRenderer().wasLastUploadIncremental();
 
-    spdlog::debug("[OpenGLWidget] rebuildScene took {:.2f} ms (batches: {:.2f} ms | build: {:.2f} ms | upload: {:.2f} ms | vbo: {:.2f} KB)",
+    spdlog::debug("[OpenGLWidget] rebuildScene took {:.2f} ms (batches: {:.2f} ms | build: {:.2f} ms | upload: {:.2f} ms | {}vbo: {:.2f} KB)",
                   ms_batches + ms_build + ms_upload, ms_batches, ms_build, ms_upload,
+                  is_incremental ? "STREAMED " : "",
                   static_cast<double>(total_bytes) / 1024.0);
 
     // Update cached matrices
@@ -1426,7 +1434,8 @@ void OpenGLWidget::addAnalogBatchesToBuilder(CorePlotting::SceneBuilder & builde
             // The vertex_cache is mutable, allowing updates even with const iteration
             auto batch = DataViewerHelpers::buildAnalogSeriesBatchCached(
                     *series, _master_time_frame, batch_params, model_matrix,
-                    analog_data.vertex_cache);
+                    analog_data.vertex_cache,
+                    &analog_data.scratch_vertices);
             if (!batch.vertices.empty()) {
                 builder.addPolyLineBatch(std::move(batch));
             }

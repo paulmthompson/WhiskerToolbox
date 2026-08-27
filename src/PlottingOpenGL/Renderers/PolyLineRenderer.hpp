@@ -95,6 +95,16 @@ public:
      */
     [[nodiscard]] bool isUsingShaderManager() const { return m_use_shader_manager; }
 
+    /**
+     * @brief Number of bytes uploaded during the last upload call.
+     */
+    [[nodiscard]] size_t getLastUploadedBytes() const { return m_last_uploaded_bytes; }
+
+    /**
+     * @brief Whether the last upload was fulfilled via incremental sub-buffer updates.
+     */
+    [[nodiscard]] bool wasLastUploadIncremental() const { return m_was_last_upload_incremental; }
+
 private:
     bool loadShadersFromManager();
     bool compileEmbeddedShaders();
@@ -111,6 +121,8 @@ private:
 
     // Persistent GPU buffer allocation in bytes
     size_t m_gpu_buffer_capacity{0};
+    size_t m_last_uploaded_bytes{0};
+    bool m_was_last_upload_incremental{false};
 
     // Cached batch data for rendering - supports multiple batches
     struct BatchData {

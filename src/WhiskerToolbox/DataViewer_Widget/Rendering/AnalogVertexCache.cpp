@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <bit>
 #include <cmath>
+#include <cstring>
 #include <ranges>
 
 namespace DataViewer {
@@ -14,26 +15,28 @@ void AnalogVertexCache::initialize(size_t capacity) {
         spdlog::debug("AnalogVertexCache: Cache wiped and re-initialized. Capacity changing from {} to {}", m_capacity, capacity);
     }
     m_capacity = capacity;
-    m_vertices.set_capacity(capacity);
+    m_time_indices.set_capacity(capacity);
+    m_flat_data.set_capacity(capacity * 2);
     invalidate();
 }
 
 void AnalogVertexCache::invalidate() {
-    m_vertices.clear();
+    m_time_indices.clear();
+    m_flat_data.clear();
     m_cached_start = TimeFrameIndex{0};
     m_cached_end = TimeFrameIndex{0};
     m_valid = false;
 }
 
 bool AnalogVertexCache::covers(TimeFrameIndex start, TimeFrameIndex end) const {
-    if (!m_valid || m_vertices.empty()) {
+    if (!m_valid || m_time_indices.empty()) {
         return false;
     }
     return start >= m_cached_start && end <= m_cached_end;
 }
 
 bool AnalogVertexCache::needsUpdate(TimeFrameIndex start, TimeFrameIndex end) const {
-    if (!m_valid || m_vertices.empty()) {
+    if (!m_valid || m_time_indices.empty()) {
         return true;
     }
 
@@ -50,7 +53,7 @@ bool AnalogVertexCache::needsUpdate(TimeFrameIndex start, TimeFrameIndex end) co
 std::vector<MissingRange> AnalogVertexCache::getMissingRanges(TimeFrameIndex start, TimeFrameIndex end) const {
     std::vector<MissingRange> result;
 
-    if (!m_valid || m_vertices.empty()) {
+    if (!m_valid || m_time_indices.empty()) {
         // Complete cache miss - need entire range
         result.push_back({start, end, false});
         return result;
@@ -77,12 +80,13 @@ std::vector<MissingRange> AnalogVertexCache::getMissingRanges(TimeFrameIndex sta
 }
 
 void AnalogVertexCache::prependVertices(std::vector<CachedAnalogVertex> const & vertices, TimeFrameIndex requested_start) {
-
     bool const was_empty = vertices.empty();
-    // Insert at front - circular buffer handles overflow automatically
-    // We need to insert in reverse order since push_front will reverse them
-    for (auto vertice: std::ranges::reverse_view(vertices)) {
-        m_vertices.push_front(vertice);
+    for (auto const & v: std::ranges::reverse_view(vertices)) {
+        int32_t const t_int = static_cast<int32_t>(v.x.getValue());
+        float const t_raw = std::bit_cast<float>(t_int);
+        m_time_indices.push_front(v.time_idx);
+        m_flat_data.push_front(v.y);
+        m_flat_data.push_front(t_raw);
     }
 
     // Update cached range
@@ -93,8 +97,8 @@ void AnalogVertexCache::prependVertices(std::vector<CachedAnalogVertex> const & 
     m_valid = true;
 
     // Update end if buffer overflowed (oldest data was discarded)
-    if (!m_vertices.empty()) {
-        m_cached_end = m_vertices.back().time_idx + TimeFrameIndex{1};
+    if (!m_time_indices.empty()) {
+        m_cached_end = m_time_indices.back() + TimeFrameIndex{1};
     }
 }
 
@@ -109,7 +113,11 @@ void AnalogVertexCache::appendVertices(std::vector<CachedAnalogVertex> const & v
     }
 
     for (auto const & v: vertices) {
-        m_vertices.push_back(v);
+        int32_t const t_int = static_cast<int32_t>(v.x.getValue());
+        float const t_raw = std::bit_cast<float>(t_int);
+        m_time_indices.push_back(v.time_idx);
+        m_flat_data.push_back(t_raw);
+        m_flat_data.push_back(v.y);
     }
 
     if (!m_valid) {
@@ -117,77 +125,100 @@ void AnalogVertexCache::appendVertices(std::vector<CachedAnalogVertex> const & v
     }
     m_valid = true;
 
-    if (!m_vertices.empty()) {
-        m_cached_start = m_vertices.front().time_idx;
-        m_cached_end = m_vertices.back().time_idx + TimeFrameIndex{1};
+    if (!m_time_indices.empty()) {
+        m_cached_start = m_time_indices.front();
+        m_cached_end = m_time_indices.back() + TimeFrameIndex{1};
     }
 }
 
 void AnalogVertexCache::setVertices(std::vector<CachedAnalogVertex> const & vertices,
                                     TimeFrameIndex start, TimeFrameIndex end) {
-    m_vertices.clear();
+    m_time_indices.clear();
+    m_flat_data.clear();
 
     if (vertices.empty()) {
         m_valid = false;
         return;
     }
 
-    // Copy all vertices (circular buffer will limit to capacity if needed)
+    // Copy all vertices into flat storage
     for (auto const & v: vertices) {
-        m_vertices.push_back(v);
+        int32_t const t_int = static_cast<int32_t>(v.x.getValue());
+        float const t_raw = std::bit_cast<float>(t_int);
+        m_time_indices.push_back(v.time_idx);
+        m_flat_data.push_back(t_raw);
+        m_flat_data.push_back(v.y);
     }
 
     // If the buffer is empty after pushing (e.g. capacity was zero), bail out
-    if (m_vertices.empty()) {
+    if (m_time_indices.empty()) {
         m_valid = false;
         return;
     }
 
-    // AnalogTimeSeries range queries treat end_time as inclusive, but cache
-    // bookkeeping and getVerticesForRange() use half-open [cached_start, cached_end).
-    // Always record the actual stored vertex extent so incremental missing ranges do not
-    // regenerate the trailing sample (duplicate time_idx corrupts extraction vs. mapper).
-    m_cached_start = m_vertices.front().time_idx;
-    m_cached_end = m_vertices.back().time_idx + TimeFrameIndex{1};
+    m_cached_start = m_time_indices.front();
+    m_cached_end = m_time_indices.back() + TimeFrameIndex{1};
+    m_valid = true;
 
     static_cast<void>(start);
     static_cast<void>(end);
-
-    m_valid = true;
 }
 
 std::vector<float> AnalogVertexCache::getVerticesForRange(TimeFrameIndex start,
                                                           TimeFrameIndex end,
                                                           ClockTicks x_origin_master_absolute_time) const {
     std::vector<float> result;
+    extractVerticesForRange(start, end, x_origin_master_absolute_time, result);
+    return result;
+}
 
-    if (!m_valid || m_vertices.empty()) {
-        return result;
+void AnalogVertexCache::extractVerticesForRange(TimeFrameIndex start,
+                                                TimeFrameIndex end,
+                                                ClockTicks x_origin_master_absolute_time,
+                                                std::vector<float> & out_buffer) const {
+    out_buffer.clear();
+
+    if (!m_valid || m_time_indices.empty()) {
+        return;
     }
 
-    // Find start position using binary search
-    auto const start_idx = findIndexForTime(start);
-    if (start_idx < 0) {
-        return result;// Start not found
+    // Binary search start index
+    auto const it_start = std::lower_bound(m_time_indices.begin(), m_time_indices.end(), start);
+    if (it_start == m_time_indices.end()) {
+        return;
+    }
+    size_t const start_idx = static_cast<size_t>(std::distance(m_time_indices.begin(), it_start));
+
+    // Binary search end index
+    auto const it_end = std::lower_bound(it_start, m_time_indices.end(), end);
+    size_t const end_idx = static_cast<size_t>(std::distance(m_time_indices.begin(), it_end));
+
+    if (end_idx <= start_idx) {
+        return;
     }
 
-    // Extract vertices in range
-    result.reserve(static_cast<size_t>(end.getValue() - start.getValue()) * 2);
+    size_t const vertex_count = end_idx - start_idx;
+    size_t const float_count = vertex_count * 2;
 
-    for (auto i = static_cast<size_t>(start_idx); i < m_vertices.size(); ++i) {
-        auto const & v = m_vertices[i];
-        if (v.time_idx >= end) {
-            break;
+    out_buffer.resize(float_count);
+
+    size_t const offset = start_idx * 2;
+    auto const arr1 = m_flat_data.array_one();
+    auto const arr2 = m_flat_data.array_two();
+
+    if (offset < arr1.second) {
+        size_t const copy1 = std::min(float_count, arr1.second - offset);
+        std::memcpy(out_buffer.data(), arr1.first + offset, copy1 * sizeof(float));
+        if (copy1 < float_count) {
+            size_t const copy2 = float_count - copy1;
+            std::memcpy(out_buffer.data() + copy1, arr2.first, copy2 * sizeof(float));
         }
-        auto const t_val = static_cast<int32_t>(v.x.getValue());
-        auto const t_raw = std::bit_cast<float>(t_val);
-        result.push_back(t_raw);
-        result.push_back(v.y);
+    } else {
+        size_t const off2 = offset - arr1.second;
+        std::memcpy(out_buffer.data(), arr2.first + off2, float_count * sizeof(float));
     }
 
     static_cast<void>(x_origin_master_absolute_time);
-
-    return result;
 }
 
 std::vector<float> AnalogVertexCache::getVerticesForRangeDecimated(
@@ -195,53 +226,79 @@ std::vector<float> AnalogVertexCache::getVerticesForRangeDecimated(
         TimeFrameIndex end,
         int bucket_count,
         ClockTicks x_origin_master_absolute_time) const {
-    if (!m_valid || m_vertices.empty() || bucket_count <= 0) {
-        return getVerticesForRange(start, end, x_origin_master_absolute_time);
-    }
-
-    auto const start_idx = findIndexForTime(start);
-    if (start_idx < 0) {
-        return {};
-    }
-
-    // Find upper bound index in circular buffer
-    auto it_end = std::lower_bound(
-            m_vertices.begin() + start_idx, m_vertices.end(), end,
-            [](CachedAnalogVertex const & v, TimeFrameIndex t) {
-                return v.time_idx < t;
-            });
-    size_t const end_idx = static_cast<size_t>(std::distance(m_vertices.begin(), it_end));
-    size_t const total_samples = (end_idx > static_cast<size_t>(start_idx)) ? (end_idx - static_cast<size_t>(start_idx)) : 0;
-
-    if (total_samples <= static_cast<size_t>(bucket_count * 2)) {
-        return getVerticesForRange(start, end, x_origin_master_absolute_time);
-    }
-
     std::vector<float> result;
-    result.reserve(static_cast<size_t>(bucket_count) * 4 + 4);
+    extractVerticesForRangeDecimated(start, end, bucket_count, x_origin_master_absolute_time, result);
+    return result;
+}
+
+void AnalogVertexCache::extractVerticesForRangeDecimated(
+        TimeFrameIndex start,
+        TimeFrameIndex end,
+        int bucket_count,
+        ClockTicks x_origin_master_absolute_time,
+        std::vector<float> & out_buffer) const {
+    out_buffer.clear();
+
+    if (!m_valid || m_time_indices.empty() || bucket_count <= 0) {
+        extractVerticesForRange(start, end, x_origin_master_absolute_time, out_buffer);
+        return;
+    }
+
+    auto const it_start = std::lower_bound(m_time_indices.begin(), m_time_indices.end(), start);
+    if (it_start == m_time_indices.end()) {
+        return;
+    }
+    size_t const start_idx = static_cast<size_t>(std::distance(m_time_indices.begin(), it_start));
+
+    auto const it_end = std::lower_bound(it_start, m_time_indices.end(), end);
+    size_t const end_idx = static_cast<size_t>(std::distance(m_time_indices.begin(), it_end));
+
+    if (end_idx <= start_idx) {
+        return;
+    }
+
+    size_t const total_samples = end_idx - start_idx;
+    if (total_samples <= static_cast<size_t>(bucket_count * 2)) {
+        extractVerticesForRange(start, end, x_origin_master_absolute_time, out_buffer);
+        return;
+    }
+
+    out_buffer.reserve(static_cast<size_t>(bucket_count) * 4 + 4);
 
     size_t const B = static_cast<size_t>(bucket_count);
 
-    auto appendDedupe = [&](int32_t t_int, float y) {
-        float const t_raw = std::bit_cast<float>(t_int);
-        if (result.size() >= 2) {
-            float const prev_t_raw = result[result.size() - 2];
-            float const prev_y = result[result.size() - 1];
-            if (std::bit_cast<int32_t>(prev_t_raw) == t_int && std::abs(prev_y - y) <= 1e-7f) {
+    auto const arr1 = m_flat_data.array_one();
+    auto const arr2 = m_flat_data.array_two();
+
+    auto getSample = [&](size_t idx) -> std::pair<float, float> {
+        size_t const float_idx = idx * 2;
+        if (float_idx < arr1.second) {
+            return {arr1.first[float_idx], arr1.first[float_idx + 1]};
+        } else {
+            size_t const off2 = float_idx - arr1.second;
+            return {arr2.first[off2], arr2.first[off2 + 1]};
+        }
+    };
+
+    auto appendDedupe = [&](float t_raw, float y) {
+        if (out_buffer.size() >= 2) {
+            float const prev_t_raw = out_buffer[out_buffer.size() - 2];
+            float const prev_y = out_buffer[out_buffer.size() - 1];
+            if (std::bit_cast<int32_t>(prev_t_raw) == std::bit_cast<int32_t>(t_raw) && std::abs(prev_y - y) <= 1e-7f) {
                 return;
             }
         }
-        result.push_back(t_raw);
-        result.push_back(y);
+        out_buffer.push_back(t_raw);
+        out_buffer.push_back(y);
     };
 
     // Always append first vertex
-    auto const & first_v = m_vertices[static_cast<size_t>(start_idx)];
-    appendDedupe(static_cast<int32_t>(first_v.x.getValue()), first_v.y);
+    auto const first_v = getSample(start_idx);
+    appendDedupe(first_v.first, first_v.second);
 
     for (size_t b = 0; b < B; ++b) {
-        size_t const chunk_start = static_cast<size_t>(start_idx) + (b * total_samples) / B;
-        size_t const chunk_end = static_cast<size_t>(start_idx) + ((b + 1) * total_samples) / B;
+        size_t const chunk_start = start_idx + (b * total_samples) / B;
+        size_t const chunk_end = start_idx + ((b + 1) * total_samples) / B;
 
         if (chunk_start >= chunk_end) {
             continue;
@@ -249,63 +306,91 @@ std::vector<float> AnalogVertexCache::getVerticesForRangeDecimated(
 
         size_t min_idx = chunk_start;
         size_t max_idx = chunk_start;
-        float min_val = m_vertices[chunk_start].y;
-        float max_val = m_vertices[chunk_start].y;
+        auto const start_s = getSample(chunk_start);
+        float min_val = start_s.second;
+        float max_val = start_s.second;
 
-        for (size_t k = chunk_start + 1; k < chunk_end; ++k) {
-            float const y = m_vertices[k].y;
-            if (y < min_val) {
-                min_val = y;
-                min_idx = k;
+        size_t const start_float = chunk_start * 2;
+        size_t const end_float = chunk_end * 2;
+
+        if (end_float <= arr1.second) {
+            // Contiguous fast-path in arr1
+            float const * const p = arr1.first;
+            for (size_t k = chunk_start + 1; k < chunk_end; ++k) {
+                float const y = p[k * 2 + 1];
+                if (y < min_val) {
+                    min_val = y;
+                    min_idx = k;
+                }
+                if (y > max_val) {
+                    max_val = y;
+                    max_idx = k;
+                }
             }
-            if (y > max_val) {
-                max_val = y;
-                max_idx = k;
+        } else if (start_float >= arr1.second) {
+            // Contiguous fast-path in arr2
+            size_t const arr1_samples = arr1.second / 2;
+            float const * const p = arr2.first;
+            for (size_t k = chunk_start + 1; k < chunk_end; ++k) {
+                float const y = p[(k - arr1_samples) * 2 + 1];
+                if (y < min_val) {
+                    min_val = y;
+                    min_idx = k;
+                }
+                if (y > max_val) {
+                    max_val = y;
+                    max_idx = k;
+                }
+            }
+        } else {
+            // Straddles boundary (rare)
+            for (size_t k = chunk_start + 1; k < chunk_end; ++k) {
+                auto const s = getSample(k);
+                if (s.second < min_val) {
+                    min_val = s.second;
+                    min_idx = k;
+                }
+                if (s.second > max_val) {
+                    max_val = s.second;
+                    max_idx = k;
+                }
             }
         }
 
         // Emit in chronological order
         if (min_idx <= max_idx) {
-            auto const & v1 = m_vertices[min_idx];
-            appendDedupe(static_cast<int32_t>(v1.x.getValue()), v1.y);
+            auto const v1 = getSample(min_idx);
+            appendDedupe(v1.first, v1.second);
             if (min_idx != max_idx) {
-                auto const & v2 = m_vertices[max_idx];
-                appendDedupe(static_cast<int32_t>(v2.x.getValue()), v2.y);
+                auto const v2 = getSample(max_idx);
+                appendDedupe(v2.first, v2.second);
             }
         } else {
-            auto const & v1 = m_vertices[max_idx];
-            appendDedupe(static_cast<int32_t>(v1.x.getValue()), v1.y);
-            auto const & v2 = m_vertices[min_idx];
-            appendDedupe(static_cast<int32_t>(v2.x.getValue()), v2.y);
+            auto const v1 = getSample(max_idx);
+            appendDedupe(v1.first, v1.second);
+            auto const v2 = getSample(min_idx);
+            appendDedupe(v2.first, v2.second);
         }
     }
 
     // Always append last vertex
-    auto const & last_v = m_vertices[end_idx - 1];
-    appendDedupe(static_cast<int32_t>(last_v.x.getValue()), last_v.y);
+    auto const last_v = getSample(end_idx - 1);
+    appendDedupe(last_v.first, last_v.second);
 
     static_cast<void>(x_origin_master_absolute_time);
-    return result;
 }
 
 std::ptrdiff_t AnalogVertexCache::findIndexForTime(TimeFrameIndex time_idx) const {
-    if (m_vertices.empty()) {
+    if (m_time_indices.empty()) {
         return -1;
     }
 
-    // Binary search for the time index
-    // Note: circular_buffer iterators support random access
-    auto it = std::lower_bound(
-            m_vertices.begin(), m_vertices.end(), time_idx,
-            [](CachedAnalogVertex const & v, TimeFrameIndex t) {
-                return v.time_idx < t;
-            });
-
-    if (it == m_vertices.end()) {
+    auto it = std::lower_bound(m_time_indices.begin(), m_time_indices.end(), time_idx);
+    if (it == m_time_indices.end()) {
         return -1;
     }
 
-    return std::distance(m_vertices.begin(), it);
+    return std::distance(m_time_indices.begin(), it);
 }
 
 }// namespace DataViewer

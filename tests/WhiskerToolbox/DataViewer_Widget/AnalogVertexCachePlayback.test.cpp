@@ -150,3 +150,51 @@ TEST_CASE("AnalogVertexCache playback: fast-path decimation reduces vertex count
     REQUIRE(std::bit_cast<int32_t>(decimated_batch.vertices[0]) == expected_start);
     REQUIRE(std::bit_cast<int32_t>(decimated_batch.vertices[decimated_batch.vertices.size() - 2U]) == expected_end);
 }
+
+TEST_CASE("AnalogVertexCache playback: scratch buffer preserves allocated memory capacity across frames", "[AnalogVertexCache][DataViewer]") {
+    int constexpr kFrames = 2000;
+    std::vector<int> times(static_cast<size_t>(kFrames));
+    for (int i = 0; i < kFrames; ++i) {
+        times[static_cast<size_t>(i)] = i;
+    }
+    auto master = std::make_shared<TimeFrame>(times);
+
+    std::vector<float> values(static_cast<size_t>(kFrames), 1.0f);
+    auto series = std::make_shared<AnalogTimeSeries>(std::move(values), static_cast<size_t>(kFrames));
+    series->setTimeFrame(master);
+
+    AnalogVertexCache cache;
+    glm::mat4 const model{1.0f};
+
+    std::vector<float> scratch;
+    scratch.reserve(10000);
+    float const * initial_ptr = scratch.data();
+
+    DataViewerHelpers::AnalogBatchParams params{};
+    params.start_time = TimeFrameIndex{100};
+    params.end_time = TimeFrameIndex{500};
+    params.x_origin_master_absolute_time = master->getTimeAtIndex(params.start_time);
+    params.detect_gaps = false;
+    params.min_max_decimation_bucket_count = 0;
+
+    auto batch1 = DataViewerHelpers::buildAnalogSeriesBatchCached(
+            *series, master, params, model, cache, &scratch);
+
+    REQUIRE(batch1.vertices.data() == initial_ptr);
+    REQUIRE(batch1.vertices.size() == 401U * 2U);
+
+    // Recycle vector back
+    scratch = std::move(batch1.vertices);
+    REQUIRE(scratch.data() == initial_ptr);
+
+    // Frame 2
+    params.start_time = TimeFrameIndex{110};
+    params.end_time = TimeFrameIndex{510};
+    params.x_origin_master_absolute_time = master->getTimeAtIndex(params.start_time);
+
+    auto batch2 = DataViewerHelpers::buildAnalogSeriesBatchCached(
+            *series, master, params, model, cache, &scratch);
+
+    REQUIRE(batch2.vertices.data() == initial_ptr);
+    REQUIRE(batch2.vertices.size() == 401U * 2U);
+}

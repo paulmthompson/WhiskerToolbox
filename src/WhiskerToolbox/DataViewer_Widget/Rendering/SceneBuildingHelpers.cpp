@@ -307,7 +307,8 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
         std::shared_ptr<TimeFrame> const & master_time_frame,
         AnalogBatchParams const & params,
         glm::mat4 const & model_matrix,
-        DataViewer::AnalogVertexCache & cache) {
+        DataViewer::AnalogVertexCache & cache,
+        std::vector<float> * scratch_buffer) {
 
     CorePlotting::RenderablePolyLineBatch batch;
     batch.global_color = params.color;
@@ -350,9 +351,9 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
     if (cache.needsUpdate(cache_start, cache_end)) {
         auto missing_ranges = cache.getMissingRanges(cache_start, cache_end);
 
-        if (missing_ranges.size() == 1 &&
-            missing_ranges[0].start == cache_start &&
-            missing_ranges[0].end == cache_end) {
+        // If complete cache miss or too many missing ranges, do full refresh
+        if (missing_ranges.size() == 1 && !missing_ranges[0].prepend &&
+            missing_ranges[0].start == cache_start && missing_ranges[0].end == cache_end) {
 
             spdlog::debug("AnalogVertexCache: Complete cache miss for range [{}, {}]", cache_start.getValue(), cache_end.getValue());
 
@@ -389,25 +390,28 @@ CorePlotting::RenderablePolyLineBatch buildAnalogSeriesBatchCached(
     // AnalogTimeSeries / TimeSeriesMapper treat the batch end index as inclusive, while
     // AnalogVertexCache::getVerticesForRange uses a half-open upper bound.
     TimeFrameIndex const extract_end_exclusive = cache_end + TimeFrameIndex{1};
-    std::vector<float> flat_vertices;
+    if (scratch_buffer) {
+        batch.vertices = std::move(*scratch_buffer);
+    }
     if (params.min_max_decimation_bucket_count > 0) {
-        flat_vertices = cache.getVerticesForRangeDecimated(
+        cache.extractVerticesForRangeDecimated(
                 cache_start, extract_end_exclusive,
                 params.min_max_decimation_bucket_count,
-                params.x_origin_master_absolute_time);
+                params.x_origin_master_absolute_time,
+                batch.vertices);
     } else {
-        flat_vertices = cache.getVerticesForRange(
+        cache.extractVerticesForRange(
                 cache_start, extract_end_exclusive,
-                params.x_origin_master_absolute_time);
+                params.x_origin_master_absolute_time,
+                batch.vertices);
     }
 
     // Gap detection is currently not supported with caching
     // (would require tracking original indices in the cache)
-    if (!flat_vertices.empty() && flat_vertices.size() >= 4) {
-        int const vertex_count = static_cast<int>(flat_vertices.size()) / 2;
+    if (!batch.vertices.empty() && batch.vertices.size() >= 4) {
+        int const vertex_count = static_cast<int>(batch.vertices.size()) / 2;
         batch.line_start_indices.push_back(0);
         batch.line_vertex_counts.push_back(vertex_count);
-        batch.vertices = std::move(flat_vertices);
     }
 
     return batch;
