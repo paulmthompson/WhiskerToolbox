@@ -1,0 +1,68 @@
+=== Int16 to Float Conversion Benchmark ===
+
+
+--- Testing 1000000 samples (1 MB of int16) ---
+Generating test data...
+Generated 1000000 samples
+                   simple_loop | Samples:      1000000 | Time:     1.00 ms | Throughput:   1002.8 M samples/s
+     std_transform_back_insert | Samples:      1000000 | Time:     1.74 ms | Throughput:    575.9 M samples/s
+        std_transform_presized | Samples:      1000000 | Time:     0.91 ms | Throughput:   1102.8 M samples/s
+                   unrolled_8x | Samples:      1000000 | Time:     0.75 ms | Throughput:   1327.1 M samples/s
+                  with_scaling | Samples:      1000000 | Time:     0.94 ms | Throughput:   1067.6 M samples/s
+              from_char_buffer | Samples:      1000000 | Time:     0.56 ms | Throughput:   1783.9 M samples/s
+
+--- Testing 10000000 samples (19 MB of int16) ---
+Generating test data...
+Generated 10000000 samples
+                   simple_loop | Samples:     10000000 | Time:    11.90 ms | Throughput:    840.5 M samples/s
+     std_transform_back_insert | Samples:     10000000 | Time:     9.60 ms | Throughput:   1041.4 M samples/s
+        std_transform_presized | Samples:     10000000 | Time:     9.52 ms | Throughput:   1050.3 M samples/s
+                   unrolled_8x | Samples:     10000000 | Time:     9.98 ms | Throughput:   1001.7 M samples/s
+                  with_scaling | Samples:     10000000 | Time:     8.08 ms | Throughput:   1237.8 M samples/s
+              from_char_buffer | Samples:     10000000 | Time:     7.49 ms | Throughput:   1334.5 M samples/s
+
+--- Testing 100000000 samples (190 MB of int16) ---
+Generating test data...
+Generated 100000000 samples
+                   simple_loop | Samples:    100000000 | Time:   106.37 ms | Throughput:    940.1 M samples/s
+     std_transform_back_insert | Samples:    100000000 | Time:    91.29 ms | Throughput:   1095.5 M samples/s
+        std_transform_presized | Samples:    100000000 | Time:    88.01 ms | Throughput:   1136.3 M samples/s
+                   unrolled_8x | Samples:    100000000 | Time:    89.23 ms | Throughput:   1120.7 M samples/s
+                  with_scaling | Samples:    100000000 | Time:    80.16 ms | Throughput:   1247.5 M samples/s
+              from_char_buffer | Samples:    100000000 | Time:    78.70 ms | Throughput:   1270.6 M samples/s
+
+--- Testing 500000000 samples (953 MB of int16) ---
+Generating test data...
+Generated 500000000 samples
+                   simple_loop | Samples:    500000000 | Time:   546.97 ms | Throughput:    914.1 M samples/s
+     std_transform_back_insert | Samples:    500000000 | Time:   638.87 ms | Throughput:    782.6 M samples/s
+        std_transform_presized | Samples:    500000000 | Time:   531.84 ms | Throughput:    940.1 M samples/s
+                   unrolled_8x | Samples:    500000000 | Time:   457.47 ms | Throughput:   1093.0 M samples/s
+                  with_scaling | Samples:    500000000 | Time:   418.40 ms | Throughput:   1195.0 M samples/s
+              from_char_buffer | Samples:    500000000 | Time:   617.19 ms | Throughput:    810.1 M samples/s
+
+--- Testing 1000000000 samples (1907 MB of int16) ---
+Generating test data...
+Generated 1000000000 samples
+                   simple_loop | Samples:   1000000000 | Time:  1242.62 ms | Throughput:    804.8 M samples/s
+     std_transform_back_insert | Samples:   1000000000 | Time:  1411.31 ms | Throughput:    708.6 M samples/s
+        std_transform_presized | Samples:   1000000000 | Time:  1680.41 ms | Throughput:    595.1 M samples/s
+                   unrolled_8x | Samples:   1000000000 | Time:  1384.76 ms | Throughput:    722.1 M samples/s
+                  with_scaling | Samples:   1000000000 | Time:  1042.53 ms | Throughput:    959.2 M samples/s
+              from_char_buffer | Samples:   1000000000 | Time:  1048.21 ms | Throughput:    954.0 M samples/s
+
+--- Testing 2500000000 samples (4768 MB of int16) ---
+Generating test data...
+Generated 2500000000 samples
+                   simple_loop | Samples:   2500000000 | Time:  3899.97 ms | Throughput:    641.0 M samples/s
+     std_transform_back_insert | Samples:   2500000000 | Time:  3389.42 ms | Throughput:    737.6 M samples/s
+        std_transform_presized | Samples:   2500000000 | Time:  3182.74 ms | Throughput:    785.5 M samples/s
+                   unrolled_8x | Samples:   2500000000 | Time:  2963.43 ms | Throughput:    843.6 M samples/s
+                  with_scaling | Samples:   2500000000 | Time:  3204.10 ms | Throughput:    780.3 M samples/s
+              from_char_buffer | Samples:   2500000000 | Time:  2933.53 ms | Throughput:    852.2 M samples/s
+
+=== Observations ===
+1. Pre-sized output vectors are faster than back_inserter
+2. Simple loops and std::transform with presizing perform similarly
+3. Modern compilers auto-vectorize these loops effectively
+4. Conversion is typically NOT the bottleneck compared to disk I/O

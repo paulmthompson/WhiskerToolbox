@@ -1,61 +1,49 @@
 # WhiskerToolbox Benchmarking
 
-This directory contains performance benchmarks using Google Benchmark.
+Local performance stress binaries and heaptrack regression checks. Not part of `ctest`.
 
-## Quick Start
+## Regression guard (pass / fail)
+
+Requires `HEAPTRACK_EXECUTABLE` in `CMakeUserPresets.json` and a working OpenGL display.
 
 ```bash
-# Build benchmarks (enabled by default)
-cmake --preset linux-clang-release
-cmake --build --preset linux-clang-release
+cmake --preset my-clang-release
+cmake --build --preset my-clang-release
 
-# Run all benchmarks
-./out/build/Clang/Release/benchmark/benchmark_MaskArea
+# Once per machine:
+cmake --build --preset my-clang-release --target record_benchmark_baselines
 
-# Run specific benchmark
-./out/build/Clang/Release/benchmark/benchmark_MaskArea --benchmark_filter=Pipeline
+# After code changes:
+cmake --build --preset my-clang-release --target check_benchmark_regressions
 ```
 
-## Available Benchmarks
+- Exit **0** — heaptrack `temporary allocations` (and `allocations`) within baseline tolerance
+- Exit **1** — regression printed with numbers
 
-### MaskArea Transform Benchmarks
+Baselines are stored in `benchmark-baselines-local/` (gitignored). Same machine only.
 
-Tests the performance of mask area calculation and pipeline execution:
+## ScatterPlot view stress
 
-- **Element-level**: Single mask area calculation
-- **Container-level**: MaskData → RaggedAnalogTimeSeries transform
-- **Pipeline**: Full transform chains with optimization comparisons
-- **Baseline**: Iteration and computation overhead measurements
-
-## Creating New Benchmarks
-
-1. Create `MyFeature.benchmark.cpp` in this directory
-2. Add to `CMakeLists.txt`:
-   ```cmake
-   add_selective_benchmark(
-       NAME MyFeature
-       SOURCES MyFeature.benchmark.cpp
-       LINK_LIBRARIES DataManager
-   )
-   ```
-3. Build and run!
-
-## Documentation
-
-See [`docs/developer/benchmarking.md`](../docs/developer/benchmarking.md) for:
-- Complete benchmarking guide
-- Profiling tool integration (perf, heaptrack, valgrind)
-- Assembly inspection techniques
-- Best practices and patterns
-
-## CMake Options
-
-Control which benchmarks are built:
+`benchmark_ScatterPlotView` runs a fixed pan/zoom loop on `ScatterPlotOpenGLWidget`
+with synthetic analog data (10k points, 5000 iterations by default).
 
 ```bash
-# Disable all benchmarks
-cmake -DENABLE_BENCHMARK=OFF ..
+./out/build/Clang/Release/benchmark/benchmark_ScatterPlotView
+./out/build/Clang/Release/benchmark/benchmark_ScatterPlotView 10000 5000
+```
 
-# Disable specific benchmark
-cmake -DBENCHMARK_MASK_AREA=OFF ..
+## Optional Google Benchmark JSON
+
+`run_benchmarks` runs Google Benchmark targets only (stress executables are excluded).
+
+## Adding another regression stress binary
+
+1. Add `MyViewInteraction.benchmark.cpp` with a `main()` stress loop
+2. Register with `add_selective_benchmark(... STRESS_ONLY ...)`
+3. `record_benchmark_baselines` / `check_benchmark_regressions` pick it up automatically
+
+## CMake options
+
+```bash
+cmake --preset my-clang-release -DBENCHMARK_SCATTERPLOTVIEW=OFF
 ```

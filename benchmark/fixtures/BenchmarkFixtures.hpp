@@ -9,8 +9,8 @@
  * - Representative of real-world data
  */
 
-#ifndef WHISKERTOOLBOX_BENCHMARK_FIXTURES_HPP
-#define WHISKERTOOLBOX_BENCHMARK_FIXTURES_HPP
+#ifndef NEURALYZER_BENCHMARK_FIXTURES_HPP
+#define NEURALYZER_BENCHMARK_FIXTURES_HPP
 
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/masks.hpp"
@@ -28,7 +28,7 @@
 #include <set>
 #include <vector>
 
-namespace WhiskerToolbox::Benchmark {
+namespace Neuralyzer::Benchmark {
 
 // ============================================================================
 // Configuration Structures
@@ -497,6 +497,6 @@ private:
     std::mt19937 rng_;
 };
 
-}// namespace WhiskerToolbox::Benchmark
+}// namespace Neuralyzer::Benchmark
 
-#endif// WHISKERTOOLBOX_BENCHMARK_FIXTURES_HPP
+#endif// NEURALYZER_BENCHMARK_FIXTURES_HPP

@@ -56,8 +56,8 @@ Mouse interaction uses modifier keys:
 
 | Action | Modifier | Behavior |
 |--------|----------|----------|
-| Select point | Click | Finds nearest point within threshold, highlights in yellow |
-| Move point | Ctrl+Click | Moves selected point to click position |
+| Select point | Click | Uses `Media_Window::findEntityAtPosition()` (same hit-test as rendering) and highlights in yellow |
+| Move point | Ctrl+Click | Moves selected point to click position (data coordinates) |
 | Add point | Alt+Click | Adds new point at click position at current time |
 
 ## Display Options

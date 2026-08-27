@@ -13,6 +13,8 @@ style.rst
 
 infer-out
 
+benchmark-baselines-local/
+
 vcpkg_installed
 vcpkg
 vcpkg_cache
@@ -35,5 +37,7 @@ docs/api_generated/
 # Quarto build artifact
 .quarto/
 _site/
+
+__pycache__/
 
 docs/site_libs/

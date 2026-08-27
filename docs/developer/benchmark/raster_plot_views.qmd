@@ -308,24 +308,24 @@ For comparison, Baseline Normalization breakdown:
 | Extract + normalize | 429 | Binary search + memory copy + subtract |
 | **Total** | **429** | |
 
-### Context-Aware Transform Infrastructure
+### Store-Based Projection Infrastructure
 
-The gather approach uses the transform pipeline infrastructure:
+The gather approach uses `PipelineValueStore` populated by `buildGatherRowStore()`:
 
 ```cpp
-// Pattern: Context-aware value projection for each trial
-auto projection_factory = [](TrialContext const& ctx) -> ValueProjectionFn<EventWithId, float> {
-    NormalizeTimeParams params;
-    params.setContext(ctx);  // Inject trial alignment time
-    return [params](EventWithId const& event) -> float {
-        return normalizeTimeValue(event.time(), params);
+ValueProjectionFactoryV2<EventWithId, float> projection_factory =
+    [](PipelineValueStore const& store) -> ValueProjectionFn<EventWithId, float> {
+        NormalizeTimeParams params;
+        int64_t alignment = store.getInt("alignment_time").value_or(0);
+        params.setAlignmentTime(TimeFrameIndex{alignment});
+        return [params](EventWithId const& event) -> float {
+            return normalizeTimeValue(event.time(), params);
+        };
     };
-};
 
-// Build projections per trial
 for (size_t i = 0; i < gathered.size(); ++i) {
-    auto ctx = gathered.buildContext(i);  // Get alignment info
-    projections[i] = projection_factory(ctx);
+    auto store = buildGatherRowStore(gathered, i);
+    projections[i] = projection_factory(store);
 }
 ```
 
@@ -334,7 +334,7 @@ for (size_t i = 0; i < gathered.size(); ++i) {
 Several factors contribute to the 3.5x overhead:
 
 1. **View Creation Overhead**: Creating 1000 views takes ~240µs, amortized across the operation
-2. **Lambda Captures**: Each trial's projection captures its context parameters (NormalizeTimeParams)
+2. **Lambda Captures**: Each trial's projection captures its bound parameters (NormalizeTimeParams)
 3. **Virtual Dispatch**: Type-erased storage adds indirection on each event access
 4. **Memory Layout**: Events accessed via index indirection rather than contiguous array
 5. **Cache Locality**: Jumping between indices and data arrays reduces cache efficiency
@@ -375,7 +375,7 @@ auto projections = gathered.project(normalize_factory);  // 50µs
 
 3. **The cost is reasonable for trial-aligned analysis** - Additional 201µs for gather+normalization vs. gather alone is ~2.5% of the gather cost
 
-4. **Transform pipeline infrastructure is ready** - Context-aware parameters enable flexible trial-based transformations
+4. **Transform pipeline infrastructure is ready** - PipelineValueStore bindings enable flexible trial-based transformations
 
 5. **Use baseline for performance-critical tight loops** - Use gather for analysis pipelines where composability matters more than raw speed
 

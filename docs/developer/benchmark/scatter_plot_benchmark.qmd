@@ -1,0 +1,45 @@
+---
+title: "ScatterPlot regression guard"
+format: html
+---
+
+## Purpose
+
+`benchmark/ScatterPlotViewInteraction.benchmark.cpp` builds `benchmark_ScatterPlotView`,
+a fixed-loop pan/zoom stress binary for `ScatterPlotOpenGLWidget`. It is run under
+heaptrack to catch allocation churn when view-only interaction accidentally rebuilds
+the scene (the bug class you fixed with ~1000× slowdown).
+
+No library instrumentation. Pass/fail compares heaptrack summary lines to a local baseline.
+
+## Commands
+
+```bash
+cmake --preset my-clang-release
+cmake --build --preset my-clang-release
+
+# Once per machine:
+cmake --build --preset my-clang-release --target record_benchmark_baselines
+
+# After changes:
+cmake --build --preset my-clang-release --target check_benchmark_regressions
+```
+
+Baselines: `benchmark-baselines-local/` (gitignored). Requires `HEAPTRACK_EXECUTABLE`
+in `CMakeUserPresets.json` and working OpenGL on the machine.
+
+## Manual run
+
+```bash
+./out/build/Clang/Release/benchmark/benchmark_ScatterPlotView
+```
+
+Optional arguments: `point_count` `iteration_count` (defaults: 10000, 5000).
+
+## What fails
+
+`check_benchmark_regressions` compares heaptrack summary output. Primary signal:
+`temporary allocations` (per-frame churn). Secondary: total `allocations`.
+Default tolerance: 30% above baseline.
+
+Inspect detailed stacks with the `.zst` file in `out/build/Clang/Release/benchmark-regression-results/`.

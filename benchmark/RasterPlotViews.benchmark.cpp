@@ -40,6 +40,7 @@
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "TransformsV2/extension/gatherResult/GatherResultRowContext.hpp"
 #include "transforms/v2/algorithms/Temporal/NormalizeTime.hpp"
 #include "transforms/v2/core/PipelineValueStore.hpp"
 #include "transforms/v2/core/TransformPipeline.hpp"
@@ -725,7 +726,7 @@ BENCHMARK_REGISTER_F(RasterPlotBenchmark, IterationOnly_ViewBased)
 std::shared_ptr<DigitalIntervalSeries> createAlignmentIntervals(
         std::vector<TimeFrameIndex> const & alignment_events,
         int64_t half_window) {
-    std::vector<Interval> intervals;
+    std::vector<TimeFrameInterval> intervals;
     intervals.reserve(alignment_events.size());
 
     for (auto const & event: alignment_events) {
@@ -772,7 +773,7 @@ void populateGPUBufferGather(
  */
 void populateGPUBufferGatherWithProjection(
         GatherResult<DigitalEventSeries> const & gathered,
-        std::vector<WhiskerToolbox::Transforms::V2::ValueProjectionFn<EventWithId, float>> const & projections,
+        std::vector<Neuralyzer::Transforms::V2::ValueProjectionFn<EventWithId, float>> const & projections,
         MockGPUBuffer & buffer) {
     buffer.clear();
 
@@ -1000,7 +1001,7 @@ BENCHMARK_DEFINE_F(RasterPlotBenchmark, FullPipeline_Gather_Normalized)
             alignment_events_, config_.window_half_size);
 
     // Build projection factory once (outside benchmark loop)
-    using namespace WhiskerToolbox::Transforms::V2;
+    using namespace Neuralyzer::Transforms::V2;
 
     ValueProjectionFactoryV2<EventWithId, float> projection_factory =
             [](PipelineValueStore const & store) -> ValueProjectionFn<EventWithId, float> {
@@ -1017,12 +1018,7 @@ BENCHMARK_DEFINE_F(RasterPlotBenchmark, FullPipeline_Gather_Normalized)
         auto gathered = gather(raster_series_, alignment_intervals);
 
         // Phase 2: Build projections for each trial (store-based binding)
-        std::vector<ValueProjectionFn<EventWithId, float>> projections;
-        projections.reserve(gathered.size());
-        for (size_t i = 0; i < gathered.size(); ++i) {
-            auto store = gathered.buildTrialStore(i);
-            projections.push_back(projection_factory(store));
-        }
+        auto projections = Neuralyzer::Gather::projectGatherRows(gathered, projection_factory);
 
         // Phase 3: Populate buffer using projections
         populateGPUBufferGatherWithProjection(gathered, projections, buffer_);
@@ -1073,7 +1069,7 @@ BENCHMARK_DEFINE_F(RasterPlotBenchmark, Normalization_Gather)
             alignment_events_, config_.window_half_size);
 
     // Create projection factory
-    using namespace WhiskerToolbox::Transforms::V2;
+    using namespace Neuralyzer::Transforms::V2;
     ValueProjectionFactoryV2<EventWithId, float> projection_factory =
             [](PipelineValueStore const & store) -> ValueProjectionFn<EventWithId, float> {
         NormalizeTimeParams params;
@@ -1089,12 +1085,7 @@ BENCHMARK_DEFINE_F(RasterPlotBenchmark, Normalization_Gather)
         auto gathered = gather(raster_series_, alignment_intervals);
 
         // Create projections with per-trial store
-        std::vector<ValueProjectionFn<EventWithId, float>> projections;
-        projections.reserve(gathered.size());
-        for (size_t i = 0; i < gathered.size(); ++i) {
-            auto store = gathered.buildTrialStore(i);
-            projections.push_back(projection_factory(store));
-        }
+        auto projections = Neuralyzer::Gather::projectGatherRows(gathered, projection_factory);
 
         // Compute sum of normalized times to ensure projections are actually evaluated
         int64_t sum = 0;

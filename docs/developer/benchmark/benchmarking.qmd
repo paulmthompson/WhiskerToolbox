@@ -3,26 +3,27 @@ title: "Profiling and Performance"
 format: html
 ---
 
-This document describes the benchmarking infrastructure for Neuralyzer, including how to create benchmarks, run them, and analyze performance using various profiling tools.
+This document describes the local benchmarking infrastructure for Neuralyzer, including how to create benchmarks, run them outside the normal test suite, and analyze performance using profiling tools.
 
 ## Quick Start
 
 ``` bash
-# Build with benchmarks enabled (they're on by default)
-cmake --preset linux-clang-release -DENABLE_BENCHMARK=ON
-cmake --build --preset linux-clang-release
+# Configure and build the local benchmark preset
+cmake --preset my-clang-release
+cmake --build --preset my-clang-release
 
-# Run all benchmarks
-cd out/build/Clang/Release/benchmark
-./benchmark_MaskArea
+# Heaptrack regression guard (pass/fail, not CTest)
+cmake --build --preset my-clang-release --target record_benchmark_baselines
+cmake --build --preset my-clang-release --target check_benchmark_regressions
 
-# Run specific benchmarks with filtering
-./benchmark_MaskArea --benchmark_filter=Pipeline
+# Optional: Google Benchmark JSON (stress executables are excluded)
+cmake --build --preset my-clang-release --target run_benchmarks
 
-# Run with different output formats
-./benchmark_MaskArea --benchmark_format=json > results.json
-./benchmark_MaskArea --benchmark_format=csv > results.csv
+# Manual ScatterPlot stress run
+./out/build/Clang/Release/benchmark/benchmark_ScatterPlotView
 ```
+
+Benchmarks are intentionally not registered as CTest tests. A normal command such as `ctest --preset my-clang-release` runs correctness tests only.
 
 ## Architecture
 
@@ -30,18 +31,19 @@ cd out/build/Clang/Release/benchmark
 
 The benchmarking system is built on `cmake/BenchmarkUtils.cmake`, which provides:
 
--   `add_selective_benchmark()` - Create individual benchmark executables
+-   `add_selective_benchmark()` - Create individual benchmark executables and register them with the local benchmark runner
 -   `configure_benchmark_for_profiling()` - Add profiling tool support
+-   `add_benchmark_suite_target()` - Create the `run_benchmarks` target that runs enabled benchmarks and writes JSON results
 -   `print_benchmark_summary()` - Display configuration summary
 
 Each benchmark can be individually enabled/disabled via CMake options:
 
 ``` bash
 # Disable a specific benchmark
-cmake -DBENCHMARK_MASK_AREA=OFF ..
+cmake --preset my-clang-release -DBENCHMARK_SCATTERPLOTVIEW=OFF
 
 # Only build specific benchmarks
-cmake -DBENCHMARK_MASK_AREA=ON -DBENCHMARK_OTHER=OFF ..
+cmake --preset my-clang-release -DBENCHMARK_SCATTERPLOT=ON -DBENCHMARK_OTHER=OFF
 ```
 
 ### Test Data Fixtures
@@ -200,7 +202,7 @@ Profile CPU usage and generate call graphs:
 
 ``` bash
 # Record profile data
-perf record -g ./benchmark_MaskArea --benchmark_filter=Pipeline
+perf record -g ./benchmark_ScatterPlot --benchmark_filter=PanZoom
 
 # View interactive report
 perf report
@@ -223,13 +225,13 @@ Analyze memory allocation patterns:
 
 ``` bash
 # Run with heaptrack
-heaptrack ./benchmark_MaskArea
+cmake --build --preset my-clang-release --target run_scatterplot_heaptrack
 
 # View results in GUI
-heaptrack_gui heaptrack.benchmark_MaskArea.*.gz
+heaptrack_gui heaptrack.benchmark_ScatterPlot.*.gz
 
 # View results in terminal
-heaptrack_print heaptrack.benchmark_MaskArea.*.gz
+heaptrack_print heaptrack.benchmark_ScatterPlot.*.gz
 ```
 
 What heaptrack shows: - Total memory allocated - Peak memory usage - Number of allocations - Call stacks for allocations - Memory leaks - Temporary allocations
@@ -240,7 +242,7 @@ Analyze cache behavior:
 
 ``` bash
 # Run cachegrind
-valgrind --tool=cachegrind ./benchmark_MaskArea --benchmark_filter=CacheBehavior
+valgrind --tool=cachegrind ./benchmark_ScatterPlot --benchmark_filter=PanZoom
 
 # Visualize results
 cg_annotate cachegrind.out.<pid>
@@ -257,10 +259,10 @@ View generated assembly for optimization:
 
 ``` bash
 # Method 1: objdump
-objdump -d -C -S ./benchmark_MaskArea | less
+objdump -d -C -S ./benchmark_ScatterPlot | less
 
 # Search for specific function
-objdump -d -C -S ./benchmark_MaskArea | grep -A 50 "calculateMaskArea"
+objdump -d -C -S ./benchmark_ScatterPlot | grep -A 50 "updateProjectionOnly"
 
 # Method 2: During compilation (if GENERATE_ASM=ON)
 # Assembly files (.s) generated alongside object files
@@ -274,7 +276,7 @@ What to look for: - Loop vectorization (SIMD instructions) - Unnecessary branche
 Get quick overview of resource usage:
 
 ``` bash
-/usr/bin/time -v ./benchmark_MaskArea
+/usr/bin/time -v ./benchmark_ScatterPlot
 
 # Key metrics:
 # - Maximum resident set size (peak memory)
@@ -299,19 +301,19 @@ ClangBuildAnalyzer --analyze build_results.bin
 
 ``` bash
 # 1. Identify hot spots
-perf record -g ./benchmark_MaskArea
+perf record -g ./benchmark_ScatterPlot
 perf report  # Identify slowest function
 
 # 2. View assembly
-objdump -d -C -S ./benchmark_MaskArea | grep -A 100 "mySlowFunction"
+objdump -d -C -S ./benchmark_ScatterPlot | grep -A 100 "mySlowFunction"
 
 # 3. Check cache behavior
-valgrind --tool=cachegrind ./benchmark_MaskArea --benchmark_filter=MyFunction
+valgrind --tool=cachegrind ./benchmark_ScatterPlot --benchmark_filter=MyFunction
 
 # 4. Make changes and compare
-./benchmark_MaskArea --benchmark_filter=MyFunction > before.txt
+./benchmark_ScatterPlot --benchmark_filter=MyFunction > before.txt
 # ... make changes ...
-./benchmark_MaskArea --benchmark_filter=MyFunction > after.txt
+./benchmark_ScatterPlot --benchmark_filter=MyFunction > after.txt
 compare.py compare before.txt after.txt  # From Google Benchmark tools
 ```
 
@@ -319,20 +321,20 @@ compare.py compare before.txt after.txt  # From Google Benchmark tools
 
 ``` bash
 # 1. Identify allocation hot spots
-heaptrack ./benchmark_MaskArea
+cmake --build --preset my-clang-release --target run_scatterplot_heaptrack
 
 # 2. View in GUI
-heaptrack_gui heaptrack.benchmark_MaskArea.*.gz
+heaptrack_gui heaptrack.benchmark_ScatterPlot.*.gz
 # Look for:
 # - Temporary allocations in loops
 # - Large peak allocations
 # - Memory leaks
 
 # 3. Check for leaks with valgrind
-valgrind --leak-check=full ./benchmark_MaskArea --benchmark_filter=MyTest
+valgrind --leak-check=full ./benchmark_ScatterPlot --benchmark_filter=MyTest
 
 # 4. Verify fix
-heaptrack ./benchmark_MaskArea
+cmake --build --preset my-clang-release --target run_scatterplot_heaptrack
 # Compare before/after total allocations and peak memory
 ```
 
@@ -340,14 +342,14 @@ heaptrack ./benchmark_MaskArea
 
 ``` bash
 # Benchmark different implementations
-./benchmark_MaskArea --benchmark_filter="Algorithm_v1|Algorithm_v2" \
+./benchmark_ScatterPlot --benchmark_filter="Algorithm_v1|Algorithm_v2" \
     --benchmark_format=json > comparison.json
 
 # Use benchmark tools to compare
 tools/compare.py benchmarks comparison.json baseline.json
 
 # Or export to CSV for plotting
-./benchmark_MaskArea --benchmark_format=csv > data.csv
+./benchmark_ScatterPlot --benchmark_format=csv > data.csv
 # Import into spreadsheet/plotting tool
 ```
 
@@ -435,22 +437,26 @@ BM_Pipeline/2                124.56 ms       124.12 ms            6
 
 **Cachegrind:** - L1 miss rate \< 5% is excellent - L2 miss rate \< 1% is good - Look for cache-unfriendly access patterns
 
-## Continuous Performance Monitoring
+## Local Performance Monitoring
 
 ### Save Baseline Results
 
 ``` bash
 # Save current performance as baseline
-./benchmark_MaskArea --benchmark_out=baseline.json \
-    --benchmark_out_format=json
+cmake --build --preset my-clang-release --target run_benchmarks
+cp -r out/build/Clang/Release/benchmark-results benchmark-baseline-local
 
 # After changes, compare
-./benchmark_MaskArea --benchmark_out=current.json \
-    --benchmark_out_format=json
+cmake --build --preset my-clang-release --target run_benchmarks
 
 # Compare results
-tools/compare.py benchmarks baseline.json current.json
+benchmark/tools/compare_benchmark_json.py \
+    benchmark-baseline-local \
+    out/build/Clang/Release/benchmark-results \
+    --tolerance 0.30
 ```
+
+Keep these baselines local to the machine, compiler, and preset that produced them. Timing numbers are hardware dependent. For memory regressions in interaction paths, run the focused benchmark executable under heaptrack and compare allocation totals and call stacks locally.
 
 ## Troubleshooting
 
@@ -475,7 +481,7 @@ If standard deviation \> 10% of mean:
 
 1.  Close other applications
 2.  Disable CPU frequency scaling: `sudo cpupower frequency-set --governor performance`
-3.  Pin to specific CPU: `taskset -c 0 ./benchmark_MaskArea`
+3.  Pin to specific CPU: `taskset -c 0 ./benchmark_ScatterPlot`
 4.  Increase minimum iteration time: `--benchmark_min_time=5`
 
 ### Build Issues
@@ -485,7 +491,7 @@ If standard deviation \> 10% of mean:
 cmake -DENABLE_BENCHMARK=ON ..
 
 # Specific benchmark disabled
-cmake -DBENCHMARK_MASK_AREA=ON ..
+cmake --preset my-clang-release -DBENCHMARK_SCATTERPLOT=ON
 
 # Google Benchmark not found
 # (Should auto-fetch with FetchContent, but can install manually)

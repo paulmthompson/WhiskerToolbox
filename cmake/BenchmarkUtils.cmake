@@ -14,31 +14,41 @@ Key Features:
 Usage Example:
     # In benchmark/CMakeLists.txt
     add_selective_benchmark(
-        NAME MaskArea
-        SOURCES MaskArea.benchmark.cpp
+        NAME ScatterPlot
+        SOURCES ScatterPlot.benchmark.cpp
         LINK_LIBRARIES DataManager
         DEFAULT ON
     )
 
 This creates:
-- CMake option: BENCHMARK_MASK_AREA (default: ON)
-- Executable: benchmark_MaskArea (if enabled)
+- CMake option: BENCHMARK_SCATTERPLOT (default: ON)
+- Executable: benchmark_ScatterPlot (if enabled)
 - All necessary linkage and configuration
 
 Performance Analysis Integration:
     # Run with perf
-    perf record -g ./benchmark_MaskArea
+    perf record -g ./benchmark_ScatterPlot
     perf report
     
     # Run with heaptrack
-    heaptrack ./benchmark_MaskArea
-    heaptrack_gui heaptrack.benchmark_MaskArea.*.gz
+    heaptrack ./benchmark_ScatterPlot
+    heaptrack_gui heaptrack.benchmark_ScatterPlot.*.gz
     
     # View assembly
-    objdump -d -C -S ./benchmark_MaskArea | less
+    objdump -d -C -S ./benchmark_ScatterPlot | less
 ]]
 
 include_guard(GLOBAL)
+
+define_property(GLOBAL PROPERTY NEURALYZER_BENCHMARK_TARGETS
+    BRIEF_DOCS "Benchmark executable targets"
+    FULL_DOCS "Executable targets created by add_selective_benchmark for the local benchmark runner"
+)
+
+define_property(GLOBAL PROPERTY NEURALYZER_GOOGLE_BENCHMARK_TARGETS
+    BRIEF_DOCS "Google Benchmark executable targets"
+    FULL_DOCS "Targets registered for run_benchmarks JSON output (excludes STRESS_ONLY executables)"
+)
 
 #[[
 add_selective_benchmark
@@ -47,7 +57,7 @@ add_selective_benchmark
 Creates a benchmark executable with optional compilation controlled by a CMake option.
 
 Parameters:
-  NAME              - Base name for the benchmark (e.g., "MaskArea")
+  NAME              - Base name for the benchmark (e.g., "ScatterPlot")
   SOURCES           - List of source files for the benchmark
   LINK_LIBRARIES    - List of libraries to link against
   INCLUDE_DIRS      - (Optional) Additional include directories
@@ -55,15 +65,15 @@ Parameters:
   COMPILE_OPTIONS   - (Optional) Additional compiler flags
 
 Generated Artifacts:
-  - CMake Option: BENCHMARK_<UPPER_NAME> (e.g., BENCHMARK_MASK_AREA)
-  - Executable: benchmark_<Name> (e.g., benchmark_MaskArea)
-  - Test: benchmark_<Name> (registered with CTest)
+  - CMake Option: BENCHMARK_<UPPER_NAME> (e.g., BENCHMARK_SCATTERPLOT)
+  - Executable: benchmark_<Name> (e.g., benchmark_ScatterPlot)
+  - Registration with the local benchmark suite target
 
 Example:
   add_selective_benchmark(
-      NAME MaskArea
+      NAME ScatterPlot
       SOURCES 
-          MaskArea.benchmark.cpp
+          ScatterPlot.benchmark.cpp
           fixtures/MaskDataFixture.cpp
       LINK_LIBRARIES 
           DataManager
@@ -74,7 +84,7 @@ Example:
 function(add_selective_benchmark)
     cmake_parse_arguments(
         BENCH                          # Prefix for parsed variables
-        ""                             # Options (boolean flags)
+        "STRESS_ONLY"                  # Options (boolean flags)
         "NAME;DEFAULT"                 # Single-value keywords
         "SOURCES;LINK_LIBRARIES;INCLUDE_DIRS;COMPILE_OPTIONS" # Multi-value keywords
         ${ARGN}                        # Arguments to parse
@@ -111,17 +121,17 @@ function(add_selective_benchmark)
         add_executable(${target_name} ${BENCH_SOURCES})
 
         # Link libraries
-        if(BENCH_LINK_LIBRARIES)
-            target_link_libraries(${target_name} PRIVATE 
+        if(BENCH_STRESS_ONLY)
+            if(BENCH_LINK_LIBRARIES)
+                target_link_libraries(${target_name} PRIVATE ${BENCH_LINK_LIBRARIES})
+            endif()
+        elseif(BENCH_LINK_LIBRARIES)
+            target_link_libraries(${target_name} PRIVATE
                 ${BENCH_LINK_LIBRARIES}
                 benchmark::benchmark
-                benchmark::benchmark_main
             )
         else()
-            target_link_libraries(${target_name} PRIVATE 
-                benchmark::benchmark
-                benchmark::benchmark_main
-            )
+            target_link_libraries(${target_name} PRIVATE benchmark::benchmark)
         endif()
 
         # Add include directories
@@ -156,13 +166,15 @@ function(add_selective_benchmark)
             $<$<CXX_COMPILER_ID:GNU,Clang>:-fno-inline-small-functions>
         )
 
-        # Register with CTest for easy execution
-        add_test(NAME ${target_name} COMMAND ${target_name})
-
         # Set output directory
         set_target_properties(${target_name} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/benchmark"
         )
+
+        set_property(GLOBAL APPEND PROPERTY NEURALYZER_BENCHMARK_TARGETS ${target_name})
+        if(NOT BENCH_STRESS_ONLY)
+            set_property(GLOBAL APPEND PROPERTY NEURALYZER_GOOGLE_BENCHMARK_TARGETS ${target_name})
+        endif()
 
         message(STATUS "Benchmark enabled: ${BENCH_NAME} (${target_name})")
     else()
@@ -178,14 +190,14 @@ Adds additional configuration to a benchmark target for profiling tools.
 Call this after add_selective_benchmark if you need special profiling setup.
 
 Parameters:
-  TARGET            - The benchmark target name (e.g., benchmark_MaskArea)
+  TARGET            - The benchmark target name (e.g., benchmark_ScatterPlot)
   ENABLE_PERF       - (Optional) Add perf-specific flags
   ENABLE_HEAPTRACK  - (Optional) Add heaptrack-specific flags
   GENERATE_ASM      - (Optional) Generate assembly listing files
 
 Example:
   configure_benchmark_for_profiling(
-      TARGET benchmark_MaskArea
+      TARGET benchmark_ScatterPlot
       ENABLE_PERF ON
       GENERATE_ASM ON
   )
@@ -229,6 +241,180 @@ function(configure_benchmark_for_profiling)
         message(STATUS "  Assembly generation enabled for ${PROF_TARGET}")
         message(STATUS "    Assembly files will be in build directory")
     endif()
+endfunction()
+
+#[[
+add_benchmark_suite_target
+--------------------------
+
+Creates a local benchmark runner target that executes all benchmark targets
+registered via add_selective_benchmark. Benchmarks are deliberately not CTest
+tests, so normal ctest invocations run correctness tests only.
+
+Parameters:
+  NAME        - (Optional) Custom target name (default: run_benchmarks)
+  OUTPUT_DIR  - (Optional) Output directory for Google Benchmark JSON files
+]]
+function(add_benchmark_suite_target)
+    cmake_parse_arguments(
+        SUITE
+        ""
+        "NAME;OUTPUT_DIR"
+        ""
+        ${ARGN}
+    )
+
+    if(NOT SUITE_NAME)
+        set(SUITE_NAME run_benchmarks)
+    endif()
+
+    if(NOT SUITE_OUTPUT_DIR)
+        set(SUITE_OUTPUT_DIR "${CMAKE_BINARY_DIR}/benchmark-results")
+    endif()
+
+    get_property(benchmark_targets GLOBAL PROPERTY NEURALYZER_GOOGLE_BENCHMARK_TARGETS)
+
+    if(NOT benchmark_targets)
+        add_custom_target(${SUITE_NAME}
+            COMMAND ${CMAKE_COMMAND} -E echo "No Google Benchmark targets are enabled."
+            VERBATIM
+        )
+        return()
+    endif()
+
+    set(commands
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${SUITE_OUTPUT_DIR}"
+    )
+
+    foreach(benchmark_target ${benchmark_targets})
+        list(APPEND commands
+            COMMAND ${CMAKE_COMMAND} -E echo "Running ${benchmark_target}"
+            COMMAND $<TARGET_FILE:${benchmark_target}>
+                    --benchmark_format=json
+                    --benchmark_out=${SUITE_OUTPUT_DIR}/${benchmark_target}.json
+                    --benchmark_out_format=json
+        )
+    endforeach()
+
+    add_custom_target(${SUITE_NAME}
+        ${commands}
+        COMMENT "Running local benchmark suite"
+        USES_TERMINAL
+        VERBATIM
+    )
+
+    message(STATUS "Benchmark runner target: ${SUITE_NAME}")
+    message(STATUS "Benchmark results: ${SUITE_OUTPUT_DIR}")
+endfunction()
+
+#[[
+add_benchmark_regression_targets
+---------------------------------
+
+Creates record_benchmark_baselines and check_benchmark_regressions targets that
+run each registered benchmark executable under heaptrack and compare summary
+statistics to local baseline files.
+
+Parameters:
+  BASELINE_DIR  - (Optional) Directory for saved baselines (default: source/benchmark-baselines-local)
+  RESULTS_DIR   - (Optional) Directory for heaptrack artifacts and current run logs
+  TOLERANCE     - (Optional) Fractional tolerance for compare script (default: 0.30)
+]]
+function(add_benchmark_regression_targets)
+    cmake_parse_arguments(
+        REG
+        ""
+        "BASELINE_DIR;RESULTS_DIR;TOLERANCE"
+        ""
+        ${ARGN}
+    )
+
+    if(NOT REG_BASELINE_DIR)
+        set(REG_BASELINE_DIR "${CMAKE_SOURCE_DIR}/benchmark-baselines-local")
+    endif()
+
+    if(NOT REG_RESULTS_DIR)
+        set(REG_RESULTS_DIR "${CMAKE_BINARY_DIR}/benchmark-regression-results")
+    endif()
+
+    if(NOT REG_TOLERANCE)
+        set(REG_TOLERANCE "0.30")
+    endif()
+
+    set(HEAPTRACK_EXECUTABLE "" CACHE FILEPATH "Optional local heaptrack executable")
+
+    get_property(benchmark_targets GLOBAL PROPERTY NEURALYZER_BENCHMARK_TARGETS)
+
+    set(compare_script "${CMAKE_SOURCE_DIR}/benchmark/tools/compare_heaptrack_summary.py")
+
+    if(NOT benchmark_targets)
+        add_custom_target(record_benchmark_baselines
+            COMMAND ${CMAKE_COMMAND} -E echo "No benchmark targets are enabled."
+            VERBATIM
+        )
+        add_custom_target(check_benchmark_regressions
+            COMMAND ${CMAKE_COMMAND} -E echo "No benchmark targets are enabled."
+            VERBATIM
+        )
+        return()
+    endif()
+
+    if(NOT HEAPTRACK_EXECUTABLE)
+        add_custom_target(record_benchmark_baselines
+            COMMAND ${CMAKE_COMMAND} -E echo
+                "record_benchmark_baselines: HEAPTRACK_EXECUTABLE is not set. Configure with CMakeUserPresets.json."
+            VERBATIM
+        )
+        add_custom_target(check_benchmark_regressions
+            COMMAND ${CMAKE_COMMAND} -E echo
+                "check_benchmark_regressions: HEAPTRACK_EXECUTABLE is not set. Configure with CMakeUserPresets.json."
+            VERBATIM
+        )
+        return()
+    endif()
+
+    set(record_commands
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${REG_BASELINE_DIR}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${REG_RESULTS_DIR}"
+    )
+    set(check_commands
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${REG_RESULTS_DIR}"
+    )
+
+    foreach(benchmark_target ${benchmark_targets})
+        list(APPEND record_commands
+            COMMAND bash -c
+                "cd '${REG_RESULTS_DIR}' && '${HEAPTRACK_EXECUTABLE}' '$<TARGET_FILE:${benchmark_target}>' > '${REG_BASELINE_DIR}/${benchmark_target}.heaptrack.txt' 2>&1"
+        )
+        list(APPEND check_commands
+            COMMAND bash -c
+                "cd '${REG_RESULTS_DIR}' && '${HEAPTRACK_EXECUTABLE}' '$<TARGET_FILE:${benchmark_target}>' > '${REG_RESULTS_DIR}/${benchmark_target}.heaptrack.txt' 2>&1"
+            COMMAND ${Python3_EXECUTABLE} "${compare_script}"
+                    "${REG_BASELINE_DIR}/${benchmark_target}.heaptrack.txt"
+                    "${REG_RESULTS_DIR}/${benchmark_target}.heaptrack.txt"
+                    --tolerance ${REG_TOLERANCE}
+        )
+    endforeach()
+
+    add_custom_target(record_benchmark_baselines
+        ${record_commands}
+        DEPENDS ${benchmark_targets}
+        COMMENT "Recording local benchmark heaptrack baselines"
+        USES_TERMINAL
+        VERBATIM
+    )
+
+    add_custom_target(check_benchmark_regressions
+        ${check_commands}
+        DEPENDS ${benchmark_targets}
+        COMMENT "Checking benchmark heaptrack regressions against local baselines"
+        USES_TERMINAL
+        VERBATIM
+    )
+
+    message(STATUS "Benchmark baseline directory: ${REG_BASELINE_DIR}")
+    message(STATUS "Benchmark regression results: ${REG_RESULTS_DIR}")
+    message(STATUS "Targets: record_benchmark_baselines, check_benchmark_regressions")
 endfunction()
 
 #[[

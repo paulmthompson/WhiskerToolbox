@@ -1,0 +1,40 @@
+Mask connected-component adhoc timing (remove_small_connected_components, dense 256×256)
+========================================================================================
+
+Configuration (2026-05-13, local run)
+- Preset: my-clang-release (Clang, out/build/Clang/Release)
+- Driver: bin/adhoc/mask_connected_component_timing (GoogleTest)
+- Input: MaskData with one time slice listing all 65,536 foreground pixels (solid tile),
+  threshold=10 (single component preserved).
+
+Median timings (default MASK_CC_TIMING_WARMUP=2, MASK_CC_TIMING_REPS=11)
+- End-to-end remove_small_connected_components: ~2.83 ms
+- Breakdown of the same pipeline stages (measured separately on one mask):
+  - mask_to_binary_image:           ~0.14 ms
+  - remove_small_clusters (8-conn): ~1.59 ms
+  - binary_image_to_mask:           ~0.68 ms
+
+Interpretation
+- The connected-component pass is the largest single stage but not the whole story:
+  rasterizing the sparse mask and especially re-vectorizing the full grid are also material.
+- End-to-end is slightly less than the sum of the breakdown parts because the breakdown
+  benchmarks stages in isolation (different cache behavior, repeated allocations per stage).
+
+Profiling notes
+- `perf record` was not usable in this environment (exit 255; common on WSL without
+  `kernel.perf_event_paranoid` relaxed or without `linux-tools` matching the kernel).
+- `heaptrack` was not available in PATH. When available, run:
+    heaptrack ./out/build/Clang/Release/bin/adhoc/mask_connected_component_timing
+  Expect allocation hotspots in: std::vector growth in BFS queues, `labeled_image` /
+  `cluster_sizes`, `binary_image_to_mask` push_back, and `mask_to_binary_image` fill.
+
+Suggested next steps (engineering)
+1. Connected components: replace per-component flood-fill from a raster scan with a
+   single-pass union-find or OpenCV `connectedComponentsWithStats` (if OpenCV path is
+   acceptable) to cut queue churn and redundant neighbor checks.
+2. Allocations: reuse scratch buffers (labeled image + output) across frames in the
+   transform instead of allocating fresh vectors per call inside remove_small_clusters.
+3. binary_image_to_mask: reserve(width*height) when dense masks are expected; consider
+   skipping full raster→vector when downstream only needs a bitmap.
+4. mask_to_binary_image: already O(pixels in mask); for dense masks consider accepting
+   dense storage or memset row blocks when contiguous.
