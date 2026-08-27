@@ -953,6 +953,8 @@ major feature phases to avoid merge conflicts.
 
 # See Also
 
+- [Rendering Performance Audit](rendering_performance_audit.qmd) — Detailed technical audit of coordinate precision, GPU uploads, shaders, and decimation
+- [Rendering Optimization Refactoring Guide](rendering_optimization_refactoring_guide.qmd) — Step-by-step refactoring plan for GPU streaming and performance optimization
 - [Data Viewer Widget Documentation](index.qmd) — Full architecture and feature documentation
 - [Mixed Lanes + Scaling Implementation Roadmap](mixed_lanes_and_scaling_implementation_roadmap.md) — Detailed developer execution plan for Y-scaling bug fix and mixed-lane layout support
 - [Developer Debug Panel Plan](developer_debug_panel.qmd) — Diagnostic panel and on-canvas overlays for development

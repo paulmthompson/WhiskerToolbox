@@ -53,6 +53,10 @@ struct RenderablePolyLineBatch {
 
     // Model matrix for this batch (positions in world space)
     glm::mat4 model_matrix{1.0f};
+
+    // Time-series integer attribute representation
+    bool is_integer_time{false};
+    int32_t view_start_time{0};
 };
 
 /**

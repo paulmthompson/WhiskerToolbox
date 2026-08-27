@@ -8,6 +8,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
+#include <bit>
+
 using namespace DataViewer;
 using Catch::Matchers::WithinAbs;
 
@@ -210,12 +212,12 @@ TEST_CASE("AnalogVertexCache: getVerticesForRange", "[AnalogVertexCache]") {
         auto flat = cache.getVerticesForRange(TimeFrameIndex{0}, TimeFrameIndex{10}, ClockTicks(0));
         REQUIRE(flat.size() == 20);// 10 vertices * 2 floats each
 
-        // Check first vertex
-        CHECK_THAT(flat[0], WithinAbs(0.0f, 0.01f));
+        // Check first vertex (time_index = 0, y = 0.0f)
+        CHECK(std::bit_cast<int32_t>(flat[0]) == 0);
         CHECK_THAT(flat[1], WithinAbs(0.0f, 0.01f));
 
-        // Check last vertex
-        CHECK_THAT(flat[18], WithinAbs(9.0f, 0.01f));
+        // Check last vertex (time_index = 9, y = 90.0f)
+        CHECK(std::bit_cast<int32_t>(flat[18]) == 9);
         CHECK_THAT(flat[19], WithinAbs(90.0f, 0.01f));
     }
 
@@ -223,12 +225,12 @@ TEST_CASE("AnalogVertexCache: getVerticesForRange", "[AnalogVertexCache]") {
         auto flat = cache.getVerticesForRange(TimeFrameIndex{2}, TimeFrameIndex{5}, ClockTicks(0));
         REQUIRE(flat.size() == 6);// 3 vertices * 2 floats
 
-        // Check first vertex (index 2)
-        CHECK_THAT(flat[0], WithinAbs(2.0f, 0.01f));
+        // Check first vertex (time_index = 2, y = 20.0f)
+        CHECK(std::bit_cast<int32_t>(flat[0]) == 2);
         CHECK_THAT(flat[1], WithinAbs(20.0f, 0.01f));
 
-        // Check last vertex (index 4)
-        CHECK_THAT(flat[4], WithinAbs(4.0f, 0.01f));
+        // Check last vertex (time_index = 4, y = 40.0f)
+        CHECK(std::bit_cast<int32_t>(flat[4]) == 4);
         CHECK_THAT(flat[5], WithinAbs(40.0f, 0.01f));
     }
 
@@ -249,9 +251,9 @@ TEST_CASE("AnalogVertexCache: getVerticesForRange", "[AnalogVertexCache]") {
 
         auto flat = cache.getVerticesForRange(TimeFrameIndex{0}, TimeFrameIndex{5}, ClockTicks(1000));
         REQUIRE(flat.size() == 10);
-        CHECK_THAT(flat[0], WithinAbs(0.0f, 0.001f));
+        CHECK(std::bit_cast<int32_t>(flat[0]) == 1000);
         CHECK_THAT(flat[1], WithinAbs(1.0f, 0.001f));
-        CHECK_THAT(flat[8], WithinAbs(8.0f, 0.001f));
+        CHECK(std::bit_cast<int32_t>(flat[8]) == 1008);
         CHECK_THAT(flat[9], WithinAbs(5.0f, 0.001f));
     }
 }

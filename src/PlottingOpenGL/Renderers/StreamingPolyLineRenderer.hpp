@@ -60,17 +60,17 @@ struct RenderTimingStats {
     std::chrono::microseconds last_upload_time{0};
     std::chrono::microseconds last_render_time{0};
     std::chrono::microseconds last_total_time{0};
-    
+
     // Upload breakdown
     size_t bytes_uploaded{0};
     size_t bytes_total{0};
     bool was_full_reupload{false};
-    
+
     // Moving averages (updated internally)
     double avg_upload_time_us{0.0};
     double avg_render_time_us{0.0};
     int sample_count{0};
-    
+
     void reset() {
         last_upload_time = std::chrono::microseconds{0};
         last_render_time = std::chrono::microseconds{0};
@@ -295,8 +295,8 @@ private:
     GLBuffer m_vbo{GLBuffer::Type::Vertex};
 
     // GPU buffer state
-    size_t m_gpu_buffer_capacity{0};     // Allocated capacity in bytes
-    size_t m_gpu_buffer_used{0};         // Used portion in bytes
+    size_t m_gpu_buffer_capacity{0};// Allocated capacity in bytes
+    size_t m_gpu_buffer_used{0};    // Used portion in bytes
 
     // Cached batch data (CPU copy for comparison)
     struct CachedBatchData {
@@ -306,6 +306,8 @@ private:
         glm::vec4 global_color{1.0f, 1.0f, 1.0f, 1.0f};
         glm::mat4 model_matrix{1.0f};
         float thickness{1.0f};
+        int32_t view_start_time{0};
+        bool is_integer_time{false};
         bool valid{false};
     };
     CachedBatchData m_cached_batch;
@@ -316,7 +318,7 @@ private:
         size_t end_byte{0};
     };
     std::vector<DirtyRegion> m_dirty_regions;
-    std::vector<float> m_pending_vertices;  // New vertex data to upload
+    std::vector<float> m_pending_vertices;// New vertex data to upload
 
     // Timing and statistics
     bool m_timing_enabled{false};
@@ -342,12 +344,15 @@ namespace StreamingPolyLineShaders {
 constexpr char const * VERTEX_SHADER = R"(
 #version 410 core
 
-layout(location = 0) in vec2 a_position;
+layout(location = 0) in int a_time_index;
+layout(location = 1) in float a_value;
 
+uniform int u_view_start_sample;
 uniform mat4 u_mvp_matrix;
 
 void main() {
-    gl_Position = u_mvp_matrix * vec4(a_position, 0.0, 1.0);
+    int rel_sample = a_time_index - u_view_start_sample;
+    gl_Position = u_mvp_matrix * vec4(float(rel_sample), a_value, 0.0, 1.0);
 }
 )";
 

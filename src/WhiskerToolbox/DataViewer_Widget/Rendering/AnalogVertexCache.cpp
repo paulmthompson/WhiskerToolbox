@@ -3,6 +3,7 @@
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <ranges>
 
@@ -178,11 +179,13 @@ std::vector<float> AnalogVertexCache::getVerticesForRange(TimeFrameIndex start,
         if (v.time_idx >= end) {
             break;
         }
-        double const rel_x =
-                static_cast<double>(v.x - x_origin_master_absolute_time);
-        result.push_back(static_cast<float>(rel_x));
+        auto const t_val = static_cast<int32_t>(v.x.getValue());
+        auto const t_raw = std::bit_cast<float>(t_val);
+        result.push_back(t_raw);
         result.push_back(v.y);
     }
+
+    static_cast<void>(x_origin_master_absolute_time);
 
     return result;
 }

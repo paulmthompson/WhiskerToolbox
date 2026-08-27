@@ -124,6 +124,7 @@ void StreamingPolyLineRenderer::render(glm::mat4 const & view_matrix,
 
     if (m_use_shader_manager) {
         shader_program->setUniform("u_mvp_matrix", mvp);
+        shader_program->setUniform("u_view_start_sample", m_cached_batch.view_start_time);
         auto * native = shader_program->getNativeProgram();
         if (native) {
             native->setUniformValue("u_color",
@@ -136,6 +137,7 @@ void StreamingPolyLineRenderer::render(glm::mat4 const & view_matrix,
         }
     } else {
         m_embedded_shader.setUniformMatrix4("u_mvp_matrix", glm::value_ptr(mvp));
+        m_embedded_shader.setUniformValue("u_view_start_sample", m_cached_batch.view_start_time);
         m_embedded_shader.setUniformValue("u_color",
                                           m_cached_batch.global_color.r,
                                           m_cached_batch.global_color.g,
@@ -404,6 +406,8 @@ void StreamingPolyLineRenderer::uploadGPUBufferFull(CorePlotting::RenderablePoly
     m_cached_batch.global_color = batch.global_color;
     m_cached_batch.model_matrix = batch.model_matrix;
     m_cached_batch.thickness = batch.thickness;
+    m_cached_batch.view_start_time = batch.view_start_time;
+    m_cached_batch.is_integer_time = batch.is_integer_time;
     m_cached_batch.valid = true;
 
     if (m_timing_enabled) {
@@ -433,17 +437,21 @@ bool StreamingPolyLineRenderer::compileEmbeddedShaders() {
 }
 
 void StreamingPolyLineRenderer::setupVertexAttributes() {
-    auto * gl = GLFunctions::get();
-    if (!gl) {
+    auto * gl_extra = GLFunctions::getExtra();
+    if (!gl_extra) {
         return;
     }
 
     (void) m_vao.bind();
     (void) m_vbo.bind();
 
-    // Position attribute: vec2 at location 0
-    gl->glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-    gl->glEnableVertexAttribArray(0);
+    // Location 0: int a_time_index (1 int, stride = 2 * sizeof(float), offset = 0)
+    gl_extra->glVertexAttribIPointer(0, 1, GL_INT, 2 * sizeof(float), nullptr);
+    gl_extra->glEnableVertexAttribArray(0);
+
+    // Location 1: float a_value (1 float, stride = 2 * sizeof(float), offset = sizeof(float))
+    gl_extra->glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void *>(sizeof(float)));
+    gl_extra->glEnableVertexAttribArray(1);
 
     m_vbo.release();
     m_vao.release();

@@ -488,6 +488,8 @@ Group names are derived from series keys by stripping the trailing `_N` suffix (
 
 # See Also
 
+- [Rendering Performance Audit](rendering_performance_audit.qmd) — Detailed technical audit of coordinate precision, GPU uploads, shaders, and decimation
+- [Rendering Optimization Refactoring Guide](rendering_optimization_refactoring_guide.qmd) — Step-by-step refactoring plan for GPU streaming and performance optimization
 - [Data Viewer Widget Roadmap](roadmap.qmd) — Development roadmap and planned features
 - [Plot Widget Guide](../plot_widget_guide.md) — Shared axis architecture, DataManager integration, testing patterns
 - [EventPlotWidget](../EventPlotWidget/index.qmd) — Similar lane-based layout for trial rows; Y pan/zoom model to adopt

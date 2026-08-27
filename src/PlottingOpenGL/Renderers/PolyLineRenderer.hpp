@@ -143,6 +143,8 @@ private:
         glm::vec4 global_color{1.0f, 1.0f, 1.0f, 1.0f};
         glm::mat4 model_matrix{1.0f};
         float thickness{1.0f};
+        int32_t view_start_time{0};
+        bool is_integer_time{false};
         int vertex_offset{0};// Offset in VBO for this batch
         int total_vertices{0};
         bool has_per_line_colors{false};
@@ -171,12 +173,15 @@ namespace PolyLineShaders {
 constexpr char const * VERTEX_SHADER = R"(
 #version 410 core
 
-layout(location = 0) in vec2 a_position;
+layout(location = 0) in int a_time_index;
+layout(location = 1) in float a_value;
 
+uniform int u_view_start_sample;
 uniform mat4 u_mvp_matrix;
 
 void main() {
-    gl_Position = u_mvp_matrix * vec4(a_position, 0.0, 1.0);
+    int rel_sample = a_time_index - u_view_start_sample;
+    gl_Position = u_mvp_matrix * vec4(float(rel_sample), a_value, 0.0, 1.0);
 }
 )";
 

@@ -7,6 +7,7 @@
 
 #include "PlottingSVG/SVGUtils.hpp"
 
+#include <bit>
 #include <sstream>
 
 namespace PlottingSVG {
@@ -46,8 +47,14 @@ SVGPolyLineRenderer::render(CorePlotting::RenderablePolyLineBatch const & batch,
                 break;
             }
 
-            float const x = batch.vertices[static_cast<size_t>(vert_idx)];
+            float const raw_x = batch.vertices[static_cast<size_t>(vert_idx)];
             float const y = batch.vertices[static_cast<size_t>(vert_idx) + 1U];
+
+            float x = raw_x;
+            if (batch.is_integer_time) {
+                auto const t_idx = std::bit_cast<int32_t>(raw_x);
+                x = static_cast<float>(t_idx - batch.view_start_time);
+            }
 
             glm::vec4 const vertex(x, y, 0.0f, 1.0f);
             glm::vec2 const svg_pos =

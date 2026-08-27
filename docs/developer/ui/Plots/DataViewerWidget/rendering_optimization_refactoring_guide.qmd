@@ -1,0 +1,267 @@
+---
+title: "DataViewer Rendering Optimization Refactoring Guide"
+format: html
+---
+
+# DataViewer Rendering Optimization Refactoring Guide
+
+## Overview
+
+This guide provides a step-by-step implementation plan to resolve the performance bottlenecks identified in the [Rendering Performance Audit](rendering_performance_audit.qmd).
+
+The refactoring is structured around the **Integer Vertex Attribute Architecture**: time is represented as a 32-bit integer primitive (`TimeFrameIndex` / sample index) in GPU vertex buffers and shaders, matching the strongly typed integer design of the core library.
+
+```
+Phase 1: Integer Vertex Attribute & Shader Pipeline (Static VBOs)
+    │
+    ▼
+Phase 2: True Incremental GPU Streaming (glBufferSubData & Offset Drawing)
+    │
+    ▼
+Phase 3: Fast-Path 1.0px Line Rendering (Bypass Geometry Shader)
+    │
+    ▼
+Phase 4: Adaptive Source-Level Min-Max Decimation
+    │
+    ▼
+Phase 5: Scratch Buffer Reuse & Heap Allocation Reduction
+```
+
+## Status and Progress
+
+| Phase | Description | Status | Target / Notes |
+|:---|:---|:---:|:---|
+| **Phase 1** | Integer Vertex Attribute & Shader Pipeline | **Completed** | `glVertexAttribIPointer`, `u_view_start_sample`, static integer packing via `std::bit_cast` |
+| **Phase 2** | True Incremental GPU Streaming | Pending | `glBufferSubData` ring buffer, persistent VBO allocation in `StreamingPolyLineRenderer` |
+| **Phase 3** | Fast-Path 1.0px Line Rendering | Pending | Bypass geometry shader for `thickness <= 1.0f` |
+| **Phase 4** | Adaptive Source-Level Min-Max Decimation | Pending | Direct contiguous storage decimation for high-density zoomed-out views |
+| **Phase 5** | Scratch Buffer Reuse & Heap Reduction | Pending | Reusable scratch buffers in `SceneCacheState` |
+
+---
+
+## Phase 1: Integer Vertex Attribute & Shader Pipeline (Completed)
+
+### Objective
+Replace the float-based X coordinate pipeline with a 32-bit integer attribute (`int32_t`) representing `TimeFrameIndex` / sample tick. Subtraction of the view window offset occurs directly on the GPU with bit-exact integer arithmetic, rendering stored VBO data completely static and invariant to scrolling.
+
+### 1.1 Renderable Batch & Data Layout
+
+In [`RenderablePrimitives.hpp`](file:///home/wanglab/Programs/WhiskerToolbox/src/CorePlotting/SceneGraph/RenderablePrimitives.hpp#L29-L58):
+```cpp
+struct RenderablePolyLineBatch {
+    std::vector<float> vertices;      ///< Interleaved: (time_index bit-cast to float, value)
+    std::vector<int> line_start_indices;
+    std::vector<int> line_vertex_counts;
+    glm::vec4 global_color{1.0f, 1.0f, 1.0f, 1.0f};
+    float thickness{1.0f};
+    glm::mat4 model_matrix{1.0f};
+    bool is_integer_time{false};      ///< True when X attribute represents int32_t sample tick
+    int32_t view_start_time{0};       ///< Viewport start sample passed to shader as u_view_start_sample
+};
+```
+
+Vertices are tightly packed with 8 bytes per vertex:
+* **Attribute 0 (Location 0)**: 32-bit signed integer time index (`int32_t`). Packed into `std::vector<float>` via `std::bit_cast<float>(time_index)`.
+* **Attribute 1 (Location 1)**: 32-bit single-precision float analog value (`float`).
+
+### 1.2 VAO / Vertex Attribute Setup (`glVertexAttribIPointer`)
+
+In [`PolyLineRenderer.cpp`](file:///home/wanglab/Programs/WhiskerToolbox/src/PlottingOpenGL/Renderers/PolyLineRenderer.cpp#L271-L293) and [`StreamingPolyLineRenderer.cpp`](file:///home/wanglab/Programs/WhiskerToolbox/src/PlottingOpenGL/Renderers/StreamingPolyLineRenderer.cpp#L437-L458):
+
+* Attribute 0 (`a_time_index`): Bound via `gl_extra->glVertexAttribIPointer` (the `I` prefix preserves integer bit patterns in GLSL without implicit float conversion).
+* Attribute 1 (`a_value`): Bound via standard `gl_extra->glVertexAttribPointer`.
+
+```cpp
+void PolyLineRenderer::setupVertexAttributes() {
+    auto * gl_extra = GLFunctions::getExtra();
+    if (!gl_extra) {
+        return;
+    }
+
+    (void) m_vao.bind();
+    (void) m_vbo.bind();
+
+    // Location 0: 32-bit signed integer time index (stride = 8 bytes, offset = 0)
+    gl_extra->glVertexAttribIPointer(0, 1, GL_INT, 2 * sizeof(float), nullptr);
+    gl_extra->glEnableVertexAttribArray(0);
+
+    // Location 1: 32-bit float analog value (stride = 8 bytes, offset = 4 bytes)
+    gl_extra->glVertexAttribPointer(
+            1, 1, GL_FLOAT, GL_FALSE, 2 * sizeof(float), reinterpret_cast<void *>(sizeof(float)));
+    gl_extra->glEnableVertexAttribArray(1);
+
+    m_vbo.release();
+    m_vao.release();
+}
+```
+
+### 1.3 Vertex Shader Implementation
+
+In [`wide_line.vert`](file:///home/wanglab/Programs/WhiskerToolbox/src/WhiskerToolbox/shaders/wide_line.vert) and embedded fallback strings:
+
+```glsl
+#version 410 core
+
+layout(location = 0) in int a_time_index;
+layout(location = 1) in float a_value;
+
+uniform int u_view_start_sample;
+uniform mat4 u_mvp_matrix;
+
+void main() {
+    // 1. Bit-exact integer subtraction on GPU hardware:
+    int rel_sample = a_time_index - u_view_start_sample;
+
+    // 2. Cast to float only after subtraction (rel_sample is within [0, visible_samples]):
+    gl_Position = u_mvp_matrix * vec4(float(rel_sample), a_value, 0.0, 1.0);
+}
+```
+
+### 1.4 CPU Batch Building & Cache Extraction
+
+1. **[`AnalogVertexCache.cpp`](file:///home/wanglab/Programs/WhiskerToolbox/src/WhiskerToolbox/DataViewer_Widget/Rendering/AnalogVertexCache.cpp#L175-L188)**:
+   In `getVerticesForRange()`, vertex time coordinates are stored static and un-subtracted:
+   ```cpp
+   for (auto it = range_start_it; it != range_end_it; ++it) {
+       auto const & v = *it;
+       int32_t const t_raw = static_cast<int32_t>(v.x.getValue());
+       result.push_back(std::bit_cast<float>(t_raw));
+       result.push_back(v.y);
+   }
+   ```
+2. **[`SceneBuildingHelpers.cpp`](file:///home/wanglab/Programs/WhiskerToolbox/src/WhiskerToolbox/DataViewer_Widget/Rendering/SceneBuildingHelpers.cpp#L63-L135)**:
+   Both `buildAnalogSeriesBatchCached` and `buildAnalogSeriesBatchSimplified` set `batch.is_integer_time = true` and `batch.view_start_time = static_cast<int32_t>(params.x_origin_master_absolute_time.getValue())`.
+3. **[`SVGPolyLineRenderer.cpp`](file:///home/wanglab/Programs/WhiskerToolbox/src/PlottingSVG/Renderers/SVGPolyLineRenderer.cpp#L45-L55)**:
+   Decodes `std::bit_cast<int32_t>` when `batch.is_integer_time` is enabled to produce correct SVG polylines during static vector exports.
+
+---
+
+## Phase 2: True Incremental GPU Streaming
+
+### Objective
+Because vertex sample indices in the VBO are now static, newly visible samples can be appended or prepended directly into a persistent GPU VBO using `glBufferSubData`.
+
+### Architecture
+
+```
+GPU VBO (3x Visible Window Capacity)
+┌──────────────────────────────────────────────────────────────────┐
+│ [ Old Data (Left) ] │ [ Currently Visible Window ] │ [ Pre-cached Right ] │
+└──────────────────────────────────────────────────────────────────┘
+                      ▲                              ▲
+                 start_index                    end_index
+```
+
+### Implementation Steps
+
+1. **Persistent Buffer Allocation**:
+   In `StreamingPolyLineRenderer::uploadGPUBufferFull()`:
+   * Allocate $3 \times \text{visible\_window\_size}$ with `glBufferData(GL_ARRAY_BUFFER, capacity_bytes, nullptr, GL_DYNAMIC_DRAW)`.
+
+2. **Incremental Update with `glBufferSubData`**:
+   When the view window scrolls by $K$ samples (e.g. $[1000, 2000] \to [1010, 2010]$):
+   * Points $[1010, 2000]$ already reside in the VBO at their fixed indices.
+   * Upload only the $K$ missing edge samples ($K \times 8$ bytes) using `glBufferSubData`.
+   * Update the start offset:
+     ```cpp
+     gl->glDrawArrays(GL_LINE_STRIP, visible_start_offset, visible_sample_count);
+     ```
+
+3. **Wire into `SceneRenderer`**:
+   Switch [`SceneRenderer.hpp`](file:///home/wanglab/Programs/WhiskerToolbox/src/PlottingOpenGL/SceneRenderer.hpp) from `PolyLineRenderer` to `StreamingPolyLineRenderer` for analog batches.
+
+---
+
+## Phase 3: Fast-Path 1.0px Line Rendering
+
+### Objective
+Bypass geometry shader quad expansion ([`wide_line.geom`](file:///home/wanglab/Programs/WhiskerToolbox/src/WhiskerToolbox/shaders/wide_line.geom)) when `thickness == 1.0f`.
+
+### Implementation
+
+1. **Dual Shader Program Setup**:
+   In `PolyLineRenderer` / `StreamingPolyLineRenderer`:
+   * `m_fast_program`: Compiled from `line_fast.vert` + `line_fast.frag` (no geometry shader).
+   * `m_wide_program`: Compiled from `wide_line.vert` + `wide_line.geom` + `wide_line.frag`.
+
+2. **Conditional Draw Dispatch**:
+   ```cpp
+   void PolyLineRenderer::render(glm::mat4 const & view_matrix, glm::mat4 const & projection_matrix) {
+       for (auto const & batch : m_batches) {
+           if (batch.thickness <= 1.0f) {
+               m_fast_program->use();
+               m_fast_program->setUniform("u_view_start_sample", m_view_start_sample);
+               m_fast_program->setUniform("u_projection_matrix", projection_matrix);
+               m_fast_program->setUniform("u_model_matrix", batch.model_matrix);
+               m_fast_program->setUniform("u_color", batch.global_color);
+               
+               gl->glDrawArrays(GL_LINE_STRIP, batch.vertex_offset, batch.total_vertices);
+           } else {
+               m_wide_program->use();
+               // Set wide line uniforms and draw through geometry shader
+               ...
+           }
+       }
+   }
+   ```
+
+---
+
+## Phase 4: Adaptive Source-Level Min-Max Decimation
+
+### Objective
+Downsample dense time series directly during storage reads when the sample count exceeds screen resolution, reducing data transfer before VBO upload.
+
+### Implementation
+
+1. **Adaptive Decimation Threshold**:
+   In [`OpenGLWidget::addAnalogBatchesToBuilder`](file:///home/wanglab/Programs/WhiskerToolbox/src/WhiskerToolbox/DataViewer_Widget/Rendering/OpenGLWidget.cpp#L1381):
+   ```cpp
+   int64_t const visible_points = end_time.getValue() - start_time.getValue();
+   int const canvas_width = std::max(1, width());
+
+   if (opts->enable_min_max_line_decimation || visible_points > canvas_width * 4) {
+       batch_params.min_max_decimation_bucket_count = std::clamp(canvas_width * 2, 512, 4096);
+   }
+   ```
+
+2. **Direct-From-Storage Decimation**:
+   Add a fast-path in [`AnalogTimeSeries`](file:///home/wanglab/Programs/WhiskerToolbox/src/DataObjects/AnalogTimeSeries/Analog_Time_Series.hpp) that computes the min and max for each pixel bin directly from raw contiguous memory:
+   ```cpp
+   std::vector<AnalogTimeVertex> decimateContiguousSpan(
+       std::span<float const> values,
+       TimeFrameIndex start,
+       TimeFrameIndex end,
+       int bucket_count);
+   ```
+
+---
+
+## Phase 5: Memory Reuse and Transient Allocation Reduction
+
+### Objective
+Eliminate per-frame heap churn during interactive mouse drags and playback scrolling.
+
+### Implementation
+
+1. **Persistent Batch Buffers**:
+   Add reusable scratch vectors to `SceneCacheState` in [`OpenGLWidget.hpp`](file:///home/wanglab/Programs/WhiskerToolbox/src/WhiskerToolbox/DataViewer_Widget/Rendering/OpenGLWidget.hpp):
+   ```cpp
+   struct SceneCacheState {
+       ...
+       std::vector<AnalogTimeVertex> scratch_vertex_buffer;
+   };
+   ```
+2. **Reuse Across Frames**:
+   Call `.clear()` (retaining allocated capacity) instead of reallocating new vectors every frame.
+
+---
+
+## Verification & Testing Plan
+
+1. **Unit Testing**:
+   * Verify `AnalogTimeVertex` alignment and packing in `AnalogVertexCache.test.cpp`.
+   * Test integer subtraction edge cases across large indices ($> 10^8$) in Catch2.
+2. **Visual & Benchmark Validation**:
+   * Test with a $50\text{M}$-sample recording: verify zero visual jitter or sub-sample snapping.
+   * Measure draw call latency during continuous scrolling: target $< 1.5\text{ ms}$ at 60 FPS.

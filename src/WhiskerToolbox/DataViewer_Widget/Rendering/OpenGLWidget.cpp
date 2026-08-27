@@ -1841,6 +1841,9 @@ void OpenGLWidget::loadSpikeToAnalogPairing(std::string const & digital_group,
     // Adjacent Below / Adjacent Above: digital series gets its own lane inserted
     // next to the analog series in the visual order.
 
+    // Ensure layout is current before querying lanes
+    computeAndApplyLayout();
+
     // Read current visual order from axis state (top-to-bottom = reverse of lanes vector).
     auto * axis_state = _state->multiLaneAxisState();
     if (axis_state == nullptr) {
@@ -1866,6 +1869,15 @@ void OpenGLWidget::loadSpikeToAnalogPairing(std::string const & digital_group,
         }
         return auto_prefix + key;
     };
+
+    if (visual_order.empty()) {
+        for (auto const & [key, _]: _data_store->eventSeries()) {
+            visual_order.push_back(resolve_lane_id(key));
+        }
+        for (auto const & [key, _]: _data_store->analogSeries()) {
+            visual_order.push_back(resolve_lane_id(key));
+        }
+    }
 
     // For each pairing, insert the digital auto-lane adjacent to the analog lane.
     // Process in reverse analog-slot order to avoid index shifts when inserting.
@@ -1996,6 +2008,8 @@ void OpenGLWidget::loadSpikeToAnalogPairing(std::string const & digital_group,
     for (auto & upd: updates) {
         _state->setSeriesLaneOverride(upd.series_key, upd.updated);
     }
+
+    computeAndApplyLayout();
 }
 
 DataViewerDiagnostics OpenGLWidget::getDiagnostics() const {

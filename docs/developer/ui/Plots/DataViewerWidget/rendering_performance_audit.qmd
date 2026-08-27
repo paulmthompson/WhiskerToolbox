@@ -1,0 +1,224 @@
+---
+title: "DataViewer Rendering Performance Audit"
+format: html
+---
+
+# DataViewer Rendering Performance Audit
+
+## Executive Summary
+
+An in-depth code and architecture audit of [`DataViewer_Widget`](file:///home/wanglab/Programs/WhiskerToolbox/src/WhiskerToolbox/DataViewer_Widget), [`SceneBuildingHelpers`](file:///home/wanglab/Programs/WhiskerToolbox/src/WhiskerToolbox/DataViewer_Widget/Rendering/SceneBuildingHelpers.cpp), [`AnalogVertexCache`](file:///home/wanglab/Programs/WhiskerToolbox/src/WhiskerToolbox/DataViewer_Widget/Rendering/AnalogVertexCache.hpp), and [`PlottingOpenGL`](file:///home/wanglab/Programs/WhiskerToolbox/src/PlottingOpenGL) was conducted to diagnose interactive rendering lag during time series visualization and scrolling.
+
+The audit identified five critical bottlenecks:
+
+1. **Origin Baking & Full Buffer Re-Uploads**: Relative X coordinates are subtracted per vertex on the CPU on every frame. Because all vertex X coordinates change when the viewport scrolls by even 1 sample, 100% of the vertex data is invalidated every frame, forcing a full `glBufferData` VBO allocation and upload over PCIe.
+2. **Failure of Incremental Streaming Caches**: The existing [`AnalogVertexCache`](file:///home/wanglab/Programs/WhiskerToolbox/src/WhiskerToolbox/DataViewer_Widget/Rendering/AnalogVertexCache.hpp) on the CPU still materializes and extracts all $N$ visible vertices on every frame. The GPU-side [`StreamingPolyLineRenderer`](file:///home/wanglab/Programs/WhiskerToolbox/src/PlottingOpenGL/Renderers/StreamingPolyLineRenderer.cpp) compares relative-X floats; because all X values shift during scrolling, dirty region detection flags 100% of the buffer as dirty, falling back to full re-uploads.
+3. **Geometry Shader Primitive Expansion**: [`wide_line.geom`](file:///home/wanglab/Programs/WhiskerToolbox/src/WhiskerToolbox/shaders/wide_line.geom) converts every line segment into a 4-vertex triangle strip on the GPU. On modern GPUs, geometry shaders introduce significant primitive-assembly bottlenecks even for 1.0px lines.
+4. **Disabled-by-Default Min-Max Decimation**: `enable_min_max_line_decimation` is `false` by default. Zooming out over $10^5$ to $10^7$ samples causes millions of triangles to be rasterized to a $\sim 1920$-pixel viewport. Even when enabled, decimation occurs after full vertex extraction.
+5. **Continuous Heap Allocations**: Rebuilding `std::vector<float>` vertices and batch structures creates gigabytes of transient heap churn during active scrolling.
+
+---
+
+## 1. The Integer-to-Float Precision Problem & Architecture
+
+### The Bit-Depth Limitation
+
+Timestamps in neural data acquisition (e.g., sample indices represented by strongly typed [`TimeFrameIndex`](file:///home/wanglab/Programs/WhiskerToolbox/src/TimeFrame/StrongTimeTypes.hpp) or [`ClockTicks`](file:///home/wanglab/Programs/WhiskerToolbox/src/TimeFrame/StrongTimeTypes.hpp)) are discrete 64-bit integers (`int64_t`).
+
+Standard IEEE 754 32-bit single-precision floating-point numbers (`float`) allocate only 24 bits to the significand (1 sign bit + 23 mantissa bits). This provides exact integer representation only up to:
+
+$$2^{24} = 16,777,216 \text{ integers}$$
+
+When absolute sample timestamps exceed $\sim 16.7\text{ million}$ (which occurs in under 10 minutes of recording at 30 kHz sampling rates), converting raw absolute timestamps to `float` results in loss of resolution. For example, at sample $50,000,000$, the spacing between representable floats is $4.0$:
+
+```
+Absolute timestamp: 50,000,000  -->  (float)  -->  50,000,000.0f
+Absolute timestamp: 50,000,001  -->  (float)  -->  50,000,000.0f  (Lost lower 2 bits!)
+Absolute timestamp: 50,000,002  -->  (float)  -->  50,000,000.0f
+Absolute timestamp: 50,000,003  -->  (float)  -->  50,000,000.0f
+Absolute timestamp: 50,000,004  -->  (float)  -->  50,000,004.0f
+```
+
+Neighboring samples snap to the same float value, leading to severe visual stutter, non-monotonic X coordinates, and waveform distortion.
+
+### Current Workaround and Its Consequence
+
+To avoid rounding artifacts, the codebase currently subtracts the view window's starting position (`x_origin_master_absolute_time`) on the CPU before casting to `float`:
+
+In [`AnalogVertexCache::getVerticesForRange`](file:///home/wanglab/Programs/WhiskerToolbox/src/WhiskerToolbox/DataViewer_Widget/Rendering/AnalogVertexCache.cpp#L181-L184):
+```cpp
+double const rel_x = static_cast<double>(v.x - x_origin_master_absolute_time);
+result.push_back(static_cast<float>(rel_x));
+result.push_back(v.y);
+```
+
+While this eliminates sub-pixel rounding errors (since $t - t_{\text{origin}}$ is small), it introduces a severe architectural side effect:
+
+> **Every time the view window scrolls by even a single sample, `x_origin_master_absolute_time` changes, altering the float value of *every single vertex* currently visible.**
+
+Because the vertex values themselves change, GPU VBOs cannot be reused, dirty region checks detect 100% invalidation, and the entire vertex buffer must be reallocated and re-uploaded over PCIe via `glBufferData`.
+
+### The Solution: Integer Vertex Attributes (Exact Integer Math on GPU)
+
+Because time is fundamentally a discrete, strongly typed integer index (`TimeFrameIndex`), the proper architectural solution is to treat time as an **integer primitive in the shader pipeline**:
+
+1. **VBO Format**: Store sample indices as 32-bit signed/unsigned integers (`int32_t` / `uint32_t`) alongside float Y values:
+   ```cpp
+   struct AnalogVertex {
+       int32_t time_index; // 4 bytes (exact up to 2.14 billion samples)
+       float value;        // 4 bytes
+   };
+   ```
+2. **Attribute Configuration**: Use `glVertexAttribIPointer` (OpenGL 3.0+ / GLSL 1.30+) to bind the integer attribute without automatic float conversion:
+   ```cpp
+   gl->glVertexAttribIPointer(0, 1, GL_INT, sizeof(AnalogVertex), (void*)0);
+   gl->glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, sizeof(AnalogVertex), (void*)offsetof(AnalogVertex, value));
+   ```
+3. **Integer Uniform**: Pass the view window's starting index as an integer uniform:
+   ```cpp
+   shader->setUniform("u_view_start_sample", static_cast<int32_t>(start_time.getValue()));
+   ```
+4. **Vertex Shader**:
+   ```glsl
+   #version 410 core
+   layout(location = 0) in int a_time_index;
+   layout(location = 1) in float a_y_val;
+
+   uniform int u_view_start_sample;
+   uniform mat4 u_projection_matrix;
+   uniform float u_y_gain;
+   uniform float u_y_offset;
+
+   void main() {
+       // 1. Bit-exact integer subtraction on GPU hardware:
+       int rel_idx = a_time_index - u_view_start_sample;
+
+       // 2. Cast to float only after subtraction (rel_idx is small: 0 .. viewport_width):
+       float rel_x = float(rel_idx);
+       float rel_y = a_y_val * u_y_gain + u_y_offset;
+
+       gl_Position = u_projection_matrix * vec4(rel_x, rel_y, 0.0, 1.0);
+   }
+   ```
+
+#### Why This Solves Both Precision and Re-Uploads
+* **Precision**: Integer subtraction on the GPU hardware is exact with zero floating-point error. Converting `rel_idx` to `float` operates on values within $[0, \text{visible\_window}]$, well within the 24-bit mantissa limit.
+* **Static VBOs**: The stored sample index in the VBO is invariant (sample 50,000,000 is always stored as `50000000`). Scrolling updates **only the integer uniform**, leaving the VBO intact.
+* **Persistent Streaming**: Because VBO values are static, streaming updates only require appending new edge samples via `glBufferSubData`.
+
+---
+
+## 2. The Full Re-Upload Bottleneck
+
+### Pipeline Execution on Every Scroll Frame
+
+When the user pans or playback advances from window `[1, 1000]` to `[2, 1001]`:
+
+```
+User scrolls by 1 tick
+  └── DataViewerState::timeWindowChanged
+        └── OpenGLWidget::renderWithSceneRenderer()
+              └── OpenGLWidget::rebuildScene()
+                    └── SceneBuildingHelpers::buildAnalogSeriesBatchCached()
+                          ├── AnalogVertexCache::needsUpdate() (Ring buffer appends 1 sample)
+                          └── AnalogVertexCache::getVerticesForRange() (Full O(N) extraction loop!)
+                                └── Allocates std::vector<float>(2N)
+                                └── Computes rel_x for all N samples
+              └── SceneRenderer::uploadScene()
+                    └── PolyLineRenderer::uploadData()
+                          └── m_vbo.allocate() -> glBufferData(GL_ARRAY_BUFFER, ...)
+                                └── Discards old GPU buffer
+                                └── Allocates new VBO memory in VRAM
+                                └── Transfers 2N floats over PCIe
+              └── SceneRenderer::render()
+                    └── PolyLineRenderer::render()
+                          └── Geometry shader expands all N segments to quads
+```
+
+### Why Existing Caching Layers Failed to Prevent Re-Uploads
+
+1. **`AnalogVertexCache` (CPU)**:
+   [`AnalogVertexCache`](file:///home/wanglab/Programs/WhiskerToolbox/src/WhiskerToolbox/DataViewer_Widget/Rendering/AnalogVertexCache.hpp) uses a `boost::circular_buffer<CachedAnalogVertex>` to avoid querying `AnalogTimeSeries` for points already in memory. However, `getVerticesForRange()` performs a linear scan over all $N$ visible vertices to compute `rel_x` relative to the current frame's origin. It then allocates and populates a new `std::vector<float>` on every frame.
+2. **`StreamingPolyLineRenderer` (GPU)**:
+   [`StreamingPolyLineRenderer`](file:///home/wanglab/Programs/WhiskerToolbox/src/PlottingOpenGL/Renderers/StreamingPolyLineRenderer.hpp) was designed to use `glBufferSubData` for incremental GPU updates. But because `batch.vertices` contains window-relative X coordinates, comparing incoming vertices with cached vertices in `computeDirtyRegions` finds that **100% of floats have changed**. The incremental path aborts, triggering a full re-upload.
+3. **Renderer Disconnect**:
+   [`SceneRenderer`](file:///home/wanglab/Programs/WhiskerToolbox/src/PlottingOpenGL/SceneRenderer.cpp#L65) instantiates and calls [`PolyLineRenderer`](file:///home/wanglab/Programs/WhiskerToolbox/src/PlottingOpenGL/Renderers/PolyLineRenderer.cpp), which unconditionally calls `glBufferData` on every frame, bypassing streaming entirely.
+
+---
+
+## 3. Shader and GPU Bottlenecks
+
+### Geometry Shader Overhead (`wide_line.geom`)
+
+[`PolyLineRenderer`](file:///home/wanglab/Programs/WhiskerToolbox/src/PlottingOpenGL/Renderers/PolyLineRenderer.cpp) compiles and binds [`wide_line.geom`](file:///home/wanglab/Programs/WhiskerToolbox/src/WhiskerToolbox/shaders/wide_line.geom) for all polyline rendering:
+
+```glsl
+#version 410 core
+layout(lines) in;
+layout(triangle_strip, max_vertices = 4) out;
+
+uniform float u_line_width;
+uniform vec2 u_viewport_size;
+
+void main() {
+    // Computes screen-space perpendiculars
+    // Emits 4 vertices (triangle strip) per segment
+    ...
+}
+```
+
+* **Default Line Width**: The default line thickness in `AnalogSeriesOptionsData` is 1.0px.
+* **Cost**: On desktop GPUs (NVIDIA, AMD, Intel), geometry shaders cannot utilize the hardware rasterizer's fast primitive assembly paths. For $100\text{K}$ samples, the geometry shader must generate $400\text{K}$ vertices and $200\text{K}$ triangles per frame.
+* **Fast Path Available**: Standard OpenGL `GL_LINE_STRIP` without a geometry shader renders 1.0px lines with an order of magnitude higher primitive throughput.
+
+---
+
+## 4. Decimation & Level of Detail (LOD)
+
+### Status
+
+In [`DataViewerStateData.hpp`](file:///home/wanglab/Programs/WhiskerToolbox/src/WhiskerToolbox/DataViewer_Widget/Core/DataViewerStateData.hpp#L98), `enable_min_max_line_decimation` is initialized to `false`:
+
+```cpp
+bool enable_min_max_line_decimation = false;
+```
+
+### Impact
+
+When viewing a time window containing $10^6$ samples on a 1920-pixel monitor:
+* The renderer attempts to draw $>500$ vertices per horizontal pixel column.
+* $99.8\%$ of line segments land on sub-pixel coordinates already covered by other segments in the same column, causing extreme GPU fragment overdraw and visual aliasing.
+* When decimation is enabled via user checkbox, [`decimatePolyLineBatchMinMax`](file:///home/wanglab/Programs/WhiskerToolbox/src/CorePlotting/LineDecimation/MinMaxPolylineDecimation.cpp#L151) is executed **after** all $10^6$ vertices have already been extracted, converted, and assembled into `RenderablePolyLineBatch`.
+
+---
+
+## 5. Architectural Root Causes Summary
+
+| Subsystem | Symptom | Root Cause | Selected Solution |
+| :--- | :--- | :--- | :--- |
+| **Coordinate Space** | Jitter/Rounding at $t > 16.7\text{M}$ | View origin baked into individual vertices instead of camera transformation | Integer vertex attribute (`int32_t`) + `uniform int u_view_start_sample` |
+| **GPU Upload** | Full VBO re-allocation every frame | Shifting vertex values invalidate `glBufferSubData` and ring buffers | Static VBO sample indices + `glBufferSubData` for edge deltas |
+| **CPU Extraction** | $O(N)$ memory allocations per frame | `AnalogVertexCache` extracts full window to new `vector<float>` on every frame | Direct GPU upload from ring buffer with index range queries |
+| **Shader Pipeline** | High GPU render time | `wide_line.geom` runs for 1.0px lines where native `GL_LINE_STRIP` suffices | Fast-path native `GL_LINE_STRIP` shader for 1.0px thickness |
+| **Decimation** | Slow zoom-out on large series | Min-Max decimation is disabled by default and runs downstream of extraction | Adaptive min-max decimation enabled at $> 2 \times \text{canvas\_width}$ |
+
+---
+
+## 6. Implementation Status & Recommendations
+
+### Implementation Milestones
+
+* **Phase 1: Integer Vertex Attribute & Shader Pipeline** — **Completed**:
+  * Bound integer vertex attribute at location 0 using `glVertexAttribIPointer(0, 1, GL_INT, ...)` and float attribute at location 1.
+  * Updated `wide_line.vert` and embedded shader fallbacks to perform bit-exact GPU integer subtraction `rel_sample = a_time_index - u_view_start_sample;` before casting to float.
+  * Updated `AnalogVertexCache` and `SceneBuildingHelpers` to pack static integer coordinates via `std::bit_cast<float>(int32_t)` without CPU origin baking during scrolling.
+  * Enabled SVG polyline export decoding for integer time series batches.
+
+### Next Steps
+
+1. **Implement GPU Ring Buffer Streaming (Phase 2)**: With fixed integer coordinates in the VBO, scrolling right by $K$ samples only requires uploading $K$ new points via `glBufferSubData`. Existing samples remain valid in VRAM. Adjust `glDrawArrays(GL_LINE_STRIP, start_index, count)` dynamically.
+2. **Fast-Path 1.0px Lines (Phase 3)**: Bypass the geometry shader when line thickness is 1.0px, routing directly through a minimal vertex/fragment shader pair.
+3. **Adaptive Min-Max Decimation (Phase 4)**: Automatically enable min-max decimation when visible samples exceed $2 \times \text{canvas\_width}$, and perform decimation during raw storage read rather than post-extraction.
+4. **Memory Reuse (Phase 5)**: Scratch buffer reuse in `SceneCacheState` to eliminate per-frame allocations.
+
+For the step-by-step implementation plan, see the companion document: [Rendering Optimization Refactoring Guide](rendering_optimization_refactoring_guide.qmd).

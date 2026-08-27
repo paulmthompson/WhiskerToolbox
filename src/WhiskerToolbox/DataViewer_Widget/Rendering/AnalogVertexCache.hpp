@@ -52,7 +52,7 @@ namespace DataViewer {
  * @brief A cached vertex with time index for range tracking
  */
 struct CachedAnalogVertex {
-    ClockTicks x;              ///< Absolute physical time (same scalar space as @c TimeFrame::getTimeAtIndex); view-relative X is computed on extract
+    ClockTicks x;           ///< Absolute physical time (same scalar space as @c TimeFrame::getTimeAtIndex); view-relative X is computed on extract
     float y;                ///< Data value
     TimeFrameIndex time_idx;///< Series @c TimeFrameIndex for cache range bookkeeping
 };
