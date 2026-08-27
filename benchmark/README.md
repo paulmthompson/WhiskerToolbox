@@ -25,12 +25,26 @@ Baselines are stored in `benchmark-baselines-local/` (gitignored). Same machine 
 ## ScatterPlot view stress
 
 `benchmark_ScatterPlotView` runs a fixed pan/zoom loop on `ScatterPlotOpenGLWidget`
-with synthetic analog data (10k points, 5000 iterations by default).
+with synthetic analog data (10k points, 50 pan/zoom iterations by default).
 
 ```bash
 ./out/build/Clang/Release/benchmark/benchmark_ScatterPlotView
-./out/build/Clang/Release/benchmark/benchmark_ScatterPlotView 10000 5000
+./out/build/Clang/Release/benchmark/benchmark_ScatterPlotView 10000 50
 ```
+
+## DataViewer allocation probes
+
+`benchmark_DataViewerView` runs small horizontal-scroll probes on `OpenGLWidget`
+(1–2 channels, 1000-sample window). Three named scenarios are recorded under
+`benchmark-baselines-local/benchmark_DataViewerView_*.heaptrack.txt`:
+
+```bash
+./out/build/Clang/Release/benchmark/benchmark_DataViewerView 1 10000 1000 0 1   # 1ch-init
+./out/build/Clang/Release/benchmark/benchmark_DataViewerView 1 10000 1000 1 1   # 1ch-scroll1
+./out/build/Clang/Release/benchmark/benchmark_DataViewerView 2 10000 1000 1 1   # 2ch-scroll1
+```
+
+See `docs/developer/benchmark/dataviewer_view_benchmark.qmd` for theoretical expectations.
 
 ## Optional Google Benchmark JSON
 

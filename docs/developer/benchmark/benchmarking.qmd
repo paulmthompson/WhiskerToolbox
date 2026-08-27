@@ -21,6 +21,9 @@ cmake --build --preset my-clang-release --target run_benchmarks
 
 # Manual ScatterPlot stress run
 ./out/build/Clang/Release/benchmark/benchmark_ScatterPlotView
+
+# Manual DataViewer allocation probe (defaults: 1ch, scroll-by-1)
+./out/build/Clang/Release/benchmark/benchmark_DataViewerView
 ```
 
 Benchmarks are intentionally not registered as CTest tests. A normal command such as `ctest --preset my-clang-release` runs correctness tests only.

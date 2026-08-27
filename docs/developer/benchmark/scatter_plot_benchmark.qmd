@@ -34,7 +34,7 @@ in `CMakeUserPresets.json` and working OpenGL on the machine.
 ./out/build/Clang/Release/benchmark/benchmark_ScatterPlotView
 ```
 
-Optional arguments: `point_count` `iteration_count` (defaults: 10000, 5000).
+Optional arguments: `point_count` `iteration_count` (defaults: 10000, 50).
 
 ## What fails
 

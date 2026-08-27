@@ -50,6 +50,11 @@ define_property(GLOBAL PROPERTY NEURALYZER_GOOGLE_BENCHMARK_TARGETS
     FULL_DOCS "Targets registered for run_benchmarks JSON output (excludes STRESS_ONLY executables)"
 )
 
+define_property(GLOBAL PROPERTY NEURALYZER_HEAPTRACK_PROBES
+    BRIEF_DOCS "Heaptrack probe registrations"
+    FULL_DOCS "Semicolon-separated entries: probe_name|executable_target|arg1 arg2 ..."
+)
+
 #[[
 add_selective_benchmark
 -----------------------
@@ -84,7 +89,7 @@ Example:
 function(add_selective_benchmark)
     cmake_parse_arguments(
         BENCH                          # Prefix for parsed variables
-        "STRESS_ONLY"                  # Options (boolean flags)
+        "STRESS_ONLY;SKIP_HEAPTRACK_REGRESSION" # Options (boolean flags)
         "NAME;DEFAULT"                 # Single-value keywords
         "SOURCES;LINK_LIBRARIES;INCLUDE_DIRS;COMPILE_OPTIONS" # Multi-value keywords
         ${ARGN}                        # Arguments to parse
@@ -171,6 +176,10 @@ function(add_selective_benchmark)
             RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/benchmark"
         )
 
+        if(BENCH_SKIP_HEAPTRACK_REGRESSION)
+            set_target_properties(${target_name} PROPERTIES BENCHMARK_SKIP_HEAPTRACK_REGRESSION TRUE)
+        endif()
+
         set_property(GLOBAL APPEND PROPERTY NEURALYZER_BENCHMARK_TARGETS ${target_name})
         if(NOT BENCH_STRESS_ONLY)
             set_property(GLOBAL APPEND PROPERTY NEURALYZER_GOOGLE_BENCHMARK_TARGETS ${target_name})
@@ -180,6 +189,40 @@ function(add_selective_benchmark)
     else()
         message(STATUS "Benchmark disabled: ${BENCH_NAME}")
     endif()
+endfunction()
+
+#[[
+register_benchmark_heaptrack_probe
+----------------------------------
+
+Registers a named heaptrack probe that runs an existing benchmark executable with
+fixed CLI arguments. Used when one stress binary supports multiple probe scenarios.
+
+Parameters:
+  NAME       - Baseline file stem (e.g., benchmark_DataViewerView_1ch_init)
+  EXECUTABLE - CMake target to run (e.g., benchmark_DataViewerView)
+  ARGS       - Command-line arguments passed to the executable
+]]
+function(register_benchmark_heaptrack_probe)
+    cmake_parse_arguments(
+        PROBE
+        ""
+        "NAME;EXECUTABLE"
+        "ARGS"
+        ${ARGN}
+    )
+
+    if(NOT PROBE_NAME)
+        message(FATAL_ERROR "register_benchmark_heaptrack_probe: NAME is required")
+    endif()
+    if(NOT PROBE_EXECUTABLE)
+        message(FATAL_ERROR "register_benchmark_heaptrack_probe: EXECUTABLE is required")
+    endif()
+
+    string(JOIN " " probe_args ${PROBE_ARGS})
+    set_property(GLOBAL APPEND PROPERTY NEURALYZER_HEAPTRACK_PROBES
+        "${PROBE_NAME}|${PROBE_EXECUTABLE}|${probe_args}"
+    )
 endfunction()
 
 #[[
@@ -344,10 +387,15 @@ function(add_benchmark_regression_targets)
     set(HEAPTRACK_EXECUTABLE "" CACHE FILEPATH "Optional local heaptrack executable")
 
     get_property(benchmark_targets GLOBAL PROPERTY NEURALYZER_BENCHMARK_TARGETS)
+    get_property(heaptrack_probes GLOBAL PROPERTY NEURALYZER_HEAPTRACK_PROBES)
+    if(NOT heaptrack_probes)
+        set(heaptrack_probes "")
+    endif()
 
     set(compare_script "${CMAKE_SOURCE_DIR}/benchmark/tools/compare_heaptrack_summary.py")
+    set(heaptrack_runner "${CMAKE_SOURCE_DIR}/benchmark/tools/run_heaptrack_for_regression.sh")
 
-    if(NOT benchmark_targets)
+    if(NOT benchmark_targets AND NOT heaptrack_probes)
         add_custom_target(record_benchmark_baselines
             COMMAND ${CMAKE_COMMAND} -E echo "No benchmark targets are enabled."
             VERBATIM
@@ -382,16 +430,48 @@ function(add_benchmark_regression_targets)
     )
 
     foreach(benchmark_target ${benchmark_targets})
+        get_target_property(skip_regression ${benchmark_target} BENCHMARK_SKIP_HEAPTRACK_REGRESSION)
+        if(skip_regression)
+            continue()
+        endif()
+
         list(APPEND record_commands
             COMMAND bash -c
-                "cd '${REG_RESULTS_DIR}' && '${HEAPTRACK_EXECUTABLE}' '$<TARGET_FILE:${benchmark_target}>' > '${REG_BASELINE_DIR}/${benchmark_target}.heaptrack.txt' 2>&1"
+                "cd '${REG_RESULTS_DIR}' && '${heaptrack_runner}' '${REG_BASELINE_DIR}/${benchmark_target}.heaptrack.txt' '${HEAPTRACK_EXECUTABLE}' '$<TARGET_FILE:${benchmark_target}>'"
         )
         list(APPEND check_commands
             COMMAND bash -c
-                "cd '${REG_RESULTS_DIR}' && '${HEAPTRACK_EXECUTABLE}' '$<TARGET_FILE:${benchmark_target}>' > '${REG_RESULTS_DIR}/${benchmark_target}.heaptrack.txt' 2>&1"
+                "cd '${REG_RESULTS_DIR}' && '${heaptrack_runner}' '${REG_RESULTS_DIR}/${benchmark_target}.heaptrack.txt' '${HEAPTRACK_EXECUTABLE}' '$<TARGET_FILE:${benchmark_target}>'"
             COMMAND ${Python3_EXECUTABLE} "${compare_script}"
                     "${REG_BASELINE_DIR}/${benchmark_target}.heaptrack.txt"
                     "${REG_RESULTS_DIR}/${benchmark_target}.heaptrack.txt"
+                    --tolerance ${REG_TOLERANCE}
+        )
+    endforeach()
+
+    foreach(probe_entry ${heaptrack_probes})
+        string(REPLACE "|" ";" probe_parts "${probe_entry}")
+        list(LENGTH probe_parts probe_part_count)
+        if(probe_part_count LESS 3)
+            message(WARNING "Skipping malformed heaptrack probe entry: ${probe_entry}")
+            continue()
+        endif()
+
+        list(GET probe_parts 0 probe_name)
+        list(GET probe_parts 1 probe_executable)
+        list(SUBLIST probe_parts 2 -1 probe_args)
+
+        string(JOIN " " probe_args_quoted ${probe_args})
+        list(APPEND record_commands
+            COMMAND bash -c
+                "cd '${REG_RESULTS_DIR}' && '${heaptrack_runner}' '${REG_BASELINE_DIR}/${probe_name}.heaptrack.txt' '${HEAPTRACK_EXECUTABLE}' '$<TARGET_FILE:${probe_executable}>' ${probe_args_quoted}"
+        )
+        list(APPEND check_commands
+            COMMAND bash -c
+                "cd '${REG_RESULTS_DIR}' && '${heaptrack_runner}' '${REG_RESULTS_DIR}/${probe_name}.heaptrack.txt' '${HEAPTRACK_EXECUTABLE}' '$<TARGET_FILE:${probe_executable}>' ${probe_args_quoted}"
+            COMMAND ${Python3_EXECUTABLE} "${compare_script}"
+                    "${REG_BASELINE_DIR}/${probe_name}.heaptrack.txt"
+                    "${REG_RESULTS_DIR}/${probe_name}.heaptrack.txt"
                     --tolerance ${REG_TOLERANCE}
         )
     endforeach()

@@ -8,45 +8,27 @@
 
 #include "Core/ScatterPlotState.hpp"
 #include "Rendering/ScatterPlotOpenGLWidget.hpp"
+#include "fixtures/QtOpenGLBenchmarkFixture.hpp"
 #include "fixtures/ScatterPlotStressFixture.hpp"
 
 #include <QApplication>
-#include <QByteArray>
 #include <QCoreApplication>
 #include <QEventLoop>
-#include <QSurfaceFormat>
 
 #include <cstddef>
 #include <cstdlib>
 #include <memory>
+#include <stdexcept>
 
 namespace {
 
 constexpr std::size_t kDefaultPointCount = 10'000;
-constexpr std::size_t kDefaultIterations = 5'000;
+constexpr std::size_t kDefaultIterations = 50;
 
 struct ScatterStressConfig {
     std::size_t point_count{kDefaultPointCount};
     std::size_t iteration_count{kDefaultIterations};
 };
-
-/**
- * @brief Initialize Qt platform and OpenGL defaults for ScatterPlotOpenGLWidget.
- */
-void initializeQtForScatterStress() {
-#ifdef Q_OS_LINUX
-    if (qEnvironmentVariableIsEmpty("WHISKER_USE_WAYLAND")) {
-        qputenv("QT_QPA_PLATFORM", QByteArray("xcb"));
-    }
-#endif
-
-    QSurfaceFormat format;
-    format.setProfile(QSurfaceFormat::CoreProfile);
-    format.setVersion(4, 3);
-    format.setSamples(4);
-    format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
-    QSurfaceFormat::setDefaultFormat(format);
-}
 
 /**
  * @brief Run pan/zoom stress on ScatterPlotOpenGLWidget with synthetic data.
@@ -62,9 +44,15 @@ void runScatterPlotPanZoomStress(ScatterStressConfig const & config) {
     widget->setDataManager(std::move(dm));
     widget->setState(state);
     widget->resize(800, 600);
+
+    Neuralyzer::Benchmark::configureOpenGLWidgetFormat(*widget);
     widget->show();
 
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
+    if (!Neuralyzer::Benchmark::waitForOpenGLWidgetContext(*widget)) {
+        Neuralyzer::Benchmark::printOpenGLWidgetContextStatus(*widget);
+        throw std::runtime_error(
+                "ScatterPlotOpenGLWidget failed to acquire a valid OpenGL context");
+    }
 
     widget->update();
     QCoreApplication::processEvents(QEventLoop::AllEvents, 10);
@@ -74,6 +62,11 @@ void runScatterPlotPanZoomStress(ScatterStressConfig const & config) {
         widget->update();
         QCoreApplication::processEvents(QEventLoop::AllEvents, 1);
     }
+
+    Neuralyzer::Benchmark::shutdownOpenGLWidgetForBenchmark(*widget);
+    widget.reset();
+    state.reset();
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 50);
 }
 
 }// namespace
@@ -82,7 +75,7 @@ void runScatterPlotPanZoomStress(ScatterStressConfig const & config) {
  * @brief Entry point for ScatterPlot view interaction stress.
  */
 int main(int argc, char ** argv) {
-    initializeQtForScatterStress();
+    Neuralyzer::Benchmark::initializeQtPlatformForOpenGLBenchmarks();
 
     QApplication const app(argc, argv);
 

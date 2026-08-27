@@ -1,0 +1,118 @@
+---
+title: "DataViewer allocation probes"
+format: html
+---
+
+## Purpose
+
+`benchmark/DataViewerViewInteraction.benchmark.cpp` builds `benchmark_DataViewerView`,
+a small horizontal-scroll probe binary for `OpenGLWidget`. It is run under heaptrack
+with fixed CLI arguments to build intuition about allocation behavior:
+
+- Does vertex **generation** cache work on a +1 scroll?
+- Does allocation scale **linearly** with channel count?
+- How far are we from the theoretical minimum?
+
+Three named probes are registered for `record_benchmark_baselines` /
+`check_benchmark_regressions`. No library instrumentation.
+
+## Probe scenarios
+
+| Probe | Command | Scene rebuilds | Purpose |
+|-------|---------|----------------|---------|
+| `1ch-init` | `1 10000 1000 0 1` | 1 | Cold baseline |
+| `1ch-scroll1` | `1 10000 1000 1 1` | 2 | Cold + one scroll-by-1 |
+| `2ch-scroll1` | `2 10000 1000 1 1` | 2 | Linear channel scaling |
+
+Arguments: `channels samples window scroll_frames scroll_step`.
+
+## Theoretical expectations (window W=1000, scroll step=1)
+
+Per **scene rebuild**, for each analog channel:
+
+| Stage | Frame 0 (cold) | Frame 1 (+1 scroll, if cache works) |
+|-------|----------------|-------------------------------------|
+| Vertex generation | ~W `CachedAnalogVertex` temp | ~1 vertex temp (incremental append) |
+| Vertex extraction | 1 new `vector<float>` ~2W floats | 1 new `vector<float>` ~2W floats |
+| Scene + GPU | Full `rebuildScene` + `uploadScene` | Same |
+
+If generation caching is **broken**, frame 1 regenerates ~W vertices again.
+
+If extraction used a **reused buffer**, frame 1 would still do O(W) work but avoid a new heap allocation for the float vector.
+
+**Channel scaling:** `2ch-scroll1` should add roughly one extra per-channel extraction alloc per rebuild versus `1ch-scroll1`, plus one small incremental gen alloc on frame 1.
+
+## Commands
+
+```bash
+cmake --preset my-clang-release
+cmake --build --preset my-clang-release
+
+# Once per machine (records ScatterPlot + three DataViewer probes):
+cmake --build --preset my-clang-release --target record_benchmark_baselines
+
+# After changes:
+cmake --build --preset my-clang-release --target check_benchmark_regressions
+```
+
+Baselines: `benchmark-baselines-local/benchmark_DataViewerView_*.heaptrack.txt` (gitignored).
+Requires `HEAPTRACK_EXECUTABLE` in `CMakeUserPresets.json` and a working OpenGL display.
+
+## OpenGL setup
+
+Benchmarks use `benchmark/fixtures/QtOpenGLBenchmarkFixture.hpp`, which mirrors in-app plot
+widgets:
+
+- Does **not** override `QT_QPA_PLATFORM` (respects your X11/Wayland/WSLg setup).
+- Sets OpenGL **4.1 Core** with 4× MSAA on each `QOpenGLWidget` before `show()`.
+- Blocks until `context()->isValid()` so `initializeGL` / `paintGL` actually run.
+
+Successful probe stdout includes `opengl_context=valid` and `OpenGL major version:` from
+`OpenGLWidget::initializeGL`. If context creation fails, the binary exits with an error instead
+of recording a misleading heaptrack baseline.
+
+## Manual runs
+
+```bash
+./out/build/Clang/Release/benchmark/benchmark_DataViewerView --help
+
+# Named recipes:
+./out/build/Clang/Release/benchmark/benchmark_DataViewerView 1 10000 1000 0 1
+./out/build/Clang/Release/benchmark/benchmark_DataViewerView 1 10000 1000 1 1
+./out/build/Clang/Release/benchmark/benchmark_DataViewerView 2 10000 1000 1 1
+```
+
+### Comparing frames (separate heaptrack processes)
+
+```bash
+heaptrack ./out/build/Clang/Release/benchmark/benchmark_DataViewerView 1 10000 1000 0 1
+heaptrack ./out/build/Clang/Release/benchmark/benchmark_DataViewerView 1 10000 1000 1 1
+```
+
+Subtract summaries to approximate the incremental scroll frame cost.
+
+### Comparing channel scaling
+
+```bash
+heaptrack ./out/build/Clang/Release/benchmark/benchmark_DataViewerView 1 10000 1000 1 1
+heaptrack ./out/build/Clang/Release/benchmark/benchmark_DataViewerView 2 10000 1000 1 1
+```
+
+## What fails
+
+`check_benchmark_regressions` compares heaptrack summary output per probe. Primary signal:
+`temporary allocations`. Secondary: total `allocations`. Default tolerance: 30% above baseline.
+
+Inspect call stacks with the `.zst` file in `out/build/Clang/Release/benchmark-regression-results/`.
+
+## Measuring improvements
+
+Save pre-refactor probe baselines before optimizing:
+
+```bash
+cp benchmark-baselines-local/benchmark_DataViewerView_1ch_scroll1.heaptrack.txt \
+   benchmark-baselines-local/benchmark_DataViewerView_1ch_scroll1.before-refactor.heaptrack.txt
+```
+
+After refactoring, compare summary lines manually or with
+`benchmark/tools/compare_heaptrack_summary.py`.
