@@ -83,6 +83,12 @@ private:
     QTableWidget * _lane_table = nullptr;
 
     // --- Rendering stats labels ---
+    QLabel * _fps_label = nullptr;
+    QLabel * _frame_time_label = nullptr;
+    QLabel * _rebuild_time_label = nullptr;
+    QLabel * _upload_time_label = nullptr;
+    QLabel * _draw_time_label = nullptr;
+    QLabel * _vertex_bytes_label = nullptr;
     QLabel * _batch_counts_label = nullptr;
     QLabel * _vertex_count_label = nullptr;
     QLabel * _entity_count_label = nullptr;

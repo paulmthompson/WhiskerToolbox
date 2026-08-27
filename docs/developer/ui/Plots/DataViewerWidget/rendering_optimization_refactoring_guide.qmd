@@ -32,7 +32,7 @@ Phase 5: Scratch Buffer Reuse & Heap Allocation Reduction
 | Phase | Description | Status | Target / Notes |
 |:---|:---|:---:|:---|
 | **Phase 1** | Integer Vertex Attribute & Shader Pipeline | **Completed** | `glVertexAttribIPointer`, `u_view_start_sample`, static integer packing via `std::bit_cast` |
-| **Phase 2** | True Incremental GPU Streaming | Pending | `glBufferSubData` ring buffer, persistent VBO allocation in `StreamingPolyLineRenderer` |
+| **Phase 2** | True Incremental GPU Streaming & Persistent VBOs | **Completed** | Multi-batch single-pass staging, persistent VBO allocation (`glBufferSubData`), sliding window streaming |
 | **Phase 3** | Fast-Path 1.0px Line Rendering | Pending | Bypass geometry shader for `thickness <= 1.0f` |
 | **Phase 4** | Adaptive Source-Level Min-Max Decimation | Pending | Direct contiguous storage decimation for high-density zoomed-out views |
 | **Phase 5** | Scratch Buffer Reuse & Heap Reduction | Pending | Reusable scratch buffers in `SceneCacheState` |
@@ -98,35 +98,30 @@ void PolyLineRenderer::setupVertexAttributes() {
 ### 1.3 Vertex Shader Implementation
 
 In [`wide_line.vert`](file:///home/wanglab/Programs/WhiskerToolbox/src/WhiskerToolbox/shaders/wide_line.vert) and embedded fallback strings:
-
 ```glsl
-#version 410 core
+#version 330 core
 
 layout(location = 0) in int a_time_index;
 layout(location = 1) in float a_value;
 
-uniform int u_view_start_sample;
 uniform mat4 u_mvp_matrix;
+uniform int u_view_start_sample;
 
 void main() {
-    // 1. Bit-exact integer subtraction on GPU hardware:
     int rel_sample = a_time_index - u_view_start_sample;
-
-    // 2. Cast to float only after subtraction (rel_sample is within [0, visible_samples]):
     gl_Position = u_mvp_matrix * vec4(float(rel_sample), a_value, 0.0, 1.0);
 }
 ```
 
-### 1.4 CPU Batch Building & Cache Extraction
+### 1.4 Cache & Pipeline Integration
 
-1. **[`AnalogVertexCache.cpp`](file:///home/wanglab/Programs/WhiskerToolbox/src/WhiskerToolbox/DataViewer_Widget/Rendering/AnalogVertexCache.cpp#L175-L188)**:
-   In `getVerticesForRange()`, vertex time coordinates are stored static and un-subtracted:
+1. **[`AnalogVertexCache.cpp`](file:///home/wanglab/Programs/WhiskerToolbox/src/WhiskerToolbox/DataViewer_Widget/Rendering/AnalogVertexCache.cpp#L45-L68)**:
+   `getVerticesForRange` populates sample indices directly without CPU origin baking:
    ```cpp
-   for (auto it = range_start_it; it != range_end_it; ++it) {
-       auto const & v = *it;
-       int32_t const t_raw = static_cast<int32_t>(v.x.getValue());
-       result.push_back(std::bit_cast<float>(t_raw));
-       result.push_back(v.y);
+   for (size_t i = start_idx; i < end_idx; ++i) {
+       auto const & v = data.points[i];
+       vertices.push_back(std::bit_cast<float>(static_cast<int32_t>(v.x.getValue())));
+       vertices.push_back(v.y);
    }
    ```
 2. **[`SceneBuildingHelpers.cpp`](file:///home/wanglab/Programs/WhiskerToolbox/src/WhiskerToolbox/DataViewer_Widget/Rendering/SceneBuildingHelpers.cpp#L63-L135)**:
@@ -136,39 +131,43 @@ void main() {
 
 ---
 
-## Phase 2: True Incremental GPU Streaming
+## Phase 2: True Incremental GPU Streaming & Persistent VBOs (Completed)
 
 ### Objective
-Because vertex sample indices in the VBO are now static, newly visible samples can be appended or prepended directly into a persistent GPU VBO using `glBufferSubData`.
+Eliminate repeated GPU memory allocation and redundant byte re-transfers when panning, scrolling, or playing back multi-channel data.
 
-### Architecture
+### 2.1 Multi-Batch Single-Pass Staging in `PolyLineRenderer` & `SceneRenderer`
 
+Previously, `SceneRenderer::uploadScene` iterated through all polyline batches and called `uploadData` per channel. Because each `uploadData` call reallocated and reuploaded the entire cumulative buffer, an $N$-channel scene caused $O(N^2)$ byte transfers and $N$ GPU reallocations per frame.
+
+Implemented `PolyLineRenderer::uploadBatches(std::span<RenderablePolyLineBatch const> batches)`:
+1. Computes total vertex count across all channels upfront and reserves CPU buffer memory in one pass.
+2. Stages all channel descriptors (`line_start_indices`, `line_vertex_counts`, `model_matrix`, `view_start_time`, `global_color`, `thickness`).
+3. Uses a persistent GPU buffer: if `required_bytes <= m_gpu_buffer_capacity`, updates GPU memory using `m_vbo.write(0, data, size)` (`glBufferSubData`) with zero buffer reallocations. If growth is required, grows capacity by $2\times$ with dynamic draw allocation.
+
+In [`SceneRenderer.cpp`](file:///home/wanglab/Programs/WhiskerToolbox/src/PlottingOpenGL/SceneRenderer.cpp):
+```cpp
+// Upload all polyline batches in a single combined pass
+m_poly_line_renderer.uploadBatches(scene.poly_line_batches);
 ```
-GPU VBO (3x Visible Window Capacity)
-┌──────────────────────────────────────────────────────────────────┐
-│ [ Old Data (Left) ] │ [ Currently Visible Window ] │ [ Pre-cached Right ] │
-└──────────────────────────────────────────────────────────────────┘
-                      ▲                              ▲
-                 start_index                    end_index
-```
 
-### Implementation Steps
+### 2.2 Integer-Time Sliding Window Streaming in `StreamingPolyLineRenderer`
 
-1. **Persistent Buffer Allocation**:
-   In `StreamingPolyLineRenderer::uploadGPUBufferFull()`:
-   * Allocate $3 \times \text{visible\_window\_size}$ with `glBufferData(GL_ARRAY_BUFFER, capacity_bytes, nullptr, GL_DYNAMIC_DRAW)`.
+In [`StreamingPolyLineRenderer.cpp`](file:///home/wanglab/Programs/WhiskerToolbox/src/PlottingOpenGL/Renderers/StreamingPolyLineRenderer.cpp):
 
-2. **Incremental Update with `glBufferSubData`**:
-   When the view window scrolls by $K$ samples (e.g. $[1000, 2000] \to [1010, 2010]$):
-   * Points $[1010, 2000]$ already reside in the VBO at their fixed indices.
-   * Upload only the $K$ missing edge samples ($K \times 8$ bytes) using `glBufferSubData`.
-   * Update the start offset:
-     ```cpp
-     gl->glDrawArrays(GL_LINE_STRIP, visible_start_offset, visible_sample_count);
-     ```
+For integer time series batches, `StreamingPolyLineRenderer` allocates persistent GPU capacity ($2\times$ to $3\times$ visible points) and dynamically computes time index delta $\Delta = T_{\text{new\_start}} - T_{\text{cached\_start}}$:
 
-3. **Wire into `SceneRenderer`**:
-   Switch [`SceneRenderer.hpp`](file:///home/wanglab/Programs/WhiskerToolbox/src/PlottingOpenGL/SceneRenderer.hpp) from `PolyLineRenderer` to `StreamingPolyLineRenderer` for analog batches.
+1. **Forward Scroll ($0 < \Delta < N$)**:
+   - The trailing $\Delta$ samples are written to the VBO at byte offset `(m_vbo_vertex_offset + N) * 8` via `glBufferSubData`.
+   - `m_vbo_vertex_offset` advances by $\Delta$, and `line_start_indices[0] = m_vbo_vertex_offset`.
+   - Only $\Delta \times 8$ bytes are transferred to the GPU (e.g. 80 bytes for a 10-sample shift instead of 8,000 bytes, achieving >99% bandwidth reduction).
+2. **Backward Scroll ($-\text{N} < \Delta < 0$)**:
+   - The leading $|\Delta|$ samples are written at `(m_vbo_vertex_offset - |\Delta|) * 8` via `glBufferSubData`.
+   - `m_vbo_vertex_offset` decrements by $|\Delta|$.
+3. **Discontinuous Scrub / Large Jump ($|\Delta| \ge N$)**:
+   - Full re-upload resets `m_vbo_vertex_offset = 0` into the persistent VBO.
+4. **Buffer Ring Wrap**:
+   - When scrolling reaches the boundary of the allocated capacity, it seamlessly resets `m_vbo_vertex_offset = 0`.
 
 ---
 

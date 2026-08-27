@@ -461,6 +461,13 @@ signals:
      */
     void sceneRebuilt();
 
+    /**
+     * @brief Emitted after paintGL() completes
+     *
+     * Used by the debug panel to refresh live performance timing statistics.
+     */
+    void frameRendered();
+
 protected:
     void initializeGL() override;
     void paintGL() override;
@@ -496,6 +503,7 @@ private:
      * on top of the GL canvas.
      */
     void drawDeveloperOverlays();
+    void drawDeveloperHUD(QPainter & painter);
     void drawLaneBoundaries(QPainter & painter);
     void drawOriginMarkers(QPainter & painter);
     void drawCursorCrosshair(QPainter & painter);
@@ -564,6 +572,10 @@ private:
 
     /// Cumulative count of scene rebuilds (for diagnostics)
     int _scene_rebuild_count{0};
+
+    /// High-resolution performance metrics for diagnostics panel and HUD
+    PerformanceMetrics _perf_metrics;
+    std::chrono::high_resolution_clock::time_point _last_paint_time;
 
     // ========================================================================
     // Input, Interaction, Selection, and Tooltip Handlers

@@ -65,6 +65,7 @@ void PolyLineRenderer::cleanup() {
     if (!m_use_shader_manager) {
         m_embedded_shader.destroy();
     }
+    m_gpu_buffer_capacity = 0;
     m_initialized = false;
     clearData();
 }
@@ -113,21 +114,9 @@ void PolyLineRenderer::render(glm::mat4 const & view_matrix,
         return;
     }
 
-    // Set viewport size uniform (shared across all batches)
-    if (m_use_shader_manager) {
-        auto * native = shader_program->getNativeProgram();
-        if (native) {
-            native->setUniformValue("u_viewport_size", viewport_width, viewport_height);
-        }
-    } else {
-        m_embedded_shader.setUniformValue("u_viewport_size", viewport_width, viewport_height);
-    }
-
-    // Render each batch with its own model matrix
+    // Render each batch with its own MVP and color
     for (auto const & batch: m_batches) {
-        if (batch.total_vertices == 0) continue;
-
-        // Compute MVP = Projection * View * Model (per-batch model matrix)
+        // Compute MVP = Projection * View * Model for this batch
         glm::mat4 mvp = projection_matrix * view_matrix * batch.model_matrix;
 
         if (m_use_shader_manager) {
@@ -136,11 +125,13 @@ void PolyLineRenderer::render(glm::mat4 const & view_matrix,
             auto * native = shader_program->getNativeProgram();
             if (native) {
                 native->setUniformValue("u_line_width", batch.thickness);
+                native->setUniformValue("u_viewport_size", viewport_width, viewport_height);
             }
         } else {
             m_embedded_shader.setUniformMatrix4("u_mvp_matrix", glm::value_ptr(mvp));
             m_embedded_shader.setUniformValue("u_view_start_sample", batch.view_start_time);
             m_embedded_shader.setUniformValue("u_line_width", batch.thickness);
+            m_embedded_shader.setUniformValue("u_viewport_size", viewport_width, viewport_height);
         }
 
         // Draw each polyline segment in this batch
@@ -204,6 +195,75 @@ void PolyLineRenderer::clearData() {
     m_total_vertices = 0;
 }
 
+void PolyLineRenderer::uploadBatches(std::span<CorePlotting::RenderablePolyLineBatch const> batches) {
+    if (!m_initialized) {
+        return;
+    }
+
+    clearData();
+
+    if (batches.empty()) {
+        return;
+    }
+
+    size_t total_floats = 0;
+    for (auto const & b: batches) {
+        total_floats += b.vertices.size();
+    }
+
+    if (total_floats == 0) {
+        return;
+    }
+
+    m_all_vertices.reserve(total_floats);
+    m_batches.reserve(batches.size());
+
+    for (auto const & batch: batches) {
+        if (batch.vertices.empty()) {
+            continue;
+        }
+
+        BatchData batch_data;
+        batch_data.line_start_indices = batch.line_start_indices;
+        batch_data.line_vertex_counts = batch.line_vertex_counts;
+        batch_data.has_per_line_colors = !batch.colors.empty();
+        if (batch_data.has_per_line_colors) {
+            batch_data.line_colors = batch.colors;
+        }
+        batch_data.global_color = batch.global_color;
+        batch_data.model_matrix = batch.model_matrix;
+        batch_data.thickness = batch.thickness;
+        batch_data.view_start_time = batch.view_start_time;
+        batch_data.is_integer_time = batch.is_integer_time;
+
+        batch_data.vertex_offset = m_total_vertices;
+        batch_data.total_vertices = static_cast<int>(batch.vertices.size()) / 2;
+
+        m_all_vertices.insert(m_all_vertices.end(), batch.vertices.begin(), batch.vertices.end());
+        m_total_vertices += batch_data.total_vertices;
+
+        m_batches.push_back(std::move(batch_data));
+    }
+
+    size_t const required_bytes = m_all_vertices.size() * sizeof(float);
+
+    (void) m_vao.bind();
+    (void) m_vbo.bind();
+
+    // Reallocate with growth headroom if needed
+    if (required_bytes > m_gpu_buffer_capacity || m_gpu_buffer_capacity == 0) {
+        size_t const desired_capacity = std::max(required_bytes * 2, static_cast<size_t>(1024 * 1024));
+        m_vbo.allocate(nullptr, static_cast<int>(desired_capacity));
+        m_gpu_buffer_capacity = desired_capacity;
+    }
+
+    // Sub-buffer write into persistent VBO
+    m_vbo.write(0, m_all_vertices.data(), static_cast<int>(required_bytes));
+
+    m_vbo.release();
+    m_vao.release();
+}
+
 void PolyLineRenderer::uploadData(CorePlotting::RenderablePolyLineBatch const & batch) {
     if (!m_initialized) {
         return;
@@ -238,11 +298,20 @@ void PolyLineRenderer::uploadData(CorePlotting::RenderablePolyLineBatch const & 
     // Store batch metadata
     m_batches.push_back(std::move(batch_data));
 
-    // Upload all vertex data to GPU
+    // Upload to persistent GPU buffer
+    size_t const required_bytes = m_all_vertices.size() * sizeof(float);
+
     (void) m_vao.bind();
     (void) m_vbo.bind();
-    m_vbo.allocate(m_all_vertices.data(),
-                   static_cast<int>(m_all_vertices.size() * sizeof(float)));
+
+    if (required_bytes > m_gpu_buffer_capacity || m_gpu_buffer_capacity == 0) {
+        size_t const desired_capacity = std::max(required_bytes * 2, static_cast<size_t>(1024 * 1024));
+        m_vbo.allocate(nullptr, static_cast<int>(desired_capacity));
+        m_gpu_buffer_capacity = desired_capacity;
+    }
+
+    m_vbo.write(0, m_all_vertices.data(), static_cast<int>(required_bytes));
+
     m_vbo.release();
     m_vao.release();
 }

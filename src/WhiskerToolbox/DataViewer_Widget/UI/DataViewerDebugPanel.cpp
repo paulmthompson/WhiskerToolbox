@@ -167,19 +167,28 @@ void DataViewerDebugPanel::_buildUI() {
     main_layout->addWidget(_lane_table_group);
 
     // --- A.3 Rendering Statistics ---
-    _rendering_stats_group = new QGroupBox(QStringLiteral("Rendering Stats"), this);
+    _rendering_stats_group = new QGroupBox(QStringLiteral("Rendering & Performance"), this);
     _rendering_stats_group->setCheckable(true);
     _rendering_stats_group->setChecked(true);
     auto * rs_layout = new QVBoxLayout(_rendering_stats_group);
     rs_layout->setContentsMargins(4, 4, 4, 4);
     rs_layout->setSpacing(2);
 
+    _fps_label = new QLabel(_rendering_stats_group);
+    _frame_time_label = new QLabel(_rendering_stats_group);
+    _rebuild_time_label = new QLabel(_rendering_stats_group);
+    _upload_time_label = new QLabel(_rendering_stats_group);
+    _draw_time_label = new QLabel(_rendering_stats_group);
+    _vertex_bytes_label = new QLabel(_rendering_stats_group);
     _batch_counts_label = new QLabel(_rendering_stats_group);
     _vertex_count_label = new QLabel(_rendering_stats_group);
     _entity_count_label = new QLabel(_rendering_stats_group);
     _rebuild_count_label = new QLabel(_rendering_stats_group);
 
-    for (auto * lbl: {_batch_counts_label, _vertex_count_label,
+    for (auto * lbl: {_fps_label, _frame_time_label,
+                      _rebuild_time_label, _upload_time_label,
+                      _draw_time_label, _vertex_bytes_label,
+                      _batch_counts_label, _vertex_count_label,
                       _entity_count_label, _rebuild_count_label}) {
         lbl->setTextInteractionFlags(Qt::TextSelectableByMouse);
         lbl->setFont(QFont(QStringLiteral("monospace"), 8));
@@ -243,6 +252,9 @@ void DataViewerDebugPanel::_connectSignals() {
         connect(_opengl_widget, &OpenGLWidget::sceneRebuilt,
                 this, &DataViewerDebugPanel::refresh);
 
+        connect(_opengl_widget, &OpenGLWidget::frameRendered,
+                this, &DataViewerDebugPanel::_refreshRenderingStats);
+
         connect(_opengl_widget, &OpenGLWidget::mouseHover,
                 this, &DataViewerDebugPanel::updateCoordinateInspector);
 
@@ -262,7 +274,7 @@ void DataViewerDebugPanel::_connectSignals() {
 }
 
 // ============================================================================
-// Private: Section refreshers
+// Private: Section refresh implementations
 // ============================================================================
 
 void DataViewerDebugPanel::_refreshViewState() {
@@ -271,31 +283,27 @@ void DataViewerDebugPanel::_refreshViewState() {
     }
 
     auto const & view = _state->viewState();
-    auto const [w, h] = _opengl_widget->getCanvasSize();
 
     _time_window_label->setText(
             QStringLiteral("Time: [%1, %2]")
-                    .arg(static_cast<int64_t>(view.x_min))
-                    .arg(static_cast<int64_t>(view.x_max)));
+                    .arg(static_cast<double>(view.x_min), 0, 'f', 1)
+                    .arg(static_cast<double>(view.x_max), 0, 'f', 1));
 
+    double const duration = view.x_max - view.x_min;
     _visible_duration_label->setText(
-            QStringLiteral("Duration: %1 frames")
-                    .arg(static_cast<int64_t>(view.x_max - view.x_min)));
+            QStringLiteral("Duration: %1 ticks").arg(duration, 0, 'f', 1));
 
-    auto const eff = CorePlotting::computeEffectiveYViewport(view);
-    float const eff_y_min = eff.y_min;
-    float const eff_y_max = eff.y_max;
     _y_bounds_label->setText(
-            QStringLiteral("Y: [%1, %2]  pan=%3  zoom=%4")
-                    .arg(static_cast<double>(eff_y_min), 0, 'f', 4)
-                    .arg(static_cast<double>(eff_y_max), 0, 'f', 4)
-                    .arg(view.y_pan, 0, 'f', 4)
-                    .arg(view.y_zoom, 0, 'f', 2));
+            QStringLiteral("Y bounds: [%1, %2]")
+                    .arg(static_cast<double>(view.y_min), 0, 'f', 2)
+                    .arg(static_cast<double>(view.y_max), 0, 'f', 2));
 
     _pan_zoom_label->setText(
-            QStringLiteral("y_scale=%1")
-                    .arg(static_cast<double>(_state->globalYScale()), 0, 'f', 2));
+            QStringLiteral("Zoom: %1x  Pan: %2")
+                    .arg(static_cast<double>(view.y_zoom), 0, 'f', 2)
+                    .arg(static_cast<double>(view.y_pan), 0, 'f', 2));
 
+    auto const [w, h] = _opengl_widget->getCanvasSize();
     _widget_size_label->setText(
             QStringLiteral("Widget: %1 x %2 px").arg(w).arg(h));
 
@@ -351,6 +359,25 @@ void DataViewerDebugPanel::_refreshRenderingStats() {
 
     auto const diag = _opengl_widget->getDiagnostics();
     auto const & r = diag.rendering;
+    auto const & p = diag.performance;
+
+    _fps_label->setText(
+            QStringLiteral("FPS: %1").arg(p.fps, 0, 'f', 1));
+
+    _frame_time_label->setText(
+            QStringLiteral("Frame Time: %1 ms").arg(p.total_paint_ms, 0, 'f', 2));
+
+    _rebuild_time_label->setText(
+            QStringLiteral("Rebuild (CPU): %1 ms").arg(p.scene_rebuild_ms, 0, 'f', 2));
+
+    _upload_time_label->setText(
+            QStringLiteral("Upload (PCIe): %1 ms").arg(p.scene_upload_ms, 0, 'f', 2));
+
+    _draw_time_label->setText(
+            QStringLiteral("Draw (GPU): %1 ms").arg(p.gl_draw_ms, 0, 'f', 2));
+
+    _vertex_bytes_label->setText(
+            QStringLiteral("VBO Poly: %1 KB").arg(static_cast<double>(p.total_vertex_bytes) / 1024.0, 0, 'f', 1));
 
     _batch_counts_label->setText(
             QStringLiteral("Batches: poly=%1  glyph=%2  rect=%3")

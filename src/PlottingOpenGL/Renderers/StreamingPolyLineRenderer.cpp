@@ -6,6 +6,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <iostream>
 
@@ -69,6 +70,8 @@ void StreamingPolyLineRenderer::cleanup() {
     if (!m_use_shader_manager) {
         m_embedded_shader.destroy();
     }
+    m_gpu_buffer_capacity = 0;
+    m_vbo_vertex_offset = 0;
     m_initialized = false;
     clearData();
 }
@@ -182,6 +185,7 @@ void StreamingPolyLineRenderer::clearData() {
     m_dirty_regions.clear();
     m_pending_vertices.clear();
     m_gpu_buffer_used = 0;
+    m_vbo_vertex_offset = 0;
     // Note: We don't reset m_gpu_buffer_capacity - keep the allocated buffer
 }
 
@@ -197,6 +201,11 @@ void StreamingPolyLineRenderer::updateData(CorePlotting::RenderablePolyLineBatch
     if (computeDirtyRegions(batch)) {
         // Incremental update
         updateGPUBufferIncremental();
+        m_cached_batch.global_color = batch.global_color;
+        m_cached_batch.model_matrix = batch.model_matrix;
+        m_cached_batch.thickness = batch.thickness;
+        m_cached_batch.view_start_time = batch.view_start_time;
+        m_cached_batch.is_integer_time = batch.is_integer_time;
         m_incremental_updates++;
 
         if (m_timing_enabled) {
@@ -266,7 +275,6 @@ bool StreamingPolyLineRenderer::computeDirtyRegions(CorePlotting::RenderablePoly
         return false;
     }
 
-    // Check if vertex counts changed
     for (size_t i = 0; i < batch.line_vertex_counts.size(); ++i) {
         if (batch.line_vertex_counts[i] != m_cached_batch.line_vertex_counts[i]) {
             return false;
@@ -279,13 +287,78 @@ bool StreamingPolyLineRenderer::computeDirtyRegions(CorePlotting::RenderablePoly
         return false;// Need to reallocate
     }
 
-    // Find dirty regions by comparing vertices
-    // Strategy: Scan for contiguous regions that differ
     size_t const vertex_count = batch.vertices.size();
     if (vertex_count != m_cached_batch.vertices.size()) {
         return false;
     }
 
+    // Fast path: Integer time sliding window streaming
+    if (batch.is_integer_time && m_cached_batch.is_integer_time &&
+        batch.line_start_indices.size() == 1 && vertex_count >= 2) {
+
+        size_t const point_count = vertex_count / 2;
+        auto const cached_start = std::bit_cast<int32_t>(m_cached_batch.vertices[0]);
+        auto const new_start = std::bit_cast<int32_t>(batch.vertices[0]);
+        int64_t const delta = static_cast<int64_t>(new_start) - static_cast<int64_t>(cached_start);
+
+        size_t const capacity_points = m_gpu_buffer_capacity / (2 * sizeof(float));
+
+        if (delta == 0) {
+            // Same time range (e.g. amplitude update or pan without scroll)
+            for (size_t i = 0; i < point_count; ++i) {
+                float const old_y = m_cached_batch.vertices[i * 2 + 1];
+                float const new_y = batch.vertices[i * 2 + 1];
+                if (std::abs(new_y - old_y) > m_comparison_tolerance) {
+                    size_t const start_byte = (m_vbo_vertex_offset + i) * 2 * sizeof(float);
+                    m_dirty_regions.push_back({start_byte, start_byte + 2 * sizeof(float), i * 2});
+                }
+            }
+            return true;
+        }
+
+        if (delta > 0 && static_cast<size_t>(delta) < point_count) {
+            // Forward scroll by delta samples
+            auto const u_delta = static_cast<size_t>(delta);
+            if (m_vbo_vertex_offset + point_count + u_delta <= capacity_points) {
+                // Upload only the new trailing delta samples
+                size_t const write_vbo_vertex = m_vbo_vertex_offset + point_count;
+                size_t const write_start_byte = write_vbo_vertex * 2 * sizeof(float);
+                size_t const write_bytes = u_delta * 2 * sizeof(float);
+                size_t const source_float_offset = (point_count - u_delta) * 2;
+
+                m_dirty_regions.push_back({write_start_byte, write_start_byte + write_bytes, source_float_offset});
+                m_vbo_vertex_offset += u_delta;
+                m_cached_batch.line_start_indices[0] = static_cast<int32_t>(m_vbo_vertex_offset);
+                return true;
+            }
+            // Exceeded capacity margin — fall back to full upload at offset 0
+            return false;
+        }
+
+        if (delta < 0 && static_cast<size_t>(-delta) < point_count) {
+            // Backward scroll by u_k samples
+            auto const u_k = static_cast<size_t>(-delta);
+            if (m_vbo_vertex_offset >= u_k) {
+                // Upload only the new leading u_k samples
+                size_t const write_vbo_vertex = m_vbo_vertex_offset - u_k;
+                size_t const write_start_byte = write_vbo_vertex * 2 * sizeof(float);
+                size_t const write_bytes = u_k * 2 * sizeof(float);
+                size_t const source_float_offset = 0;
+
+                m_dirty_regions.push_back({write_start_byte, write_start_byte + write_bytes, source_float_offset});
+                m_vbo_vertex_offset -= u_k;
+                m_cached_batch.line_start_indices[0] = static_cast<int32_t>(m_vbo_vertex_offset);
+                return true;
+            }
+            // Need wrap around
+            return false;
+        }
+
+        // Jump too large (scrub/seek)
+        return false;
+    }
+
+    // Standard floating-point dirty region detection
     bool in_dirty_region = false;
     size_t dirty_start = 0;
 
@@ -293,13 +366,12 @@ bool StreamingPolyLineRenderer::computeDirtyRegions(CorePlotting::RenderablePoly
         bool const is_different = std::abs(batch.vertices[i] - m_cached_batch.vertices[i]) > m_comparison_tolerance;
 
         if (is_different && !in_dirty_region) {
-            // Start of dirty region
             dirty_start = i;
             in_dirty_region = true;
         } else if (!is_different && in_dirty_region) {
-            // End of dirty region
             m_dirty_regions.push_back({dirty_start * sizeof(float),
-                                       i * sizeof(float)});
+                                       i * sizeof(float),
+                                       dirty_start});
             in_dirty_region = false;
         }
     }
@@ -307,7 +379,8 @@ bool StreamingPolyLineRenderer::computeDirtyRegions(CorePlotting::RenderablePoly
     // Close any open dirty region
     if (in_dirty_region) {
         m_dirty_regions.push_back({dirty_start * sizeof(float),
-                                   vertex_count * sizeof(float)});
+                                   vertex_count * sizeof(float),
+                                   dirty_start});
     }
 
     // If too many dirty regions, it's more efficient to do full upload
@@ -334,31 +407,31 @@ bool StreamingPolyLineRenderer::computeDirtyRegions(CorePlotting::RenderablePoly
 
 void StreamingPolyLineRenderer::updateGPUBufferIncremental() {
     auto * gl = GLFunctions::get();
-    if (!gl || m_dirty_regions.empty()) {
-        // No changes needed, but still update cached metadata
+    if (!gl) {
         return;
     }
 
-    (void) m_vao.bind();
-    (void) m_vbo.bind();
-
     size_t total_uploaded = 0;
 
-    // Upload each dirty region using glBufferSubData
-    for (auto const & region: m_dirty_regions) {
-        size_t const offset = region.start_byte;
-        size_t const size = region.end_byte - region.start_byte;
-        size_t const float_offset = offset / sizeof(float);
+    if (!m_dirty_regions.empty()) {
+        (void) m_vao.bind();
+        (void) m_vbo.bind();
 
-        // Use write() which calls glBufferSubData
-        m_vbo.write(static_cast<int>(offset),
-                    m_pending_vertices.data() + float_offset,
-                    static_cast<int>(size));
-        total_uploaded += size;
+        // Upload each dirty region using glBufferSubData
+        for (auto const & region: m_dirty_regions) {
+            size_t const offset = region.start_byte;
+            size_t const size = region.end_byte - region.start_byte;
+
+            // Use write() which calls glBufferSubData
+            m_vbo.write(static_cast<int>(offset),
+                        m_pending_vertices.data() + region.source_float_offset,
+                        static_cast<int>(size));
+            total_uploaded += size;
+        }
+
+        m_vbo.release();
+        m_vao.release();
     }
-
-    m_vbo.release();
-    m_vao.release();
 
     // Update cache with new data
     m_cached_batch.vertices = std::move(m_pending_vertices);
@@ -392,7 +465,8 @@ void StreamingPolyLineRenderer::uploadGPUBufferFull(CorePlotting::RenderablePoly
         m_gpu_buffer_capacity = desired_capacity;
     }
 
-    // Upload data
+    // Upload data at offset 0
+    m_vbo_vertex_offset = 0;
     m_vbo.write(0, batch.vertices.data(), static_cast<int>(required_bytes));
     m_gpu_buffer_used = required_bytes;
 
@@ -402,6 +476,9 @@ void StreamingPolyLineRenderer::uploadGPUBufferFull(CorePlotting::RenderablePoly
     // Update cache
     m_cached_batch.vertices = batch.vertices;
     m_cached_batch.line_start_indices = batch.line_start_indices;
+    if (!m_cached_batch.line_start_indices.empty()) {
+        m_cached_batch.line_start_indices[0] = 0;
+    }
     m_cached_batch.line_vertex_counts = batch.line_vertex_counts;
     m_cached_batch.global_color = batch.global_color;
     m_cached_batch.model_matrix = batch.model_matrix;

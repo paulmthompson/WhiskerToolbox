@@ -297,6 +297,7 @@ private:
     // GPU buffer state
     size_t m_gpu_buffer_capacity{0};// Allocated capacity in bytes
     size_t m_gpu_buffer_used{0};    // Used portion in bytes
+    size_t m_vbo_vertex_offset{0};  // Current active window start offset in VBO (in vertices)
 
     // Cached batch data (CPU copy for comparison)
     struct CachedBatchData {
@@ -314,8 +315,9 @@ private:
 
     // Dirty region tracking
     struct DirtyRegion {
-        size_t start_byte{0};
-        size_t end_byte{0};
+        size_t start_byte{0};         // Destination offset in VBO
+        size_t end_byte{0};           // Destination end in VBO
+        size_t source_float_offset{0};// Source float offset in m_pending_vertices
     };
     std::vector<DirtyRegion> m_dirty_regions;
     std::vector<float> m_pending_vertices;// New vertex data to upload

@@ -525,54 +525,74 @@ void OpenGLWidget::paintGL() {
     int r, g, b;
     hexToRGB(_state->themeState().background_color, r, g, b);
 
-    auto paint_gl_start_time = std::chrono::high_resolution_clock::now();
+    auto const paint_gl_start_time = std::chrono::high_resolution_clock::now();
     glClearColor(
             static_cast<float>(r) / 255.0f,
             static_cast<float>(g) / 255.0f,
             static_cast<float>(b) / 255.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    auto gl_clear_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - paint_gl_start_time);
+    auto const t_clear_end = std::chrono::high_resolution_clock::now();
+    double const gl_clear_ms = std::chrono::duration<double, std::milli>(t_clear_end - paint_gl_start_time).count();
 
     // View state is already updated in updateCanvas() - just use it here
-    auto render_with_scene_renderer_start_time = std::chrono::high_resolution_clock::now();
+    auto const t_scene_start = std::chrono::high_resolution_clock::now();
     if (_scene_renderer && _scene_renderer->isInitialized()) {
         renderWithSceneRenderer();
     }
-    auto render_with_scene_renderer_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - render_with_scene_renderer_start_time);
+    auto const t_scene_end = std::chrono::high_resolution_clock::now();
+    double const render_with_scene_renderer_ms = std::chrono::duration<double, std::milli>(t_scene_end - t_scene_start).count();
 
-    auto draw_axis_start_time = std::chrono::high_resolution_clock::now();
+    auto const t_axis_start = std::chrono::high_resolution_clock::now();
     drawAxis();
-    auto draw_axis_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - draw_axis_start_time);
+    auto const t_axis_end = std::chrono::high_resolution_clock::now();
+    double const draw_axis_ms = std::chrono::duration<double, std::milli>(t_axis_end - t_axis_start).count();
 
-    auto draw_grid_lines_start_time = std::chrono::high_resolution_clock::now();
+    auto const t_grid_start = std::chrono::high_resolution_clock::now();
     drawGridLines();
-    auto draw_grid_lines_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - draw_grid_lines_start_time);
+    auto const t_grid_end = std::chrono::high_resolution_clock::now();
+    double const draw_grid_lines_ms = std::chrono::duration<double, std::milli>(t_grid_end - t_grid_start).count();
 
     //unified controller preview overlay
-    auto draw_interaction_preview_start_time = std::chrono::high_resolution_clock::now();
+    auto const t_preview_start = std::chrono::high_resolution_clock::now();
     drawInteractionPreview();
-    auto draw_interaction_preview_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - draw_interaction_preview_start_time);
+    auto const t_preview_end = std::chrono::high_resolution_clock::now();
+    double const draw_interaction_preview_ms = std::chrono::duration<double, std::milli>(t_preview_end - t_preview_start).count();
 
     // Lane drag overlay (always drawn when active, independent of developer mode)
-    auto draw_lane_drag_overlay_start_time = std::chrono::high_resolution_clock::now();
+    auto const t_drag_start = std::chrono::high_resolution_clock::now();
     drawLaneDragOverlay();
-    auto draw_lane_drag_overlay_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - draw_lane_drag_overlay_start_time);
+    auto const t_drag_end = std::chrono::high_resolution_clock::now();
+    double const draw_lane_drag_overlay_ms = std::chrono::duration<double, std::milli>(t_drag_end - t_drag_start).count();
 
     // Developer overlay (QPainter on top of GL)
-    auto draw_developer_overlays_start_time = std::chrono::high_resolution_clock::now();
+    auto const t_dev_start = std::chrono::high_resolution_clock::now();
     if (_state && _state->developerMode()) {
         drawDeveloperOverlays();
     }
-    auto draw_developer_overlays_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - draw_developer_overlays_start_time);
-    auto total_duration = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - paint_gl_start_time);
-    spdlog::debug("[OpenGLWidget] paintGL took {} milliseconds", total_duration.count());
-    spdlog::debug("[OpenGLWidget] gl_clear took {} milliseconds", gl_clear_duration.count());
-    spdlog::debug("[OpenGLWidget] render_with_scene_renderer took {} milliseconds", render_with_scene_renderer_duration.count());
-    spdlog::debug("[OpenGLWidget] draw_axis took {} milliseconds", draw_axis_duration.count());
-    spdlog::debug("[OpenGLWidget] draw_grid_lines took {} milliseconds", draw_grid_lines_duration.count());
-    spdlog::debug("[OpenGLWidget] draw_interaction_preview took {} milliseconds", draw_interaction_preview_duration.count());
-    spdlog::debug("[OpenGLWidget] draw_lane_drag_overlay took {} milliseconds", draw_lane_drag_overlay_duration.count());
-    spdlog::debug("[OpenGLWidget] draw_developer_overlays took {} milliseconds", draw_developer_overlays_duration.count());
+    auto const t_dev_end = std::chrono::high_resolution_clock::now();
+    double const draw_developer_overlays_ms = std::chrono::duration<double, std::milli>(t_dev_end - t_dev_start).count();
+
+    auto const paint_gl_end_time = std::chrono::high_resolution_clock::now();
+    double const total_duration_ms = std::chrono::duration<double, std::milli>(paint_gl_end_time - paint_gl_start_time).count();
+
+    if (_last_paint_time.time_since_epoch().count() > 0) {
+        double const frame_delta_ms = std::chrono::duration<double, std::milli>(paint_gl_end_time - _last_paint_time).count();
+        if (frame_delta_ms > 0.0) {
+            double const instant_fps = 1000.0 / frame_delta_ms;
+            double const alpha = 0.1;
+            _perf_metrics.fps = (_perf_metrics.fps <= 0.0) ? instant_fps : (alpha * instant_fps + (1.0 - alpha) * _perf_metrics.fps);
+        }
+    }
+    _last_paint_time = paint_gl_end_time;
+    _perf_metrics.total_paint_ms = total_duration_ms;
+    _perf_metrics.overlay_ms = draw_axis_ms + draw_grid_lines_ms + draw_interaction_preview_ms + draw_lane_drag_overlay_ms + draw_developer_overlays_ms;
+
+    spdlog::debug("[OpenGLWidget] paintGL took {:.2f} ms (clear: {:.2f} ms | scene_render: {:.2f} ms | rebuild: {:.2f} ms | upload: {:.2f} ms | draw: {:.2f} ms | overlays: {:.2f} ms)",
+                  total_duration_ms, gl_clear_ms, render_with_scene_renderer_ms, _perf_metrics.scene_rebuild_ms, _perf_metrics.scene_upload_ms, _perf_metrics.gl_draw_ms, _perf_metrics.overlay_ms);
+
+    if (_state && _state->developerMode()) {
+        emit frameRendered();
+    }
 }
 
 void OpenGLWidget::resizeGL(int w, int h) {
@@ -1152,16 +1172,13 @@ void OpenGLWidget::renderWithSceneRenderer() {
     }
 
     // Always render with current matrices (handles Y-axis pan/zoom without rebuild)
-    auto t_render_start = std::chrono::steady_clock::now();
+    auto const t_render_start = std::chrono::high_resolution_clock::now();
 
     _scene_renderer->render(_cached_view_matrix, _cached_projection_matrix);
 
-    auto t_render_end = std::chrono::steady_clock::now();
-    auto ms_render = std::chrono::duration_cast<std::chrono::milliseconds>(t_render_end - t_render_start).count();
-
-    if (ms_render > 5) {
-        spdlog::debug("Performance Warning [GL Render]: Draw call took {}ms", ms_render);
-    }
+    auto const t_render_end = std::chrono::high_resolution_clock::now();
+    double const ms_render = std::chrono::duration<double, std::milli>(t_render_end - t_render_start).count();
+    _perf_metrics.gl_draw_ms = ms_render;
 }
 
 void OpenGLWidget::updateMatrices() {
@@ -1219,13 +1236,13 @@ void OpenGLWidget::rebuildScene() {
     builder.setSelectedEntities(_selection_manager->selectedEntities());
 
     // Add all series batches to the scene builder
-    auto t_start = std::chrono::steady_clock::now();
+    auto const t_start = std::chrono::high_resolution_clock::now();
 
     addAnalogBatchesToBuilder(builder);
     addEventBatchesToBuilder(builder);
     addIntervalBatchesToBuilder(builder);
 
-    auto t_batches = std::chrono::steady_clock::now();
+    auto const t_batches = std::chrono::high_resolution_clock::now();
 
     // Build the scene (this also builds spatial index for discrete elements)
     _cache_state.scene = builder.build();
@@ -1233,28 +1250,34 @@ void OpenGLWidget::rebuildScene() {
             DataViewer::viewOriginMasterAbsolute(_master_time_frame, view_state);
     _cache_state.scene_dirty = false;
 
-    auto t_build = std::chrono::steady_clock::now();
+    auto const t_build = std::chrono::high_resolution_clock::now();
 
     // Store batch key maps for hit testing
     _cache_state.rectangle_batch_key_map = builder.getRectangleBatchKeyMap();
     _cache_state.glyph_batch_key_map = builder.getGlyphBatchKeyMap();
 
-    // Upload scene to renderer and render
+    // Upload scene to renderer
     _scene_renderer->uploadScene(_cache_state.scene);
 
-    auto t_upload = std::chrono::steady_clock::now();
+    auto const t_upload = std::chrono::high_resolution_clock::now();
 
-    // Calculate durations in milliseconds
-    auto ms_batches = std::chrono::duration_cast<std::chrono::milliseconds>(t_batches - t_start).count();
-    auto ms_build = std::chrono::duration_cast<std::chrono::milliseconds>(t_build - t_batches).count();
-    auto ms_upload = std::chrono::duration_cast<std::chrono::milliseconds>(t_upload - t_build).count();
+    // Calculate durations in floating point milliseconds
+    double const ms_batches = std::chrono::duration<double, std::milli>(t_batches - t_start).count();
+    double const ms_build = std::chrono::duration<double, std::milli>(t_build - t_batches).count();
+    double const ms_upload = std::chrono::duration<double, std::milli>(t_upload - t_build).count();
 
-    // Log if the total rebuild takes longer than 5ms
-    if ((ms_batches + ms_build + ms_upload) > 5) {
-        spdlog::debug("Performance Warning [rebuildScene]: Batches: {}ms | Build: {}ms | Upload: {}ms",
-                      ms_batches, ms_build, ms_upload);
+    _perf_metrics.scene_rebuild_ms = ms_batches + ms_build;
+    _perf_metrics.scene_upload_ms = ms_upload;
+
+    size_t total_bytes = 0;
+    for (auto const & b: _cache_state.scene.poly_line_batches) {
+        total_bytes += b.vertices.size() * sizeof(float);
     }
+    _perf_metrics.total_vertex_bytes = total_bytes;
 
+    spdlog::debug("[OpenGLWidget] rebuildScene took {:.2f} ms (batches: {:.2f} ms | build: {:.2f} ms | upload: {:.2f} ms | vbo: {:.2f} KB)",
+                  ms_batches + ms_build + ms_upload, ms_batches, ms_build, ms_upload,
+                  static_cast<double>(total_bytes) / 1024.0);
 
     // Update cached matrices
     _cached_projection_matrix = projection;
@@ -2111,6 +2134,7 @@ DataViewerDiagnostics OpenGLWidget::getDiagnostics() const {
         total_verts += static_cast<int>(batch.bounds.size()) * 4;
     }
     diag.rendering.total_vertex_count = total_verts;
+    diag.performance = _perf_metrics;
 
     return diag;
 }
@@ -2213,6 +2237,39 @@ void OpenGLWidget::drawLaneDragOverlay() {
     painter.end();
 }
 
+void OpenGLWidget::drawDeveloperHUD(QPainter & painter) {
+    painter.save();
+    QFont font = painter.font();
+    font.setPointSize(9);
+    font.setBold(true);
+    painter.setFont(font);
+
+    QString const text = QStringLiteral("FPS: %1 | Paint: %2 ms (Rebuild: %3 ms | Upload: %4 ms | Draw: %5 ms) | Poly: %6 KB")
+                                 .arg(_perf_metrics.fps, 0, 'f', 1)
+                                 .arg(_perf_metrics.total_paint_ms, 0, 'f', 2)
+                                 .arg(_perf_metrics.scene_rebuild_ms, 0, 'f', 2)
+                                 .arg(_perf_metrics.scene_upload_ms, 0, 'f', 2)
+                                 .arg(_perf_metrics.gl_draw_ms, 0, 'f', 2)
+                                 .arg(static_cast<double>(_perf_metrics.total_vertex_bytes) / 1024.0, 0, 'f', 1);
+
+    QFontMetrics const fm(font);
+    int const text_width = fm.horizontalAdvance(text);
+    int const text_height = fm.height();
+    int const padding_x = 8;
+    int const padding_y = 4;
+    int const x = width() - text_width - padding_x * 2 - 12;
+    int const y = 12;
+
+    QRect const bg_rect(x, y, text_width + padding_x * 2, text_height + padding_y * 2);
+    painter.fillRect(bg_rect, QColor(20, 24, 30, 200));
+    painter.setPen(QPen(QColor(80, 120, 160), 1));
+    painter.drawRect(bg_rect);
+
+    painter.setPen(QColor(0, 255, 180));
+    painter.drawText(x + padding_x, y + padding_y + fm.ascent(), text);
+    painter.restore();
+}
+
 void OpenGLWidget::drawDeveloperOverlays() {
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing, false);
@@ -2226,6 +2283,8 @@ void OpenGLWidget::drawDeveloperOverlays() {
     if (_overlay_toggles.crosshair) {
         drawCursorCrosshair(painter);
     }
+
+    drawDeveloperHUD(painter);
 
     painter.end();
 }

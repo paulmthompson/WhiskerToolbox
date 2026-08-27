@@ -32,6 +32,7 @@ add_executable(test_plottingopengl
     BatchLineStore.test.cpp
     ComputeShaderIntersector.test.cpp
     BatchLineRenderer.test.cpp
+    PolyLineRenderer.test.cpp
 )
 
 # Enable Qt MOC (needed for ShaderManager which contains Q_OBJECT)

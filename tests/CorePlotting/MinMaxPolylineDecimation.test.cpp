@@ -112,3 +112,33 @@ TEST_CASE("decimatePolyLineBatchMinMax returns input on topology mismatch",
     auto const out = CorePlotting::decimatePolyLineBatchMinMax(in, CorePlotting::MinMaxDecimationParams{8});
     REQUIRE(out.vertices == in.vertices);
 }
+
+TEST_CASE("decimatePolyLineBatchMinMax correctly decimates integer-time batches",
+          "[CorePlotting][MinMaxPolylineDecimation]") {
+    CorePlotting::RenderablePolyLineBatch in;
+    in.is_integer_time = true;
+    in.view_start_time = 2000000;
+    in.global_color = {1.0f, 1.0f, 0.0f, 1.0f};
+
+    int32_t const base_time = 2331543;
+    for (int i = 0; i < 10000; ++i) {
+        int32_t const t = base_time + i;
+        float const y = std::sin(static_cast<float>(i) * 0.05f);
+        in.vertices.push_back(std::bit_cast<float>(t));
+        in.vertices.push_back(y);
+    }
+    in.line_start_indices.push_back(0);
+    in.line_vertex_counts.push_back(10000);
+
+    auto const out = CorePlotting::decimatePolyLineBatchMinMax(in, CorePlotting::MinMaxDecimationParams{256});
+
+    REQUIRE(out.is_integer_time == true);
+    REQUIRE(out.view_start_time == 2000000);
+    REQUIRE(out.vertices.size() < in.vertices.size());
+    REQUIRE(out.vertices.size() >= 4U);
+    REQUIRE(out.vertices.size() % 2U == 0U);
+
+    // Verify first and last integer timestamps are preserved
+    REQUIRE(std::bit_cast<int32_t>(out.vertices[0]) == base_time);
+    REQUIRE(std::bit_cast<int32_t>(out.vertices[out.vertices.size() - 2U]) == base_time + 9999);
+}

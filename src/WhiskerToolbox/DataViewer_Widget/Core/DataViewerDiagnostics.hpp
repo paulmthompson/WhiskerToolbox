@@ -48,11 +48,25 @@ struct RenderingStats {
 };
 
 /**
+ * @brief Real-time performance and frame timing metrics
+ */
+struct PerformanceMetrics {
+    double fps = 0.0;
+    double total_paint_ms = 0.0;
+    double scene_rebuild_ms = 0.0;
+    double scene_upload_ms = 0.0;
+    double gl_draw_ms = 0.0;
+    double overlay_ms = 0.0;
+    size_t total_vertex_bytes = 0;
+};
+
+/**
  * @brief Complete diagnostics snapshot returned by OpenGLWidget::getDiagnostics()
  */
 struct DataViewerDiagnostics {
     std::vector<LaneDiagnostic> lanes;
     RenderingStats rendering;
+    PerformanceMetrics performance;
 };
 
 #endif// DATAVIEWER_DIAGNOSTICS_HPP

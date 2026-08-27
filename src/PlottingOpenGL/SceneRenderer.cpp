@@ -52,7 +52,7 @@ bool SceneRenderer::isInitialized() const {
     return m_initialized;
 }
 
-void SceneRenderer::uploadScene(CorePlotting::RenderableScene const& scene) {
+void SceneRenderer::uploadScene(CorePlotting::RenderableScene const & scene) {
     // Store scene matrices
     m_view_matrix = scene.view_matrix;
     m_projection_matrix = scene.projection_matrix;
@@ -60,18 +60,16 @@ void SceneRenderer::uploadScene(CorePlotting::RenderableScene const& scene) {
     // Clear previous data
     clearScene();
 
-    // Upload all polyline batches
-    for (auto const& batch : scene.poly_line_batches) {
-        m_poly_line_renderer.uploadData(batch);
-    }
+    // Upload all polyline batches in a single combined pass
+    m_poly_line_renderer.uploadBatches(scene.poly_line_batches);
 
     // Upload all glyph batches
-    for (auto const& batch : scene.glyph_batches) {
+    for (auto const & batch: scene.glyph_batches) {
         m_glyph_renderer.uploadData(batch);
     }
 
     // Upload all rectangle batches
-    for (auto const& batch : scene.rectangle_batches) {
+    for (auto const & batch: scene.rectangle_batches) {
         m_rectangle_renderer.uploadData(batch);
     }
 }
@@ -88,14 +86,14 @@ void SceneRenderer::render() {
     render(m_view_matrix, m_projection_matrix);
 }
 
-void SceneRenderer::render(glm::mat4 const& view_matrix, 
-                           glm::mat4 const& projection_matrix) {
+void SceneRenderer::render(glm::mat4 const & view_matrix,
+                           glm::mat4 const & projection_matrix) {
     if (!m_initialized) {
         return;
     }
 
     // Render batches in specified order
-    for (auto batch_type : m_render_order) {
+    for (auto batch_type: m_render_order) {
         switch (batch_type) {
             case BatchType::Rectangle:
                 if (m_rectangle_renderer.hasData()) {
@@ -118,18 +116,18 @@ void SceneRenderer::render(glm::mat4 const& view_matrix,
     }
 }
 
-void SceneRenderer::setRenderOrder(std::vector<BatchType> const& order) {
+void SceneRenderer::setRenderOrder(std::vector<BatchType> const & order) {
     m_render_order = order;
 }
 
 void SceneRenderer::renderPreview(CorePlotting::Interaction::GlyphPreview const & preview,
-                                   int viewport_width,
-                                   int viewport_height) {
+                                  int viewport_width,
+                                  int viewport_height) {
     if (!m_initialized) {
         return;
     }
-    
+
     m_preview_renderer.render(preview, viewport_width, viewport_height);
 }
 
-} // namespace PlottingOpenGL
+}// namespace PlottingOpenGL
