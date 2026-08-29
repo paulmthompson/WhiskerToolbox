@@ -642,12 +642,22 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/json__reflection_8hpp.html#file-json-reflection.hpp">hpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/loading__utils_8hpp.html#file-loading-utils.hpp">hpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/metaprogramming__utils_8hpp.html#file-metaprogramming-utils.hpp">hpp</a></strong></li>
+<li><strong>dir <a href="../api_generated/Files/dir_96ab5569935c596d338d838893d31eca.html#dir-src/coreutilities/include/coreutilities/probegeometry">src/CoreUtilities/include/CoreUtilities/ProbeGeometry</a></strong>
+<ul>
+<li><strong>file <a href="../api_generated/Files/ChannelPosition_8hpp.html#file-channelposition.hpp">hpp</a></strong> <br>Generic probe electrode position metadata and sortable-rank types.</li>
+<li><strong>file <a href="../api_generated/Files/CoreUtilities_2include_2CoreUtilities_2ProbeGeometry_2SwindaleSpikeSorterLoader_8hpp.html#file-swindalespikesorterloader.hpp">hpp</a></strong> <br>Parser and rank adapter for the SpikeSorter electrode configuration format.</li>
+</ul></li>
 <li><strong>file <a href="../api_generated/Files/string__manip_8hpp.html#file-string-manip.hpp">hpp</a></strong></li>
 </ul></li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_5260ce38248b87eaad7281598b1d7c33.html#dir-src/coreutilities/src">src/CoreUtilities/src</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/color_8cpp.html#file-color.cpp">cpp</a></strong></li>
+<li><strong>dir <a href="../api_generated/Files/dir_bbadb24d6c57bb0f822b015c93267513.html#dir-src/coreutilities/src/probegeometry">src/CoreUtilities/src/ProbeGeometry</a></strong>
+<ul>
+<li><strong>file <a href="../api_generated/Files/ChannelPosition_8cpp.html#file-channelposition.cpp">cpp</a></strong> <br>Implementation of generic probe identity parsing utilities.</li>
+<li><strong>file <a href="../api_generated/Files/SwindaleSpikeSorterLoader_8cpp.html#file-swindalespikesorterloader.cpp">cpp</a></strong> <br>Parser and rank adapter for the Swindale SpikeSorter electrode configuration format.</li>
+</ul></li>
 </ul></li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_3ecb79c9004fab4e821ab7b51d7404f8.html#dir-src/datamanager">src/DataManager</a></strong>
@@ -2221,6 +2231,12 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/SumReduction_8hpp.html#file-sumreduction.hpp">hpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/SumReduction_8test_8cpp.html#file-sumreduction.test.cpp">cpp</a></strong></li>
 </ul></li>
+<li><strong>dir <a href="../api_generated/Files/dir_0f83b499ca72e40d55491f4b5ac1a7b5.html#dir-src/transformsv2/algorithms/swindaleeventdetection">src/TransformsV2/algorithms/SwindaleEventDetection</a></strong>
+<ul>
+<li><strong>file <a href="../api_generated/Files/SwindaleEventDetection_8cpp.html#file-swindaleeventdetection.cpp">cpp</a></strong> <br>Ultra-fast zero-copy implementation of the Swindale multi-channel spike detection transform.</li>
+<li><strong>file <a href="../api_generated/Files/SwindaleEventDetection_8hpp.html#file-swindaleeventdetection.hpp">hpp</a></strong> <br>Multi-channel spike detection transform for polytrodes and high-density microelectrode arrays.</li>
+<li><strong>file <a href="../api_generated/Files/SwindaleEventDetection_8test_8cpp.html#file-swindaleeventdetection.test.cpp">cpp</a></strong> <br>Unit tests for Swindale multi-channel spike event detection transform.</li>
+</ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_8a4fc5fe8b2c93dc18a46bdff0aae496.html#dir-src/transformsv2/algorithms/temporal">src/TransformsV2/algorithms/Temporal</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/NormalizeTime_8hpp.html#file-normalizetime.hpp">hpp</a></strong> <br>Temporal normalization transforms for trial-aligned analysis.</li>
@@ -2986,14 +3002,12 @@ ul.task-list li input[type="checkbox"] {
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_62fc6e81a074e4aec654bc333554f74c.html#dir-src/whiskertoolbox/dataviewer-widget/ordering">src/WhiskerToolbox/DataViewer_Widget/Ordering</a></strong>
 <ul>
-<li><strong>file <a href="../api_generated/Files/ChannelPositionMetadata_8cpp.html#file-channelpositionmetadata.cpp">cpp</a></strong> <br>Implementation of generic probe identity parsing utilities.</li>
-<li><strong>file <a href="../api_generated/Files/ChannelPositionMetadata_8hpp.html#file-channelpositionmetadata.hpp">hpp</a></strong> <br>Generic probe electrode position metadata and sortable-rank types.</li>
+<li><strong>file <a href="../api_generated/Files/ChannelPositionMetadata_8hpp.html#file-channelpositionmetadata.hpp">hpp</a></strong> <br>Forwarding header to <a href="../api_generated/Files/ChannelPosition_8hpp.html#file-channelposition.hpp">CoreUtilities/ProbeGeometry/ChannelPosition.hpp</a>.</li>
 <li><strong>file <a href="../api_generated/Files/OrderingPolicyResolver_8cpp.html#file-orderingpolicyresolver.cpp">cpp</a></strong> <br>Policy resolver for stackable-series ordering precedence.</li>
 <li><strong>file <a href="../api_generated/Files/OrderingPolicyResolver_8hpp.html#file-orderingpolicyresolver.hpp">hpp</a></strong> <br>Resolves stackable-series ordering precedence with lightweight diagnostics.</li>
 <li><strong>file <a href="../api_generated/Files/SpikeToAnalogPairingLoader_8cpp.html#file-spiketoanalogpairingloader.cpp">cpp</a></strong> <br>Parser for CSV spike-to-analog channel pairing files.</li>
 <li><strong>file <a href="../api_generated/Files/SpikeToAnalogPairingLoader_8hpp.html#file-spiketoanalogpairingloader.hpp">hpp</a></strong> <br>Parser for CSV spike-to-analog channel pairing files.</li>
-<li><strong>file <a href="../api_generated/Files/SwindaleSpikeSorterLoader_8cpp.html#file-swindalespikesorterloader.cpp">cpp</a></strong> <br>Parser and rank adapter for the Swindale SpikeSorter electrode configuration format.</li>
-<li><strong>file <a href="../api_generated/Files/SwindaleSpikeSorterLoader_8hpp.html#file-swindalespikesorterloader.hpp">hpp</a></strong> <br>Parser and rank adapter for the SpikeSorter electrode configuration format.</li>
+<li><strong>file <a href="../api_generated/Files/WhiskerToolbox_2DataViewer__Widget_2Ordering_2SwindaleSpikeSorterLoader_8hpp.html#file-swindalespikesorterloader.hpp">hpp</a></strong> <br>Forwarding header to <a href="../api_generated/Files/CoreUtilities_2include_2CoreUtilities_2ProbeGeometry_2SwindaleSpikeSorterLoader_8hpp.html#file-swindalespikesorterloader.hpp">CoreUtilities/ProbeGeometry/SwindaleSpikeSorterLoader.hpp</a>.</li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_193df60468b2ef33d22546a59e330947.html#dir-src/whiskertoolbox/dataviewer-widget/rendering">src/WhiskerToolbox/DataViewer_Widget/Rendering</a></strong>
 <ul>
@@ -4065,7 +4079,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/tableview__design__doc_8md.html#file-tableview-design-doc.md">tableview_design_doc.md</a></strong></li>
 </ul>
 <hr>
-<p>Updated on 2026-08-27 at 20:53:36 +0000</p>
+<p>Updated on 2026-08-29 at 19:31:52 +0000</p>
 
 
 </section>

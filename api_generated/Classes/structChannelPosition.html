@@ -388,7 +388,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="channelposition" class="level1">
 <h1>ChannelPosition</h1>
 <p>Physical position of one electrode channel on a multi-channel probe. <a href="#detailed-description">More…</a></p>
-<p><code>#include &lt;ChannelPositionMetadata.hpp&gt;</code></p>
+<p><code>#include &lt;ChannelPosition.hpp&gt;</code></p>
 <section id="public-attributes" class="level2">
 <h2 class="anchored" data-anchor-id="public-attributes">Public Attributes</h2>
 <table class="caption-top table">
@@ -405,11 +405,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>float</td>
-<td><strong><a href="../../api_generated/Classes/structChannelPosition.html#variable-x">x</a></strong> <br>X position in micrometers (unused for vertical ordering)</td>
+<td><strong><a href="../../api_generated/Classes/structChannelPosition.html#variable-x">x</a></strong> <br>X position in micrometers.</td>
 </tr>
 <tr class="odd">
 <td>float</td>
-<td><strong><a href="../../api_generated/Classes/structChannelPosition.html#variable-y">y</a></strong> <br>Y position in micrometers (used for ordering)</td>
+<td><strong><a href="../../api_generated/Classes/structChannelPosition.html#variable-y">y</a></strong> <br>Y position in micrometers.</td>
 </tr>
 </tbody>
 </table>
@@ -418,7 +418,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> ChannelPosition<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Physical position of one electrode channel on a multi-channel probe.</p>
-<p>Coordinates are typically in micrometers. Only the Y axis (depth along the probe shank) is used for vertical stacking order; X is stored for completeness.</p>
+<p>Coordinates are in micrometers.</p>
+<ul>
+<li>x: position perpendicular to the shank (or along the probe width)</li>
+<li>y: depth along the probe shank</li>
+</ul>
 </section>
 <section id="public-attributes-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-attributes-documentation">Public Attributes Documentation</h2>
@@ -430,14 +434,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="variable-x" class="level3">
 <h3 class="anchored" data-anchor-id="variable-x">variable x</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> x <span class="op">{</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>X position in micrometers (unused for vertical ordering)</p>
+<p>X position in micrometers.</p>
 </section>
 <section id="variable-y" class="level3">
 <h3 class="anchored" data-anchor-id="variable-y">variable y</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> y <span class="op">{</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Y position in micrometers (used for ordering)</p>
+<p>Y position in micrometers.</p>
 <hr>
-<p>Updated on 2026-08-27 at 20:53:28 +0000</p>
+<p>Updated on 2026-08-29 at 19:31:45 +0000</p>
 
 
 </section>
