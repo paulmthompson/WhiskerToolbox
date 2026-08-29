@@ -29,6 +29,7 @@
 #include "algorithms/RemoveLineOutliers/RemoveLineOutliers.hpp"
 #include "algorithms/SincInterpolation/SincInterpolation.hpp"
 #include "algorithms/SumReduction/SumReduction.hpp"
+#include "algorithms/SwindaleEventDetection/SwindaleEventDetection.hpp"
 #include "algorithms/Temporal/NormalizeTime.hpp"
 #include "algorithms/TensorCAR/TensorCAR.hpp"
 #include "algorithms/TensorCentralDifference/TensorCentralDifference.hpp"
@@ -110,6 +111,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<TensorCARParams>();
     registerPipelineStepFactoryFor<TensorWhiteningParams>();
     registerPipelineStepFactoryFor<TensorToAnalogParams>();
+    registerPipelineStepFactoryFor<SwindaleEventDetectionParams>();
     return true;
 }();
 
@@ -1047,6 +1049,20 @@ auto const register_prune_overlapping_intervals = RegisterContainerTransform<
                 .output_type_name = "DigitalIntervalSeries",
                 .params_type_name = "PruneOverlappingIntervalsParams",
                 .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+auto const register_swindale_event_detection = RegisterContainerTransform<
+        TensorData, DigitalEventSeries, SwindaleEventDetectionParams>(
+        "SwindaleEventDetection",
+        swindaleEventDetection,
+        ContainerTransformMetadata{
+                .description = "Detect multi-channel spike events across polytrode and MEA recording channels using Swindale's two-stage algorithm",
+                .category = "Electrophysiology",
+                .input_type_name = "TensorData",
+                .output_type_name = "DigitalEventSeries",
+                .params_type_name = "SwindaleEventDetectionParams",
+                .is_expensive = true,
                 .is_deterministic = true,
                 .supports_cancellation = true});
 
