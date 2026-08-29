@@ -5,6 +5,10 @@ add_library(CoreUtilities STATIC
     include/CoreUtilities/string_manip.hpp
     include/CoreUtilities/color.hpp
     src/color.cpp
+    include/CoreUtilities/ProbeGeometry/ChannelPosition.hpp
+    include/CoreUtilities/ProbeGeometry/SwindaleSpikeSorterLoader.hpp
+    src/ProbeGeometry/ChannelPosition.cpp
+    src/ProbeGeometry/SwindaleSpikeSorterLoader.cpp
 )
 
 target_include_directories(CoreUtilities PUBLIC

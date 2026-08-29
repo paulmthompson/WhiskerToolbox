@@ -1,9 +1,9 @@
 /**
- * @file ChannelPositionMetadata.cpp
+ * @file ChannelPosition.cpp
  * @brief Implementation of generic probe identity parsing utilities.
  */
 
-#include "Ordering/ChannelPositionMetadata.hpp"
+#include "CoreUtilities/ProbeGeometry/ChannelPosition.hpp"
 
 #include <cctype>
 #include <charconv>
@@ -102,10 +102,20 @@ NormalizedSeriesIdentity parseSeriesIdentity(std::string const & key) {
         return identity;
     }
 
-    identity.group = parsed_group;
-    if (auto const channel = extractChannelFromSeriesKey(key, parsed_group, true)) {
-        identity.channel_id = channel;
+    auto const suffix = key.substr(parsed_group.size() + 1);
+    int channel = 0;
+    auto const * parse_begin = suffix.data();
+    auto const * parse_end = suffix.data() + suffix.size();
+    auto const parse_result = std::from_chars(parse_begin, parse_end, channel);
+    if (parse_result.ec != std::errc{} || parse_result.ptr != parse_end) {
+        return identity;
     }
 
+    identity.group = parsed_group;
+    if (channel <= 0) {
+        identity.channel_id = std::nullopt;
+    } else {
+        identity.channel_id = channel - 1;
+    }
     return identity;
 }

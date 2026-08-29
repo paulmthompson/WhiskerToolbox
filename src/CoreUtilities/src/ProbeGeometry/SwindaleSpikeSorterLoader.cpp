@@ -2,17 +2,16 @@
  * @file SwindaleSpikeSorterLoader.cpp
  * @brief Parser and rank adapter for the Swindale SpikeSorter electrode configuration format.
  *
- * Reference:
- *   Swindale, N.V., Mitelut, C., Murphy, T.H., Spacek, M.A., 2017.
- *   A Visual Guide to Sorting Electrophysiological Recordings Using “SpikeSorter.”
- *   J Vis Exp 55217. https://doi.org/10.3791/55217
+ * References:
+ *   Swindale & Spacek (2014). Front Syst Neurosci 8:6. doi:10.3389/fnsys.2014.00006
+ *   Swindale & Spacek (2015). J Comput Neurosci 38:249-267. doi:10.1007/s10827-014-0539-z
+ *   Swindale et al. (2017). J Vis Exp 55217. doi:10.3791/55217
  */
 
-#include "Ordering/SwindaleSpikeSorterLoader.hpp"
+#include "CoreUtilities/ProbeGeometry/SwindaleSpikeSorterLoader.hpp"
 
 #include <algorithm>
 #include <charconv>
-#include <limits>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -138,35 +137,35 @@ SortableRankMap buildSwindaleSpikeSorterRanks(
             }
         }
 
-        ranked_items.push_back(RankedItem{key, identity.group, channel, y_rank});
+        ranked_items.push_back(RankedItem{
+                .key = key,
+                .group = identity.group,
+                .channel = channel,
+                .y_rank = y_rank,
+        });
     }
 
-    std::stable_sort(ranked_items.begin(), ranked_items.end(),
-                     [&configs](RankedItem const & a, RankedItem const & b) {
-                         if (a.group != b.group) {
-                             return a.group < b.group;
-                         }
+    std::sort(ranked_items.begin(), ranked_items.end(),
+              [](RankedItem const & a, RankedItem const & b) {
+                  if (a.group != b.group) {
+                      return a.group < b.group;
+                  }
+                  if (a.y_rank != b.y_rank) {
+                      return a.y_rank < b.y_rank;
+                  }
+                  if (a.channel != b.channel) {
+                      return a.channel < b.channel;
+                  }
+                  return a.key < b.key;
+              });
 
-                         bool const group_has_config = configs.contains(a.group);
-                         if (group_has_config) {
-                             if (a.y_rank != b.y_rank) {
-                                 return a.y_rank < b.y_rank;
-                             }
-                         }
-
-                         if (a.channel != b.channel) {
-                             return a.channel < b.channel;
-                         }
-
-                         return a.key < b.key;
-                     });
-
-    SortableRankMap ranks;
-    for (int index = 0; index < static_cast<int>(ranked_items.size()); ++index) {
-        ranks[ranked_items[static_cast<size_t>(index)].key] = index;
+    SortableRankMap result;
+    result.reserve(ranked_items.size());
+    for (int rank = 0; rank < static_cast<int>(ranked_items.size()); ++rank) {
+        result[ranked_items[static_cast<size_t>(rank)].key] = rank;
     }
 
-    return ranks;
+    return result;
 }
 
 std::vector<std::string> orderKeysBySwindaleSpikeSorter(
@@ -176,36 +175,13 @@ std::vector<std::string> orderKeysBySwindaleSpikeSorter(
 
     auto const rank_map = buildSwindaleSpikeSorterRanks(keys, configs, key_one_based);
 
-    struct Item {
-        std::string key;
-        int rank;
-        int insertion_index;
-    };
+    std::vector<std::string> sorted_keys = keys;
+    std::sort(sorted_keys.begin(), sorted_keys.end(),
+              [&rank_map](std::string const & a, std::string const & b) {
+                  int const rank_a = rank_map.count(a) > 0 ? rank_map.at(a) : 0;
+                  int const rank_b = rank_map.count(b) > 0 ? rank_map.at(b) : 0;
+                  return rank_a < rank_b;
+              });
 
-    std::vector<Item> items;
-    items.reserve(keys.size());
-
-    int insertion_index = 0;
-    for (auto const & key: keys) {
-        int const rank = rank_map.contains(key) ? rank_map.at(key) : std::numeric_limits<int>::max();
-        items.push_back(Item{key, rank, insertion_index++});
-    }
-
-    std::stable_sort(items.begin(), items.end(), [](Item const & a, Item const & b) {
-        if (a.rank != b.rank) {
-            return a.rank < b.rank;
-        }
-        if (a.key != b.key) {
-            return a.key < b.key;
-        }
-        return a.insertion_index < b.insertion_index;
-    });
-
-    std::vector<std::string> result;
-    result.reserve(items.size());
-    for (auto const & it: items) {
-        result.push_back(it.key);
-    }
-
-    return result;
+    return sorted_keys;
 }

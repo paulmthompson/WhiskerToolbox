@@ -18,6 +18,7 @@ add_subdirectory(TimeController)
 add_subdirectory(Entity)
 add_subdirectory(CoreGeometry)
 add_subdirectory(CoreMath)
+add_subdirectory(CoreUtilities)
 add_subdirectory(CorePlotting)
 add_subdirectory(SpatialIndex)
 
