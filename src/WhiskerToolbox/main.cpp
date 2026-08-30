@@ -1,6 +1,7 @@
 #include "Main_Window/mainwindow.hpp"
 
 #include "Spike2LoaderRegistration.hpp"
+#include "StateManagement/StartupTrace.hpp"
 #include "color_scheme.hpp"
 
 #include <QApplication>
@@ -130,7 +131,9 @@ int main(int argc, char * argv[]) {
 
     QApplication::setPalette(palette);
 
+    StateManagement::logStartupPhase("before MainWindow construction");
     MainWindow w;
+    StateManagement::logStartupPhase("after MainWindow construction");
 
     // This should prevent window from closing and reopening with first
     // OpenGL widget initialization.
@@ -149,6 +152,9 @@ int main(int argc, char * argv[]) {
     //}
 
     w.show();
+    StateManagement::logStartupPhase("after w.show()");
+    StateManagement::logWindowState("after w.show()", &w);
 
+    StateManagement::logStartupPhase("before QApplication::exec()");
     return QApplication::exec();
 }

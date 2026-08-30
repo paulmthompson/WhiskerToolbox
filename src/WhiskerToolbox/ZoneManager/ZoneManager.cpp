@@ -1,14 +1,16 @@
 #include "ZoneManager.hpp"
 
-#include "DockManager.h"
+#include "StateManagement/StartupTrace.hpp"
+
 #include "DockAreaWidget.h"
-#include "DockWidget.h"
-#include "DockSplitter.h"
 #include "DockContainerWidget.h"
+#include "DockManager.h"
+#include "DockSplitter.h"
+#include "DockWidget.h"
 
 #include <QLabel>
-#include <QVBoxLayout>
 #include <QTimer>
+#include <QVBoxLayout>
 
 #include <iostream>
 
@@ -18,9 +20,8 @@
 // === ZoneManager Implementation ===
 
 ZoneManager::ZoneManager(ads::CDockManager * dock_manager, QObject * parent)
-    : QObject(parent)
-    , _dock_manager(dock_manager)
-{
+    : QObject(parent),
+      _dock_manager(dock_manager) {
     // Create auto-save timer
     _auto_save_timer = new QTimer(this);
     _auto_save_timer->setSingleShot(true);
@@ -79,7 +80,7 @@ void ZoneManager::refreshZoneAreas() {
     // _zone_areas may have been destroyed and replaced.  The placeholder
     // dock widgets survive (DeleteOnClose = false), so we can use them
     // to obtain the new CDockAreaWidget pointers.
-    for (auto & [zone, area_ptr] : _zone_areas) {
+    for (auto & [zone, area_ptr]: _zone_areas) {
         auto ph_it = _placeholder_docks.find(zone);
         if (ph_it != _placeholder_docks.end() && ph_it->second) {
             auto * new_area = ph_it->second->dockAreaWidget();
@@ -102,7 +103,7 @@ void ZoneManager::addToZone(ads::CDockWidget * dock_widget, Zone zone, bool rais
 
     auto * zone_area = getZoneArea(zone);
     if (!zone_area) {
-        std::cerr << "ZoneManager::addToZone: Zone area not found for zone: " 
+        std::cerr << "ZoneManager::addToZone: Zone area not found for zone: "
                   << zoneToString(zone).toStdString() << std::endl;
         return;
     }
@@ -122,7 +123,7 @@ void ZoneManager::addToZone(ads::CDockWidget * dock_widget, Zone zone, bool rais
     _dock_manager->addDockWidget(ads::CenterDockWidgetArea, dock_widget, zone_area);
     */
     // === FIX START ===
-    // 1. Add the new widget FIRST. 
+    // 1. Add the new widget FIRST.
     // This ensures the DockAreaWidget always has at least one tab and is not deleted by ADS.
     _dock_manager->addDockWidget(ads::CenterDockWidgetArea, dock_widget, zone_area);
 
@@ -153,7 +154,7 @@ void ZoneManager::addBelowInZone(ads::CDockWidget * dock_widget, Zone zone, floa
 
     auto * zone_area = getZoneArea(zone);
     if (!zone_area) {
-        std::cerr << "ZoneManager::addBelowInZone: Zone area not found for zone: " 
+        std::cerr << "ZoneManager::addBelowInZone: Zone area not found for zone: "
                   << zoneToString(zone).toStdString() << std::endl;
         return;
     }
@@ -176,31 +177,31 @@ void ZoneManager::addBelowInZone(ads::CDockWidget * dock_widget, Zone zone, floa
 Zone ZoneManager::getDefaultZone(QString const & editor_type) const {
     // Map editor types to their default zones
     // View components go to Center, Properties go to Right
-    
+
     QString const lower = editor_type.toLower();
-    
+
     // Left zone: data management, navigation
-    if (lower.contains("datamanager") || 
+    if (lower.contains("datamanager") ||
         lower.contains("groupmanage") ||
         lower.contains("outliner")) {
         return Zone::Left;
     }
-    
+
     // Right zone: properties, settings
-    if (lower.contains("properties") || 
+    if (lower.contains("properties") ||
         lower.contains("inspector") ||
         lower.contains("settings")) {
         return Zone::Right;
     }
-    
+
     // Bottom zone: time-based, output
-    if (lower.contains("timeline") || 
+    if (lower.contains("timeline") ||
         lower.contains("scrollbar") ||
         lower.contains("terminal") ||
         lower.contains("output")) {
         return Zone::Bottom;
     }
-    
+
     // Default: Center zone for primary editors
     return Zone::Center;
 }
@@ -209,7 +210,7 @@ void ZoneManager::setZoneWidthRatios(float left_ratio, float center_ratio, float
     _left_ratio = left_ratio;
     _center_ratio = center_ratio;
     _right_ratio = right_ratio;
-    
+
     if (_zones_initialized) {
         applySplitterSizes();
     }
@@ -217,7 +218,7 @@ void ZoneManager::setZoneWidthRatios(float left_ratio, float center_ratio, float
 
 void ZoneManager::setBottomHeightRatio(float height_ratio) {
     _bottom_ratio = height_ratio;
-    
+
     if (_zones_initialized) {
         applySplitterSizes();
     }
@@ -226,29 +227,29 @@ void ZoneManager::setBottomHeightRatio(float height_ratio) {
 ads::CDockWidget * ZoneManager::createPlaceholderDock(Zone zone) {
     QString const zone_name = zoneToString(zone);
     QString const dock_name = QStringLiteral("__zone_placeholder_%1").arg(zone_name);
-    
+
     auto * dock_widget = new ads::CDockWidget(dock_name);
-    
+
     // Create a simple placeholder widget
     auto * placeholder = new QWidget();
     auto * layout = new QVBoxLayout(placeholder);
     layout->setContentsMargins(0, 0, 0, 0);
-    
+
     auto * label = new QLabel(QStringLiteral("Zone: %1").arg(zone_name));
     label->setAlignment(Qt::AlignCenter);
     label->setStyleSheet(QStringLiteral("color: #888; font-style: italic;"));
     layout->addWidget(label);
-    
+
     dock_widget->setWidget(placeholder);
-    
+
     // Make placeholders closable and small
     dock_widget->setFeature(ads::CDockWidget::DockWidgetClosable, true);
     dock_widget->setFeature(ads::CDockWidget::DockWidgetDeleteOnClose, false);
     dock_widget->setMinimumSizeHintMode(ads::CDockWidget::MinimumSizeHintFromContent);
-    
+
     // Store reference for later removal
     _placeholder_docks[zone] = dock_widget;
-    
+
     return dock_widget;
 }
 
@@ -257,14 +258,22 @@ void ZoneManager::applySplitterSizes() {
         return;
     }
 
+    int h_splitter_count = 0;
+    int h_splitter_width = 0;
+    int v_splitter_count = 0;
+    int v_splitter_height = 0;
+    int computed_left_width = 0;
+    int computed_center_width = 0;
+    int computed_right_width = 0;
+    int computed_main_height = 0;
+    int computed_bottom_height = 0;
+
     // Find the main horizontal splitter (contains left, center, right)
     // This is complex with ADS, we need to find the appropriate splitters
-    
-    auto * left_area = getZoneArea(Zone::Left);
+
     auto * center_area = getZoneArea(Zone::Center);
-    auto * right_area = getZoneArea(Zone::Right);
     auto * bottom_area = getZoneArea(Zone::Bottom);
-    
+
     // Try to find horizontal splitter containing the zones
     if (center_area && center_area->dockContainer()) {
         // Find the splitter that contains our areas
@@ -274,13 +283,19 @@ void ZoneManager::applySplitterSizes() {
             int const left_width = static_cast<int>(total_width * _left_ratio);
             int const center_width = static_cast<int>(total_width * _center_ratio);
             int const right_width = total_width - left_width - center_width;
-            
+
+            h_splitter_count = splitter->count();
+            h_splitter_width = total_width;
+            computed_left_width = left_width;
+            computed_center_width = center_width;
+            computed_right_width = right_width;
+
             if (splitter->count() == 3) {
                 splitter->setSizes({left_width, center_width, right_width});
             }
         }
     }
-    
+
     // Handle bottom zone vertical split
     if (bottom_area) {
         auto * vsplitter = ads::internal::findParent<ads::CDockSplitter *>(bottom_area);
@@ -288,12 +303,28 @@ void ZoneManager::applySplitterSizes() {
             int const total_height = vsplitter->height();
             int const main_height = static_cast<int>(total_height * (1.0f - _bottom_ratio));
             int const bottom_height = total_height - main_height;
-            
+
+            v_splitter_count = vsplitter->count();
+            v_splitter_height = total_height;
+            computed_main_height = main_height;
+            computed_bottom_height = bottom_height;
+
             if (vsplitter->count() == 2) {
                 vsplitter->setSizes({main_height, bottom_height});
             }
         }
     }
+
+    StateManagement::logSplitterMetrics("applySplitterSizes",
+                                        h_splitter_count,
+                                        h_splitter_width,
+                                        v_splitter_count,
+                                        v_splitter_height,
+                                        computed_left_width,
+                                        computed_center_width,
+                                        computed_right_width,
+                                        computed_main_height,
+                                        computed_bottom_height);
 }
 
 // ============================================================================
@@ -303,43 +334,43 @@ void ZoneManager::applySplitterSizes() {
 ZoneConfig::ZoneLayoutConfig ZoneManager::captureCurrentConfig() const {
     ZoneConfig::ZoneLayoutConfig config;
     config.version = "1.0";
-    
+
     // Capture current ratios
     config.zone_ratios.left = _left_ratio;
     config.zone_ratios.center = _center_ratio;
     config.zone_ratios.right = _right_ratio;
     config.zone_ratios.bottom = _bottom_ratio;
-    
+
     // Capture widgets in each zone
     auto captureZoneContent = [this](Zone zone) -> ZoneConfig::ZoneContentConfig {
         ZoneConfig::ZoneContentConfig content;
-        
+
         auto * zone_area = getZoneArea(zone);
         if (!zone_area) {
             return content;
         }
-        
+
         // Get all dock widgets in this zone area
         auto const & dock_widgets = zone_area->dockWidgets();
-        for (auto * dock : dock_widgets) {
+        for (auto * dock: dock_widgets) {
             // Skip placeholders
             if (dock->objectName().startsWith("__zone_placeholder_")) {
                 continue;
             }
-            
+
             ZoneConfig::WidgetConfig widget_config;
             widget_config.type_id = dock->objectName().toStdString();
             widget_config.title = dock->windowTitle().toStdString();
             widget_config.visible = !dock->isClosed();
             widget_config.closable = dock->features().testFlag(ads::CDockWidget::DockWidgetClosable);
-            
+
             content.widgets.push_back(widget_config);
         }
-        
+
         // Track active tab
         if (auto * current = zone_area->currentDockWidget()) {
             int idx = 0;
-            for (auto * dock : dock_widgets) {
+            for (auto * dock: dock_widgets) {
                 if (dock == current) {
                     content.active_tab_index = idx;
                     break;
@@ -347,15 +378,15 @@ ZoneConfig::ZoneLayoutConfig ZoneManager::captureCurrentConfig() const {
                 ++idx;
             }
         }
-        
+
         return content;
     };
-    
+
     config.zones["left"] = captureZoneContent(Zone::Left);
     config.zones["center"] = captureZoneContent(Zone::Center);
     config.zones["right"] = captureZoneContent(Zone::Right);
     config.zones["bottom"] = captureZoneContent(Zone::Bottom);
-    
+
     return config;
 }
 
@@ -366,18 +397,18 @@ bool ZoneManager::applyConfig(ZoneConfig::ZoneLayoutConfig const & config) {
         std::cerr << "ZoneManager::applyConfig: Invalid config: " << validation_error << std::endl;
         return false;
     }
-    
+
     // Apply zone ratios
     _left_ratio = config.zone_ratios.left;
     _center_ratio = config.zone_ratios.center;
     _right_ratio = config.zone_ratios.right;
     _bottom_ratio = config.zone_ratios.bottom;
-    
+
     // Apply splitter sizes if zones are initialized
     if (_zones_initialized) {
         applySplitterSizes();
     }
-    
+
     emit zoneRatiosChanged();
     return true;
 }
@@ -389,26 +420,26 @@ QString ZoneManager::loadConfigFromFile(QString const & file_path) {
         emit configLoadError(error_msg);
         return error_msg;
     }
-    
+
     if (!applyConfig(*result)) {
         QString const error_msg = QStringLiteral("Failed to apply configuration");
         emit configLoadError(error_msg);
         return error_msg;
     }
-    
+
     emit configLoaded(file_path);
-    return QString();  // Success - empty error string
+    return QString();// Success - empty error string
 }
 
 bool ZoneManager::saveConfigToFile(QString const & file_path) const {
     auto config = captureCurrentConfig();
     bool const success = ZoneConfig::saveToFile(config, file_path.toStdString());
-    
+
     if (success) {
         // Cast away const for signal emission (this is a notification, not a state change)
         const_cast<ZoneManager *>(this)->emit configSaved(file_path);
     }
-    
+
     return success;
 }
 
@@ -421,37 +452,42 @@ void ZoneManager::setAutoSaveFilePath(QString const & file_path) {
 }
 
 void ZoneManager::setAutoSaveDebounceMs(int milliseconds) {
-    _auto_save_debounce_ms = std::max(100, milliseconds);  // Minimum 100ms
+    _auto_save_debounce_ms = std::max(100, milliseconds);// Minimum 100ms
 }
 
 ZoneConfig::ZoneRatios ZoneManager::currentRatios() const {
     return ZoneConfig::ZoneRatios{
-        .left = _left_ratio,
-        .center = _center_ratio,
-        .right = _right_ratio,
-        .bottom = _bottom_ratio
-    };
+            .left = _left_ratio,
+            .center = _center_ratio,
+            .right = _right_ratio,
+            .bottom = _bottom_ratio};
 }
 
 void ZoneManager::reapplySplitterSizes(int delay_ms) {
     if (!_zones_initialized) {
         return;
     }
-    
+
+    StateManagement::logReapplySplitterScheduled(delay_ms);
+
     // Use a single-shot timer to defer the size application
     // This ensures the window layout has been fully computed
     QTimer::singleShot(delay_ms, this, [this]() {
+        StateManagement::logStartupPhase("reapplySplitterSizes timer fired (primary)");
         applySplitterSizes();
-        
+
         // Apply a second time after a short delay to handle any layout adjustments
-        QTimer::singleShot(50, this, &ZoneManager::applySplitterSizes);
+        QTimer::singleShot(50, this, [this]() {
+            StateManagement::logStartupPhase("reapplySplitterSizes timer fired (secondary)");
+            applySplitterSizes();
+        });
     });
 }
 
 void ZoneManager::onSplitterMoved(int /*pos*/, int /*index*/) {
     // Update internal ratios from splitter positions
     updateRatiosFromSplitters();
-    
+
     // Trigger debounced auto-save
     if (_auto_save_enabled && !_auto_save_path.isEmpty()) {
         _auto_save_timer->start(_auto_save_debounce_ms);
@@ -476,7 +512,7 @@ void ZoneManager::updateRatiosFromSplitters() {
             _right_ratio = static_cast<float>(sizes[2]) / static_cast<float>(total);
         }
     }
-    
+
     // Update vertical ratio (bottom)
     if (_vertical_splitter && _vertical_splitter->count() == 2) {
         QList<int> const sizes = _vertical_splitter->sizes();
@@ -490,7 +526,7 @@ void ZoneManager::updateRatiosFromSplitters() {
 void ZoneManager::connectSplitterSignals() {
     auto * center_area = getZoneArea(Zone::Center);
     auto * bottom_area = getZoneArea(Zone::Bottom);
-    
+
     // Find and connect to horizontal splitter
     if (center_area) {
         _horizontal_splitter = ads::internal::findParent<ads::CDockSplitter *>(center_area);
@@ -499,7 +535,7 @@ void ZoneManager::connectSplitterSignals() {
                     this, &ZoneManager::onSplitterMoved);
         }
     }
-    
+
     // Find and connect to vertical splitter
     if (bottom_area) {
         _vertical_splitter = ads::internal::findParent<ads::CDockSplitter *>(bottom_area);

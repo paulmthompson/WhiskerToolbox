@@ -1,0 +1,29 @@
+---
+title: "StartupTrace"
+---
+
+## Overview
+
+`StartupTrace` emits `[Startup]`-tagged `spdlog::debug` messages to diagnose crash-recovery and layout-timing issues during application startup.
+
+## Usage
+
+Run Neuralyzer with debug logging enabled:
+
+```bash
+WhiskerToolbox --debug 2>&1 | tee startup_debug.log
+grep '\[Startup\]' startup_debug.log
+```
+
+## Key signals
+
+| Log pattern | Meaning |
+|-------------|---------|
+| `recovery_dialog_open=true` on `splitter_state` | Splitter sizing ran during the recovery prompt (suspect) |
+| `zero splitter dimension detected` | `applySplitterSizes` ran before the window had valid geometry |
+| `after w.show()` with `visible=false` | Main window failed to appear after startup |
+
+## Related
+
+- Crash recovery flow: `MainWindow::_checkCrashRecovery()`
+- Deferred splitter sizing: `ZoneManager::reapplySplitterSizes()`

@@ -1,5 +1,7 @@
 #include "SessionStore.hpp"
 
+#include "StartupTrace.hpp"
+
 #include <rfl/json.hpp>
 
 #include <QDir>
@@ -7,6 +9,8 @@
 #include <QFileInfo>
 #include <QMainWindow>
 #include <QTimer>
+
+#include <spdlog/spdlog.h>
 
 #include <algorithm>
 #include <fstream>
@@ -76,7 +80,7 @@ void SessionStore::_scheduleSave() {
 // === Per-Dialog Path Memory ===
 
 QString SessionStore::lastUsedPath(QString const & dialog_id,
-                                    QString const & fallback) const {
+                                   QString const & fallback) const {
     auto const key = dialog_id.toStdString();
     auto it = _data.last_used_paths.find(key);
     if (it != _data.last_used_paths.end() && !it->second.empty()) {
@@ -113,7 +117,7 @@ void SessionStore::rememberPath(QString const & dialog_id, QString const & path)
 QStringList SessionStore::recentWorkspaces() const {
     QStringList result;
     result.reserve(static_cast<int>(_data.recent_workspaces.size()));
-    for (auto const & ws : _data.recent_workspaces) {
+    for (auto const & ws: _data.recent_workspaces) {
         result.append(QString::fromStdString(ws));
     }
     return result;
@@ -180,11 +184,22 @@ void SessionStore::restoreWindowGeometry(QMainWindow * window) const {
     }
 
     if (_data.window_maximized) {
+        spdlog::debug("[Startup] restoreWindowGeometry elapsed_ms={} action=showMaximized",
+                      startupElapsedMs());
         window->showMaximized();
     } else {
+        spdlog::debug(
+                "[Startup] restoreWindowGeometry elapsed_ms={} action=setGeometry geometry={}x{}@({},{})",
+                startupElapsedMs(),
+                _data.window_width,
+                _data.window_height,
+                _data.window_x,
+                _data.window_y);
         window->setGeometry(_data.window_x, _data.window_y,
                             _data.window_width, _data.window_height);
     }
+
+    logWindowState("restoreWindowGeometry applied", window);
 }
 
-} // namespace StateManagement
+}// namespace StateManagement

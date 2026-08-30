@@ -6,6 +6,7 @@
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets)
 find_package(reflectcpp CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 
 set(STATE_MANAGEMENT_SOURCES
     AppFileDialog.hpp
@@ -22,6 +23,8 @@ set(STATE_MANAGEMENT_SOURCES
     WorkspaceManager.cpp
     StateManager.hpp
     StateManager.cpp
+    StartupTrace.hpp
+    StartupTrace.cpp
 )
 
 add_library(StateManagement STATIC ${STATE_MANAGEMENT_SOURCES})
@@ -38,6 +41,7 @@ target_link_libraries(StateManagement
         reflectcpp::reflectcpp
     PRIVATE
         nlohmann_json::nlohmann_json
+        spdlog::spdlog_header_only
         EditorState
         KeymapSystem
         ZoneManager
