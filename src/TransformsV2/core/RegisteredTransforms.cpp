@@ -29,6 +29,7 @@
 #include "algorithms/RemoveLineOutliers/RemoveLineOutliers.hpp"
 #include "algorithms/SincInterpolation/SincInterpolation.hpp"
 #include "algorithms/SumReduction/SumReduction.hpp"
+#include "algorithms/SpikeWaveformExtraction/SpikeWaveformExtraction.hpp"
 #include "algorithms/SwindaleEventDetection/SwindaleEventDetection.hpp"
 #include "algorithms/Temporal/NormalizeTime.hpp"
 #include "algorithms/TensorCAR/TensorCAR.hpp"
@@ -112,6 +113,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<TensorWhiteningParams>();
     registerPipelineStepFactoryFor<TensorToAnalogParams>();
     registerPipelineStepFactoryFor<SwindaleEventDetectionParams>();
+    registerPipelineStepFactoryFor<SpikeWaveformExtractionParams>();
     return true;
 }();
 
@@ -839,6 +841,21 @@ auto const register_interval_overlap_reduction = RegisterBinaryContainerTransfor
                 .description = "Gather overlapping intervals and reduce to a TensorData column",
                 .category = "Signal Processing / Reduction",
                 .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = true});
+
+// Register SpikeWaveformExtraction (Binary Container Transform: TensorData + DigitalEventSeries → TensorData)
+auto const register_spike_waveform_extraction = RegisterBinaryContainerTransform<
+        TensorData,
+        DigitalEventSeries,
+        TensorData,
+        SpikeWaveformExtractionParams>(
+        "SpikeWaveformExtraction",
+        extractSpikeWaveforms,
+        ContainerTransformMetadata{
+                .description = "Extract spatio-temporal multichannel waveform snippets for detected spike events",
+                .category = "Electrophysiology",
+                .is_expensive = true,
                 .is_deterministic = true,
                 .supports_cancellation = true});
 

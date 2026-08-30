@@ -15,6 +15,8 @@
 
 #include "EditorState/DataFocusAware.hpp"
 #include "EditorState/StrongTypes.hpp"
+#include "UI/MultiInputStepContext.hpp"
+#include "UI/PipelineStepListWidget.hpp"
 
 #include <QWidget>
 
@@ -32,7 +34,6 @@ struct PendingOperation;
 class TransformsV2State;
 class SelectionContext;
 class DataManager;
-class PipelineStepListWidget;
 class StepConfigPanel;
 class QLabel;
 class QGroupBox;
@@ -110,6 +111,7 @@ private slots:
     void onStepSelected(int step_index);
     void onPipelineChanged();
     void onStepParametersChanged(std::string const & params_json);
+    void onStepAdditionalInputChanged(std::string const & additional_input_key);
     void onValidationChanged(bool all_valid);
     void onJsonPanelEdited();
     void onCopyJsonClicked();
@@ -212,6 +214,32 @@ private:
      * @brief Update execute button enabled state based on validation
      */
     void updateExecuteButtonState();
+
+    /**
+     * @brief Refresh validation label text for type errors and multi-input state
+     */
+    void updateValidationLabel();
+
+    /**
+     * @brief Build multi-input context for the selected step config panel
+     */
+    [[nodiscard]] MultiInputStepContext buildMultiInputStepContext(
+            PipelineStepEntry const & step) const;
+
+    /**
+     * @brief Refresh the selected step's configuration panel
+     */
+    void refreshSelectedStepConfig();
+
+    /**
+     * @brief Return true when pipeline is exactly one multi-input step
+     */
+    [[nodiscard]] bool isSingleStepBinaryPipeline() const;
+
+    /**
+     * @brief Return true when JSON panel contains pre_reductions or range_reduction
+     */
+    [[nodiscard]] bool hasJsonPreOrRangeReduction() const;
 
     /**
      * @brief Refresh the output TimeKey combo box with keys from DataManager

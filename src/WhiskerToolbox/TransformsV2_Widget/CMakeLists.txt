@@ -4,6 +4,9 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets Core Gui)
 set(TRANSFORMS_V2_WIDGET_SOURCES
         Core/TransformsV2State.hpp
         Core/TransformsV2State.cpp
+        Core/MultiInputKeyResolver.hpp
+        Core/MultiInputKeyResolver.cpp
+        UI/MultiInputStepContext.hpp
         UI/ParamWidgetRegistry.hpp
         UI/PipelineStepListWidget.hpp
         UI/PipelineStepListWidget.cpp

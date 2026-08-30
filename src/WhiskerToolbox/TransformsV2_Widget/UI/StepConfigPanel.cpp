@@ -5,6 +5,7 @@
 #include "ParameterSchema/ParameterSchema.hpp"
 #include "TransformsV2/core/ElementRegistry.hpp"
 
+#include <QComboBox>
 #include <QLabel>
 #include <QScrollArea>
 #include <QVBoxLayout>
@@ -33,6 +34,37 @@ StepConfigPanel::StepConfigPanel(QWidget * parent)
     _description_label->setVisible(false);
     _main_layout->addWidget(_description_label);
 
+    // Multi-input section (second DataManager key)
+    _multi_input_group = new QWidget(this);
+    auto * multi_layout = new QVBoxLayout(_multi_input_group);
+    multi_layout->setContentsMargins(0, 0, 0, 0);
+    multi_layout->setSpacing(2);
+
+    _primary_input_label = new QLabel(_multi_input_group);
+    _primary_input_label->setWordWrap(true);
+    _primary_input_label->setStyleSheet("font-size: 9pt;");
+    multi_layout->addWidget(_primary_input_label);
+
+    _secondary_input_label = new QLabel(tr("Second input:"), _multi_input_group);
+    _secondary_input_label->setStyleSheet("font-size: 9pt;");
+    multi_layout->addWidget(_secondary_input_label);
+
+    _secondary_input_combo = new QComboBox(_multi_input_group);
+    _secondary_input_combo->setToolTip(
+            tr("Second input is not saved in pipeline JSON. Re-select after loading a saved pipeline."));
+    connect(_secondary_input_combo, QOverload<int>::of(&QComboBox::currentIndexChanged),
+            this, [this](int index) {
+                if (index <= 0) {
+                    emit additionalInputChanged(std::string{});
+                    return;
+                }
+                emit additionalInputChanged(_secondary_input_combo->currentText().toStdString());
+            });
+    multi_layout->addWidget(_secondary_input_combo);
+
+    _multi_input_group->setVisible(false);
+    _main_layout->addWidget(_multi_input_group);
+
     // Scrollable area for the parameter widget
     _scroll_area = new QScrollArea(this);
     _scroll_area->setWidgetResizable(true);
@@ -53,8 +85,10 @@ StepConfigPanel::~StepConfigPanel() = default;
 // ============================================================================
 
 void StepConfigPanel::showStepConfig(std::string const & transform_name,
-                                     std::string const & params_json) {
+                                     std::string const & params_json,
+                                     MultiInputStepContext const & multi_input) {
     clearCurrentWidget();
+    clearMultiInputSection();
 
     _current_transform_name = transform_name;
 
@@ -69,7 +103,8 @@ void StepConfigPanel::showStepConfig(std::string const & transform_name,
         description = meta->description;
         params_type = meta->params_type;
     } else {
-        auto const * cmeta = Neuralyzer::Transforms::V2::ElementRegistry::instance().getContainerMetadata(transform_name);
+        auto const * cmeta =
+                Neuralyzer::Transforms::V2::ElementRegistry::instance().getContainerMetadata(transform_name);
         if (cmeta) {
             display_name = cmeta->name;
             description = cmeta->description;
@@ -87,6 +122,10 @@ void StepConfigPanel::showStepConfig(std::string const & transform_name,
         _description_label->setVisible(false);
     }
 
+    if (multi_input.enabled) {
+        setupMultiInputSection(multi_input);
+    }
+
     // Check for custom widget override first
     if (params_type != typeid(void) && params_type != typeid(Neuralyzer::Transforms::V2::NoParams)) {
         auto & widget_registry = ParamWidgetRegistry::instance();
@@ -102,6 +141,7 @@ void StepConfigPanel::showStepConfig(std::string const & transform_name,
 
 void StepConfigPanel::clearConfig() {
     clearCurrentWidget();
+    clearMultiInputSection();
     _current_transform_name.clear();
     _header_label->setVisible(false);
     _description_label->setVisible(false);
@@ -119,9 +159,59 @@ std::string StepConfigPanel::currentParamsJson() const {
 // Private Helpers
 // ============================================================================
 
+void StepConfigPanel::setupMultiInputSection(MultiInputStepContext const & multi_input) {
+    _multi_input_group->setVisible(true);
+
+    QString const primary_text =
+            tr("Primary input: %1 (%2)")
+                    .arg(QString::fromStdString(multi_input.primary_input_key))
+                    .arg(QString::fromStdString(multi_input.primary_input_type_name));
+    _primary_input_label->setText(primary_text);
+
+    _secondary_input_label->setText(
+            tr("Second input (%1):").arg(QString::fromStdString(multi_input.secondary_input_type_name)));
+
+    _secondary_input_combo->blockSignals(true);
+    _secondary_input_combo->clear();
+    _secondary_input_combo->addItem(tr("(Select a data key)"), QString());
+
+    for (auto const & key: multi_input.available_secondary_keys) {
+        _secondary_input_combo->addItem(QString::fromStdString(key));
+    }
+
+    if (multi_input.additional_input_key.has_value() &&
+        !multi_input.additional_input_key->empty()) {
+        int const idx = _secondary_input_combo->findText(
+                QString::fromStdString(*multi_input.additional_input_key));
+        if (idx >= 0) {
+            _secondary_input_combo->setCurrentIndex(idx);
+        }
+    } else {
+        _secondary_input_combo->setCurrentIndex(0);
+    }
+
+    _secondary_input_combo->setEnabled(!multi_input.available_secondary_keys.empty());
+    _secondary_input_combo->blockSignals(false);
+}
+
+void StepConfigPanel::clearMultiInputSection() {
+    if (_multi_input_group) {
+        _multi_input_group->setVisible(false);
+    }
+    if (_primary_input_label) {
+        _primary_input_label->clear();
+    }
+    if (_secondary_input_combo) {
+        _secondary_input_combo->blockSignals(true);
+        _secondary_input_combo->clear();
+        _secondary_input_combo->blockSignals(false);
+    }
+}
+
 void StepConfigPanel::setupAutoParamWidget(std::string const & transform_name,
                                            std::string const & params_json) {
-    auto const * schema = Neuralyzer::Transforms::V2::ElementRegistry::instance().getParameterSchema(transform_name);
+    auto const * schema =
+            Neuralyzer::Transforms::V2::ElementRegistry::instance().getParameterSchema(transform_name);
     if (!schema || schema->fields.empty()) {
         // Transform has no parameters (NoParams)
         auto * label = new QLabel(tr("This transform has no configurable parameters."), _scroll_content);

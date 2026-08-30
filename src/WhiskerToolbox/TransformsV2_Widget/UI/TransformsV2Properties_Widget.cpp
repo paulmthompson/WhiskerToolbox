@@ -6,15 +6,19 @@
 #include "StepConfigPanel.hpp"
 
 #include "Collapsible_Widget/Section.hpp"
+#include "Core/MultiInputKeyResolver.hpp"
 #include "Core/TransformsV2State.hpp"
 #include "DataManager/DataManager.hpp"
+#include "DataManager/utils/ContainerTypeIndex.hpp"
+#include "DataManager/utils/DataManagerKeys.hpp"
+#include "DataManager/utils/DataTypeIndexBridge.hpp"
 #include "EditorState/OperationContext.hpp"
 #include "EditorState/SelectionContext.hpp"
 #include "StateManagement/AppFileDialog.hpp"
+#include "TransformsV2/core/DataManagerIntegration.hpp"
+#include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/io/PipelineLibrary.hpp"
 #include "TransformsV2/io/PipelineLoader.hpp"
-#include "TransformsV2/core/TransformPipeline.hpp"
-#include "DataManager/utils/ContainerTypeIndex.hpp"
 
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
@@ -26,8 +30,8 @@
 #include <QGroupBox>
 #include <QGuiApplication>
 #include <QHBoxLayout>
-#include <QLabel>
 #include <QInputDialog>
+#include <QLabel>
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QProgressBar>
@@ -37,6 +41,7 @@
 #include <QTextEdit>
 #include <QVBoxLayout>
 
+#include <algorithm>
 #include <chrono>
 #include <filesystem>
 
@@ -126,7 +131,9 @@ void TransformsV2Properties_Widget::onDataFocusChanged(
     // Update output key and execute button state
     updateOutputKeyFromPipeline();
     refreshTimeKeyCombo();
+    updateValidationLabel();
     updateExecuteButtonState();
+    updateDeliverButtonState();
 }
 
 // ============================================================================
@@ -139,8 +146,80 @@ void TransformsV2Properties_Widget::onStepSelected(int step_index) {
         return;
     }
 
+    refreshSelectedStepConfig();
+}
+
+void TransformsV2Properties_Widget::refreshSelectedStepConfig() {
+    int const step_index = _step_list->selectedStepIndex();
+    if (step_index < 0 || step_index >= static_cast<int>(_step_list->steps().size())) {
+        _step_config->clearConfig();
+        return;
+    }
+
     auto const & step = _step_list->steps()[static_cast<size_t>(step_index)];
-    _step_config->showStepConfig(step.transform_name, step.parameters_json);
+    auto const multi_input = buildMultiInputStepContext(step);
+    _step_config->showStepConfig(step.transform_name, step.parameters_json, multi_input);
+}
+
+MultiInputStepContext TransformsV2Properties_Widget::buildMultiInputStepContext(
+        PipelineStepEntry const & step) const {
+    MultiInputStepContext context;
+    if (!step.is_multi_input || _input_data_key.empty()) {
+        return context;
+    }
+
+    auto const multi_info = getMultiInputTransformInfo(step.transform_name);
+    if (!multi_info.has_value()) {
+        return context;
+    }
+
+    auto const secondary_container =
+            getSecondaryContainerType(_input_container_type, multi_info->individual_input_types);
+    if (!secondary_container.has_value()) {
+        return context;
+    }
+
+    context.enabled = true;
+    context.primary_input_key = _input_data_key;
+    context.primary_input_type_name = _input_data_type_name;
+    try {
+        context.secondary_input_type_name =
+                TypeIndexMapper::containerToString(*secondary_container);
+    } catch (...) {
+        context.secondary_input_type_name = "Unknown";
+    }
+    context.additional_input_key = step.additional_input_key;
+
+    auto * dm = _state ? _state->dataManager().get() : nullptr;
+    if (!dm) {
+        return context;
+    }
+
+    auto const dm_type = containerTypeIndexToDmDataType(*secondary_container);
+    if (!dm_type.has_value()) {
+        return context;
+    }
+
+    context.available_secondary_keys = getKeysForTypes(*dm, {*dm_type});
+    context.available_secondary_keys.erase(
+            std::remove(context.available_secondary_keys.begin(),
+                        context.available_secondary_keys.end(),
+                        _input_data_key),
+            context.available_secondary_keys.end());
+
+    return context;
+}
+
+void TransformsV2Properties_Widget::onStepAdditionalInputChanged(
+        std::string const & additional_input_key) {
+    int const selected = _step_list->selectedStepIndex();
+    if (selected < 0) {
+        return;
+    }
+
+    _step_list->updateStepAdditionalInput(selected, additional_input_key);
+    updateValidationLabel();
+    updateExecuteButtonState();
 }
 
 void TransformsV2Properties_Widget::onPipelineChanged() {
@@ -166,7 +245,9 @@ void TransformsV2Properties_Widget::onPipelineChanged() {
 
     syncJsonFromUI();
     updateOutputKeyFromPipeline();
+    updateValidationLabel();
     updateExecuteButtonState();
+    refreshSelectedStepConfig();
     emit _state->stateChanged();
 }
 
@@ -177,16 +258,48 @@ void TransformsV2Properties_Widget::onStepParametersChanged(std::string const & 
     }
 }
 
-void TransformsV2Properties_Widget::onValidationChanged(bool all_valid) {
-    if (all_valid) {
+void TransformsV2Properties_Widget::onValidationChanged(bool /*all_valid*/) {
+    updateValidationLabel();
+    updateExecuteButtonState();
+}
+
+void TransformsV2Properties_Widget::updateValidationLabel() {
+    if (_step_list->steps().empty()) {
+        _validation_label->setVisible(false);
+        return;
+    }
+
+    _validation_label->setVisible(true);
+
+    if (_step_list->hasMultiInputWithExtraSteps()) {
+        _validation_label->setText(
+                tr("Multi-input transforms require a single-step pipeline. Remove extra steps or run "
+                   "unary steps separately."));
+        _validation_label->setStyleSheet("color: #b36b00; font-weight: bold;");
+        return;
+    }
+
+    if (_step_list->hasMultiInputStep() && !_step_list->allMultiInputStepsConfigured()) {
+        _validation_label->setText(tr("Second input required for multi-input step"));
+        _validation_label->setStyleSheet("color: #b36b00; font-weight: bold;");
+        return;
+    }
+
+    auto const chain_valid = [&]() {
+        std::vector<std::string> names;
+        for (auto const & step: _step_list->steps()) {
+            names.push_back(step.transform_name);
+        }
+        return resolveTypeChain(_input_container_type, names).all_valid;
+    }();
+
+    if (chain_valid) {
         _validation_label->setText(tr("Pipeline valid ✓"));
         _validation_label->setStyleSheet("color: green; font-weight: bold;");
     } else {
         _validation_label->setText(tr("Pipeline has type errors ✗"));
         _validation_label->setStyleSheet("color: red; font-weight: bold;");
     }
-    _validation_label->setVisible(!_step_list->steps().empty());
-    updateExecuteButtonState();
 }
 
 // ============================================================================
@@ -419,6 +532,8 @@ void TransformsV2Properties_Widget::setupUI() {
             this, &TransformsV2Properties_Widget::onValidationChanged);
     connect(_step_config, &StepConfigPanel::parametersChanged,
             this, &TransformsV2Properties_Widget::onStepParametersChanged);
+    connect(_step_config, &StepConfigPanel::additionalInputChanged,
+            this, &TransformsV2Properties_Widget::onStepAdditionalInputChanged);
 
     // JSON panel connections
     connect(_json_panel, &QTextEdit::textChanged,
@@ -777,7 +892,7 @@ void TransformsV2Properties_Widget::onSaveJsonClicked() {
     if (descriptor.metadata.has_value() && descriptor.metadata->name.has_value() &&
         !descriptor.metadata->name->empty()) {
         suggested_name = QString::fromStdString(
-                                     sanitizePipelineFilename(*descriptor.metadata->name)) +
+                                 sanitizePipelineFilename(*descriptor.metadata->name)) +
                          QStringLiteral(".json");
     }
 
@@ -850,18 +965,56 @@ void TransformsV2Properties_Widget::updateExecuteButtonState() {
     bool const is_data_manager_mode =
             _execution_mode_combo->currentData().toString() == QStringLiteral("data_manager");
 
-    // For data_manager mode: need valid input, steps, and output key
+    bool const multi_input_ready =
+            !_step_list->hasMultiInputStep() ||
+            (_step_list->allMultiInputStepsConfigured() && !_step_list->hasMultiInputWithExtraSteps());
+
+    std::vector<std::string> step_names;
+    for (auto const & step: _step_list->steps()) {
+        step_names.push_back(step.transform_name);
+    }
+    bool const type_chain_valid = has_steps
+                                          ? resolveTypeChain(_input_container_type, step_names).all_valid
+                                          : true;
+
+    // For data_manager mode: need valid input, steps, output key, and multi-input config
     // For json_only mode: just need steps (the JSON is already produced)
     bool can_execute = false;
     if (is_data_manager_mode) {
-        can_execute = has_input && has_steps && has_output_key;
+        can_execute = has_input && has_steps && has_output_key && multi_input_ready && type_chain_valid;
     } else {
-        // JSON-only mode: the JSON panel is always up-to-date; nothing to "execute"
-        // But allow the button so users get feedback
         can_execute = has_steps;
     }
 
     _execute_button->setEnabled(can_execute);
+
+    if (is_data_manager_mode && _step_list->hasMultiInputWithExtraSteps()) {
+        _execute_button->setToolTip(
+                tr("Multi-input transforms require a single-step pipeline. Remove extra steps or run "
+                   "unary steps separately."));
+    } else if (is_data_manager_mode && _step_list->hasMultiInputStep() &&
+               !_step_list->allMultiInputStepsConfigured()) {
+        _execute_button->setToolTip(tr("Select a second input key for the multi-input step."));
+    } else if (isSingleStepBinaryPipeline() && hasJsonPreOrRangeReduction()) {
+        _execute_button->setToolTip(
+                tr("Pre-reductions and range reduction are not applied for multi-input execution in "
+                   "this release."));
+    } else {
+        _execute_button->setToolTip(QString());
+    }
+}
+
+bool TransformsV2Properties_Widget::isSingleStepBinaryPipeline() const {
+    auto const & steps = _step_list->steps();
+    return steps.size() == 1 && steps.front().is_multi_input;
+}
+
+bool TransformsV2Properties_Widget::hasJsonPreOrRangeReduction() const {
+    auto const descriptor = parseJsonPanelDescriptor();
+    if (!descriptor.has_value()) {
+        return false;
+    }
+    return descriptor->pre_reductions.has_value() || descriptor->range_reduction.has_value();
 }
 
 void TransformsV2Properties_Widget::refreshTimeKeyCombo() {
@@ -952,6 +1105,126 @@ void TransformsV2Properties_Widget::onExecuteClicked() {
     }
 
     syncJsonFromUI();
+
+    // -------------------------------------------------------------------------
+    // Option A execution path: single-step binary transforms use
+    // DataManagerPipelineExecutor with input_key + additional_input_keys.
+    // Unary pipelines (single or multi-step) continue using executePipeline().
+    // -------------------------------------------------------------------------
+    if (isSingleStepBinaryPipeline()) {
+        auto const & step = _step_list->steps().front();
+        auto const multi_info = getMultiInputTransformInfo(step.transform_name);
+        if (!multi_info.has_value() || !step.additional_input_key.has_value()) {
+            _error_label->setStyleSheet("color: red; font-weight: bold; padding: 4px;");
+            _error_label->setText(tr("Error: Second input key is not configured."));
+            _error_label->setVisible(true);
+            return;
+        }
+
+        auto const ordered_keys = resolveOrderedBinaryInputKeys(
+                _input_data_key,
+                _input_container_type,
+                *step.additional_input_key,
+                multi_info->individual_input_types);
+        if (!ordered_keys.has_value()) {
+            _error_label->setStyleSheet("color: red; font-weight: bold; padding: 4px;");
+            _error_label->setText(
+                    tr("Error: Primary and second input keys must be different and match the "
+                       "transform's expected input types."));
+            _error_label->setVisible(true);
+            return;
+        }
+
+        if (hasJsonPreOrRangeReduction()) {
+            _error_label->setStyleSheet("color: #b36b00; font-weight: bold; padding: 4px;");
+            _error_label->setText(
+                    tr("Note: Pre-reductions and range reduction are not applied for multi-input "
+                       "execution in this release."));
+            _error_label->setVisible(true);
+            QApplication::processEvents();
+        }
+
+        nlohmann::json parameters = nlohmann::json::object();
+        if (step.parameters_json != "{}" && !step.parameters_json.empty()) {
+            try {
+                parameters = nlohmann::json::parse(step.parameters_json);
+            } catch (...) {
+                _error_label->setStyleSheet("color: red; font-weight: bold; padding: 4px;");
+                _error_label->setText(tr("Error: Step parameters are not valid JSON."));
+                _error_label->setVisible(true);
+                return;
+            }
+        }
+
+        nlohmann::json step_json;
+        step_json["step_id"] = step.step_id;
+        step_json["transform_name"] = step.transform_name;
+        step_json["input_key"] = ordered_keys->first;
+        step_json["additional_input_keys"] = nlohmann::json::array({ordered_keys->second});
+        step_json["output_key"] = output_key;
+        step_json["parameters"] = parameters;
+
+        std::string const otk = _output_time_key_combo
+                                        ? _output_time_key_combo->currentData().toString().toStdString()
+                                        : std::string{};
+        if (!otk.empty()) {
+            step_json["output_time_key"] = otk;
+        }
+
+        nlohmann::json pipeline_json;
+        pipeline_json["steps"] = nlohmann::json::array({step_json});
+
+        _progress_bar->setRange(0, 1);
+        _progress_bar->setValue(0);
+        _progress_bar->setVisible(true);
+        _progress_label->setText(tr("Executing multi-input pipeline..."));
+        _progress_label->setVisible(true);
+        _execute_button->setEnabled(false);
+        QApplication::processEvents();
+
+        auto start_time = std::chrono::steady_clock::now();
+
+        try {
+            DataManagerPipelineExecutor executor(dm);
+            if (!executor.loadFromJson(pipeline_json)) {
+                throw std::runtime_error("Failed to load multi-input pipeline configuration");
+            }
+
+            auto result = executor.execute();
+            if (!result.success) {
+                throw std::runtime_error(result.error_message.empty()
+                                                 ? "Multi-input pipeline execution failed"
+                                                 : result.error_message);
+            }
+
+            auto end_time = std::chrono::steady_clock::now();
+            auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                      end_time - start_time)
+                                      .count();
+
+            _state->setOutputDataKey(output_key);
+            _progress_bar->setValue(1);
+            _progress_label->setVisible(false);
+            _error_label->setStyleSheet("color: green; font-weight: bold; padding: 4px;");
+            _error_label->setText(
+                    tr("Success! Result stored as '%1' (%2 ms)")
+                            .arg(QString::fromStdString(output_key))
+                            .arg(elapsed_ms));
+            _error_label->setVisible(true);
+        } catch (std::exception const & e) {
+            spdlog::error("[TransformsV2Widget] Multi-input execution exception: {}", e.what());
+            _error_label->setStyleSheet("color: red; font-weight: bold; padding: 4px;");
+            _error_label->setText(
+                    tr("Execution error: %1").arg(QString::fromUtf8(e.what())));
+            _error_label->setVisible(true);
+        }
+
+        _progress_bar->setVisible(false);
+        _progress_label->setVisible(false);
+        updateExecuteButtonState();
+        tryDeliverPipeline();
+        return;
+    }
 
     auto json_str = _json_panel->toPlainText().toStdString();
     if (json_str.empty()) {
@@ -1179,7 +1452,18 @@ void TransformsV2Properties_Widget::updateDeliverButtonState() {
             QStringLiteral("TransformsV2Widget"));
 
     auto pending = _operation_context->pendingOperationFor(tv2_type);
-    _deliver_pipeline_btn->setVisible(pending.has_value());
+    bool const has_pending = pending.has_value();
+    bool const multi_input_blocks_delivery = _step_list && _step_list->hasMultiInputStep();
+
+    _deliver_pipeline_btn->setVisible(has_pending);
+    _deliver_pipeline_btn->setEnabled(has_pending && !multi_input_blocks_delivery);
+    if (multi_input_blocks_delivery) {
+        _deliver_pipeline_btn->setToolTip(
+                tr("Pipeline delivery does not include second input bindings yet."));
+    } else {
+        _deliver_pipeline_btn->setToolTip(
+                tr("Deliver the current pipeline JSON to the widget that requested it"));
+    }
 }
 
 void TransformsV2Properties_Widget::loadSeedFromOperation(

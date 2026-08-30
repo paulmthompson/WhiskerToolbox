@@ -15,22 +15,23 @@
 #include <QApplication>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QDateTime>
+#include <QDir>
 #include <QDoubleSpinBox>
 #include <QGroupBox>
 #include <QLabel>
 #include <QLineEdit>
 #include <QListWidget>
 #include <QPushButton>
-#include <QDateTime>
-#include <QDir>
 #include <QSpinBox>
 #include <QTextEdit>
 
 #include "AutoParamWidget/AutoParamWidget.hpp"
+#include "Core/MultiInputKeyResolver.hpp"
 #include "Core/TransformsV2State.hpp"
+#include "UI/PipelineLibraryDialog.hpp"
 #include "UI/PipelineStepListWidget.hpp"
 #include "UI/StepConfigPanel.hpp"
-#include "UI/PipelineLibraryDialog.hpp"
 #include "UI/TransformsV2Properties_Widget.hpp"
 
 #include "TransformsV2/io/PipelineLibrary.hpp"
@@ -40,11 +41,11 @@
 
 #include "DataManager/DataManager.hpp"
 
+#include "DataManager/utils/ContainerElementMapping.hpp"
+#include "DataManager/utils/ContainerTypeIndex.hpp"
 #include "ParameterSchema/ParameterSchema.hpp"
 #include "TransformsV2/core/ElementRegistry.hpp"
 #include "TransformsV2/core/TypeChainResolver.hpp"
-#include "DataManager/utils/ContainerElementMapping.hpp"
-#include "DataManager/utils/ContainerTypeIndex.hpp"
 
 #include <QStackedWidget>
 #include <QTest>
@@ -94,7 +95,6 @@ TEST_CASE("AutoParamWidget generates correct layouts from ParameterSchema",
 
         AutoParamWidget widget;
         REQUIRE_NOTHROW(widget.setSchema(*schema));
-
     }
 
     SECTION("Schema with string enum fields creates QComboBox when ParameterUIHints provides allowed_values") {
@@ -235,7 +235,6 @@ TEST_CASE("AutoParamWidget generates correct layouts from ParameterSchema",
         auto const * schema = ElementRegistry::instance().getParameterSchema("CalculateLineAngle");
         REQUIRE(schema != nullptr);
         CHECK(schema->fields.size() == 8);
-
     }
 }
 
@@ -443,7 +442,6 @@ TEST_CASE("StepConfigPanel shows correct config for transforms",
         // Should have an AutoParamWidget
         auto auto_widgets = panel.findChildren<AutoParamWidget *>();
         REQUIRE_FALSE(auto_widgets.isEmpty());
-
     }
 
     SECTION("showStepConfig shows transform name in header label") {
@@ -684,8 +682,7 @@ TEST_CASE("TransformsV2Properties_Widget preserves pre_reductions after Apply an
     auto selection_context = std::make_unique<SelectionContext>();
 
     auto const config_dir =
-            QDir::temp().filePath(QStringLiteral("wt_tv2_widget_%1").arg(
-                    QDateTime::currentMSecsSinceEpoch()));
+            QDir::temp().filePath(QStringLiteral("wt_tv2_widget_%1").arg(QDateTime::currentMSecsSinceEpoch()));
 
     TransformsV2Properties_Widget widget(state, selection_context.get(), config_dir);
     QApplication::processEvents();
@@ -755,8 +752,7 @@ TEST_CASE("PipelineLibraryDialog lists and previews saved pipelines",
     QtAppFixture const qt;
 
     auto const config_dir =
-            QDir::temp().filePath(QStringLiteral("wt_tv2_library_%1").arg(
-                    QDateTime::currentMSecsSinceEpoch()));
+            QDir::temp().filePath(QStringLiteral("wt_tv2_library_%1").arg(QDateTime::currentMSecsSinceEpoch()));
 
     auto const dir_result = Neuralyzer::Transforms::V2::Examples::ensureUserPipelineDirectory(
             config_dir.toStdString());
@@ -765,7 +761,8 @@ TEST_CASE("PipelineLibraryDialog lists and previews saved pipelines",
     PipelineDescriptor descriptor;
     descriptor.metadata = PipelineMetadata{.name = "Catalog Test"};
     descriptor.steps = {PipelineStepDescriptor{
-            .step_id = "area", .transform_name = "CalculateMaskArea"}};
+            .step_id = "area",
+            .transform_name = "CalculateMaskArea"}};
 
     auto const library_path = dir_result.value() / "catalog_test.json";
     REQUIRE(Neuralyzer::Transforms::V2::Examples::savePipelineDescriptorToFile(
@@ -798,8 +795,7 @@ TEST_CASE("TransformsV2Properties_Widget has library controls when config dir is
     auto selection_context = std::make_unique<SelectionContext>();
 
     auto const config_dir =
-            QDir::temp().filePath(QStringLiteral("wt_tv2_props_lib_%1").arg(
-                    QDateTime::currentMSecsSinceEpoch()));
+            QDir::temp().filePath(QStringLiteral("wt_tv2_props_lib_%1").arg(QDateTime::currentMSecsSinceEpoch()));
 
     TransformsV2Properties_Widget widget(state, selection_context.get(), config_dir);
     QApplication::processEvents();
@@ -1015,6 +1011,135 @@ TEST_CASE("resolveTypeChain produces correct per-step type info",
         CHECK_FALSE(result.steps[0].is_valid);
         CHECK(result.steps[0].output_type_name == "Unknown");
     }
+}
+
+// ============================================================================
+// Section: Multi-input key resolution and type chain
+// ============================================================================
+
+TEST_CASE("MultiInputKeyResolver orders keys for binary transforms",
+          "[TransformsV2Widget][MultiInput][resolver]") {
+
+    SECTION("CalculateLineMinPointDistance with LineData primary") {
+        auto const line_container = TypeIndexMapper::stringToContainer("LineData");
+        auto const point_container = TypeIndexMapper::stringToContainer("PointData");
+        auto const info = getMultiInputTransformInfo("CalculateLineMinPointDistance");
+        REQUIRE(info.has_value());
+
+        auto const secondary = getSecondaryContainerType(line_container, info->individual_input_types);
+        REQUIRE(secondary.has_value());
+        CHECK(*secondary == point_container);
+
+        auto const ordered = resolveOrderedBinaryInputKeys(
+                "lines", line_container, "points", info->individual_input_types);
+        REQUIRE(ordered.has_value());
+        CHECK(ordered->first == "lines");
+        CHECK(ordered->second == "points");
+    }
+
+    SECTION("CalculateLineMinPointDistance with PointData primary swaps order") {
+        auto const line_container = TypeIndexMapper::stringToContainer("LineData");
+        auto const point_container = TypeIndexMapper::stringToContainer("PointData");
+        auto const info = getMultiInputTransformInfo("CalculateLineMinPointDistance");
+        REQUIRE(info.has_value());
+
+        auto const secondary = getSecondaryContainerType(point_container, info->individual_input_types);
+        REQUIRE(secondary.has_value());
+        CHECK(*secondary == line_container);
+
+        auto const ordered = resolveOrderedBinaryInputKeys(
+                "points", point_container, "lines", info->individual_input_types);
+        REQUIRE(ordered.has_value());
+        CHECK(ordered->first == "lines");
+        CHECK(ordered->second == "points");
+    }
+
+    SECTION("Reject identical primary and secondary keys") {
+        auto const line_container = TypeIndexMapper::stringToContainer("LineData");
+        auto const info = getMultiInputTransformInfo("ClipLineAtReference");
+        REQUIRE(info.has_value());
+
+        auto const ordered = resolveOrderedBinaryInputKeys(
+                "lines_a", line_container, "lines_a", info->individual_input_types);
+        CHECK_FALSE(ordered.has_value());
+    }
+}
+
+TEST_CASE("resolveTypeChain accepts binary transforms for either input type",
+          "[TransformsV2Widget][MultiInput][typechain]") {
+
+    SECTION("LineData focus + CalculateLineMinPointDistance is valid") {
+        auto container = TypeIndexMapper::stringToContainer("LineData");
+        std::vector<std::string> names = {"CalculateLineMinPointDistance"};
+        auto result = resolveTypeChain(container, names);
+        REQUIRE(result.steps.size() == 1);
+        CHECK(result.steps[0].is_valid);
+        CHECK(result.all_valid);
+    }
+
+    SECTION("PointData focus + CalculateLineMinPointDistance is valid") {
+        auto container = TypeIndexMapper::stringToContainer("PointData");
+        std::vector<std::string> names = {"CalculateLineMinPointDistance"};
+        auto result = resolveTypeChain(container, names);
+        REQUIRE(result.steps.size() == 1);
+        CHECK(result.steps[0].is_valid);
+        CHECK(result.all_valid);
+    }
+}
+
+TEST_CASE("PipelineStepListWidget tracks multi-input step state",
+          "[TransformsV2Widget][MultiInput][steplist]") {
+
+    QtAppFixture const qt;
+
+    auto container_type = TypeIndexMapper::stringToContainer("LineData");
+    auto element_type = TypeIndexMapper::containerToElement(container_type);
+
+    PipelineStepListWidget widget;
+    widget.setInputType(element_type, container_type);
+
+    SECTION("Binary step is flagged multi-input") {
+        REQUIRE(widget.addStep("CalculateLineMinPointDistance"));
+        REQUIRE(widget.steps().size() == 1);
+        CHECK(widget.steps()[0].is_multi_input);
+        CHECK_FALSE(widget.allMultiInputStepsConfigured());
+    }
+
+    SECTION("hasMultiInputWithExtraSteps detects mixed pipelines") {
+        REQUIRE(widget.addStep("CalculateLineMinPointDistance"));
+        REQUIRE(widget.addStep("ResampleLine"));
+        CHECK(widget.hasMultiInputWithExtraSteps());
+    }
+}
+
+TEST_CASE("StepConfigPanel shows second-input controls for binary transforms",
+          "[TransformsV2Widget][MultiInput][config]") {
+
+    QtAppFixture const qt;
+
+    StepConfigPanel panel;
+
+    MultiInputStepContext context;
+    context.enabled = true;
+    context.primary_input_key = "lines";
+    context.primary_input_type_name = "LineData";
+    context.secondary_input_type_name = "PointData";
+    context.available_secondary_keys = {"points_a", "points_b"};
+
+    panel.showStepConfig("CalculateLineMinPointDistance", "{}", context);
+
+    auto combos = panel.findChildren<QComboBox *>();
+    REQUIRE_FALSE(combos.isEmpty());
+
+    bool found_secondary = false;
+    for (auto * combo: combos) {
+        if (combo->count() >= 3) {
+            found_secondary = true;
+            CHECK(combo->itemText(1) == "points_a");
+            CHECK(combo->itemText(2) == "points_b");
+        }
+    }
+    CHECK(found_secondary);
 }
 
 // ============================================================================

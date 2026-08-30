@@ -21,6 +21,7 @@
 
 #include <QWidget>
 
+#include <optional>
 #include <string>
 #include <typeindex>
 #include <vector>
@@ -31,19 +32,21 @@ class QPushButton;
 
 namespace Neuralyzer::Transforms::V2::Examples {
 struct PipelineStepDescriptor;
-} // namespace Neuralyzer::Transforms::V2::Examples
+}// namespace Neuralyzer::Transforms::V2::Examples
 
 /**
  * @brief Represents a single step in the pipeline UI
  */
 struct PipelineStepEntry {
-    std::string step_id;                ///< Unique step identifier
-    std::string transform_name;         ///< Name of the transform
-    std::string parameters_json;        ///< Current parameters as JSON
-    std::type_index input_type{typeid(void)};  ///< Expected input element type
-    std::type_index output_type{typeid(void)}; ///< Produced output element type
-    bool is_valid = true;               ///< Whether this step is type-compatible
-    bool is_container_transform = false;///< Whether this is a container-level transform
+    std::string step_id;                            ///< Unique step identifier
+    std::string transform_name;                     ///< Name of the transform
+    std::string parameters_json;                    ///< Current parameters as JSON
+    std::type_index input_type{typeid(void)};       ///< Expected input element type
+    std::type_index output_type{typeid(void)};      ///< Produced output element type
+    bool is_valid = true;                           ///< Whether this step is type-compatible
+    bool is_container_transform = false;            ///< Whether this is a container-level transform
+    bool is_multi_input = false;                    ///< Whether this transform requires a second input key
+    std::optional<std::string> additional_input_key;///< Second DataManager key for binary transforms
 
     PipelineStepEntry() = default;
 };
@@ -120,6 +123,30 @@ public:
     void updateStepParams(int step_index, std::string const & params_json);
 
     /**
+     * @brief Update the second input key for a multi-input step
+     * @param step_index Index of the step to update
+     * @param additional_input_key Second DataManager key, or empty to clear
+     */
+    void updateStepAdditionalInput(int step_index, std::string const & additional_input_key);
+
+    /**
+     * @brief Check whether any step is a multi-input transform
+     */
+    [[nodiscard]] bool hasMultiInputStep() const;
+
+    /**
+     * @brief Check whether every multi-input step has a configured second key
+     */
+    [[nodiscard]] bool allMultiInputStepsConfigured() const;
+
+    /**
+     * @brief Check whether a multi-input step coexists with additional steps
+     *
+     * Option A limitation: multi-input execution requires a single-step pipeline.
+     */
+    [[nodiscard]] bool hasMultiInputWithExtraSteps() const;
+
+    /**
      * @brief Rebuild all steps from a list of PipelineStepDescriptors
      *
      * Used by JSON → UI loading.  Clears existing steps, then adds
@@ -153,9 +180,9 @@ private:
 
     void rebuildStepsTable();
     void updateAvailableTransforms();
-    std::vector<std::string> getCompatibleTransforms(
+    static std::vector<std::string> getCompatibleTransforms(
             std::type_index element_type,
-            std::type_index container_type) const;
+            std::type_index container_type) ;
     void updateButtonStates();
 
     // --- Widgets ---
@@ -166,7 +193,7 @@ private:
 
     // --- Model ---
     std::vector<PipelineStepEntry> _steps;
-    std::vector<std::string> _current_compatible; ///< Names in the browser table
+    std::vector<std::string> _current_compatible;///< Names in the browser table
     std::type_index _input_element_type{typeid(void)};
     std::type_index _input_container_type{typeid(void)};
 
@@ -174,4 +201,4 @@ private:
     Neuralyzer::Transforms::V2::TypeChainResult _chain_result;
 };
 
-#endif // NEURALYZER_V2_PIPELINE_STEP_LIST_WIDGET_HPP
+#endif// NEURALYZER_V2_PIPELINE_STEP_LIST_WIDGET_HPP

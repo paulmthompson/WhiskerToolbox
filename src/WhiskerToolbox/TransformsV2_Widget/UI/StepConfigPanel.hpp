@@ -10,6 +10,8 @@
  * auto-generated forms, with ParamWidgetRegistry override support.
  */
 
+#include "MultiInputStepContext.hpp"
+
 #include <QWidget>
 
 #include <memory>
@@ -18,6 +20,7 @@
 class QLabel;
 class QVBoxLayout;
 class QScrollArea;
+class QComboBox;
 class AutoParamWidget;
 
 struct ParameterSchema;
@@ -43,9 +46,11 @@ public:
      * @brief Show the configuration for a specific transform step
      * @param transform_name The registered transform name
      * @param params_json Existing parameters as JSON to populate the form
+     * @param multi_input Optional second-input configuration context
      */
     void showStepConfig(std::string const & transform_name,
-                        std::string const & params_json);
+                        std::string const & params_json,
+                        MultiInputStepContext const & multi_input = {});
 
     /**
      * @brief Clear the panel (no step selected)
@@ -70,7 +75,15 @@ signals:
      */
     void parametersChanged(std::string const & params_json);
 
+    /**
+     * @brief Emitted when the second input key selection changes
+     * @param additional_input_key Selected DataManager key, or empty if cleared
+     */
+    void additionalInputChanged(std::string const & additional_input_key);
+
 private:
+    void setupMultiInputSection(MultiInputStepContext const & multi_input);
+    void clearMultiInputSection();
     void setupAutoParamWidget(std::string const & transform_name,
                               std::string const & params_json);
     void setupCustomWidget(std::string const & transform_name,
@@ -80,6 +93,10 @@ private:
     QVBoxLayout * _main_layout = nullptr;
     QLabel * _header_label = nullptr;
     QLabel * _description_label = nullptr;
+    QWidget * _multi_input_group = nullptr;
+    QLabel * _primary_input_label = nullptr;
+    QLabel * _secondary_input_label = nullptr;
+    QComboBox * _secondary_input_combo = nullptr;
     QScrollArea * _scroll_area = nullptr;
     QWidget * _scroll_content = nullptr;
     QVBoxLayout * _scroll_layout = nullptr;

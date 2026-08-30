@@ -124,6 +124,8 @@ set(TRANSFORM_V2_SOURCES
         algorithms/TensorToAnalog/TensorToAnalog.cpp
         algorithms/SwindaleEventDetection/SwindaleEventDetection.hpp
         algorithms/SwindaleEventDetection/SwindaleEventDetection.cpp
+        algorithms/SpikeWaveformExtraction/SpikeWaveformExtraction.hpp
+        algorithms/SpikeWaveformExtraction/SpikeWaveformExtraction.cpp
         utils/NaNPolicy.hpp
         utils/DimReductionOutputBuilder.hpp
         utils/DimReductionOutputBuilder.cpp

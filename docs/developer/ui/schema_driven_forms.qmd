@@ -264,6 +264,37 @@ _auto_param_widget->fromJson(params_json);
 next step's input — without running data. The available-transforms browser filters
 to compatible successors, mirroring `TransformPipeline::execute()` logic.
 
+Binary (multi-input) transforms register both input types in `ElementRegistry`, so
+they appear when either container is focused. `resolveTypeChain()` treats a step as
+valid when the focused container matches **either** slot in
+`individual_input_types`.
+
+### Multi-input transforms (Option A)
+
+Binary transforms (`CalculateLineMinPointDistance`, `ExtractSpikeWaveforms`, interval
+reductions, etc.) require two DataManager keys. The widget collects the second key in
+`StepConfigPanel` and executes single-step binary pipelines via
+`DataManagerPipelineExecutor` with `additional_input_keys`.
+
+| UI piece | Role |
+|----------|------|
+| `MultiInputKeyResolver` | Maps focused primary key + user second key to registry order |
+| `StepConfigPanel` | Second-input `QComboBox` filtered by required container type |
+| `PipelineStepEntry::additional_input_key` | In-memory second key (not in library JSON) |
+
+**Option A limitations (surfaced in UI):**
+
+| Limitation | User-facing behavior |
+|------------|---------------------|
+| Single-step binary only | Execute disabled when a multi-input step shares a pipeline with other steps |
+| Second key not in pipeline JSON | Tooltip on second-input combo; re-select after library load |
+| Pipeline delivery | Deliver button disabled when any step is multi-input |
+| Pre-reductions / range_reduction | Warning before multi-input execute; not applied on that path |
+| Same-type inputs (e.g. two `LineData`) | Primary key excluded from second-input combo |
+
+Unary multi-step pipelines still use `executePipeline(focused_input, TransformPipeline)`.
+Option B (unified `DataManagerPipelineExecutor` for all shapes) is future work.
+
 ### UI ↔ JSON sync
 
 `buildJsonFromUI()` serializes the step list into `PipelineDescriptor`. A collapsible

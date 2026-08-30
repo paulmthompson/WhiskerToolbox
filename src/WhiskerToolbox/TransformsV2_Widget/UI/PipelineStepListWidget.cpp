@@ -1,8 +1,9 @@
 #include "PipelineStepListWidget.hpp"
 
+#include "Core/MultiInputKeyResolver.hpp"
 #include "TransformsV2/core/ElementRegistry.hpp"
-#include "TransformsV2/io/PipelineLoader.hpp"
 #include "TransformsV2/core/TypeChainResolver.hpp"
+#include "TransformsV2/io/PipelineLoader.hpp"
 
 #include <QHBoxLayout>
 #include <QHeaderView>
@@ -13,6 +14,7 @@
 
 #include <algorithm>
 #include <format>
+#include <ranges>
 
 using namespace Neuralyzer::Transforms::V2;
 using namespace Neuralyzer::Transforms::V2::Examples;
@@ -130,6 +132,9 @@ bool PipelineStepListWidget::addStep(std::string const & transform_name,
     entry.transform_name = transform_name;
     entry.parameters_json = params_json;
     entry.is_container_transform = registry.isContainerTransform(transform_name);
+    if (auto const multi_info = getMultiInputTransformInfo(transform_name)) {
+        entry.is_multi_input = multi_info->is_multi_input;
+    }
 
     // Look up metadata from either element or container registry
     auto const * meta = registry.getMetadata(transform_name);
@@ -163,12 +168,44 @@ void PipelineStepListWidget::updateStepParams(int step_index, std::string const 
     emit pipelineChanged();
 }
 
+void PipelineStepListWidget::updateStepAdditionalInput(int step_index,
+                                                       std::string const & additional_input_key) {
+    if (step_index < 0 || step_index >= static_cast<int>(_steps.size())) {
+        return;
+    }
+
+    auto & step = _steps[static_cast<size_t>(step_index)];
+    if (additional_input_key.empty()) {
+        step.additional_input_key.reset();
+    } else {
+        step.additional_input_key = additional_input_key;
+    }
+    emit pipelineChanged();
+}
+
+bool PipelineStepListWidget::hasMultiInputStep() const {
+    return std::any_of(_steps.begin(), _steps.end(), [](PipelineStepEntry const & step) {
+        return step.is_multi_input;
+    });
+}
+
+bool PipelineStepListWidget::allMultiInputStepsConfigured() const {
+    return std::ranges::all_of(_steps, [](PipelineStepEntry const & step) {
+        return !step.is_multi_input ||
+               (step.additional_input_key.has_value() && !step.additional_input_key->empty());
+    });
+}
+
+bool PipelineStepListWidget::hasMultiInputWithExtraSteps() const {
+    return hasMultiInputStep() && _steps.size() > 1;
+}
+
 // ============================================================================
 // Slots
 // ============================================================================
 
 void PipelineStepListWidget::onRemoveStepClicked() {
-    int row = _steps_table->currentRow();
+    int const row = _steps_table->currentRow();
     if (row < 0 || row >= static_cast<int>(_steps.size())) {
         return;
     }
@@ -178,7 +215,7 @@ void PipelineStepListWidget::onRemoveStepClicked() {
 
     // Select the previous step or the first one
     if (!_steps.empty()) {
-        int new_row = std::min(row, static_cast<int>(_steps.size()) - 1);
+        int const new_row = std::min(row, static_cast<int>(_steps.size()) - 1);
         _steps_table->setCurrentCell(new_row, 0);
     }
 
@@ -208,7 +245,7 @@ void PipelineStepListWidget::refreshChain() {
     // Extract step names
     std::vector<std::string> step_names;
     step_names.reserve(_steps.size());
-    for (auto const & s : _steps) {
+    for (auto const & s: _steps) {
         step_names.push_back(s.transform_name);
     }
 
@@ -230,14 +267,14 @@ void PipelineStepListWidget::refreshChain() {
 // ============================================================================
 
 void PipelineStepListWidget::rebuildStepsTable() {
-    int saved_row = _steps_table->currentRow();
+    int const saved_row = _steps_table->currentRow();
     _steps_table->blockSignals(true);
     _steps_table->setRowCount(0);
 
     for (size_t i = 0; i < _steps.size() && i < _chain_result.steps.size(); ++i) {
         auto const & step = _steps[i];
         auto const & type_info = _chain_result.steps[i];
-        int row = static_cast<int>(i);
+        int const row = static_cast<int>(i);
         _steps_table->insertRow(row);
 
         // Column 0: Step number
@@ -247,24 +284,29 @@ void PipelineStepListWidget::rebuildStepsTable() {
 
         // Column 1: Input type
         _steps_table->setItem(row, 1,
-                new QTableWidgetItem(QString::fromStdString(type_info.input_type_name)));
+                              new QTableWidgetItem(QString::fromStdString(type_info.input_type_name)));
 
         // Column 2: Transform name
         _steps_table->setItem(row, 2,
-                new QTableWidgetItem(QString::fromStdString(step.transform_name)));
+                              new QTableWidgetItem(QString::fromStdString(step.transform_name)));
 
         // Column 3: Output type
         _steps_table->setItem(row, 3,
-                new QTableWidgetItem(QString::fromStdString(type_info.output_type_name)));
+                              new QTableWidgetItem(QString::fromStdString(type_info.output_type_name)));
 
         // Highlight invalid steps
         if (!step.is_valid) {
-            QColor invalid_bg(255, 200, 200);// Light red
+            QColor const invalid_bg(255, 200, 200);// Light red
             for (int col = 0; col < 4; ++col) {
                 _steps_table->item(row, col)->setBackground(invalid_bg);
                 _steps_table->item(row, col)->setToolTip(
                         tr("Type mismatch: this step's input type is incompatible "
                            "with the previous step's output type"));
+            }
+        } else if (step.is_multi_input) {
+            QString const tooltip = tr("Requires a second DataManager key (configure below).");
+            for (int col = 0; col < 4; ++col) {
+                _steps_table->item(row, col)->setToolTip(tooltip);
             }
         }
     }
@@ -293,7 +335,7 @@ void PipelineStepListWidget::updateAvailableTransforms() {
 
     for (size_t i = 0; i < compatible.size(); ++i) {
         auto const & name = compatible[i];
-        int row = static_cast<int>(i);
+        int const row = static_cast<int>(i);
         _browser_table->insertRow(row);
 
         // Column 0: Name
@@ -336,7 +378,7 @@ void PipelineStepListWidget::updateAvailableTransforms() {
 
 std::vector<std::string> PipelineStepListWidget::getCompatibleTransforms(
         std::type_index element_type,
-        std::type_index container_type) const {
+        std::type_index container_type) {
 
     auto & registry = ElementRegistry::instance();
 
@@ -363,8 +405,8 @@ std::vector<std::string> PipelineStepListWidget::getCompatibleTransforms(
 }
 
 void PipelineStepListWidget::updateButtonStates() {
-    int row = _steps_table->currentRow();
-    bool has_selection = (row >= 0);
+    int const row = _steps_table->currentRow();
+    bool const has_selection = (row >= 0);
     _remove_button->setEnabled(has_selection);
 }
 
@@ -382,7 +424,7 @@ bool PipelineStepListWidget::loadFromDescriptors(
 
     bool all_ok = true;
 
-    for (auto const & desc : descriptors) {
+    for (auto const & desc: descriptors) {
         // Serialize the step's parameters back to JSON for the params_json field
         std::string params_json = "{}";
         if (desc.parameters.has_value()) {
@@ -395,6 +437,9 @@ bool PipelineStepListWidget::loadFromDescriptors(
         entry.transform_name = desc.transform_name;
         entry.parameters_json = params_json;
         entry.is_container_transform = registry.isContainerTransform(desc.transform_name);
+        if (auto const multi_info = getMultiInputTransformInfo(desc.transform_name)) {
+            entry.is_multi_input = multi_info->is_multi_input;
+        }
 
         // Look up metadata from either element or container registry
         auto const * meta = registry.getMetadata(desc.transform_name);

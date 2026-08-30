@@ -1,0 +1,22 @@
+---
+title: MultiInputKeyResolver
+---
+
+## Overview
+
+`MultiInputKeyResolver` provides free functions used by `TransformsV2Properties_Widget`
+to configure and execute single-step binary transforms (Option A).
+
+## API
+
+- `getMultiInputTransformInfo(transform_name)` — reads `is_multi_input` and
+  `individual_input_types` from `ElementRegistry`.
+- `getSecondaryContainerType(primary_container, individual_input_types)` — resolves
+  which container type the second-input combo should list.
+- `resolveOrderedBinaryInputKeys(...)` — maps focused primary + user-selected
+  secondary keys into `(input_key, additional_input_keys[0])` registry order.
+
+## Related UI
+
+See [Schema-Driven Forms](../../../ui/schema_driven_forms.qmd#multi-input-transforms-option-a)
+for Option A limitations and widget behavior.
