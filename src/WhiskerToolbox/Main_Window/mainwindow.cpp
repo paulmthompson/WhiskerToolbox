@@ -305,15 +305,11 @@ MainWindow::MainWindow(QWidget * parent)
     connect(_state_manager->workspace(), &StateManagement::WorkspaceManager::workspacePathChanged,
             this, &MainWindow::_updateTitleBar);
 
-    // Enable crash-recovery auto-save
-    _state_manager->workspace()->enableAutoSave();
-
     _updateTitleBar();
 
-    // Check for crash recovery file from a previous unclean shutdown
-    StateManagement::logStartupPhase("before _checkCrashRecovery");
-    _checkCrashRecovery();
-    StateManagement::logWindowState("after _checkCrashRecovery", this);
+    // Defer crash recovery until after main() calls show() and the event loop runs.
+    StateManagement::logStartupPhase("scheduling deferred _checkCrashRecovery");
+    QTimer::singleShot(0, this, &MainWindow::_checkCrashRecovery);
     StateManagement::logStartupPhase("MainWindow ctor end");
 }
 
@@ -443,10 +439,7 @@ void MainWindow::_buildInitialLayout() {
     // by EditorCreationController when editors are created.
     // No more PropertiesHost container - properties persist independently.
 
-    // === Apply Zone Ratios ===
-    // Defer the splitter size application to after the window is shown and laid out
-    // This ensures the splitters have valid dimensions when sizes are applied
-    _zone_manager->reapplySplitterSizes(200);// 200ms delay for layout to stabilize
+    // Splitter sizes are applied in _finishStartupLayout() after crash-recovery prompt.
 }
 
 void MainWindow::_createActions() {
@@ -1271,10 +1264,19 @@ void MainWindow::_updateTitleBar() {
 // Crash Recovery
 // ---------------------------------------------------------------------------
 
+void MainWindow::_finishStartupLayout() {
+    StateManagement::logStartupPhase("before finishStartupLayout");
+    StateManagement::logWindowState("before finishStartupLayout", this);
+    _zone_manager->reapplySplitterSizes(200);
+    _state_manager->workspace()->enableAutoSave();
+    StateManagement::logStartupPhase("finishStartupLayout complete");
+}
+
 void MainWindow::_checkCrashRecovery() {
     auto * ws = _state_manager->workspace();
     if (!ws->hasRecoveryFile()) {
         StateManagement::logStartupPhase("crash_recovery skipped (no recovery file)");
+        _finishStartupLayout();
         return;
     }
 
@@ -1286,6 +1288,7 @@ void MainWindow::_checkCrashRecovery() {
         // Corrupt recovery file — delete it silently
         StateManagement::logStartupPhase("crash_recovery corrupt file deleted");
         ws->deleteRecoveryFile();
+        _finishStartupLayout();
         return;
     }
 
@@ -1341,7 +1344,6 @@ void MainWindow::_checkCrashRecovery() {
 
         // Restore zone layout
         _restoreZoneLayout(*recovery_data);
-        _state_manager->workspace()->enableAutoSave();
 
         // Restore provenance
         ws->clearDataLoads();
@@ -1368,6 +1370,7 @@ void MainWindow::_checkCrashRecovery() {
     ws->deleteRecoveryFile();
     StateManagement::logStartupPhase("crash_recovery file deleted");
     StateManagement::logWindowState("after crash_recovery complete", this);
+    _finishStartupLayout();
 }
 
 // ---------------------------------------------------------------------------

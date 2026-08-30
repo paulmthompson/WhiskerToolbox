@@ -119,14 +119,14 @@ public:
 protected:
     void keyPressEvent(QKeyEvent * event) override;
     bool eventFilter(QObject * obj, QEvent * event) override;
-    void dragEnterEvent(QDragEnterEvent *event) override;
-    void dropEvent(QDropEvent *event) override;
+    void dragEnterEvent(QDragEnterEvent * event) override;
+    void dropEvent(QDropEvent * event) override;
 
 private:
     Ui::MainWindow * ui;
 
-    void _loadJSONFromFile(const QString& filename);
-    void _loadVideoFromFile(const QString& filename);
+    void _loadJSONFromFile(QString const & filename);
+    void _loadVideoFromFile(QString const & filename);
 
     ads::CDockManager * _m_DockManager;
 
@@ -161,6 +161,10 @@ private:
 
     /// Check for crash recovery file and prompt user to restore
     void _checkCrashRecovery();
+
+    /// Apply deferred zone splitter sizes and enable workspace auto-save.
+    /// Called at the end of startup after crash-recovery prompt (or skip).
+    void _finishStartupLayout();
 
     /// Build the recent workspaces submenu from SessionStore
     void _rebuildRecentWorkspacesMenu();

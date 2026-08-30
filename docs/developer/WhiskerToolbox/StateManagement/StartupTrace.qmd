@@ -25,5 +25,5 @@ grep '\[Startup\]' startup_debug.log
 
 ## Related
 
-- Crash recovery flow: `MainWindow::_checkCrashRecovery()`
-- Deferred splitter sizing: `ZoneManager::reapplySplitterSizes()`
+- Crash recovery flow: `MainWindow::_checkCrashRecovery()` (deferred until after `w.show()`)
+- Deferred splitter sizing: `MainWindow::_finishStartupLayout()` / `ZoneManager::reapplySplitterSizes()`

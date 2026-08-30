@@ -184,9 +184,9 @@ void SessionStore::restoreWindowGeometry(QMainWindow * window) const {
     }
 
     if (_data.window_maximized) {
-        spdlog::debug("[Startup] restoreWindowGeometry elapsed_ms={} action=showMaximized",
+        spdlog::debug("[Startup] restoreWindowGeometry elapsed_ms={} action=setWindowState maximized",
                       startupElapsedMs());
-        window->showMaximized();
+        window->setWindowState(window->windowState() | Qt::WindowMaximized);
     } else {
         spdlog::debug(
                 "[Startup] restoreWindowGeometry elapsed_ms={} action=setGeometry geometry={}x{}@({},{})",
