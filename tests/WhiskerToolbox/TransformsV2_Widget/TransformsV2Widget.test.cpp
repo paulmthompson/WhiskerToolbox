@@ -44,11 +44,18 @@
 #include "DataManager/utils/ContainerElementMapping.hpp"
 #include "DataManager/utils/ContainerTypeIndex.hpp"
 #include "ParameterSchema/ParameterSchema.hpp"
+#include "TransformsV2/core/DataManagerIntegration.hpp"
 #include "TransformsV2/core/ElementRegistry.hpp"
 #include "TransformsV2/core/TypeChainResolver.hpp"
 
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "Tensors/TensorData.hpp"
+#include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeIndexStorage.hpp"
+
 #include <QStackedWidget>
 #include <QTest>
+#include <nlohmann/json.hpp>
 #include <rfl.hpp>
 #include <rfl/json.hpp>
 
@@ -797,7 +804,7 @@ TEST_CASE("TransformsV2Properties_Widget has library controls when config dir is
     auto const config_dir =
             QDir::temp().filePath(QStringLiteral("wt_tv2_props_lib_%1").arg(QDateTime::currentMSecsSinceEpoch()));
 
-    TransformsV2Properties_Widget widget(state, selection_context.get(), config_dir);
+    TransformsV2Properties_Widget const widget(state, selection_context.get(), config_dir);
     QApplication::processEvents();
 
     bool found_library = false;
@@ -1140,6 +1147,140 @@ TEST_CASE("StepConfigPanel shows second-input controls for binary transforms",
         }
     }
     CHECK(found_secondary);
+}
+
+namespace spike_waveform_widget_test {
+
+std::shared_ptr<TimeFrame> createTestTimeFrame() {
+    return std::make_shared<TimeFrame>(std::vector<int>{0, 1, 2, 3, 4});
+}
+
+std::shared_ptr<TensorData> createTestVoltageTensor() {
+    size_t const num_samples = 1000;
+    size_t const num_channels = 4;
+    std::vector<float> flat_data(num_samples * num_channels, 0.0f);
+
+    std::vector<std::pair<size_t, int>> const spikes = {{100, 0}, {300, 1}, {600, 0}};
+    for (auto const & [t_spike, ch]: spikes) {
+        if (t_spike + 4 < num_samples && ch >= 0 && static_cast<size_t>(ch) < num_channels) {
+            flat_data[(t_spike + 1) * num_channels + static_cast<size_t>(ch)] = -15.0f;
+        }
+    }
+
+    auto time_storage = std::make_shared<DenseTimeIndexStorage>(TimeFrameIndex{0}, num_samples);
+    return std::make_shared<TensorData>(
+            TensorData::createTimeSeries2D(
+                    flat_data, num_samples, num_channels, time_storage, nullptr, {}));
+}
+
+std::shared_ptr<DigitalEventSeries> createTestSpikeEvents() {
+    auto events = std::make_shared<DigitalEventSeries>();
+    events->addEvent(TimeFrameIndex{100});
+    events->addEvent(TimeFrameIndex{300});
+    events->addEvent(TimeFrameIndex{600});
+    return events;
+}
+
+nlohmann::json buildWidgetStyleBinaryPipelineJson(
+        std::string const & transform_name,
+        std::pair<std::string, std::string> const & ordered_keys,
+        std::string const & output_key) {
+    nlohmann::json step_json;
+    step_json["step_id"] = "step_1";
+    step_json["transform_name"] = transform_name;
+    step_json["input_key"] = ordered_keys.first;
+    step_json["additional_input_keys"] = nlohmann::json::array({ordered_keys.second});
+    step_json["output_key"] = output_key;
+    step_json["parameters"] = {
+            {"pre_window_ms", 0.50},
+            {"post_window_ms", 1.00},
+            {"sampling_rate_hz", 30000.0}};
+
+    nlohmann::json pipeline_json;
+    pipeline_json["steps"] = nlohmann::json::array({step_json});
+    return pipeline_json;
+}
+
+}// namespace spike_waveform_widget_test
+
+TEST_CASE("Widget binary execution path — SpikeWaveformExtraction",
+          "[TransformsV2Widget][MultiInput][execution][SpikeWaveformExtraction]") {
+
+    using namespace spike_waveform_widget_test;
+
+    DataManager dm;
+    auto time_frame = createTestTimeFrame();
+    dm.setTime(TimeKey("default"), time_frame);
+
+    auto voltage = createTestVoltageTensor();
+    voltage->setTimeFrame(time_frame);
+    dm.setData<TensorData>("voltage", voltage, TimeKey("default"));
+
+    auto events = createTestSpikeEvents();
+    events->setTimeFrame(time_frame);
+    dm.setData<DigitalEventSeries>("spikes", events, TimeKey("default"));
+
+    auto const tensor_container = TypeIndexMapper::stringToContainer("TensorData");
+    auto const event_container = TypeIndexMapper::stringToContainer("DigitalEventSeries");
+    auto const info = getMultiInputTransformInfo("SpikeWaveformExtraction");
+    REQUIRE(info.has_value());
+
+    SECTION("resolveTypeChain accepts TensorData or DigitalEventSeries focus") {
+        std::vector<std::string> const names = {"SpikeWaveformExtraction"};
+        for (auto const * container_name: {"TensorData", "DigitalEventSeries"}) {
+            auto const container = TypeIndexMapper::stringToContainer(container_name);
+            auto result = resolveTypeChain(container, names);
+            REQUIRE(result.steps.size() == 1);
+            CHECK(result.steps[0].is_valid);
+            CHECK(result.all_valid);
+        }
+    }
+
+    SECTION("TensorData primary orders keys voltage then spikes") {
+        auto const ordered = resolveOrderedBinaryInputKeys(
+                "voltage", tensor_container, "spikes", info->individual_input_types);
+        REQUIRE(ordered.has_value());
+        CHECK(ordered->first == "voltage");
+        CHECK(ordered->second == "spikes");
+
+        auto const pipeline_json =
+                buildWidgetStyleBinaryPipelineJson("SpikeWaveformExtraction", *ordered, "waveforms");
+
+        DataManagerPipelineExecutor executor(&dm);
+        REQUIRE(executor.loadFromJson(pipeline_json));
+
+        auto const result = executor.execute();
+        REQUIRE(result.success);
+        REQUIRE(result.steps_completed == 1);
+
+        auto const waveforms = dm.getData<TensorData>("waveforms");
+        REQUIRE(waveforms != nullptr);
+        CHECK(waveforms->numRows() == 3);
+        CHECK(waveforms->numColumns() == static_cast<std::size_t>(4) * 46);
+    }
+
+    SECTION("DigitalEventSeries primary swaps keys to voltage then spikes") {
+        auto const ordered = resolveOrderedBinaryInputKeys(
+                "spikes", event_container, "voltage", info->individual_input_types);
+        REQUIRE(ordered.has_value());
+        CHECK(ordered->first == "voltage");
+        CHECK(ordered->second == "spikes");
+
+        auto const pipeline_json =
+                buildWidgetStyleBinaryPipelineJson("SpikeWaveformExtraction", *ordered, "waveforms_des");
+
+        DataManagerPipelineExecutor executor(&dm);
+        REQUIRE(executor.loadFromJson(pipeline_json));
+
+        auto const result = executor.execute();
+        REQUIRE(result.success);
+        REQUIRE(result.steps_completed == 1);
+
+        auto const waveforms = dm.getData<TensorData>("waveforms_des");
+        REQUIRE(waveforms != nullptr);
+        CHECK(waveforms->numRows() == 3);
+        CHECK(waveforms->numColumns() == static_cast<std::size_t>(4) * 46);
+    }
 }
 
 // ============================================================================

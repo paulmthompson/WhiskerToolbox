@@ -6,15 +6,17 @@
 #include "TransformsV2/core/TransformPipeline.hpp"
 #include "TransformsV2/detail/FlatZipView.hpp"
 
-#include "CoreGeometry/lines.hpp"
-#include "CoreGeometry/points.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"
+#include "CoreGeometry/lines.hpp"
+#include "CoreGeometry/points.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Points/Point_Data.hpp"
+#include "Tensors/TensorData.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "TimeFrame/TimeIndexStorage.hpp"
 
 #include <nlohmann/json.hpp>
 #include <rfl.hpp>
@@ -96,6 +98,32 @@ std::shared_ptr<TimeFrame> createTestTimeFrame() {
     return std::make_shared<TimeFrame>(std::vector<int>{0, 1, 2, 3, 4});
 }
 
+std::shared_ptr<TensorData> createTestVoltageTensor() {
+    size_t const num_samples = 1000;
+    size_t const num_channels = 4;
+    std::vector<float> flat_data(num_samples * num_channels, 0.0f);
+
+    std::vector<std::pair<size_t, int>> const spikes = {{100, 0}, {300, 1}, {600, 0}};
+    for (auto const & [t_spike, ch]: spikes) {
+        if (t_spike + 4 < num_samples && ch >= 0 && static_cast<size_t>(ch) < num_channels) {
+            flat_data[(t_spike + 1) * num_channels + static_cast<size_t>(ch)] = -15.0f;
+        }
+    }
+
+    auto time_storage = std::make_shared<DenseTimeIndexStorage>(TimeFrameIndex{0}, num_samples);
+    return std::make_shared<TensorData>(
+            TensorData::createTimeSeries2D(
+                    flat_data, num_samples, num_channels, time_storage, nullptr, {}));
+}
+
+std::shared_ptr<DigitalEventSeries> createTestSpikeEvents() {
+    auto events = std::make_shared<DigitalEventSeries>();
+    events->addEvent(TimeFrameIndex{100});
+    events->addEvent(TimeFrameIndex{300});
+    events->addEvent(TimeFrameIndex{600});
+    return events;
+}
+
 }// anonymous namespace
 
 // ============================================================================
@@ -148,7 +176,7 @@ TEST_CASE("DataManagerPipelineExecutor - Binary transform via JSON", "[transform
     dm.setData<PointData>("points", points, TimeKey("default"));
 
     SECTION("Execute binary transform with JSON configuration") {
-        nlohmann::json pipeline_json = {
+        nlohmann::json const pipeline_json = {
                 {"steps", {{{"step_id", "calculate_distance"}, {"transform_name", "CalculateLineMinPointDistance"}, {"input_key", "lines"}, {"additional_input_keys", {"points"}}, {"output_key", "distances"}, {"parameters", {}}}}}};
 
         DataManagerPipelineExecutor executor(&dm);
@@ -206,7 +234,7 @@ TEST_CASE("DataManagerPipelineExecutor - Multi-input fusion analysis", "[transfo
 
     SECTION("Single binary transform executes successfully") {
         // Just test that the binary transform alone works
-        nlohmann::json pipeline_json = {
+        nlohmann::json const pipeline_json = {
                 {"steps", {{{"step_id", "1"}, {"transform_name", "CalculateLineMinPointDistance"}, {"input_key", "lines"}, {"additional_input_keys", {"points"}}, {"output_key", "distances"}}}}};
 
         DataManagerPipelineExecutor executor(&dm);
@@ -220,14 +248,14 @@ TEST_CASE("DataManagerPipelineExecutor - Multi-input fusion analysis", "[transfo
         REQUIRE(distances != nullptr);
 
         auto data_t0 = distances->getDataAtTime(TimeFrameIndex(0));
-        REQUIRE(data_t0.size() >= 1);
+        REQUIRE(!data_t0.empty());
         REQUIRE_THAT(data_t0[0], WithinAbs(3.0f, 0.001f));
     }
 
     SECTION("Multi-input step is correctly identified as non-fusible") {
         DataManagerPipelineExecutor executor(&dm);
 
-        nlohmann::json pipeline_json = {
+        nlohmann::json const pipeline_json = {
                 {"steps", {{{"step_id", "1"}, {"transform_name", "CalculateLineMinPointDistance"}, {"input_key", "lines"}, {"additional_input_keys", {"points"}}, {"output_key", "distances"}}}}};
 
         REQUIRE(executor.loadFromJson(pipeline_json));
@@ -246,7 +274,7 @@ TEST_CASE("DataManagerPipelineExecutor - Step chaining detection", "[transforms]
     DataManagerPipelineExecutor executor(&dm);
 
     SECTION("canFuseStep returns false for multi-input steps") {
-        nlohmann::json pipeline_json = {
+        nlohmann::json const pipeline_json = {
                 {"steps", {{{"step_id", "1"}, {"transform_name", "CalculateLineMinPointDistance"}, {"input_key", "lines"}, {"additional_input_keys", {"points"}}}}}};
 
         executor.loadFromJson(pipeline_json);
@@ -261,7 +289,7 @@ TEST_CASE("DataManagerPipelineExecutor - Step chaining detection", "[transforms]
         // Ensure ScaleValue is registered (might be from previous test)
         struct ScaleParams {
             std::optional<float> factor;
-            float getFactor() const { return factor.value_or(2.0f); }
+            [[nodiscard]] float getFactor() const { return factor.value_or(2.0f); }
         };
 
         if (!registry.hasTransform("ScaleValue")) {
@@ -272,7 +300,7 @@ TEST_CASE("DataManagerPipelineExecutor - Step chaining detection", "[transforms]
                     });
         }
 
-        nlohmann::json pipeline_json = {
+        nlohmann::json const pipeline_json = {
                 {"steps", {{{"step_id", "1"}, {"transform_name", "CalculateMaskArea"}, {"input_key", "masks"}}, {{"step_id", "2"}, {"transform_name", "ScaleValue"}, {"input_key", "1"}}}}};
 
         executor.loadFromJson(pipeline_json);
@@ -282,7 +310,7 @@ TEST_CASE("DataManagerPipelineExecutor - Step chaining detection", "[transforms]
     }
 
     SECTION("stepsAreChained detects correct chaining") {
-        nlohmann::json pipeline_json = {
+        nlohmann::json const pipeline_json = {
                 {"steps", {{{"step_id", "1"}, {"transform_name", "TransformA"}, {"input_key", "input"}, {"output_key", "intermediate"}}, {
                                                                                                                                                  {"step_id", "2"},
                                                                                                                                                  {"transform_name", "TransformB"},
@@ -301,7 +329,7 @@ TEST_CASE("DataManagerPipelineExecutor - Step chaining detection", "[transforms]
     }
 
     SECTION("stepsAreChained with step_id as implicit output") {
-        nlohmann::json pipeline_json = {
+        nlohmann::json const pipeline_json = {
                 {"steps", {{
                                    {"step_id", "calc_area"},
                                    {"transform_name", "TransformA"},
@@ -328,7 +356,7 @@ TEST_CASE("DataManagerPipelineExecutor - Segment building", "[transforms][v2][pi
     DataManagerPipelineExecutor executor(&dm);
 
     SECTION("Single step creates single segment") {
-        nlohmann::json pipeline_json = {
+        nlohmann::json const pipeline_json = {
                 {"steps", {{{"step_id", "1"}, {"transform_name", "CalculateMaskArea"}, {"input_key", "masks"}, {"output_key", "areas"}}}}};
 
         executor.loadFromJson(pipeline_json);
@@ -341,7 +369,7 @@ TEST_CASE("DataManagerPipelineExecutor - Segment building", "[transforms][v2][pi
     }
 
     SECTION("Multi-input step creates multi-input segment") {
-        nlohmann::json pipeline_json = {
+        nlohmann::json const pipeline_json = {
                 {"steps", {{{"step_id", "1"}, {"transform_name", "CalculateLineMinPointDistance"}, {"input_key", "lines"}, {"additional_input_keys", {"points"}}, {"output_key", "distances"}}}}};
 
         executor.loadFromJson(pipeline_json);
@@ -370,7 +398,7 @@ TEST_CASE("DataManagerPipelineExecutor - Error handling for multi-input", "[tran
         dm.setData<LineData>("lines", lines, TimeKey("default"));
         // Note: "points" is NOT added to DataManager
 
-        nlohmann::json pipeline_json = {
+        nlohmann::json const pipeline_json = {
                 {"steps", {{{"step_id", "1"}, {"transform_name", "CalculateLineMinPointDistance"}, {"input_key", "lines"}, {"additional_input_keys", {"points"}},// This doesn't exist!
                             {"output_key", "distances"}}}}};
 
@@ -389,7 +417,7 @@ TEST_CASE("DataManagerPipelineExecutor - Error handling for multi-input", "[tran
         dm.setData<PointData>("points", points, TimeKey("default"));
         // Note: "lines" is NOT added to DataManager
 
-        nlohmann::json pipeline_json = {
+        nlohmann::json const pipeline_json = {
                 {"steps", {{{"step_id", "1"}, {"transform_name", "CalculateLineMinPointDistance"}, {"input_key", "lines"},// This doesn't exist!
                             {"additional_input_keys", {"points"}},
                             {"output_key", "distances"}}}}};
@@ -400,4 +428,44 @@ TEST_CASE("DataManagerPipelineExecutor - Error handling for multi-input", "[tran
         auto result = executor.execute();
         REQUIRE_FALSE(result.success);
     }
+}
+
+TEST_CASE("DataManagerPipelineExecutor - SpikeWaveformExtraction binary container",
+          "[transforms][v2][pipeline][multi-input][integration][spike_waveform]") {
+
+    DataManager dm;
+    auto time_frame = createTestTimeFrame();
+    dm.setTime(TimeKey("default"), time_frame);
+
+    auto voltage = createTestVoltageTensor();
+    voltage->setTimeFrame(time_frame);
+    dm.setData<TensorData>("voltage", voltage, TimeKey("default"));
+
+    auto events = createTestSpikeEvents();
+    events->setTimeFrame(time_frame);
+    dm.setData<DigitalEventSeries>("spikes", events, TimeKey("default"));
+
+    nlohmann::json const pipeline_json = {
+            {"steps",
+             {{{"step_id", "extract_waveforms"},
+               {"transform_name", "SpikeWaveformExtraction"},
+               {"input_key", "voltage"},
+               {"additional_input_keys", {"spikes"}},
+               {"output_key", "waveforms"},
+               {"parameters",
+                {{"pre_window_ms", 0.50},
+                 {"post_window_ms", 1.00},
+                 {"sampling_rate_hz", 30000.0}}}}}}};
+
+    DataManagerPipelineExecutor executor(&dm);
+    REQUIRE(executor.loadFromJson(pipeline_json));
+
+    auto result = executor.execute();
+    REQUIRE(result.success);
+    REQUIRE(result.steps_completed == 1);
+
+    auto const waveforms = dm.getData<TensorData>("waveforms");
+    REQUIRE(waveforms != nullptr);
+    REQUIRE(waveforms->numRows() == 3);
+    REQUIRE(waveforms->numColumns() == static_cast<std::size_t>(4) * 46);
 }

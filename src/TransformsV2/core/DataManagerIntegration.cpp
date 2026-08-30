@@ -6,6 +6,7 @@
 #include "algorithms/AnalogIntervalPeak/AnalogIntervalPeak.hpp"
 #include "algorithms/DigitalIntervalBoolean/DigitalIntervalBoolean.hpp"
 #include "algorithms/IntervalReduction/IntervalReduction.hpp"
+#include "algorithms/SpikeWaveformExtraction/SpikeWaveformExtraction.hpp"
 #include "core/ElementRegistry.hpp"
 #include "core/RegisteredTransforms.hpp"
 #include "core/TransformPipeline.hpp"
@@ -812,6 +813,15 @@ std::optional<DataTypeVariant> tryExecuteBinaryContainerTransform(
         }
     }
 
+    // TensorData x DigitalEventSeries -> TensorData
+    if constexpr (std::is_same_v<Container1, TensorData> &&
+                  std::is_same_v<Container2, DigitalEventSeries>) {
+        if (auto r = tryExecuteWithOutput<Container1, Container2, TensorData, Params>(
+                    registry, transform_name, *data1_ptr, *data2_ptr, params, ctx, meta)) {
+            return r;
+        }
+    }
+
     return std::nullopt;
 }
 
@@ -862,6 +872,16 @@ std::optional<DataTypeVariant> tryExecuteBinaryContainerTransformAny(
                   std::is_same_v<Container2, DigitalEventSeries>) {
         try {
             auto const & params = std::any_cast<IntervalReductionParams const &>(params_any);
+            auto r = tryExecuteBinaryContainerTransform(data1_ptr, data2_ptr, transform_name, params);
+            if (r.has_value()) return r;
+        } catch (std::bad_any_cast const &) {}
+    }
+
+    // TensorData x DES: SpikeWaveformExtractionParams
+    if constexpr (std::is_same_v<Container1, TensorData> &&
+                  std::is_same_v<Container2, DigitalEventSeries>) {
+        try {
+            auto const & params = std::any_cast<SpikeWaveformExtractionParams const &>(params_any);
             auto r = tryExecuteBinaryContainerTransform(data1_ptr, data2_ptr, transform_name, params);
             if (r.has_value()) return r;
         } catch (std::bad_any_cast const &) {}
