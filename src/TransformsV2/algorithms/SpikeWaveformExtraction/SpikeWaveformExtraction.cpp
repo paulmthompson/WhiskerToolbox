@@ -5,10 +5,12 @@
 
 #include "SpikeWaveformExtraction.hpp"
 
+#include "CoreMath/sinc_interpolation.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Tensors/RowDescriptor.hpp"
 #include "Tensors/TensorData.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"
+#include "TransformsV2/utils/MultichannelTemplateRealigner.hpp"
 #include "core/ComputeContext.hpp"
 
 #include <armadillo>
@@ -46,64 +48,51 @@ std::shared_ptr<TensorData> extractWaveformSnippetsImpl(
         SpikeWaveformExtractionParams const & params,
         ComputeContext const & ctx) {
 
-    size_t const total_samples = voltage_data.numRows();
-    size_t const total_channels = voltage_data.numColumns();
-
-    if (total_samples == 0 || total_channels == 0 || events.empty()) {
-        ctx.reportProgress(100);
+    if (voltage_data.numRows() == 0 || events.empty()) {
         return std::make_shared<TensorData>();
     }
 
-    ctx.reportProgress(0);
-
-    // Retrieve zero-copy Armadillo matrix wrapper
     auto const arma_data = voltage_data.toArmadillo();
     arma::fmat const & mat = arma_data.asArmadilloMatrix();
 
-    // 1. Resolve selected channels of interest
+    size_t const total_samples = mat.n_rows;
+    size_t const total_channels = mat.n_cols;
+
+    if (total_samples == 0 || total_channels == 0) {
+        return std::make_shared<TensorData>();
+    }
+
+    float const sr = params.sampling_rate_hz.value();
+    int const w_pre = static_cast<int>(std::round((params.pre_window_ms.value() / 1000.0f) * sr));
+    int const w_post = static_cast<int>(std::round((params.post_window_ms.value() / 1000.0f) * sr));
+    int const num_points = w_pre + w_post + 1;
+    int const search_samples = std::max(1, static_cast<int>(std::round((params.search_window_ms.value() / 1000.0f) * sr)));
+
+    // Resolve channels of interest
     std::vector<int> selected_channels;
     if (params.channels_of_interest.empty()) {
-        selected_channels.reserve(total_channels);
+        selected_channels.resize(total_channels);
         for (size_t c = 0; c < total_channels; ++c) {
-            selected_channels.push_back(static_cast<int>(c));
+            selected_channels[c] = static_cast<int>(c);
         }
     } else {
-        std::set<int> unique_channels;
         for (int const ch: params.channels_of_interest) {
             if (ch >= 0 && static_cast<size_t>(ch) < total_channels) {
-                unique_channels.insert(ch);
+                selected_channels.push_back(ch);
             }
         }
-        selected_channels.assign(unique_channels.begin(), unique_channels.end());
-        if (selected_channels.empty()) {
-            for (size_t c = 0; c < total_channels; ++c) {
-                selected_channels.push_back(static_cast<int>(c));
-            }
-        }
+    }
+
+    if (selected_channels.empty()) {
+        return std::make_shared<TensorData>();
     }
 
     std::set<int> const selected_channel_set(selected_channels.begin(), selected_channels.end());
+    size_t const num_feature_cols = selected_channels.size() * static_cast<size_t>(num_points);
 
-    // 2. Compute snippet window dimensions
-    float const sr = params.sampling_rate_hz.value();
-    int const w_pre = std::max(1, static_cast<int>(std::round((params.pre_window_ms.value() / 1000.0f) * sr)));
-    int const w_post = std::max(1, static_cast<int>(std::round((params.post_window_ms.value() / 1000.0f) * sr)));
-    size_t const snippet_len = static_cast<size_t>(w_pre + w_post + 1);
-    size_t const num_feature_cols = selected_channels.size() * snippet_len;
-
-    // 3. Generate column names
-    std::vector<std::string> column_names;
-    column_names.reserve(num_feature_cols);
-    for (int const ch: selected_channels) {
-        for (int dt = -w_pre; dt <= w_post; ++dt) {
-            float const offset_ms = (static_cast<float>(dt) / sr) * 1000.0f;
-            column_names.push_back(formatColumnName(ch, offset_ms));
-        }
-    }
-
-    // 4. Resolve row time storage mapping
+    // Map TimeFrameIndex to discrete sample index
     auto const & row_desc = voltage_data.rows();
-    bool const has_time_storage = (row_desc.type() == RowType::TimeFrameIndex && row_desc.timeStoragePtr() != nullptr);
+    bool const has_time_storage = (row_desc.type() == RowType::TimeFrameIndex);
 
     std::vector<TimeFrameIndex> accepted_timestamps;
     accepted_timestamps.reserve(events.size());
@@ -113,21 +102,20 @@ std::shared_ptr<TensorData> extractWaveformSnippetsImpl(
 
     auto const align_mode = params.alignment_mode;
     bool const filter_primary = params.filter_by_primary_channel;
-
     size_t const total_events = events.size();
 
+    // Pre-extract valid candidate events
+    struct CandidateEvent {
+        TimeFrameIndex timestamp;
+        int64_t sample_idx{0};
+        int center_channel{0};
+    };
+
+    std::vector<CandidateEvent> candidates;
+    candidates.reserve(total_events);
+
     for (size_t i = 0; i < total_events; ++i) {
-        if (i % 1000 == 0) {
-            if (ctx.shouldCancel()) {
-                return std::make_shared<TensorData>();
-            }
-            int const pct = static_cast<int>((static_cast<double>(i) / static_cast<double>(total_events)) * 90.0);
-            ctx.reportProgress(pct);
-        }
-
         auto const & ev = events[i];
-
-        // Map TimeFrameIndex to discrete sample index
         int64_t sample_idx = -1;
         if (has_time_storage) {
             auto const opt_pos = row_desc.timeStorage().findArrayPositionForTimeIndex(ev.timestamp);
@@ -139,10 +127,9 @@ std::shared_ptr<TensorData> extractWaveformSnippetsImpl(
         }
 
         if (sample_idx < w_pre || sample_idx + w_post >= static_cast<int64_t>(total_samples)) {
-            continue;// Skip boundary events that cannot fit full temporal window
+            continue;
         }
 
-        // Determine center channel if needed
         int center_ch = ev.center_channel.value_or(selected_channels[0]);
         if (!ev.center_channel.has_value() || filter_primary) {
             float max_energy = 0.0f;
@@ -159,49 +146,91 @@ std::shared_ptr<TensorData> extractWaveformSnippetsImpl(
             }
         }
 
-        // Apply primary channel filter if requested
         if (filter_primary && selected_channel_set.find(center_ch) == selected_channel_set.end()) {
-            continue;// Primary channel is outside selected subset
+            continue;
         }
 
-        // Compute aligned sample center
-        int64_t aligned_sample = sample_idx;
-        float const * center_col = mat.colptr(static_cast<size_t>(center_ch));
+        candidates.push_back(CandidateEvent{
+                .timestamp = ev.timestamp,
+                .sample_idx = sample_idx,
+                .center_channel = center_ch,
+        });
+    }
+
+    if (candidates.empty()) {
+        ctx.reportProgress(100);
+        return std::make_shared<TensorData>();
+    }
+
+    // Optional IterativeTemplateFit pre-pass
+    std::vector<int64_t> aligned_sample_indices(candidates.size());
+    for (size_t i = 0; i < candidates.size(); ++i) {
+        aligned_sample_indices[i] = candidates[i].sample_idx;
+    }
+
+    if (align_mode == WaveformAlignmentMode::IterativeTemplateFit) {
+        TemplateRealignerParams realign_params{
+                .w_pre = w_pre,
+                .w_post = w_post,
+                .search_window = search_samples,
+                .max_iterations = 3,
+                .sinc_sub_divisions = 8,
+                .sinc_kernel_half_width = 8,
+        };
+        aligned_sample_indices = MultichannelTemplateRealigner::realignEventsDiscrete(
+                mat, aligned_sample_indices, selected_channels, realign_params);
+    }
+
+    for (size_t i = 0; i < candidates.size(); ++i) {
+        if (i % 500 == 0) {
+            if (ctx.shouldCancel()) {
+                return std::make_shared<TensorData>();
+            }
+            int const pct = static_cast<int>((static_cast<double>(i) / static_cast<double>(candidates.size())) * 90.0);
+            ctx.reportProgress(pct);
+        }
+
+        auto const & cand = candidates[i];
+        int64_t const initial_sample = aligned_sample_indices[i];
+        int64_t aligned_sample = initial_sample;
+        float const * center_col = mat.colptr(static_cast<size_t>(cand.center_channel));
 
         if (align_mode == WaveformAlignmentMode::LocalNegativeTrough) {
             float min_v = std::numeric_limits<float>::infinity();
-            int64_t min_t = sample_idx;
-            for (int k = -w_pre; k <= w_post; ++k) {
-                float const v = center_col[sample_idx + k];
+            int64_t min_t = initial_sample;
+            int64_t const k_start = std::max(int64_t{0}, initial_sample - search_samples);
+            int64_t const k_end = std::min(static_cast<int64_t>(total_samples) - 1, initial_sample + search_samples);
+            for (int64_t t = k_start; t <= k_end; ++t) {
+                float const v = center_col[t];
                 if (v < min_v) {
                     min_v = v;
-                    min_t = sample_idx + k;
+                    min_t = t;
                 }
             }
             aligned_sample = min_t;
         } else if (align_mode == WaveformAlignmentMode::LocalPositivePeak) {
             float max_v = -std::numeric_limits<float>::infinity();
-            int64_t max_t = sample_idx;
-            for (int k = -w_pre; k <= w_post; ++k) {
-                float const v = center_col[sample_idx + k];
+            int64_t max_t = initial_sample;
+            int64_t const k_start = std::max(int64_t{0}, initial_sample - search_samples);
+            int64_t const k_end = std::min(static_cast<int64_t>(total_samples) - 1, initial_sample + search_samples);
+            for (int64_t t = k_start; t <= k_end; ++t) {
+                float const v = center_col[t];
                 if (v > max_v) {
                     max_v = v;
-                    max_t = sample_idx + k;
+                    max_t = t;
                 }
             }
             aligned_sample = max_t;
         } else if (align_mode == WaveformAlignmentMode::SincSubSampleCOG) {
-            float sum_weighted_t = 0.0f;
-            float sum_v2 = 0.0f;
-            for (int k = -w_pre; k <= w_post; ++k) {
-                float const v = center_col[sample_idx + k];
-                float const v2 = v * v;
-                sum_weighted_t += static_cast<float>(sample_idx + k) * v2;
-                sum_v2 += v2;
-            }
-            if (sum_v2 > 1e-9f) {
-                aligned_sample = static_cast<int64_t>(std::round(sum_weighted_t / sum_v2));
-            }
+            std::span<float const> const center_span(center_col, total_samples);
+            double const continuous_cog = CoreMath::SincInterpolator::findSubSampleEnergyCentroid(
+                    center_span, static_cast<int>(initial_sample), search_samples);
+            aligned_sample = static_cast<int64_t>(std::round(continuous_cog));
+        } else if (align_mode == WaveformAlignmentMode::SincSubSampleTrough) {
+            std::span<float const> const center_span(center_col, total_samples);
+            auto const [sub_t, _] = CoreMath::SincInterpolator::findSubSampleExtremum(
+                    center_span, static_cast<int>(initial_sample), true, search_samples);
+            aligned_sample = static_cast<int64_t>(std::round(sub_t));
         }
 
         // Re-check boundaries after alignment
@@ -217,7 +246,7 @@ std::shared_ptr<TensorData> extractWaveformSnippetsImpl(
             }
         }
 
-        accepted_timestamps.push_back(ev.timestamp);
+        accepted_timestamps.push_back(cand.timestamp);
     }
 
     if (ctx.shouldCancel()) {
@@ -231,6 +260,16 @@ std::shared_ptr<TensorData> extractWaveformSnippetsImpl(
         return std::make_shared<TensorData>();
     }
 
+    // Generate column labels: "ch01_-0.500ms", ...
+    std::vector<std::string> col_labels;
+    col_labels.reserve(num_feature_cols);
+    for (int const ch: selected_channels) {
+        for (int k = -w_pre; k <= w_post; ++k) {
+            float const offset_ms = (static_cast<float>(k) / sr) * 1000.0f;
+            col_labels.push_back(formatColumnName(ch, offset_ms));
+        }
+    }
+
     auto out_time_storage = std::make_shared<SparseTimeIndexStorage>(std::move(accepted_timestamps));
     auto out_tensor = std::make_shared<TensorData>(
             TensorData::createTimeSeries2D(
@@ -239,7 +278,7 @@ std::shared_ptr<TensorData> extractWaveformSnippetsImpl(
                     num_feature_cols,
                     out_time_storage,
                     voltage_data.getTimeFrame(),
-                    std::move(column_names)));
+                    std::move(col_labels)));
 
     ctx.reportProgress(100);
     return out_tensor;
@@ -253,28 +292,22 @@ std::shared_ptr<TensorData> extractSpikeWaveforms(
         SpikeWaveformExtractionParams const & params,
         ComputeContext const & ctx) {
 
-    size_t const num_events = event_series.size();
-    if (num_events == 0) {
-        ctx.reportProgress(100);
+    auto const n_events = event_series.size();
+    if (n_events == 0) {
         return std::make_shared<TensorData>();
     }
 
-    std::vector<detail::SpikeEventDescriptor> event_descriptors;
-    event_descriptors.reserve(num_events);
-
-    for (size_t i = 0; i < num_events; ++i) {
-        event_descriptors.push_back(detail::SpikeEventDescriptor{
+    std::vector<detail::SpikeEventDescriptor> events;
+    events.reserve(n_events);
+    for (size_t i = 0; i < n_events; ++i) {
+        events.push_back(detail::SpikeEventDescriptor{
                 .timestamp = event_series.getStoredEvent(i),
                 .center_channel = std::nullopt,
                 .peak_amplitude = std::nullopt,
         });
     }
 
-    return detail::extractWaveformSnippetsImpl(
-            voltage_data,
-            event_descriptors,
-            params,
-            ctx);
+    return detail::extractWaveformSnippetsImpl(voltage_data, events, params, ctx);
 }
 
 }// namespace Neuralyzer::Transforms::V2

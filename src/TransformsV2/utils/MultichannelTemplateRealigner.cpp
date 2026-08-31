@@ -67,7 +67,7 @@ MultichannelTemplate MultichannelTemplateRealigner::computeTemplate(
     return tmpl;
 }
 
-float MultichannelTemplateRealigner::computeRmsError(
+float MultichannelTemplateRealigner::computeCrossCorrelation(
         arma::fmat const & voltage_matrix,
         int64_t event_sample_index,
         int shift_offset,
@@ -78,14 +78,13 @@ float MultichannelTemplateRealigner::computeRmsError(
     int const w_pre = tmpl.w_pre;
     int const w_post = tmpl.w_post;
     size_t const num_ch = selected_channels.size();
-    size_t const num_pts = tmpl.num_points;
     int64_t const total_samples = static_cast<int64_t>(voltage_matrix.n_rows);
 
     if (shifted_center < w_pre || shifted_center + w_post >= total_samples) {
-        return std::numeric_limits<float>::infinity();
+        return -std::numeric_limits<float>::infinity();
     }
 
-    double sum_sq_diff = 0.0;
+    double sum_dot = 0.0;
 
     for (size_t c_idx = 0; c_idx < num_ch; ++c_idx) {
         int const ch = selected_channels[c_idx];
@@ -94,17 +93,11 @@ float MultichannelTemplateRealigner::computeRmsError(
 
         for (int dt = -w_pre; dt <= w_post; ++dt) {
             size_t const pt_idx = static_cast<size_t>(dt + w_pre);
-            double const diff = static_cast<double>(col[shifted_center + dt]) - static_cast<double>(tmpl_col[pt_idx]);
-            sum_sq_diff += diff * diff;
+            sum_dot += static_cast<double>(col[shifted_center + dt]) * static_cast<double>(tmpl_col[pt_idx]);
         }
     }
 
-    size_t const total_elements = num_ch * num_pts;
-    if (total_elements == 0) {
-        return 0.0f;
-    }
-
-    return static_cast<float>(std::sqrt(sum_sq_diff / static_cast<double>(total_elements)));
+    return static_cast<float>(sum_dot);
 }
 
 int MultichannelTemplateRealigner::findOptimalDiscreteShift(
@@ -115,13 +108,13 @@ int MultichannelTemplateRealigner::findOptimalDiscreteShift(
         int search_window) noexcept {
 
     int best_shift = 0;
-    float min_rms = std::numeric_limits<float>::infinity();
+    float max_score = -std::numeric_limits<float>::infinity();
 
     for (int shift = -search_window; shift <= search_window; ++shift) {
-        float const rms = computeRmsError(
+        float const score = computeCrossCorrelation(
                 voltage_matrix, event_sample_index, shift, selected_channels, tmpl);
-        if (rms < min_rms) {
-            min_rms = rms;
+        if (score > max_score) {
+            max_score = score;
             best_shift = shift;
         }
     }
@@ -151,14 +144,13 @@ double MultichannelTemplateRealigner::findOptimalSubSampleShift(
     int const w_pre = tmpl.w_pre;
     int const w_post = tmpl.w_post;
     size_t const num_ch = selected_channels.size();
-    size_t const num_pts = tmpl.num_points;
     int64_t const total_samples = static_cast<int64_t>(voltage_matrix.n_rows);
 
     double best_continuous_shift = static_cast<double>(best_discrete);
-    double min_rms = std::numeric_limits<double>::infinity();
+    double max_score = -std::numeric_limits<double>::infinity();
 
     for (double shift = start_shift; shift <= end_shift; shift += step) {
-        double sum_sq_diff = 0.0;
+        double sum_dot = 0.0;
         bool valid = true;
 
         for (size_t c_idx = 0; c_idx < num_ch; ++c_idx) {
@@ -176,18 +168,14 @@ double MultichannelTemplateRealigner::findOptimalSubSampleShift(
                 float const interp_val = CoreMath::SincInterpolator::interpolateAt(
                         col_span, sample_pos, kernel_half_width, CoreMath::SincWindowType::Hann);
                 size_t const pt_idx = static_cast<size_t>(dt + w_pre);
-                double const diff = static_cast<double>(interp_val) - static_cast<double>(tmpl_col[pt_idx]);
-                sum_sq_diff += diff * diff;
+                sum_dot += static_cast<double>(interp_val) * static_cast<double>(tmpl_col[pt_idx]);
             }
             if (!valid) break;
         }
 
-        if (valid) {
-            double const rms = std::sqrt(sum_sq_diff / static_cast<double>(num_ch * num_pts));
-            if (rms < min_rms) {
-                min_rms = rms;
-                best_continuous_shift = shift;
-            }
+        if (valid && sum_dot > max_score) {
+            max_score = sum_dot;
+            best_continuous_shift = shift;
         }
     }
 

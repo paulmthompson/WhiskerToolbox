@@ -103,6 +103,15 @@ struct SwindaleEventDetectionParams {
 
     /// Explicit probe channel coordinates in micrometers (used when probe_config_path is empty)
     std::vector<ChannelPosition2D> channel_positions{};
+
+    /// Enable iterative multichannel template realignment on detected spike clusters (matches SpikeSorter)
+    bool enable_template_realignment{true};
+
+    /// Maximum search window width in milliseconds for template alignment (default: 0.50 ms = 15 samples @ 30 kHz)
+    rfl::Validator<float, rfl::Minimum<0.05f>, rfl::Maximum<2.0f>> template_search_window_ms{0.50f};
+
+    /// Maximum Expectation-Maximization iterations for template realignment (default: 3)
+    rfl::Validator<int, rfl::Minimum<1>, rfl::Maximum<10>> template_max_iterations{3};
 };
 
 /**
@@ -130,6 +139,15 @@ struct ParameterUIHints<Neuralyzer::Transforms::V2::SwindaleEventDetectionParams
             f->path_field_kind = PathFieldKind::FilePath;
             f->file_dialog_id = "swindale_probe_cfg_open";
             f->tooltip = "Path to SpikeSorter electrode configuration file (.cfg) specifying probe geometry (e.g. electrode.cfg)";
+        }
+        if (auto * f = schema.field("enable_template_realignment")) {
+            f->tooltip = "Enable iterative multichannel template realignment to refine spike times against cluster mean waveforms (matches SpikeSorter)";
+        }
+        if (auto * f = schema.field("template_search_window_ms")) {
+            f->tooltip = "Maximum temporal search shift in milliseconds for template realignment (default: 0.50 ms)";
+        }
+        if (auto * f = schema.field("template_max_iterations")) {
+            f->tooltip = "Maximum Expectation-Maximization iterations for template realignment (default: 3)";
         }
         if (auto * f = schema.field("method")) {
             f->tooltip = "Stage 1 candidate proto-event detection method (DynamicMultiphasic recommended for extracellular APs)";

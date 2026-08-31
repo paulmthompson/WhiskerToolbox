@@ -5,10 +5,10 @@
  * @file MultichannelTemplateRealigner.hpp
  * @brief High-performance modular engine for spatio-temporal template calculation and iterative waveform realignment.
  *
- * Implements Expectation-Maximization (EM) template realignment:
+ * Implements Expectation-Maximization (EM) template realignment matching SpikeSorter:
  * 1. M-Step: Compute multichannel spatio-temporal cluster mean template T(c, τ)
- * 2. E-Step: Slide each event within [-W_search, +W_search] to minimize multichannel RMS error
- * 3. Iterate until shifts converge to 0 (reproducing SpikeSorter's template realignment behavior).
+ * 2. E-Step: Slide each event within [-W_search, +W_search] to maximize template goodness-of-fit / cross-correlation
+ * 3. Iterate until shifts converge to 0.
  */
 
 #include "CoreMath/sinc_interpolation.hpp"
@@ -46,7 +46,7 @@ struct MultichannelTemplate {
 struct TemplateRealignerParams {
     int w_pre{10};                  ///< Pre-peak window in samples (e.g. 0.33 ms @ 30 kHz)
     int w_post{21};                 ///< Post-peak window in samples (e.g. 0.70 ms @ 30 kHz)
-    int search_window{8};           ///< Maximum search range (+/- samples) for shifting
+    int search_window{15};          ///< Maximum search range (+/- samples, e.g. 15 samples = +/- 0.5 ms @ 30 kHz)
     int max_iterations{5};          ///< Maximum Expectation-Maximization iterations
     int sinc_sub_divisions{8};      ///< Sub-divisions per sample for sub-sample search
     int sinc_kernel_half_width{8};  ///< Sinc interpolation kernel half width
@@ -78,16 +78,16 @@ public:
             int w_post);
 
     /**
-     * @brief Compute multichannel RMS error between a candidate shifted event and the template.
+     * @brief Compute multichannel template cross-correlation / goodness-of-fit.
      *
      * @param voltage_matrix Continuous voltage matrix
      * @param event_sample_index Center sample index
      * @param shift_offset Shift offset in samples
      * @param selected_channels Channel indices
      * @param tmpl Multichannel template
-     * @return Root-mean-square difference
+     * @return Inner product sum V * T
      */
-    [[nodiscard]] static float computeRmsError(
+    [[nodiscard]] static float computeCrossCorrelation(
             arma::fmat const & voltage_matrix,
             int64_t event_sample_index,
             int shift_offset,
@@ -95,7 +95,7 @@ public:
             MultichannelTemplate const & tmpl) noexcept;
 
     /**
-     * @brief Find optimal integer shift that minimizes multichannel RMS error against template.
+     * @brief Find optimal integer shift that maximizes multichannel goodness-of-fit against template.
      *
      * @param voltage_matrix Continuous voltage matrix
      * @param event_sample_index Center sample index

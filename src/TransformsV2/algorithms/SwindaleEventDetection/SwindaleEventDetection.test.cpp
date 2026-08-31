@@ -140,5 +140,26 @@ TEST_CASE("SwindaleEventDetectionParams extracts valid schema with FilePath hint
     auto const * method_field = schema.field("method");
     REQUIRE(method_field != nullptr);
     REQUIRE(!method_field->tooltip.empty());
+
+    auto const * tmpl_field = schema.field("enable_template_realignment");
+    REQUIRE(tmpl_field != nullptr);
+}
+
+TEST_CASE("SwindaleEventDetection with template realignment refines timestamps", "[TransformsV2][SwindaleEventDetection]") {
+    size_t const num_samples = 1000;
+    size_t const num_channels = 2;
+    std::vector<size_t> const spike_times = {200, 500, 800};
+
+    auto const tensor = createSyntheticMultiChannelRecording(num_samples, num_channels, spike_times);
+
+    Neuralyzer::Transforms::V2::SwindaleEventDetectionParams params;
+    params.enable_template_realignment = true;
+    params.threshold_multiplier = 4.0f;
+
+    Neuralyzer::Transforms::V2::ComputeContext ctx;
+    auto const events = Neuralyzer::Transforms::V2::swindaleEventDetection(*tensor, params, ctx);
+
+    REQUIRE(events != nullptr);
+    REQUIRE(events->size() == 3);
 }
 

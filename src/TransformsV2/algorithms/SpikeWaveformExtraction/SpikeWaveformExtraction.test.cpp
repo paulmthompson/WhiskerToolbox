@@ -139,4 +139,37 @@ TEST_CASE("SpikeWaveformExtractionParams schema extraction", "[TransformsV2][Spi
 
     auto const * ch_field = schema.field("channels_of_interest");
     REQUIRE(ch_field != nullptr);
+
+    auto const * align_field = schema.field("alignment_mode");
+    REQUIRE(align_field != nullptr);
+}
+
+TEST_CASE("SpikeWaveformExtraction with IterativeTemplateFit aligns jittered spikes", "[TransformsV2][SpikeWaveformExtraction]") {
+    size_t const num_samples = 1000;
+    size_t const num_channels = 2;
+    std::vector<std::pair<size_t, int>> const spikes = {
+            {200, 0},
+            {400, 0},
+            {600, 0}};
+
+    auto const voltage = createSyntheticVoltageData(num_samples, num_channels, spikes);
+
+    // Jittered events: 202, 398, 600
+    std::vector<TimeFrameIndex> event_times = {
+            TimeFrameIndex{202},
+            TimeFrameIndex{398},
+            TimeFrameIndex{600}};
+    DigitalEventSeries event_series(event_times);
+
+    Neuralyzer::Transforms::V2::SpikeWaveformExtractionParams params;
+    params.pre_window_ms = 0.33f;
+    params.post_window_ms = 0.70f;
+    params.alignment_mode = Neuralyzer::Transforms::V2::WaveformAlignmentMode::IterativeTemplateFit;
+
+    Neuralyzer::Transforms::V2::ComputeContext ctx;
+    auto const waveforms = Neuralyzer::Transforms::V2::extractSpikeWaveforms(
+            *voltage, event_series, params, ctx);
+
+    REQUIRE(waveforms != nullptr);
+    REQUIRE(waveforms->numRows() == 3);
 }

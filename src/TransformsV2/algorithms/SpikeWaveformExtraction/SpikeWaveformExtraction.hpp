@@ -32,11 +32,12 @@ struct ComputeContext;
  * @brief Alignment mode for extracted spike waveform snippets.
  */
 enum class WaveformAlignmentMode {
-    OriginalEventTime,  ///< Extract directly around the input discrete event timestamp
-    LocalNegativeTrough,///< Re-align to discrete local minimum on center channel
-    LocalPositivePeak,  ///< Re-align to discrete local maximum on center channel
-    SincSubSampleCOG,   ///< Sub-sample continuous V^2 energy centroid alignment
-    SincSubSampleTrough ///< Sub-sample continuous trough alignment
+    OriginalEventTime,   ///< Extract directly around the input discrete event timestamp
+    LocalNegativeTrough, ///< Re-align to discrete local minimum on center channel
+    LocalPositivePeak,   ///< Re-align to discrete local maximum on center channel
+    SincSubSampleCOG,    ///< Sub-sample continuous V^2 energy centroid alignment
+    SincSubSampleTrough, ///< Sub-sample continuous trough alignment
+    IterativeTemplateFit ///< Sub-sample iterative multichannel template alignment
 };
 
 /**
@@ -57,6 +58,9 @@ struct SpikeWaveformExtractionParams {
 
     /// Waveform snippet alignment method
     WaveformAlignmentMode alignment_mode{WaveformAlignmentMode::OriginalEventTime};
+
+    /// Maximum search window width in milliseconds for template / peak alignment (default: 0.50 ms = 15 samples @ 30 kHz)
+    rfl::Validator<float, rfl::Minimum<0.05f>, rfl::Maximum<2.0f>> search_window_ms{0.50f};
 
     /// Sinc interpolation upsampling factor (used when sub-sample alignment is enabled)
     rfl::Validator<int, rfl::Minimum<1>, rfl::Maximum<32>> sinc_upsample_factor{4};

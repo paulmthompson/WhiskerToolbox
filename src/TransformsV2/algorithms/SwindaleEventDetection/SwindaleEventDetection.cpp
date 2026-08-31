@@ -10,6 +10,7 @@
 #include "Tensors/RowDescriptor.hpp"
 #include "Tensors/TensorData.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"
+#include "TransformsV2/utils/MultichannelTemplateRealigner.hpp"
 #include "core/ComputeContext.hpp"
 
 #include <armadillo>
@@ -181,8 +182,13 @@ std::shared_ptr<DigitalEventSeries> swindaleEventDetection(
     int64_t const chunk_size = std::max(int64_t{30000}, static_cast<int64_t>(sr * 10.0f));// 10 seconds per chunk
     int64_t const overlap = std::max(int64_t{300}, static_cast<int64_t>(std::ceil(sigma_t_samples * 4.0f)));
 
-    std::vector<int64_t> final_event_samples;
-    final_event_samples.reserve(total_samples / 50);
+    struct DetectedClusterEvent {
+        int64_t sample_idx{0};
+        int center_channel{0};
+    };
+
+    std::vector<DetectedClusterEvent> raw_cluster_events;
+    raw_cluster_events.reserve(total_samples / 50);
 
     for (int64_t chunk_start = 0; chunk_start < static_cast<int64_t>(total_samples); chunk_start += chunk_size) {
         if (ctx.shouldCancel()) {
@@ -386,12 +392,64 @@ std::shared_ptr<DigitalEventSeries> swindaleEventDetection(
 
             // Only accept events whose aligned timestamp is within the non-overlapping chunk boundary
             if (aligned_t < valid_boundary) {
-                final_event_samples.push_back(aligned_t);
+                raw_cluster_events.push_back(DetectedClusterEvent{
+                        .sample_idx = aligned_t,
+                        .center_channel = center_channel,
+                });
             }
         }
 
-        int const pct = static_cast<int>((static_cast<double>(chunk_end) / static_cast<double>(total_samples)) * 90.0);
+        int const pct = static_cast<int>((static_cast<double>(chunk_end) / static_cast<double>(total_samples)) * 80.0);
         ctx.reportProgress(5 + pct);
+    }
+
+    // 3. Multichannel Template Realignment pass (matches SpikeSorter)
+    std::vector<int64_t> final_event_samples;
+    final_event_samples.reserve(raw_cluster_events.size());
+
+    if (params.enable_template_realignment && !raw_cluster_events.empty()) {
+        std::vector<std::vector<int64_t>> events_by_ch(num_channels);
+        for (auto const & ev: raw_cluster_events) {
+            if (ev.center_channel >= 0 && static_cast<size_t>(ev.center_channel) < num_channels) {
+                events_by_ch[static_cast<size_t>(ev.center_channel)].push_back(ev.sample_idx);
+            }
+        }
+
+        int const template_w_pre = std::max(5, static_cast<int>(std::round(0.33f / 1000.0f * sr)));
+        int const template_w_post = std::max(10, static_cast<int>(std::round(0.70f / 1000.0f * sr)));
+        int const search_samples = std::max(2, static_cast<int>(std::round((params.template_search_window_ms.value() / 1000.0f) * sr)));
+        TemplateRealignerParams realign_params{
+                .w_pre = template_w_pre,
+                .w_post = template_w_post,
+                .search_window = search_samples,
+                .max_iterations = params.template_max_iterations.value(),
+                .sinc_sub_divisions = 8,
+                .sinc_kernel_half_width = 8,
+        };
+
+        for (size_t c = 0; c < num_channels; ++c) {
+            if (events_by_ch[c].empty()) {
+                continue;
+            }
+            std::vector<int> neighbor_channels;
+            for (size_t k = 0; k < num_channels; ++k) {
+                if (dist_matrix[c][k] <= sigma_spatial_um) {
+                    neighbor_channels.push_back(static_cast<int>(k));
+                }
+            }
+            if (neighbor_channels.empty()) {
+                neighbor_channels.push_back(static_cast<int>(c));
+            }
+
+            auto realigned = MultichannelTemplateRealigner::realignEventsDiscrete(
+                    mat, events_by_ch[c], neighbor_channels, realign_params);
+
+            final_event_samples.insert(final_event_samples.end(), realigned.begin(), realigned.end());
+        }
+    } else {
+        for (auto const & ev: raw_cluster_events) {
+            final_event_samples.push_back(ev.sample_idx);
+        }
     }
 
     // 4. Convert sample timestamps to TimeFrameIndex via RowDescriptor / TimeIndexStorage
