@@ -369,6 +369,13 @@ void DataViewer_Widget::setState(std::shared_ptr<DataViewerState> state) {
         return;// Don't accept null state
     }
 
+    // Disconnect the axis widget from the current state's axis while _state is still alive.
+    // create_editor_custom calls setState immediately after construction; without this,
+    // replacing _state destroys MultiLaneVerticalAxisState before disconnect runs.
+    if (_multi_lane_axis_widget) {
+        _multi_lane_axis_widget->setState(nullptr);
+    }
+
     _state = std::move(state);
 
     // Share with OpenGLWidget

@@ -67,7 +67,7 @@ public:
      *
      * Disconnects from the previous state and reconnects to the new one.
      *
-     * @param state New state object (non-owning)
+     * @param state New state object (non-owning), or @c nullptr to disconnect only
      */
     void setState(MultiLaneVerticalAxisState * state);
 
