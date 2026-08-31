@@ -129,6 +129,8 @@ set(TRANSFORM_V2_SOURCES
         utils/NaNPolicy.hpp
         utils/DimReductionOutputBuilder.hpp
         utils/DimReductionOutputBuilder.cpp
+        utils/MultichannelTemplateRealigner.hpp
+        utils/MultichannelTemplateRealigner.cpp
         algorithms/RangeReductions/EventRangeReductions.hpp
         algorithms/RangeReductions/IntervalRangeReductions.hpp
         algorithms/RangeReductions/ValueRangeReductions.hpp

@@ -76,6 +76,7 @@ add_executable(test_TransformsV2
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/TensorWhitening/TensorWhitening.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/SwindaleEventDetection/SwindaleEventDetection.test.cpp
     ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/SpikeWaveformExtraction/SpikeWaveformExtraction.test.cpp
+    ${CMAKE_SOURCE_DIR}/tests/TransformsV2/MultichannelTemplateRealigner.test.cpp
 
     ${CMAKE_SOURCE_DIR}/tests/shared/RegisterCommandsListener.cpp
 
