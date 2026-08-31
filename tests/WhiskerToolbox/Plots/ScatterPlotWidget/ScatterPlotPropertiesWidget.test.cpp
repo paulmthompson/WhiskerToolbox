@@ -11,19 +11,20 @@
  */
 
 #include "UI/ScatterPlotPropertiesWidget.hpp"
-#include "Core/ScatterPlotState.hpp"
+#include "Common/ScrollableComboBox.hpp"
 #include "Core/ScatterAxisSource.hpp"
+#include "Core/ScatterPlotState.hpp"
 
-#include "DataManager/DataManager.hpp"
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
+#include "DataManager/DataManager.hpp"
 #include "Tensors/TensorData.hpp"
+#include "TimeFrame/StrongTimeTypes.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"
-#include "TimeFrame/StrongTimeTypes.hpp"
 
-#include <catch2/catch_test_macros.hpp>
 #include <QApplication>
 #include <QComboBox>
+#include <catch2/catch_test_macros.hpp>
 
 #include <memory>
 #include <string>
@@ -35,8 +36,7 @@
 
 namespace {
 
-std::shared_ptr<TimeFrame> createTestTimeFrame()
-{
+std::shared_ptr<TimeFrame> createTestTimeFrame() {
     std::vector<int> times;
     times.reserve(1000);
     for (int i = 0; i < 1000; ++i) {
@@ -45,35 +45,31 @@ std::shared_ptr<TimeFrame> createTestTimeFrame()
     return std::make_shared<TimeFrame>(times);
 }
 
-std::shared_ptr<DataManager> createDataManager()
-{
+std::shared_ptr<DataManager> createDataManager() {
     auto dm = std::make_shared<DataManager>();
     auto tf = createTestTimeFrame();
     dm->setTime(TimeKey("time"), tf);
     return dm;
 }
 
-void addAnalogTimeSeries(DataManager & dm, std::string const & key)
-{
+void addAnalogTimeSeries(DataManager & dm, std::string const & key) {
     std::vector<float> values(100, 1.0f);
     auto ats = std::make_shared<AnalogTimeSeries>(values, values.size());
     ats->setTimeFrame(dm.getTime(TimeKey("time")));
     dm.setData<AnalogTimeSeries>(key, ats, TimeKey("time"));
 }
 
-void addTensorData(DataManager & dm, std::string const & key)
-{
+void addTensorData(DataManager & dm, std::string const & key) {
     std::vector<float> data(100, 2.0f);
     auto ts = TimeIndexStorageFactory::createDenseFromZero(100);
     auto tf = dm.getTime(TimeKey("time"));
     auto tensor = std::make_shared<TensorData>(
-        TensorData::createTimeSeries2D(data, 100, 1, ts, tf, {"col_0"}));
+            TensorData::createTimeSeries2D(data, 100, 1, ts, tf, {"col_0"}));
     dm.setData<TensorData>(key, tensor, TimeKey("time"));
 }
 
 /// Find X key combo box
-QComboBox * findXKeyCombo(ScatterPlotPropertiesWidget * widget)
-{
+QComboBox * findXKeyCombo(ScatterPlotPropertiesWidget * widget) {
     // The x_key_combo is a private member, but we can find it via objectName
     // or by traversing children. We need to ensure it's findable.
     // The widget creates _x_key_combo without setting objectName, so we search
@@ -84,16 +80,14 @@ QComboBox * findXKeyCombo(ScatterPlotPropertiesWidget * widget)
 }
 
 /// Find Y key combo box
-QComboBox * findYKeyCombo(ScatterPlotPropertiesWidget * widget)
-{
+QComboBox * findYKeyCombo(ScatterPlotPropertiesWidget * widget) {
     auto combos = widget->findChildren<QComboBox *>();
     // Y key combo is the third (after X key and X column)
     return combos.size() >= 3 ? combos[2] : nullptr;
 }
 
 /// Check if combo contains a key (with either ATS or Tensor prefix)
-bool comboContainsKey(QComboBox * combo, std::string const & key)
-{
+bool comboContainsKey(QComboBox * combo, std::string const & key) {
     if (!combo) {
         return false;
     }
@@ -102,19 +96,17 @@ bool comboContainsKey(QComboBox * combo, std::string const & key)
     return combo->findText(ats_text) >= 0 || combo->findText(td_text) >= 0;
 }
 
-}  // namespace
+}// namespace
 
 // =============================================================================
 // Tests
 // =============================================================================
 
-TEST_CASE("ScatterPlotPropertiesWidget combo box population", "[ScatterPlotPropertiesWidget]")
-{
+TEST_CASE("ScatterPlotPropertiesWidget combo box population", "[ScatterPlotPropertiesWidget]") {
     int argc = 0;
     QApplication app(argc, nullptr);
 
-    SECTION("empty combo boxes when no data available")
-    {
+    SECTION("empty combo boxes when no data available") {
         auto dm = createDataManager();
         auto state = std::make_shared<ScatterPlotState>();
 
@@ -127,8 +119,7 @@ TEST_CASE("ScatterPlotPropertiesWidget combo box population", "[ScatterPlotPrope
         REQUIRE(x_combo->itemText(0).isEmpty());
     }
 
-    SECTION("combo boxes populated with AnalogTimeSeries keys")
-    {
+    SECTION("combo boxes populated with AnalogTimeSeries keys") {
         auto dm = createDataManager();
         addAnalogTimeSeries(*dm, "signal_1");
         addAnalogTimeSeries(*dm, "signal_2");
@@ -144,8 +135,7 @@ TEST_CASE("ScatterPlotPropertiesWidget combo box population", "[ScatterPlotPrope
         REQUIRE(comboContainsKey(x_combo, "signal_2"));
     }
 
-    SECTION("combo boxes populated with TensorData keys")
-    {
+    SECTION("combo boxes populated with TensorData keys") {
         auto dm = createDataManager();
         addTensorData(*dm, "tensor_1");
         addTensorData(*dm, "tensor_2");
@@ -161,8 +151,7 @@ TEST_CASE("ScatterPlotPropertiesWidget combo box population", "[ScatterPlotPrope
         REQUIRE(comboContainsKey(x_combo, "tensor_2"));
     }
 
-    SECTION("combo boxes populated with mixed ATS and TensorData keys")
-    {
+    SECTION("combo boxes populated with mixed ATS and TensorData keys") {
         auto dm = createDataManager();
         addAnalogTimeSeries(*dm, "analog");
         addTensorData(*dm, "tensor");
@@ -177,15 +166,27 @@ TEST_CASE("ScatterPlotPropertiesWidget combo box population", "[ScatterPlotPrope
         REQUIRE(comboContainsKey(x_combo, "analog"));
         REQUIRE(comboContainsKey(x_combo, "tensor"));
     }
+
+    SECTION("axis key combos use scroll-limited popups") {
+        auto dm = createDataManager();
+        auto state = std::make_shared<ScatterPlotState>();
+        ScatterPlotPropertiesWidget widget(state, dm);
+
+        auto * x_combo = findXKeyCombo(&widget);
+        auto * y_combo = findYKeyCombo(&widget);
+        REQUIRE(x_combo != nullptr);
+        REQUIRE(y_combo != nullptr);
+        REQUIRE(x_combo->maxVisibleItems() == wt::widget::kDefaultComboMaxVisibleItems);
+        REQUIRE(y_combo->maxVisibleItems() == wt::widget::kDefaultComboMaxVisibleItems);
+        REQUIRE(x_combo->styleSheet().contains(QStringLiteral("combobox-popup: 0")));
+    }
 }
 
-TEST_CASE("ScatterPlotPropertiesWidget DataManager observer", "[ScatterPlotPropertiesWidget]")
-{
+TEST_CASE("ScatterPlotPropertiesWidget DataManager observer", "[ScatterPlotPropertiesWidget]") {
     int argc = 0;
     QApplication app(argc, nullptr);
 
-    SECTION("observer refresh on data add")
-    {
+    SECTION("observer refresh on data add") {
         auto dm = createDataManager();
         auto state = std::make_shared<ScatterPlotState>();
 
@@ -203,8 +204,7 @@ TEST_CASE("ScatterPlotPropertiesWidget DataManager observer", "[ScatterPlotPrope
         REQUIRE(comboContainsKey(x_combo, "new_signal"));
     }
 
-    SECTION("observer refresh on data remove")
-    {
+    SECTION("observer refresh on data remove") {
         auto dm = createDataManager();
         addAnalogTimeSeries(*dm, "to_remove");
         addAnalogTimeSeries(*dm, "to_keep");
@@ -224,8 +224,7 @@ TEST_CASE("ScatterPlotPropertiesWidget DataManager observer", "[ScatterPlotPrope
         REQUIRE(comboContainsKey(x_combo, "to_keep"));
     }
 
-    SECTION("observer cleaned up on destruction - no crash")
-    {
+    SECTION("observer cleaned up on destruction - no crash") {
         auto dm = createDataManager();
 
         {
@@ -240,17 +239,15 @@ TEST_CASE("ScatterPlotPropertiesWidget DataManager observer", "[ScatterPlotPrope
         addAnalogTimeSeries(*dm, "after_destroy");
         QApplication::processEvents();
 
-        REQUIRE(true);  // If we get here without crashing, test passes
+        REQUIRE(true);// If we get here without crashing, test passes
     }
 }
 
-TEST_CASE("ScatterPlotPropertiesWidget stale key handling", "[ScatterPlotPropertiesWidget]")
-{
+TEST_CASE("ScatterPlotPropertiesWidget stale key handling", "[ScatterPlotPropertiesWidget]") {
     int argc = 0;
     QApplication app(argc, nullptr);
 
-    SECTION("X source cleared when selected key is deleted")
-    {
+    SECTION("X source cleared when selected key is deleted") {
         auto dm = createDataManager();
         addAnalogTimeSeries(*dm, "signal");
 
@@ -276,8 +273,7 @@ TEST_CASE("ScatterPlotPropertiesWidget stale key handling", "[ScatterPlotPropert
         REQUIRE_FALSE(state->xSource().has_value());
     }
 
-    SECTION("Y source cleared when selected key is deleted")
-    {
+    SECTION("Y source cleared when selected key is deleted") {
         auto dm = createDataManager();
         addTensorData(*dm, "tensor");
 
@@ -304,8 +300,7 @@ TEST_CASE("ScatterPlotPropertiesWidget stale key handling", "[ScatterPlotPropert
         REQUIRE_FALSE(state->ySource().has_value());
     }
 
-    SECTION("other axis source preserved when only one key deleted")
-    {
+    SECTION("other axis source preserved when only one key deleted") {
         auto dm = createDataManager();
         addAnalogTimeSeries(*dm, "x_signal");
         addAnalogTimeSeries(*dm, "y_signal");
@@ -335,13 +330,11 @@ TEST_CASE("ScatterPlotPropertiesWidget stale key handling", "[ScatterPlotPropert
     }
 }
 
-TEST_CASE("ScatterPlotPropertiesWidget state synchronization", "[ScatterPlotPropertiesWidget]")
-{
+TEST_CASE("ScatterPlotPropertiesWidget state synchronization", "[ScatterPlotPropertiesWidget]") {
     int argc = 0;
     QApplication app(argc, nullptr);
 
-    SECTION("UI reflects state on construction")
-    {
+    SECTION("UI reflects state on construction") {
         auto dm = createDataManager();
         addAnalogTimeSeries(*dm, "preset_signal");
 
@@ -362,8 +355,7 @@ TEST_CASE("ScatterPlotPropertiesWidget state synchronization", "[ScatterPlotProp
         REQUIRE(x_combo->currentText().toStdString().find("preset_signal") != std::string::npos);
     }
 
-    SECTION("widget constructed with null DataManager does not crash")
-    {
+    SECTION("widget constructed with null DataManager does not crash") {
         auto state = std::make_shared<ScatterPlotState>();
         ScatterPlotPropertiesWidget widget(state, nullptr);
 

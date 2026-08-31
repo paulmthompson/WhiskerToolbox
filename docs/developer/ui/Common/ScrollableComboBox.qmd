@@ -1,0 +1,29 @@
+---
+title: "Scrollable Combo Box"
+format: html
+---
+
+`wt::widget::configureScrollableComboPopup()` configures a `QComboBox` so its dropdown is height-limited and scrollable.
+
+## Problem
+
+On Gtk+/Linux, non-editable `QComboBox` widgets use a native menu popup that ignores `maxVisibleItems`. With hundreds of data keys, the menu can extend beyond the screen.
+
+## Solution
+
+Call `configureScrollableComboPopup(combo)` after creating the combo. This:
+
+1. Sets `combobox-popup: 0` so Qt uses an internal `QListView` popup.
+2. Sets `maxVisibleItems` (default 15).
+3. Ensures the list view shows a vertical scrollbar when needed.
+
+## Usage
+
+```cpp
+#include "Common/ScrollableComboBox.hpp"
+
+auto * combo = new QComboBox();
+wt::widget::configureScrollableComboPopup(combo);
+```
+
+ScatterPlot axis and feature-key combos use this utility in `ScatterPlotPropertiesWidget`.

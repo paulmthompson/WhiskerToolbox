@@ -2,6 +2,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Collapsible_Widget/Section.hpp"
+#include "Common/ScrollableComboBox.hpp"
 #include "Core/ScatterAxisSource.hpp"
 #include "Core/ScatterColorConfig.hpp"
 #include "Core/ScatterPlotState.hpp"
@@ -78,7 +79,8 @@ ScatterPlotPropertiesWidget::ScatterPlotPropertiesWidget(std::shared_ptr<Scatter
         _dm_observer_id = _data_manager->addObserver([this]() {
             _populateKeyComboBoxes();
             _populateColorKeyCombo();
-        }, "ScatterPlotPropertiesWidget");
+        },
+                                                     "ScatterPlotPropertiesWidget");
     }
 
     if (_state) {
@@ -107,11 +109,13 @@ void ScatterPlotPropertiesWidget::_createDataSourceUI() {
 
     _x_key_combo = new QComboBox();
     _x_key_combo->setPlaceholderText("Select data source...");
+    wt::widget::configureScrollableComboPopup(_x_key_combo);
     form->addRow("Key:", _x_key_combo);
 
     _x_column_combo = new QComboBox();
     _x_column_combo->setPlaceholderText("Column");
     _x_column_combo->setVisible(false);
+    wt::widget::configureScrollableComboPopup(_x_column_combo);
     form->addRow("Column:", _x_column_combo);
 
     _x_offset_spin = new QSpinBox();
@@ -126,11 +130,13 @@ void ScatterPlotPropertiesWidget::_createDataSourceUI() {
 
     _y_key_combo = new QComboBox();
     _y_key_combo->setPlaceholderText("Select data source...");
+    wt::widget::configureScrollableComboPopup(_y_key_combo);
     form->addRow("Key:", _y_key_combo);
 
     _y_column_combo = new QComboBox();
     _y_column_combo->setPlaceholderText("Column");
     _y_column_combo->setVisible(false);
+    wt::widget::configureScrollableComboPopup(_y_column_combo);
     form->addRow("Column:", _y_column_combo);
 
     _y_offset_spin = new QSpinBox();
@@ -767,12 +773,14 @@ void ScatterPlotPropertiesWidget::_createPointColoringUI() {
     // --- Data Key (feature source) ---
     _color_key_combo = new QComboBox();
     _color_key_combo->setPlaceholderText("Select feature source...");
+    wt::widget::configureScrollableComboPopup(_color_key_combo);
     form->addRow("Data Key:", _color_key_combo);
 
     // --- Column (TensorData only) ---
     _color_column_label = new QLabel("Column:");
     _color_column_combo = new QComboBox();
     _color_column_combo->setPlaceholderText("Column");
+    wt::widget::configureScrollableComboPopup(_color_column_combo);
     form->addRow(_color_column_label, _color_column_combo);
 
     // --- Compatibility status ---
