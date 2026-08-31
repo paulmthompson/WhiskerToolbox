@@ -369,6 +369,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#pipeline-composition-ui-layer" id="toc-pipeline-composition-ui-layer" class="nav-link" data-scroll-target="#pipeline-composition-ui-layer">Pipeline composition (UI layer)</a></li>
   <li><a href="#stepconfigpanel-multiplexing-autoparamwidget" id="toc-stepconfigpanel-multiplexing-autoparamwidget" class="nav-link" data-scroll-target="#stepconfigpanel-multiplexing-autoparamwidget">StepConfigPanel — multiplexing AutoParamWidget</a></li>
   <li><a href="#type-chain-validation" id="toc-type-chain-validation" class="nav-link" data-scroll-target="#type-chain-validation">Type-chain validation</a></li>
+  <li><a href="#multi-input-transforms-option-a" id="toc-multi-input-transforms-option-a" class="nav-link" data-scroll-target="#multi-input-transforms-option-a">Multi-input transforms (Option A)</a></li>
   <li><a href="#ui-json-sync" id="toc-ui-json-sync" class="nav-link" data-scroll-target="#ui-json-sync">UI ↔︎ JSON sync</a></li>
   <li><a href="#simple-vs-complex-developer-comparison" id="toc-simple-vs-complex-developer-comparison" class="nav-link" data-scroll-target="#simple-vs-complex-developer-comparison">Simple vs complex — developer comparison</a></li>
   </ul></li>
@@ -677,6 +678,73 @@ Important
 <section id="type-chain-validation" class="level3">
 <h3 class="anchored" data-anchor-id="type-chain-validation">Type-chain validation</h3>
 <p><code>resolveTypeChain()</code> validates that each step’s output type is compatible with the next step’s input — without running data. The available-transforms browser filters to compatible successors, mirroring <code>TransformPipeline::execute()</code> logic.</p>
+<p>Binary (multi-input) transforms register both input types in <code>ElementRegistry</code>, so they appear when either container is focused. <code>resolveTypeChain()</code> treats a step as valid when the focused container matches <strong>either</strong> slot in <code>individual_input_types</code>.</p>
+</section>
+<section id="multi-input-transforms-option-a" class="level3">
+<h3 class="anchored" data-anchor-id="multi-input-transforms-option-a">Multi-input transforms (Option A)</h3>
+<p>Binary transforms (<code>CalculateLineMinPointDistance</code>, <code>ExtractSpikeWaveforms</code>, interval reductions, etc.) require two DataManager keys. The widget collects the second key in <code>StepConfigPanel</code> and executes single-step binary pipelines via <code>DataManagerPipelineExecutor</code> with <code>additional_input_keys</code>.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 62%">
+<col style="width: 37%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>UI piece</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>MultiInputKeyResolver</code></td>
+<td>Maps focused primary key + user second key to registry order</td>
+</tr>
+<tr class="even">
+<td><code>StepConfigPanel</code></td>
+<td>Second-input <code>QComboBox</code> filtered by required container type</td>
+</tr>
+<tr class="odd">
+<td><code>PipelineStepEntry::additional_input_key</code></td>
+<td>In-memory second key (not in library JSON)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Option A limitations (surfaced in UI):</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 36%">
+<col style="width: 63%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Limitation</th>
+<th>User-facing behavior</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Single-step binary only</td>
+<td>Execute disabled when a multi-input step shares a pipeline with other steps</td>
+</tr>
+<tr class="even">
+<td>Second key not in pipeline JSON</td>
+<td>Tooltip on second-input combo; re-select after library load</td>
+</tr>
+<tr class="odd">
+<td>Pipeline delivery</td>
+<td>Deliver button disabled when any step is multi-input</td>
+</tr>
+<tr class="even">
+<td>Pre-reductions / range_reduction</td>
+<td>Warning before multi-input execute; not applied on that path</td>
+</tr>
+<tr class="odd">
+<td>Same-type inputs (e.g.&nbsp;two <code>LineData</code>)</td>
+<td>Primary key excluded from second-input combo</td>
+</tr>
+</tbody>
+</table>
+<p>Unary multi-step pipelines still use <code>executePipeline(focused_input, TransformPipeline)</code>. Option B (unified <code>DataManagerPipelineExecutor</code> for all shapes) is future work.</p>
 </section>
 <section id="ui-json-sync" class="level3">
 <h3 class="anchored" data-anchor-id="ui-json-sync">UI ↔︎ JSON sync</h3>

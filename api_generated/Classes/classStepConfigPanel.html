@@ -356,6 +356,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#public-signals-documentation" id="toc-public-signals-documentation" class="nav-link" data-scroll-target="#public-signals-documentation">Public Signals Documentation</a>
   <ul class="collapse">
   <li><a href="#signal-parameterschanged" id="toc-signal-parameterschanged" class="nav-link" data-scroll-target="#signal-parameterschanged">signal parametersChanged</a></li>
+  <li><a href="#signal-additionalinputchanged" id="toc-signal-additionalinputchanged" class="nav-link" data-scroll-target="#signal-additionalinputchanged">signal additionalInputChanged</a></li>
   </ul></li>
   <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
   <ul class="collapse">
@@ -412,6 +413,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classStepConfigPanel.html#signal-parameterschanged">parametersChanged</a></strong>(std::string const &amp; params_json)<br>Emitted when any parameter value changes.</td>
 </tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classStepConfigPanel.html#signal-additionalinputchanged">additionalInputChanged</a></strong>(std::string const &amp; additional_input_key)<br>Emitted when the second input key selection changes.</td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -435,7 +440,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classStepConfigPanel.html#function-showstepconfig">showStepConfig</a></strong>(std::string const &amp; transform_name, std::string const &amp; params_json)<br>Show the configuration for a specific transform step.</td>
+<td><strong><a href="../../api_generated/Classes/classStepConfigPanel.html#function-showstepconfig">showStepConfig</a></strong>(std::string const &amp; transform_name, std::string const &amp; params_json, <a href="../../api_generated/Classes/structMultiInputStepContext.html">MultiInputStepContext</a> const &amp; multi_input ={})<br>Show the configuration for a specific transform step.</td>
 </tr>
 <tr class="even">
 <td>void</td>
@@ -476,49 +481,62 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>params_json</strong> Updated parameters as JSON</li>
 </ul>
 </section>
+<section id="signal-additionalinputchanged" class="level3">
+<h3 class="anchored" data-anchor-id="signal-additionalinputchanged">signal additionalInputChanged</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> additionalInputChanged<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> additional_input_key</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Emitted when the second input key selection changes.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>additional_input_key</strong> Selected <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> key, or empty if cleared</li>
+</ul>
+</section>
 </section>
 <section id="public-functions-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
 <section id="function-stepconfigpanel" class="level3">
 <h3 class="anchored" data-anchor-id="function-stepconfigpanel">function StepConfigPanel</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">explicit</span> StepConfigPanel<span class="op">(</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QWidget</span> <span class="op">*</span> parent <span class="op">=</span><span class="kw">nullptr</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">explicit</span> StepConfigPanel<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QWidget</span> <span class="op">*</span> parent <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-stepconfigpanel-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-stepconfigpanel-1">function ~StepConfigPanel</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>StepConfigPanel<span class="op">()</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>StepConfigPanel<span class="op">()</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-showstepconfig" class="level3">
 <h3 class="anchored" data-anchor-id="function-showstepconfig">function showStepConfig</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> showStepConfig<span class="op">(</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> params_json</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> showStepConfig<span class="op">(</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> transform_name<span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> params_json<span class="op">,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    MultiInputStepContext <span class="at">const</span> <span class="op">&amp;</span> multi_input <span class="op">={}</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Show the configuration for a specific transform step.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>transform_name</strong> The registered transform name</li>
 <li><strong>params_json</strong> Existing parameters as JSON to populate the form</li>
+<li><strong>multi_input</strong> Optional second-input configuration context</li>
 </ul>
 </section>
 <section id="function-clearconfig" class="level3">
 <h3 class="anchored" data-anchor-id="function-clearconfig">function clearConfig</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearConfig<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearConfig<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Clear the panel (no step selected)</p>
 </section>
 <section id="function-currentparamsjson" class="level3">
 <h3 class="anchored" data-anchor-id="function-currentparamsjson">function currentParamsJson</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string currentParamsJson<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string currentParamsJson<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the current parameters as a JSON string.</p>
 <p><strong>Return</strong>: JSON string of current parameter values</p>
 </section>
 <section id="function-currenttransformname" class="level3">
 <h3 class="anchored" data-anchor-id="function-currenttransformname">function currentTransformName</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>string currentTransformName<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>string currentTransformName<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the name of the currently displayed transform.</p>
 <hr>
-<p>Updated on 2026-08-29 at 19:31:45 +0000</p>
+<p>Updated on 2026-08-31 at 02:17:09 +0000</p>
 
 
 </section>

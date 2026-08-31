@@ -371,6 +371,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-clearsteps" id="toc-function-clearsteps" class="nav-link" data-scroll-target="#function-clearsteps">function clearSteps</a></li>
   <li><a href="#function-addstep" id="toc-function-addstep" class="nav-link" data-scroll-target="#function-addstep">function addStep</a></li>
   <li><a href="#function-updatestepparams" id="toc-function-updatestepparams" class="nav-link" data-scroll-target="#function-updatestepparams">function updateStepParams</a></li>
+  <li><a href="#function-updatestepadditionalinput" id="toc-function-updatestepadditionalinput" class="nav-link" data-scroll-target="#function-updatestepadditionalinput">function updateStepAdditionalInput</a></li>
+  <li><a href="#function-hasmultiinputstep" id="toc-function-hasmultiinputstep" class="nav-link" data-scroll-target="#function-hasmultiinputstep">function hasMultiInputStep</a></li>
+  <li><a href="#function-allmultiinputstepsconfigured" id="toc-function-allmultiinputstepsconfigured" class="nav-link" data-scroll-target="#function-allmultiinputstepsconfigured">function allMultiInputStepsConfigured</a></li>
+  <li><a href="#function-hasmultiinputwithextrasteps" id="toc-function-hasmultiinputwithextrasteps" class="nav-link" data-scroll-target="#function-hasmultiinputwithextrasteps">function hasMultiInputWithExtraSteps</a></li>
   <li><a href="#function-loadfromdescriptors" id="toc-function-loadfromdescriptors" class="nav-link" data-scroll-target="#function-loadfromdescriptors">function loadFromDescriptors</a></li>
   </ul></li>
   </ul></li>
@@ -479,6 +483,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classPipelineStepListWidget.html#function-updatestepparams">updateStepParams</a></strong>(int step_index, std::string const &amp; params_json)<br>Update the parameters JSON for a specific step.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classPipelineStepListWidget.html#function-updatestepadditionalinput">updateStepAdditionalInput</a></strong>(int step_index, std::string const &amp; additional_input_key)<br>Update the second input key for a multi-input step.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classPipelineStepListWidget.html#function-hasmultiinputstep">hasMultiInputStep</a></strong>() const<br>Check whether any step is a multi-input transform.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classPipelineStepListWidget.html#function-allmultiinputstepsconfigured">allMultiInputStepsConfigured</a></strong>() const<br>Check whether every multi-input step has a configured second key.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classPipelineStepListWidget.html#function-hasmultiinputwithextrasteps">hasMultiInputWithExtraSteps</a></strong>() const<br>Check whether a multi-input step coexists with additional steps.</td>
 </tr>
 <tr class="odd">
 <td>bool</td>
@@ -601,11 +621,40 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>params_json</strong> The new parameters JSON</li>
 </ul>
 </section>
+<section id="function-updatestepadditionalinput" class="level3">
+<h3 class="anchored" data-anchor-id="function-updatestepadditionalinput">function updateStepAdditionalInput</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> updateStepAdditionalInput<span class="op">(</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> step_index<span class="op">,</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> additional_input_key</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Update the second input key for a multi-input step.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>step_index</strong> Index of the step to update</li>
+<li><strong>additional_input_key</strong> Second <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> key, or empty to clear</li>
+</ul>
+</section>
+<section id="function-hasmultiinputstep" class="level3">
+<h3 class="anchored" data-anchor-id="function-hasmultiinputstep">function hasMultiInputStep</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasMultiInputStep<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check whether any step is a multi-input transform.</p>
+</section>
+<section id="function-allmultiinputstepsconfigured" class="level3">
+<h3 class="anchored" data-anchor-id="function-allmultiinputstepsconfigured">function allMultiInputStepsConfigured</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> allMultiInputStepsConfigured<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check whether every multi-input step has a configured second key.</p>
+</section>
+<section id="function-hasmultiinputwithextrasteps" class="level3">
+<h3 class="anchored" data-anchor-id="function-hasmultiinputwithextrasteps">function hasMultiInputWithExtraSteps</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasMultiInputWithExtraSteps<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check whether a multi-input step coexists with additional steps.</p>
+<p>Option A limitation: multi-input execution requires a single-step pipeline.</p>
+</section>
 <section id="function-loadfromdescriptors" class="level3">
 <h3 class="anchored" data-anchor-id="function-loadfromdescriptors">function loadFromDescriptors</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> loadFromDescriptors<span class="op">(</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>Examples<span class="op">::</span>PipelineStepDescriptor <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> descriptors</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> loadFromDescriptors<span class="op">(</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>Examples<span class="op">::</span>PipelineStepDescriptor <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> descriptors</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Rebuild all steps from a list of PipelineStepDescriptors.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -614,7 +663,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Return</strong>: true if all steps were loaded successfully</p>
 <p>Used by JSON → UI loading. Clears existing steps, then adds each step using the descriptor’s transform_name and serialized parameters.</p>
 <hr>
-<p>Updated on 2026-08-29 at 19:31:45 +0000</p>
+<p>Updated on 2026-08-31 at 02:17:10 +0000</p>
 
 
 </section>
