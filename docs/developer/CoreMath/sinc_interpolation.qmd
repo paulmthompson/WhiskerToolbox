@@ -1,0 +1,116 @@
+---
+title: "Sinc Interpolation & Sub-Sample Alignment"
+subtitle: "Band-limited Whittaker-Shannon sinc interpolation, continuous shift, and sub-sample alignment utilities in CoreMath"
+format: html
+---
+
+## Overview
+
+The `CoreMath::SincInterpolator` class provides high-performance, windowed Whittaker-Shannon sinc interpolation for discrete numerical signals and time series. It is used across the codebase for:
+
+- **Band-limited Nyquist Upsampling:** Upsampling signals by integer factor $U$ with zero spectral distortion.
+- **Continuous Fractional Shifting:** Shifting waveform snippets by continuous fractional offsets $\Delta t \in [-0.5, +0.5]$ samples.
+- **Sub-Sample Extremum Localization:** Finding true continuous peak/trough coordinates and amplitudes for spike alignment.
+- **Continuous Energy Centroiding:** Computing sub-sample $V^2$ energy centroids.
+
+---
+
+## Mathematical Foundations
+
+### Whittaker-Shannon Sinc Interpolation
+
+For a band-limited discrete signal $x[n]$ sampled at intervals $T_s$, the continuous band-limited reconstruction is:
+
+$$x(t) = \sum_{n = \lfloor t \rfloor - K + 1}^{\lfloor t \rfloor + K} x[n] \cdot \text{sinc}\left(\frac{t - n T_s}{T_s}\right) \cdot w\left(\frac{t - n T_s}{K T_s}\right)$$
+
+where:
+- $\text{sinc}(u) = \frac{\sin(\pi u)}{\pi u}$, with $\text{sinc}(0) = 1$.
+- $K$ is the kernel half-width in samples (default: $K = 8$).
+- $w(u)$ is a window function (Lanczos, Hann, Blackman, Hamming) that tapers the truncated sinc kernel to zero.
+
+---
+
+## C++ API Reference
+
+```cpp
+#include "CoreMath/sinc_interpolation.hpp"
+
+namespace CoreMath {
+
+enum class SincWindowType {
+    Lanczos,
+    Hann,
+    Blackman,
+    Hamming
+};
+
+enum class BoundaryMode {
+    SymmetricExtension,
+    ZeroPad,
+    Replication
+};
+
+class SincInterpolator {
+public:
+    // Sinc & Window evaluation
+    static double sinc(double t) noexcept;
+    static double window(double t, int a, SincWindowType window_type) noexcept;
+
+    // Continuous point evaluation
+    static float interpolateAt(
+        std::span<float const> data,
+        double fractional_index,
+        int kernel_half_width = 8,
+        SincWindowType window_type = SincWindowType::Lanczos,
+        BoundaryMode mode = BoundaryMode::SymmetricExtension);
+
+    // Upsampling
+    static std::vector<float> upsample(
+        std::span<float const> data,
+        int upsampling_factor,
+        int kernel_half_width = 8,
+        SincWindowType window_type = SincWindowType::Lanczos,
+        BoundaryMode mode = BoundaryMode::SymmetricExtension);
+
+    // Fractional sample shift
+    static std::vector<float> shift(
+        std::span<float const> data,
+        double fractional_shift,
+        int kernel_half_width = 8,
+        SincWindowType window_type = SincWindowType::Hann,
+        BoundaryMode mode = BoundaryMode::SymmetricExtension);
+
+    // Sub-sample peak / trough search
+    static std::pair<double, float> findSubSampleExtremum(
+        std::span<float const> data,
+        int center_index,
+        bool find_minimum = true,
+        int search_radius = 2,
+        int sub_divisions = 16,
+        int kernel_half_width = 8,
+        SincWindowType window_type = SincWindowType::Hann,
+        BoundaryMode mode = BoundaryMode::SymmetricExtension);
+
+    // Sub-sample V^2 energy centroid
+    static double findSubSampleEnergyCentroid(
+        std::span<float const> data,
+        int center_index,
+        int window_half_width = 6,
+        int sub_divisions = 16,
+        int kernel_half_width = 8,
+        SincWindowType window_type = SincWindowType::Hann,
+        BoundaryMode mode = BoundaryMode::SymmetricExtension);
+};
+
+} // namespace CoreMath
+```
+
+---
+
+## Preconditions and Postconditions
+
+- `@pre !data.empty()` (input buffer must contain at least 1 sample).
+- `@pre kernel_half_width >= 1`.
+- `@pre upsampling_factor >= 1`.
+- `@pre center_index >= 0 && center_index < data.size()`.
+- `@post SincInterpolator::interpolateAt(data, (double)n) == data[n]` (exact sample reconstruction at integer grid points within floating-point tolerance).

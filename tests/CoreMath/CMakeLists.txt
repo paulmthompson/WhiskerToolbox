@@ -14,6 +14,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 
 add_executable(test_core_math
     non_finite_rows.test.cpp
+    sinc_interpolation.test.cpp
 )
 
 target_link_libraries(test_core_math PRIVATE Catch2::Catch2WithMain WhiskerToolbox::CoreMath)

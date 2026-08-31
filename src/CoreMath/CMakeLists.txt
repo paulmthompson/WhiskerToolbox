@@ -7,6 +7,8 @@ set(NEURALYZER_COREMATH_SOURCES
     parametric_polynomial_utils.hpp
     polynomial_fit.cpp
     polynomial_fit.hpp
+    sinc_interpolation.cpp
+    sinc_interpolation.hpp
 )
 
 add_library(CoreMath STATIC ${NEURALYZER_COREMATH_SOURCES})
