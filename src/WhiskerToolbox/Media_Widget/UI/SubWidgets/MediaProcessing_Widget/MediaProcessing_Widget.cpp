@@ -11,7 +11,7 @@
 #include "ProcessingOptions/MagicEraserWidget.hpp"
 
 #include "AutoParamWidget/AutoParamWidget.hpp"
-#include "Collapsible_Widget/Section.hpp"
+#include "Common/Collapsible_Widget/Section.hpp"
 #include "DataManager/DataManager.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"
 #include "Media/Media_Data.hpp"

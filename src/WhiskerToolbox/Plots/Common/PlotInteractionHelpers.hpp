@@ -197,8 +197,13 @@ struct EventPlotEventHit {
         QPoint const & screen_pos,
         int widget_width,
         int widget_height) {
-    float const ndc_x = (2.0f * screen_pos.x() / widget_width) - 1.0f;
-    float const ndc_y = 1.0f - (2.0f * screen_pos.y() / widget_height);
+    float const width = static_cast<float>(widget_width);
+    float const height = static_cast<float>(widget_height);
+    float const px = static_cast<float>(screen_pos.x());
+    float const py = static_cast<float>(screen_pos.y());
+
+    float const ndc_x = (2.0f * px / width) - 1.0f;
+    float const ndc_y = 1.0f - (2.0f * py / height);
     return glm::vec2(ndc_x, ndc_y);
 }
 
@@ -218,8 +223,13 @@ struct EventPlotEventHit {
         int widget_width,
         int widget_height,
         QPoint const & screen_pos) {
-    float const ndc_x = (2.0f * screen_pos.x() / widget_width) - 1.0f;
-    float const ndc_y = 1.0f - (2.0f * screen_pos.y() / widget_height);// Flip Y
+    float const width = static_cast<float>(widget_width);
+    float const height = static_cast<float>(widget_height);
+    float const px = static_cast<float>(screen_pos.x());
+    float const py = static_cast<float>(screen_pos.y());
+
+    float const ndc_x = (2.0f * px / width) - 1.0f;
+    float const ndc_y = 1.0f - (2.0f * py / height);// Flip Y
 
     glm::mat4 const inv_proj = glm::inverse(projection_matrix);
     glm::vec4 const ndc(ndc_x, ndc_y, 0.0f, 1.0f);
@@ -244,11 +254,15 @@ struct EventPlotEventHit {
         int widget_height,
         float world_x,
         float world_y) {
+
+    float const width = static_cast<float>(widget_width);
+    float const height = static_cast<float>(widget_height);
+    
     glm::vec4 const world(world_x, world_y, 0.0f, 1.0f);
     glm::vec4 const ndc = projection_matrix * world;
 
-    int const screen_x = static_cast<int>((ndc.x + 1.0f) * 0.5f * widget_width);
-    int const screen_y = static_cast<int>((1.0f - ndc.y) * 0.5f * widget_height);
+    int const screen_x = static_cast<int>((ndc.x + 1.0f) * 0.5f * width);
+    int const screen_y = static_cast<int>((1.0f - ndc.y) * 0.5f * height);
 
     return QPoint(screen_x, screen_y);
 }
@@ -450,10 +464,10 @@ constexpr float WHEEL_ANGLE_DELTA_PER_NOTCH = 120.0f;
 // =============================================================================
 
 /// Visible-range fraction removed per zoom step (matches DataViewer adaptive normal mode).
-constexpr float ADAPTIVE_ZOOM_RANGE_FRACTION = 0.03f;
+constexpr double ADAPTIVE_ZOOM_RANGE_FRACTION = 0.03;
 
 /// Minimum visible-range scale factor in a single wheel event (prevents runaway zoom).
-constexpr float MIN_ADAPTIVE_VISIBLE_RANGE_SCALE = 0.01f;
+constexpr double MIN_ADAPTIVE_VISIBLE_RANGE_SCALE = 0.01;
 
 /**
  * @brief Compute the zoom multiplier for adaptive range-proportional wheel zoom.
@@ -465,15 +479,15 @@ constexpr float MIN_ADAPTIVE_VISIBLE_RANGE_SCALE = 0.01f;
  * @param delta Fractional wheel steps from wheelDeltaToZoomSteps().
  * @return Multiplier to apply to the current axis zoom value.
  */
-[[nodiscard]] inline float adaptiveZoomMultiplier(float delta) {
-    if (delta == 0.0f) {
-        return 1.0f;
+[[nodiscard]] inline double adaptiveZoomMultiplier(double delta) {
+    if (delta == 0.0) {
+        return 1.0;
     }
 
-    float const visible_scale = std::max(
-            1.0f - ADAPTIVE_ZOOM_RANGE_FRACTION * delta,
+    double const visible_scale = std::max(
+            1.0 - ADAPTIVE_ZOOM_RANGE_FRACTION * delta,
             MIN_ADAPTIVE_VISIBLE_RANGE_SCALE);
-    return 1.0f / visible_scale;
+    return 1.0 / visible_scale;
 }
 
 /**
@@ -501,7 +515,7 @@ void handleZoom(
         float delta,
         bool y_only,
         bool both_axes) {
-    float const factor = adaptiveZoomMultiplier(delta);
+    double const factor = adaptiveZoomMultiplier(delta);
 
     if (y_only) {
         state.setYZoom(view_state.y_zoom * factor);

@@ -1,6 +1,6 @@
 #include "EventPlotPropertiesWidget.hpp"
 
-#include "Collapsible_Widget/Section.hpp"
+#include "Common/Collapsible_Widget/Section.hpp"
 #include "Core/EventPlotState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"

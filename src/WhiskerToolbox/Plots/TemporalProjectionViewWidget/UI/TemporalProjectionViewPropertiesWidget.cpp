@@ -1,6 +1,6 @@
 #include "TemporalProjectionViewPropertiesWidget.hpp"
 
-#include "Collapsible_Widget/Section.hpp"
+#include "Common/Collapsible_Widget/Section.hpp"
 #include "Core/TemporalProjectionViewState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "Lines/Line_Data.hpp"

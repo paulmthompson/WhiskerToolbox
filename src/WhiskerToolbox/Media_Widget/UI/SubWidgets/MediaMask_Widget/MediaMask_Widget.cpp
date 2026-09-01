@@ -7,7 +7,7 @@
 #include "SelectionWidgets/MaskBrushSelectionWidget.hpp"
 #include "SelectionWidgets/MaskNoneSelectionWidget.hpp"
 
-#include "Collapsible_Widget/Section.hpp"
+#include "Common/Collapsible_Widget/Section.hpp"
 #include "ColorAlphaControls.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "DataManager/DataManager.hpp"

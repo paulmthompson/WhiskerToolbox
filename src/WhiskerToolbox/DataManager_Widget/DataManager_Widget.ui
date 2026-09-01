@@ -260,7 +260,7 @@
   <customwidget>
    <class>Section</class>
    <extends>QWidget</extends>
-   <header>Collapsible_Widget/Section.hpp</header>
+   <header>Common/Collapsible_Widget/Section.hpp</header>
    <container>1</container>
   </customwidget>
   <customwidget>

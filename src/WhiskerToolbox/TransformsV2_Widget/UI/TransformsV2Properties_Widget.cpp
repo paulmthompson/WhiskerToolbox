@@ -5,7 +5,7 @@
 #include "PipelineStepListWidget.hpp"
 #include "StepConfigPanel.hpp"
 
-#include "Collapsible_Widget/Section.hpp"
+#include "Common/Collapsible_Widget/Section.hpp"
 #include "Core/MultiInputKeyResolver.hpp"
 #include "Core/TransformsV2State.hpp"
 #include "DataManager/DataManager.hpp"

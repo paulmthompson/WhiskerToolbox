@@ -3,7 +3,7 @@
  * @brief Unit tests for scroll-limited QComboBox popup configuration.
  */
 
-#include "Common/ScrollableComboBox.hpp"
+#include "Common/ScrollableComboBox/ScrollableComboBox.hpp"
 
 #include <QAbstractItemView>
 #include <QApplication>

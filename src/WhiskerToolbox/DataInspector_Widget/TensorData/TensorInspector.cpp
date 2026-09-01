@@ -3,7 +3,7 @@
 #include "TensorDesign/TensorColumnViews.hpp"
 #include "TensorDesigner.hpp"
 
-#include "Collapsible_Widget/Section.hpp"
+#include "Common/Collapsible_Widget/Section.hpp"
 #include "Commands/Core/CommandContext.hpp"
 #include "Commands/Core/SequenceExecution.hpp"
 #include "Commands/IO/SaveData.hpp"

@@ -1,11 +1,11 @@
 #include "ACFPropertiesWidget.hpp"
 
+#include "Common/Collapsible_Widget/Section.hpp"
 #include "Core/ACFState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Plots/Common/HorizontalAxisWidget/HorizontalAxisWithRangeControls.hpp"
 #include "Plots/Common/VerticalAxisWidget/VerticalAxisWithRangeControls.hpp"
-#include "Collapsible_Widget/Section.hpp"
 #include "UI/ACFWidget.hpp"
 
 #include "ui_ACFPropertiesWidget.h"
@@ -13,8 +13,8 @@
 #include <algorithm>
 
 ACFPropertiesWidget::ACFPropertiesWidget(std::shared_ptr<ACFState> state,
-                                          std::shared_ptr<DataManager> data_manager,
-                                          QWidget * parent)
+                                         std::shared_ptr<DataManager> data_manager,
+                                         QWidget * parent)
     : QWidget(parent),
       ui(new Ui::ACFPropertiesWidget),
       _state(state),
@@ -24,8 +24,7 @@ ACFPropertiesWidget::ACFPropertiesWidget(std::shared_ptr<ACFState> state,
       _horizontal_range_controls_section(nullptr),
       _vertical_range_controls(nullptr),
       _vertical_range_controls_section(nullptr),
-      _dm_observer_id(-1)
-{
+      _dm_observer_id(-1) {
     ui->setupUi(this);
 
     // Connect combo box selection change
@@ -39,7 +38,8 @@ ACFPropertiesWidget::ACFPropertiesWidget(std::shared_ptr<ACFState> state,
     if (_data_manager) {
         _dm_observer_id = _data_manager->addObserver([this]() {
             _populateEventKeyComboBox();
-        }, "ACFPropertiesWidget");
+        },
+                                                     "ACFPropertiesWidget");
     }
 
     // Connect state signals to update UI
@@ -51,8 +51,7 @@ ACFPropertiesWidget::ACFPropertiesWidget(std::shared_ptr<ACFState> state,
     }
 }
 
-void ACFPropertiesWidget::setPlotWidget(ACFWidget * plot_widget)
-{
+void ACFPropertiesWidget::setPlotWidget(ACFWidget * plot_widget) {
     _plot_widget = plot_widget;
     if (!_plot_widget || !_state) {
         return;
@@ -72,14 +71,13 @@ void ACFPropertiesWidget::setPlotWidget(ACFWidget * plot_widget)
         _vertical_range_controls = new VerticalAxisRangeControls(vertical_axis_state, _vertical_range_controls_section);
         _vertical_range_controls_section->autoSetContentLayout();
         int insert_index = _horizontal_range_controls_section
-                ? ui->main_layout->indexOf(_horizontal_range_controls_section) + 1
-                : 0;
+                                   ? ui->main_layout->indexOf(_horizontal_range_controls_section) + 1
+                                   : 0;
         ui->main_layout->insertWidget(insert_index, _vertical_range_controls_section);
     }
 }
 
-ACFPropertiesWidget::~ACFPropertiesWidget()
-{
+ACFPropertiesWidget::~ACFPropertiesWidget() {
     // Remove DataManager observer callback
     if (_data_manager && _dm_observer_id != -1) {
         _data_manager->removeObserver(_dm_observer_id);
@@ -87,8 +85,7 @@ ACFPropertiesWidget::~ACFPropertiesWidget()
     delete ui;
 }
 
-void ACFPropertiesWidget::_populateEventKeyComboBox()
-{
+void ACFPropertiesWidget::_populateEventKeyComboBox() {
     ui->event_key_combo->blockSignals(true);
 
     // Save current selection before clearing
@@ -133,8 +130,7 @@ void ACFPropertiesWidget::_populateEventKeyComboBox()
     ui->event_key_combo->blockSignals(false);
 }
 
-void ACFPropertiesWidget::_onEventKeyComboChanged(int index)
-{
+void ACFPropertiesWidget::_onEventKeyComboChanged(int index) {
     if (!_state || index < 0) {
         return;
     }
@@ -145,8 +141,7 @@ void ACFPropertiesWidget::_onEventKeyComboChanged(int index)
     }
 }
 
-void ACFPropertiesWidget::_updateUIFromState()
-{
+void ACFPropertiesWidget::_updateUIFromState() {
     if (!_state) {
         return;
     }

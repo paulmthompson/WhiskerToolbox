@@ -90,7 +90,7 @@ private:
     void _createPointColoringUI();
     void _populateColorKeyCombo();
     void _populateColorColumnCombo(std::string const & data_key);
-    void _onColorModeChanged(int index);
+    void _onColorModeChanged(int /*index*/);
     void _onColorKeyChanged();
     void _onColorColumnChanged();
     void _onMappingModeChanged(int index);

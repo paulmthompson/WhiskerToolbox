@@ -12,7 +12,7 @@
 #include "EditorState/SelectionContext.hpp"
 
 #include "AnalogTimeSeries/AnalogFilter_Widget/AnalogFilter_Widget.hpp"
-#include "Collapsible_Widget/Section.hpp"
+#include "Common/Collapsible_Widget/Section.hpp"
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogEventThreshold_Widget/AnalogEventThreshold_Widget.hpp"
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogHilbertPhase_Widget/AnalogHilbertPhase_Widget.hpp"
 #include "DataTransform_Widget/AnalogTimeSeries/AnalogIntervalPeak_Widget/AnalogIntervalPeak_Widget.hpp"

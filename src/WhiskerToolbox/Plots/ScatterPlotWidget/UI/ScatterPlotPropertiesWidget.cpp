@@ -2,7 +2,7 @@
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
 #include "Collapsible_Widget/Section.hpp"
-#include "Common/ScrollableComboBox.hpp"
+#include "Common/ScrollableComboBox/ScrollableComboBox.hpp"
 #include "Core/ScatterAxisSource.hpp"
 #include "Core/ScatterColorConfig.hpp"
 #include "Core/ScatterPlotState.hpp"
@@ -957,7 +957,7 @@ void ScatterPlotPropertiesWidget::_populateColorColumnCombo(std::string const & 
     }
 }
 
-void ScatterPlotPropertiesWidget::_onColorModeChanged(int index) {
+void ScatterPlotPropertiesWidget::_onColorModeChanged(int /*index*/) {
     if (_updating_combos) {
         return;
     }

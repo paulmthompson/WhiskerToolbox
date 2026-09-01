@@ -8,7 +8,7 @@
  * is expanded and the color range is switched to Manual at constrained widths.
  */
 
-#include "Collapsible_Widget/Section.hpp"
+#include "Common/Collapsible_Widget/Section.hpp"
 #include "LayoutTesting/LayoutSanityChecker.hpp"
 #include "Plots/Common/ColormapControls/ColormapControls.hpp"
 #include "Plots/Common/RateEstimationControls/EstimationMethodControls.hpp"

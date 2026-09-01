@@ -1,6 +1,6 @@
 #include "HeatmapPropertiesWidget.hpp"
 
-#include "Collapsible_Widget/Section.hpp"
+#include "Common/Collapsible_Widget/Section.hpp"
 #include "Core/HeatmapState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "Feature_Tree_Widget/Feature_Tree_Widget.hpp"

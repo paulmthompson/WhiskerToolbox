@@ -1,6 +1,6 @@
 #include "OnionSkinViewPropertiesWidget.hpp"
 
-#include "Collapsible_Widget/Section.hpp"
+#include "Common/Collapsible_Widget/Section.hpp"
 #include "Core/OnionSkinViewState.hpp"
 #include "DataManager/DataManager.hpp"
 #include "Lines/Line_Data.hpp"

@@ -12,7 +12,7 @@
 #include "Media_Widget/UI/SubWidgets/MediaText_Widget/MediaText_Widget.hpp"
 #include "Rendering/Media_Window/Media_Window.hpp"
 
-#include "Collapsible_Widget/Section.hpp"
+#include "Common/Collapsible_Widget/Section.hpp"
 #include "DataManager/DataManager.hpp"
 
 #include <QResizeEvent>

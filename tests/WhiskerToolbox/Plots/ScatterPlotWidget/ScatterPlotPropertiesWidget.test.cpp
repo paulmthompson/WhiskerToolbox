@@ -11,7 +11,7 @@
  */
 
 #include "UI/ScatterPlotPropertiesWidget.hpp"
-#include "Common/ScrollableComboBox.hpp"
+#include "Common/ScrollableComboBox/ScrollableComboBox.hpp"
 #include "Core/ScatterAxisSource.hpp"
 #include "Core/ScatterPlotState.hpp"
 

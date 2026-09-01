@@ -2,7 +2,7 @@
 #include "ui_TableDesignerWidget.h"
 
 #include "AnalogTimeSeries/Analog_Time_Series.hpp"
-#include "Collapsible_Widget/Section.hpp"
+#include "Common/Collapsible_Widget/Section.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/TableView/ComputerRegistry.hpp"
 #include "DataManager/utils/TableView/TableEvents.hpp"

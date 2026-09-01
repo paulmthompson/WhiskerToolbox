@@ -71,6 +71,8 @@ template<ViewStateZoomPanLike ViewState>
             .y_zoom = static_cast<double>(view_state.y_zoom),
             .x_pan = static_cast<double>(view_state.x_pan),
             .y_pan = static_cast<double>(view_state.y_pan),
+            .x_bounds = std::nullopt,
+            .y_bounds = std::nullopt,
     };
 }
 

@@ -726,13 +726,8 @@ QPointF EventPlotOpenGLWidget::screenToWorld(QPoint const & screen_pos) const {
 }
 
 QPoint EventPlotOpenGLWidget::worldToScreen(float world_x, float world_y) const {
-    glm::vec4 const world(world_x, world_y, 0.0f, 1.0f);
-    glm::vec4 const ndc = _projection_matrix * world;
-
-    int const screen_x = static_cast<int>((ndc.x + 1.0f) * 0.5f * _widget_width);
-    int const screen_y = static_cast<int>((1.0f - ndc.y) * 0.5f * _widget_height);
-
-    return {screen_x, screen_y};
+    return Neuralyzer::Plots::worldToScreen(
+            _projection_matrix, _widget_width, _widget_height, world_x, world_y);
 }
 
 void EventPlotOpenGLWidget::handlePanning(int delta_x, int delta_y) {
