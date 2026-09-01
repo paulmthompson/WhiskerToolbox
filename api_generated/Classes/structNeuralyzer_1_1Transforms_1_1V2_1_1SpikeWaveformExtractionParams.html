@@ -358,6 +358,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#variable-channels_of_interest" id="toc-variable-channels_of_interest" class="nav-link" data-scroll-target="#variable-channels_of_interest">variable channels_of_interest</a></li>
   <li><a href="#variable-filter_by_primary_channel" id="toc-variable-filter_by_primary_channel" class="nav-link" data-scroll-target="#variable-filter_by_primary_channel">variable filter_by_primary_channel</a></li>
   <li><a href="#variable-alignment_mode" id="toc-variable-alignment_mode" class="nav-link" data-scroll-target="#variable-alignment_mode">variable alignment_mode</a></li>
+  <li><a href="#variable-search_window_ms" id="toc-variable-search_window_ms" class="nav-link" data-scroll-target="#variable-search_window_ms">variable search_window_ms</a></li>
   <li><a href="#variable-sinc_upsample_factor" id="toc-variable-sinc_upsample_factor" class="nav-link" data-scroll-target="#variable-sinc_upsample_factor">variable sinc_upsample_factor</a></li>
   <li><a href="#variable-output_upsampled_points" id="toc-variable-output_upsampled_points" class="nav-link" data-scroll-target="#variable-output_upsampled_points">variable output_upsampled_points</a></li>
   <li><a href="#variable-sampling_rate_hz" id="toc-variable-sampling_rate_hz" class="nav-link" data-scroll-target="#variable-sampling_rate_hz">variable sampling_rate_hz</a></li>
@@ -424,14 +425,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Transforms_1_1V2_1_1SpikeWaveformExtractionParams.html#variable-alignment-mode">alignment_mode</a></strong> <br>Waveform snippet alignment method.</td>
 </tr>
 <tr class="even">
+<td>rfl::Validator&lt; float, rfl::Minimum&lt; 0.05f &gt;, rfl::Maximum&lt; 2.0f &gt; &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Transforms_1_1V2_1_1SpikeWaveformExtractionParams.html#variable-search-window-ms">search_window_ms</a></strong> <br>Maximum search window width in milliseconds for template / peak alignment (default: 0.50 ms = 15 samples @ 30 kHz)</td>
+</tr>
+<tr class="odd">
 <td>rfl::Validator&lt; int, rfl::Minimum&lt; 1 &gt;, rfl::Maximum&lt; 32 &gt; &gt;</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Transforms_1_1V2_1_1SpikeWaveformExtractionParams.html#variable-sinc-upsample-factor">sinc_upsample_factor</a></strong> <br>Sinc interpolation upsampling factor (used when sub-sample alignment is enabled)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>bool</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Transforms_1_1V2_1_1SpikeWaveformExtractionParams.html#variable-output-upsampled-points">output_upsampled_points</a></strong> <br>Output full upsampled points (true) or resample back to original grid (false)</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>rfl::Validator&lt; float, rfl::Minimum&lt; 100.0f &gt; &gt;</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Transforms_1_1V2_1_1SpikeWaveformExtractionParams.html#variable-sampling-rate-hz">sampling_rate_hz</a></strong> <br>Acquisition sampling rate in Hz (used to convert ms windows to discrete sample counts)</td>
 </tr>
@@ -465,22 +470,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>WaveformAlignmentMode alignment_mode <span class="op">{</span>WaveformAlignmentMode<span class="op">::</span>OriginalEventTime<span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Waveform snippet alignment method.</p>
 </section>
+<section id="variable-search_window_ms" class="level3">
+<h3 class="anchored" data-anchor-id="variable-search_window_ms">variable search_window_ms</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Validator<span class="op">&lt;</span> <span class="dt">float</span><span class="op">,</span> rfl<span class="op">::</span>Minimum<span class="op">&lt;</span> <span class="fl">0.05</span><span class="bu">f</span> <span class="op">&gt;,</span> rfl<span class="op">::</span>Maximum<span class="op">&lt;</span> <span class="fl">2.0</span><span class="bu">f</span> <span class="op">&gt;</span> <span class="op">&gt;</span> search_window_ms <span class="op">{</span><span class="fl">0.50</span><span class="bu">f</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Maximum search window width in milliseconds for template / peak alignment (default: 0.50 ms = 15 samples @ 30 kHz)</p>
+</section>
 <section id="variable-sinc_upsample_factor" class="level3">
 <h3 class="anchored" data-anchor-id="variable-sinc_upsample_factor">variable sinc_upsample_factor</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Validator<span class="op">&lt;</span> <span class="dt">int</span><span class="op">,</span> rfl<span class="op">::</span>Minimum<span class="op">&lt;</span> <span class="dv">1</span> <span class="op">&gt;,</span> rfl<span class="op">::</span>Maximum<span class="op">&lt;</span> <span class="dv">32</span> <span class="op">&gt;</span> <span class="op">&gt;</span> sinc_upsample_factor <span class="op">{</span><span class="dv">4</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Validator<span class="op">&lt;</span> <span class="dt">int</span><span class="op">,</span> rfl<span class="op">::</span>Minimum<span class="op">&lt;</span> <span class="dv">1</span> <span class="op">&gt;,</span> rfl<span class="op">::</span>Maximum<span class="op">&lt;</span> <span class="dv">32</span> <span class="op">&gt;</span> <span class="op">&gt;</span> sinc_upsample_factor <span class="op">{</span><span class="dv">4</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Sinc interpolation upsampling factor (used when sub-sample alignment is enabled)</p>
 </section>
 <section id="variable-output_upsampled_points" class="level3">
 <h3 class="anchored" data-anchor-id="variable-output_upsampled_points">variable output_upsampled_points</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> output_upsampled_points <span class="op">{</span><span class="kw">false</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> output_upsampled_points <span class="op">{</span><span class="kw">false</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Output full upsampled points (true) or resample back to original grid (false)</p>
 </section>
 <section id="variable-sampling_rate_hz" class="level3">
 <h3 class="anchored" data-anchor-id="variable-sampling_rate_hz">variable sampling_rate_hz</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Validator<span class="op">&lt;</span> <span class="dt">float</span><span class="op">,</span> rfl<span class="op">::</span>Minimum<span class="op">&lt;</span> <span class="fl">100.0</span><span class="bu">f</span> <span class="op">&gt;</span> <span class="op">&gt;</span> sampling_rate_hz <span class="op">{</span><span class="fl">30000.0</span><span class="bu">f</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Validator<span class="op">&lt;</span> <span class="dt">float</span><span class="op">,</span> rfl<span class="op">::</span>Minimum<span class="op">&lt;</span> <span class="fl">100.0</span><span class="bu">f</span> <span class="op">&gt;</span> <span class="op">&gt;</span> sampling_rate_hz <span class="op">{</span><span class="fl">30000.0</span><span class="bu">f</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Acquisition sampling rate in Hz (used to convert ms windows to discrete sample counts)</p>
 <hr>
-<p>Updated on 2026-08-31 at 02:17:11 +0000</p>
+<p>Updated on 2026-09-01 at 14:41:08 +0000</p>
 
 
 </section>

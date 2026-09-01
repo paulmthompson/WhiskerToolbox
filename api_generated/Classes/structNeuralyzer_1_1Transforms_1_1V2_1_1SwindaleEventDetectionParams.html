@@ -363,6 +363,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#variable-sampling_rate_hz" id="toc-variable-sampling_rate_hz" class="nav-link" data-scroll-target="#variable-sampling_rate_hz">variable sampling_rate_hz</a></li>
   <li><a href="#variable-probe_config_path" id="toc-variable-probe_config_path" class="nav-link" data-scroll-target="#variable-probe_config_path">variable probe_config_path</a></li>
   <li><a href="#variable-channel_positions" id="toc-variable-channel_positions" class="nav-link" data-scroll-target="#variable-channel_positions">variable channel_positions</a></li>
+  <li><a href="#variable-enable_template_realignment" id="toc-variable-enable_template_realignment" class="nav-link" data-scroll-target="#variable-enable_template_realignment">variable enable_template_realignment</a></li>
+  <li><a href="#variable-template_search_window_ms" id="toc-variable-template_search_window_ms" class="nav-link" data-scroll-target="#variable-template_search_window_ms">variable template_search_window_ms</a></li>
+  <li><a href="#variable-template_max_iterations" id="toc-variable-template_max_iterations" class="nav-link" data-scroll-target="#variable-template_max_iterations">variable template_max_iterations</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -445,6 +448,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>std::vector&lt; <a href="../../api_generated/Classes/structNeuralyzer_1_1Transforms_1_1V2_1_1ChannelPosition2D.html">ChannelPosition2D</a> &gt;</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Transforms_1_1V2_1_1SwindaleEventDetectionParams.html#variable-channel-positions">channel_positions</a></strong> <br>Explicit probe channel coordinates in micrometers (used when probe_config_path is empty)</td>
 </tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Transforms_1_1V2_1_1SwindaleEventDetectionParams.html#variable-enable-template-realignment">enable_template_realignment</a></strong> <br>Enable iterative multichannel template realignment on detected spike clusters (matches SpikeSorter)</td>
+</tr>
+<tr class="even">
+<td>rfl::Validator&lt; float, rfl::Minimum&lt; 0.05f &gt;, rfl::Maximum&lt; 2.0f &gt; &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Transforms_1_1V2_1_1SwindaleEventDetectionParams.html#variable-template-search-window-ms">template_search_window_ms</a></strong> <br>Maximum search window width in milliseconds for template alignment (default: 0.50 ms = 15 samples @ 30 kHz)</td>
+</tr>
+<tr class="odd">
+<td>rfl::Validator&lt; int, rfl::Minimum&lt; 1 &gt;, rfl::Maximum&lt; 10 &gt; &gt;</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Transforms_1_1V2_1_1SwindaleEventDetectionParams.html#variable-template-max-iterations">template_max_iterations</a></strong> <br>Maximum Expectation-Maximization iterations for template realignment (default: 3)</td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -499,8 +514,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="variable-channel_positions">variable channel_positions</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> ChannelPosition2D <span class="op">&gt;</span> channel_positions <span class="op">{};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Explicit probe channel coordinates in micrometers (used when probe_config_path is empty)</p>
+</section>
+<section id="variable-enable_template_realignment" class="level3">
+<h3 class="anchored" data-anchor-id="variable-enable_template_realignment">variable enable_template_realignment</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> enable_template_realignment <span class="op">{</span><span class="kw">true</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Enable iterative multichannel template realignment on detected spike clusters (matches SpikeSorter)</p>
+</section>
+<section id="variable-template_search_window_ms" class="level3">
+<h3 class="anchored" data-anchor-id="variable-template_search_window_ms">variable template_search_window_ms</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Validator<span class="op">&lt;</span> <span class="dt">float</span><span class="op">,</span> rfl<span class="op">::</span>Minimum<span class="op">&lt;</span> <span class="fl">0.05</span><span class="bu">f</span> <span class="op">&gt;,</span> rfl<span class="op">::</span>Maximum<span class="op">&lt;</span> <span class="fl">2.0</span><span class="bu">f</span> <span class="op">&gt;</span> <span class="op">&gt;</span> template_search_window_ms <span class="op">{</span><span class="fl">0.50</span><span class="bu">f</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Maximum search window width in milliseconds for template alignment (default: 0.50 ms = 15 samples @ 30 kHz)</p>
+</section>
+<section id="variable-template_max_iterations" class="level3">
+<h3 class="anchored" data-anchor-id="variable-template_max_iterations">variable template_max_iterations</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>rfl<span class="op">::</span>Validator<span class="op">&lt;</span> <span class="dt">int</span><span class="op">,</span> rfl<span class="op">::</span>Minimum<span class="op">&lt;</span> <span class="dv">1</span> <span class="op">&gt;,</span> rfl<span class="op">::</span>Maximum<span class="op">&lt;</span> <span class="dv">10</span> <span class="op">&gt;</span> <span class="op">&gt;</span> template_max_iterations <span class="op">{</span><span class="dv">3</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Maximum Expectation-Maximization iterations for template realignment (default: 3)</p>
 <hr>
-<p>Updated on 2026-08-31 at 02:17:11 +0000</p>
+<p>Updated on 2026-09-01 at 14:41:08 +0000</p>
 
 
 </section>

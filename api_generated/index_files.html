@@ -501,6 +501,8 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/parametric__polynomial__utils_8hpp.html#file-parametric-polynomial-utils.hpp">hpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/polynomial__fit_8cpp.html#file-polynomial-fit.cpp">cpp</a></strong> <br>Implementation of polynomial fitting utilities for line parameterization.</li>
 <li><strong>file <a href="../api_generated/Files/polynomial__fit_8hpp.html#file-polynomial-fit.hpp">hpp</a></strong> <br>Polynomial fitting utilities for line parameterization and angle calculation.</li>
+<li><strong>file <a href="../api_generated/Files/sinc__interpolation_8cpp.html#file-sinc-interpolation.cpp">cpp</a></strong> <br>Implementation of SincInterpolator numerical utilities.</li>
+<li><strong>file <a href="../api_generated/Files/sinc__interpolation_8hpp.html#file-sinc-interpolation.hpp">hpp</a></strong> <br>High-performance band-limited sinc interpolation, upsampling, and sub-sample alignment utilities.</li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_736bef8c912ce49a264c412060a9c04f.html#dir-src/coreplotting">src/CorePlotting</a></strong>
 <ul>
@@ -2369,6 +2371,8 @@ ul.task-list li input[type="checkbox"] {
 <ul>
 <li><strong>file <a href="../api_generated/Files/DimReductionOutputBuilder_8cpp.html#file-dimreductionoutputbuilder.cpp">cpp</a></strong> <br>Implementation of shared output tensor construction for dim reduction.</li>
 <li><strong>file <a href="../api_generated/Files/DimReductionOutputBuilder_8hpp.html#file-dimreductionoutputbuilder.hpp">hpp</a></strong> <br>Shared output tensor construction for dimensionality reduction transforms.</li>
+<li><strong>file <a href="../api_generated/Files/MultichannelTemplateRealigner_8cpp.html#file-multichanneltemplaterealigner.cpp">cpp</a></strong> <br>Implementation of MultichannelTemplateRealigner modular engine.</li>
+<li><strong>file <a href="../api_generated/Files/MultichannelTemplateRealigner_8hpp.html#file-multichanneltemplaterealigner.hpp">hpp</a></strong> <br>High-performance modular engine for spatio-temporal template calculation and iterative waveform realignment.</li>
 <li><strong>file <a href="../api_generated/Files/NaNPolicy_8hpp.html#file-nanpolicy.hpp">hpp</a></strong> <br>Policy for handling NaN/Inf rows in dimensionality reduction transforms.</li>
 </ul></li>
 </ul></li>
@@ -2400,11 +2404,6 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/BatchProcessing__Widget_8cpp.html#file-batchprocessing-widget.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/BatchProcessing__Widget_8hpp.html#file-batchprocessing-widget.hpp">hpp</a></strong></li>
 </ul></li>
-<li><strong>dir <a href="../api_generated/Files/dir_9d09cf8d3441ff89e2d78aa3c75857ae.html#dir-src/whiskertoolbox/collapsible-widget">src/WhiskerToolbox/Collapsible_Widget</a></strong>
-<ul>
-<li><strong>file <a href="../api_generated/Files/Section_8cpp.html#file-section.cpp">cpp</a></strong></li>
-<li><strong>file <a href="../api_generated/Files/Section_8hpp.html#file-section.hpp">hpp</a></strong></li>
-</ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_959de10b0d0a4014d89287c65da36e38.html#dir-src/whiskertoolbox/commandlog-widget">src/WhiskerToolbox/CommandLog_Widget</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/CommandLogWidgetRegistration_8cpp.html#file-commandlogwidgetregistration.cpp">cpp</a></strong> <br>Registration implementation for the CommandLog editor type.</li>
@@ -2419,6 +2418,19 @@ ul.task-list li input[type="checkbox"] {
 <ul>
 <li><strong>file <a href="../api_generated/Files/CommandLogWidget_8cpp.html#file-commandlogwidget.cpp">cpp</a></strong> <br>Implementation of the Command Log dock widget.</li>
 <li><strong>file <a href="../api_generated/Files/CommandLogWidget_8hpp.html#file-commandlogwidget.hpp">hpp</a></strong> <br>Minimal dock widget showing recorded CommandDescriptor entries.</li>
+</ul></li>
+</ul></li>
+<li><strong>dir <a href="../api_generated/Files/dir_2dbf47fdb17d7c2255c4663c616b5014.html#dir-src/whiskertoolbox/common">src/WhiskerToolbox/Common</a></strong>
+<ul>
+<li><strong>dir <a href="../api_generated/Files/dir_d858b4f4da3649fb0e3e4ba59f0b168c.html#dir-src/whiskertoolbox/common/collapsible-widget">src/WhiskerToolbox/Common/Collapsible_Widget</a></strong>
+<ul>
+<li><strong>file <a href="../api_generated/Files/Section_8cpp.html#file-section.cpp">cpp</a></strong></li>
+<li><strong>file <a href="../api_generated/Files/Section_8hpp.html#file-section.hpp">hpp</a></strong></li>
+</ul></li>
+<li><strong>dir <a href="../api_generated/Files/dir_c3d80dce4f9204459ac6f7f98e3eba85.html#dir-src/whiskertoolbox/common/scrollablecombobox">src/WhiskerToolbox/Common/ScrollableComboBox</a></strong>
+<ul>
+<li><strong>file <a href="../api_generated/Files/ScrollableComboBox_8cpp.html#file-scrollablecombobox.cpp">cpp</a></strong> <br>Implementation of scroll-limited QComboBox popup configuration.</li>
+<li><strong>file <a href="../api_generated/Files/ScrollableComboBox_8hpp.html#file-scrollablecombobox.hpp">hpp</a></strong> <br>Utilities for constraining QComboBox popup height with scrollbars.</li>
 </ul></li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_72b77997fdcbf5c182dce16adf99cbfa.html#dir-src/whiskertoolbox/dataexport-widget">src/WhiskerToolbox/DataExport_Widget</a></strong>
@@ -4090,7 +4102,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/tableview__design__doc_8md.html#file-tableview-design-doc.md">tableview_design_doc.md</a></strong></li>
 </ul>
 <hr>
-<p>Updated on 2026-08-31 at 02:17:17 +0000</p>
+<p>Updated on 2026-09-01 at 14:41:13 +0000</p>
 
 
 </section>

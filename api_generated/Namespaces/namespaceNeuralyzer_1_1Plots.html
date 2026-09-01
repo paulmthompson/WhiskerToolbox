@@ -851,8 +851,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-wheeldeltatozoomsteps">wheelDeltaToZoomSteps</a></strong>(int pixel_delta_y, int angle_delta_y, int angle_delta_x, float pixels_per_zoom_step =<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#variable-default-wheel-pixels-per-zoom-step">DEFAULT_WHEEL_PIXELS_PER_ZOOM_STEP</a>)<br>Convert raw wheel deltas to fractional zoom steps for <a href="">handleZoom()</a>.</td>
 </tr>
 <tr class="even">
-<td>float</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-adaptivezoommultiplier">adaptiveZoomMultiplier</a></strong>(float delta)<br>Compute the zoom multiplier for adaptive range-proportional wheel zoom.</td>
+<td>double</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-adaptivezoommultiplier">adaptiveZoomMultiplier</a></strong>(double delta)<br>Compute the zoom multiplier for adaptive range-proportional wheel zoom.</td>
 </tr>
 <tr class="odd">
 <td>template &lt;ZoomPanSettable State,ViewStateLike ViewState&gt; <br>void</td>
@@ -908,11 +908,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#variable-wheel-angle-delta-per-notch">WHEEL_ANGLE_DELTA_PER_NOTCH</a></strong> <br>Qt angleDelta units per physical wheel notch (8 degrees x 15).</td>
 </tr>
 <tr class="odd">
-<td>constexpr float</td>
+<td>constexpr double</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#variable-adaptive-zoom-range-fraction">ADAPTIVE_ZOOM_RANGE_FRACTION</a></strong> <br>Visible-range fraction removed per zoom step (matches <a href="">DataViewer</a> adaptive normal mode).</td>
 </tr>
 <tr class="even">
-<td>constexpr float</td>
+<td>constexpr double</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#variable-min-adaptive-visible-range-scale">MIN_ADAPTIVE_VISIBLE_RANGE_SCALE</a></strong> <br>Minimum visible-range scale factor in a single wheel event (prevents runaway zoom).</td>
 </tr>
 </tbody>
@@ -1995,8 +1995,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-adaptivezoommultiplier" class="level3">
 <h3 class="anchored" data-anchor-id="function-adaptivezoommultiplier">function adaptiveZoomMultiplier</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">float</span> adaptiveZoomMultiplier<span class="op">(</span></span>
-<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> delta</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">double</span> adaptiveZoomMultiplier<span class="op">(</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> delta</span>
 <span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Compute the zoom multiplier for adaptive range-proportional wheel zoom.</p>
 <p><strong>Parameters</strong>:</p>
@@ -2153,15 +2153,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="variable-adaptive_zoom_range_fraction" class="level3">
 <h3 class="anchored" data-anchor-id="variable-adaptive_zoom_range_fraction">variable ADAPTIVE_ZOOM_RANGE_FRACTION</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb70"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">float</span> ADAPTIVE_ZOOM_RANGE_FRACTION <span class="op">=</span> <span class="fl">0.03</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb70"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">double</span> ADAPTIVE_ZOOM_RANGE_FRACTION <span class="op">=</span> <span class="fl">0.03</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Visible-range fraction removed per zoom step (matches <a href="">DataViewer</a> adaptive normal mode).</p>
 </section>
 <section id="variable-min_adaptive_visible_range_scale" class="level3">
 <h3 class="anchored" data-anchor-id="variable-min_adaptive_visible_range_scale">variable MIN_ADAPTIVE_VISIBLE_RANGE_SCALE</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb71"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">float</span> MIN_ADAPTIVE_VISIBLE_RANGE_SCALE <span class="op">=</span> <span class="fl">0.01</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb71"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">double</span> MIN_ADAPTIVE_VISIBLE_RANGE_SCALE <span class="op">=</span> <span class="fl">0.01</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Minimum visible-range scale factor in a single wheel event (prevents runaway zoom).</p>
 <hr>
-<p>Updated on 2026-08-31 at 02:17:11 +0000</p>
+<p>Updated on 2026-09-01 at 14:41:08 +0000</p>
 
 
 </section>
