@@ -111,20 +111,12 @@ if(TENSOR_BACKEND_LIBTORCH)
     target_compile_definitions(TensorData PUBLIC TENSOR_BACKEND_LIBTORCH_AVAILABLE)
 endif()
 
-# Compiler-specific options
+set_target_compiler_warnings(TensorData)
+
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(TensorData PRIVATE ${CLANG_OPTIONS})
     if(TENSOR_BACKEND_LIBTORCH)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+        target_compile_options(TensorData PRIVATE -stdlib=libstdc++) #This should be appended
     endif()
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(TensorData PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(TensorData PRIVATE ${MSVC_WARNINGS})
 endif()
 
 # Set output properties
