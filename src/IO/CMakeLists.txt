@@ -166,18 +166,7 @@ if(ENABLE_SPIKE2_SONPY)
     enable_whiskertoolbox_pch(DataManagerIO_Spike2SonPy)
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(DataManagerIO PRIVATE ${CLANG_OPTIONS})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(DataManagerIO PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(DataManagerIO PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(DataManagerIO)
 
 # Prevent static-archive symbols (e.g. TimeFrame) from leaking into the .so
 target_link_options(DataManagerIO PRIVATE

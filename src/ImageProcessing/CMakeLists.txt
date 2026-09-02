@@ -28,18 +28,7 @@ target_link_libraries(ImageProcessing PUBLIC
     ${OpenCV_LIBS}
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(ImageProcessing PRIVATE ${CLANG_OPTIONS})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(ImageProcessing PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(ImageProcessing PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(ImageProcessing)
 
 set_target_properties(ImageProcessing PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

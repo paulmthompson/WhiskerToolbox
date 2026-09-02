@@ -55,18 +55,7 @@ target_link_libraries(DataManagerNumpy PRIVATE
     ParameterSchema               # For ParameterUIHints
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(DataManagerNumpy PRIVATE ${CLANG_OPTIONS})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(DataManagerNumpy PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(DataManagerNumpy PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(DataManagerNumpy)
 
 # Prevent static-archive symbols (e.g. TimeFrame) from leaking into the .so
 target_link_options(DataManagerNumpy PRIVATE
