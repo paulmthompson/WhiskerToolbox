@@ -38,18 +38,7 @@ target_include_directories(ZoneManager PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(ZoneManager PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(ZoneManager PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(ZoneManager PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(ZoneManager)
 
 set_target_properties(ZoneManager PROPERTIES
     AUTOMOC ON

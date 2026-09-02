@@ -41,17 +41,7 @@ target_include_directories(Python_Widget PUBLIC
 
 target_compile_definitions(Python_Widget PRIVATE _ALLOW_COMPILER_AND_STL_VERSION_MISMATCH)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(Python_Widget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(Python_Widget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(Python_Widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(Python_Widget)
 
 set_target_properties(Python_Widget PROPERTIES AUTOMOC ON AUTOUIC ON AUTORCC ON)
 enable_whiskertoolbox_shared_pch(Python_Widget)

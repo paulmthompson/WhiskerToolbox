@@ -30,18 +30,7 @@ target_include_directories(MultiLaneVerticalAxisWidget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(MultiLaneVerticalAxisWidget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(MultiLaneVerticalAxisWidget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(MultiLaneVerticalAxisWidget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(MultiLaneVerticalAxisWidget)
 
 # Enable automoc for Qt
 set_target_properties(MultiLaneVerticalAxisWidget PROPERTIES

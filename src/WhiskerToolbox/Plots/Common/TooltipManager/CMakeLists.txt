@@ -27,18 +27,7 @@ target_include_directories(TooltipManager PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compiler-specific options
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(TooltipManager PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(TooltipManager PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(TooltipManager PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(TooltipManager)
 
 # Enable automoc for Qt
 set_target_properties(TooltipManager PROPERTIES

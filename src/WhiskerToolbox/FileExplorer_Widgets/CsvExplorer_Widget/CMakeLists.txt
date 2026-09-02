@@ -56,18 +56,7 @@ set_target_properties(CsvExplorer_Widget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(CsvExplorer_Widget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(CsvExplorer_Widget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(CsvExplorer_Widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(CsvExplorer_Widget)
 
 add_library(WhiskerToolbox::CsvExplorer_Widget ALIAS CsvExplorer_Widget)
 enable_whiskertoolbox_shared_pch(CsvExplorer_Widget)

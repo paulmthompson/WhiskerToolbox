@@ -79,17 +79,7 @@ set_target_properties(MLCore_Widget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(MLCore_Widget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(MLCore_Widget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(MLCore_Widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(MLCore_Widget)
 
 add_library(WhiskerToolbox::MLCore_Widget ALIAS MLCore_Widget)
 enable_whiskertoolbox_shared_pch(MLCore_Widget)

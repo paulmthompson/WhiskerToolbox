@@ -35,18 +35,7 @@ target_include_directories(HorizontalAxisWidget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(HorizontalAxisWidget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(HorizontalAxisWidget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(HorizontalAxisWidget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(HorizontalAxisWidget)
 
 # Enable automoc for Qt
 set_target_properties(HorizontalAxisWidget PROPERTIES

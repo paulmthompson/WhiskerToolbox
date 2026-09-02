@@ -56,18 +56,7 @@ set_target_properties(BinaryExplorer_Widget PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
 )
 
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(BinaryExplorer_Widget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(BinaryExplorer_Widget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(BinaryExplorer_Widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(BinaryExplorer_Widget)
 
 add_library(WhiskerToolbox::BinaryExplorer_Widget ALIAS BinaryExplorer_Widget)
 enable_whiskertoolbox_shared_pch(BinaryExplorer_Widget)

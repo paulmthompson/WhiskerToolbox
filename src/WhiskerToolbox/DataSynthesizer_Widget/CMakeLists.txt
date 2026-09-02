@@ -48,16 +48,6 @@ set_target_properties(DataSynthesizer_Widget PROPERTIES
     AUTOMOC ON
 )
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(DataSynthesizer_Widget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(DataSynthesizer_Widget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(DataSynthesizer_Widget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(DataSynthesizer_Widget)
 
 enable_whiskertoolbox_shared_pch(DataSynthesizer_Widget)

@@ -31,18 +31,7 @@ target_include_directories(LineStyleControls PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(LineStyleControls PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(LineStyleControls PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(LineStyleControls PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(LineStyleControls)
 
 # Enable automoc for Qt
 set_target_properties(LineStyleControls PROPERTIES

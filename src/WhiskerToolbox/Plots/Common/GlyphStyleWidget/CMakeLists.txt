@@ -31,18 +31,7 @@ target_include_directories(GlyphStyleWidget PUBLIC
     "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
 )
 
-# Compiler-specific options (following the same pattern as main project)
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(GlyphStyleWidget PRIVATE ${CLANG_OPTIONS})
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(GlyphStyleWidget PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(GlyphStyleWidget PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(GlyphStyleWidget)
 
 # Enable automoc for Qt
 set_target_properties(GlyphStyleWidget PROPERTIES
