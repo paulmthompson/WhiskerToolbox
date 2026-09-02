@@ -408,15 +408,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Files/color_8hpp.html#function-isvalidalpha">isValidAlpha</a></strong>(float alpha)</td>
 </tr>
 <tr class="odd">
-<td>std::string</td>
+<td>COREUTILITIES_EXPORT std::string</td>
 <td><strong><a href="../../api_generated/Files/color_8hpp.html#function-generaterandomcolor">generateRandomColor</a></strong>()</td>
 </tr>
 <tr class="even">
-<td>void</td>
+<td>COREUTILITIES_EXPORT void</td>
 <td><strong><a href="../../api_generated/Files/color_8hpp.html#function-hextorgb">hexToRGB</a></strong>(const std::string &amp; hexColor, int &amp; r, int &amp; g, int &amp; b)</td>
 </tr>
 <tr class="odd">
-<td>void</td>
+<td>COREUTILITIES_EXPORT void</td>
 <td><strong><a href="../../api_generated/Files/color_8hpp.html#function-hextorgb">hexToRGB</a></strong>(const std::string &amp; hexColor, float &amp; r, float &amp; g, float &amp; b)</td>
 </tr>
 </tbody>
@@ -438,11 +438,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-generaterandomcolor" class="level3">
 <h3 class="anchored" data-anchor-id="function-generaterandomcolor">function generateRandomColor</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string generateRandomColor<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>COREUTILITIES_EXPORT <span class="bu">std::</span>string generateRandomColor<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-hextorgb" class="level3">
 <h3 class="anchored" data-anchor-id="function-hextorgb">function hexToRGB</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> hexToRGB<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>COREUTILITIES_EXPORT <span class="dt">void</span> hexToRGB<span class="op">(</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> <span class="bu">std::</span>string <span class="op">&amp;</span> hexColor<span class="op">,</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> <span class="op">&amp;</span> r<span class="op">,</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> <span class="op">&amp;</span> g<span class="op">,</span></span>
@@ -451,7 +451,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-hextorgb-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-hextorgb-1">function hexToRGB</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> hexToRGB<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>COREUTILITIES_EXPORT <span class="dt">void</span> hexToRGB<span class="op">(</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> <span class="bu">std::</span>string <span class="op">&amp;</span> hexColor<span class="op">,</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> <span class="op">&amp;</span> r<span class="op">,</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> <span class="op">&amp;</span> g<span class="op">,</span></span>
@@ -464,22 +464,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef DATAMANAGER_COLOR_HPP</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DATAMANAGER_COLOR_HPP</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;string&gt;</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"coreutilities_export.h"</span></span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isValidHexColor<span class="op">(</span><span class="at">const</span> <span class="bu">std::</span>string<span class="op">&amp;</span> hex_color<span class="op">);</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;string&gt;</span></span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isValidAlpha<span class="op">(</span><span class="dt">float</span> alpha<span class="op">);</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isValidHexColor<span class="op">(</span><span class="at">const</span> <span class="bu">std::</span>string<span class="op">&amp;</span> hex_color<span class="op">);</span></span>
 <span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string generateRandomColor<span class="op">();</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isValidAlpha<span class="op">(</span><span class="dt">float</span> alpha<span class="op">);</span></span>
 <span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> hexToRGB<span class="op">(</span><span class="at">const</span> <span class="bu">std::</span>string <span class="op">&amp;</span>hexColor<span class="op">,</span> <span class="dt">int</span> <span class="op">&amp;</span>r<span class="op">,</span> <span class="dt">int</span> <span class="op">&amp;</span>g<span class="op">,</span> <span class="dt">int</span> <span class="op">&amp;</span>b<span class="op">);</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>COREUTILITIES_EXPORT <span class="bu">std::</span>string generateRandomColor<span class="op">();</span></span>
 <span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> hexToRGB<span class="op">(</span><span class="at">const</span> <span class="bu">std::</span>string <span class="op">&amp;</span> hexColor<span class="op">,</span> <span class="dt">float</span> <span class="op">&amp;</span> r<span class="op">,</span> <span class="dt">float</span> <span class="op">&amp;</span> g<span class="op">,</span> <span class="dt">float</span> <span class="op">&amp;</span> b<span class="op">);</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>COREUTILITIES_EXPORT <span class="dt">void</span> hexToRGB<span class="op">(</span><span class="at">const</span> <span class="bu">std::</span>string <span class="op">&amp;</span>hexColor<span class="op">,</span> <span class="dt">int</span> <span class="op">&amp;</span>r<span class="op">,</span> <span class="dt">int</span> <span class="op">&amp;</span>g<span class="op">,</span> <span class="dt">int</span> <span class="op">&amp;</span>b<span class="op">);</span></span>
 <span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif </span><span class="co">// COLOR_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>COREUTILITIES_EXPORT <span class="dt">void</span> hexToRGB<span class="op">(</span><span class="at">const</span> <span class="bu">std::</span>string <span class="op">&amp;</span> hexColor<span class="op">,</span> <span class="dt">float</span> <span class="op">&amp;</span> r<span class="op">,</span> <span class="dt">float</span> <span class="op">&amp;</span> g<span class="op">,</span> <span class="dt">float</span> <span class="op">&amp;</span> b<span class="op">);</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif </span><span class="co">// COLOR_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-02 at 16:21:22 +0000</p>
+<p>Updated on 2026-09-02 at 20:36:17 +0000</p>
 
 
 </section>
