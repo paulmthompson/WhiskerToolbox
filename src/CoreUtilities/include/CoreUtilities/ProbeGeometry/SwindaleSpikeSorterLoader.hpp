@@ -11,6 +11,7 @@
  *   Swindale et al. (2017). J Vis Exp 55217. doi:10.3791/55217
  */
 
+#include "coreutilities_export.h"
 #include "CoreUtilities/ProbeGeometry/ChannelPosition.hpp"
 
 #include <string>
@@ -27,7 +28,7 @@
  * @param text Raw text content of the SpikeSorter configuration file (.cfg)
  * @return Vector of `ChannelPosition` entries; empty if parsing fails entirely.
  */
-[[nodiscard]] std::vector<ChannelPosition> parseSwindaleSpikeSorterConfig(std::string const & text);
+[[nodiscard]] std::vector<ChannelPosition> COREUTILITIES_EXPORT parseSwindaleSpikeSorterConfig(std::string const & text);
 
 /**
  * @brief Extract group name and channel ID from a series key.
@@ -50,7 +51,7 @@
  * @param key_one_based true when series key suffixes are 1-based (e.g. "voltage_1" = first channel)
  * @return `SortableRankMap` ready for ordering policy
  */
-[[nodiscard]] SortableRankMap buildSwindaleSpikeSorterRanks(
+[[nodiscard]] COREUTILITIES_EXPORT SortableRankMap buildSwindaleSpikeSorterRanks(
         std::vector<std::string> const & keys,
         ChannelPositionMap const & configs,
         bool key_one_based = true);
@@ -63,7 +64,7 @@
  * @param key_one_based true when series key suffixes are 1-based (e.g. "voltage_1" = first channel)
  * @return Keys sorted by group, then by Y position, then by channel ID
  */
-[[nodiscard]] std::vector<std::string> orderKeysBySwindaleSpikeSorter(
+[[nodiscard]] COREUTILITIES_EXPORT std::vector<std::string> orderKeysBySwindaleSpikeSorter(
         std::vector<std::string> const & keys,
         ChannelPositionMap const & configs,
         bool key_one_based = true);

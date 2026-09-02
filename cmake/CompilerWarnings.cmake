@@ -100,16 +100,73 @@ if("${MSVC_WARNINGS}" STREQUAL "")
      )
    endif()
 
+include(GenerateExportHeader)
+
 function(set_target_compiler_warnings target_name)
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        target_compile_options(${target_name} PRIVATE ${CLANG_OPTIONS})
-    endif()
 
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        target_compile_options(${target_name} PRIVATE ${GCC_WARNINGS})
-    endif()
+  set(options MANUAL_EXPORT)
+  set(oneValueArgs EXPORT_FILE_NAME EXPORT_MACRO_NAME)
+  set(multiValueArgs)
+  cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
-    if (MSVC)
-        target_compile_options(${target_name} PRIVATE ${MSVC_WARNINGS})
+  get_target_property(target_type ${target_name} TYPE)
+
+  if(target_type STREQUAL "INTERFACE_LIBRARY")
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+      target_compile_options(${target_name} INTERFACE ${CLANG_OPTIONS})
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+      target_compile_options(${target_name} INTERFACE ${GCC_WARNINGS})
+    elseif(MSVC)
+      target_compile_options(${target_name} INTERFACE ${MSVC_WARNINGS})
     endif()
+    return()
+  else()
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+      target_compile_options(${target_name} PRIVATE ${CLANG_OPTIONS})
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+      target_compile_options(${target_name} PRIVATE ${GCC_WARNINGS})
+    elseif(MSVC)
+      target_compile_options(${target_name} PRIVATE ${MSVC_WARNINGS})
+    endif()
+  endif()
+
+  if(ARG_MANUAL_EXPORT)
+    # Only library targets (SHARED, STATIC, MODULE) generate export headers
+    if(target_type MATCHES "^(SHARED_LIBRARY|STATIC_LIBRARY|MODULE_LIBRARY)$")
+      # Set hidden visibility on GCC/Clang and disable Windows auto-export
+      set_target_properties(${target_name} PROPERTIES
+        CXX_VISIBILITY_PRESET hidden
+        VISIBILITY_INLINES_HIDDEN ON
+        WINDOWS_EXPORT_ALL_SYMBOLS OFF
+      )
+
+      # Determine export header filename (default: <lowercase_target>_export.h)
+      if(ARG_EXPORT_FILE_NAME)
+        set(export_header_rel "${ARG_EXPORT_FILE_NAME}")
+      else()
+        string(TOLOWER "${target_name}" target_lower)
+        set(export_header_rel "${target_lower}_export.h")
+      endif()
+      set(export_header_full "${CMAKE_CURRENT_BINARY_DIR}/${export_header_rel}")
+
+      # Build generate_export_header arguments
+      set(gen_export_args ${target_name} EXPORT_FILE_NAME "${export_header_full}")
+      if(ARG_EXPORT_MACRO_NAME)
+        list(APPEND gen_export_args EXPORT_MACRO_NAME "${ARG_EXPORT_MACRO_NAME}")
+      endif()
+
+      generate_export_header(${gen_export_args})
+
+      target_include_directories(${target_name} PUBLIC
+        "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
+      )
+    endif()
+  else()
+    # Default behavior: keep Windows auto-export enabled for shared libraries/DLLs
+    if(target_type MATCHES "^(SHARED_LIBRARY|MODULE_LIBRARY)$")
+      set_target_properties(${target_name} PROPERTIES
+        WINDOWS_EXPORT_ALL_SYMBOLS ON
+      )
+    endif()
+  endif()
 endfunction()

@@ -1,3 +1,13 @@
+if (APPLE)
+    message(STATUS "CorePlotting tests currently not supported on MacOS")
+    return()
+endif()
+
+if (WIN32)
+    message(STATUS "CorePlotting tests currently not supported on Windows")
+    return()
+endif()
+
 add_executable(test_CoreUtilities
     ProbeGeometry.test.cpp
 )

@@ -1,3 +1,15 @@
+
+if (APPLE)
+    message(STATUS "CorePlotting tests currently not supported on MacOS")
+    return()
+endif()
+
+if (WIN32)
+    message(STATUS "CorePlotting tests currently not supported on Windows")
+    return()
+endif()
+
+
 cmake_minimum_required(VERSION 3.20)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets)

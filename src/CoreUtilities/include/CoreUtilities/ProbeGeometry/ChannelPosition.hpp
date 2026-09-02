@@ -10,6 +10,8 @@
  * (such as SwindaleEventDetection), rank adapter layers, and viewer ordering policies.
  */
 
+#include "coreutilities_export.h"
+
 #include <functional>
 #include <optional>
 #include <string>
@@ -59,7 +61,7 @@ struct NormalizedSeriesIdentity {
  * @param key Series key to parse (e.g. "ephys_32")
  * @return Normalized identity. Non-conforming keys return group=key, channel_id=nullopt.
  */
-[[nodiscard]] NormalizedSeriesIdentity parseSeriesIdentity(std::string const & key);
+[[nodiscard]] COREUTILITIES_EXPORT NormalizedSeriesIdentity parseSeriesIdentity(std::string const & key);
 
 /**
  * @brief Extract a 0-based channel index from a series key within a group.
@@ -81,7 +83,7 @@ struct NormalizedSeriesIdentity {
  * @param group Group prefix to match (e.g. "voltage")
  * @return false (0-based) when any key has suffix 0, otherwise true (1-based)
  */
-[[nodiscard]] bool detectKeyOneBased(
+[[nodiscard]] COREUTILITIES_EXPORT bool detectKeyOneBased(
         std::vector<std::string> const & keys,
         std::string const & group);
 

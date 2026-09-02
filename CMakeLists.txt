@@ -163,8 +163,8 @@ set(VCPKG_MANIFEST_MODE ON)
 set(VCPKG_INSTALL_OPTIONS "--allow-unsupported")
 
 #This is necessary to work on windows. A better way would be to define only the symbols that need to be exported
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-set(CMAKE_SUPPORT_WINDOWS_EXPORT_ALL_SYMBOLS 1)
+#set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+#set(CMAKE_SUPPORT_WINDOWS_EXPORT_ALL_SYMBOLS 1)
 
 #Fix header linting on vscode
 #e.g. add "compileCommands": "${workspaceFolder}/out/build/Clang/Release/compile_commands.json" to c_cpp_properties.json for Mac config

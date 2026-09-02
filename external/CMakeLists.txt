@@ -110,7 +110,8 @@ if(ENABLE_ORTOOLS)
       set(BUILD_Protobuf OFF)
       set(BUILD_absl OFF)
 
-      set(BUILD_BZip2 ON)
+      #set(BUILD_BZip2 ON)
+      set(BUILD_BZip2 OFF)
 
       set(USE_SCIP OFF)
       set(BUILD_soplex OFF)
