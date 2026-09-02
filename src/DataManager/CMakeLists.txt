@@ -257,18 +257,7 @@ target_link_libraries(DataManager PRIVATE OpenBLAS::OpenBLAS)
 target_link_libraries(DataManager PRIVATE Commands)
 
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    target_compile_options(DataManager PRIVATE ${CLANG_OPTIONS})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
-endif()
-
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(DataManager PRIVATE ${GCC_WARNINGS})
-endif()
-
-if (MSVC)
-    target_compile_options(DataManager PRIVATE ${MSVC_WARNINGS})
-endif()
+set_target_compiler_warnings(DataManager)
 
 set_target_properties(DataManager PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}

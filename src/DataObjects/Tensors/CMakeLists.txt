@@ -8,10 +8,7 @@ find_package(Armadillo REQUIRED)
 if(TENSOR_BACKEND_LIBTORCH)
     set(CMAKE_CUDA_FLAGS "-allow-unsupported-compiler")
     find_package(Torch REQUIRED)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 endif()
-
-
 
 # Set backend-specific variables
 if(TENSOR_BACKEND_LIBTORCH)
@@ -19,7 +16,6 @@ if(TENSOR_BACKEND_LIBTORCH)
     
     # Find LibTorch
     find_package(Torch REQUIRED)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
     
     # Backend sources
     set(BACKEND_SOURCES
@@ -93,10 +89,6 @@ target_link_libraries(TensorData PUBLIC DataTypeTraits)
 # Armadillo is always PUBLIC (ArmadilloTensorStorage.hpp includes <armadillo>)
 target_link_libraries(TensorData PUBLIC armadillo ${ARMADILLO_LIBRARIES})
 
-# Link additional backend-specific libraries (e.g., LibTorch) as PRIVATE
-if(TENSOR_BACKEND_LIBTORCH)
-    target_link_libraries(TensorData PRIVATE ${TORCH_LIBRARIES})
-endif()
 
 # Set backend-specific compile definitions as PRIVATE
 # Note: TENSOR_BACKEND_LIBTORCH is PRIVATE because torch headers conflict with
@@ -113,10 +105,15 @@ endif()
 
 set_target_compiler_warnings(TensorData)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    if(TENSOR_BACKEND_LIBTORCH)
+if(TENSOR_BACKEND_LIBTORCH)
+    
+    target_compile_options(TensorData PRIVATE ${TORCH_CXX_FLAGS})
+
+    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         target_compile_options(TensorData PRIVATE -stdlib=libstdc++) #This should be appended
     endif()
+
+    target_link_libraries(TensorData PRIVATE ${TORCH_LIBRARIES})
 endif()
 
 # Set output properties

@@ -9,7 +9,6 @@ find_package(reflectcpp CONFIG REQUIRED)
 
 set(CMAKE_CUDA_FLAGS "-allow-unsupported-compiler")
 find_package(Torch REQUIRED)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 
 set(DEEP_LEARNING_SOURCES
     bindings/BindingParamSchemas.cpp
@@ -149,6 +148,7 @@ target_link_libraries(DeepLearning PRIVATE DataManager)
 target_link_libraries(DeepLearning PRIVATE Commands)
 
 set_target_compiler_warnings(DeepLearning)
+target_compile_options(DeepLearning PRIVATE ${TORCH_CXX_FLAGS})
 
 set_target_properties(DeepLearning PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
