@@ -17,6 +17,7 @@ class AnalogTimeSeries;
 class DigitalEventSeries;
 class DigitalIntervalSeries;
 class TensorData;
+class TimeFrame;
 
 /**
  * @brief Variant type for all possible data types that can be loaded
@@ -29,7 +30,8 @@ using LoadedDataVariant = std::variant<
         std::shared_ptr<AnalogTimeSeries>,
         std::shared_ptr<DigitalEventSeries>,
         std::shared_ptr<DigitalIntervalSeries>,
-        std::shared_ptr<TensorData>>;
+        std::shared_ptr<TensorData>,
+        std::shared_ptr<TimeFrame>>;
 
 /**
  * @brief Result of a data loading operation

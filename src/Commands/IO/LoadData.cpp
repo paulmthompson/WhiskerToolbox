@@ -36,8 +36,7 @@ std::optional<DM_DataType> parseDataType(std::string const & data_type) {
 std::optional<DataTypeVariant> toDataTypeVariant(LoadedDataVariant && loaded) {
     return std::visit(
             []<typename T>(std::shared_ptr<T> && ptr) -> std::optional<DataTypeVariant> {
-                if constexpr (std::is_same_v<T, ImageData>) {
-                    // ImageData is not stored in DataManager
+                if constexpr (std::is_same_v<T, ImageData> || std::is_same_v<T, TimeFrame>) {
                     return std::nullopt;
                 } else {
                     return DataTypeVariant{std::move(ptr)};

@@ -1,6 +1,6 @@
 #include "HDF5FormatLoader.hpp"
 
-#include "HDF5Loader.hpp"// For the existing HDF5Loader implementation
+#include "HDF5Loader.hpp"
 
 #include <iostream>
 
@@ -17,8 +17,14 @@ LoadResult HDF5FormatLoader::load(std::string const & filepath,
         case DM_DataType::DigitalEvent:
             return loadDigitalEventDataHDF5(filepath, config);
 
+        case DM_DataType::DigitalInterval:
+            return loadDigitalIntervalDataHDF5(filepath, config);
+
         case DM_DataType::Analog:
             return loadAnalogDataHDF5(filepath, config);
+
+        case DM_DataType::Time:
+            return loadIdentityTimeFrameHDF5(filepath, config);
 
         default:
             return LoadResult("HDF5 loader does not support data type: " + std::to_string(static_cast<int>(dataType)));
@@ -26,16 +32,21 @@ LoadResult HDF5FormatLoader::load(std::string const & filepath,
 }
 
 bool HDF5FormatLoader::supportsFormat(std::string const & format, DM_DataType dataType) const {
-    // Support hdf5 format for MaskData, LineData, DigitalEventSeries, and AnalogTimeSeries
-    if (format == "hdf5" &&
-        (dataType == DM_DataType::Mask ||
-         dataType == DM_DataType::Line ||
-         dataType == DM_DataType::DigitalEvent ||
-         dataType == DM_DataType::Analog)) {
-        return true;
+    if (format != "hdf5") {
+        return false;
     }
 
-    return false;
+    switch (dataType) {
+        case DM_DataType::Mask:
+        case DM_DataType::Line:
+        case DM_DataType::DigitalEvent:
+        case DM_DataType::DigitalInterval:
+        case DM_DataType::Analog:
+        case DM_DataType::Time:
+            return true;
+        default:
+            return false;
+    }
 }
 
 std::string HDF5FormatLoader::getLoaderName() const {
@@ -43,10 +54,9 @@ std::string HDF5FormatLoader::getLoaderName() const {
 }
 
 LoadResult HDF5FormatLoader::loadMaskDataHDF5(std::string const & filepath,
-                                              nlohmann::json const & config) const {
+                                              nlohmann::json const & config) {
     try {
-        // Use the existing HDF5Loader functionality
-        HDF5Loader hdf5_loader;
+        HDF5Loader const hdf5_loader;
         return hdf5_loader.loadData(filepath, DM_DataType::Mask, config);
 
     } catch (std::exception const & e) {
@@ -55,10 +65,9 @@ LoadResult HDF5FormatLoader::loadMaskDataHDF5(std::string const & filepath,
 }
 
 LoadResult HDF5FormatLoader::loadLineDataHDF5(std::string const & filepath,
-                                              nlohmann::json const & config) const {
+                                              nlohmann::json const & config) {
     try {
-        // Use the existing HDF5Loader functionality
-        HDF5Loader hdf5_loader;
+        HDF5Loader const hdf5_loader;
         return hdf5_loader.loadData(filepath, DM_DataType::Line, config);
 
     } catch (std::exception const & e) {
@@ -67,10 +76,9 @@ LoadResult HDF5FormatLoader::loadLineDataHDF5(std::string const & filepath,
 }
 
 LoadResult HDF5FormatLoader::loadDigitalEventDataHDF5(std::string const & filepath,
-                                                      nlohmann::json const & config) const {
+                                                      nlohmann::json const & config) {
     try {
-        // Use the HDF5Loader functionality
-        HDF5Loader hdf5_loader;
+        HDF5Loader const hdf5_loader;
         return hdf5_loader.loadData(filepath, DM_DataType::DigitalEvent, config);
 
     } catch (std::exception const & e) {
@@ -78,11 +86,32 @@ LoadResult HDF5FormatLoader::loadDigitalEventDataHDF5(std::string const & filepa
     }
 }
 
-LoadResult HDF5FormatLoader::loadAnalogDataHDF5(std::string const & filepath,
-                                                nlohmann::json const & config) const {
+LoadResult HDF5FormatLoader::loadDigitalIntervalDataHDF5(std::string const & filepath,
+                                                         nlohmann::json const & config) {
     try {
-        // Use the HDF5Loader functionality
-        HDF5Loader hdf5_loader;
+        HDF5Loader const hdf5_loader;
+        return hdf5_loader.loadData(filepath, DM_DataType::DigitalInterval, config);
+
+    } catch (std::exception const & e) {
+        return LoadResult("HDF5 DigitalIntervalSeries loading failed: " + std::string(e.what()));
+    }
+}
+
+LoadResult HDF5FormatLoader::loadIdentityTimeFrameHDF5(std::string const & filepath,
+                                                       nlohmann::json const & config) {
+    try {
+        HDF5Loader const hdf5_loader;
+        return hdf5_loader.loadData(filepath, DM_DataType::Time, config);
+
+    } catch (std::exception const & e) {
+        return LoadResult("HDF5 TimeFrame loading failed: " + std::string(e.what()));
+    }
+}
+
+LoadResult HDF5FormatLoader::loadAnalogDataHDF5(std::string const & filepath,
+                                                nlohmann::json const & config) {
+    try {
+        HDF5Loader const hdf5_loader;
         return hdf5_loader.loadData(filepath, DM_DataType::Analog, config);
 
     } catch (std::exception const & e) {

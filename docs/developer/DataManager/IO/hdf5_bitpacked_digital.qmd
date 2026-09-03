@@ -1,0 +1,29 @@
+---
+title: "HDF5 Bit-Packed Digital Loading"
+---
+
+## Overview
+
+`HDF5Loader` supports Wavesurfer-style bit-packed TTL datasets via `data_key` in the JSON config. Samples are read as `uint8` or `uint16`, widened to `uint16`, and passed through the shared binary TTL helpers in `IO/formats/Binary/common/binary_loaders.hpp`.
+
+## Entry points
+
+| Component | Role |
+|---|---|
+| `hdf5::load_flat_unsigned_array` | Reads flat `uint8`/`uint16` samples (1D or 2D with `sweep_row`) |
+| `hdf5::get_identity_sample_count` | Shape-only sample count for identity TimeFrames |
+| `HDF5Loader::loadBitPackedDigitalEventData` | `extractDigitalData` + `extractEvents` |
+| `HDF5Loader::loadBitPackedDigitalIntervalData` | `extractDigitalData` + `extractIntervals` |
+| `HDF5Loader::loadIdentityTimeFrameData` | Builds `[0..N-1]` from dataset shape |
+
+## Dispatch
+
+- `DigitalEvent` + `data_key` → bit-packed path; without `data_key` → existing `time_key`/`event_key` parallel-array path (unchanged).
+- `DigitalInterval` + `data_key` → bit-packed path only.
+- `Time` + `time_layout: "identity"` + `data_key` → identity TimeFrame via `LoaderRegistry`.
+
+`DataManager::load_data_from_json_config` routes `data_type: "time"` with `format: "hdf5"` through `tryRegistryThenLegacyLoad` before inline binary TimeFrame handlers.
+
+## Tests
+
+`tests/DataManager/IO/formats/HDF5/hdf5_bitpacked_digital.test.cpp` — synthetic `uint8` fixtures for events, intervals, identity TimeFrame, and 2D Wavesurfer layout.

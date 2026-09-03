@@ -13,5 +13,6 @@ This section provides guides for loading data from specific acquisition systems 
 | [Spike2 (CED)](spike2.qmd) | `.smr` / `.smrx` via SonPy |
 | [SpikeSorter](spikesorter.qmd) | SpikeSorter CSV output |
 | [Generic HDF5](generic_hdf5.qmd) | HDF5-based recordings |
+| [Wavesurfer HDF5](wavesurfer_hdf5.qmd) | Wavesurfer `.h5` bit-packed TTL scans |
 | [Generic binary](generic_binary.qmd) | Raw binary layouts |
 | [Image stacks](image_stacks.qmd) | Multi-frame imaging folders |

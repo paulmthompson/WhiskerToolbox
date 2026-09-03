@@ -1,0 +1,106 @@
+---
+title: "Wavesurfer HDF5"
+---
+
+[Wavesurfer](https://wavesurfer.janelia.org/) saves continuous acquisition data in HDF5 `.h5` files. Neuralyzer can load **bit-packed digital TTL scans** from datasets such as `sweep_0001/digitalScans`, plus an **identity master clock** derived from the dataset shape.
+
+## File layout
+
+Typical structure:
+
+| Path | Description |
+|---|---|
+| `header/AcquisitionSampleRate` | DAQ rate in Hz (e.g. 250000) |
+| `header/DIChannelNames` | Digital input names (e.g. `cam`, `pulse_pal`) |
+| `sweep_XXXX/digitalScans` | Packed TTL samples (`uint8` on disk) |
+| `sweep_XXXX/timestamp` | Sweep timestamp metadata |
+
+### uint8 storage vs uint16 semantics
+
+Wavesurfer stores `digitalScans` as **`uint8`**, but each sample is a **uint16 TTL word** via zero-extension (the same as `astype(np.uint16)` in NumPy). Values 0–3 use bits 0 and 1 for the two digital inputs:
+
+| Bit | Typical channel |
+|---|---|
+| 0 | Camera TTL (`cam`, DI0) |
+| 1 | PulsePal TTL (`pulse_pal`, DI1) |
+
+This is **not** byte-pair reinterpretation — two `uint8` bytes are not combined into one sample.
+
+## Loading digital events and intervals
+
+Bit-packed loading requires `data_key`, `channel` (bit index), and `transition` (`rising` or `falling`). Event and interval times are **DAQ sample indices**.
+
+```json
+{
+  "name": "cam_ttl",
+  "format": "hdf5",
+  "data_type": "digital_event",
+  "filepath": "/path/to/recording.h5",
+  "data_key": "sweep_0001/digitalScans",
+  "channel": 0,
+  "transition": "rising",
+  "clock": "master"
+}
+```
+
+```json
+{
+  "name": "pulse_pal_intervals",
+  "format": "hdf5",
+  "data_type": "digital_interval",
+  "filepath": "/path/to/recording.h5",
+  "data_key": "sweep_0001/digitalScans",
+  "channel": 1,
+  "transition": "rising",
+  "clock": "master"
+}
+```
+
+For 2D datasets shaped `(rows, samples)`, optional `sweep_row` (default `0`) selects which row to read.
+
+## Clock assignment
+
+Declare clocks and build a master + camera-frame timebase:
+
+```json
+{
+  "clocks": ["master", "time"],
+  "data": [
+    {
+      "name": "master",
+      "format": "hdf5",
+      "data_type": "time",
+      "filepath": "/path/to/recording.h5",
+      "data_key": "sweep_0001/digitalScans",
+      "time_layout": "identity"
+    },
+    {
+      "name": "cam_ttl",
+      "format": "hdf5",
+      "data_type": "digital_event",
+      "filepath": "/path/to/recording.h5",
+      "data_key": "sweep_0001/digitalScans",
+      "channel": 0,
+      "transition": "rising",
+      "clock": "master"
+    },
+    {
+      "format": "derived",
+      "data_type": "time",
+      "name": "time",
+      "source_timeframe": "master",
+      "source_series": "cam_ttl",
+      "source_type": "event"
+    }
+  ]
+}
+```
+
+- **`master`**: identity ticks `[0, 1, …, N-1]` at the DAQ sample rate (shape-only read; fast).
+- **`time`**: camera frame times derived from `cam_ttl` rising edges sampling `master`.
+
+Bind video to `"clock": "time"`. PulsePal intervals remain on `master` (sample indices).
+
+::: {.callout-note}
+Converting sample indices to camera frame indices (as in a Jupyter workflow that estimates FPS from the camera TTL) is a downstream transform, not part of the loader.
+:::

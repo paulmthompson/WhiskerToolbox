@@ -65,6 +65,7 @@ target_link_libraries(DataManagerHDF5 PRIVATE
     WhiskerToolbox::MaskData
     WhiskerToolbox::DigitalTimeSeries   # For DigitalEventSeries
     WhiskerToolbox::AnalogTimeSeries    # For AnalogTimeSeries
+    WhiskerToolbox::TimeFrame           # For identity TimeFrame loading
 )
 
 # Platform-specific HDF5 linking

@@ -259,6 +259,13 @@ bool tryRegistryThenLegacyLoad(
                         }
                         break;
                     }
+                    case DM_DataType::Time: {
+                        if (std::holds_alternative<std::shared_ptr<TimeFrame>>(result.data)) {
+                            auto timeframe = std::get<std::shared_ptr<TimeFrame>>(result.data);
+                            dm->setTime(TimeKey(name), timeframe, true);
+                        }
+                        break;
+                    }
                     default:
                         std::cerr << "Registry loaded unsupported data type: " << static_cast<int>(data_type) << std::endl;
                         return false;
@@ -1649,6 +1656,9 @@ std::vector<DataInfo> load_data_from_json_config(DataManager * dm, json const & 
                 break;
             }
             case DM_DataType::Time: {
+                if (tryRegistryThenLegacyLoad(dm, file_path, data_type, item, name, registration_time_key, data_info_list)) {
+                    break;
+                }
 
                 if (item["format"] == "uint16") {
 

@@ -7,9 +7,9 @@
 
 /**
  * @brief HDF5 format loader
- * 
- * This loader provides HDF5 loading capability for MaskData and LineData.
- * It wraps the existing HDF5 loading functionality.
+ *
+ * This loader provides HDF5 loading capability for MaskData, LineData,
+ * DigitalEventSeries, DigitalIntervalSeries, AnalogTimeSeries, and TimeFrame.
  */
 class DATAMANAGERIO_HDF5_EXPORT HDF5FormatLoader : public IFormatLoader {
 public:
@@ -37,26 +37,38 @@ private:
     /**
      * @brief Load MaskData from HDF5 file using existing functionality
      */
-    LoadResult loadMaskDataHDF5(std::string const & filepath,
-                                nlohmann::json const & config) const;
+    static LoadResult loadMaskDataHDF5(std::string const & filepath,
+                                nlohmann::json const & config) ;
 
     /**
      * @brief Load LineData from HDF5 file using existing functionality
      */
-    LoadResult loadLineDataHDF5(std::string const & filepath,
-                                nlohmann::json const & config) const;
+    static LoadResult loadLineDataHDF5(std::string const & filepath,
+                                nlohmann::json const & config) ;
 
     /**
      * @brief Load DigitalEventSeries from HDF5 file
      */
-    LoadResult loadDigitalEventDataHDF5(std::string const & filepath,
-                                        nlohmann::json const & config) const;
+    static LoadResult loadDigitalEventDataHDF5(std::string const & filepath,
+                                        nlohmann::json const & config) ;
+
+    /**
+     * @brief Load DigitalIntervalSeries from HDF5 file
+     */
+    static LoadResult loadDigitalIntervalDataHDF5(std::string const & filepath,
+                                           nlohmann::json const & config) ;
+
+    /**
+     * @brief Load identity TimeFrame from HDF5 dataset shape
+     */
+    static LoadResult loadIdentityTimeFrameHDF5(std::string const & filepath,
+                                         nlohmann::json const & config) ;
 
     /**
      * @brief Load AnalogTimeSeries from HDF5 file
      */
-    LoadResult loadAnalogDataHDF5(std::string const & filepath,
-                                  nlohmann::json const & config) const;
+    static LoadResult loadAnalogDataHDF5(std::string const & filepath,
+                                  nlohmann::json const & config) ;
 };
 
 #endif// HDF5_FORMAT_LOADER_HPP

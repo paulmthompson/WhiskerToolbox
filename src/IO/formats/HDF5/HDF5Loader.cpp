@@ -5,17 +5,69 @@
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "IO/formats/Binary/common/binary_loaders.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Masks/Mask_Data.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 #include "common/hdf5_utilities.hpp"
 #include "hdf5_loaders.hpp"
 
 #include <cmath>
 #include <iostream>
+#include <numeric>
 
 std::string HDF5Loader::getFormatId() const {
     return "hdf5";
 }
+
+namespace {
+
+bool parseBitPackedConfig(
+        nlohmann::json const & config,
+        std::string & data_key,
+        int & channel,
+        std::string & transition,
+        int & sweep_row) {
+    if (!config.contains("data_key")) {
+        return false;
+    }
+    if (!config.contains("channel")) {
+        throw std::invalid_argument("HDF5 bit-packed loader requires 'channel' in config");
+    }
+    if (!config.contains("transition")) {
+        throw std::invalid_argument("HDF5 bit-packed loader requires 'transition' in config");
+    }
+
+    data_key = config["data_key"].get<std::string>();
+    channel = config["channel"].get<int>();
+    transition = config["transition"].get<std::string>();
+    sweep_row = config.value("sweep_row", 0);
+
+    if (channel < 0 || channel >= 16) {
+        throw std::invalid_argument("HDF5 bit-packed loader: channel must be in range [0, 15]");
+    }
+    if (transition != "rising" && transition != "falling") {
+        throw std::invalid_argument("HDF5 bit-packed loader: transition must be 'rising' or 'falling'");
+    }
+    if (sweep_row < 0) {
+        throw std::invalid_argument("HDF5 bit-packed loader: sweep_row must be non-negative");
+    }
+
+    return true;
+}
+
+hdf5::HDF5FlatUnsignedOptions makeFlatUnsignedOptions(
+        std::string const & file_path,
+        std::string const & data_key,
+        int sweep_row) {
+    return hdf5::HDF5FlatUnsignedOptions{
+            .filepath = file_path,
+            .key = data_key,
+            .sweep_row = sweep_row};
+}
+
+}// namespace
 
 bool HDF5Loader::supportsDataType(DM_DataType data_type) const {
     using enum DM_DataType;
@@ -23,7 +75,9 @@ bool HDF5Loader::supportsDataType(DM_DataType data_type) const {
         case Mask:
         case Line:
         case DigitalEvent:
+        case DigitalInterval:
         case Analog:
+        case Time:
             return true;
         default:
             return false;
@@ -45,8 +99,14 @@ LoadResult HDF5Loader::loadData(
         if (data_type == DigitalEvent) {
             return loadDigitalEventData(file_path, config);
         }
+        if (data_type == DigitalInterval) {
+            return loadDigitalIntervalData(file_path, config);
+        }
         if (data_type == Analog) {
             return loadAnalogData(file_path, config);
+        }
+        if (data_type == Time) {
+            return loadIdentityTimeFrameData(file_path, config);
         }
         return LoadResult("Unsupported data type for HDF5 loader");
     } catch (std::exception const & e) {
@@ -56,7 +116,7 @@ LoadResult HDF5Loader::loadData(
 
 LoadResult HDF5Loader::loadMaskData(
         std::string const & file_path,
-        nlohmann::json const & config) const {
+        nlohmann::json const & config) {
     try {
         // Extract configuration with defaults
         std::string frame_key = "frames";
@@ -86,7 +146,7 @@ LoadResult HDF5Loader::loadMaskData(
         auto mask_data = std::make_shared<MaskData>();
 
         for (std::size_t i = 0; i < frames.size(); i++) {
-            TimeFrameIndex frame_idx{frames[i]};
+            TimeFrameIndex const frame_idx{frames[i]};
 
             if (i < x_coords.size() && i < y_coords.size()) {
                 Mask2D mask_points;
@@ -94,7 +154,7 @@ LoadResult HDF5Loader::loadMaskData(
                 auto const & x_vec = x_coords[i];
                 auto const & y_vec = y_coords[i];
 
-                size_t min_size = std::min(x_vec.size(), y_vec.size());
+                size_t const min_size = std::min(x_vec.size(), y_vec.size());
                 for (size_t j = 0; j < min_size; j++) {
                     mask_points.push_back(Point2D<uint32_t>(
                             static_cast<uint32_t>(x_vec[j]),
@@ -125,7 +185,7 @@ LoadResult HDF5Loader::loadMaskData(
 
 LoadResult HDF5Loader::loadLineData(
         std::string const & file_path,
-        nlohmann::json const & config) const {
+        nlohmann::json const & config) {
     try {
         // Extract configuration with defaults
         std::string frame_key = "frames";
@@ -155,7 +215,7 @@ LoadResult HDF5Loader::loadLineData(
         auto line_data = std::make_shared<LineData>();
 
         for (std::size_t i = 0; i < frames.size(); i++) {
-            TimeFrameIndex frame_idx{frames[i]};
+            TimeFrameIndex const frame_idx{frames[i]};
 
             if (i < x_coords.size() && i < y_coords.size()) {
                 Line2D line;
@@ -163,7 +223,7 @@ LoadResult HDF5Loader::loadLineData(
                 auto const & x_vec = x_coords[i];
                 auto const & y_vec = y_coords[i];
 
-                size_t min_size = std::min(x_vec.size(), y_vec.size());
+                size_t const min_size = std::min(x_vec.size(), y_vec.size());
                 for (size_t j = 0; j < min_size; j++) {
                     line.push_back(Point2D<float>(x_vec[j], y_vec[j]));
                 }
@@ -193,6 +253,10 @@ LoadResult HDF5Loader::loadLineData(
 LoadResult HDF5Loader::loadDigitalEventData(
         std::string const & file_path,
         nlohmann::json const & config) const {
+    if (config.contains("data_key")) {
+        return loadBitPackedDigitalEventData(file_path, config);
+    }
+
     try {
         // Extract required configuration
         if (!config.contains("time_key")) {
@@ -202,8 +266,8 @@ LoadResult HDF5Loader::loadDigitalEventData(
             return LoadResult("HDF5 DigitalEvent loader requires 'event_key' in config");
         }
 
-        std::string time_key = config["time_key"].get<std::string>();
-        std::string event_key = config["event_key"].get<std::string>();
+        std::string const time_key = config["time_key"].get<std::string>();
+        std::string const event_key = config["event_key"].get<std::string>();
 
         // Scale factor: multiply timestamps by this to convert to frame indices
         // e.g., timestamps in seconds * 30000 Hz = sample indices
@@ -254,7 +318,7 @@ LoadResult HDF5Loader::loadDigitalEventData(
 
                 // Convert to integer frame index (round to nearest)
                 auto frame_idx = static_cast<int64_t>(std::round(scaled_time));
-                event_times.push_back(TimeFrameIndex{frame_idx});
+                event_times.emplace_back(frame_idx);
             }
         }
 
@@ -271,9 +335,115 @@ LoadResult HDF5Loader::loadDigitalEventData(
     }
 }
 
-LoadResult HDF5Loader::loadAnalogData(
+LoadResult HDF5Loader::loadDigitalIntervalData(
         std::string const & file_path,
         nlohmann::json const & config) const {
+    return loadBitPackedDigitalIntervalData(file_path, config);
+}
+
+LoadResult HDF5Loader::loadBitPackedDigitalEventData(
+        std::string const & file_path,
+        nlohmann::json const & config) {
+    try {
+        std::string data_key;
+        int channel = 0;
+        std::string transition;
+        int sweep_row = 0;
+        if (!parseBitPackedConfig(config, data_key, channel, transition, sweep_row)) {
+            return LoadResult("HDF5 bit-packed DigitalEvent loader requires 'data_key' in config");
+        }
+
+        auto const samples = hdf5::load_flat_unsigned_array(
+                makeFlatUnsignedOptions(file_path, data_key, sweep_row));
+        if (samples.empty()) {
+            return LoadResult("No bit-packed digital data found in HDF5 file at key: " + data_key);
+        }
+
+        auto const digital_data = Loader::extractDigitalData(samples, channel);
+        auto const events = Loader::extractEvents(digital_data, transition);
+
+        auto event_series = std::make_shared<DigitalEventSeries>(events);
+        std::cout << "HDF5 bit-packed DigitalEvent loading complete: " << event_series->size()
+                  << " events loaded from " << samples.size() << " samples" << std::endl;
+
+        return LoadResult(std::move(event_series));
+    } catch (std::exception const & e) {
+        return LoadResult("Error loading HDF5 bit-packed DigitalEvent data: " + std::string(e.what()));
+    }
+}
+
+LoadResult HDF5Loader::loadBitPackedDigitalIntervalData(
+        std::string const & file_path,
+        nlohmann::json const & config) {
+    try {
+        std::string data_key;
+        int channel = 0;
+        std::string transition;
+        int sweep_row = 0;
+        if (!parseBitPackedConfig(config, data_key, channel, transition, sweep_row)) {
+            return LoadResult("HDF5 bit-packed DigitalInterval loader requires 'data_key' in config");
+        }
+
+        auto const samples = hdf5::load_flat_unsigned_array(
+                makeFlatUnsignedOptions(file_path, data_key, sweep_row));
+        if (samples.empty()) {
+            return LoadResult("No bit-packed digital data found in HDF5 file at key: " + data_key);
+        }
+
+        auto const digital_data = Loader::extractDigitalData(samples, channel);
+        auto const interval_pairs = Loader::extractIntervals(digital_data, transition);
+
+        auto interval_series = std::make_shared<DigitalIntervalSeries>(interval_pairs);
+        std::cout << "HDF5 bit-packed DigitalInterval loading complete: " << interval_series->size()
+                  << " intervals loaded from " << samples.size() << " samples" << std::endl;
+
+        return LoadResult(std::move(interval_series));
+    } catch (std::exception const & e) {
+        return LoadResult("Error loading HDF5 bit-packed DigitalInterval data: " + std::string(e.what()));
+    }
+}
+
+LoadResult HDF5Loader::loadIdentityTimeFrameData(
+        std::string const & file_path,
+        nlohmann::json const & config) {
+    try {
+        if (!config.contains("data_key")) {
+            return LoadResult("HDF5 identity TimeFrame loader requires 'data_key' in config");
+        }
+
+        std::string const time_layout = config.value("time_layout", "identity");
+        if (time_layout != "identity") {
+            return LoadResult("HDF5 Time loader only supports time_layout='identity'");
+        }
+
+        int const sweep_row = config.value("sweep_row", 0);
+        if (sweep_row < 0) {
+            return LoadResult("HDF5 identity TimeFrame loader: sweep_row must be non-negative");
+        }
+
+        std::string const data_key = config["data_key"].get<std::string>();
+        auto const sample_count = hdf5::get_identity_sample_count(
+                makeFlatUnsignedOptions(file_path, data_key, sweep_row));
+        if (!sample_count.has_value() || *sample_count == 0) {
+            return LoadResult("Could not determine sample count for HDF5 dataset: " + data_key);
+        }
+
+        std::vector<int> times(*sample_count);
+        std::iota(times.begin(), times.end(), 0);
+        auto timeframe = std::make_shared<TimeFrame>(times);
+
+        std::cout << "HDF5 identity TimeFrame loading complete: " << times.size()
+                  << " ticks from dataset " << data_key << std::endl;
+
+        return LoadResult(std::move(timeframe));
+    } catch (std::exception const & e) {
+        return LoadResult("Error loading HDF5 identity TimeFrame: " + std::string(e.what()));
+    }
+}
+
+LoadResult HDF5Loader::loadAnalogData(
+        std::string const & file_path,
+        nlohmann::json const & config) {
     try {
         // Extract required configuration
         if (!config.contains("time_key")) {
@@ -283,8 +453,8 @@ LoadResult HDF5Loader::loadAnalogData(
             return LoadResult("HDF5 Analog loader requires 'value_key' in config");
         }
 
-        std::string time_key = config["time_key"].get<std::string>();
-        std::string value_key = config["value_key"].get<std::string>();
+        std::string const time_key = config["time_key"].get<std::string>();
+        std::string const value_key = config["value_key"].get<std::string>();
 
         // Scale factor: multiply timestamps by this to convert to frame indices
         // e.g., timestamps in seconds * 30000 Hz = sample indices
@@ -339,7 +509,7 @@ LoadResult HDF5Loader::loadAnalogData(
 
             // Convert to integer frame index (round to nearest)
             auto frame_idx = static_cast<int64_t>(std::round(scaled_time));
-            time_indices.push_back(TimeFrameIndex{frame_idx});
+            time_indices.emplace_back(frame_idx);
 
             // Convert double to float for analog value
             values.push_back(static_cast<float>(analog_values[i]));

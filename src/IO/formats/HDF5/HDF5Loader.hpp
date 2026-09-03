@@ -8,13 +8,15 @@
 
 /**
  * @brief HDF5 data loader implementation
- * 
+ *
  * This loader supports loading various data types from HDF5 format files.
  * Currently supports:
  * - MaskData
  * - LineData
- * - DigitalEventSeries
+ * - DigitalEventSeries (parallel-array and bit-packed)
+ * - DigitalIntervalSeries (bit-packed)
  * - AnalogTimeSeries
+ * - TimeFrame (identity layout from dataset shape)
  */
 class DATAMANAGERIO_HDF5_EXPORT HDF5Loader : public DataLoader {
 public:
@@ -40,53 +42,77 @@ private:
     /**
      * @brief Load MaskData from HDF5 file
      */
-    LoadResult loadMaskData(
+    static LoadResult loadMaskData(
             std::string const & file_path,
-            nlohmann::json const & config) const;
+            nlohmann::json const & config) ;
 
     /**
      * @brief Load LineData from HDF5 file
      */
-    LoadResult loadLineData(
+    static LoadResult loadLineData(
             std::string const & file_path,
-            nlohmann::json const & config) const;
+            nlohmann::json const & config) ;
 
     /**
      * @brief Load DigitalEventSeries from HDF5 file
-     * 
-     * Loads event data from an HDF5 file where one dataset contains time values
-     * and another dataset contains binary (0/1) event indicators. Events are
-     * extracted where the indicator is 1.
-     * 
-     * Required config fields:
-     * - time_key: HDF5 dataset path for time values (float64, fractional seconds)
-     * - event_key: HDF5 dataset path for event indicators (0 or 1)
-     * - scale: Multiplier to convert time to frame indices (e.g., 30000 for 30kHz sampling)
-     * 
-     * Optional config fields:
-     * - scale_divide: If true, divide by scale instead of multiply (default: false)
+     *
+     * Supports two layouts:
+     * - Bit-packed (data_key + channel + transition): Wavesurfer-style TTL words
+     * - Parallel-array (time_key + event_key): legacy float indicator arrays
      */
     LoadResult loadDigitalEventData(
             std::string const & file_path,
             nlohmann::json const & config) const;
 
     /**
-     * @brief Load AnalogTimeSeries from HDF5 file
-     * 
-     * Loads analog data from an HDF5 file where one dataset contains time values
-     * and another dataset contains floating point signal values.
-     * 
+     * @brief Load DigitalIntervalSeries from bit-packed HDF5 TTL data
+     *
      * Required config fields:
-     * - time_key: HDF5 dataset path for time values (float64, fractional seconds)
-     * - value_key: HDF5 dataset path for analog values (float64)
-     * 
+     * - data_key: HDF5 dataset path for packed TTL samples
+     * - channel: Bit index to extract
+     * - transition: "rising" or "falling" for interval start detection
+     *
      * Optional config fields:
-     * - scale: Multiplier to convert time to frame indices (default: 1.0)
-     * - scale_divide: If true, divide by scale instead of multiply (default: false)
+     * - sweep_row: Row index for 2D datasets (default: 0)
      */
-    LoadResult loadAnalogData(
+    LoadResult loadDigitalIntervalData(
             std::string const & file_path,
             nlohmann::json const & config) const;
+
+    /**
+     * @brief Load identity TimeFrame from HDF5 dataset shape
+     *
+     * Required config fields:
+     * - data_key: HDF5 dataset path used to determine sample count
+     * - time_layout: Must be "identity"
+     *
+     * Optional config fields:
+     * - sweep_row: Row index for 2D datasets (default: 0)
+     */
+    static LoadResult loadIdentityTimeFrameData(
+            std::string const & file_path,
+            nlohmann::json const & config) ;
+
+    /**
+     * @brief Load AnalogTimeSeries from HDF5 file
+     */
+    static LoadResult loadAnalogData(
+            std::string const & file_path,
+            nlohmann::json const & config) ;
+
+    /**
+     * @brief Load bit-packed uint16 TTL samples from an HDF5 dataset
+     */
+    static LoadResult loadBitPackedDigitalEventData(
+            std::string const & file_path,
+            nlohmann::json const & config) ;
+
+    /**
+     * @brief Load bit-packed uint16 TTL intervals from an HDF5 dataset
+     */
+    static LoadResult loadBitPackedDigitalIntervalData(
+            std::string const & file_path,
+            nlohmann::json const & config) ;
 };
 
 #endif// DATAMANAGER_IO_HDF5LOADER_HPP

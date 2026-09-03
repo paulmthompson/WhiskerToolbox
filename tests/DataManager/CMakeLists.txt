@@ -209,6 +209,7 @@ endif()
 
 if(ENABLE_HDF5)
     target_sources(test_data_manager PRIVATE IO/line_data_hdf5.test.cpp)
+    target_sources(test_data_manager PRIVATE IO/formats/HDF5/hdf5_bitpacked_digital.test.cpp)
     target_link_libraries(test_data_manager PRIVATE DataManagerHDF5)
     target_compile_definitions(test_data_manager PRIVATE ENABLE_HDF5)
 endif()
