@@ -361,6 +361,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-load_array" id="toc-function-load_array" class="nav-link" data-scroll-target="#function-load_array">function load_array</a></li>
   <li><a href="#function-load_array-1" id="toc-function-load_array-1" class="nav-link" data-scroll-target="#function-load_array-1">function load_array</a></li>
   <li><a href="#function-load_ragged_array-1" id="toc-function-load_ragged_array-1" class="nav-link" data-scroll-target="#function-load_ragged_array-1">function load_ragged_array</a></li>
+  <li><a href="#function-get_dataset_dims" id="toc-function-get_dataset_dims" class="nav-link" data-scroll-target="#function-get_dataset_dims">function get_dataset_dims</a></li>
+  <li><a href="#function-get_dataset_dims-1" id="toc-function-get_dataset_dims-1" class="nav-link" data-scroll-target="#function-get_dataset_dims-1">function get_dataset_dims</a></li>
+  <li><a href="#function-get_identity_sample_count" id="toc-function-get_identity_sample_count" class="nav-link" data-scroll-target="#function-get_identity_sample_count">function get_identity_sample_count</a></li>
+  <li><a href="#function-load_flat_unsigned_array" id="toc-function-load_flat_unsigned_array" class="nav-link" data-scroll-target="#function-load_flat_unsigned_array">function load_flat_unsigned_array</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -402,6 +406,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structhdf5_1_1HDF5FlatUnsignedOptions.html">hdf5::HDF5FlatUnsignedOptions</a></strong> <br>Options for loading flat unsigned sample arrays (e.g.&nbsp;Wavesurfer digitalScans)</td>
+</tr>
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structhdf5_1_1HDF5LoadOptions.html">hdf5::HDF5LoadOptions</a></strong></td>
 </tr>
@@ -445,6 +453,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>template &lt;typename T &gt; <br>std::vector&lt; std::vector&lt; T &gt; &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespacehdf5.html#function-load-ragged-array">load_ragged_array</a></strong>(<a href="../../api_generated/Classes/structhdf5_1_1HDF5LoadOptions.html">HDF5LoadOptions</a> const &amp; opts)<br>Load a ragged array from an HDF5 file.</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; <a href="../../api_generated/Files/HDF5DatasetPreviewModel_8hpp.html#using-hsize-t">hsize_t</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacehdf5.html#function-get-dataset-dims">get_dataset_dims</a></strong>(H5::DataSet &amp; dataset)<br>Get the dimensions of an HDF5 dataset.</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; <a href="../../api_generated/Files/HDF5DatasetPreviewModel_8hpp.html#using-hsize-t">hsize_t</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacehdf5.html#function-get-dataset-dims">get_dataset_dims</a></strong>(<a href="../../api_generated/Classes/structhdf5_1_1HDF5LoadOptions.html">HDF5LoadOptions</a> const &amp; opts)<br>Get the dimensions of an HDF5 dataset by file path and key.</td>
+</tr>
+<tr class="even">
+<td>std::optional&lt; std::size_t &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacehdf5.html#function-get-identity-sample-count">get_identity_sample_count</a></strong>(<a href="../../api_generated/Classes/structhdf5_1_1HDF5FlatUnsignedOptions.html">HDF5FlatUnsignedOptions</a> const &amp; opts)<br>Compute the number of samples in a dataset for identity <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> creation.</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; uint16_t &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacehdf5.html#function-load-flat-unsigned-array">load_flat_unsigned_array</a></strong>(<a href="../../api_generated/Classes/structhdf5_1_1HDF5FlatUnsignedOptions.html">HDF5FlatUnsignedOptions</a> const &amp; opts)<br>Load a flat unsigned array from an HDF5 dataset as uint16 samples.</td>
 </tr>
 </tbody>
 </table>
@@ -558,8 +582,57 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>T</strong> The data type (float, double, int)</li>
 </ul>
 <p><strong>Return</strong>: Vector of vectors containing the ragged array data</p>
+</section>
+<section id="function-get_dataset_dims" class="level3">
+<h3 class="anchored" data-anchor-id="function-get_dataset_dims">function get_dataset_dims</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">hsize_t</span> <span class="op">&gt;</span> get_dataset_dims<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    H5<span class="op">::</span>DataSet <span class="op">&amp;</span> dataset</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the dimensions of an HDF5 dataset.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>dataset</strong> HDF5 dataset handle</li>
+</ul>
+<p><strong>Return</strong>: Vector of dimension sizes</p>
+</section>
+<section id="function-get_dataset_dims-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-get_dataset_dims-1">function get_dataset_dims</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">hsize_t</span> <span class="op">&gt;</span> get_dataset_dims<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    HDF5LoadOptions <span class="at">const</span> <span class="op">&amp;</span> opts</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Get the dimensions of an HDF5 dataset by file path and key.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>opts</strong> Load options containing file path and dataset key</li>
+</ul>
+<p><strong>Return</strong>: Vector of dimension sizes</p>
+</section>
+<section id="function-get_identity_sample_count" class="level3">
+<h3 class="anchored" data-anchor-id="function-get_identity_sample_count">function get_identity_sample_count</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> get_identity_sample_count<span class="op">(</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    HDF5FlatUnsignedOptions <span class="at">const</span> <span class="op">&amp;</span> opts</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Compute the number of samples in a dataset for identity <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> creation.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>opts</strong> Flat unsigned load options (uses sweep_row for 2D datasets)</li>
+</ul>
+<p><strong>Return</strong>: Number of samples along the fast axis, or nullopt on error</p>
+</section>
+<section id="function-load_flat_unsigned_array" class="level3">
+<h3 class="anchored" data-anchor-id="function-load_flat_unsigned_array">function load_flat_unsigned_array</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">uint16_t</span> <span class="op">&gt;</span> load_flat_unsigned_array<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    HDF5FlatUnsignedOptions <span class="at">const</span> <span class="op">&amp;</span> opts</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Load a flat unsigned array from an HDF5 dataset as uint16 samples.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>opts</strong> Flat unsigned load options</li>
+</ul>
+<p><strong>Return</strong>: Vector of uint16 samples</p>
+<p>Supports native uint8 (zero-extended) and uint16 storage. For 2D datasets, reads the row specified by sweep_row. For 1D datasets, reads all elements.</p>
 <hr>
-<p>Updated on 2026-09-02 at 20:36:16 +0000</p>
+<p>Updated on 2026-09-03 at 16:47:38 +0000</p>
 
 
 </section>
