@@ -1503,6 +1503,7 @@ ul.task-list li input[type="checkbox"] {
   <ul>
   <li><a href="#timescrollbar" id="toc-timescrollbar" class="nav-link active" data-scroll-target="#timescrollbar">TimeScrollBar</a>
   <ul class="collapse">
+  <li><a href="#cross-clock-navigation" id="toc-cross-clock-navigation" class="nav-link" data-scroll-target="#cross-clock-navigation">Cross-clock navigation</a></li>
   <li><a href="#playback-phase-3" id="toc-playback-phase-3" class="nav-link" data-scroll-target="#playback-phase-3">Playback (Phase 3)</a>
   <ul class="collapse">
   <li><a href="#discrete-fps-presets" id="toc-discrete-fps-presets" class="nav-link" data-scroll-target="#discrete-fps-presets">Discrete FPS presets</a></li>
@@ -1538,6 +1539,10 @@ ul.task-list li input[type="checkbox"] {
 <section id="timescrollbar" class="level1">
 <h1>TimeScrollBar</h1>
 <p>The timeline widget (<code>TimeScrollBar</code>) drives the active <code>TimeFrame</code> and syncs with <code>EditorRegistry</code>.</p>
+<section id="cross-clock-navigation" class="level2">
+<h2 class="anchored" data-anchor-id="cross-clock-navigation">Cross-clock navigation</h2>
+<p>When <code>EditorRegistry::currentPosition()</code> uses a different <code>TimeFrame</code> than the scrollbar (for example, a DataInspector interval on the <code>master</code> clock while the scrollbar controls <code>time</code>), relative frame stepping must convert through <code>TimePosition::convertTo()</code> — not <code>sameClock()</code>, which only compares <code>shared_ptr</code> identity. Inbound sync (<code>_onEditorRegistryTimeChanged</code>) already used conversion; arrow keys, playback, and pause-snap now use the same rule.</p>
+</section>
 <section id="playback-phase-3" class="level2">
 <h2 class="anchored" data-anchor-id="playback-phase-3">Playback (Phase 3)</h2>
 <p>Playback advances at the selected <strong>logical</strong> <code>target_fps</code> (frames of time per second). The QTimer tick rate is capped at <strong>30 Hz</strong> (<code>time_scroll_bar::kMaxPlaybackUiRefreshFps</code>): when <code>target_fps</code> exceeds that cap, each tick advances multiple frames so average speed matches <code>target_fps</code>, while UI callbacks stay bounded. For rates at or below the cap, the timer interval is <code>1000 / target_fps</code> milliseconds (for example <strong>0.5 FPS</strong>, one frame every two seconds).</p>
