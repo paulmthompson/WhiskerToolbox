@@ -1,0 +1,44 @@
+---
+title: DigitalIntervalSeriesInspector
+---
+
+# DigitalIntervalSeriesInspector
+
+Inspector and table view for `DigitalIntervalSeries` in the Data Inspector (interval table, create/remove, export, move/copy).
+
+## Cross-timeframe move and copy
+
+Source and target series may be registered on different `TimeKey`s (for example `master` vs `time`). The context-menu **Move To** and **Copy To** actions must convert interval bounds between timeframes before writing to the target.
+
+### Move (`_moveIntervalsToTarget`)
+
+1. Read selected intervals from the table (indices in the **source** timeframe).
+2. Convert each interval with `convertTimeFrameRange(source_start, source_end, *source_tf, *target_tf)`.
+3. `addEvent()` on the target with converted indices.
+4. `removeIntervals()` on the source (single observer notification batch).
+
+Previously, raw source indices were passed to the target and removal used per-frame `setEventAtTime(false)`, which fired `notifyObservers()` on every frame and could crash the wired `DigitalIntervalSeriesDataView` via repeated Qt model resets.
+
+### Copy (`_copyIntervalsToTarget`)
+
+1. Resolve selected intervals via `getIntervalsByEntityIds()` (clock-tick space, timeframe-agnostic).
+2. Map clock times to target indices with `target_tf->getIndexAtTime(...)`.
+3. `addEvent()` on the target.
+
+Do not use `copyByEntityIds()` for cross-timeframe copies; it copies raw storage indices without conversion.
+
+## EntityId semantics (deferred cleanup)
+
+Move and copy **do not preserve** the source `EntityId`:
+
+- The target interval receives a **new** `EntityId` from `addEvent()` → `ensureIntervalEntityId()`, keyed on the target `data_key` and converted `(start, end)` in the target timeframe.
+- On move, the source interval (and its `EntityId`) is removed.
+- **Group membership** is not migrated; groups may retain stale references to the old source `EntityId`.
+
+`DigitalIntervalSeries::moveByEntityIds` remains intentionally unimplemented (merge/EntityId edge cases; see `Digital_Interval_Series.hpp`). Contrast with `DigitalEventSeries`, where `moveByEntityIds` preserves entity IDs.
+
+Preserving entity IDs and group membership on interval move/copy is a deferred follow-up.
+
+## Tests
+
+`DigitalIntervalSeriesInspector.test.cpp` — `[DigitalIntervalSeriesInspector][DigitalIntervalSeriesDataView][MoveCopy]` exercises cross-timeframe move and copy with wired view + inspector, clock-time assertions, and new-EntityId checks.

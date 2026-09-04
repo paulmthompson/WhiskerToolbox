@@ -472,18 +472,20 @@ void DigitalIntervalSeriesInspector::_moveIntervalsToTarget(std::string const & 
         return;
     }
 
-    // Add intervals to target
-    for (TimeFrameInterval const & interval: selected_intervals) {
-        target_interval_data->addEvent(interval);
+    auto source_tf = source_interval_data->getTimeFrame();
+    auto target_tf = target_interval_data->getTimeFrame();
+    if (!source_tf || !target_tf) {
+        std::cerr << "DigitalIntervalSeriesInspector: Source or target timeframe is not set." << std::endl;
+        return;
     }
 
-    // Remove intervals from source
     for (TimeFrameInterval const & interval: selected_intervals) {
-        // Remove each time point in the interval from source
-        for (TimeFrameIndex time = interval.start; time <= interval.end; ++time) {
-            source_interval_data->setEventAtTime(time, false);
-        }
+        auto const [target_start, target_end] = convertTimeFrameRange(
+                interval.start, interval.end, *source_tf, *target_tf);
+        target_interval_data->addEvent(TimeFrameInterval{target_start, target_end});
     }
+
+    source_interval_data->removeIntervals(selected_intervals);
 
     std::cout << "Moved " << selected_intervals.size() << " intervals from " << _active_key
               << " to " << target_key << std::endl;
@@ -508,8 +510,21 @@ void DigitalIntervalSeriesInspector::_copyIntervalsToTarget(std::string const & 
         return;
     }
 
-    std::unordered_set<EntityId> const selected_set(selected_entity_ids.begin(), selected_entity_ids.end());
-    std::size_t const total_copied = source_interval_data->copyByEntityIds(*target_interval_data, selected_set, NotifyObservers::Yes);
+    auto target_tf = target_interval_data->getTimeFrame();
+    if (!target_tf) {
+        std::cerr << "DigitalIntervalSeriesInspector: Target timeframe is not set." << std::endl;
+        return;
+    }
+
+    auto const intervals_by_entity = source_interval_data->getIntervalsByEntityIds(selected_entity_ids);
+    std::size_t total_copied = 0;
+    for (auto const & [entity_id, clock_interval]: intervals_by_entity) {
+        (void) entity_id;
+        auto const target_start = target_tf->getIndexAtTime(clock_interval.start, false);
+        auto const target_end = target_tf->getIndexAtTime(clock_interval.end, true);
+        target_interval_data->addEvent(TimeFrameInterval{target_start, target_end});
+        ++total_copied;
+    }
 
     if (total_copied > 0) {
         std::cout << "DigitalIntervalSeriesInspector: Copied " << total_copied

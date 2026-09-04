@@ -1393,3 +1393,112 @@ TEST_CASE("DigitalIntervalSeriesInspector error handling", "[DigitalIntervalSeri
         REQUIRE(inspector.findChild<QPushButton *>("create_interval_button")->text() == "Mark Interval End");
     }
 }
+
+TEST_CASE("DigitalIntervalSeriesInspector and DataView cross-timeframe move and copy",
+          "[DigitalIntervalSeriesInspector][DigitalIntervalSeriesDataView][MoveCopy]") {
+    ensureQApplication();
+
+    auto * app = QApplication::instance();
+    REQUIRE(app != nullptr);
+
+    auto data_manager = std::make_shared<DataManager>();
+
+    constexpr int kNumMasterTimes = 1000;
+    std::vector<int> master_times(kNumMasterTimes);
+    std::iota(master_times.begin(), master_times.end(), 0);
+    auto master_tf = std::make_shared<TimeFrame>(master_times);
+    data_manager->setTime(TimeKey("master"), master_tf, true);
+
+    constexpr int kNumTimeTimes = 1000;
+    std::vector<int> time_times(kNumTimeTimes);
+    std::iota(time_times.begin(), time_times.end(), 0);
+    for (int & tick: time_times) {
+        tick *= 2;
+    }
+    auto time_tf = std::make_shared<TimeFrame>(time_times);
+    data_manager->setTime(TimeKey("time"), time_tf, true);
+
+    auto source_interval_series = std::make_shared<DigitalIntervalSeries>();
+    source_interval_series->addEvent(TimeFrameIndex(10), TimeFrameIndex(20));
+    data_manager->setData<DigitalIntervalSeries>("source_intervals", source_interval_series, TimeKey("master"));
+
+    auto target_interval_series = std::make_shared<DigitalIntervalSeries>();
+    data_manager->setData<DigitalIntervalSeries>("target_intervals", target_interval_series, TimeKey("time"));
+
+    auto const assert_target_interval_correct = [](DigitalIntervalSeries const & target) {
+        REQUIRE(target.size() == 1);
+        auto const target_view = target.view();
+        REQUIRE(target_view[0].value().start == ClockTicks(10));
+        REQUIRE(target_view[0].value().end == ClockTicks(20));
+        REQUIRE(target.getStoredInterval(0).start == TimeFrameIndex(5));
+        REQUIRE(target.getStoredInterval(0).end == TimeFrameIndex(10));
+    };
+
+    SECTION("Move intervals to target DigitalIntervalSeries on different timeframe") {
+        auto source_copy = std::make_shared<DigitalIntervalSeries>();
+        source_copy->addEvent(TimeFrameIndex(10), TimeFrameIndex(20));
+        data_manager->setData<DigitalIntervalSeries>("source_intervals", source_copy, TimeKey("master"));
+
+        auto target_copy = std::make_shared<DigitalIntervalSeries>();
+        data_manager->setData<DigitalIntervalSeries>("target_intervals", target_copy, TimeKey("time"));
+
+        EntityId const source_entity_id = source_copy->view()[0].id();
+        REQUIRE(source_entity_id != EntityId(0));
+
+        DigitalIntervalSeriesDataView view(data_manager, nullptr);
+        view.setActiveKey("source_intervals");
+
+        DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
+        inspector.setActiveKey("source_intervals");
+        inspector.setDataView(&view);
+
+        QCoreApplication::processEvents();
+
+        auto * table_view = view.tableView();
+        REQUIRE(table_view != nullptr);
+        table_view->selectRow(0);
+        QCoreApplication::processEvents();
+
+        emit view.moveIntervalsRequested("target_intervals");
+        QCoreApplication::processEvents();
+
+        REQUIRE(source_copy->size() == 0);
+        assert_target_interval_correct(*target_copy);
+        REQUIRE(target_copy->view()[0].id() != source_entity_id);
+        REQUIRE(target_copy->view()[0].id() != EntityId(0));
+    }
+
+    SECTION("Copy intervals to target DigitalIntervalSeries on different timeframe") {
+        auto source_copy = std::make_shared<DigitalIntervalSeries>();
+        source_copy->addEvent(TimeFrameIndex(10), TimeFrameIndex(20));
+        data_manager->setData<DigitalIntervalSeries>("source_intervals", source_copy, TimeKey("master"));
+
+        auto target_copy = std::make_shared<DigitalIntervalSeries>();
+        data_manager->setData<DigitalIntervalSeries>("target_intervals", target_copy, TimeKey("time"));
+
+        EntityId const source_entity_id = source_copy->view()[0].id();
+        REQUIRE(source_entity_id != EntityId(0));
+
+        DigitalIntervalSeriesDataView view(data_manager, nullptr);
+        view.setActiveKey("source_intervals");
+
+        DigitalIntervalSeriesInspector inspector(data_manager, nullptr, nullptr);
+        inspector.setActiveKey("source_intervals");
+        inspector.setDataView(&view);
+
+        QCoreApplication::processEvents();
+
+        auto * table_view = view.tableView();
+        REQUIRE(table_view != nullptr);
+        table_view->selectRow(0);
+        QCoreApplication::processEvents();
+
+        emit view.copyIntervalsRequested("target_intervals");
+        QCoreApplication::processEvents();
+
+        REQUIRE(source_copy->size() == 1);
+        assert_target_interval_correct(*target_copy);
+        REQUIRE(target_copy->view()[0].id() != source_entity_id);
+        REQUIRE(target_copy->view()[0].id() != EntityId(0));
+    }
+}
