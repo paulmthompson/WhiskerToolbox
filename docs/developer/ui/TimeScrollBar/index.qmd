@@ -6,6 +6,10 @@ title: TimeScrollBar
 
 The timeline widget (`TimeScrollBar`) drives the active `TimeFrame` and syncs with `EditorRegistry`.
 
+## Cross-clock navigation
+
+When `EditorRegistry::currentPosition()` uses a different `TimeFrame` than the scrollbar (for example, a DataInspector interval on the `master` clock while the scrollbar controls `time`), relative frame stepping must convert through `TimePosition::convertTo()` — not `sameClock()`, which only compares `shared_ptr` identity. Inbound sync (`_onEditorRegistryTimeChanged`) already used conversion; arrow keys, playback, and pause-snap now use the same rule.
+
 ## Playback (Phase 3)
 
 Playback advances at the selected **logical** `target_fps` (frames of time per second). The QTimer tick rate is capped at **30 Hz** (`time_scroll_bar::kMaxPlaybackUiRefreshFps`): when `target_fps` exceeds that cap, each tick advances multiple frames so average speed matches `target_fps`, while UI callbacks stay bounded. For rates at or below the cap, the timer interval is `1000 / target_fps` milliseconds (for example **0.5 FPS**, one frame every two seconds).

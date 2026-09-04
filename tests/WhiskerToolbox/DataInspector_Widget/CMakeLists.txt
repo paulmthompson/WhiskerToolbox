@@ -24,6 +24,7 @@ add_executable(test_data_inspector_widget
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget/MaskData/MaskInspector.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget/PointData/PointInspector.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/DataInspector_Widget/TensorData/ColumnConfigDialog.test.cpp
+    ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/DataInspector_Widget/DataInspectorTimeSync.test.cpp
 )
 
 target_link_libraries(test_data_inspector_widget PRIVATE 

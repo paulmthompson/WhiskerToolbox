@@ -252,9 +252,11 @@ void TimeScrollBar::PlayButton() {
         _playback_frame_accum = 0.0;
 
         auto current_pos = _editor_registry->currentPosition();
-        if (current_pos.isValid() && current_pos.sameClock(_current_time_frame)) {
+        if (current_pos.isValid() && _current_time_frame) {
+            int const frame_value = static_cast<int>(
+                    current_pos.convertTo(_current_time_frame.get()).getValue());
             ui->horizontalScrollBar->blockSignals(true);
-            ui->horizontalScrollBar->setValue(static_cast<int>(current_pos.index.getValue()));
+            ui->horizontalScrollBar->setValue(frame_value);
             ui->horizontalScrollBar->blockSignals(false);
         }
 
@@ -317,8 +319,9 @@ void TimeScrollBar::FastForwardButton() {
 void TimeScrollBar::_vidLoop() {
     int displayed_frame = 0;
     auto current_pos = _editor_registry->currentPosition();
-    if (current_pos.isValid() && current_pos.sameClock(_current_time_frame)) {
-        displayed_frame = static_cast<int>(current_pos.index.getValue());
+    if (current_pos.isValid() && _current_time_frame) {
+        displayed_frame = static_cast<int>(
+                current_pos.convertTo(_current_time_frame.get()).getValue());
     }
 
     float const ui_refresh_fps = time_scroll_bar::playbackUiRefreshFps(_target_fps);
@@ -375,8 +378,9 @@ void TimeScrollBar::changeScrollBarValue(int new_value, bool relative) {
         int current_time = 0;
 
         auto current_pos = _editor_registry->currentPosition();
-        if (current_pos.isValid() && current_pos.sameClock(_current_time_frame)) {
-            current_time = static_cast<int>(current_pos.index.getValue());
+        if (current_pos.isValid() && _current_time_frame) {
+            current_time = static_cast<int>(
+                    current_pos.convertTo(_current_time_frame.get()).getValue());
         }
         direction = (new_value >= 0) ? 1 : -1;
         new_value = current_time + new_value;
@@ -617,7 +621,7 @@ void TimeScrollBar::_onEditorRegistryTimeChanged(TimePosition const & position) 
 
     int const frame_value = static_cast<int>(position.convertTo(_current_time_frame.get()).getValue());
     ui->horizontalScrollBar->blockSignals(true);
-    ui->horizontalScrollBar->setSliderPosition(frame_value);
+    ui->horizontalScrollBar->setValue(frame_value);
     ui->horizontalScrollBar->blockSignals(false);
 
     // Update labels

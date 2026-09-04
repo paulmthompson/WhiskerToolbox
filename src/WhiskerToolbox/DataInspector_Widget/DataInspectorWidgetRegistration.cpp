@@ -11,6 +11,8 @@
 #include "KeymapSystem/KeyAction.hpp"
 #include "KeymapSystem/KeyActionAdapter.hpp"
 #include "KeymapSystem/KeymapManager.hpp"
+#include "TimeFrame/StrongTimeTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <QKeySequence>
 
@@ -96,7 +98,7 @@ void registerTypes(EditorRegistry * registry,
     auto gm = group_manager;
     auto cr = recorder;
     auto * km = keymap_manager;
-    auto const pipeline_dir = pipeline_config_dir;
+    auto const& pipeline_dir = pipeline_config_dir;
 
     registry->registerType({.type_id = QStringLiteral("DataInspector"),
                             .display_name = QStringLiteral("Data Inspector"),
@@ -127,7 +129,7 @@ void registerTypes(EditorRegistry * registry,
 
                             // Properties factory - creates DataInspectorPropertiesWidget (Right zone)
                             .create_properties = [dm, gm, cr, km, pipeline_dir](
-                                                           std::shared_ptr<EditorState> const & state) -> QWidget * {
+                                                         std::shared_ptr<EditorState> const & state) -> QWidget * {
                                 auto inspector_state = std::dynamic_pointer_cast<DataInspectorState>(state);
                                 if (!inspector_state) {
                                     std::cerr << "DataInspectorModule: Failed to cast state to DataInspectorState for properties" << std::endl;
@@ -174,8 +176,24 @@ void registerTypes(EditorRegistry * registry,
                                 // This allows double-clicking on table cells to navigate to the corresponding frame
                                 if (reg && dm) {
                                     QObject::connect(view, &DataInspectorViewWidget::frameSelected,
-                                                     [reg](TimePosition const & position) {
-                                                         // Update EditorRegistry time (triggers timeChanged signal for other widgets)
+                                                     [reg, dm](TimePosition const & position) {
+                                                         if (!position.isValid()) {
+                                                             return;
+                                                         }
+
+                                                         std::shared_ptr<TimeFrame> canonical_tf = reg->currentTimeFrame();
+                                                         if (!canonical_tf) {
+                                                             canonical_tf = dm->getTime(TimeKey("time"));
+                                                         }
+
+                                                         if (canonical_tf && !position.sameClock(canonical_tf)) {
+                                                             TimeFrameIndex const converted_index =
+                                                                     position.convertTo(canonical_tf.get());
+                                                             reg->setCurrentTime(
+                                                                     TimePosition(converted_index, canonical_tf));
+                                                             return;
+                                                         }
+
                                                          reg->setCurrentTime(position);
                                                      });
                                 }
