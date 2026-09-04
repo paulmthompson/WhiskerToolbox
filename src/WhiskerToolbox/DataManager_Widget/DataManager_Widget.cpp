@@ -146,6 +146,9 @@ void DataManager_Widget::openWidget() {
     if (ui->new_data_widget) {
         ui->new_data_widget->populateTimeframes();
     }
+    if (ui->new_timeframe_widget) {
+        ui->new_timeframe_widget->populateTimeframes();
+    }
     this->show();
 }
 
@@ -270,7 +273,7 @@ void DataManager_Widget::_disablePreviousFeature(QString const & feature) {
     }
 }
 
-void DataManager_Widget::_changeOutputDir(const QString& dir_name) {
+void DataManager_Widget::_changeOutputDir(QString const & dir_name) {
 
 
     if (dir_name.isEmpty()) {
@@ -281,7 +284,7 @@ void DataManager_Widget::_changeOutputDir(const QString& dir_name) {
     ui->output_dir_widget->setDirLabel(dir_name);
 }
 
-void DataManager_Widget::_createNewData(const std::string& key, const std::string& type, const std::string& timeframe_key) {
+void DataManager_Widget::_createNewData(std::string const & key, std::string const & type, std::string const & timeframe_key) {
 
     if (key.empty()) {
         return;

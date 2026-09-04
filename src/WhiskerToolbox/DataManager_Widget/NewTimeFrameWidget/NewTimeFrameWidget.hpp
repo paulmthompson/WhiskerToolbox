@@ -40,6 +40,7 @@ signals:
 private:
     Ui::NewTimeFrameWidget * ui;
     std::shared_ptr<DataManager> _data_manager;
+    int _data_manager_observer_id{-1};
     QString _last_auto_name;
 
     void _updatePreview();

@@ -33,15 +33,35 @@ NewTimeFrameWidget::NewTimeFrameWidget(QWidget * parent)
 }
 
 NewTimeFrameWidget::~NewTimeFrameWidget() {
+    if (_data_manager && _data_manager_observer_id >= 0) {
+        _data_manager->removeObserver(_data_manager_observer_id);
+        _data_manager_observer_id = -1;
+    }
+
     delete ui;
 }
 
 void NewTimeFrameWidget::setDataManager(std::shared_ptr<DataManager> data_manager) {
+    if (_data_manager && _data_manager_observer_id >= 0) {
+        _data_manager->removeObserver(_data_manager_observer_id);
+        _data_manager_observer_id = -1;
+    }
+
     _data_manager = std::move(data_manager);
+
+    if (_data_manager) {
+        _data_manager_observer_id = _data_manager->addObserver([this]() {
+            populateTimeframes();
+        },
+                                                               "NewTimeFrameWidget");
+    }
+
     populateTimeframes();
 }
 
 void NewTimeFrameWidget::populateTimeframes() {
+    auto const current_selection = ui->source_timeframe_combo->currentText();
+
     ui->source_timeframe_combo->clear();
 
     if (!_data_manager) {
@@ -55,10 +75,21 @@ void NewTimeFrameWidget::populateTimeframes() {
     }
 
     if (ui->source_timeframe_combo->count() > 0) {
-        // Default to "time" if it exists
-        int const time_index = ui->source_timeframe_combo->findText("time");
-        if (time_index >= 0) {
-            ui->source_timeframe_combo->setCurrentIndex(time_index);
+        if (!current_selection.isEmpty()) {
+            int const selection_index = ui->source_timeframe_combo->findText(current_selection);
+            if (selection_index >= 0) {
+                ui->source_timeframe_combo->setCurrentIndex(selection_index);
+            } else {
+                int const time_index = ui->source_timeframe_combo->findText("time");
+                if (time_index >= 0) {
+                    ui->source_timeframe_combo->setCurrentIndex(time_index);
+                }
+            }
+        } else {
+            int const time_index = ui->source_timeframe_combo->findText("time");
+            if (time_index >= 0) {
+                ui->source_timeframe_combo->setCurrentIndex(time_index);
+            }
         }
     }
 

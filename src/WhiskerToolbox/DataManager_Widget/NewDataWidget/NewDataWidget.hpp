@@ -40,6 +40,7 @@ signals:
 private:
     Ui::NewDataWidget * ui;
     std::shared_ptr<DataManager> _data_manager;
+    int _data_manager_observer_id{-1};
 
 private slots:
     void _createNewData();
