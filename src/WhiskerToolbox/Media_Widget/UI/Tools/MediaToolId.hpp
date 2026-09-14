@@ -12,7 +12,8 @@
  * @brief Active tool modes for the Media Viewer left toolbar
  */
 enum class MediaToolId {
-    Select///< Pointer / selection tool (default)
+    None,  ///< No global tool active (canvas pan/zoom and per-datatype modes only)
+    Select,///< Pointer / selection tool
 };
 
 Q_DECLARE_METATYPE(MediaToolId)

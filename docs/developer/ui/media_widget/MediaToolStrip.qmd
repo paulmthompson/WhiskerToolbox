@@ -29,11 +29,12 @@ See [Media Viewer Tool Options Bar](MediaToolOptionsBar.qmd) for contextual cont
 
 ## Selection API
 
-- `activeTool()` returns the current `MediaToolId`
-- `setActiveTool(MediaToolId)` updates the checked button
-- `activeToolChanged(MediaToolId)` is emitted when the user selects a different tool
+- `activeTool()` returns the current `MediaToolId` (`None` or `Select`)
+- `setActiveTool(MediaToolId)` updates the checked button (or unchecks all for `None`)
+- `activeToolChanged(MediaToolId)` is emitted when the user selects or deactivates a tool
+- Clicking the active tool button again sets `MediaToolId::None`
 
-Tool behavior is not wired to canvas interaction yet; the strip only tracks which tool is selected.
+`Media_Widget` wires `activeMediaTool` in state; `MediaSelectToolController` enables unified canvas selection only when `Select` is active.
 
 ## Adding Tools
 

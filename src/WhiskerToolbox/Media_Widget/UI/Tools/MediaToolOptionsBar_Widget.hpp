@@ -49,6 +49,7 @@ private:
     void _applyStyle();
 
     QStackedWidget * _stack{nullptr};
+    QWidget * _empty_page{nullptr};
     SelectToolOptions_Widget * _select_options{nullptr};
 };
 

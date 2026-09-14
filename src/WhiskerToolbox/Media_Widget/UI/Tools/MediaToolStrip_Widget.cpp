@@ -29,7 +29,7 @@ MediaToolStrip_Widget::MediaToolStrip_Widget(QWidget * parent)
 
     _addToolButton(MediaToolId::Select,
                    MediaToolIcons::createSelectToolIcon(),
-                   tr("Select (placeholder)"));
+                   tr("Select — click again to deactivate"));
 
     _layout->addStretch();
 
@@ -39,7 +39,26 @@ MediaToolStrip_Widget::MediaToolStrip_Widget(QWidget * parent)
     setActiveTool(MediaToolId::Select);
 }
 
+void MediaToolStrip_Widget::_uncheckAllButtons() {
+    _button_group->setExclusive(false);
+    for (auto * button: _button_group->buttons()) {
+        button->setChecked(false);
+    }
+    _button_group->setExclusive(true);
+}
+
 void MediaToolStrip_Widget::setActiveTool(MediaToolId tool) {
+    if (tool == MediaToolId::None) {
+        if (_active_tool == MediaToolId::None) {
+            return;
+        }
+
+        _uncheckAllButtons();
+        _active_tool = MediaToolId::None;
+        emit activeToolChanged(MediaToolId::None);
+        return;
+    }
+
     auto * button = _button_group->button(static_cast<int>(tool));
     assert(button != nullptr && "setActiveTool: unknown tool id");
 
@@ -90,6 +109,9 @@ void MediaToolStrip_Widget::_applyStyle() {
 void MediaToolStrip_Widget::_onToolIdClicked(int id) {
     auto const tool = static_cast<MediaToolId>(id);
     if (_active_tool == tool) {
+        _uncheckAllButtons();
+        _active_tool = MediaToolId::None;
+        emit activeToolChanged(MediaToolId::None);
         return;
     }
 

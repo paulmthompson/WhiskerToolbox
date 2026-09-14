@@ -100,7 +100,7 @@ void SelectToolOptions_Widget::_buildUi() {
     _filter_label = new QLabel(tr("Selection filter:"), this);
     _filter_combo = new QComboBox(this);
     _filter_combo->setMinimumWidth(180);
-    _filter_combo->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    _filter_combo->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
 
     _pick_radius_label = new QLabel(tr("Pick radius:"), this);
     _pick_radius_spinbox = new QSpinBox(this);
@@ -110,9 +110,10 @@ void SelectToolOptions_Widget::_buildUi() {
     _pick_radius_spinbox->setValue(15);
 
     _layout->addWidget(_filter_label);
-    _layout->addWidget(_filter_combo, 1);
+    _layout->addWidget(_filter_combo);
     _layout->addWidget(_pick_radius_label);
     _layout->addWidget(_pick_radius_spinbox);
+    _layout->addStretch();
 
     connect(_filter_combo, &QComboBox::currentIndexChanged,
             this, &SelectToolOptions_Widget::_onFilterComboChanged);

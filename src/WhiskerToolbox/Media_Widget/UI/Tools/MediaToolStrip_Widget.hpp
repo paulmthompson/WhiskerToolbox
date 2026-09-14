@@ -17,8 +17,8 @@ class QVBoxLayout;
 /**
  * @brief Inkscape-style vertical tool palette along the left edge of the Media Viewer
  *
- * Exactly one tool button may be selected at a time. Tool behavior is not wired yet;
- * this widget only tracks and exposes the active tool identity.
+ * At most one tool button may be selected at a time. Clicking the active tool again
+ * deactivates it (no tool selected). Tool identity is exposed via activeToolChanged.
  */
 class MediaToolStrip_Widget : public QWidget {
     Q_OBJECT
@@ -68,6 +68,11 @@ private:
      * @param id Button group id (MediaToolId value)
      */
     void _onToolIdClicked(int id);
+
+    /**
+     * @brief Uncheck every tool button without changing exclusive-group mode permanently
+     */
+    void _uncheckAllButtons();
 
     QVBoxLayout * _layout{nullptr};
     QButtonGroup * _button_group{nullptr};

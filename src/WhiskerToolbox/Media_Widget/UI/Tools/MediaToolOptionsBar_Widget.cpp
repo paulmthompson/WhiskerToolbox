@@ -19,8 +19,10 @@ MediaToolOptionsBar_Widget::MediaToolOptionsBar_Widget(QWidget * parent)
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
     _stack = new QStackedWidget(this);
+    _empty_page = new QWidget(_stack);
     _select_options = new SelectToolOptions_Widget(_stack);
 
+    _stack->addWidget(_empty_page);
     _stack->addWidget(_select_options);
 
     auto * layout = new QHBoxLayout(this);
@@ -39,15 +41,21 @@ void MediaToolOptionsBar_Widget::setState(MediaWidgetState * state) {
 }
 
 void MediaToolOptionsBar_Widget::setActiveTool(MediaToolId tool) {
+    if (!_stack) {
+        return;
+    }
+
     switch (tool) {
         case MediaToolId::Select:
-            if (_stack && _select_options) {
+            if (_select_options) {
                 _stack->setCurrentWidget(_select_options);
             }
-            setVisible(true);
             break;
+        case MediaToolId::None:
         default:
-            setVisible(false);
+            if (_empty_page) {
+                _stack->setCurrentWidget(_empty_page);
+            }
             break;
     }
 }

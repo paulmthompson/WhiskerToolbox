@@ -9,8 +9,8 @@ The Media Viewer includes a vertical toolbar on the left edge of the canvas (to 
 
 ## Select Tool
 
-The pointer (mouse) icon is the **Select** tool. It is selected by default.
+The pointer (mouse) icon is the **Select** tool. It is selected by default. Click the button again to deactivate it — no global tool is required to be active at all times. When Select is off, canvas clicks are not handled by unified entity picking (pan/zoom and per-datatype editing modes still work).
 
-When Select is active, an options bar appears above the horizontal ruler. Use **Selection filter** to limit picking to a specific enabled feature, or leave it on **All enabled features** to consider every key currently enabled in the feature table. Adjust **Pick radius** to control how close the cursor must be to an entity (in scene pixels).
+When Select is active, tool options appear in the bar above the horizontal ruler. When no tool is active, the bar stays in place as an empty strip so the canvas layout does not shift. Use **Selection filter** to limit picking to a specific enabled feature, or leave it on **All enabled features** to consider every key currently enabled in the feature table. Adjust **Pick radius** to control how close the cursor must be to an entity (in scene pixels).
 
 Click the canvas to select the closest enabled line, point, or mask entity. Hold **Ctrl** to toggle multi-selection. The properties panel feature table and datatype page update automatically to match the selected key.

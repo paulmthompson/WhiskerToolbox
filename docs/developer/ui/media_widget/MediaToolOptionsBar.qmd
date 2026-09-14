@@ -21,7 +21,7 @@ The `Media_Widget` grid uses three rows:
 
 | Component | Role |
 |-----------|------|
-| `MediaToolOptionsBar_Widget` | Container with `QStackedWidget` indexed by `MediaToolId` |
+| `MediaToolOptionsBar_Widget` | Container with `QStackedWidget` (empty placeholder or tool page); fixed height always reserved |
 | `SelectToolOptions_Widget` | Select-tool page: key filter combo and pick radius spinbox |
 
 ## Select Tool Filter

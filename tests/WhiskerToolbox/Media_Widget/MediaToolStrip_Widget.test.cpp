@@ -45,3 +45,16 @@ TEST_CASE("MediaToolStrip_Widget emits activeToolChanged when selection changes"
     REQUIRE(change_count == 0);
     REQUIRE(last_tool == MediaToolId::Select);
 }
+
+TEST_CASE("MediaToolStrip_Widget deactivates Select when clicked again", "[MediaToolStrip]") {
+    ensureQtApplication();
+
+    MediaToolStrip_Widget strip;
+    REQUIRE(strip.activeTool() == MediaToolId::Select);
+
+    strip.setActiveTool(MediaToolId::None);
+    REQUIRE(strip.activeTool() == MediaToolId::None);
+
+    strip.setActiveTool(MediaToolId::Select);
+    REQUIRE(strip.activeTool() == MediaToolId::Select);
+}
