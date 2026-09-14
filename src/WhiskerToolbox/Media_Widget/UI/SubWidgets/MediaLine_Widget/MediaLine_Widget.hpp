@@ -87,6 +87,7 @@ private:
 
     // Flag to prevent infinite loops during percentage updates
     bool _is_updating_percentages{false};
+    bool _is_eraser_dragging{false};
 
     void _setupSelectionModePages();
     void _addPointToLine(float x_media, float y_media, TimeFrameIndex current_time);
@@ -94,10 +95,16 @@ private:
     void _erasePointsFromLine(float x_media, float y_media, TimeFrameIndex current_time);
 
     /**
+     * @brief Resolve eraser radius for the active global tool or legacy erase widget
+     * @return Radius in scene/media pixels
+     */
+    [[nodiscard]] float _eraserRadiusPx() const;
+
+    /**
      * @brief Apply polynomial fit to a line
      * @param line The line to fit
      * @param order The order of the polynomial to fit
-     * @pre order >= 0 (enforcement: runtime_check via caller UI). 
+     * @pre order >= 0 (enforcement: runtime_check via caller UI).
      * @pre line.size() > order for successful fit (enforcement: runtime_check)
      */
     static void _applyPolynomialFit(Line2D & line, int order);
@@ -135,6 +142,8 @@ private:
 
 private slots:
     void _clickedInVideoWithModifiers(qreal x, qreal y, Qt::KeyboardModifiers modifiers);
+    void _mouseMovedInVideo(qreal x, qreal y);
+    void _mouseReleasedInVideo();
     void _rightClickedInVideo(qreal x, qreal y);
     void _toggleSelectionMode(QString const & text);
     void _setSmoothingMode(int index);

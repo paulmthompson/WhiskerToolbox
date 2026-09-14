@@ -17,8 +17,7 @@
    <item>
     <widget class="QLabel" name="descriptionLabel">
      <property name="text">
-      <string>Brush mode: Use the mouse to modify the mask.
-Left click to add to the mask, right click to erase from it.</string>
+      <string>Brush mode: left click to add mask pixels. Use the Eraser toolbar tool to remove pixels.</string>
      </property>
      <property name="wordWrap">
       <bool>true</bool>
@@ -100,7 +99,7 @@ Left click to add to the mask, right click to erase from it.</string>
       <string>font-style: italic; color: #666;</string>
      </property>
      <property name="text">
-      <string>Note: The same brush size applies to both adding and erasing operations.</string>
+      <string>Hover preview is controlled by the Eraser toolbar tool or the checkbox below for brush add mode.</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignCenter</set>

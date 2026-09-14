@@ -86,15 +86,24 @@ private:
     void _addToMask(CanvasCoordinates const & canvas_coords);
     void _removeFromMask(CanvasCoordinates const & canvas_coords);
 
+    /**
+     * @brief Whether the global Eraser tool is active for this mask key
+     */
+    [[nodiscard]] bool _isEraserInteractionActive() const;
+
+    /**
+     * @brief Brush radius in canvas pixels for add/remove operations
+     */
+    [[nodiscard]] int _effectiveBrushRadiusCanvas() const;
+
 private slots:
     void _setMaskAlpha(float alpha);
     void _setMaskColor(QString const & hex_color);
     void _toggleShowBoundingBox(bool checked);
     void _toggleShowOutline(bool checked);
     void _toggleUseAsTransparency(bool checked);
-    void _toggleSelectionMode(const QString& text);
+    void _toggleSelectionMode(QString const & text);
     void _clickedInVideo(CanvasCoordinates const & canvas_coords);
-    void _rightClickedInVideo(CanvasCoordinates const & canvas_coords);
     void _mouseMoveInVideo(CanvasCoordinates const & canvas_coords);
     void _mouseReleased();
     void _setBrushSize(int size);

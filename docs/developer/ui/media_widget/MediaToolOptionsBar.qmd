@@ -53,11 +53,12 @@ When `DataManager` deletes a key, `Media_Widget::_pruneRemovedFeatures()` remove
 
 ## Eraser Tool
 
-`EraserToolOptions_Widget` configures the Eraser hover-circle preview. When the Eraser tool is active:
+`EraserToolOptions_Widget` configures the Eraser hover-circle radius. When the Eraser tool is active:
 
 - **Eraser size** (`EraserToolPrefs::radius_px`, default 10 px, range 1–50) drives `Media_Window::setHoverCircleRadius()`.
 - `Media_Widget::_syncEraserHoverCircle()` enables the hover circle on the canvas.
-- Actual erase gestures are not implemented in this phase.
+- **Lines:** drag on a selected line removes vertices within the circle; remaining vertices stay connected.
+- **Masks:** left-click drag removes pixels within the circle (replacing mask brush right-click erase).
 
 ## Wiring
 

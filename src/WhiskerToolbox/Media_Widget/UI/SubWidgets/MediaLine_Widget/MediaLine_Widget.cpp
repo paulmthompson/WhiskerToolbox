@@ -49,6 +49,13 @@ namespace {
 }
 
 /**
+ * @brief Whether the Eraser toolbar tool owns erase gestures for the active line key
+ */
+[[nodiscard]] bool isEraserToolActive(MediaWidgetState const * state, std::string const & active_key) {
+    return state != nullptr && !active_key.empty() && state->activeMediaTool() == MediaToolId::Eraser;
+}
+
+/**
  * @brief Resolve which line endpoint receives the next appended point
  * @param policy User-selected append policy
  * @param click Click position in media coordinates
@@ -220,6 +227,8 @@ void MediaLine_Widget::showEvent(QShowEvent * event) {
     spdlog::debug("MediaLine_Widget: initial selected entities on show: {}", initial_selections.size());
 
     connect(_scene, &Media_Window::leftClickMediaWithEvent, this, &MediaLine_Widget::_clickedInVideoWithModifiers);
+    connect(_scene, &Media_Window::mouseMove, this, &MediaLine_Widget::_mouseMovedInVideo);
+    connect(_scene, &Media_Window::leftRelease, this, &MediaLine_Widget::_mouseReleasedInVideo);
     connect(_scene, &Media_Window::rightClickMedia, this, &MediaLine_Widget::_rightClickedInVideo);
 }
 
@@ -235,7 +244,11 @@ void MediaLine_Widget::hideEvent(QHideEvent * event) {
     }
 
     disconnect(_scene, &Media_Window::leftClickMediaWithEvent, this, &MediaLine_Widget::_clickedInVideoWithModifiers);
+    disconnect(_scene, &Media_Window::mouseMove, this, &MediaLine_Widget::_mouseMovedInVideo);
+    disconnect(_scene, &Media_Window::leftRelease, this, &MediaLine_Widget::_mouseReleasedInVideo);
     disconnect(_scene, &Media_Window::rightClickMedia, this, &MediaLine_Widget::_rightClickedInVideo);
+
+    _is_eraser_dragging = false;
 
     // Clean up hover circle when switching away from line widget
     _scene->setShowHoverCircle(false);
@@ -325,6 +338,17 @@ void MediaLine_Widget::_clickedInVideoWithModifiers(qreal x_canvas, qreal y_canv
         return;
     }
 
+    if (isEraserToolActive(_state, _active_key)) {
+        if ((modifiers & Qt::ControlModifier) || (modifiers & Qt::AltModifier)) {
+            return;
+        }
+
+        spdlog::debug("MediaLine_Widget: Eraser tool click - erasing vertices within radius");
+        _is_eraser_dragging = true;
+        _erasePointsFromLine(x_media, y_media, current_time);
+        return;
+    }
+
     switch (_selection_mode) {
         case Selection_Mode::None: {
             spdlog::debug("MediaLine_Widget: selection mode is None");
@@ -339,6 +363,26 @@ void MediaLine_Widget::_clickedInVideoWithModifiers(qreal x_canvas, qreal y_canv
         case Selection_Mode::Erase:
             break;
     }
+}
+
+void MediaLine_Widget::_mouseMovedInVideo(qreal x_canvas, qreal y_canvas) {
+    if (!_is_eraser_dragging || !isEraserToolActive(_state, _active_key)) {
+        return;
+    }
+
+    auto line_data = _data_manager->getData<LineData>(_active_key);
+    if (!line_data) {
+        return;
+    }
+
+    auto const current_time = _state->current_position.convertTo(line_data->getTimeFrame().get());
+    _erasePointsFromLine(static_cast<float>(x_canvas),
+                         static_cast<float>(y_canvas),
+                         current_time);
+}
+
+void MediaLine_Widget::_mouseReleasedInVideo() {
+    _is_eraser_dragging = false;
 }
 
 void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIndex current_time) {
@@ -513,8 +557,21 @@ void MediaLine_Widget::_deleteNearestVertexFromLine(float x_media, float y_media
                   nearest_index, x_media, y_media, _active_key, selected_entity_id.id);
 }
 
+float MediaLine_Widget::_eraserRadiusPx() const {
+    if (_state && _state->activeMediaTool() == MediaToolId::Eraser) {
+        return static_cast<float>(_state->eraserPrefs().radius_px);
+    }
+
+    if (_eraseSelectionWidget) {
+        return static_cast<float>(_eraseSelectionWidget->getEraserRadius());
+    }
+
+    return 10.0f;
+}
+
 void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFrameIndex current_time) {
-    // Get the EntityID for the selected line from the group system
+    static_cast<void>(current_time);
+
     auto selected_entities = _scene->getSelectedEntities();
     if (selected_entities.empty()) {
         spdlog::debug("MediaLine_Widget: no line selected - cannot erase points");
@@ -542,14 +599,10 @@ void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFr
         return;
     }
 
-    // Get eraser radius from the erase selection widget
-    float eraser_radius = 10.0f;// Default radius
-    if (_eraseSelectionWidget) {
-        eraser_radius = static_cast<float>(_eraseSelectionWidget->getEraserRadius());
-    }
+    float const eraser_radius = _eraserRadiusPx();
 
-    // Find points within eraser radius and remove them
     std::vector<Point2D<float>> remaining_points;
+    remaining_points.reserve(line.size());
     Point2D<float> const click_point{x_media, y_media};
 
     for (auto const & point: line) {
@@ -559,14 +612,21 @@ void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFr
         }
     }
 
-    // Update the line with remaining points (this modifies the original line)
-    line = Line2D(remaining_points);
+    if (remaining_points.size() == line.size()) {
+        return;
+    }
 
-    // Notify observers that the data has changed
+    line = Line2D(std::move(remaining_points));
+
     line_data->notifyObservers();
 
     _scene->UpdateCanvas();
-    spdlog::debug("MediaLine_Widget: erased points near ({}, {}) from line {} (EntityID: {})", x_media, y_media, _active_key, selected_entity_id.id);
+    spdlog::debug("MediaLine_Widget: erased vertices near ({}, {}) from line {} (EntityID: {}, {} remaining)",
+                  x_media,
+                  y_media,
+                  _active_key,
+                  selected_entity_id.id,
+                  line.size());
 }
 
 void MediaLine_Widget::_applyPolynomialFit(Line2D & line, int order) {

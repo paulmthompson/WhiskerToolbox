@@ -68,7 +68,7 @@
    <item>
     <widget class="QLabel" name="instruction_label">
      <property name="text">
-      <string>Hover circle shows eraser radius. Erasing is not wired yet.</string>
+      <string>Drag on the canvas to erase selected-line vertices within the hover circle.</string>
      </property>
      <property name="wordWrap">
       <bool>false</bool>

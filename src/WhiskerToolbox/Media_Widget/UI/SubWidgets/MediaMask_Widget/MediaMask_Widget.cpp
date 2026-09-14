@@ -76,7 +76,6 @@ void MediaMask_Widget::showEvent(QShowEvent * event) {
 
     spdlog::debug("MediaMask_Widget: showEvent");
     connect(_scene, &Media_Window::leftClickCanvas, this, &MediaMask_Widget::_clickedInVideo);
-    connect(_scene, &Media_Window::rightClickCanvas, this, &MediaMask_Widget::_rightClickedInVideo);
     connect(_scene, &Media_Window::mouseMoveCanvas, this, &MediaMask_Widget::_mouseMoveInVideo);
     connect(_scene, &Media_Window::leftRelease, this, &MediaMask_Widget::_mouseReleased);
     connect(_scene, &Media_Window::rightRelease, this, &MediaMask_Widget::_mouseReleased);
@@ -94,7 +93,6 @@ void MediaMask_Widget::hideEvent(QHideEvent * event) {
     }
 
     disconnect(_scene, &Media_Window::leftClickCanvas, this, &MediaMask_Widget::_clickedInVideo);
-    disconnect(_scene, &Media_Window::rightClickCanvas, this, &MediaMask_Widget::_rightClickedInVideo);
     disconnect(_scene, &Media_Window::mouseMoveCanvas, this, &MediaMask_Widget::_mouseMoveInVideo);
     disconnect(_scene, &Media_Window::leftRelease, this, &MediaMask_Widget::_mouseReleased);
     disconnect(_scene, &Media_Window::rightRelease, this, &MediaMask_Widget::_mouseReleased);
@@ -187,19 +185,39 @@ void MediaMask_Widget::_toggleSelectionMode(QString const & text) {
     ui->mode_stacked_widget->setCurrentIndex(pageIndex);
 
     // Update hover circle visibility based on the mode
-    if (_selection_mode == Selection_Mode::Brush) {
+    if (_selection_mode == Selection_Mode::Brush && !_isEraserInteractionActive()) {
         _scene->setShowHoverCircle(_brushSelectionWidget->isHoverCircleVisible());
-        _scene->setHoverCircleRadius(static_cast<double>(_brushSelectionWidget->getBrushSize()));
-    } else {
+        _scene->setHoverCircleRadius(_effectiveBrushRadiusCanvas());
+    } else if (!_isEraserInteractionActive()) {
         _scene->setShowHoverCircle(false);
     }
 
     spdlog::debug("MediaMask_Widget: selection mode changed to {}", text.toStdString());
 }
 
+bool MediaMask_Widget::_isEraserInteractionActive() const {
+    return _state != nullptr && !_active_key.empty() && _state->activeMediaTool() == MediaToolId::Eraser;
+}
+
+int MediaMask_Widget::_effectiveBrushRadiusCanvas() const {
+    if (_isEraserInteractionActive()) {
+        return _state->eraserPrefs().radius_px;
+    }
+
+    return _brushSelectionWidget->getBrushSize();
+}
+
 void MediaMask_Widget::_clickedInVideo(CanvasCoordinates const & canvas_coords) {
     if (_active_key.empty()) {
         spdlog::debug("MediaMask_Widget: no active mask key");
+        return;
+    }
+
+    if (_isEraserInteractionActive()) {
+        spdlog::debug("MediaMask_Widget: Eraser tool click - removing mask pixels");
+        _is_dragging = true;
+        _is_adding_mode = false;
+        _removeFromMask(canvas_coords);
         return;
     }
 
@@ -225,27 +243,15 @@ void MediaMask_Widget::_clickedInVideo(CanvasCoordinates const & canvas_coords) 
     }
 }
 
-void MediaMask_Widget::_rightClickedInVideo(CanvasCoordinates const & canvas_coords) {
-    if (_active_key.empty() || _selection_mode != Selection_Mode::Brush) {
-        return;
-    }
-
-    spdlog::debug("MediaMask_Widget: right click at canvas ({}, {})", canvas_coords.x, canvas_coords.y);
-
-    _is_dragging = true;
-    _is_adding_mode = false;
-    _removeFromMask(canvas_coords);
-}
-
 void MediaMask_Widget::_setBrushSize(int size) {
-    if (_selection_mode == Selection_Mode::Brush) {
-        _scene->setHoverCircleRadius(static_cast<double>(size));
+    if (_selection_mode == Selection_Mode::Brush && !_isEraserInteractionActive()) {
+        _scene->setHoverCircleRadius(size);
     }
     spdlog::debug("MediaMask_Widget: brush size set to {}", size);
 }
 
 void MediaMask_Widget::_toggleShowHoverCircle(bool checked) {
-    if (_selection_mode == Selection_Mode::Brush) {
+    if (_selection_mode == Selection_Mode::Brush && !_isEraserInteractionActive()) {
         _scene->setShowHoverCircle(checked);
     }
     spdlog::debug("MediaMask_Widget: show hover circle {}", checked ? "enabled" : "disabled");
@@ -481,7 +487,7 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
     float const y_mask_raw = (canvas_coords.y / static_cast<float>(canvas_height)) * static_cast<float>(mask_image_size.height);
 
     // Get brush size and scale it separately for each dimension to preserve circle shape
-    int const brush_radius_canvas = _brushSelectionWidget->getBrushSize();
+    int const brush_radius_canvas = _effectiveBrushRadiusCanvas();
     float const scale_x = static_cast<float>(mask_image_size.width) / static_cast<float>(canvas_width);
     float const scale_y = static_cast<float>(mask_image_size.height) / static_cast<float>(canvas_height);
 
@@ -578,7 +584,7 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
     float const y_mask_raw = (canvas_coords.y / static_cast<float>(canvas_height)) * static_cast<float>(mask_image_size.height);
 
     // Get brush size and scale it separately for each dimension to preserve circle shape
-    int const brush_radius_canvas = _brushSelectionWidget->getBrushSize();
+    int const brush_radius_canvas = _effectiveBrushRadiusCanvas();
     float const scale_x = static_cast<float>(mask_image_size.width) / static_cast<float>(canvas_width);
     float const scale_y = static_cast<float>(mask_image_size.height) / static_cast<float>(canvas_height);
 
@@ -648,12 +654,14 @@ void MediaMask_Widget::_removeFromMask(CanvasCoordinates const & canvas_coords) 
 }
 
 void MediaMask_Widget::_mouseMoveInVideo(CanvasCoordinates const & canvas_coords) {
-    // Only process mouse move if we're in brush mode and currently dragging
-    if (_active_key.empty() || _selection_mode != Selection_Mode::Brush || !_is_dragging) {
+    if (_active_key.empty() || !_is_dragging) {
         return;
     }
 
-    // Continue adding or removing based on the mode set when dragging started
+    if (!_isEraserInteractionActive() && _selection_mode != Selection_Mode::Brush) {
+        return;
+    }
+
     if (_is_adding_mode) {
         _addToMask(canvas_coords);
     } else {
@@ -666,11 +674,11 @@ void MediaMask_Widget::_mouseReleased() {
     bool const was_dragging = _is_dragging;
     _is_dragging = false;
 
-    // Update canvas once when brush drag operation is completed
-    if (_selection_mode == Selection_Mode::Brush && was_dragging) {
+    // Update canvas once when brush or eraser drag operation is completed
+    if (was_dragging && (_isEraserInteractionActive() || _selection_mode == Selection_Mode::Brush)) {
         _scene->UpdateCanvas();
         if (_debug_performance) {
-            spdlog::debug("MediaMask_Widget: brush drag finished, canvas updated");
+            spdlog::debug("MediaMask_Widget: brush/eraser drag finished, canvas updated");
         }
     }
 }

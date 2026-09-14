@@ -34,7 +34,7 @@ See [Media Viewer Tool Options Bar](MediaToolOptionsBar.qmd) for contextual cont
 - `activeToolChanged(MediaToolId)` is emitted when the user selects or deactivates a tool
 - Clicking the active tool button again sets `MediaToolId::None`
 
-`Media_Widget` wires `activeMediaTool` in state; `MediaSelectToolController` enables unified canvas selection only when `Select` is active. The **Pen** tool routes Ctrl+click / Alt+click line edits through `MediaLine_Widget`. The **Eraser** tool shows a configurable hover circle via `Media_Window`; erasing gestures are not wired yet.
+`Media_Widget` wires `activeMediaTool` in state; `MediaSelectToolController` enables unified canvas selection only when `Select` is active. The **Pen** tool routes Ctrl+click / Alt+click line edits through `MediaLine_Widget`. The **Eraser** tool removes line vertices or mask pixels under the hover circle via `MediaLine_Widget` and `MediaMask_Widget`.
 
 ## Adding Tools
 

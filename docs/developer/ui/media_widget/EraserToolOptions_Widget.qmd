@@ -5,7 +5,7 @@ format: html
 
 ## Overview
 
-`EraserToolOptions_Widget` is the options-bar page shown when `MediaToolId::Eraser` is active in the Media Viewer left tool strip. In the current phase it configures the hover-circle preview only; actual erasing gestures are not wired yet.
+`EraserToolOptions_Widget` is the options-bar page shown when `MediaToolId::Eraser` is active in the Media Viewer left tool strip. It configures the hover-circle radius used for brush-style erasing on lines and masks.
 
 ## Controls
 
@@ -13,16 +13,21 @@ format: html
 |---------|-------------|-------------|
 | Eraser size slider / spinbox | `EraserToolPrefs::radius_px` | Hover circle radius in scene pixels (1–50, default 10) |
 
-## Hover Circle
+## Behavior
 
-When the Eraser tool is active, `Media_Widget::_syncEraserHoverCircle()` enables `Media_Window::setShowHoverCircle(true)` and applies the configured radius via `setHoverCircleRadius()`. Switching to another toolbar tool hides the hover circle unless a datatype sub-widget (for example mask brush mode) re-enables it.
+When the Eraser tool is active:
+
+- **Lines:** left-click drag on a selected line removes all vertices within the hover circle. Remaining vertices stay connected in order (for example, erasing vertices 13–15 leaves vertex 12 adjacent to vertex 16).
+- **Masks:** left-click drag removes mask pixels under the hover circle, replacing the former mask brush right-click erase path.
+
+`Media_Widget::_syncEraserHoverCircle()` enables the shared `Media_Window` hover circle and applies `EraserToolPrefs::radius_px`.
 
 ## Related Code
 
 | Component | Role |
 |-----------|------|
-| `MediaToolStrip_Widget` | Eraser toolbar button |
-| `Media_Widget::_syncEraserHoverCircle` | Enables/disables hover preview for the Eraser tool |
-| `Media_Window::setShowHoverCircle` / `setHoverCircleRadius` | Shared hover-circle rendering infrastructure |
+| `MediaLine_Widget::_erasePointsFromLine` | Removes line vertices within radius |
+| `MediaMask_Widget::_removeFromMask` | Removes mask pixels within brush ellipse |
+| `Media_Window::setShowHoverCircle` / `setHoverCircleRadius` | Shared hover-circle rendering |
 
 See also [Media Viewer Tool Strip](MediaToolStrip.qmd) and [Media Viewer Tool Options Bar](MediaToolOptionsBar.qmd).
