@@ -420,6 +420,18 @@ public:
      */
     void setSelectPrefs(SelectToolPrefs const & prefs);
 
+    /**
+     * @brief Get Eraser tool preferences
+     * @return Const reference to EraserToolPrefs
+     */
+    [[nodiscard]] EraserToolPrefs const & eraserPrefs() const { return _data.eraser_prefs; }
+
+    /**
+     * @brief Set Eraser tool preferences
+     * @param prefs The new preferences
+     */
+    void setEraserPrefs(EraserToolPrefs const & prefs);
+
     // === Text Overlays ===
 
     /**
@@ -598,6 +610,11 @@ signals:
      * @brief Emitted when Select tool preferences change
      */
     void selectPrefsChanged();
+
+    /**
+     * @brief Emitted when Eraser tool preferences change
+     */
+    void eraserPrefsChanged();
 
     // === Text Overlay Signals ===
 

@@ -78,6 +78,38 @@ namespace MediaToolIcons {
     return QIcon(pixmap);
 }
 
+/**
+ * @brief Create an eraser block icon
+ * @param size Icon size in pixels
+ * @return Icon suitable for a toolbar button
+ */
+[[nodiscard]] inline QIcon createEraserToolIcon(int size = 20) {
+    QPixmap pixmap(size, size);
+    pixmap.fill(Qt::transparent);
+
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+
+    double const scale = static_cast<double>(size) / 20.0;
+    painter.scale(scale, scale);
+
+    QPainterPath body;
+    body.moveTo(4.0, 14.0);
+    body.lineTo(8.0, 17.0);
+    body.lineTo(16.0, 9.0);
+    body.lineTo(12.0, 6.0);
+    body.closeSubpath();
+
+    painter.setPen(QPen(QColor(20, 20, 20), 1.0));
+    painter.setBrush(QColor(235, 180, 190));
+    painter.drawPath(body);
+
+    painter.setPen(QPen(QColor(170, 120, 130), 1.0));
+    painter.drawLine(QPointF(6.0, 15.0), QPointF(14.0, 7.0));
+
+    return QIcon(pixmap);
+}
+
 }// namespace MediaToolIcons
 
 #endif// MEDIA_TOOL_ICONS_HPP

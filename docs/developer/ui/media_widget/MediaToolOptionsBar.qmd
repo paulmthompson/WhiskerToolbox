@@ -24,6 +24,7 @@ The `Media_Widget` grid uses three rows:
 | `MediaToolOptionsBar_Widget` | Container with `QStackedWidget` (empty placeholder or tool page); fixed height always reserved |
 | `SelectToolOptions_Widget` | Select-tool page: key filter combo and pick radius spinbox |
 | `PenToolOptions_Widget` | Pen-tool page: append-endpoint combo and usage instructions |
+| `EraserToolOptions_Widget` | Eraser-tool page: hover-circle radius slider/spinbox |
 
 ## Select Tool Filter
 
@@ -50,11 +51,18 @@ When `DataManager` deletes a key, `Media_Widget::_pruneRemovedFeatures()` remove
 - **Alt+click** deletes the nearest vertex within `SelectToolPrefs::pick_radius_px` (`MediaLine_Widget::_deleteNearestVertexFromLine`).
 - **Right-click** on the selected line opens the line context menu.
 
-Brush/radius erasing with hover preview remains in legacy `LineEraseSelectionWidget` scaffolding for a future **Eraser** toolbar tool.
+## Eraser Tool
+
+`EraserToolOptions_Widget` configures the Eraser hover-circle preview. When the Eraser tool is active:
+
+- **Eraser size** (`EraserToolPrefs::radius_px`, default 10 px, range 1–50) drives `Media_Window::setHoverCircleRadius()`.
+- `Media_Widget::_syncEraserHoverCircle()` enables the hover circle on the canvas.
+- Actual erase gestures are not implemented in this phase.
 
 ## Wiring
 
 `Media_Widget::_wireToolUi()` connects:
 
 - `MediaToolStrip_Widget::activeToolChanged` → `MediaToolOptionsBar_Widget::setActiveTool`
-- `MediaWidgetState` → `SelectToolOptions_Widget::setState` and `PenToolOptions_Widget::setState` (via `MediaToolOptionsBar_Widget::setState`)
+- `MediaWidgetState` → tool option widgets via `MediaToolOptionsBar_Widget::setState`
+- `MediaWidgetState::eraserPrefsChanged` → `Media_Widget::_syncEraserHoverCircle`

@@ -24,17 +24,17 @@ See [Media Viewer Tool Options Bar](MediaToolOptionsBar.qmd) for contextual cont
 | Component | Location | Role |
 |-----------|----------|------|
 | `MediaToolStrip_Widget` | `Media_Widget/UI/Tools` | Vertical toolbar with exclusive `QButtonGroup` |
-| `MediaToolId` | `Media_Widget/UI/Tools` | Tool identifiers (`None`, `Select`, `Pen`) |
+| `MediaToolId` | `Media_Widget/UI/Tools` | Tool identifiers (`None`, `Select`, `Pen`, `Eraser`) |
 | `MediaToolIcons` | `Media_Widget/UI/Tools` | Programmatic placeholder icons |
 
 ## Selection API
 
-- `activeTool()` returns the current `MediaToolId` (`None`, `Select`, or `Pen`)
+- `activeTool()` returns the current `MediaToolId` (`None`, `Select`, `Pen`, or `Eraser`)
 - `setActiveTool(MediaToolId)` updates the checked button (or unchecks all for `None`)
 - `activeToolChanged(MediaToolId)` is emitted when the user selects or deactivates a tool
 - Clicking the active tool button again sets `MediaToolId::None`
 
-`Media_Widget` wires `activeMediaTool` in state; `MediaSelectToolController` enables unified canvas selection only when `Select` is active. The **Pen** tool disables unified selection and routes Ctrl+click / Alt+click line edits through `MediaLine_Widget` when line properties are visible.
+`Media_Widget` wires `activeMediaTool` in state; `MediaSelectToolController` enables unified canvas selection only when `Select` is active. The **Pen** tool routes Ctrl+click / Alt+click line edits through `MediaLine_Widget`. The **Eraser** tool shows a configurable hover circle via `Media_Window`; erasing gestures are not wired yet.
 
 ## Adding Tools
 

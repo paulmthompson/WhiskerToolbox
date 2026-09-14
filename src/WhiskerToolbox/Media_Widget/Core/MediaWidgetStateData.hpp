@@ -218,6 +218,13 @@ struct SelectToolPrefs {
     float pick_radius_px = 15.0f;///< Scene-pixel distance for unified canvas selection
 };
 
+/**
+ * @brief Preferences for the Media Viewer Eraser tool
+ */
+struct EraserToolPrefs {
+    int radius_px = 10;///< Eraser hover circle radius in scene pixels
+};
+
 // ==================== Main State Structure ====================
 
 /**
@@ -294,6 +301,7 @@ struct MediaWidgetStateData {
     PointInteractionPrefs point_prefs;///< Point tool preferences
     RulerPrefs ruler_prefs;           ///< Pixel ruler display preferences
     SelectToolPrefs select_prefs;     ///< Select tool key-filter preferences
+    EraserToolPrefs eraser_prefs;     ///< Eraser tool hover circle preferences
 
     // === Text Overlays ===
     std::vector<TextOverlayData> text_overlays;///< All text overlays

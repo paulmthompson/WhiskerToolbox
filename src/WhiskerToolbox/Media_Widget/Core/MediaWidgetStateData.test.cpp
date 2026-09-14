@@ -144,6 +144,28 @@ TEST_CASE("PointInteractionPrefs serialization", "[MediaWidgetStateData]") {
     REQUIRE(data.selection_threshold == Approx(15.5f));
 }
 
+TEST_CASE("EraserToolPrefs serialization", "[MediaWidgetStateData]") {
+    SECTION("Default values") {
+        EraserToolPrefs prefs;
+        auto json = rfl::json::write(prefs);
+        auto result = rfl::json::read<EraserToolPrefs>(json);
+
+        REQUIRE(result);
+        REQUIRE(result.value().radius_px == 10);
+    }
+
+    SECTION("Custom values round-trip") {
+        EraserToolPrefs prefs;
+        prefs.radius_px = 24;
+
+        auto json = rfl::json::write(prefs);
+        auto result = rfl::json::read<EraserToolPrefs>(json);
+
+        REQUIRE(result);
+        REQUIRE(result.value().radius_px == 24);
+    }
+}
+
 // ==================== ViewportState Tests ====================
 
 TEST_CASE("ViewportState serialization", "[MediaWidgetStateData]") {

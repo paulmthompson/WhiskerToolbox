@@ -46,6 +46,9 @@ set(MEDIA_WIDGET_SOURCES
     UI/Tools/PenToolOptions_Widget.hpp
     UI/Tools/PenToolOptions_Widget.cpp
     UI/Tools/PenToolOptions_Widget.ui
+    UI/Tools/EraserToolOptions_Widget.hpp
+    UI/Tools/EraserToolOptions_Widget.cpp
+    UI/Tools/EraserToolOptions_Widget.ui
 
     Selection/MediaSelectionHit.hpp
     Selection/MediaSelectToolController.hpp

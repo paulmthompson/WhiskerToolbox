@@ -35,6 +35,10 @@ MediaToolStrip_Widget::MediaToolStrip_Widget(QWidget * parent)
                    MediaToolIcons::createPenToolIcon(),
                    tr("Pen — edit selected line"));
 
+    _addToolButton(MediaToolId::Eraser,
+                   MediaToolIcons::createEraserToolIcon(),
+                   tr("Eraser — brush preview"));
+
     _layout->addStretch();
 
     connect(_button_group, &QButtonGroup::idClicked, this, &MediaToolStrip_Widget::_onToolIdClicked);

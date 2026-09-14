@@ -666,6 +666,21 @@ void Media_Widget::_syncActiveMediaTool(MediaToolId tool) {
     if (_select_controller) {
         _select_controller->setActive(tool == MediaToolId::Select);
     }
+    _syncEraserHoverCircle();
+}
+
+void Media_Widget::_syncEraserHoverCircle() {
+    if (!_scene || !_state) {
+        return;
+    }
+
+    if (_state->activeMediaTool() == MediaToolId::Eraser) {
+        _scene->setHoverCircleRadius(_state->eraserPrefs().radius_px);
+        _scene->setShowHoverCircle(true);
+        return;
+    }
+
+    _scene->setShowHoverCircle(false);
 }
 
 void Media_Widget::_wireToolUi() {
@@ -691,6 +706,11 @@ void Media_Widget::_wireToolUi() {
     connect(_state.get(), &MediaWidgetState::activeMediaToolChanged,
             this, [this](MediaToolId tool) {
                 _syncActiveMediaTool(tool);
+            });
+
+    connect(_state.get(), &MediaWidgetState::eraserPrefsChanged,
+            this, [this]() {
+                _syncEraserHoverCircle();
             });
 
     _syncActiveMediaTool(_state->activeMediaTool());

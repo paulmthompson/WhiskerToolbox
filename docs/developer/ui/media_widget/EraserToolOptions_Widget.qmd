@@ -1,0 +1,28 @@
+---
+title: "Eraser Tool Options Widget"
+format: html
+---
+
+## Overview
+
+`EraserToolOptions_Widget` is the options-bar page shown when `MediaToolId::Eraser` is active in the Media Viewer left tool strip. In the current phase it configures the hover-circle preview only; actual erasing gestures are not wired yet.
+
+## Controls
+
+| Control | State field | Description |
+|---------|-------------|-------------|
+| Eraser size slider / spinbox | `EraserToolPrefs::radius_px` | Hover circle radius in scene pixels (1–50, default 10) |
+
+## Hover Circle
+
+When the Eraser tool is active, `Media_Widget::_syncEraserHoverCircle()` enables `Media_Window::setShowHoverCircle(true)` and applies the configured radius via `setHoverCircleRadius()`. Switching to another toolbar tool hides the hover circle unless a datatype sub-widget (for example mask brush mode) re-enables it.
+
+## Related Code
+
+| Component | Role |
+|-----------|------|
+| `MediaToolStrip_Widget` | Eraser toolbar button |
+| `Media_Widget::_syncEraserHoverCircle` | Enables/disables hover preview for the Eraser tool |
+| `Media_Window::setShowHoverCircle` / `setHoverCircleRadius` | Shared hover-circle rendering infrastructure |
+
+See also [Media Viewer Tool Strip](MediaToolStrip.qmd) and [Media Viewer Tool Options Bar](MediaToolOptionsBar.qmd).

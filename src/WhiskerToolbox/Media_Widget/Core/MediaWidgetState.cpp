@@ -552,6 +552,16 @@ void MediaWidgetState::setSelectPrefs(SelectToolPrefs const & prefs) {
     emit selectPrefsChanged();
 }
 
+void MediaWidgetState::setEraserPrefs(EraserToolPrefs const & prefs) {
+    if (_data.eraser_prefs.radius_px == prefs.radius_px) {
+        return;
+    }
+
+    _data.eraser_prefs = prefs;
+    markDirty();
+    emit eraserPrefsChanged();
+}
+
 // === Text Overlays ===
 
 int MediaWidgetState::addTextOverlay(TextOverlayData overlay) {

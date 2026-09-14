@@ -66,3 +66,11 @@ TEST_CASE("MediaToolStrip_Widget selects Pen tool", "[MediaToolStrip]") {
     strip.setActiveTool(MediaToolId::Pen);
     REQUIRE(strip.activeTool() == MediaToolId::Pen);
 }
+
+TEST_CASE("MediaToolStrip_Widget selects Eraser tool", "[MediaToolStrip]") {
+    ensureQtApplication();
+
+    MediaToolStrip_Widget strip;
+    strip.setActiveTool(MediaToolId::Eraser);
+    REQUIRE(strip.activeTool() == MediaToolId::Eraser);
+}

@@ -12,6 +12,7 @@
 
 class MediaWidgetState;
 class QStackedWidget;
+class EraserToolOptions_Widget;
 class PenToolOptions_Widget;
 class SelectToolOptions_Widget;
 
@@ -50,6 +51,12 @@ public:
      */
     [[nodiscard]] PenToolOptions_Widget * penOptionsWidget() const { return _pen_options; }
 
+    /**
+     * @brief Access Eraser tool options widget
+     * @return Eraser options widget (never null after construction)
+     */
+    [[nodiscard]] EraserToolOptions_Widget * eraserOptionsWidget() const { return _eraser_options; }
+
     [[nodiscard]] QSize sizeHint() const override;
 
 private:
@@ -59,6 +66,7 @@ private:
     QWidget * _empty_page{nullptr};
     SelectToolOptions_Widget * _select_options{nullptr};
     PenToolOptions_Widget * _pen_options{nullptr};
+    EraserToolOptions_Widget * _eraser_options{nullptr};
 };
 
 #endif// MEDIA_TOOL_OPTIONS_BAR_WIDGET_HPP
