@@ -14,6 +14,7 @@
 enum class MediaToolId {
     None,  ///< No global tool active (canvas pan/zoom and per-datatype modes only)
     Select,///< Pointer / selection tool
+    Pen,   ///< Selected-line node editing (append / delete vertices)
 };
 
 Q_DECLARE_METATYPE(MediaToolId)

@@ -43,6 +43,9 @@ set(MEDIA_WIDGET_SOURCES
     UI/Tools/MediaToolOptionsBar_Widget.cpp
     UI/Tools/SelectToolOptions_Widget.hpp
     UI/Tools/SelectToolOptions_Widget.cpp
+    UI/Tools/PenToolOptions_Widget.hpp
+    UI/Tools/PenToolOptions_Widget.cpp
+    UI/Tools/PenToolOptions_Widget.ui
 
     Selection/MediaSelectionHit.hpp
     Selection/MediaSelectToolController.hpp
@@ -85,9 +88,6 @@ set(MEDIA_WIDGET_SOURCES
     UI/SubWidgets/MediaLine_Widget/SelectionWidgets/LineEraseSelectionWidget.cpp
     UI/SubWidgets/MediaLine_Widget/SelectionWidgets/LineEraseSelectionWidget.hpp
     UI/SubWidgets/MediaLine_Widget/SelectionWidgets/LineEraseSelectionWidget.ui
-    UI/SubWidgets/MediaLine_Widget/SelectionWidgets/LineSelectSelectionWidget.cpp
-    UI/SubWidgets/MediaLine_Widget/SelectionWidgets/LineSelectSelectionWidget.hpp
-    UI/SubWidgets/MediaLine_Widget/SelectionWidgets/LineSelectSelectionWidget.ui
     UI/SubWidgets/MediaLine_Widget/SelectionWidgets/LineDrawAllFramesSelectionWidget.cpp
     UI/SubWidgets/MediaLine_Widget/SelectionWidgets/LineDrawAllFramesSelectionWidget.hpp
     UI/SubWidgets/MediaLine_Widget/SelectionWidgets/LineDrawAllFramesSelectionWidget.ui

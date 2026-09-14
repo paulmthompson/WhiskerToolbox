@@ -204,7 +204,8 @@ void MediaMask_Widget::_clickedInVideo(CanvasCoordinates const & canvas_coords) 
     }
 
     if (_state && _scene && _scene->isUnifiedSelectionEnabled() &&
-        _state->activeMediaTool() == MediaToolId::Select) {
+        _state->activeMediaTool() == MediaToolId::Select &&
+        _selection_mode != Selection_Mode::Brush) {
         return;
     }
 

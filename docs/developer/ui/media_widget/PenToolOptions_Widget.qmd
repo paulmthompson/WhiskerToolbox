@@ -1,0 +1,27 @@
+---
+title: "Pen Tool Options Widget"
+format: html
+---
+
+## Overview
+
+`PenToolOptions_Widget` is the options-bar page shown when `MediaToolId::Pen` is active in the Media Viewer left tool strip. It provides discoverable usage instructions only; there are no persisted Pen-tool parameters in this phase.
+
+## Instructions
+
+The widget displays:
+
+- Select a line with the **Select** tool.
+- **Ctrl+click** to append a point.
+- **Alt+click** to delete the nearest vertex.
+- **Right-click** the selected line for additional operations.
+
+## Related Code
+
+| Component | Role |
+|-----------|------|
+| `MediaLine_Widget::_addPointToLine` | Appends to the selected line entity |
+| `MediaLine_Widget::_deleteNearestVertexFromLine` | Removes one vertex by nearest hit-test |
+| `SelectToolPrefs::pick_radius_px` | Vertex hit threshold for Alt+click deletion |
+
+See also [Media Viewer Tool Strip](MediaToolStrip.qmd) and [Media Viewer Tool Options Bar](MediaToolOptionsBar.qmd).

@@ -31,6 +31,10 @@ MediaToolStrip_Widget::MediaToolStrip_Widget(QWidget * parent)
                    MediaToolIcons::createSelectToolIcon(),
                    tr("Select — click again to deactivate"));
 
+    _addToolButton(MediaToolId::Pen,
+                   MediaToolIcons::createPenToolIcon(),
+                   tr("Pen — edit selected line"));
+
     _layout->addStretch();
 
     connect(_button_group, &QButtonGroup::idClicked, this, &MediaToolStrip_Widget::_onToolIdClicked);

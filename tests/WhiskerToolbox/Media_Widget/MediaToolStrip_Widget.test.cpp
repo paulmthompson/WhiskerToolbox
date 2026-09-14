@@ -58,3 +58,11 @@ TEST_CASE("MediaToolStrip_Widget deactivates Select when clicked again", "[Media
     strip.setActiveTool(MediaToolId::Select);
     REQUIRE(strip.activeTool() == MediaToolId::Select);
 }
+
+TEST_CASE("MediaToolStrip_Widget selects Pen tool", "[MediaToolStrip]") {
+    ensureQtApplication();
+
+    MediaToolStrip_Widget strip;
+    strip.setActiveTool(MediaToolId::Pen);
+    REQUIRE(strip.activeTool() == MediaToolId::Pen);
+}

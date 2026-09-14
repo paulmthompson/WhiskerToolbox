@@ -151,12 +151,7 @@ void MediaPoint_Widget::_clearPointSelection() {
 }
 
 EntityId MediaPoint_Widget::_resolveMoveTargetId() {
-    if (_selected_point_id != EntityId(0)) {
-        return _selected_point_id;
-    }
-
-    auto const selected_entities = _scene->getSelectedEntities();
-    if (selected_entities.empty() || _active_key.empty()) {
+    if (_active_key.empty()) {
         return EntityId(0);
     }
 
@@ -165,11 +160,17 @@ EntityId MediaPoint_Widget::_resolveMoveTargetId() {
         return EntityId(0);
     }
 
+    auto const selected_entities = _scene->getSelectedEntities();
     for (EntityId const entity_id: selected_entities) {
         if (point_data->getMutableData(entity_id, NotifyObservers::No).has_value()) {
             _selected_point_id = entity_id;
             return entity_id;
         }
+    }
+
+    if (_selected_point_id != EntityId(0) &&
+        point_data->getMutableData(_selected_point_id, NotifyObservers::No).has_value()) {
+        return _selected_point_id;
     }
 
     return EntityId(0);

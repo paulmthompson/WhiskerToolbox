@@ -22,7 +22,6 @@ namespace line_widget {
 class LineNoneSelectionWidget;
 class LineAddSelectionWidget;
 class LineEraseSelectionWidget;
-class LineSelectSelectionWidget;
 class LineDrawAllFramesSelectionWidget;
 }// namespace line_widget
 
@@ -60,7 +59,6 @@ private:
         None,
         Add,
         Erase,
-        Select,
         DrawAllFrames
     };
 
@@ -72,7 +70,6 @@ private:
     line_widget::LineNoneSelectionWidget * _noneSelectionWidget{nullptr};
     line_widget::LineAddSelectionWidget * _addSelectionWidget{nullptr};
     line_widget::LineEraseSelectionWidget * _eraseSelectionWidget{nullptr};
-    line_widget::LineSelectSelectionWidget * _selectSelectionWidget{nullptr};
     line_widget::LineDrawAllFramesSelectionWidget * _drawAllFramesSelectionWidget{nullptr};
 
     QMap<QString, Selection_Mode> _selection_modes;
@@ -93,6 +90,7 @@ private:
 
     void _setupSelectionModePages();
     void _addPointToLine(float x_media, float y_media, TimeFrameIndex current_time);
+    void _deleteNearestVertexFromLine(float x_media, float y_media, TimeFrameIndex current_time);
     void _erasePointsFromLine(float x_media, float y_media, TimeFrameIndex current_time);
 
     /**
@@ -138,7 +136,6 @@ private:
 private slots:
     void _clickedInVideoWithModifiers(qreal x, qreal y, Qt::KeyboardModifiers modifiers);
     void _rightClickedInVideo(qreal x, qreal y);
-    void _mouseMoved(qreal x, qreal y);
     void _toggleSelectionMode(QString const & text);
     void _setSmoothingMode(int index);
     void _setPolynomialOrder(int order);

@@ -29,6 +29,6 @@ Per-datatype subwidgets skip plain left-click selection when `activeMediaTool() 
 
 ## Phase B UI changes
 
-- **Line properties**: `Select Line` mode renamed to **Edit Selected Line**. The threshold control moved to the Select tool options bar.
+- **Line properties**: **Edit Selected Line** mouse mode removed; selected-line editing moved to the global **Pen** toolbar tool (`PenToolOptions_Widget`).
 - **Point properties**: The `Select Point` combo replaced with a static **Point Editing** section describing modifier-driven edits.
 - **Legacy group selection**: `setGroupSelectionEnabled` and `findEntityAtPosition` removed; canvas clicks use unified selection only.

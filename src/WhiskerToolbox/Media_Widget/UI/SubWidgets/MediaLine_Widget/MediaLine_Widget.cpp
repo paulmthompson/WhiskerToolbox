@@ -8,7 +8,6 @@
 #include "SelectionWidgets/LineDrawAllFramesSelectionWidget.hpp"
 #include "SelectionWidgets/LineEraseSelectionWidget.hpp"
 #include "SelectionWidgets/LineNoneSelectionWidget.hpp"
-#include "SelectionWidgets/LineSelectSelectionWidget.hpp"
 
 #include "CoreGeometry/point_geometry.hpp"
 #include "CoreMath/polynomial_fit.hpp"
@@ -37,6 +36,20 @@
 
 #include <cmath>
 
+namespace {
+
+/**
+ * @brief Whether the Pen toolbar tool owns selected-line edit gestures
+ * @param state Media widget state
+ * @param active_key Active line data key
+ * @return True when Pen tool is active for a non-empty line key
+ */
+[[nodiscard]] bool isPenLineEditActive(MediaWidgetState const * state, std::string const & active_key) {
+    return state != nullptr && !active_key.empty() && state->activeMediaTool() == MediaToolId::Pen;
+}
+
+}// namespace
+
 MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, MediaWidgetState * state, QWidget * parent)
     : QWidget(parent),
       ui(new Ui::MediaLine_Widget),
@@ -57,7 +70,6 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
             this, &MediaLine_Widget::_applyLineStyleToOptions);
 
     _selection_modes["(None)"] = Selection_Mode::None;
-    _selection_modes["Edit Selected Line"] = Selection_Mode::Select;
     _selection_modes["Draw Across All Frames"] = Selection_Mode::DrawAllFrames;
 
     ui->selection_mode_combo->addItems(QStringList(_selection_modes.keys()));
@@ -128,9 +140,6 @@ void MediaLine_Widget::_setupSelectionModePages() {
     connect(_eraseSelectionWidget, &line_widget::LineEraseSelectionWidget::showCircleToggled,
             this, &MediaLine_Widget::_toggleShowHoverCircle);
 
-    _selectSelectionWidget = new line_widget::LineSelectSelectionWidget();
-    ui->mode_stacked_widget->addWidget(_selectSelectionWidget);
-
     _drawAllFramesSelectionWidget = new line_widget::LineDrawAllFramesSelectionWidget();
     ui->mode_stacked_widget->addWidget(_drawAllFramesSelectionWidget);
 
@@ -166,9 +175,6 @@ void MediaLine_Widget::showEvent(QShowEvent * event) {
 
     connect(_scene, &Media_Window::leftClickMediaWithEvent, this, &MediaLine_Widget::_clickedInVideoWithModifiers);
     connect(_scene, &Media_Window::rightClickMedia, this, &MediaLine_Widget::_rightClickedInVideo);
-    connect(_scene, &Media_Window::mouseMove, this, [this](qreal x, qreal y) {
-        _mouseMoved(x, y);
-    });
 }
 
 void MediaLine_Widget::hideEvent(QHideEvent * event) {
@@ -184,7 +190,6 @@ void MediaLine_Widget::hideEvent(QHideEvent * event) {
 
     disconnect(_scene, &Media_Window::leftClickMediaWithEvent, this, &MediaLine_Widget::_clickedInVideoWithModifiers);
     disconnect(_scene, &Media_Window::rightClickMedia, this, &MediaLine_Widget::_rightClickedInVideo);
-    disconnect(_scene, &Media_Window::mouseMove, this, nullptr);
 
     // Clean up hover circle when switching away from line widget
     _scene->setShowHoverCircle(false);
@@ -263,25 +268,20 @@ void MediaLine_Widget::_clickedInVideoWithModifiers(qreal x_canvas, qreal y_canv
     auto const current_position = _state->current_position;
     auto const current_time = current_position.convertTo(line_data->getTimeFrame().get());
 
+    if (isPenLineEditActive(_state, _active_key)) {
+        if (modifiers & Qt::ControlModifier) {
+            spdlog::debug("MediaLine_Widget: Pen tool Ctrl+click - adding point to selected line");
+            _addPointToLine(x_media, y_media, current_time);
+        } else if (modifiers & Qt::AltModifier) {
+            spdlog::debug("MediaLine_Widget: Pen tool Alt+click - deleting nearest vertex");
+            _deleteNearestVertexFromLine(x_media, y_media, current_time);
+        }
+        return;
+    }
+
     switch (_selection_mode) {
         case Selection_Mode::None: {
             spdlog::debug("MediaLine_Widget: selection mode is None");
-            break;
-        }
-        case Selection_Mode::Select: {
-            spdlog::debug("MediaLine_Widget: selection mode is Select");
-
-            // Check for modifier keys to determine action
-            if (modifiers & Qt::ControlModifier) {
-                // Ctrl+click: Add points to selected line
-                spdlog::debug("MediaLine_Widget: Ctrl+click - adding points to selected line");
-                _addPointToLine(x_media, y_media, current_time);
-            } else if (modifiers & Qt::AltModifier) {
-                // Alt+click: Erase points from selected line
-                spdlog::debug("MediaLine_Widget: Alt+click - erasing points from selected line");
-                _erasePointsFromLine(x_media, y_media, current_time);
-            }
-            // Plain clicks select entities via the global Select tool on the toolbar.
             break;
         }
         case Selection_Mode::DrawAllFrames: {
@@ -289,29 +289,9 @@ void MediaLine_Widget::_clickedInVideoWithModifiers(qreal x_canvas, qreal y_canv
             _addPointToDrawAllFrames(x_media, y_media);
             break;
         }
-    }
-}
-
-void MediaLine_Widget::_mouseMoved(qreal x, qreal y) {
-    // Only handle mouse move in Select Line mode
-    if (_selection_mode != Selection_Mode::Select) {
-        return;
-    }
-
-    // Check if Alt is currently held (we can't get modifier state from mouse move,
-    // so we'll track it from the last click event)
-    // For now, we'll show the eraser circle when in Select mode
-    // This could be improved by tracking modifier state
-    static bool const alt_held = false;
-
-    // Update hover circle position and show/hide based on modifier state
-    if (alt_held) {
-        _scene->setShowHoverCircle(true);
-        if (_eraseSelectionWidget) {
-            _scene->setHoverCircleRadius(_eraseSelectionWidget->getEraserRadius());
-        }
-    } else {
-        _scene->setShowHoverCircle(false);
+        case Selection_Mode::Add:
+        case Selection_Mode::Erase:
+            break;
     }
 }
 
@@ -393,6 +373,75 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
     }
 
     spdlog::debug("MediaLine_Widget: added point ({}, {}) to line {} (EntityID: {})", x_media, y_media, _active_key, selected_entity_id.id);
+}
+
+void MediaLine_Widget::_deleteNearestVertexFromLine(float x_media, float y_media, TimeFrameIndex current_time) {
+    static_cast<void>(current_time);
+
+    auto selected_entities = _scene->getSelectedEntities();
+    if (selected_entities.empty()) {
+        spdlog::debug("MediaLine_Widget: no line selected - cannot delete vertex");
+        return;
+    }
+
+    auto line_data = _data_manager->getData<LineData>(_active_key);
+    if (!line_data) {
+        spdlog::debug("MediaLine_Widget: no line data for active key");
+        return;
+    }
+
+    EntityId const selected_entity_id = *selected_entities.begin();
+
+    auto line_ref = line_data->getMutableData(selected_entity_id, NotifyObservers::Yes);
+    if (!line_ref.has_value()) {
+        spdlog::debug("MediaLine_Widget: could not get mutable reference to line with EntityID {}", selected_entity_id.id);
+        return;
+    }
+
+    Line2D & line = line_ref.value().get();
+
+    if (line.size() <= 1) {
+        spdlog::debug("MediaLine_Widget: selected line has at most one vertex - cannot delete");
+        return;
+    }
+
+    float pick_radius = 15.0f;
+    if (_state) {
+        pick_radius = _state->selectPrefs().pick_radius_px;
+    }
+
+    Point2D<float> const click_point{x_media, y_media};
+    size_t nearest_index = 0;
+    float min_distance = calc_distance(click_point, line[0]);
+
+    for (size_t i = 1; i < line.size(); ++i) {
+        float const distance = calc_distance(click_point, line[i]);
+        if (distance < min_distance) {
+            min_distance = distance;
+            nearest_index = i;
+        }
+    }
+
+    if (min_distance > pick_radius) {
+        spdlog::debug("MediaLine_Widget: no vertex within pick radius {} px (nearest {:.1f} px)",
+                      pick_radius, min_distance);
+        return;
+    }
+
+    std::vector<Point2D<float>> remaining_points;
+    remaining_points.reserve(line.size() - 1);
+    for (size_t i = 0; i < line.size(); ++i) {
+        if (i != nearest_index) {
+            remaining_points.push_back(line[i]);
+        }
+    }
+
+    line = Line2D(remaining_points);
+    line_data->notifyObservers();
+    _scene->UpdateCanvas();
+
+    spdlog::debug("MediaLine_Widget: deleted vertex {} near ({}, {}) from line {} (EntityID: {})",
+                  nearest_index, x_media, y_media, _active_key, selected_entity_id.id);
 }
 
 void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFrameIndex current_time) {
@@ -520,23 +569,10 @@ void MediaLine_Widget::_toggleSelectionMode(QString const & text) {
     int const pageIndex = static_cast<int>(_selection_mode);
     ui->mode_stacked_widget->setCurrentIndex(pageIndex);
 
-    // For Select Line mode, show both add and erase options
-    if (_selection_mode == Selection_Mode::Select) {
-        // Show both add and erase widgets by creating a combined layout
-        // For now, we'll show the add widget as the primary options
-        // The erase options will be available through the existing erase widget
-    }
-
-    // Debug: Check if we have any selections after mode change
     auto selected_entities = _scene->getSelectedEntities();
     spdlog::debug("MediaLine_Widget: selected entities after mode change: {}", selected_entities.size());
 
-    if (_selection_mode == Selection_Mode::Select) {
-        // Show hover circle for eraser when in Select mode (will be controlled by Shift key)
-        _scene->setShowHoverCircle(false);// Initially off, will be controlled by mouse move events
-    } else {
-        _scene->setShowHoverCircle(false);
-    }
+    _scene->setShowHoverCircle(false);
 
     // Enable/disable temporary line visualization for DrawAllFrames mode
     if (_selection_mode == Selection_Mode::DrawAllFrames) {
@@ -876,8 +912,7 @@ void MediaLine_Widget::_setSegmentEndPercentage(int percentage) {
 }
 
 void MediaLine_Widget::_rightClickedInVideo(qreal x_canvas, qreal y_canvas) {
-    // Only handle right-clicks in Select mode and when a line is selected
-    if (_selection_mode != Selection_Mode::Select || _active_key.empty()) {
+    if (!isPenLineEditActive(_state, _active_key)) {
         return;
     }
 

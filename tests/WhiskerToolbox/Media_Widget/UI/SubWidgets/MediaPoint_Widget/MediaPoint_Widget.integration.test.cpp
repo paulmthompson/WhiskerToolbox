@@ -12,6 +12,7 @@
 #include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
 #include "Media_Widget/MediaWidgetRegistration.hpp"
 #include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
+#include "Media_Widget/Selection/MediaSelectionHit.hpp"
 #include "Media_Widget/UI/MediaPropertiesWidget.hpp"
 #include "Media_Widget/UI/Media_Widget.hpp"
 
@@ -151,12 +152,41 @@ void setupMediaWindowForPointEditing(Media_Window * media_window,
     media_window->setMediaWidgetState(state);
     media_window->setCanvasSize(image_size);
     media_window->resolveCanvasCoordinateSystem();
+    media_window->setUnifiedSelectionEnabled(true);
     media_window->addPointDataToScene(point_key);
 
     if (auto point_opts = state->displayOptions().getMutable<PointDisplayOptions>(
                 QString::fromStdString(point_key))) {
         point_opts->is_visible() = true;
     }
+}
+
+/**
+ * @brief Select a point entity on the canvas via unified selection hit-testing
+ */
+void selectPointViaHitTest(Media_Window * media_window,
+                           MediaWidgetState * state,
+                           QPointF const & scene_pos) {
+    REQUIRE(media_window != nullptr);
+    REQUIRE(state != nullptr);
+
+    auto const hit = media_window->findBestEntityAtPosition(scene_pos, state->selectPrefs());
+    REQUIRE(hit.has_value());
+    media_window->selectEntity(hit->entity_id, hit->data_key, hit->data_type);
+}
+
+/**
+ * @brief Select the first point entity at a frame (fallback when hit-test is not under test)
+ */
+EntityId selectFirstPointEntityAtFrame(Media_Window * media_window,
+                                       PointData * point_data,
+                                       TimeFrameIndex frame,
+                                       std::string const & point_key) {
+    auto entity_ids = point_data->getEntityIdsAtTime(frame);
+    REQUIRE_FALSE(entity_ids.empty());
+    EntityId const entity_id = entity_ids[0];
+    media_window->selectEntity(entity_id, point_key, "point");
+    return entity_id;
 }
 
 /**
@@ -343,11 +373,13 @@ TEST_CASE("Position of existing point can be changed",
         auto point_widget = selectPointFeature(props_widget, "test_points", app);
         REQUIRE(point_widget != nullptr);
 
-        // First, select the point by clicking near it (without modifiers)
-        simulatePointClick(point_widget, kInitialX + 5.0, kInitialY + 5.0, Qt::NoModifier);
+        selectFirstPointEntityAtFrame(media_window.get(),
+                                      point_data.get(),
+                                      TimeFrameIndex{kTargetFrame},
+                                      "test_points");
         app->processEvents();
 
-        // Now move the point using Ctrl+click
+        // Move the point using Ctrl+click
         constexpr qreal kNewX = 250.0;
         constexpr qreal kNewY = 275.0;
         simulatePointClick(point_widget, kNewX, kNewY, Qt::ControlModifier);
@@ -404,14 +436,20 @@ TEST_CASE("Point movement works across different frames",
 
         // Move point at frame 20
         state->current_position = TimePosition(TimeFrameIndex{kFrame1}, time_frame);
-        simulatePointClick(point_widget, 105.0, 105.0, Qt::NoModifier);// Select
+        selectFirstPointEntityAtFrame(media_window.get(),
+                                      point_data.get(),
+                                      TimeFrameIndex{kFrame1},
+                                      "test_points");
         app->processEvents();
         simulatePointClick(point_widget, 150.0, 150.0, Qt::ControlModifier);// Move
         app->processEvents();
 
         // Move point at frame 60
         state->current_position = TimePosition(TimeFrameIndex{kFrame2}, time_frame);
-        simulatePointClick(point_widget, 205.0, 205.0, Qt::NoModifier);// Select
+        selectFirstPointEntityAtFrame(media_window.get(),
+                                      point_data.get(),
+                                      TimeFrameIndex{kFrame2},
+                                      "test_points");
         app->processEvents();
         simulatePointClick(point_widget, 300.0, 300.0, Qt::ControlModifier);// Move
         app->processEvents();
@@ -470,8 +508,8 @@ TEST_CASE("Point selection uses Media_Window hit-test threshold and enables Ctrl
         auto point_widget = selectPointFeature(props_widget, "test_points", app);
         REQUIRE(point_widget != nullptr);
 
-        // Click 12 pixels away: within Media_Window's 15px threshold but outside the old 10px widget threshold
-        simulatePointClick(point_widget, kInitialX + 12.0, kInitialY, Qt::NoModifier);
+        // Click 12 pixels away: within Media_Window's 15px threshold
+        selectPointViaHitTest(media_window.get(), state.get(), QPointF{kInitialX + 12.0, kInitialY});
         app->processEvents();
 
         constexpr qreal kNewX = 300.0;
@@ -529,10 +567,10 @@ TEST_CASE("Point move and add convert coordinates when ImageSize differs from ca
         auto point_widget = selectPointFeature(props_widget, "test_points", app);
         REQUIRE(point_widget != nullptr);
 
-        // Center of 1920x1080 maps to center of 640x480 canvas in media coordinates
-        constexpr qreal kSelectX = 320.0;
-        constexpr qreal kSelectY = 240.0;
-        simulatePointClick(point_widget, kSelectX, kSelectY, Qt::NoModifier);
+        selectFirstPointEntityAtFrame(media_window.get(),
+                                      point_data.get(),
+                                      TimeFrameIndex{kTargetFrame},
+                                      "test_points");
         app->processEvents();
 
         constexpr qreal kMoveMediaX = 400.0;

@@ -61,8 +61,9 @@ Mouse modes are selected via a combo box with a stacked widget for mode-specific
 | Mode | Widget | Behavior |
 |------|--------|----------|
 | (None) | `LineNoneSelectionWidget` | No interaction |
-| Edit Selected Line | `LineSelectSelectionWidget` | Select with toolbar Select tool; Ctrl+click to add points, Alt+click to erase |
 | Draw Across All Frames | `LineDrawAllFramesSelectionWidget` | Stateful workflow: start → draw → complete → apply to all frames |
+
+Selected-line node editing (Ctrl+click append, Alt+click delete nearest vertex) is handled by the global **Pen** toolbar tool. See [Pen Tool Options Widget](PenToolOptions_Widget.qmd).
 
 ## Display Options
 

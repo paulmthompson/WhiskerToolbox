@@ -6,6 +6,7 @@
 #include "MediaToolOptionsBar_Widget.hpp"
 
 #include "Core/MediaWidgetState.hpp"
+#include "PenToolOptions_Widget.hpp"
 #include "SelectToolOptions_Widget.hpp"
 
 #include <QHBoxLayout>
@@ -21,9 +22,11 @@ MediaToolOptionsBar_Widget::MediaToolOptionsBar_Widget(QWidget * parent)
     _stack = new QStackedWidget(this);
     _empty_page = new QWidget(_stack);
     _select_options = new SelectToolOptions_Widget(_stack);
+    _pen_options = new PenToolOptions_Widget(_stack);
 
     _stack->addWidget(_empty_page);
     _stack->addWidget(_select_options);
+    _stack->addWidget(_pen_options);
 
     auto * layout = new QHBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -49,6 +52,11 @@ void MediaToolOptionsBar_Widget::setActiveTool(MediaToolId tool) {
         case MediaToolId::Select:
             if (_select_options) {
                 _stack->setCurrentWidget(_select_options);
+            }
+            break;
+        case MediaToolId::Pen:
+            if (_pen_options) {
+                _stack->setCurrentWidget(_pen_options);
             }
             break;
         case MediaToolId::None:

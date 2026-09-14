@@ -23,6 +23,7 @@ The `Media_Widget` grid uses three rows:
 |-----------|------|
 | `MediaToolOptionsBar_Widget` | Container with `QStackedWidget` (empty placeholder or tool page); fixed height always reserved |
 | `SelectToolOptions_Widget` | Select-tool page: key filter combo and pick radius spinbox |
+| `PenToolOptions_Widget` | Pen-tool page: usage instructions for selected-line node editing |
 
 ## Select Tool Filter
 
@@ -38,6 +39,17 @@ Preferences are stored in `MediaWidgetStateData::select_prefs` and exposed via `
 Canvas left-click selection uses `Media_Window::findBestEntityAtPosition()` when the Select tool is active. The filter restricts candidate keys before closest-hit ranking across enabled line, mask, and point features.
 
 When `DataManager` deletes a key, `Media_Widget::_pruneRemovedFeatures()` removes stale display options (emitting `displayOptionsRemoved`), which triggers a combo rebuild. If the active filter targeted the deleted key, it resets to **All enabled features**.
+
+## Pen Tool
+
+`PenToolOptions_Widget` shows instruction text only (no persisted parameters in this phase). When the Pen tool is active:
+
+- Use the **Select** tool first to pick a line entity on the canvas.
+- **Ctrl+click** appends a point to the selected line (`MediaLine_Widget::_addPointToLine`).
+- **Alt+click** deletes the nearest vertex within `SelectToolPrefs::pick_radius_px` (`MediaLine_Widget::_deleteNearestVertexFromLine`).
+- **Right-click** on the selected line opens the line context menu.
+
+Brush/radius erasing with hover preview remains in legacy `LineEraseSelectionWidget` scaffolding for a future **Eraser** toolbar tool.
 
 ## Wiring
 

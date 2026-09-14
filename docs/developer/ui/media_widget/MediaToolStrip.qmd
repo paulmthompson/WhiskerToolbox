@@ -24,17 +24,17 @@ See [Media Viewer Tool Options Bar](MediaToolOptionsBar.qmd) for contextual cont
 | Component | Location | Role |
 |-----------|----------|------|
 | `MediaToolStrip_Widget` | `Media_Widget/UI/Tools` | Vertical toolbar with exclusive `QButtonGroup` |
-| `MediaToolId` | `Media_Widget/UI/Tools` | Tool identifiers (`Select` for now) |
+| `MediaToolId` | `Media_Widget/UI/Tools` | Tool identifiers (`None`, `Select`, `Pen`) |
 | `MediaToolIcons` | `Media_Widget/UI/Tools` | Programmatic placeholder icons |
 
 ## Selection API
 
-- `activeTool()` returns the current `MediaToolId` (`None` or `Select`)
+- `activeTool()` returns the current `MediaToolId` (`None`, `Select`, or `Pen`)
 - `setActiveTool(MediaToolId)` updates the checked button (or unchecks all for `None`)
 - `activeToolChanged(MediaToolId)` is emitted when the user selects or deactivates a tool
 - Clicking the active tool button again sets `MediaToolId::None`
 
-`Media_Widget` wires `activeMediaTool` in state; `MediaSelectToolController` enables unified canvas selection only when `Select` is active.
+`Media_Widget` wires `activeMediaTool` in state; `MediaSelectToolController` enables unified canvas selection only when `Select` is active. The **Pen** tool disables unified selection and routes Ctrl+click / Alt+click line edits through `MediaLine_Widget` when line properties are visible.
 
 ## Adding Tools
 
