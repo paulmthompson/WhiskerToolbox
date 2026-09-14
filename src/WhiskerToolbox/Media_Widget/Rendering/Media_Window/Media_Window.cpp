@@ -979,23 +979,9 @@ void Media_Window::mousePressEvent(QGraphicsSceneMouseEvent * event) {
             if (_debug_performance) {
                 std::cout << "  Started drawing - cleared and added first point" << std::endl;
             }
-        } else if (_unified_selection_enabled || _group_selection_enabled) {
-            std::optional<MediaSelectionHit> best_hit;
-
-            if (_unified_selection_enabled && _media_widget_state) {
-                best_hit = findBestEntityAtPosition(event->scenePos(), _media_widget_state->selectPrefs());
-            } else {
-                std::string data_key;
-                std::string data_type;
-                EntityId const entity_id = _findEntityAtPosition(event->scenePos(), data_key, data_type);
-                if (entity_id != EntityId(0)) {
-                    best_hit = MediaSelectionHit{
-                            entity_id,
-                            data_key,
-                            data_type,
-                            0.0};
-                }
-            }
+        } else if (_unified_selection_enabled && _media_widget_state) {
+            std::optional<MediaSelectionHit> const best_hit =
+                    findBestEntityAtPosition(event->scenePos(), _media_widget_state->selectPrefs());
 
             if (best_hit.has_value()) {
                 EntityId const entity_id = best_hit->entity_id;
@@ -2374,18 +2360,6 @@ std::unordered_set<EntityId> Media_Window::getSelectedEntities() const {
     return _selected_entities;
 }
 
-void Media_Window::setGroupSelectionEnabled(bool enabled) {
-    _group_selection_enabled = enabled;
-    if (!enabled) {
-        // Clear any existing selections when disabling group selection
-        clearAllSelections();
-    }
-}
-
-bool Media_Window::isGroupSelectionEnabled() const {
-    return _group_selection_enabled;
-}
-
 void Media_Window::setUnifiedSelectionEnabled(bool enabled) {
     _unified_selection_enabled = enabled;
 }
@@ -2425,7 +2399,7 @@ std::optional<MediaSelectionHit> Media_Window::findBestEntityAtPosition(
             continue;
         }
 
-        if (auto hit = _computeLineHitAtPosition(scene_pos, key)) {
+        if (auto hit = _computeLineHitAtPosition(scene_pos, key, prefs.pick_radius_px)) {
             if (!best_hit || hit->distance_px < best_hit->distance_px) {
                 best_hit = hit;
             }
@@ -2443,7 +2417,7 @@ std::optional<MediaSelectionHit> Media_Window::findBestEntityAtPosition(
             continue;
         }
 
-        if (auto hit = _computePointHitAtPosition(scene_pos, key)) {
+        if (auto hit = _computePointHitAtPosition(scene_pos, key, prefs.pick_radius_px)) {
             if (!best_hit || hit->distance_px < best_hit->distance_px) {
                 best_hit = hit;
             }
@@ -2461,7 +2435,7 @@ std::optional<MediaSelectionHit> Media_Window::findBestEntityAtPosition(
             continue;
         }
 
-        if (auto hit = _computeMaskHitAtPosition(scene_pos, key)) {
+        if (auto hit = _computeMaskHitAtPosition(scene_pos, key, prefs.pick_radius_px)) {
             if (!best_hit || hit->distance_px < best_hit->distance_px) {
                 best_hit = hit;
             }
@@ -2469,14 +2443,6 @@ std::optional<MediaSelectionHit> Media_Window::findBestEntityAtPosition(
     }
 
     return best_hit;
-}
-
-EntityId Media_Window::findPointAtPosition(QPointF const & scene_pos, std::string const & point_key) {
-    return _findPointAtPosition(scene_pos, point_key);
-}
-
-EntityId Media_Window::findEntityAtPosition(QPointF const & scene_pos, std::string & data_key, std::string & data_type) {
-    return _findEntityAtPosition(scene_pos, data_key, data_type);
 }
 
 void Media_Window::selectEntity(EntityId entity_id, std::string const & data_key, std::string const & data_type) {
@@ -2487,57 +2453,10 @@ void Media_Window::selectEntity(EntityId entity_id, std::string const & data_key
     UpdateCanvas();// Refresh to show selection
 }
 
-EntityId Media_Window::_findEntityAtPosition(QPointF const & scene_pos, std::string & data_key, std::string & data_type) {
-    if (!_media_widget_state) return EntityId(0);
-
-    // Search through lines first (as they're typically most precise)
-    for (auto const & key_q: _media_widget_state->displayOptions().keys<LineDisplayOptions>()) {
-        auto const * config = _media_widget_state->displayOptions().get<LineDisplayOptions>(key_q);
-        if (config && config->is_visible()) {
-            std::string const key = key_q.toStdString();
-            EntityId entity_id = _findLineAtPosition(scene_pos, key);
-            if (entity_id != EntityId(0)) {
-                data_key = key;
-                data_type = "line";
-                return entity_id;
-            }
-        }
-    }
-
-    // Then search points
-    for (auto const & key_q: _media_widget_state->displayOptions().keys<PointDisplayOptions>()) {
-        auto const * config = _media_widget_state->displayOptions().get<PointDisplayOptions>(key_q);
-        if (config && config->is_visible()) {
-            std::string const key = key_q.toStdString();
-            EntityId entity_id = _findPointAtPosition(scene_pos, key);
-            if (entity_id != EntityId(0)) {
-                data_key = key;
-                data_type = "point";
-                return entity_id;
-            }
-        }
-    }
-
-    // Finally search masks (usually less precise)
-    for (auto const & key_q: _media_widget_state->displayOptions().keys<MaskDisplayOptions>()) {
-        auto const * config = _media_widget_state->displayOptions().get<MaskDisplayOptions>(key_q);
-        if (config && config->is_visible()) {
-            std::string const key = key_q.toStdString();
-            EntityId entity_id = _findMaskAtPosition(scene_pos, key);
-            if (entity_id != EntityId(0)) {
-                data_key = key;
-                data_type = "mask";
-                return entity_id;
-            }
-        }
-    }
-
-    return EntityId(0);// No entity found
-}
-
 std::optional<MediaSelectionHit> Media_Window::_computeLineHitAtPosition(
         QPointF const & scene_pos,
-        std::string const & line_key) const {
+        std::string const & line_key,
+        float threshold_px) const {
     if (!_media_widget_state) {
         return std::nullopt;
     }
@@ -2566,7 +2485,7 @@ std::optional<MediaSelectionHit> Media_Window::_computeLineHitAtPosition(
             _canvasWidth, _canvasHeight, _canvas_coord_system,
             line_data->getImageSize(), mapping);
 
-    float const threshold = _media_widget_state->linePrefs().selection_threshold;
+    float const threshold = threshold_px;
     float best_dist = std::numeric_limits<float>::max();
     auto best_index = static_cast<std::size_t>(-1);
 
@@ -2607,17 +2526,10 @@ std::optional<MediaSelectionHit> Media_Window::_computeLineHitAtPosition(
             static_cast<double>(best_dist)};
 }
 
-EntityId Media_Window::_findLineAtPosition(QPointF const & scene_pos, std::string const & line_key) {
-    if (auto hit = _computeLineHitAtPosition(scene_pos, line_key)) {
-        return hit->entity_id;
-    }
-
-    return EntityId(0);
-}
-
 std::optional<MediaSelectionHit> Media_Window::_computePointHitAtPosition(
         QPointF const & scene_pos,
-        std::string const & point_key) const {
+        std::string const & point_key,
+        float threshold_px) const {
     if (!_media_widget_state) {
         return std::nullopt;
     }
@@ -2646,7 +2558,7 @@ std::optional<MediaSelectionHit> Media_Window::_computePointHitAtPosition(
             _canvasWidth, _canvasHeight, _canvas_coord_system,
             point_data->getImageSize(), mapping);
 
-    float const threshold = _media_widget_state->pointPrefs().selection_threshold;
+    float const threshold = threshold_px;
     float best_dist = std::numeric_limits<float>::max();
     auto best_index = static_cast<std::size_t>(-1);
 
@@ -2675,17 +2587,10 @@ std::optional<MediaSelectionHit> Media_Window::_computePointHitAtPosition(
             static_cast<double>(best_dist)};
 }
 
-EntityId Media_Window::_findPointAtPosition(QPointF const & scene_pos, std::string const & point_key) {
-    if (auto hit = _computePointHitAtPosition(scene_pos, point_key)) {
-        return hit->entity_id;
-    }
-
-    return EntityId(0);
-}
-
 std::optional<MediaSelectionHit> Media_Window::_computeMaskHitAtPosition(
         QPointF const & scene_pos,
-        std::string const & mask_key) const {
+        std::string const & mask_key,
+        float threshold_px) const {
     if (!_media_widget_state) {
         return std::nullopt;
     }
@@ -2710,7 +2615,7 @@ std::optional<MediaSelectionHit> Media_Window::_computeMaskHitAtPosition(
             mask_data->getImageSize(), mapping);
     auto const x_media = static_cast<float>(scene_pos.x()) / factors.x;
     auto const y_media = static_cast<float>(scene_pos.y()) / factors.y;
-    float const threshold = _media_widget_state->maskPrefs().selection_threshold;
+    float const threshold = threshold_px;
 
     float best_dist = std::numeric_limits<float>::max();
     auto best_index = static_cast<std::size_t>(-1);
@@ -2739,14 +2644,6 @@ std::optional<MediaSelectionHit> Media_Window::_computeMaskHitAtPosition(
             mask_key,
             "mask",
             static_cast<double>(best_dist)};
-}
-
-EntityId Media_Window::_findMaskAtPosition(QPointF const & scene_pos, std::string const & mask_key) {
-    if (auto hit = _computeMaskHitAtPosition(scene_pos, mask_key)) {
-        return hit->entity_id;
-    }
-
-    return EntityId(0);
 }
 
 void Media_Window::_createContextMenu() {

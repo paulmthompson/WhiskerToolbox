@@ -542,7 +542,8 @@ void MediaWidgetState::setRulerPrefs(RulerPrefs const & prefs) {
 void MediaWidgetState::setSelectPrefs(SelectToolPrefs const & prefs) {
     if (_data.select_prefs.filter_to_key == prefs.filter_to_key &&
         _data.select_prefs.filter_key == prefs.filter_key &&
-        _data.select_prefs.filter_data_type == prefs.filter_data_type) {
+        _data.select_prefs.filter_data_type == prefs.filter_data_type &&
+        _data.select_prefs.pick_radius_px == prefs.pick_radius_px) {
         return;
     }
 

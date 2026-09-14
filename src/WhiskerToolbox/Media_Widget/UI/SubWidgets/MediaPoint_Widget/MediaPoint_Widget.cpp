@@ -138,26 +138,7 @@ void MediaPoint_Widget::_handlePointClickWithModifiers(qreal x_media, qreal y_me
         return;
     }
 
-    _selectPointAtClick(x_media, y_media);
-}
-
-void MediaPoint_Widget::_selectPointAtClick(qreal x_media, qreal y_media) {
-    QPointF const scene_pos(x_media * _scene->getXAspect(), y_media * _scene->getYAspect());
-    EntityId const entity_id = _scene->findPointAtPosition(scene_pos, _active_key);
-
-    if (entity_id != EntityId(0)) {
-        _selectPoint(entity_id);
-    } else {
-        _clearPointSelection();
-    }
-}
-
-void MediaPoint_Widget::_selectPoint(EntityId point_id) {
-    _selected_point_id = point_id;
-
-    // Use Media_Window's selection system for visual feedback
-    _scene->selectEntity(point_id, _active_key, "point");
-    spdlog::debug("MediaPoint_Widget: selected point EntityID {}", point_id.id);
+    // Plain clicks select entities via the global Select tool on the toolbar.
 }
 
 void MediaPoint_Widget::_clearPointSelection() {

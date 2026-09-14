@@ -22,7 +22,7 @@ The `Media_Widget` grid uses three rows:
 | Component | Role |
 |-----------|------|
 | `MediaToolOptionsBar_Widget` | Container with `QStackedWidget` indexed by `MediaToolId` |
-| `SelectToolOptions_Widget` | Select-tool page: optional key filter combo |
+| `SelectToolOptions_Widget` | Select-tool page: key filter combo and pick radius spinbox |
 
 ## Select Tool Filter
 
@@ -32,6 +32,8 @@ The `Media_Widget` grid uses three rows:
 - One entry per enabled key — sets `filter_key` and `filter_data_type` in `SelectToolPrefs`
 
 Preferences are stored in `MediaWidgetStateData::select_prefs` and exposed via `selectPrefs()` / `setSelectPrefs()`.
+
+**Pick radius** (`SelectToolPrefs::pick_radius_px`, default 15 px) controls the scene-pixel distance threshold used by `findBestEntityAtPosition()` for all data types.
 
 Canvas left-click selection uses `Media_Window::findBestEntityAtPosition()` when the Select tool is active. The filter restricts candidate keys before closest-hit ranking across enabled line, mask, and point features.
 

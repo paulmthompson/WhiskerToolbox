@@ -10,6 +10,7 @@
 #include <QComboBox>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QSpinBox>
 
 #include <algorithm>
 #include <vector>
@@ -101,11 +102,22 @@ void SelectToolOptions_Widget::_buildUi() {
     _filter_combo->setMinimumWidth(180);
     _filter_combo->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
+    _pick_radius_label = new QLabel(tr("Pick radius:"), this);
+    _pick_radius_spinbox = new QSpinBox(this);
+    _pick_radius_spinbox->setSuffix(tr(" px"));
+    _pick_radius_spinbox->setMinimum(1);
+    _pick_radius_spinbox->setMaximum(50);
+    _pick_radius_spinbox->setValue(15);
+
     _layout->addWidget(_filter_label);
     _layout->addWidget(_filter_combo, 1);
+    _layout->addWidget(_pick_radius_label);
+    _layout->addWidget(_pick_radius_spinbox);
 
     connect(_filter_combo, &QComboBox::currentIndexChanged,
             this, &SelectToolOptions_Widget::_onFilterComboChanged);
+    connect(_pick_radius_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+            this, &SelectToolOptions_Widget::_onPickRadiusChanged);
 }
 
 void SelectToolOptions_Widget::_rebuildFilterCombo() {
@@ -129,8 +141,10 @@ void SelectToolOptions_Widget::_rebuildFilterCombo() {
     _filter_combo->blockSignals(false);
 
     if (_state && _state->selectPrefs().filter_to_key && target_index == 0) {
-        SelectToolPrefs prefs;
+        SelectToolPrefs prefs = _state->selectPrefs();
         prefs.filter_to_key = false;
+        prefs.filter_key.clear();
+        prefs.filter_data_type.clear();
         _state->setSelectPrefs(prefs);
     }
 }
@@ -179,6 +193,16 @@ void SelectToolOptions_Widget::_onFilterComboChanged(int index) {
     _state->setSelectPrefs(prefs);
 }
 
+void SelectToolOptions_Widget::_onPickRadiusChanged(int radius_px) {
+    if (_updating_from_state || !_state || !_pick_radius_spinbox) {
+        return;
+    }
+
+    SelectToolPrefs prefs = _state->selectPrefs();
+    prefs.pick_radius_px = static_cast<float>(radius_px);
+    _state->setSelectPrefs(prefs);
+}
+
 void SelectToolOptions_Widget::_onEnabledFeaturesChanged() {
     _rebuildFilterCombo();
 }
@@ -193,5 +217,13 @@ void SelectToolOptions_Widget::_syncFromState() {
     if (_filter_combo->currentIndex() != target_index) {
         _filter_combo->setCurrentIndex(target_index);
     }
+
+    if (_pick_radius_spinbox) {
+        int const radius = static_cast<int>(_state->selectPrefs().pick_radius_px);
+        if (_pick_radius_spinbox->value() != radius) {
+            _pick_radius_spinbox->setValue(radius);
+        }
+    }
+
     _updating_from_state = false;
 }

@@ -203,6 +203,7 @@ struct SelectToolPrefs {
     bool filter_to_key = false;  ///< When false, selection considers all enabled keys
     std::string filter_key;      ///< Data manager key when filter_to_key is true
     std::string filter_data_type;///< Data type string ("line", "point", "mask", ...)
+    float pick_radius_px = 15.0f;///< Scene-pixel distance for unified canvas selection
 };
 
 // ==================== Main State Structure ====================

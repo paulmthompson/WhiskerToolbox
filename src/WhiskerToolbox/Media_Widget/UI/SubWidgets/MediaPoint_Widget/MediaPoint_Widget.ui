@@ -117,36 +117,17 @@
        <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
       </property>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_3">
-       <property name="spacing">
-        <number>6</number>
+      <widget class="QLabel" name="point_editing_header">
+       <property name="text">
+        <string>Point Editing</string>
        </property>
-       <property name="sizeConstraint">
-        <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignCenter</set>
        </property>
-       <item>
-        <widget class="QLabel" name="label_4">
-         <property name="text">
-          <string>Mouse Mode:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="selection_model_combo">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <item>
-          <property name="text">
-           <string>Select Point</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-      </layout>
+       <property name="styleSheet">
+        <string>font-weight: bold;</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QLabel" name="selection_model_label">
@@ -157,7 +138,8 @@
         </sizepolicy>
        </property>
        <property name="text">
-        <string>Description: Click near a point to select it (highlighted in yellow). Ctrl+click to move selected point to new location. Alt+click to add a new point at the current time.</string>
+        <string>Use the Select tool on the toolbar to pick a point on the canvas.
+Ctrl+click to move the selected point. Alt+click to add a new point at the current time.</string>
        </property>
        <property name="wordWrap">
         <bool>true</bool>

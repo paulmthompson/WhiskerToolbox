@@ -190,10 +190,6 @@ public:
     std::unordered_set<EntityId> getSelectedEntities() const;
     void selectEntity(EntityId entity_id, std::string const & data_key, std::string const & data_type);
 
-    // Selection mode coordination
-    void setGroupSelectionEnabled(bool enabled);
-    bool isGroupSelectionEnabled() const;
-
     /**
      * @brief Enable unified cross-type selection using closest-hit ranking
      * @param enabled True when the global Select tool is active
@@ -227,10 +223,6 @@ public:
     [[nodiscard]] std::optional<MediaSelectionHit> findBestEntityAtPosition(
             QPointF const & scene_pos,
             SelectToolPrefs const & prefs) const;
-
-    // Public methods for entity finding
-    EntityId findPointAtPosition(QPointF const & scene_pos, std::string const & point_key);
-    EntityId findEntityAtPosition(QPointF const & scene_pos, std::string & data_key, std::string & data_type);
 
     /**
      * @brief Get mutable line display options for a key
@@ -348,7 +340,6 @@ private:
     std::unordered_set<EntityId> _selected_entities;
     std::string _selected_data_key;         // Key of the data containing selected entities
     std::string _selected_data_type;        // Type of selected data ("line", "point", "mask")
-    bool _group_selection_enabled = true;   ///< Legacy line-widget group selection path
     bool _unified_selection_enabled = false;///< Global Select-tool closest-hit path
     QMenu * _context_menu = nullptr;
     std::unique_ptr<GroupContextMenuHandler> _group_menu_handler;
@@ -396,23 +387,22 @@ private:
     [[nodiscard]] bool _isEntityGroupVisible(EntityId entity_id) const;
 
     // Selection and context menu helpers
-    EntityId _findEntityAtPosition(QPointF const & scene_pos, std::string & data_key, std::string & data_type);
-    EntityId _findLineAtPosition(QPointF const & scene_pos, std::string const & line_key);
-    EntityId _findPointAtPosition(QPointF const & scene_pos, std::string const & point_key);
-    EntityId _findMaskAtPosition(QPointF const & scene_pos, std::string const & mask_key);
     [[nodiscard]] std::optional<MediaSelectionHit> _computeLineHitAtPosition(
             QPointF const & scene_pos,
-            std::string const & line_key) const;
+            std::string const & line_key,
+            float threshold_px) const;
     [[nodiscard]] std::optional<MediaSelectionHit> _computePointHitAtPosition(
             QPointF const & scene_pos,
-            std::string const & point_key) const;
+            std::string const & point_key,
+            float threshold_px) const;
     [[nodiscard]] std::optional<MediaSelectionHit> _computeMaskHitAtPosition(
             QPointF const & scene_pos,
-            std::string const & mask_key) const;
+            std::string const & mask_key,
+            float threshold_px) const;
     [[nodiscard]] static bool _isSelectionCandidate(
             std::string const & data_key,
             std::string const & data_type,
-            SelectToolPrefs const & prefs) ;
+            SelectToolPrefs const & prefs);
     void _createContextMenu();
     void _showContextMenu(QPoint const & global_pos);
     static float _calculateDistanceToLineSegment(float px, float py, float x1, float y1, float x2, float y2);

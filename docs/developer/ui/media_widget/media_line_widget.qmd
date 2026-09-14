@@ -61,7 +61,7 @@ Mouse modes are selected via a combo box with a stacked widget for mode-specific
 | Mode | Widget | Behavior |
 |------|--------|----------|
 | (None) | `LineNoneSelectionWidget` | No interaction |
-| Select Line | `LineSelectSelectionWidget` | Click to select, Ctrl+click to add points, Alt+click to erase |
+| Edit Selected Line | `LineSelectSelectionWidget` | Select with toolbar Select tool; Ctrl+click to add points, Alt+click to erase |
 | Draw Across All Frames | `LineDrawAllFramesSelectionWidget` | Stateful workflow: start → draw → complete → apply to all frames |
 
 ## Display Options

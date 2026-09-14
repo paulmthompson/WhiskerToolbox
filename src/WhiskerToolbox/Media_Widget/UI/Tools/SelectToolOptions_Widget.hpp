@@ -12,6 +12,7 @@ class MediaWidgetState;
 class QComboBox;
 class QHBoxLayout;
 class QLabel;
+class QSpinBox;
 
 /**
  * @brief Horizontal options for the Select tool, including optional key filtering
@@ -30,6 +31,7 @@ public:
 
 private slots:
     void _onFilterComboChanged(int index);
+    void _onPickRadiusChanged(int radius_px);
     void _onEnabledFeaturesChanged();
     void _syncFromState();
 
@@ -44,6 +46,8 @@ private:
     QHBoxLayout * _layout{nullptr};
     QLabel * _filter_label{nullptr};
     QComboBox * _filter_combo{nullptr};
+    QLabel * _pick_radius_label{nullptr};
+    QSpinBox * _pick_radius_spinbox{nullptr};
 };
 
 #endif// SELECT_TOOL_OPTIONS_WIDGET_HPP

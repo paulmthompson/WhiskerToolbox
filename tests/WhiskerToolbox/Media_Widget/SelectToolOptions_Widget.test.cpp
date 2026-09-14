@@ -1,3 +1,4 @@
+#include <catch2/catch_approx.hpp>
 #include <catch2/catch_test_macros.hpp>
 
 #include "Core/MediaWidgetState.hpp"
@@ -11,6 +12,7 @@
 
 #include <QApplication>
 #include <QComboBox>
+#include <QSpinBox>
 
 #include <array>
 #include <memory>
@@ -30,6 +32,10 @@ void ensureQtApplication() {
 
 QComboBox * findFilterCombo(SelectToolOptions_Widget const & widget) {
     return widget.findChild<QComboBox *>();
+}
+
+QSpinBox * findPickRadiusSpinbox(SelectToolOptions_Widget const & widget) {
+    return widget.findChild<QSpinBox *>();
 }
 
 std::shared_ptr<DataManager> createDataManagerWithLine(std::string const & line_key) {
@@ -90,6 +96,22 @@ TEST_CASE("SelectToolOptions_Widget updates SelectToolPrefs when filter changes"
 
     combo->setCurrentIndex(0);
     REQUIRE_FALSE(state->selectPrefs().filter_to_key);
+}
+
+TEST_CASE("SelectToolOptions_Widget updates pick radius in SelectToolPrefs", "[SelectToolOptions]") {
+    ensureQtApplication();
+
+    auto state = std::make_shared<MediaWidgetState>();
+
+    SelectToolOptions_Widget widget;
+    widget.setState(state.get());
+
+    auto * spinbox = findPickRadiusSpinbox(widget);
+    REQUIRE(spinbox != nullptr);
+    REQUIRE(spinbox->value() == 15);
+
+    spinbox->setValue(20);
+    REQUIRE(state->selectPrefs().pick_radius_px == Catch::Approx(20.0f));
 }
 
 TEST_CASE("SelectToolOptions_Widget rebuilds when visibility changes via setVisible", "[SelectToolOptions]") {

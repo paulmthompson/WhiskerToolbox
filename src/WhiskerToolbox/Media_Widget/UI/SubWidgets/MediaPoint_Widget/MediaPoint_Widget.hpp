@@ -50,8 +50,6 @@ private:
     EntityId _selected_point_id = EntityId(0);
 
     // Helper methods for point interaction
-    void _selectPointAtClick(qreal x_media, qreal y_media);
-    void _selectPoint(EntityId point_id);
     void _clearPointSelection();
     [[nodiscard]] EntityId _resolveMoveTargetId();
     [[nodiscard]] Point2D<float> _mediaCoordsToDataCoords(qreal x_media, qreal y_media) const;

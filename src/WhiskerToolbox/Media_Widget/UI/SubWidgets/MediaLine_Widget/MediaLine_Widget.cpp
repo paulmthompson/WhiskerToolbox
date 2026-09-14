@@ -57,7 +57,7 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
             this, &MediaLine_Widget::_applyLineStyleToOptions);
 
     _selection_modes["(None)"] = Selection_Mode::None;
-    _selection_modes["Select Line"] = Selection_Mode::Select;
+    _selection_modes["Edit Selected Line"] = Selection_Mode::Select;
     _selection_modes["Draw Across All Frames"] = Selection_Mode::DrawAllFrames;
 
     ui->selection_mode_combo->addItems(QStringList(_selection_modes.keys()));
@@ -130,12 +130,6 @@ void MediaLine_Widget::_setupSelectionModePages() {
 
     _selectSelectionWidget = new line_widget::LineSelectSelectionWidget();
     ui->mode_stacked_widget->addWidget(_selectSelectionWidget);
-
-    connect(_selectSelectionWidget, &line_widget::LineSelectSelectionWidget::selectionThresholdChanged,
-            this, [this](float threshold) {
-                _line_selection_threshold = threshold;
-                spdlog::debug("Line selection threshold set to: {}", threshold);
-            });
 
     _drawAllFramesSelectionWidget = new line_widget::LineDrawAllFramesSelectionWidget();
     ui->mode_stacked_widget->addWidget(_drawAllFramesSelectionWidget);
@@ -286,22 +280,8 @@ void MediaLine_Widget::_clickedInVideoWithModifiers(qreal x_canvas, qreal y_canv
                 // Alt+click: Erase points from selected line
                 spdlog::debug("MediaLine_Widget: Alt+click - erasing points from selected line");
                 _erasePointsFromLine(x_media, y_media, current_time);
-            } else if (_state && _scene && _scene->isUnifiedSelectionEnabled() &&
-                       _state->activeMediaTool() == MediaToolId::Select) {
-                // Unified Select tool handles plain clicks on the canvas
-            } else {
-                QPointF const scene_pos(x_canvas * _scene->getXAspect(), y_canvas * _scene->getYAspect());
-                std::string data_key, data_type;
-                EntityId const entity_id = _scene->findEntityAtPosition(scene_pos, data_key, data_type);
-
-                if (entity_id != EntityId(0) && data_type == "line" && data_key == _active_key) {
-                    _scene->selectEntity(entity_id, data_key, data_type);
-                    spdlog::debug("MediaLine_Widget: selected line entity {} in group system", entity_id.id);
-                } else {
-                    _scene->clearAllSelections();
-                    spdlog::debug("MediaLine_Widget: no line found within threshold - cleared selections");
-                }
             }
+            // Plain clicks select entities via the global Select tool on the toolbar.
             break;
         }
         case Selection_Mode::DrawAllFrames: {
@@ -546,11 +526,6 @@ void MediaLine_Widget::_toggleSelectionMode(QString const & text) {
         // For now, we'll show the add widget as the primary options
         // The erase options will be available through the existing erase widget
     }
-
-    // Always enable group selection for line operations
-    // This prevents selections from being cleared when switching modes
-    _scene->setGroupSelectionEnabled(true);
-    spdlog::debug("MediaLine_Widget: group selection enabled for line operations");
 
     // Debug: Check if we have any selections after mode change
     auto selected_entities = _scene->getSelectedEntities();
@@ -979,7 +954,10 @@ std::optional<EntityId> MediaLine_Widget::_findNearestLine(float x, float y) {
 
     Point2D<float> const click_point{x, y};
     std::optional<EntityId> nearest_entity_id = std::nullopt;
-    float min_distance = _line_selection_threshold + 1;// Initialize beyond threshold
+    float const selection_threshold = _state != nullptr
+                                              ? _state->selectPrefs().pick_radius_px
+                                              : 15.0f;
+    float min_distance = selection_threshold + 1;// Initialize beyond threshold
 
     for (size_t i = 0; i < lines.size(); ++i) {
         auto const & line = lines[i];
@@ -1016,7 +994,7 @@ std::optional<EntityId> MediaLine_Widget::_findNearestLine(float x, float y) {
         }
     }
 
-    return (min_distance <= _line_selection_threshold) ? nearest_entity_id : std::nullopt;
+    return (min_distance <= selection_threshold) ? nearest_entity_id : std::nullopt;
 }
 
 void MediaLine_Widget::_selectLine(int line_index) {

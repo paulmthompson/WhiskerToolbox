@@ -14,7 +14,7 @@ The global **Select** tool on the left toolbar enables cross-type closest-hit se
 | `MediaSelectionHit` | Hit-test result: entity id, key, type, scene-pixel distance |
 | `Media_Window::findBestEntityAtPosition` | Ranks hits across enabled line, point, and mask keys |
 | `MediaSelectToolController` | Enables unified selection; syncs canvas picks to state |
-| `SelectToolPrefs` | Optional key filter from `SelectToolOptions_Widget` |
+| `SelectToolPrefs` | Key filter and pick radius from `SelectToolOptions_Widget` |
 | `Feature_Table_Widget::selectFeature` | Programmatic row highlight without `featureSelected` |
 
 ## Selection flow
@@ -26,3 +26,9 @@ The global **Select** tool on the left toolbar enables cross-type closest-hit se
 5. `MediaPropertiesWidget` highlights the feature table row and switches the stacked widget page.
 
 Per-datatype subwidgets skip plain left-click selection when `activeMediaTool() == Select`; modifier-driven line/point edits still work.
+
+## Phase B UI changes
+
+- **Line properties**: `Select Line` mode renamed to **Edit Selected Line**. The threshold control moved to the Select tool options bar.
+- **Point properties**: The `Select Point` combo replaced with a static **Point Editing** section describing modifier-driven edits.
+- **Legacy group selection**: `setGroupSelectionEnabled` and `findEntityAtPosition` removed; canvas clicks use unified selection only.

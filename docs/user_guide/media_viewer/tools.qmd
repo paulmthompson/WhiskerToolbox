@@ -11,6 +11,6 @@ The Media Viewer includes a vertical toolbar on the left edge of the canvas (to 
 
 The pointer (mouse) icon is the **Select** tool. It is selected by default.
 
-When Select is active, an options bar appears above the horizontal ruler. Use **Selection filter** to limit picking to a specific enabled feature, or leave it on **All enabled features** to consider every key currently enabled in the feature table.
+When Select is active, an options bar appears above the horizontal ruler. Use **Selection filter** to limit picking to a specific enabled feature, or leave it on **All enabled features** to consider every key currently enabled in the feature table. Adjust **Pick radius** to control how close the cursor must be to an entity (in scene pixels).
 
 Click the canvas to select the closest enabled line, point, or mask entity. Hold **Ctrl** to toggle multi-selection. The properties panel feature table and datatype page update automatically to match the selected key.
