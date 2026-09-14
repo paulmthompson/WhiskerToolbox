@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Neuralyzer::Plots – Neuralyzer</title>
+<title>SelectToolPrefs – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -25,6 +25,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -313,7 +348,17 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#neuralyzerplots" id="toc-neuralyzerplots" class="nav-link active" data-scroll-target="#neuralyzerplots">Neuralyzer::Plots</a></li>
+  <li><a href="#selecttoolprefs" id="toc-selecttoolprefs" class="nav-link active" data-scroll-target="#selecttoolprefs">SelectToolPrefs</a>
+  <ul class="collapse">
+  <li><a href="#public-attributes" id="toc-public-attributes" class="nav-link" data-scroll-target="#public-attributes">Public Attributes</a></li>
+  <li><a href="#public-attributes-documentation" id="toc-public-attributes-documentation" class="nav-link" data-scroll-target="#public-attributes-documentation">Public Attributes Documentation</a>
+  <ul class="collapse">
+  <li><a href="#variable-filter_to_key" id="toc-variable-filter_to_key" class="nav-link" data-scroll-target="#variable-filter_to_key">variable filter_to_key</a></li>
+  <li><a href="#variable-filter_key" id="toc-variable-filter_key" class="nav-link" data-scroll-target="#variable-filter_key">variable filter_key</a></li>
+  <li><a href="#variable-filter_data_type" id="toc-variable-filter_data_type" class="nav-link" data-scroll-target="#variable-filter_data_type">variable filter_data_type</a></li>
+  <li><a href="#variable-pick_radius_px" id="toc-variable-pick_radius_px" class="nav-link" data-scroll-target="#variable-pick_radius_px">variable pick_radius_px</a></li>
+  </ul></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -323,7 +368,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Neuralyzer::Plots</h1>
+<h1 class="title">SelectToolPrefs</h1>
 </div>
 
 
@@ -340,12 +385,66 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="neuralyzerplots" class="level1">
-<h1>Neuralyzer::Plots</h1>
+<section id="selecttoolprefs" class="level1">
+<h1>SelectToolPrefs</h1>
+<p>Preferences for the Media Viewer Select tool.</p>
+<p><code>#include &lt;MediaWidgetStateData.hpp&gt;</code></p>
+<section id="public-attributes" class="level2">
+<h2 class="anchored" data-anchor-id="public-attributes">Public Attributes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structSelectToolPrefs.html#variable-filter-to-key">filter_to_key</a></strong> <br>When false, selection considers all enabled keys.</td>
+</tr>
+<tr class="even">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structSelectToolPrefs.html#variable-filter-key">filter_key</a></strong> <br>Data manager key when filter_to_key is true.</td>
+</tr>
+<tr class="odd">
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structSelectToolPrefs.html#variable-filter-data-type">filter_data_type</a></strong> <br>Data type string (“line”, “point”, “mask”, …)</td>
+</tr>
+<tr class="even">
+<td>float</td>
+<td><strong><a href="../../api_generated/Classes/structSelectToolPrefs.html#variable-pick-radius-px">pick_radius_px</a></strong> <br>Scene-pixel distance for unified canvas selection.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-attributes-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-attributes-documentation">Public Attributes Documentation</h2>
+<section id="variable-filter_to_key" class="level3">
+<h3 class="anchored" data-anchor-id="variable-filter_to_key">variable filter_to_key</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> filter_to_key <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>When false, selection considers all enabled keys.</p>
+</section>
+<section id="variable-filter_key" class="level3">
+<h3 class="anchored" data-anchor-id="variable-filter_key">variable filter_key</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string filter_key<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Data manager key when filter_to_key is true.</p>
+</section>
+<section id="variable-filter_data_type" class="level3">
+<h3 class="anchored" data-anchor-id="variable-filter_data_type">variable filter_data_type</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string <span class="dt">filter_data_type</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Data type string (“line”, “point”, “mask”, …)</p>
+</section>
+<section id="variable-pick_radius_px" class="level3">
+<h3 class="anchored" data-anchor-id="variable-pick_radius_px">variable pick_radius_px</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> pick_radius_px <span class="op">=</span> <span class="fl">15.0</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Scene-pixel distance for unified canvas selection.</p>
 <hr>
-<p>Updated on 2026-09-04 at 19:58:31 +0000</p>
+<p>Updated on 2026-09-14 at 17:52:47 +0000</p>
 
 
+</section>
+</section>
 </section>
 
 </main> <!-- /main -->

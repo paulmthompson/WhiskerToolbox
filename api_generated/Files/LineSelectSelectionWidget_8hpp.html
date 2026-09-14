@@ -412,7 +412,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classline__widget_1_1LineSelectSelectionWidget.html">line_widget::LineSelectSelectionWidget</a></strong> <br>Widget displayed when line selection mode is active.</td>
+<td><strong><a href="../../api_generated/Classes/classline__widget_1_1LineSelectSelectionWidget.html">line_widget::LineSelectSelectionWidget</a></strong> <br>Widget displayed when line edit mode is active.</td>
 </tr>
 </tbody>
 </table>
@@ -434,29 +434,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Q_OBJECT</span></span>
 <span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">explicit</span> LineSelectSelectionWidget<span class="op">(</span><span class="ex">QWidget</span><span class="op">*</span> parent <span class="op">=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">~</span>LineSelectSelectionWidget<span class="op">();</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">explicit</span> LineSelectSelectionWidget<span class="op">(</span><span class="ex">QWidget</span> <span class="op">*</span> parent <span class="op">=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">~</span>LineSelectSelectionWidget<span class="op">()</span> <span class="kw">override</span><span class="op">;</span></span>
 <span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> getSelectionThreshold<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setSelectionThreshold<span class="op">(</span><span class="dt">float</span> threshold<span class="op">);</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    Ui<span class="op">::</span>LineSelectSelectionWidget <span class="op">*</span> ui<span class="op">;</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
 <span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="ex">signals</span><span class="op">:</span></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> selectionThresholdChanged<span class="op">(</span><span class="dt">float</span> threshold<span class="op">);</span></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span> <span class="ex">slots</span><span class="op">:</span></span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _onThresholdChanged<span class="op">(</span><span class="dt">int</span> threshold<span class="op">);</span></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    Ui<span class="op">::</span>LineSelectSelectionWidget<span class="op">*</span> ui<span class="op">;</span></span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> <span class="co">// namespace line_widget</span></span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif </span><span class="co">// WHISKER_TOOLBOX_LINE_SELECT_SELECTION_WIDGET_HPP </span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace line_widget</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// WHISKER_TOOLBOX_LINE_SELECT_SELECTION_WIDGET_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-04 at 19:58:35 +0000</p>
+<p>Updated on 2026-09-14 at 17:52:53 +0000</p>
 
 
 </section>

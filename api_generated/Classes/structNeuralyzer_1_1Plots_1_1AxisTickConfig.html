@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>WhiskerWidgetModule – Neuralyzer</title>
+<title>Neuralyzer::Plots::AxisTickConfig – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -25,6 +25,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -313,7 +348,17 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#whiskerwidgetmodule" id="toc-whiskerwidgetmodule" class="nav-link active" data-scroll-target="#whiskerwidgetmodule">WhiskerWidgetModule</a></li>
+  <li><a href="#neuralyzerplotsaxistickconfig" id="toc-neuralyzerplotsaxistickconfig" class="nav-link active" data-scroll-target="#neuralyzerplotsaxistickconfig">Neuralyzer::Plots::AxisTickConfig</a>
+  <ul class="collapse">
+  <li><a href="#public-attributes" id="toc-public-attributes" class="nav-link" data-scroll-target="#public-attributes">Public Attributes</a></li>
+  <li><a href="#public-attributes-documentation" id="toc-public-attributes-documentation" class="nav-link" data-scroll-target="#public-attributes-documentation">Public Attributes Documentation</a>
+  <ul class="collapse">
+  <li><a href="#variable-mode" id="toc-variable-mode" class="nav-link" data-scroll-target="#variable-mode">variable mode</a></li>
+  <li><a href="#variable-target_tick_count" id="toc-variable-target_tick_count" class="nav-link" data-scroll-target="#variable-target_tick_count">variable target_tick_count</a></li>
+  <li><a href="#variable-fixed_interval" id="toc-variable-fixed_interval" class="nav-link" data-scroll-target="#variable-fixed_interval">variable fixed_interval</a></li>
+  <li><a href="#variable-show_minor_ticks" id="toc-variable-show_minor_ticks" class="nav-link" data-scroll-target="#variable-show_minor_ticks">variable show_minor_ticks</a></li>
+  </ul></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -323,7 +368,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">WhiskerWidgetModule</h1>
+<h1 class="title">Neuralyzer::Plots::AxisTickConfig</h1>
 </div>
 
 
@@ -340,12 +385,65 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="whiskerwidgetmodule" class="level1">
-<h1>WhiskerWidgetModule</h1>
+<section id="neuralyzerplotsaxistickconfig" class="level1">
+<h1>Neuralyzer::Plots::AxisTickConfig</h1>
+<p>Configuration for axis tick generation.</p>
+<p><code>#include &lt;AxisTickLayout.hpp&gt;</code></p>
+<section id="public-attributes" class="level2">
+<h2 class="anchored" data-anchor-id="public-attributes">Public Attributes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-axistickmode">AxisTickMode</a></td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1AxisTickConfig.html#variable-mode">mode</a></strong></td>
+</tr>
+<tr class="even">
+<td>int</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1AxisTickConfig.html#variable-target-tick-count">target_tick_count</a></strong> <br>Auto mode: desired number of major tick intervals.</td>
+</tr>
+<tr class="odd">
+<td>double</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1AxisTickConfig.html#variable-fixed-interval">fixed_interval</a></strong> <br>Fixed mode: spacing between ticks.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1AxisTickConfig.html#variable-show-minor-ticks">show_minor_ticks</a></strong> <br>When false, only major ticks and zero are drawn.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-attributes-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-attributes-documentation">Public Attributes Documentation</h2>
+<section id="variable-mode" class="level3">
+<h3 class="anchored" data-anchor-id="variable-mode">variable mode</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>AxisTickMode mode <span class="op">=</span> AxisTickMode<span class="op">::</span>Auto<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="variable-target_tick_count" class="level3">
+<h3 class="anchored" data-anchor-id="variable-target_tick_count">variable target_tick_count</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> target_tick_count <span class="op">=</span> <span class="dv">7</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Auto mode: desired number of major tick intervals.</p>
+</section>
+<section id="variable-fixed_interval" class="level3">
+<h3 class="anchored" data-anchor-id="variable-fixed_interval">variable fixed_interval</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> fixed_interval <span class="op">=</span> <span class="fl">100.0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Fixed mode: spacing between ticks.</p>
+</section>
+<section id="variable-show_minor_ticks" class="level3">
+<h3 class="anchored" data-anchor-id="variable-show_minor_ticks">variable show_minor_ticks</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> show_minor_ticks <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>When false, only major ticks and zero are drawn.</p>
 <hr>
-<p>Updated on 2026-09-04 at 19:58:31 +0000</p>
+<p>Updated on 2026-09-14 at 17:52:49 +0000</p>
 
 
+</section>
+</section>
 </section>
 
 </main> <!-- /main -->

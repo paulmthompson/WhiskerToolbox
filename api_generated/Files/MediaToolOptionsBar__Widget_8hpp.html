@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>ScatterPlotWidgetModule – Neuralyzer</title>
+<title>src/WhiskerToolbox/Media_Widget/UI/Tools/MediaToolOptionsBar_Widget.hpp – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -25,6 +25,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -313,7 +348,11 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#scatterplotwidgetmodule" id="toc-scatterplotwidgetmodule" class="nav-link active" data-scroll-target="#scatterplotwidgetmodule">ScatterPlotWidgetModule</a></li>
+  <li><a href="#srcwhiskertoolboxmedia_widgetuitoolsmediatooloptionsbar_widget.hpp" id="toc-srcwhiskertoolboxmedia_widgetuitoolsmediatooloptionsbar_widget.hpp" class="nav-link active" data-scroll-target="#srcwhiskertoolboxmedia_widgetuitoolsmediatooloptionsbar_widget.hpp">src/WhiskerToolbox/Media_Widget/UI/Tools/MediaToolOptionsBar_Widget.hpp</a>
+  <ul class="collapse">
+  <li><a href="#classes" id="toc-classes" class="nav-link" data-scroll-target="#classes">Classes</a></li>
+  <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -323,7 +362,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">ScatterPlotWidgetModule</h1>
+<h1 class="title">src/WhiskerToolbox/Media_Widget/UI/Tools/MediaToolOptionsBar_Widget.hpp</h1>
 </div>
 
 
@@ -340,12 +379,69 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="scatterplotwidgetmodule" class="level1">
-<h1>ScatterPlotWidgetModule</h1>
+<section id="srcwhiskertoolboxmedia_widgetuitoolsmediatooloptionsbar_widget.hpp" class="level1">
+<h1>src/WhiskerToolbox/Media_Widget/UI/Tools/MediaToolOptionsBar_Widget.hpp</h1>
+<p>Horizontal options strip above the Media Viewer rulers.</p>
+<section id="classes" class="level2">
+<h2 class="anchored" data-anchor-id="classes">Classes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMediaToolOptionsBar__Widget.html">MediaToolOptionsBar_Widget</a></strong> <br>Contextual tool options displayed above the horizontal ruler.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="source-code" class="level2">
+<h2 class="anchored" data-anchor-id="source-code">Source code</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef MEDIA_TOOL_OPTIONS_BAR_WIDGET_HPP</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define MEDIA_TOOL_OPTIONS_BAR_WIDGET_HPP</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Media_Widget/UI/Tools/MediaToolId.hpp"</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QWidget&gt;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MediaWidgetState<span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> <span class="ex">QStackedWidget</span><span class="op">;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> SelectToolOptions_Widget<span class="op">;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MediaToolOptionsBar_Widget <span class="op">:</span> <span class="kw">public</span> <span class="ex">QWidget</span> <span class="op">{</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Q_OBJECT</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">static</span> <span class="kw">constexpr</span> <span class="dt">int</span> kBarHeight <span class="op">=</span> <span class="dv">28</span><span class="op">;</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">explicit</span> MediaToolOptionsBar_Widget<span class="op">(</span><span class="ex">QWidget</span> <span class="op">*</span> parent <span class="op">=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setState<span class="op">(</span>MediaWidgetState <span class="op">*</span> state<span class="op">);</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setActiveTool<span class="op">(</span>MediaToolId tool<span class="op">);</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> SelectToolOptions_Widget <span class="op">*</span> selectOptionsWidget<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _select_options<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="ex">QSize</span> sizeHint<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span><span class="op">;</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _applyStyle<span class="op">();</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QStackedWidget</span> <span class="op">*</span> _stack<span class="op">{</span><span class="kw">nullptr</span><span class="op">};</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QWidget</span> <span class="op">*</span> _empty_page<span class="op">{</span><span class="kw">nullptr</span><span class="op">};</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    SelectToolOptions_Widget <span class="op">*</span> _select_options<span class="op">{</span><span class="kw">nullptr</span><span class="op">};</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// MEDIA_TOOL_OPTIONS_BAR_WIDGET_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-04 at 19:58:31 +0000</p>
+<p>Updated on 2026-09-14 at 17:52:53 +0000</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

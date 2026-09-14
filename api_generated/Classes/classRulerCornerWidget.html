@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>HeatmapWidgetModule – Neuralyzer</title>
+<title>RulerCornerWidget – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -25,6 +25,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -313,7 +348,20 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#heatmapwidgetmodule" id="toc-heatmapwidgetmodule" class="nav-link active" data-scroll-target="#heatmapwidgetmodule">HeatmapWidgetModule</a></li>
+  <li><a href="#rulercornerwidget" id="toc-rulercornerwidget" class="nav-link active" data-scroll-target="#rulercornerwidget">RulerCornerWidget</a>
+  <ul class="collapse">
+  <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
+  <li><a href="#protected-functions" id="toc-protected-functions" class="nav-link" data-scroll-target="#protected-functions">Protected Functions</a></li>
+  <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-rulercornerwidget" id="toc-function-rulercornerwidget" class="nav-link" data-scroll-target="#function-rulercornerwidget">function RulerCornerWidget</a></li>
+  <li><a href="#function-sizehint" id="toc-function-sizehint" class="nav-link" data-scroll-target="#function-sizehint">function sizeHint</a></li>
+  </ul></li>
+  <li><a href="#protected-functions-documentation" id="toc-protected-functions-documentation" class="nav-link" data-scroll-target="#protected-functions-documentation">Protected Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-paintevent" id="toc-function-paintevent" class="nav-link" data-scroll-target="#function-paintevent">function paintEvent</a></li>
+  </ul></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -323,7 +371,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">HeatmapWidgetModule</h1>
+<h1 class="title">RulerCornerWidget</h1>
 </div>
 
 
@@ -340,12 +388,75 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="heatmapwidgetmodule" class="level1">
-<h1>HeatmapWidgetModule</h1>
+<section id="rulercornerwidget" class="level1">
+<h1>RulerCornerWidget</h1>
+<p>Small corner widget where horizontal and vertical rulers meet.</p>
+<p><code>#include &lt;RulerCornerWidget.hpp&gt;</code></p>
+<p>Inherits from QWidget</p>
+<section id="public-functions" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classRulerCornerWidget.html#function-rulercornerwidget">RulerCornerWidget</a></strong>(QWidget * parent =nullptr)</td>
+</tr>
+<tr class="even">
+<td>QSize</td>
+<td><strong><a href="../../api_generated/Classes/classRulerCornerWidget.html#function-sizehint">sizeHint</a></strong>() const override</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="protected-functions" class="level2">
+<h2 class="anchored" data-anchor-id="protected-functions">Protected Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classRulerCornerWidget.html#function-paintevent">paintEvent</a></strong>(QPaintEvent * event) override</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
+<section id="function-rulercornerwidget" class="level3">
+<h3 class="anchored" data-anchor-id="function-rulercornerwidget">function RulerCornerWidget</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">explicit</span> RulerCornerWidget<span class="op">(</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QWidget</span> <span class="op">*</span> parent <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-sizehint" class="level3">
+<h3 class="anchored" data-anchor-id="function-sizehint">function sizeHint</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QSize</span> sizeHint<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="protected-functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="protected-functions-documentation">Protected Functions Documentation</h2>
+<section id="function-paintevent" class="level3">
+<h3 class="anchored" data-anchor-id="function-paintevent">function paintEvent</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> paintEvent<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPaintEvent</span> <span class="op">*</span> event</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-04 at 19:58:32 +0000</p>
+<p>Updated on 2026-09-14 at 17:52:47 +0000</p>
 
 
+</section>
+</section>
 </section>
 
 </main> <!-- /main -->

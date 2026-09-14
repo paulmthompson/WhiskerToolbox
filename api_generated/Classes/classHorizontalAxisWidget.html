@@ -367,6 +367,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-setaxismapping" id="toc-function-setaxismapping" class="nav-link" data-scroll-target="#function-setaxismapping">function setAxisMapping</a></li>
   <li><a href="#function-clearaxismapping" id="toc-function-clearaxismapping" class="nav-link" data-scroll-target="#function-clearaxismapping">function clearAxisMapping</a></li>
   <li><a href="#function-axismapping" id="toc-function-axismapping" class="nav-link" data-scroll-target="#function-axismapping">function axisMapping</a></li>
+  <li><a href="#function-setdisplaymode" id="toc-function-setdisplaymode" class="nav-link" data-scroll-target="#function-setdisplaymode">function setDisplayMode</a></li>
+  <li><a href="#function-setthickness" id="toc-function-setthickness" class="nav-link" data-scroll-target="#function-setthickness">function setThickness</a></li>
+  <li><a href="#function-setshowextentlabels" id="toc-function-setshowextentlabels" class="nav-link" data-scroll-target="#function-setshowextentlabels">function setShowExtentLabels</a></li>
+  <li><a href="#function-setnegativelabelcolor" id="toc-function-setnegativelabelcolor" class="nav-link" data-scroll-target="#function-setnegativelabelcolor">function setNegativeLabelColor</a></li>
+  <li><a href="#function-settickconfig" id="toc-function-settickconfig" class="nav-link" data-scroll-target="#function-settickconfig">function setTickConfig</a></li>
   <li><a href="#function-connecttorangechanged" id="toc-function-connecttorangechanged" class="nav-link" data-scroll-target="#function-connecttorangechanged">function connectToRangeChanged</a></li>
   <li><a href="#function-sizehint" id="toc-function-sizehint" class="nav-link" data-scroll-target="#function-sizehint">function sizeHint</a></li>
   </ul></li>
@@ -462,10 +467,30 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classHorizontalAxisWidget.html#function-axismapping">axisMapping</a></strong>() const<br>Get the current AxisMapping, if any.</td>
 </tr>
 <tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classHorizontalAxisWidget.html#function-setdisplaymode">setDisplayMode</a></strong>(<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-axisdisplaymode">Neuralyzer::Plots::AxisDisplayMode</a> mode)<br>Set plot or ruler display mode.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classHorizontalAxisWidget.html#function-setthickness">setThickness</a></strong>(int px)<br>Set the widget thickness in pixels.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classHorizontalAxisWidget.html#function-setshowextentlabels">setShowExtentLabels</a></strong>(bool show)<br>Show or hide min/max extent labels at the bottom.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classHorizontalAxisWidget.html#function-setnegativelabelcolor">setNegativeLabelColor</a></strong>(QColor color)<br>Set the color used for negative tick values and labels.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classHorizontalAxisWidget.html#function-settickconfig">setTickConfig</a></strong>(<a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1AxisTickConfig.html">Neuralyzer::Plots::AxisTickConfig</a> config)<br>Set tick generation configuration.</td>
+</tr>
+<tr class="odd">
 <td>template &lt;typename SenderType &gt; <br>void</td>
 <td><strong><a href="../../api_generated/Classes/classHorizontalAxisWidget.html#function-connecttorangechanged">connectToRangeChanged</a></strong>(SenderType * sender, void(SenderType::*)() signal)<br>Connect to a QObject signal that indicates range changes.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>QSize</td>
 <td><strong><a href="../../api_generated/Classes/classHorizontalAxisWidget.html#function-sizehint">sizeHint</a></strong>() const override<br>Suggested height for the axis widget.</td>
 </tr>
@@ -573,13 +598,68 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Get the current AxisMapping, if any.</p>
 <p><strong>Return</strong>: Pointer to the mapping, or nullptr if none set</p>
 </section>
+<section id="function-setdisplaymode" class="level3">
+<h3 class="anchored" data-anchor-id="function-setdisplaymode">function setDisplayMode</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setDisplayMode<span class="op">(</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>AxisDisplayMode mode</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set plot or ruler display mode.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>mode</strong> Display mode</li>
+</ul>
+</section>
+<section id="function-setthickness" class="level3">
+<h3 class="anchored" data-anchor-id="function-setthickness">function setThickness</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setThickness<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> px</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the widget thickness in pixels.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>px</strong> Height in pixels</li>
+</ul>
+</section>
+<section id="function-setshowextentlabels" class="level3">
+<h3 class="anchored" data-anchor-id="function-setshowextentlabels">function setShowExtentLabels</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setShowExtentLabels<span class="op">(</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Show or hide min/max extent labels at the bottom.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>show</strong> Whether to show extent labels</li>
+</ul>
+</section>
+<section id="function-setnegativelabelcolor" class="level3">
+<h3 class="anchored" data-anchor-id="function-setnegativelabelcolor">function setNegativeLabelColor</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setNegativeLabelColor<span class="op">(</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QColor</span> color</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the color used for negative tick values and labels.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>color</strong> Label and tick color when value &lt; 0</li>
+</ul>
+</section>
+<section id="function-settickconfig" class="level3">
+<h3 class="anchored" data-anchor-id="function-settickconfig">function setTickConfig</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setTickConfig<span class="op">(</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>AxisTickConfig config</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set tick generation configuration.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>config</strong> Tick spacing configuration</li>
+</ul>
+</section>
 <section id="function-connecttorangechanged" class="level3">
 <h3 class="anchored" data-anchor-id="function-connecttorangechanged">function connectToRangeChanged</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> SenderType <span class="op">&gt;</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> connectToRangeChanged<span class="op">(</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    SenderType <span class="op">*</span> sender<span class="op">,</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span><span class="op">(</span>SenderType<span class="op">::*)()</span> signal</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> SenderType <span class="op">&gt;</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> connectToRangeChanged<span class="op">(</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    SenderType <span class="op">*</span> sender<span class="op">,</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span><span class="op">(</span>SenderType<span class="op">::*)()</span> signal</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Connect to a QObject signal that indicates range changes.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -594,7 +674,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-sizehint" class="level3">
 <h3 class="anchored" data-anchor-id="function-sizehint">function sizeHint</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QSize</span> sizeHint<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QSize</span> sizeHint<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Suggested height for the axis widget.</p>
 </section>
 </section>
@@ -602,11 +682,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="protected-functions-documentation">Protected Functions Documentation</h2>
 <section id="function-paintevent" class="level3">
 <h3 class="anchored" data-anchor-id="function-paintevent">function paintEvent</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> paintEvent<span class="op">(</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPaintEvent</span> <span class="op">*</span> event</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> paintEvent<span class="op">(</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPaintEvent</span> <span class="op">*</span> event</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-04 at 19:58:30 +0000</p>
+<p>Updated on 2026-09-14 at 17:52:48 +0000</p>
 
 
 </section>

@@ -368,6 +368,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-setcolumns" id="toc-function-setcolumns" class="nav-link" data-scroll-target="#function-setcolumns">function setColumns</a></li>
   <li><a href="#function-settypefilter" id="toc-function-settypefilter" class="nav-link" data-scroll-target="#function-settypefilter">function setTypeFilter</a></li>
   <li><a href="#function-gethighlightedfeature" id="toc-function-gethighlightedfeature" class="nav-link" data-scroll-target="#function-gethighlightedfeature">function getHighlightedFeature</a></li>
+  <li><a href="#function-selectfeature" id="toc-function-selectfeature" class="nav-link" data-scroll-target="#function-selectfeature">function selectFeature</a></li>
   </ul></li>
   <li><a href="#protected-functions-documentation" id="toc-protected-functions-documentation" class="nav-link" data-scroll-target="#protected-functions-documentation">Protected Functions Documentation</a>
   <ul class="collapse">
@@ -467,6 +468,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>QString</td>
 <td><strong><a href="../../api_generated/Classes/classFeature__Table__Widget.html#function-gethighlightedfeature">getHighlightedFeature</a></strong>() const</td>
 </tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classFeature__Table__Widget.html#function-selectfeature">selectFeature</a></strong>(QString const &amp; feature)<br>Programmatically highlight a feature row without emitting featureSelected.</td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -546,16 +551,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="function-gethighlightedfeature">function getHighlightedFeature</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="ex">QString</span> getHighlightedFeature<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
+<section id="function-selectfeature" class="level3">
+<h3 class="anchored" data-anchor-id="function-selectfeature">function selectFeature</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> selectFeature<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> feature</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Programmatically highlight a feature row without emitting featureSelected.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>feature</strong> Data manager key to highlight</li>
+</ul>
+<p><strong>Precondition</strong>: feature must exist in the current table when populated</p>
+</section>
 </section>
 <section id="protected-functions-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="protected-functions-documentation">Protected Functions Documentation</h2>
 <section id="function-resizeevent" class="level3">
 <h3 class="anchored" data-anchor-id="function-resizeevent">function resizeEvent</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> resizeEvent<span class="op">(</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QResizeEvent</span> <span class="op">*</span> event</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> resizeEvent<span class="op">(</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QResizeEvent</span> <span class="op">*</span> event</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-04 at 19:58:30 +0000</p>
+<p>Updated on 2026-09-14 at 17:52:48 +0000</p>
 
 
 </section>

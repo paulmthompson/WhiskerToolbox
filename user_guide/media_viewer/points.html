@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Point Data – Neuralyzer</title>
+<title>Points – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -308,7 +308,7 @@ ul.task-list li input[type="checkbox"] {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/overview.html">Media Viewer</a></li><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/points.html">Point Data</a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/overview.html">Media Viewer</a></li><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/points.html">Points</a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
     </div>
@@ -462,7 +462,7 @@ ul.task-list li input[type="checkbox"] {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../../user_guide/media_viewer/points.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Point Data</span></a>
+ <span class="menu-text">Points</span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -1015,16 +1015,10 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a>
-  <ul class="collapse">
-  <li><a href="#widget-layout-controls" id="toc-widget-layout-controls" class="nav-link" data-scroll-target="#widget-layout-controls">Widget Layout &amp; Controls</a>
-  <ul class="collapse">
-  <li><a href="#color-opacity" id="toc-color-opacity" class="nav-link" data-scroll-target="#color-opacity">Color &amp; Opacity</a></li>
-  <li><a href="#size-shape" id="toc-size-shape" class="nav-link" data-scroll-target="#size-shape">Size &amp; Shape</a></li>
-  </ul></li>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#display-options" id="toc-display-options" class="nav-link" data-scroll-target="#display-options">Display Options</a></li>
   <li><a href="#adding-editing-keypoints" id="toc-adding-editing-keypoints" class="nav-link" data-scroll-target="#adding-editing-keypoints">Adding &amp; Editing Keypoints</a></li>
   <li><a href="#tips" id="toc-tips" class="nav-link" data-scroll-target="#tips">Tips</a></li>
-  </ul></li>
   </ul>
 </nav>
     </div>
@@ -1032,9 +1026,9 @@ ul.task-list li input[type="checkbox"] {
 <main class="content" id="quarto-document-content">
 
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/overview.html">Media Viewer</a></li><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/points.html">Point Data</a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/overview.html">Media Viewer</a></li><li class="breadcrumb-item"><a href="../../user_guide/media_viewer/points.html">Points</a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title">Point Data</h1>
+<h1 class="title">Points</h1>
 </div>
 
 
@@ -1051,68 +1045,26 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="overview" class="level1">
-<h1>Overview</h1>
-<p>The <strong>Points</strong> widget appears when <strong>Points</strong> are enabled in the Feature Tree. It’s designed for <strong>viewing, styling, adding, and editing keypoints</strong> visible in the Media Viewer.<br>
-If you haven’t loaded a keypoint dataset, you can still add keypoints; these changes will be tracked in the Data Manager (see <em>Data Manager → points [link user-ref here]</em>).</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Note
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p><strong>Saving and Export:</strong> Any additions or edits to keypoints are recorded by the <strong>Data Manager</strong> and can be <strong>exported</strong> later as part of your dataset.</p>
-</div>
-</div>
-<section id="widget-layout-controls" class="level2">
-<h2 class="anchored" data-anchor-id="widget-layout-controls">Widget Layout &amp; Controls</h2>
-<section id="color-opacity" class="level3">
-<h3 class="anchored" data-anchor-id="color-opacity">Color &amp; Opacity</h3>
-<ul>
-<li><strong>RGB (0–255):</strong> Enter the <strong>Red</strong>, <strong>Green</strong>, and <strong>Blue</strong> channels to set the keypoint color.<br>
-</li>
-<li><strong>Hex Color:</strong> Optionally specify a color using a hex code (e.g., <code>#FF6600</code>).<br>
-</li>
-<li><strong>Color Preview:</strong> Shows the current color selection.<br>
-</li>
-<li><strong>Alpha:</strong> Controls <strong>opacity/transparency</strong> of the keypoint in the Media Viewer (higher = more opaque).</li>
-</ul>
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p>The <strong>Points</strong> widget in the Media Viewer properties panel controls how point data is displayed and edited.</p>
 </section>
-<section id="size-shape" class="level3">
-<h3 class="anchored" data-anchor-id="size-shape">Size &amp; Shape</h3>
+<section id="display-options" class="level2">
+<h2 class="anchored" data-anchor-id="display-options">Display Options</h2>
 <ul>
-<li><p><strong>Point Size:</strong> Sets how large the keypoint appears <strong>in the Media Viewer</strong>.</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-Note
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p><strong>Data size vs.&nbsp;display size:</strong> The <strong>stored keypoint</strong> in the <strong>Data Manager</strong> is always <strong>one pixel</strong> (a single coordinate). <strong>Point Size/Shape</strong> only affects <strong>on-screen display</strong>, not the underlying saved data.</p>
-</div>
-</div></li>
-<li><p><strong>Marker Shape:</strong> Choose how the keypoint is drawn in the display:</p>
-<ul>
-<li><code>circle</code>, <code>square</code>, <code>triangle</code>, <code>cross</code>, <code>x</code>, <code>diamond</code></li>
-</ul></li>
+<li><strong>Glyph style</strong> controls (color, alpha, size, shape) are available in the properties panel when a point feature is selected.</li>
+<li>Supported shapes include <code>circle</code>, <code>square</code>, <code>triangle</code>, <code>cross</code>, <code>x</code>, and <code>diamond</code>.</li>
 </ul>
-</section>
 </section>
 <section id="adding-editing-keypoints" class="level2">
 <h2 class="anchored" data-anchor-id="adding-editing-keypoints">Adding &amp; Editing Keypoints</h2>
 <ol type="1">
-<li><p>In the <strong>Points</strong> widget, find <strong>Mouse Mode</strong> (dropdown).</p></li>
-<li><p>Select <strong><code>Select Point</code></strong>.</p></li>
-<li><p>Click <strong>anywhere in the Media Viewer</strong> to <strong>add</strong> a keypoint at that location.</p></li>
-<li><p>To <strong>modify</strong> a keypoint, use the same mode to select it and then adjust its location in the media window.</p>
+<li><p>Use the <strong>Select</strong> tool on the left toolbar to pick a point on the canvas (or select the point feature in the feature table).</p></li>
+<li><p>With the point feature page open, use modifier keys on the canvas:</p>
+<ul>
+<li><strong>Alt+click</strong> to <strong>add</strong> a keypoint at the current time.</li>
+<li><strong>Ctrl+click</strong> to <strong>move</strong> the selected keypoint to a new location.</li>
+</ul>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -1137,7 +1089,6 @@ Note
 </ul>
 
 
-</section>
 </section>
 
 </main> <!-- /main -->

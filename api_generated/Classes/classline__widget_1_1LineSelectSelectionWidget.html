@@ -350,19 +350,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul>
   <li><a href="#line_widgetlineselectselectionwidget" id="toc-line_widgetlineselectselectionwidget" class="nav-link active" data-scroll-target="#line_widgetlineselectselectionwidget">line_widget::LineSelectSelectionWidget</a>
   <ul class="collapse">
-  <li><a href="#public-signals" id="toc-public-signals" class="nav-link" data-scroll-target="#public-signals">Public Signals</a></li>
   <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
   <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
-  <li><a href="#public-signals-documentation" id="toc-public-signals-documentation" class="nav-link" data-scroll-target="#public-signals-documentation">Public Signals Documentation</a>
-  <ul class="collapse">
-  <li><a href="#signal-selectionthresholdchanged" id="toc-signal-selectionthresholdchanged" class="nav-link" data-scroll-target="#signal-selectionthresholdchanged">signal selectionThresholdChanged</a></li>
-  </ul></li>
   <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
   <ul class="collapse">
   <li><a href="#function-lineselectselectionwidget" id="toc-function-lineselectselectionwidget" class="nav-link" data-scroll-target="#function-lineselectselectionwidget">function LineSelectSelectionWidget</a></li>
   <li><a href="#function-lineselectselectionwidget-1" id="toc-function-lineselectselectionwidget-1" class="nav-link" data-scroll-target="#function-lineselectselectionwidget-1">function ~LineSelectSelectionWidget</a></li>
-  <li><a href="#function-getselectionthreshold" id="toc-function-getselectionthreshold" class="nav-link" data-scroll-target="#function-getselectionthreshold">function getSelectionThreshold</a></li>
-  <li><a href="#function-setselectionthreshold" id="toc-function-setselectionthreshold" class="nav-link" data-scroll-target="#function-setselectionthreshold">function setSelectionThreshold</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -393,26 +386,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="line_widgetlineselectselectionwidget" class="level1">
 <h1>line_widget::LineSelectSelectionWidget</h1>
-<p>Widget displayed when line selection mode is active. <a href="#detailed-description">More…</a></p>
+<p>Widget displayed when line edit mode is active. <a href="#detailed-description">More…</a></p>
 <p><code>#include &lt;LineSelectSelectionWidget.hpp&gt;</code></p>
 <p>Inherits from QWidget</p>
-<section id="public-signals" class="level2">
-<h2 class="anchored" data-anchor-id="public-signals">Public Signals</h2>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th></th>
-<th>Name</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>void</td>
-<td><strong><a href="../../api_generated/Classes/classline__widget_1_1LineSelectSelectionWidget.html#signal-selectionthresholdchanged">selectionThresholdChanged</a></strong>(float threshold)<br>Emitted when the selection threshold changes.</td>
-</tr>
-</tbody>
-</table>
-</section>
 <section id="public-functions" class="level2">
 <h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
 <table class="caption-top table">
@@ -429,15 +405,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td></td>
-<td><strong><a href="../../api_generated/Classes/classline__widget_1_1LineSelectSelectionWidget.html#function-~lineselectselectionwidget">~LineSelectSelectionWidget</a></strong>()<br>Destructor.</td>
-</tr>
-<tr class="odd">
-<td>float</td>
-<td><strong><a href="../../api_generated/Classes/classline__widget_1_1LineSelectSelectionWidget.html#function-getselectionthreshold">getSelectionThreshold</a></strong>() const<br>Get the current selection threshold.</td>
-</tr>
-<tr class="even">
-<td>void</td>
-<td><strong><a href="../../api_generated/Classes/classline__widget_1_1LineSelectSelectionWidget.html#function-setselectionthreshold">setSelectionThreshold</a></strong>(float threshold)<br>Set the selection threshold.</td>
+<td><strong><a href="../../api_generated/Classes/classline__widget_1_1LineSelectSelectionWidget.html#function-~lineselectselectionwidget">~LineSelectSelectionWidget</a></strong>() override<br>Destructor.</td>
 </tr>
 </tbody>
 </table>
@@ -445,30 +413,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="detailed-description" class="level2">
 <h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> line_widget<span class="op">::</span>LineSelectSelectionWidget<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Widget displayed when line selection mode is active.</p>
-<p>This widget provides controls for line selection including selection threshold and information about the current selection.</p>
-</section>
-<section id="public-signals-documentation" class="level2">
-<h2 class="anchored" data-anchor-id="public-signals-documentation">Public Signals Documentation</h2>
-<section id="signal-selectionthresholdchanged" class="level3">
-<h3 class="anchored" data-anchor-id="signal-selectionthresholdchanged">signal selectionThresholdChanged</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> selectionThresholdChanged<span class="op">(</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> threshold</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Emitted when the selection threshold changes.</p>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>threshold</strong> New threshold value</li>
-</ul>
-</section>
+<p>Widget displayed when line edit mode is active.</p>
+<p>Provides instructions for editing a line that was selected with the global Select tool.</p>
 </section>
 <section id="public-functions-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
 <section id="function-lineselectselectionwidget" class="level3">
 <h3 class="anchored" data-anchor-id="function-lineselectselectionwidget">function LineSelectSelectionWidget</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">explicit</span> LineSelectSelectionWidget<span class="op">(</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QWidget</span> <span class="op">*</span> parent <span class="op">=</span><span class="kw">nullptr</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">explicit</span> LineSelectSelectionWidget<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QWidget</span> <span class="op">*</span> parent <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Constructor.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -477,27 +431,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-lineselectselectionwidget-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-lineselectselectionwidget-1">function ~LineSelectSelectionWidget</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>LineSelectSelectionWidget<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>LineSelectSelectionWidget<span class="op">()</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Destructor.</p>
-</section>
-<section id="function-getselectionthreshold" class="level3">
-<h3 class="anchored" data-anchor-id="function-getselectionthreshold">function getSelectionThreshold</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> getSelectionThreshold<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Get the current selection threshold.</p>
-<p><strong>Return</strong>: Selection threshold in pixels</p>
-</section>
-<section id="function-setselectionthreshold" class="level3">
-<h3 class="anchored" data-anchor-id="function-setselectionthreshold">function setSelectionThreshold</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setSelectionThreshold<span class="op">(</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> threshold</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Set the selection threshold.</p>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>threshold</strong> Selection threshold in pixels</li>
-</ul>
 <hr>
-<p>Updated on 2026-09-04 at 19:58:32 +0000</p>
+<p>Updated on 2026-09-14 at 17:52:49 +0000</p>
 
 
 </section>

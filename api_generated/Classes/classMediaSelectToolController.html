@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Neuralyzer::Plots – Neuralyzer</title>
+<title>MediaSelectToolController – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -25,6 +25,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -313,7 +348,19 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#neuralyzerplots" id="toc-neuralyzerplots" class="nav-link active" data-scroll-target="#neuralyzerplots">Neuralyzer::Plots</a></li>
+  <li><a href="#mediaselecttoolcontroller" id="toc-mediaselecttoolcontroller" class="nav-link active" data-scroll-target="#mediaselecttoolcontroller">MediaSelectToolController</a>
+  <ul class="collapse">
+  <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
+  <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-mediaselecttoolcontroller" id="toc-function-mediaselecttoolcontroller" class="nav-link" data-scroll-target="#function-mediaselecttoolcontroller">function MediaSelectToolController</a></li>
+  <li><a href="#function-setmediawindow" id="toc-function-setmediawindow" class="nav-link" data-scroll-target="#function-setmediawindow">function setMediaWindow</a></li>
+  <li><a href="#function-setstate" id="toc-function-setstate" class="nav-link" data-scroll-target="#function-setstate">function setState</a></li>
+  <li><a href="#function-setactive" id="toc-function-setactive" class="nav-link" data-scroll-target="#function-setactive">function setActive</a></li>
+  <li><a href="#function-isactive" id="toc-function-isactive" class="nav-link" data-scroll-target="#function-isactive">function isActive</a></li>
+  </ul></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -323,7 +370,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Neuralyzer::Plots</h1>
+<h1 class="title">MediaSelectToolController</h1>
 </div>
 
 
@@ -340,12 +387,102 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="neuralyzerplots" class="level1">
-<h1>Neuralyzer::Plots</h1>
+<section id="mediaselecttoolcontroller" class="level1">
+<h1>MediaSelectToolController</h1>
+<p>Enables unified selection on the canvas and syncs hits to <a href="../../api_generated/Classes/classMediaWidgetState.html">MediaWidgetState</a>. <a href="#detailed-description">More…</a></p>
+<p><code>#include &lt;MediaSelectToolController.hpp&gt;</code></p>
+<p>Inherits from QObject</p>
+<section id="public-functions" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classMediaSelectToolController.html#function-mediaselecttoolcontroller">MediaSelectToolController</a></strong>(QObject * parent =nullptr)</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaSelectToolController.html#function-setmediawindow">setMediaWindow</a></strong>(<a href="../../api_generated/Classes/classMedia__Window.html">Media_Window</a> * window)<br>Set the canvas scene used for selection.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaSelectToolController.html#function-setstate">setState</a></strong>(<a href="../../api_generated/Classes/classMediaWidgetState.html">MediaWidgetState</a> * state)<br>Set shared widget state for preference reads and key sync.</td>
+</tr>
+<tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaSelectToolController.html#function-setactive">setActive</a></strong>(bool active)<br>Enable or disable unified Select-tool behavior on the canvas.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classMediaSelectToolController.html#function-isactive">isActive</a></strong>() const<br>Whether unified Select-tool behavior is active.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MediaSelectToolController<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Enables unified selection on the canvas and syncs hits to <a href="../../api_generated/Classes/classMediaWidgetState.html">MediaWidgetState</a>.</p>
+<p>Active when the Media Viewer Select tool is selected in the left tool strip.</p>
+</section>
+<section id="public-functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
+<section id="function-mediaselecttoolcontroller" class="level3">
+<h3 class="anchored" data-anchor-id="function-mediaselecttoolcontroller">function MediaSelectToolController</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">explicit</span> MediaSelectToolController<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QObject</span> <span class="op">*</span> parent <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-setmediawindow" class="level3">
+<h3 class="anchored" data-anchor-id="function-setmediawindow">function setMediaWindow</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setMediaWindow<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    Media_Window <span class="op">*</span> window</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set the canvas scene used for selection.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>window</strong> Non-owning <a href="../../api_generated/Classes/classMedia__Window.html">Media_Window</a> pointer</li>
+</ul>
+</section>
+<section id="function-setstate" class="level3">
+<h3 class="anchored" data-anchor-id="function-setstate">function setState</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setState<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    MediaWidgetState <span class="op">*</span> state</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set shared widget state for preference reads and key sync.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>state</strong> Non-owning <a href="../../api_generated/Classes/classMediaWidgetState.html">MediaWidgetState</a> pointer</li>
+</ul>
+</section>
+<section id="function-setactive" class="level3">
+<h3 class="anchored" data-anchor-id="function-setactive">function setActive</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setActive<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> active</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Enable or disable unified Select-tool behavior on the canvas.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>active</strong> True when <a href="../../api_generated/Files/MediaToolId_8hpp.html#enumvalue-select">MediaToolId::Select</a> is active</li>
+</ul>
+</section>
+<section id="function-isactive" class="level3">
+<h3 class="anchored" data-anchor-id="function-isactive">function isActive</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> isActive<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether unified Select-tool behavior is active.</p>
+<p><strong>Return</strong>: True when the Select tool is active</p>
 <hr>
-<p>Updated on 2026-09-04 at 19:58:31 +0000</p>
+<p>Updated on 2026-09-14 at 17:52:48 +0000</p>
 
 
+</section>
+</section>
 </section>
 
 </main> <!-- /main -->

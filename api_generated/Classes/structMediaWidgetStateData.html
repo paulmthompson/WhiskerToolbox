@@ -372,8 +372,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#variable-line_prefs" id="toc-variable-line_prefs" class="nav-link" data-scroll-target="#variable-line_prefs">variable line_prefs</a></li>
   <li><a href="#variable-mask_prefs" id="toc-variable-mask_prefs" class="nav-link" data-scroll-target="#variable-mask_prefs">variable mask_prefs</a></li>
   <li><a href="#variable-point_prefs" id="toc-variable-point_prefs" class="nav-link" data-scroll-target="#variable-point_prefs">variable point_prefs</a></li>
+  <li><a href="#variable-ruler_prefs" id="toc-variable-ruler_prefs" class="nav-link" data-scroll-target="#variable-ruler_prefs">variable ruler_prefs</a></li>
+  <li><a href="#variable-select_prefs" id="toc-variable-select_prefs" class="nav-link" data-scroll-target="#variable-select_prefs">variable select_prefs</a></li>
   <li><a href="#variable-text_overlays" id="toc-variable-text_overlays" class="nav-link" data-scroll-target="#variable-text_overlays">variable text_overlays</a></li>
   <li><a href="#variable-next_overlay_id" id="toc-variable-next_overlay_id" class="nav-link" data-scroll-target="#variable-next_overlay_id">variable next_overlay_id</a></li>
+  <li><a href="#variable-active_media_tool" id="toc-variable-active_media_tool" class="nav-link" data-scroll-target="#variable-active_media_tool">variable active_media_tool</a></li>
   <li><a href="#variable-active_line_mode" id="toc-variable-active_line_mode" class="nav-link" data-scroll-target="#variable-active_line_mode">variable active_line_mode</a></li>
   <li><a href="#variable-active_mask_mode" id="toc-variable-active_mask_mode" class="nav-link" data-scroll-target="#variable-active_mask_mode">variable active_mask_mode</a></li>
   <li><a href="#variable-active_point_mode" id="toc-variable-active_point_mode" class="nav-link" data-scroll-target="#variable-active_point_mode">variable active_point_mode</a></li>
@@ -484,6 +487,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/structMediaWidgetStateData.html#variable-point-prefs">point_prefs</a></strong> <br><a href="../../api_generated/Classes/structPoint.html">Point</a> tool preferences.</td>
 </tr>
 <tr class="odd">
+<td><a href="../../api_generated/Classes/structRulerPrefs.html">RulerPrefs</a></td>
+<td><strong><a href="../../api_generated/Classes/structMediaWidgetStateData.html#variable-ruler-prefs">ruler_prefs</a></strong> <br>Pixel ruler display preferences.</td>
+</tr>
+<tr class="even">
+<td><a href="../../api_generated/Classes/structSelectToolPrefs.html">SelectToolPrefs</a></td>
+<td><strong><a href="../../api_generated/Classes/structMediaWidgetStateData.html#variable-select-prefs">select_prefs</a></strong> <br>Select tool key-filter preferences.</td>
+</tr>
+<tr class="odd">
 <td>std::vector&lt; <a href="../../api_generated/Classes/structTextOverlayData.html">TextOverlayData</a> &gt;</td>
 <td><strong><a href="../../api_generated/Classes/structMediaWidgetStateData.html#variable-text-overlays">text_overlays</a></strong> <br>All text overlays.</td>
 </tr>
@@ -492,14 +503,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/structMediaWidgetStateData.html#variable-next-overlay-id">next_overlay_id</a></strong> <br>Counter for assigning overlay IDs.</td>
 </tr>
 <tr class="odd">
+<td><a href="../../api_generated/Files/MediaToolId_8hpp.html#enum-mediatoolid">MediaToolId</a></td>
+<td><strong><a href="../../api_generated/Classes/structMediaWidgetStateData.html#variable-active-media-tool">active_media_tool</a></strong> <br>Global Media Viewer toolbar tool.</td>
+</tr>
+<tr class="even">
 <td><a href="../../api_generated/Files/MediaWidgetStateData_8hpp.html#enum-linetoolmode">LineToolMode</a></td>
 <td><strong><a href="../../api_generated/Classes/structMediaWidgetStateData.html#variable-active-line-mode">active_line_mode</a></strong> <br>Current line tool mode.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><a href="../../api_generated/Files/MediaWidgetStateData_8hpp.html#enum-masktoolmode">MaskToolMode</a></td>
 <td><strong><a href="../../api_generated/Classes/structMediaWidgetStateData.html#variable-active-mask-mode">active_mask_mode</a></strong> <br>Current mask tool mode.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><a href="../../api_generated/Files/MediaWidgetStateData_8hpp.html#enum-pointtoolmode">PointToolMode</a></td>
 <td><strong><a href="../../api_generated/Classes/structMediaWidgetStateData.html#variable-active-point-mode">active_point_mode</a></strong> <br>Current point tool mode.</td>
 </tr>
@@ -657,32 +672,47 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>PointInteractionPrefs point_prefs<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><a href="../../api_generated/Classes/structPoint.html">Point</a> tool preferences.</p>
 </section>
+<section id="variable-ruler_prefs" class="level3">
+<h3 class="anchored" data-anchor-id="variable-ruler_prefs">variable ruler_prefs</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>RulerPrefs ruler_prefs<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Pixel ruler display preferences.</p>
+</section>
+<section id="variable-select_prefs" class="level3">
+<h3 class="anchored" data-anchor-id="variable-select_prefs">variable select_prefs</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>SelectToolPrefs select_prefs<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Select tool key-filter preferences.</p>
+</section>
 <section id="variable-text_overlays" class="level3">
 <h3 class="anchored" data-anchor-id="variable-text_overlays">variable text_overlays</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> TextOverlayData <span class="op">&gt;</span> text_overlays<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> TextOverlayData <span class="op">&gt;</span> text_overlays<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>All text overlays.</p>
 </section>
 <section id="variable-next_overlay_id" class="level3">
 <h3 class="anchored" data-anchor-id="variable-next_overlay_id">variable next_overlay_id</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> next_overlay_id <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> next_overlay_id <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Counter for assigning overlay IDs.</p>
+</section>
+<section id="variable-active_media_tool" class="level3">
+<h3 class="anchored" data-anchor-id="variable-active_media_tool">variable active_media_tool</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>MediaToolId active_media_tool <span class="op">=</span> MediaToolId<span class="op">::</span>Select<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Global Media Viewer toolbar tool.</p>
 </section>
 <section id="variable-active_line_mode" class="level3">
 <h3 class="anchored" data-anchor-id="variable-active_line_mode">variable active_line_mode</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>LineToolMode active_line_mode <span class="op">=</span> LineToolMode<span class="op">::</span>None<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>LineToolMode active_line_mode <span class="op">=</span> LineToolMode<span class="op">::</span>None<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Current line tool mode.</p>
 </section>
 <section id="variable-active_mask_mode" class="level3">
 <h3 class="anchored" data-anchor-id="variable-active_mask_mode">variable active_mask_mode</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>MaskToolMode active_mask_mode <span class="op">=</span> MaskToolMode<span class="op">::</span>None<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>MaskToolMode active_mask_mode <span class="op">=</span> MaskToolMode<span class="op">::</span>None<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Current mask tool mode.</p>
 </section>
 <section id="variable-active_point_mode" class="level3">
 <h3 class="anchored" data-anchor-id="variable-active_point_mode">variable active_point_mode</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>PointToolMode active_point_mode <span class="op">=</span> PointToolMode<span class="op">::</span>None<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>PointToolMode active_point_mode <span class="op">=</span> PointToolMode<span class="op">::</span>None<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Current point tool mode.</p>
 <hr>
-<p>Updated on 2026-09-04 at 19:58:29 +0000</p>
+<p>Updated on 2026-09-14 at 17:52:47 +0000</p>
 
 
 </section>
