@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>src/WhiskerToolbox/Media_Widget/UI/SubWidgets/MediaLine_Widget/SelectionWidgets/LineSelectSelectionWidget.hpp – Neuralyzer</title>
+<title>commands::MultiFileSavePathResolution – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -348,11 +348,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#srcwhiskertoolboxmedia_widgetuisubwidgetsmedialine_widgetselectionwidgetslineselectselectionwidget.hpp" id="toc-srcwhiskertoolboxmedia_widgetuisubwidgetsmedialine_widgetselectionwidgetslineselectselectionwidget.hpp" class="nav-link active" data-scroll-target="#srcwhiskertoolboxmedia_widgetuisubwidgetsmedialine_widgetselectionwidgetslineselectselectionwidget.hpp">src/WhiskerToolbox/Media_Widget/UI/SubWidgets/MediaLine_Widget/SelectionWidgets/LineSelectSelectionWidget.hpp</a>
+  <li><a href="#commandsmultifilesavepathresolution" id="toc-commandsmultifilesavepathresolution" class="nav-link active" data-scroll-target="#commandsmultifilesavepathresolution">commands::MultiFileSavePathResolution</a>
   <ul class="collapse">
-  <li><a href="#namespaces" id="toc-namespaces" class="nav-link" data-scroll-target="#namespaces">Namespaces</a></li>
-  <li><a href="#classes" id="toc-classes" class="nav-link" data-scroll-target="#classes">Classes</a></li>
-  <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
+  <li><a href="#public-attributes" id="toc-public-attributes" class="nav-link" data-scroll-target="#public-attributes">Public Attributes</a></li>
+  <li><a href="#public-attributes-documentation" id="toc-public-attributes-documentation" class="nav-link" data-scroll-target="#public-attributes-documentation">Public Attributes Documentation</a>
+  <ul class="collapse">
+  <li><a href="#variable-m_parent_dir" id="toc-variable-m_parent_dir" class="nav-link" data-scroll-target="#variable-m_parent_dir">variable m_parent_dir</a></li>
+  <li><a href="#variable-m_using_file_origin" id="toc-variable-m_using_file_origin" class="nav-link" data-scroll-target="#variable-m_using_file_origin">variable m_using_file_origin</a></li>
+  </ul></li>
   </ul></li>
   </ul>
 </nav>
@@ -363,7 +366,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">src/WhiskerToolbox/Media_Widget/UI/SubWidgets/MediaLine_Widget/SelectionWidgets/LineSelectSelectionWidget.hpp</h1>
+<h1 class="title">commands::MultiFileSavePathResolution</h1>
 </div>
 
 
@@ -380,28 +383,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="srcwhiskertoolboxmedia_widgetuisubwidgetsmedialine_widgetselectionwidgetslineselectselectionwidget.hpp" class="level1">
-<h1>src/WhiskerToolbox/Media_Widget/UI/SubWidgets/MediaLine_Widget/SelectionWidgets/LineSelectSelectionWidget.hpp</h1>
-<section id="namespaces" class="level2">
-<h2 class="anchored" data-anchor-id="namespaces">Namespaces</h2>
-<table class="caption-top table">
-<thead>
-<tr class="header">
-<th>Name</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><strong><a href="../../api_generated/Namespaces/namespaceUi.html">Ui</a></strong></td>
-</tr>
-<tr class="even">
-<td><strong><a href="../../api_generated/Namespaces/namespaceline__widget.html">line_widget</a></strong></td>
-</tr>
-</tbody>
-</table>
-</section>
-<section id="classes" class="level2">
-<h2 class="anchored" data-anchor-id="classes">Classes</h2>
+<section id="commandsmultifilesavepathresolution" class="level1">
+<h1>commands::MultiFileSavePathResolution</h1>
+<p>Resolved multi-file save directory for a data key.</p>
+<p><code>#include &lt;SavePathResolver.hpp&gt;</code></p>
+<section id="public-attributes" class="level2">
+<h2 class="anchored" data-anchor-id="public-attributes">Public Attributes</h2>
 <table class="caption-top table">
 <thead>
 <tr class="header">
@@ -411,44 +398,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classline__widget_1_1LineSelectSelectionWidget.html">line_widget::LineSelectSelectionWidget</a></strong> <br>Widget displayed when line edit mode is active.</td>
+<td>std::string</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1MultiFileSavePathResolution.html#variable-m-parent-dir">m_parent_dir</a></strong> <br>Directory where per-frame files are written.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1MultiFileSavePathResolution.html#variable-m-using-file-origin">m_using_file_origin</a></strong> <br>True when the source directory origin was used.</td>
 </tr>
 </tbody>
 </table>
 </section>
-<section id="source-code" class="level2">
-<h2 class="anchored" data-anchor-id="source-code">Source code</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef WHISKER_TOOLBOX_LINE_SELECT_SELECTION_WIDGET_HPP</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define WHISKER_TOOLBOX_LINE_SELECT_SELECTION_WIDGET_HPP</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QWidget&gt;</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> Ui <span class="op">{</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LineSelectSelectionWidget<span class="op">;</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> line_widget <span class="op">{</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> LineSelectSelectionWidget <span class="op">:</span> <span class="kw">public</span> <span class="ex">QWidget</span> <span class="op">{</span></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Q_OBJECT</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">explicit</span> LineSelectSelectionWidget<span class="op">(</span><span class="ex">QWidget</span> <span class="op">*</span> parent <span class="op">=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">~</span>LineSelectSelectionWidget<span class="op">()</span> <span class="kw">override</span><span class="op">;</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    Ui<span class="op">::</span>LineSelectSelectionWidget <span class="op">*</span> ui<span class="op">;</span></span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace line_widget</span></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// WHISKER_TOOLBOX_LINE_SELECT_SELECTION_WIDGET_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="public-attributes-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-attributes-documentation">Public Attributes Documentation</h2>
+<section id="variable-m_parent_dir" class="level3">
+<h3 class="anchored" data-anchor-id="variable-m_parent_dir">variable m_parent_dir</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string <span class="va">m_parent_dir</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Directory where per-frame files are written.</p>
+</section>
+<section id="variable-m_using_file_origin" class="level3">
+<h3 class="anchored" data-anchor-id="variable-m_using_file_origin">variable m_using_file_origin</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> <span class="va">m_using_file_origin</span> <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>True when the source directory origin was used.</p>
 <hr>
-<p>Updated on 2026-09-14 at 17:52:53 +0000</p>
+<p>Updated on 2026-09-14 at 20:30:51 +0000</p>
 
 
+</section>
 </section>
 </section>
 

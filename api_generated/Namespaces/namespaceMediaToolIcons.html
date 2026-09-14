@@ -354,6 +354,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
   <ul class="collapse">
   <li><a href="#function-createselecttoolicon" id="toc-function-createselecttoolicon" class="nav-link" data-scroll-target="#function-createselecttoolicon">function createSelectToolIcon</a></li>
+  <li><a href="#function-createpentoolicon" id="toc-function-createpentoolicon" class="nav-link" data-scroll-target="#function-createpentoolicon">function createPenToolIcon</a></li>
+  <li><a href="#function-createerasertoolicon" id="toc-function-createerasertoolicon" class="nav-link" data-scroll-target="#function-createerasertoolicon">function createEraserToolIcon</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -398,6 +400,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>QIcon</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceMediaToolIcons.html#function-createselecttoolicon">createSelectToolIcon</a></strong>(int size =20)<br>Create a pointer/selection cursor icon.</td>
 </tr>
+<tr class="even">
+<td>QIcon</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceMediaToolIcons.html#function-createpentoolicon">createPenToolIcon</a></strong>(int size =20)<br>Create a pen nib icon for selected-line editing.</td>
+</tr>
+<tr class="odd">
+<td>QIcon</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceMediaToolIcons.html#function-createerasertoolicon">createEraserToolIcon</a></strong>(int size =20)<br>Create an eraser block icon.</td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -414,8 +424,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>size</strong> Icon size in pixels</li>
 </ul>
 <p><strong>Return</strong>: Icon suitable for a toolbar button</p>
+</section>
+<section id="function-createpentoolicon" class="level3">
+<h3 class="anchored" data-anchor-id="function-createpentoolicon">function createPenToolIcon</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="ex">QIcon</span> createPenToolIcon<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> size <span class="op">=</span><span class="dv">20</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create a pen nib icon for selected-line editing.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>size</strong> Icon size in pixels</li>
+</ul>
+<p><strong>Return</strong>: Icon suitable for a toolbar button</p>
+</section>
+<section id="function-createerasertoolicon" class="level3">
+<h3 class="anchored" data-anchor-id="function-createerasertoolicon">function createEraserToolIcon</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="ex">QIcon</span> createEraserToolIcon<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> size <span class="op">=</span><span class="dv">20</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Create an eraser block icon.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>size</strong> Icon size in pixels</li>
+</ul>
+<p><strong>Return</strong>: Icon suitable for a toolbar button</p>
 <hr>
-<p>Updated on 2026-09-14 at 17:52:49 +0000</p>
+<p>Updated on 2026-09-14 at 20:30:50 +0000</p>
 
 
 </section>

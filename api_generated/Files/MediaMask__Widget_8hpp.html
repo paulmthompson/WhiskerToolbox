@@ -507,28 +507,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _addToMask<span class="op">(</span>CanvasCoordinates <span class="at">const</span> <span class="op">&amp;</span> canvas_coords<span class="op">);</span></span>
 <span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _removeFromMask<span class="op">(</span>CanvasCoordinates <span class="at">const</span> <span class="op">&amp;</span> canvas_coords<span class="op">);</span></span>
 <span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span> <span class="ex">slots</span><span class="op">:</span></span>
-<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _setMaskAlpha<span class="op">(</span><span class="dt">float</span> alpha<span class="op">);</span></span>
-<span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _setMaskColor<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> hex_color<span class="op">);</span></span>
-<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _toggleShowBoundingBox<span class="op">(</span><span class="dt">bool</span> checked<span class="op">);</span></span>
-<span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _toggleShowOutline<span class="op">(</span><span class="dt">bool</span> checked<span class="op">);</span></span>
-<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _toggleUseAsTransparency<span class="op">(</span><span class="dt">bool</span> checked<span class="op">);</span></span>
-<span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _toggleSelectionMode<span class="op">(</span><span class="at">const</span> <span class="ex">QString</span><span class="op">&amp;</span> text<span class="op">);</span></span>
-<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _clickedInVideo<span class="op">(</span>CanvasCoordinates <span class="at">const</span> <span class="op">&amp;</span> canvas_coords<span class="op">);</span></span>
-<span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _rightClickedInVideo<span class="op">(</span>CanvasCoordinates <span class="at">const</span> <span class="op">&amp;</span> canvas_coords<span class="op">);</span></span>
-<span id="cb1-98"><a href="#cb1-98" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _mouseMoveInVideo<span class="op">(</span>CanvasCoordinates <span class="at">const</span> <span class="op">&amp;</span> canvas_coords<span class="op">);</span></span>
-<span id="cb1-99"><a href="#cb1-99" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _mouseReleased<span class="op">();</span></span>
-<span id="cb1-100"><a href="#cb1-100" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _setBrushSize<span class="op">(</span><span class="dt">int</span> size<span class="op">);</span></span>
-<span id="cb1-101"><a href="#cb1-101" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _toggleShowHoverCircle<span class="op">(</span><span class="dt">bool</span> checked<span class="op">);</span></span>
-<span id="cb1-102"><a href="#cb1-102" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _onDilationOptionsChanged<span class="op">(</span>MaskDilationOptions <span class="at">const</span> <span class="op">&amp;</span> options<span class="op">);</span></span>
-<span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _onDilationApplyRequested<span class="op">();</span></span>
-<span id="cb1-104"><a href="#cb1-104" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _onAllowEmptyMaskChanged<span class="op">(</span><span class="dt">bool</span> allow<span class="op">);</span></span>
-<span id="cb1-105"><a href="#cb1-105" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb1-106"><a href="#cb1-106" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-107"><a href="#cb1-107" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-108"><a href="#cb1-108" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// MEDIAMASK_WIDGET_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> _isEraserInteractionActive<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">int</span> _effectiveBrushRadiusCanvas<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span> <span class="ex">slots</span><span class="op">:</span></span>
+<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _setMaskAlpha<span class="op">(</span><span class="dt">float</span> alpha<span class="op">);</span></span>
+<span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _setMaskColor<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> hex_color<span class="op">);</span></span>
+<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _toggleShowBoundingBox<span class="op">(</span><span class="dt">bool</span> checked<span class="op">);</span></span>
+<span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _toggleShowOutline<span class="op">(</span><span class="dt">bool</span> checked<span class="op">);</span></span>
+<span id="cb1-98"><a href="#cb1-98" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _toggleUseAsTransparency<span class="op">(</span><span class="dt">bool</span> checked<span class="op">);</span></span>
+<span id="cb1-99"><a href="#cb1-99" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _toggleSelectionMode<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> text<span class="op">);</span></span>
+<span id="cb1-100"><a href="#cb1-100" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _clickedInVideo<span class="op">(</span>CanvasCoordinates <span class="at">const</span> <span class="op">&amp;</span> canvas_coords<span class="op">);</span></span>
+<span id="cb1-101"><a href="#cb1-101" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _mouseMoveInVideo<span class="op">(</span>CanvasCoordinates <span class="at">const</span> <span class="op">&amp;</span> canvas_coords<span class="op">);</span></span>
+<span id="cb1-102"><a href="#cb1-102" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _mouseReleased<span class="op">();</span></span>
+<span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _setBrushSize<span class="op">(</span><span class="dt">int</span> size<span class="op">);</span></span>
+<span id="cb1-104"><a href="#cb1-104" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _toggleShowHoverCircle<span class="op">(</span><span class="dt">bool</span> checked<span class="op">);</span></span>
+<span id="cb1-105"><a href="#cb1-105" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _onDilationOptionsChanged<span class="op">(</span>MaskDilationOptions <span class="at">const</span> <span class="op">&amp;</span> options<span class="op">);</span></span>
+<span id="cb1-106"><a href="#cb1-106" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _onDilationApplyRequested<span class="op">();</span></span>
+<span id="cb1-107"><a href="#cb1-107" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _onAllowEmptyMaskChanged<span class="op">(</span><span class="dt">bool</span> allow<span class="op">);</span></span>
+<span id="cb1-108"><a href="#cb1-108" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb1-109"><a href="#cb1-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-111"><a href="#cb1-111" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// MEDIAMASK_WIDGET_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-14 at 17:52:53 +0000</p>
+<p>Updated on 2026-09-14 at 20:30:54 +0000</p>
 
 
 </section>

@@ -1537,8 +1537,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
    
   <ul>
   <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
-  <li><a href="#api" id="toc-api" class="nav-link" data-scroll-target="#api">API</a></li>
-  <li><a href="#behavior" id="toc-behavior" class="nav-link" data-scroll-target="#behavior">Behavior</a></li>
+  <li><a href="#api" id="toc-api" class="nav-link" data-scroll-target="#api">API</a>
+  <ul class="collapse">
+  <li><a href="#single-file-saves" id="toc-single-file-saves" class="nav-link" data-scroll-target="#single-file-saves">Single-file saves</a></li>
+  <li><a href="#multi-file-saves" id="toc-multi-file-saves" class="nav-link" data-scroll-target="#multi-file-saves">Multi-file saves</a></li>
+  </ul></li>
+  <li><a href="#behavior" id="toc-behavior" class="nav-link" data-scroll-target="#behavior">Behavior</a>
+  <ul class="collapse">
+  <li><a href="#resolvedefaultsavepath" id="toc-resolvedefaultsavepath" class="nav-link" data-scroll-target="#resolvedefaultsavepath"><code>resolveDefaultSavePath</code></a></li>
+  <li><a href="#resolvedefaultmultifilesavedir" id="toc-resolvedefaultmultifilesavedir" class="nav-link" data-scroll-target="#resolvedefaultmultifilesavedir"><code>resolveDefaultMultiFileSaveDir</code></a></li>
+  </ul></li>
   <li><a href="#call-sites" id="toc-call-sites" class="nav-link" data-scroll-target="#call-sites">Call Sites</a></li>
   </ul>
 </nav>
@@ -1568,11 +1576,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="overview" class="level2">
 <h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p><code>SavePathResolver</code> provides a Qt-free helper for choosing the default single-file save target for a <code>DataManager</code> key. It first checks <code>LineageRegistry</code> for matching <code>FileOrigin</code> metadata and falls back to <code>DataManager::getOutputPath()</code> plus the UI-provided filename.</p>
-<p>This keeps provenance-aware save defaults out of the inspector widgets and leaves overwrite policy in <code>SaveData</code>.</p>
+<p><code>SavePathResolver</code> provides Qt-free helpers for choosing provenance-aware default save targets for a <code>DataManager</code> key. It checks <code>LineageRegistry</code> for matching <code>FileOrigin</code> metadata and falls back to <code>DataManager::getOutputPath()</code> plus the UI-provided name.</p>
+<p>This keeps provenance-aware save defaults out of the inspector widgets and leaves overwrite policy in <code>SaveData</code> (single-file) or the format options (multi-file).</p>
 </section>
 <section id="api" class="level2">
 <h2 class="anchored" data-anchor-id="api">API</h2>
+<section id="single-file-saves" class="level3">
+<h3 class="anchored" data-anchor-id="single-file-saves">Single-file saves</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>commands<span class="op">::</span>SavePathResolution resolveDefaultSavePath<span class="op">(</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="at">const</span><span class="op">&amp;</span> data_manager<span class="op">,</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span><span class="op">&amp;</span> data_key<span class="op">,</span></span>
@@ -1580,17 +1590,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span><span class="op">&amp;</span> fallback_filename<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><code>SavePathResolution</code> returns the full path, parent directory, filename, and a <code>m_using_file_origin</code> flag. Callers use that flag to enable backup-on-overwrite only when saving back to the loaded source file.</p>
 </section>
+<section id="multi-file-saves" class="level3">
+<h3 class="anchored" data-anchor-id="multi-file-saves">Multi-file saves</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>commands<span class="op">::</span>MultiFileSavePathResolution resolveDefaultMultiFileSaveDir<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    DataManager <span class="at">const</span><span class="op">&amp;</span> data_manager<span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span><span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span><span class="op">&amp;</span> requested_format<span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span><span class="op">&amp;</span> fallback_parent_dir<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><code>MultiFileSavePathResolution</code> returns the parent directory for per-frame output files and a <code>m_using_file_origin</code> flag. Callers should set <code>overwrite_existing = true</code> in the saver config when <code>m_using_file_origin</code> is true, because multi-file savers skip existing files by default.</p>
+</section>
+</section>
 <section id="behavior" class="level2">
 <h2 class="anchored" data-anchor-id="behavior">Behavior</h2>
+<section id="resolvedefaultsavepath" class="level3">
+<h3 class="anchored" data-anchor-id="resolvedefaultsavepath"><code>resolveDefaultSavePath</code></h3>
 <ul>
-<li>If the key has <code>FileOrigin</code> metadata and its format matches the requested saver format, the resolver returns the original load path.</li>
+<li>If the key has <code>FileOrigin</code> metadata and its format matches the requested saver format, the resolver returns the original load path (treated as a single file).</li>
 <li>If no matching origin exists, the resolver returns <code>DataManager::getOutputPath() / fallback_filename</code>.</li>
-<li>The resolver does not modify <code>DataManager</code>, lineage metadata, or the filesystem.</li>
 </ul>
+</section>
+<section id="resolvedefaultmultifilesavedir" class="level3">
+<h3 class="anchored" data-anchor-id="resolvedefaultmultifilesavedir"><code>resolveDefaultMultiFileSaveDir</code></h3>
+<ul>
+<li>If the key has <code>FileOrigin</code> metadata, the format matches, and the origin describes a multi-file load (<code>multi_file: true</code> in <code>m_source_config_json</code>, or <code>m_path</code> is an existing directory), the resolver returns <code>m_path</code> as the parent directory.</li>
+<li>If no matching multi-file origin exists, the resolver joins <code>fallback_parent_dir</code> with <code>DataManager::getOutputPath()</code> when the fallback is relative (or <code>"."</code>), otherwise uses the absolute fallback path as-is.</li>
+</ul>
+<p>Neither resolver modifies <code>DataManager</code>, lineage metadata, or the filesystem.</p>
+</section>
 </section>
 <section id="call-sites" class="level2">
 <h2 class="anchored" data-anchor-id="call-sites">Call Sites</h2>
-<p>Data inspector save handlers use this helper before constructing <code>SaveDataParams</code>. <code>SaveData</code> remains responsible for the actual write and optional <code>.bak</code> backup.</p>
+<p>Data inspector save handlers use these helpers before constructing <code>SaveDataParams</code>. <code>LineInspector</code> uses <code>resolveDefaultMultiFileSaveDir</code> for CSV multi-file line export. <code>SaveData</code> remains responsible for the actual write and optional <code>.bak</code> backup for single-file targets.</p>
 
 
 </section>

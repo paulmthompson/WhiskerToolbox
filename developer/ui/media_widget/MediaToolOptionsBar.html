@@ -317,6 +317,8 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#layout" id="toc-layout" class="nav-link" data-scroll-target="#layout">Layout</a></li>
   <li><a href="#components" id="toc-components" class="nav-link" data-scroll-target="#components">Components</a></li>
   <li><a href="#select-tool-filter" id="toc-select-tool-filter" class="nav-link" data-scroll-target="#select-tool-filter">Select Tool Filter</a></li>
+  <li><a href="#pen-tool" id="toc-pen-tool" class="nav-link" data-scroll-target="#pen-tool">Pen Tool</a></li>
+  <li><a href="#eraser-tool" id="toc-eraser-tool" class="nav-link" data-scroll-target="#eraser-tool">Eraser Tool</a></li>
   <li><a href="#wiring" id="toc-wiring" class="nav-link" data-scroll-target="#wiring">Wiring</a></li>
   </ul>
 </nav>
@@ -400,6 +402,14 @@ ul.task-list li input[type="checkbox"] {
 <td><code>SelectToolOptions_Widget</code></td>
 <td>Select-tool page: key filter combo and pick radius spinbox</td>
 </tr>
+<tr class="odd">
+<td><code>PenToolOptions_Widget</code></td>
+<td>Pen-tool page: append-endpoint combo and usage instructions</td>
+</tr>
+<tr class="even">
+<td><code>EraserToolOptions_Widget</code></td>
+<td>Eraser-tool page: hover-circle radius slider/spinbox</td>
+</tr>
 </tbody>
 </table>
 </section>
@@ -415,12 +425,34 @@ ul.task-list li input[type="checkbox"] {
 <p>Canvas left-click selection uses <code>Media_Window::findBestEntityAtPosition()</code> when the Select tool is active. The filter restricts candidate keys before closest-hit ranking across enabled line, mask, and point features.</p>
 <p>When <code>DataManager</code> deletes a key, <code>Media_Widget::_pruneRemovedFeatures()</code> removes stale display options (emitting <code>displayOptionsRemoved</code>), which triggers a combo rebuild. If the active filter targeted the deleted key, it resets to <strong>All enabled features</strong>.</p>
 </section>
+<section id="pen-tool" class="level2">
+<h2 class="anchored" data-anchor-id="pen-tool">Pen Tool</h2>
+<p><code>PenToolOptions_Widget</code> exposes the append-endpoint policy and usage instructions. When the Pen tool is active:</p>
+<ul>
+<li>Use the <strong>Select</strong> tool first to pick a line entity on the canvas.</li>
+<li>Choose <strong>Append to:</strong> tip, base, or nearest endpoint (stored in <code>LineInteractionPrefs::append_endpoint</code>).</li>
+<li><strong>Ctrl+click</strong> appends a point to the selected line at the configured endpoint (<code>MediaLine_Widget::_addPointToLine</code>).</li>
+<li><strong>Alt+click</strong> deletes the nearest vertex within <code>SelectToolPrefs::pick_radius_px</code> (<code>MediaLine_Widget::_deleteNearestVertexFromLine</code>).</li>
+<li><strong>Right-click</strong> on the selected line opens the line context menu.</li>
+</ul>
+</section>
+<section id="eraser-tool" class="level2">
+<h2 class="anchored" data-anchor-id="eraser-tool">Eraser Tool</h2>
+<p><code>EraserToolOptions_Widget</code> configures the Eraser hover-circle radius. When the Eraser tool is active:</p>
+<ul>
+<li><strong>Eraser size</strong> (<code>EraserToolPrefs::radius_px</code>, default 10 px, range 1–50) drives <code>Media_Window::setHoverCircleRadius()</code>.</li>
+<li><code>Media_Widget::_syncEraserHoverCircle()</code> enables the hover circle on the canvas.</li>
+<li><strong>Lines:</strong> drag on a selected line removes vertices within the circle; remaining vertices stay connected.</li>
+<li><strong>Masks:</strong> left-click drag removes pixels within the circle (replacing mask brush right-click erase).</li>
+</ul>
+</section>
 <section id="wiring" class="level2">
 <h2 class="anchored" data-anchor-id="wiring">Wiring</h2>
 <p><code>Media_Widget::_wireToolUi()</code> connects:</p>
 <ul>
 <li><code>MediaToolStrip_Widget::activeToolChanged</code> → <code>MediaToolOptionsBar_Widget::setActiveTool</code></li>
-<li><code>MediaWidgetState</code> → <code>SelectToolOptions_Widget::setState</code></li>
+<li><code>MediaWidgetState</code> → tool option widgets via <code>MediaToolOptionsBar_Widget::setState</code></li>
+<li><code>MediaWidgetState::eraserPrefsChanged</code> → <code>Media_Widget::_syncEraserHoverCircle</code></li>
 </ul>
 
 

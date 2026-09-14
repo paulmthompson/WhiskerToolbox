@@ -403,7 +403,7 @@ ul.task-list li input[type="checkbox"] {
 <tr class="even">
 <td><code>MediaToolId</code></td>
 <td><code>Media_Widget/UI/Tools</code></td>
-<td>Tool identifiers (<code>Select</code> for now)</td>
+<td>Tool identifiers (<code>None</code>, <code>Select</code>, <code>Pen</code>, <code>Eraser</code>)</td>
 </tr>
 <tr class="odd">
 <td><code>MediaToolIcons</code></td>
@@ -416,12 +416,12 @@ ul.task-list li input[type="checkbox"] {
 <section id="selection-api" class="level2">
 <h2 class="anchored" data-anchor-id="selection-api">Selection API</h2>
 <ul>
-<li><code>activeTool()</code> returns the current <code>MediaToolId</code> (<code>None</code> or <code>Select</code>)</li>
+<li><code>activeTool()</code> returns the current <code>MediaToolId</code> (<code>None</code>, <code>Select</code>, <code>Pen</code>, or <code>Eraser</code>)</li>
 <li><code>setActiveTool(MediaToolId)</code> updates the checked button (or unchecks all for <code>None</code>)</li>
 <li><code>activeToolChanged(MediaToolId)</code> is emitted when the user selects or deactivates a tool</li>
 <li>Clicking the active tool button again sets <code>MediaToolId::None</code></li>
 </ul>
-<p><code>Media_Widget</code> wires <code>activeMediaTool</code> in state; <code>MediaSelectToolController</code> enables unified canvas selection only when <code>Select</code> is active.</p>
+<p><code>Media_Widget</code> wires <code>activeMediaTool</code> in state; <code>MediaSelectToolController</code> enables unified canvas selection only when <code>Select</code> is active. The <strong>Pen</strong> tool routes Ctrl+click / Alt+click line edits through <code>MediaLine_Widget</code>. The <strong>Eraser</strong> tool removes line vertices or mask pixels under the hover circle via <code>MediaLine_Widget</code> and <code>MediaMask_Widget</code>.</p>
 </section>
 <section id="adding-tools" class="level2">
 <h2 class="anchored" data-anchor-id="adding-tools">Adding Tools</h2>

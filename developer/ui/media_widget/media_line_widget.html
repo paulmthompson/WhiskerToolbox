@@ -1627,17 +1627,13 @@ Media_Window::_plotLineData() (rendering)</code></pre>
 <td>No interaction</td>
 </tr>
 <tr class="even">
-<td>Edit Selected Line</td>
-<td><code>LineSelectSelectionWidget</code></td>
-<td>Select with toolbar Select tool; Ctrl+click to add points, Alt+click to erase</td>
-</tr>
-<tr class="odd">
 <td>Draw Across All Frames</td>
 <td><code>LineDrawAllFramesSelectionWidget</code></td>
 <td>Stateful workflow: start → draw → complete → apply to all frames</td>
 </tr>
 </tbody>
 </table>
+<p>Selected-line node editing (Ctrl+click append, Alt+click delete nearest vertex) is handled by the global <strong>Pen</strong> toolbar tool. Append endpoint policy (tip, base, or nearest) is configured in <a href="../../../developer/ui/media_widget/PenToolOptions_Widget.html">Pen Tool Options Widget</a> via <code>LineInteractionPrefs::append_endpoint</code>.</p>
 </section>
 <section id="display-options" class="level2">
 <h2 class="anchored" data-anchor-id="display-options">Display Options</h2>

@@ -366,6 +366,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-test_case-10" id="toc-function-test_case-10" class="nav-link" data-scroll-target="#function-test_case-10">function TEST_CASE</a></li>
   <li><a href="#function-test_case-11" id="toc-function-test_case-11" class="nav-link" data-scroll-target="#function-test_case-11">function TEST_CASE</a></li>
   <li><a href="#function-test_case-12" id="toc-function-test_case-12" class="nav-link" data-scroll-target="#function-test_case-12">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-13" id="toc-function-test_case-13" class="nav-link" data-scroll-target="#function-test_case-13">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-14" id="toc-function-test_case-14" class="nav-link" data-scroll-target="#function-test_case-14">function TEST_CASE</a></li>
   </ul></li>
   <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
   </ul></li>
@@ -439,6 +441,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td></td>
 <td><strong><a href="../../api_generated/Files/SaveData_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“SavePathResolver prefers matching file origin” , “” [commands][SaveData][resolver])</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/SaveData_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“SavePathResolver prefers matching multi-file directory origin” , “” [commands][SaveData][resolver])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/SaveData_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“SavePathResolver multi-file <a href="../../api_generated/Files/Line__Data__Binary_8cpp.html#function-save">save</a> falls back to output directory” , “” [commands][SaveData][resolver])</td>
 </tr>
 <tr class="odd">
 <td></td>
@@ -524,376 +534,434 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-test_case-8" class="level3">
 <h3 class="anchored" data-anchor-id="function-test_case-8">function TEST_CASE</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"SaveData errors on unknown data_key"</span> <span class="op">,</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>commands<span class="op">][</span>SaveData<span class="op">]</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"SavePathResolver prefers matching multi-file directory origin"</span> <span class="op">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>commands<span class="op">][</span>SaveData<span class="op">][</span>resolver<span class="op">]</span></span>
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-test_case-9" class="level3">
 <h3 class="anchored" data-anchor-id="function-test_case-9">function TEST_CASE</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"SaveData errors on unsupported format"</span> <span class="op">,</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>commands<span class="op">][</span>SaveData<span class="op">]</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"SavePathResolver multi-file save falls back to output directory"</span> <span class="op">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>commands<span class="op">][</span>SaveData<span class="op">][</span>resolver<span class="op">]</span></span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-test_case-10" class="level3">
 <h3 class="anchored" data-anchor-id="function-test_case-10">function TEST_CASE</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"SaveData toJson produces valid JSON"</span> <span class="op">,</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"SaveData errors on unknown data_key"</span> <span class="op">,</span></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>commands<span class="op">][</span>SaveData<span class="op">]</span></span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-test_case-11" class="level3">
 <h3 class="anchored" data-anchor-id="function-test_case-11">function TEST_CASE</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"SaveData in a command sequence via factory"</span> <span class="op">,</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"SaveData errors on unsupported format"</span> <span class="op">,</span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>commands<span class="op">][</span>SaveData<span class="op">]</span></span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-test_case-12" class="level3">
 <h3 class="anchored" data-anchor-id="function-test_case-12">function TEST_CASE</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"getCommandInfo returns metadata for SaveData"</span> <span class="op">,</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>commands<span class="op">][</span>SaveData<span class="op">][</span>factory<span class="op">]</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"SaveData toJson produces valid JSON"</span> <span class="op">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>commands<span class="op">][</span>SaveData<span class="op">]</span></span>
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-13" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-13">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"SaveData in a command sequence via factory"</span> <span class="op">,</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>commands<span class="op">][</span>SaveData<span class="op">]</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-14" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-14">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"getCommandInfo returns metadata for SaveData"</span> <span class="op">,</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>commands<span class="op">][</span>SaveData<span class="op">][</span>factory<span class="op">]</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </section>
 <section id="source-code" class="level2">
 <h2 class="anchored" data-anchor-id="source-code">Source code</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Commands/IO/SaveData.hpp"</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Commands/Core/CommandContext.hpp"</span></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Commands/Core/CommandFactory.hpp"</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Commands/IO/SavePathResolver.hpp"</span></span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager/DataManager.hpp"</span></span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager/Lineage/LineageRecorder.hpp"</span></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Points/Point_Data.hpp"</span></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"IO/core/LoaderRegistration.hpp"</span></span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"IO/core/LoaderRegistry.hpp"</span></span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"IO/formats/CSV/points/Point_Data_CSV.hpp"</span></span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Entity/EntityTypes.hpp"</span></span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Observer/Observer_Data.hpp"</span></span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/catch_test_macros.hpp&gt;</span></span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;rfl/json.hpp&gt;</span></span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;filesystem&gt;</span></span>
-<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;fstream&gt;</span></span>
-<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;utility&gt;</span></span>
-<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> commands<span class="op">;</span></span>
-<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a><span class="co">// Helper: ensure internal loaders are registered on the global singleton</span></span>
-<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="op">{</span></span>
-<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> RegistryInitializer <span class="op">{</span></span>
-<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>    RegistryInitializer<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>        <span class="at">static</span> <span class="dt">bool</span> initialized <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
-<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>initialized<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>            registerInternalLoaders<span class="op">();</span></span>
-<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>            initialized <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">maybe_unused</span><span class="op">]]</span> RegistryInitializer <span class="at">const</span> <span class="va">g_init</span><span class="op">{};</span></span>
-<span id="cb14-44"><a href="#cb14-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-45"><a href="#cb14-45" aria-hidden="true" tabindex="-1"></a>CommandContext makeContextWithPoints<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb14-46"><a href="#cb14-46" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> dm <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataManager<span class="op">&gt;();</span></span>
-<span id="cb14-47"><a href="#cb14-47" aria-hidden="true" tabindex="-1"></a>    dm<span class="op">-&gt;</span>setData<span class="op">&lt;</span>PointData<span class="op">&gt;(</span>key<span class="op">,</span> TimeKey<span class="op">(</span><span class="st">"time"</span><span class="op">));</span></span>
-<span id="cb14-48"><a href="#cb14-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-49"><a href="#cb14-49" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> pts <span class="op">=</span> dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>PointData<span class="op">&gt;(</span>key<span class="op">);</span></span>
-<span id="cb14-50"><a href="#cb14-50" aria-hidden="true" tabindex="-1"></a>    pts<span class="op">-&gt;</span>addEntryAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">0</span><span class="op">),</span></span>
-<span id="cb14-51"><a href="#cb14-51" aria-hidden="true" tabindex="-1"></a>                        Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">2.0</span><span class="bu">f</span><span class="op">},</span></span>
-<span id="cb14-52"><a href="#cb14-52" aria-hidden="true" tabindex="-1"></a>                        EntityId<span class="op">(</span><span class="dv">1</span><span class="op">),</span> NotifyObservers<span class="op">::</span>No<span class="op">);</span></span>
-<span id="cb14-53"><a href="#cb14-53" aria-hidden="true" tabindex="-1"></a>    pts<span class="op">-&gt;</span>addEntryAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">5</span><span class="op">),</span></span>
-<span id="cb14-54"><a href="#cb14-54" aria-hidden="true" tabindex="-1"></a>                        Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;{</span><span class="fl">3.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">4.0</span><span class="bu">f</span><span class="op">},</span></span>
-<span id="cb14-55"><a href="#cb14-55" aria-hidden="true" tabindex="-1"></a>                        EntityId<span class="op">(</span><span class="dv">2</span><span class="op">),</span> NotifyObservers<span class="op">::</span>No<span class="op">);</span></span>
-<span id="cb14-56"><a href="#cb14-56" aria-hidden="true" tabindex="-1"></a>    pts<span class="op">-&gt;</span>addEntryAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">10</span><span class="op">),</span></span>
-<span id="cb14-57"><a href="#cb14-57" aria-hidden="true" tabindex="-1"></a>                        Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;{</span><span class="fl">5.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">6.0</span><span class="bu">f</span><span class="op">},</span></span>
-<span id="cb14-58"><a href="#cb14-58" aria-hidden="true" tabindex="-1"></a>                        EntityId<span class="op">(</span><span class="dv">3</span><span class="op">),</span> NotifyObservers<span class="op">::</span>No<span class="op">);</span></span>
-<span id="cb14-59"><a href="#cb14-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-60"><a href="#cb14-60" aria-hidden="true" tabindex="-1"></a>    CommandContext ctx<span class="op">;</span></span>
-<span id="cb14-61"><a href="#cb14-61" aria-hidden="true" tabindex="-1"></a>    ctx<span class="op">.</span>data_manager <span class="op">=</span> dm<span class="op">;</span></span>
-<span id="cb14-62"><a href="#cb14-62" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ctx<span class="op">;</span></span>
-<span id="cb14-63"><a href="#cb14-63" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb14-64"><a href="#cb14-64" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-65"><a href="#cb14-65" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>filesystem::path makeTempDir<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb14-66"><a href="#cb14-66" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> dir <span class="op">=</span> <span class="bu">std::</span>filesystem::temp_directory_path<span class="op">()</span> <span class="op">/</span> <span class="st">"whisker_save_data_test"</span><span class="op">;</span></span>
-<span id="cb14-67"><a href="#cb14-67" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>filesystem::create_directories<span class="op">(</span>dir<span class="op">);</span></span>
-<span id="cb14-68"><a href="#cb14-68" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> dir<span class="op">;</span></span>
-<span id="cb14-69"><a href="#cb14-69" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb14-70"><a href="#cb14-70" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-71"><a href="#cb14-71" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> cleanupTempDir<span class="op">(</span><span class="bu">std::</span>filesystem::path <span class="at">const</span> <span class="op">&amp;</span> dir<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb14-72"><a href="#cb14-72" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>error_code ec<span class="op">;</span></span>
-<span id="cb14-73"><a href="#cb14-73" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>filesystem::remove_all<span class="op">(</span>dir<span class="op">,</span> ec<span class="op">);</span></span>
-<span id="cb14-74"><a href="#cb14-74" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb14-75"><a href="#cb14-75" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-76"><a href="#cb14-76" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace</span></span>
-<span id="cb14-77"><a href="#cb14-77" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-78"><a href="#cb14-78" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb14-79"><a href="#cb14-79" aria-hidden="true" tabindex="-1"></a><span class="co">// Factory tests</span></span>
-<span id="cb14-80"><a href="#cb14-80" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb14-81"><a href="#cb14-81" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-82"><a href="#cb14-82" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"createCommand creates SaveData from valid params"</span><span class="op">,</span></span>
-<span id="cb14-83"><a href="#cb14-83" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData][factory]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb14-84"><a href="#cb14-84" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{</span></span>
-<span id="cb14-85"><a href="#cb14-85" aria-hidden="true" tabindex="-1"></a><span class="vs">        "data_key": "my_points",</span></span>
-<span id="cb14-86"><a href="#cb14-86" aria-hidden="true" tabindex="-1"></a><span class="vs">        "format": "csv",</span></span>
-<span id="cb14-87"><a href="#cb14-87" aria-hidden="true" tabindex="-1"></a><span class="vs">        "path": "/tmp/test_output.csv"</span></span>
-<span id="cb14-88"><a href="#cb14-88" aria-hidden="true" tabindex="-1"></a><span class="vs">    }</span><span class="st">)"</span><span class="op">;</span></span>
-<span id="cb14-89"><a href="#cb14-89" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> generic <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>read<span class="op">&lt;</span>rfl<span class="op">::</span>Generic<span class="op">&gt;(</span>json<span class="op">).</span>value<span class="op">();</span></span>
-<span id="cb14-90"><a href="#cb14-90" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> cmd <span class="op">=</span> createCommand<span class="op">(</span><span class="st">"SaveData"</span><span class="op">,</span> generic<span class="op">);</span></span>
-<span id="cb14-91"><a href="#cb14-91" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>cmd <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb14-92"><a href="#cb14-92" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>cmd<span class="op">-&gt;</span>commandName<span class="op">()</span> <span class="op">==</span> <span class="st">"SaveData"</span><span class="op">);</span></span>
-<span id="cb14-93"><a href="#cb14-93" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>cmd<span class="op">-&gt;</span>isUndoable<span class="op">());</span></span>
-<span id="cb14-94"><a href="#cb14-94" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb14-95"><a href="#cb14-95" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-96"><a href="#cb14-96" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"createCommand creates SaveData with format_options"</span><span class="op">,</span></span>
-<span id="cb14-97"><a href="#cb14-97" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData][factory]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb14-98"><a href="#cb14-98" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{</span></span>
-<span id="cb14-99"><a href="#cb14-99" aria-hidden="true" tabindex="-1"></a><span class="vs">        "data_key": "my_points",</span></span>
-<span id="cb14-100"><a href="#cb14-100" aria-hidden="true" tabindex="-1"></a><span class="vs">        "format": "csv",</span></span>
-<span id="cb14-101"><a href="#cb14-101" aria-hidden="true" tabindex="-1"></a><span class="vs">        "path": "/tmp/test_output.csv",</span></span>
-<span id="cb14-102"><a href="#cb14-102" aria-hidden="true" tabindex="-1"></a><span class="vs">        "format_options": {"delimiter": ";"}</span></span>
-<span id="cb14-103"><a href="#cb14-103" aria-hidden="true" tabindex="-1"></a><span class="vs">    }</span><span class="st">)"</span><span class="op">;</span></span>
-<span id="cb14-104"><a href="#cb14-104" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> generic <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>read<span class="op">&lt;</span>rfl<span class="op">::</span>Generic<span class="op">&gt;(</span>json<span class="op">).</span>value<span class="op">();</span></span>
-<span id="cb14-105"><a href="#cb14-105" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> cmd <span class="op">=</span> createCommand<span class="op">(</span><span class="st">"SaveData"</span><span class="op">,</span> generic<span class="op">);</span></span>
-<span id="cb14-106"><a href="#cb14-106" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>cmd <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb14-107"><a href="#cb14-107" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb14-108"><a href="#cb14-108" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-109"><a href="#cb14-109" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"createCommand applies DefaultIfMissing when unknown fields are present"</span><span class="op">,</span></span>
-<span id="cb14-110"><a href="#cb14-110" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData][factory]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb14-111"><a href="#cb14-111" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"not_a_valid_field": 42}</span><span class="st">)"</span><span class="op">;</span></span>
-<span id="cb14-112"><a href="#cb14-112" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> generic <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>read<span class="op">&lt;</span>rfl<span class="op">::</span>Generic<span class="op">&gt;(</span>json<span class="op">).</span>value<span class="op">();</span></span>
-<span id="cb14-113"><a href="#cb14-113" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> cmd <span class="op">=</span> createCommand<span class="op">(</span><span class="st">"SaveData"</span><span class="op">,</span> generic<span class="op">);</span></span>
-<span id="cb14-114"><a href="#cb14-114" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>cmd <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb14-115"><a href="#cb14-115" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>cmd<span class="op">-&gt;</span>commandName<span class="op">()</span> <span class="op">==</span> <span class="st">"SaveData"</span><span class="op">);</span></span>
-<span id="cb14-116"><a href="#cb14-116" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb14-117"><a href="#cb14-117" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-118"><a href="#cb14-118" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"isKnownCommandName recognizes SaveData"</span><span class="op">,</span></span>
-<span id="cb14-119"><a href="#cb14-119" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData][factory]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb14-120"><a href="#cb14-120" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>isKnownCommandName<span class="op">(</span><span class="st">"SaveData"</span><span class="op">));</span></span>
-<span id="cb14-121"><a href="#cb14-121" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb14-122"><a href="#cb14-122" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-123"><a href="#cb14-123" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb14-124"><a href="#cb14-124" aria-hidden="true" tabindex="-1"></a><span class="co">// Execution tests</span></span>
-<span id="cb14-125"><a href="#cb14-125" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb14-126"><a href="#cb14-126" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-127"><a href="#cb14-127" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SaveData saves PointData to CSV file"</span><span class="op">,</span></span>
-<span id="cb14-128"><a href="#cb14-128" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb14-129"><a href="#cb14-129" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> temp_dir <span class="op">=</span> makeTempDir<span class="op">();</span></span>
-<span id="cb14-130"><a href="#cb14-130" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> ctx <span class="op">=</span> makeContextWithPoints<span class="op">(</span><span class="st">"pts"</span><span class="op">);</span></span>
-<span id="cb14-131"><a href="#cb14-131" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-132"><a href="#cb14-132" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> filepath <span class="op">=</span> <span class="op">(</span>temp_dir <span class="op">/</span> <span class="st">"points.csv"</span><span class="op">).</span>string<span class="op">();</span></span>
-<span id="cb14-133"><a href="#cb14-133" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-134"><a href="#cb14-134" aria-hidden="true" tabindex="-1"></a>    SaveData cmd<span class="op">(</span>SaveDataParams<span class="op">{</span></span>
-<span id="cb14-135"><a href="#cb14-135" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>data_key <span class="op">=</span> <span class="st">"pts"</span><span class="op">,</span></span>
-<span id="cb14-136"><a href="#cb14-136" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>format <span class="op">=</span> <span class="st">"csv"</span><span class="op">,</span></span>
-<span id="cb14-137"><a href="#cb14-137" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>path <span class="op">=</span> filepath<span class="op">,</span></span>
-<span id="cb14-138"><a href="#cb14-138" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
-<span id="cb14-139"><a href="#cb14-139" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-140"><a href="#cb14-140" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> cmd<span class="op">.</span>execute<span class="op">(</span>ctx<span class="op">);</span></span>
-<span id="cb14-141"><a href="#cb14-141" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>success<span class="op">);</span></span>
-<span id="cb14-142"><a href="#cb14-142" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-143"><a href="#cb14-143" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Verify the file was created</span></span>
-<span id="cb14-144"><a href="#cb14-144" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span><span class="bu">std::</span>filesystem::exists<span class="op">(</span>filepath<span class="op">));</span></span>
-<span id="cb14-145"><a href="#cb14-145" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-146"><a href="#cb14-146" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Verify the file has content</span></span>
-<span id="cb14-147"><a href="#cb14-147" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>ifstream ifs<span class="op">(</span>filepath<span class="op">);</span></span>
-<span id="cb14-148"><a href="#cb14-148" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string content<span class="op">((</span><span class="bu">std::</span>istreambuf_iterator<span class="op">&lt;</span><span class="dt">char</span><span class="op">&gt;(</span>ifs<span class="op">)),</span></span>
-<span id="cb14-149"><a href="#cb14-149" aria-hidden="true" tabindex="-1"></a>                        <span class="bu">std::</span>istreambuf_iterator<span class="op">&lt;</span><span class="dt">char</span><span class="op">&gt;());</span></span>
-<span id="cb14-150"><a href="#cb14-150" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>content<span class="op">.</span>empty<span class="op">());</span></span>
-<span id="cb14-151"><a href="#cb14-151" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-152"><a href="#cb14-152" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Verify it contains the expected data (3 points + header)</span></span>
-<span id="cb14-153"><a href="#cb14-153" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> line_count <span class="op">=</span> <span class="bu">std::</span>count<span class="op">(</span>content<span class="op">.</span>begin<span class="op">(),</span> content<span class="op">.</span>end<span class="op">(),</span> <span class="ch">'</span><span class="sc">\n</span><span class="ch">'</span><span class="op">);</span></span>
-<span id="cb14-154"><a href="#cb14-154" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>line_count <span class="op">&gt;=</span> <span class="dv">3</span><span class="op">);</span><span class="co">// 3 data lines (plus possibly a header)</span></span>
-<span id="cb14-155"><a href="#cb14-155" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-156"><a href="#cb14-156" aria-hidden="true" tabindex="-1"></a>    cleanupTempDir<span class="op">(</span>temp_dir<span class="op">);</span></span>
-<span id="cb14-157"><a href="#cb14-157" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb14-158"><a href="#cb14-158" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-159"><a href="#cb14-159" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SaveData round-trips PointData through CSV"</span><span class="op">,</span></span>
-<span id="cb14-160"><a href="#cb14-160" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb14-161"><a href="#cb14-161" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> temp_dir <span class="op">=</span> makeTempDir<span class="op">();</span></span>
-<span id="cb14-162"><a href="#cb14-162" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> ctx <span class="op">=</span> makeContextWithPoints<span class="op">(</span><span class="st">"pts"</span><span class="op">);</span></span>
-<span id="cb14-163"><a href="#cb14-163" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-164"><a href="#cb14-164" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> filepath <span class="op">=</span> <span class="op">(</span>temp_dir <span class="op">/</span> <span class="st">"roundtrip.csv"</span><span class="op">).</span>string<span class="op">();</span></span>
-<span id="cb14-165"><a href="#cb14-165" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-166"><a href="#cb14-166" aria-hidden="true" tabindex="-1"></a>    SaveData cmd<span class="op">(</span>SaveDataParams<span class="op">{</span></span>
-<span id="cb14-167"><a href="#cb14-167" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>data_key <span class="op">=</span> <span class="st">"pts"</span><span class="op">,</span></span>
-<span id="cb14-168"><a href="#cb14-168" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>format <span class="op">=</span> <span class="st">"csv"</span><span class="op">,</span></span>
-<span id="cb14-169"><a href="#cb14-169" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>path <span class="op">=</span> filepath<span class="op">,</span></span>
-<span id="cb14-170"><a href="#cb14-170" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
-<span id="cb14-171"><a href="#cb14-171" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-172"><a href="#cb14-172" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> cmd<span class="op">.</span>execute<span class="op">(</span>ctx<span class="op">);</span></span>
-<span id="cb14-173"><a href="#cb14-173" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>success<span class="op">);</span></span>
-<span id="cb14-174"><a href="#cb14-174" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-175"><a href="#cb14-175" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Load back via direct loader (CSV saver uses comma delimiter by default)</span></span>
-<span id="cb14-176"><a href="#cb14-176" aria-hidden="true" tabindex="-1"></a>    CSVPointLoaderOptions load_opts<span class="op">;</span></span>
-<span id="cb14-177"><a href="#cb14-177" aria-hidden="true" tabindex="-1"></a>    load_opts<span class="op">.</span>filepath <span class="op">=</span> filepath<span class="op">;</span></span>
-<span id="cb14-178"><a href="#cb14-178" aria-hidden="true" tabindex="-1"></a>    load_opts<span class="op">.</span>column_delim <span class="op">=</span> <span class="st">","</span><span class="op">;</span></span>
-<span id="cb14-179"><a href="#cb14-179" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> loaded <span class="op">=</span> load<span class="op">(</span>load_opts<span class="op">);</span></span>
-<span id="cb14-180"><a href="#cb14-180" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-181"><a href="#cb14-181" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Original had 3 frames with one point each</span></span>
-<span id="cb14-182"><a href="#cb14-182" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>loaded<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
-<span id="cb14-183"><a href="#cb14-183" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>loaded<span class="op">.</span>count<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">0</span><span class="op">))</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb14-184"><a href="#cb14-184" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>loaded<span class="op">.</span>count<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">5</span><span class="op">))</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb14-185"><a href="#cb14-185" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>loaded<span class="op">.</span>count<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">10</span><span class="op">))</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb14-186"><a href="#cb14-186" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-187"><a href="#cb14-187" aria-hidden="true" tabindex="-1"></a>    cleanupTempDir<span class="op">(</span>temp_dir<span class="op">);</span></span>
-<span id="cb14-188"><a href="#cb14-188" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb14-189"><a href="#cb14-189" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-190"><a href="#cb14-190" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SaveData backs up existing single-file target when requested"</span><span class="op">,</span></span>
-<span id="cb14-191"><a href="#cb14-191" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData][backup]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb14-192"><a href="#cb14-192" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> temp_dir <span class="op">=</span> makeTempDir<span class="op">();</span></span>
-<span id="cb14-193"><a href="#cb14-193" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> ctx <span class="op">=</span> makeContextWithPoints<span class="op">(</span><span class="st">"pts"</span><span class="op">);</span></span>
-<span id="cb14-194"><a href="#cb14-194" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-195"><a href="#cb14-195" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> filepath <span class="op">=</span> temp_dir <span class="op">/</span> <span class="st">"points_with_backup.csv"</span><span class="op">;</span></span>
-<span id="cb14-196"><a href="#cb14-196" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
-<span id="cb14-197"><a href="#cb14-197" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>ofstream existing<span class="op">(</span>filepath<span class="op">);</span></span>
-<span id="cb14-198"><a href="#cb14-198" aria-hidden="true" tabindex="-1"></a>        existing <span class="op">&lt;&lt;</span> <span class="st">"original file</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb14-199"><a href="#cb14-199" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb14-200"><a href="#cb14-200" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-201"><a href="#cb14-201" aria-hidden="true" tabindex="-1"></a>    SaveData cmd<span class="op">(</span>SaveDataParams<span class="op">{</span></span>
-<span id="cb14-202"><a href="#cb14-202" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>data_key <span class="op">=</span> <span class="st">"pts"</span><span class="op">,</span></span>
-<span id="cb14-203"><a href="#cb14-203" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>format <span class="op">=</span> <span class="st">"csv"</span><span class="op">,</span></span>
-<span id="cb14-204"><a href="#cb14-204" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>path <span class="op">=</span> filepath<span class="op">.</span>string<span class="op">(),</span></span>
-<span id="cb14-205"><a href="#cb14-205" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>backup_existing <span class="op">=</span> <span class="kw">true</span><span class="op">,</span></span>
-<span id="cb14-206"><a href="#cb14-206" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
-<span id="cb14-207"><a href="#cb14-207" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-208"><a href="#cb14-208" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> cmd<span class="op">.</span>execute<span class="op">(</span>ctx<span class="op">);</span></span>
-<span id="cb14-209"><a href="#cb14-209" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>success<span class="op">);</span></span>
-<span id="cb14-210"><a href="#cb14-210" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-211"><a href="#cb14-211" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> backup_path <span class="op">=</span> <span class="bu">std::</span>filesystem::path<span class="op">(</span>filepath<span class="op">.</span>string<span class="op">()</span> <span class="op">+</span> <span class="st">".bak"</span><span class="op">);</span></span>
-<span id="cb14-212"><a href="#cb14-212" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span><span class="bu">std::</span>filesystem::exists<span class="op">(</span>filepath<span class="op">));</span></span>
-<span id="cb14-213"><a href="#cb14-213" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span><span class="bu">std::</span>filesystem::exists<span class="op">(</span>backup_path<span class="op">));</span></span>
-<span id="cb14-214"><a href="#cb14-214" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-215"><a href="#cb14-215" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>ifstream backup_stream<span class="op">(</span>backup_path<span class="op">);</span></span>
-<span id="cb14-216"><a href="#cb14-216" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> backup_content<span class="op">(</span></span>
-<span id="cb14-217"><a href="#cb14-217" aria-hidden="true" tabindex="-1"></a>            <span class="op">(</span><span class="bu">std::</span>istreambuf_iterator<span class="op">&lt;</span><span class="dt">char</span><span class="op">&gt;(</span>backup_stream<span class="op">)),</span></span>
-<span id="cb14-218"><a href="#cb14-218" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>istreambuf_iterator<span class="op">&lt;</span><span class="dt">char</span><span class="op">&gt;());</span></span>
-<span id="cb14-219"><a href="#cb14-219" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>backup_content <span class="op">==</span> <span class="st">"original file</span><span class="sc">\n</span><span class="st">"</span><span class="op">);</span></span>
-<span id="cb14-220"><a href="#cb14-220" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-221"><a href="#cb14-221" aria-hidden="true" tabindex="-1"></a>    cleanupTempDir<span class="op">(</span>temp_dir<span class="op">);</span></span>
-<span id="cb14-222"><a href="#cb14-222" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb14-223"><a href="#cb14-223" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-224"><a href="#cb14-224" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SavePathResolver prefers matching file origin"</span><span class="op">,</span></span>
-<span id="cb14-225"><a href="#cb14-225" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData][resolver]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb14-226"><a href="#cb14-226" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> temp_dir <span class="op">=</span> makeTempDir<span class="op">();</span></span>
-<span id="cb14-227"><a href="#cb14-227" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> ctx <span class="op">=</span> makeContextWithPoints<span class="op">(</span><span class="st">"pts"</span><span class="op">);</span></span>
-<span id="cb14-228"><a href="#cb14-228" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> origin_path <span class="op">=</span> <span class="op">(</span>temp_dir <span class="op">/</span> <span class="st">"source_points.csv"</span><span class="op">).</span>string<span class="op">();</span></span>
-<span id="cb14-229"><a href="#cb14-229" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-230"><a href="#cb14-230" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Entity<span class="op">::</span>Lineage<span class="op">::</span>FileOrigin origin<span class="op">{</span></span>
-<span id="cb14-231"><a href="#cb14-231" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="va">m_path</span> <span class="op">=</span> origin_path<span class="op">,</span></span>
-<span id="cb14-232"><a href="#cb14-232" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="va">m_format</span> <span class="op">=</span> <span class="st">"csv"</span><span class="op">,</span></span>
-<span id="cb14-233"><a href="#cb14-233" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="dt">m_data_type</span> <span class="op">=</span> <span class="st">"PointData"</span><span class="op">};</span></span>
-<span id="cb14-234"><a href="#cb14-234" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Entity<span class="op">::</span>Lineage<span class="op">::</span>LineageRecorder<span class="op">::</span>recordFileSource<span class="op">(</span></span>
-<span id="cb14-235"><a href="#cb14-235" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>ctx<span class="op">.</span>data_manager<span class="op">-&gt;</span>getLineageRegistry<span class="op">(),</span> <span class="st">"pts"</span><span class="op">,</span> <span class="bu">std::</span>move<span class="op">(</span>origin<span class="op">));</span></span>
-<span id="cb14-236"><a href="#cb14-236" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-237"><a href="#cb14-237" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> resolution <span class="op">=</span> resolveDefaultSavePath<span class="op">(</span></span>
-<span id="cb14-238"><a href="#cb14-238" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>ctx<span class="op">.</span>data_manager<span class="op">,</span> <span class="st">"pts"</span><span class="op">,</span> <span class="st">"csv"</span><span class="op">,</span> <span class="st">"fallback.csv"</span><span class="op">);</span></span>
-<span id="cb14-239"><a href="#cb14-239" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-240"><a href="#cb14-240" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>resolution<span class="op">.</span><span class="va">m_using_file_origin</span><span class="op">);</span></span>
-<span id="cb14-241"><a href="#cb14-241" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>resolution<span class="op">.</span><span class="va">m_path</span> <span class="op">==</span> origin_path<span class="op">);</span></span>
-<span id="cb14-242"><a href="#cb14-242" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>resolution<span class="op">.</span><span class="va">m_filename</span> <span class="op">==</span> <span class="st">"source_points.csv"</span><span class="op">);</span></span>
-<span id="cb14-243"><a href="#cb14-243" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-244"><a href="#cb14-244" aria-hidden="true" tabindex="-1"></a>    cleanupTempDir<span class="op">(</span>temp_dir<span class="op">);</span></span>
-<span id="cb14-245"><a href="#cb14-245" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb14-246"><a href="#cb14-246" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-247"><a href="#cb14-247" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SaveData errors on unknown data_key"</span><span class="op">,</span></span>
-<span id="cb14-248"><a href="#cb14-248" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb14-249"><a href="#cb14-249" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> dm <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataManager<span class="op">&gt;();</span></span>
-<span id="cb14-250"><a href="#cb14-250" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-251"><a href="#cb14-251" aria-hidden="true" tabindex="-1"></a>    CommandContext ctx<span class="op">;</span></span>
-<span id="cb14-252"><a href="#cb14-252" aria-hidden="true" tabindex="-1"></a>    ctx<span class="op">.</span>data_manager <span class="op">=</span> dm<span class="op">;</span></span>
-<span id="cb14-253"><a href="#cb14-253" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-254"><a href="#cb14-254" aria-hidden="true" tabindex="-1"></a>    SaveData cmd<span class="op">(</span>SaveDataParams<span class="op">{</span></span>
-<span id="cb14-255"><a href="#cb14-255" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>data_key <span class="op">=</span> <span class="st">"nonexistent"</span><span class="op">,</span></span>
-<span id="cb14-256"><a href="#cb14-256" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>format <span class="op">=</span> <span class="st">"csv"</span><span class="op">,</span></span>
-<span id="cb14-257"><a href="#cb14-257" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>path <span class="op">=</span> <span class="st">"/tmp/should_not_exist.csv"</span><span class="op">,</span></span>
-<span id="cb14-258"><a href="#cb14-258" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
-<span id="cb14-259"><a href="#cb14-259" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-260"><a href="#cb14-260" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> cmd<span class="op">.</span>execute<span class="op">(</span>ctx<span class="op">);</span></span>
-<span id="cb14-261"><a href="#cb14-261" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>result<span class="op">.</span>success<span class="op">);</span></span>
-<span id="cb14-262"><a href="#cb14-262" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>error_message<span class="op">.</span>find<span class="op">(</span><span class="st">"not found"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
-<span id="cb14-263"><a href="#cb14-263" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb14-264"><a href="#cb14-264" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-265"><a href="#cb14-265" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SaveData errors on unsupported format"</span><span class="op">,</span></span>
-<span id="cb14-266"><a href="#cb14-266" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb14-267"><a href="#cb14-267" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> ctx <span class="op">=</span> makeContextWithPoints<span class="op">(</span><span class="st">"pts"</span><span class="op">);</span></span>
-<span id="cb14-268"><a href="#cb14-268" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-269"><a href="#cb14-269" aria-hidden="true" tabindex="-1"></a>    SaveData cmd<span class="op">(</span>SaveDataParams<span class="op">{</span></span>
-<span id="cb14-270"><a href="#cb14-270" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>data_key <span class="op">=</span> <span class="st">"pts"</span><span class="op">,</span></span>
-<span id="cb14-271"><a href="#cb14-271" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>format <span class="op">=</span> <span class="st">"totally_fake_format"</span><span class="op">,</span></span>
-<span id="cb14-272"><a href="#cb14-272" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>path <span class="op">=</span> <span class="st">"/tmp/should_not_exist.xyz"</span><span class="op">,</span></span>
-<span id="cb14-273"><a href="#cb14-273" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
-<span id="cb14-274"><a href="#cb14-274" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-275"><a href="#cb14-275" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> cmd<span class="op">.</span>execute<span class="op">(</span>ctx<span class="op">);</span></span>
-<span id="cb14-276"><a href="#cb14-276" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>result<span class="op">.</span>success<span class="op">);</span></span>
-<span id="cb14-277"><a href="#cb14-277" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb14-278"><a href="#cb14-278" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-279"><a href="#cb14-279" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SaveData toJson produces valid JSON"</span><span class="op">,</span></span>
-<span id="cb14-280"><a href="#cb14-280" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb14-281"><a href="#cb14-281" aria-hidden="true" tabindex="-1"></a>    SaveData cmd<span class="op">(</span>SaveDataParams<span class="op">{</span></span>
-<span id="cb14-282"><a href="#cb14-282" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>data_key <span class="op">=</span> <span class="st">"my_points"</span><span class="op">,</span></span>
-<span id="cb14-283"><a href="#cb14-283" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>format <span class="op">=</span> <span class="st">"csv"</span><span class="op">,</span></span>
-<span id="cb14-284"><a href="#cb14-284" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>path <span class="op">=</span> <span class="st">"/tmp/output.csv"</span><span class="op">,</span></span>
-<span id="cb14-285"><a href="#cb14-285" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
-<span id="cb14-286"><a href="#cb14-286" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-287"><a href="#cb14-287" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> json_str <span class="op">=</span> cmd<span class="op">.</span>toJson<span class="op">();</span></span>
-<span id="cb14-288"><a href="#cb14-288" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>json_str<span class="op">.</span>empty<span class="op">());</span></span>
-<span id="cb14-289"><a href="#cb14-289" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-290"><a href="#cb14-290" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Should be parseable</span></span>
-<span id="cb14-291"><a href="#cb14-291" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> parsed <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>read<span class="op">&lt;</span>SaveDataParams<span class="op">&gt;(</span>json_str<span class="op">);</span></span>
-<span id="cb14-292"><a href="#cb14-292" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>parsed<span class="op">);</span></span>
-<span id="cb14-293"><a href="#cb14-293" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-294"><a href="#cb14-294" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> val <span class="op">=</span> parsed<span class="op">.</span>value<span class="op">();</span></span>
-<span id="cb14-295"><a href="#cb14-295" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>val<span class="op">.</span>data_key <span class="op">==</span> <span class="st">"my_points"</span><span class="op">);</span></span>
-<span id="cb14-296"><a href="#cb14-296" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>val<span class="op">.</span>format <span class="op">==</span> <span class="st">"csv"</span><span class="op">);</span></span>
-<span id="cb14-297"><a href="#cb14-297" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>val<span class="op">.</span>path <span class="op">==</span> <span class="st">"/tmp/output.csv"</span><span class="op">);</span></span>
-<span id="cb14-298"><a href="#cb14-298" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb14-299"><a href="#cb14-299" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-300"><a href="#cb14-300" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SaveData in a command sequence via factory"</span><span class="op">,</span></span>
-<span id="cb14-301"><a href="#cb14-301" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb14-302"><a href="#cb14-302" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> temp_dir <span class="op">=</span> makeTempDir<span class="op">();</span></span>
-<span id="cb14-303"><a href="#cb14-303" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> ctx <span class="op">=</span> makeContextWithPoints<span class="op">(</span><span class="st">"pts"</span><span class="op">);</span></span>
-<span id="cb14-304"><a href="#cb14-304" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-305"><a href="#cb14-305" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> filepath <span class="op">=</span> <span class="op">(</span>temp_dir <span class="op">/</span> <span class="st">"factory_save.csv"</span><span class="op">).</span>string<span class="op">();</span></span>
-<span id="cb14-306"><a href="#cb14-306" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-307"><a href="#cb14-307" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create via factory (as would happen in a pipeline)</span></span>
-<span id="cb14-308"><a href="#cb14-308" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{</span></span>
-<span id="cb14-309"><a href="#cb14-309" aria-hidden="true" tabindex="-1"></a><span class="vs">        "data_key": "pts",</span></span>
-<span id="cb14-310"><a href="#cb14-310" aria-hidden="true" tabindex="-1"></a><span class="vs">        "format": "csv",</span></span>
-<span id="cb14-311"><a href="#cb14-311" aria-hidden="true" tabindex="-1"></a><span class="vs">        "path": "</span><span class="st">)"</span> <span class="op">+</span> filepath <span class="op">+</span></span>
-<span id="cb14-312"><a href="#cb14-312" aria-hidden="true" tabindex="-1"></a>                      <span class="st">R"(</span><span class="vs">"</span></span>
-<span id="cb14-313"><a href="#cb14-313" aria-hidden="true" tabindex="-1"></a><span class="vs">    }</span><span class="st">)"</span><span class="op">;</span></span>
-<span id="cb14-314"><a href="#cb14-314" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> generic <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>read<span class="op">&lt;</span>rfl<span class="op">::</span>Generic<span class="op">&gt;(</span>json<span class="op">).</span>value<span class="op">();</span></span>
-<span id="cb14-315"><a href="#cb14-315" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> cmd <span class="op">=</span> createCommand<span class="op">(</span><span class="st">"SaveData"</span><span class="op">,</span> generic<span class="op">);</span></span>
-<span id="cb14-316"><a href="#cb14-316" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>cmd <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb14-317"><a href="#cb14-317" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-318"><a href="#cb14-318" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> cmd<span class="op">-&gt;</span>execute<span class="op">(</span>ctx<span class="op">);</span></span>
-<span id="cb14-319"><a href="#cb14-319" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>success<span class="op">);</span></span>
-<span id="cb14-320"><a href="#cb14-320" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span><span class="bu">std::</span>filesystem::exists<span class="op">(</span>filepath<span class="op">));</span></span>
-<span id="cb14-321"><a href="#cb14-321" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-322"><a href="#cb14-322" aria-hidden="true" tabindex="-1"></a>    cleanupTempDir<span class="op">(</span>temp_dir<span class="op">);</span></span>
-<span id="cb14-323"><a href="#cb14-323" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb14-324"><a href="#cb14-324" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-325"><a href="#cb14-325" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"getCommandInfo returns metadata for SaveData"</span><span class="op">,</span></span>
-<span id="cb14-326"><a href="#cb14-326" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData][factory]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb14-327"><a href="#cb14-327" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> info <span class="op">=</span> getCommandInfo<span class="op">(</span><span class="st">"SaveData"</span><span class="op">);</span></span>
-<span id="cb14-328"><a href="#cb14-328" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>info<span class="op">.</span>has_value<span class="op">());</span></span>
-<span id="cb14-329"><a href="#cb14-329" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>info<span class="op">-&gt;</span>name <span class="op">==</span> <span class="st">"SaveData"</span><span class="op">);</span></span>
-<span id="cb14-330"><a href="#cb14-330" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>info<span class="op">-&gt;</span>category <span class="op">==</span> <span class="st">"persistence"</span><span class="op">);</span></span>
-<span id="cb14-331"><a href="#cb14-331" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>info<span class="op">-&gt;</span>supports_undo<span class="op">);</span></span>
-<span id="cb14-332"><a href="#cb14-332" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>info<span class="op">-&gt;</span>parameter_schema<span class="op">.</span>fields<span class="op">.</span>empty<span class="op">());</span></span>
-<span id="cb14-333"><a href="#cb14-333" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Commands/IO/SaveData.hpp"</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Commands/Core/CommandContext.hpp"</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Commands/Core/CommandFactory.hpp"</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Commands/IO/SavePathResolver.hpp"</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager/DataManager.hpp"</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager/Lineage/LineageRecorder.hpp"</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Lines/Line_Data.hpp"</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Points/Point_Data.hpp"</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"IO/core/LoaderRegistration.hpp"</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"IO/core/LoaderRegistry.hpp"</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"IO/formats/CSV/points/Point_Data_CSV.hpp"</span></span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Entity/EntityTypes.hpp"</span></span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Observer/Observer_Data.hpp"</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/catch_test_macros.hpp&gt;</span></span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;rfl/json.hpp&gt;</span></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;filesystem&gt;</span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;fstream&gt;</span></span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;utility&gt;</span></span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> commands<span class="op">;</span></span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a><span class="co">// Helper: ensure internal loaders are registered on the global singleton</span></span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb16-32"><a href="#cb16-32" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="op">{</span></span>
+<span id="cb16-33"><a href="#cb16-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-34"><a href="#cb16-34" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> RegistryInitializer <span class="op">{</span></span>
+<span id="cb16-35"><a href="#cb16-35" aria-hidden="true" tabindex="-1"></a>    RegistryInitializer<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb16-36"><a href="#cb16-36" aria-hidden="true" tabindex="-1"></a>        <span class="at">static</span> <span class="dt">bool</span> initialized <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb16-37"><a href="#cb16-37" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>initialized<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-38"><a href="#cb16-38" aria-hidden="true" tabindex="-1"></a>            registerInternalLoaders<span class="op">();</span></span>
+<span id="cb16-39"><a href="#cb16-39" aria-hidden="true" tabindex="-1"></a>            initialized <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb16-40"><a href="#cb16-40" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb16-41"><a href="#cb16-41" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb16-42"><a href="#cb16-42" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb16-43"><a href="#cb16-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-44"><a href="#cb16-44" aria-hidden="true" tabindex="-1"></a><span class="op">[[</span><span class="at">maybe_unused</span><span class="op">]]</span> RegistryInitializer <span class="at">const</span> <span class="va">g_init</span><span class="op">{};</span></span>
+<span id="cb16-45"><a href="#cb16-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-46"><a href="#cb16-46" aria-hidden="true" tabindex="-1"></a>CommandContext makeContextWithPoints<span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-47"><a href="#cb16-47" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> dm <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataManager<span class="op">&gt;();</span></span>
+<span id="cb16-48"><a href="#cb16-48" aria-hidden="true" tabindex="-1"></a>    dm<span class="op">-&gt;</span>setData<span class="op">&lt;</span>PointData<span class="op">&gt;(</span>key<span class="op">,</span> TimeKey<span class="op">(</span><span class="st">"time"</span><span class="op">));</span></span>
+<span id="cb16-49"><a href="#cb16-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-50"><a href="#cb16-50" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> pts <span class="op">=</span> dm<span class="op">-&gt;</span>getData<span class="op">&lt;</span>PointData<span class="op">&gt;(</span>key<span class="op">);</span></span>
+<span id="cb16-51"><a href="#cb16-51" aria-hidden="true" tabindex="-1"></a>    pts<span class="op">-&gt;</span>addEntryAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">0</span><span class="op">),</span></span>
+<span id="cb16-52"><a href="#cb16-52" aria-hidden="true" tabindex="-1"></a>                        Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;{</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">2.0</span><span class="bu">f</span><span class="op">},</span></span>
+<span id="cb16-53"><a href="#cb16-53" aria-hidden="true" tabindex="-1"></a>                        EntityId<span class="op">(</span><span class="dv">1</span><span class="op">),</span> NotifyObservers<span class="op">::</span>No<span class="op">);</span></span>
+<span id="cb16-54"><a href="#cb16-54" aria-hidden="true" tabindex="-1"></a>    pts<span class="op">-&gt;</span>addEntryAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">5</span><span class="op">),</span></span>
+<span id="cb16-55"><a href="#cb16-55" aria-hidden="true" tabindex="-1"></a>                        Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;{</span><span class="fl">3.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">4.0</span><span class="bu">f</span><span class="op">},</span></span>
+<span id="cb16-56"><a href="#cb16-56" aria-hidden="true" tabindex="-1"></a>                        EntityId<span class="op">(</span><span class="dv">2</span><span class="op">),</span> NotifyObservers<span class="op">::</span>No<span class="op">);</span></span>
+<span id="cb16-57"><a href="#cb16-57" aria-hidden="true" tabindex="-1"></a>    pts<span class="op">-&gt;</span>addEntryAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">10</span><span class="op">),</span></span>
+<span id="cb16-58"><a href="#cb16-58" aria-hidden="true" tabindex="-1"></a>                        Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;{</span><span class="fl">5.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">6.0</span><span class="bu">f</span><span class="op">},</span></span>
+<span id="cb16-59"><a href="#cb16-59" aria-hidden="true" tabindex="-1"></a>                        EntityId<span class="op">(</span><span class="dv">3</span><span class="op">),</span> NotifyObservers<span class="op">::</span>No<span class="op">);</span></span>
+<span id="cb16-60"><a href="#cb16-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-61"><a href="#cb16-61" aria-hidden="true" tabindex="-1"></a>    CommandContext ctx<span class="op">;</span></span>
+<span id="cb16-62"><a href="#cb16-62" aria-hidden="true" tabindex="-1"></a>    ctx<span class="op">.</span>data_manager <span class="op">=</span> dm<span class="op">;</span></span>
+<span id="cb16-63"><a href="#cb16-63" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ctx<span class="op">;</span></span>
+<span id="cb16-64"><a href="#cb16-64" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-65"><a href="#cb16-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-66"><a href="#cb16-66" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>filesystem::path makeTempDir<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb16-67"><a href="#cb16-67" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> dir <span class="op">=</span> <span class="bu">std::</span>filesystem::temp_directory_path<span class="op">()</span> <span class="op">/</span> <span class="st">"whisker_save_data_test"</span><span class="op">;</span></span>
+<span id="cb16-68"><a href="#cb16-68" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>filesystem::create_directories<span class="op">(</span>dir<span class="op">);</span></span>
+<span id="cb16-69"><a href="#cb16-69" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> dir<span class="op">;</span></span>
+<span id="cb16-70"><a href="#cb16-70" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-71"><a href="#cb16-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-72"><a href="#cb16-72" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> cleanupTempDir<span class="op">(</span><span class="bu">std::</span>filesystem::path <span class="at">const</span> <span class="op">&amp;</span> dir<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-73"><a href="#cb16-73" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>error_code ec<span class="op">;</span></span>
+<span id="cb16-74"><a href="#cb16-74" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>filesystem::remove_all<span class="op">(</span>dir<span class="op">,</span> ec<span class="op">);</span></span>
+<span id="cb16-75"><a href="#cb16-75" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-76"><a href="#cb16-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-77"><a href="#cb16-77" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace</span></span>
+<span id="cb16-78"><a href="#cb16-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-79"><a href="#cb16-79" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb16-80"><a href="#cb16-80" aria-hidden="true" tabindex="-1"></a><span class="co">// Factory tests</span></span>
+<span id="cb16-81"><a href="#cb16-81" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb16-82"><a href="#cb16-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-83"><a href="#cb16-83" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"createCommand creates SaveData from valid params"</span><span class="op">,</span></span>
+<span id="cb16-84"><a href="#cb16-84" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData][factory]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-85"><a href="#cb16-85" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{</span></span>
+<span id="cb16-86"><a href="#cb16-86" aria-hidden="true" tabindex="-1"></a><span class="vs">        "data_key": "my_points",</span></span>
+<span id="cb16-87"><a href="#cb16-87" aria-hidden="true" tabindex="-1"></a><span class="vs">        "format": "csv",</span></span>
+<span id="cb16-88"><a href="#cb16-88" aria-hidden="true" tabindex="-1"></a><span class="vs">        "path": "/tmp/test_output.csv"</span></span>
+<span id="cb16-89"><a href="#cb16-89" aria-hidden="true" tabindex="-1"></a><span class="vs">    }</span><span class="st">)"</span><span class="op">;</span></span>
+<span id="cb16-90"><a href="#cb16-90" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> generic <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>read<span class="op">&lt;</span>rfl<span class="op">::</span>Generic<span class="op">&gt;(</span>json<span class="op">).</span>value<span class="op">();</span></span>
+<span id="cb16-91"><a href="#cb16-91" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> cmd <span class="op">=</span> createCommand<span class="op">(</span><span class="st">"SaveData"</span><span class="op">,</span> generic<span class="op">);</span></span>
+<span id="cb16-92"><a href="#cb16-92" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>cmd <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb16-93"><a href="#cb16-93" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>cmd<span class="op">-&gt;</span>commandName<span class="op">()</span> <span class="op">==</span> <span class="st">"SaveData"</span><span class="op">);</span></span>
+<span id="cb16-94"><a href="#cb16-94" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>cmd<span class="op">-&gt;</span>isUndoable<span class="op">());</span></span>
+<span id="cb16-95"><a href="#cb16-95" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-96"><a href="#cb16-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-97"><a href="#cb16-97" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"createCommand creates SaveData with format_options"</span><span class="op">,</span></span>
+<span id="cb16-98"><a href="#cb16-98" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData][factory]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-99"><a href="#cb16-99" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{</span></span>
+<span id="cb16-100"><a href="#cb16-100" aria-hidden="true" tabindex="-1"></a><span class="vs">        "data_key": "my_points",</span></span>
+<span id="cb16-101"><a href="#cb16-101" aria-hidden="true" tabindex="-1"></a><span class="vs">        "format": "csv",</span></span>
+<span id="cb16-102"><a href="#cb16-102" aria-hidden="true" tabindex="-1"></a><span class="vs">        "path": "/tmp/test_output.csv",</span></span>
+<span id="cb16-103"><a href="#cb16-103" aria-hidden="true" tabindex="-1"></a><span class="vs">        "format_options": {"delimiter": ";"}</span></span>
+<span id="cb16-104"><a href="#cb16-104" aria-hidden="true" tabindex="-1"></a><span class="vs">    }</span><span class="st">)"</span><span class="op">;</span></span>
+<span id="cb16-105"><a href="#cb16-105" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> generic <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>read<span class="op">&lt;</span>rfl<span class="op">::</span>Generic<span class="op">&gt;(</span>json<span class="op">).</span>value<span class="op">();</span></span>
+<span id="cb16-106"><a href="#cb16-106" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> cmd <span class="op">=</span> createCommand<span class="op">(</span><span class="st">"SaveData"</span><span class="op">,</span> generic<span class="op">);</span></span>
+<span id="cb16-107"><a href="#cb16-107" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>cmd <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb16-108"><a href="#cb16-108" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-109"><a href="#cb16-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-110"><a href="#cb16-110" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"createCommand applies DefaultIfMissing when unknown fields are present"</span><span class="op">,</span></span>
+<span id="cb16-111"><a href="#cb16-111" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData][factory]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-112"><a href="#cb16-112" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"not_a_valid_field": 42}</span><span class="st">)"</span><span class="op">;</span></span>
+<span id="cb16-113"><a href="#cb16-113" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> generic <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>read<span class="op">&lt;</span>rfl<span class="op">::</span>Generic<span class="op">&gt;(</span>json<span class="op">).</span>value<span class="op">();</span></span>
+<span id="cb16-114"><a href="#cb16-114" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> cmd <span class="op">=</span> createCommand<span class="op">(</span><span class="st">"SaveData"</span><span class="op">,</span> generic<span class="op">);</span></span>
+<span id="cb16-115"><a href="#cb16-115" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>cmd <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb16-116"><a href="#cb16-116" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>cmd<span class="op">-&gt;</span>commandName<span class="op">()</span> <span class="op">==</span> <span class="st">"SaveData"</span><span class="op">);</span></span>
+<span id="cb16-117"><a href="#cb16-117" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-118"><a href="#cb16-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-119"><a href="#cb16-119" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"isKnownCommandName recognizes SaveData"</span><span class="op">,</span></span>
+<span id="cb16-120"><a href="#cb16-120" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData][factory]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-121"><a href="#cb16-121" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>isKnownCommandName<span class="op">(</span><span class="st">"SaveData"</span><span class="op">));</span></span>
+<span id="cb16-122"><a href="#cb16-122" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-123"><a href="#cb16-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-124"><a href="#cb16-124" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb16-125"><a href="#cb16-125" aria-hidden="true" tabindex="-1"></a><span class="co">// Execution tests</span></span>
+<span id="cb16-126"><a href="#cb16-126" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb16-127"><a href="#cb16-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-128"><a href="#cb16-128" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SaveData saves PointData to CSV file"</span><span class="op">,</span></span>
+<span id="cb16-129"><a href="#cb16-129" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-130"><a href="#cb16-130" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> temp_dir <span class="op">=</span> makeTempDir<span class="op">();</span></span>
+<span id="cb16-131"><a href="#cb16-131" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> ctx <span class="op">=</span> makeContextWithPoints<span class="op">(</span><span class="st">"pts"</span><span class="op">);</span></span>
+<span id="cb16-132"><a href="#cb16-132" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-133"><a href="#cb16-133" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> filepath <span class="op">=</span> <span class="op">(</span>temp_dir <span class="op">/</span> <span class="st">"points.csv"</span><span class="op">).</span>string<span class="op">();</span></span>
+<span id="cb16-134"><a href="#cb16-134" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-135"><a href="#cb16-135" aria-hidden="true" tabindex="-1"></a>    SaveData cmd<span class="op">(</span>SaveDataParams<span class="op">{</span></span>
+<span id="cb16-136"><a href="#cb16-136" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>data_key <span class="op">=</span> <span class="st">"pts"</span><span class="op">,</span></span>
+<span id="cb16-137"><a href="#cb16-137" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>format <span class="op">=</span> <span class="st">"csv"</span><span class="op">,</span></span>
+<span id="cb16-138"><a href="#cb16-138" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>path <span class="op">=</span> filepath<span class="op">,</span></span>
+<span id="cb16-139"><a href="#cb16-139" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb16-140"><a href="#cb16-140" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-141"><a href="#cb16-141" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> cmd<span class="op">.</span>execute<span class="op">(</span>ctx<span class="op">);</span></span>
+<span id="cb16-142"><a href="#cb16-142" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>success<span class="op">);</span></span>
+<span id="cb16-143"><a href="#cb16-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-144"><a href="#cb16-144" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Verify the file was created</span></span>
+<span id="cb16-145"><a href="#cb16-145" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span><span class="bu">std::</span>filesystem::exists<span class="op">(</span>filepath<span class="op">));</span></span>
+<span id="cb16-146"><a href="#cb16-146" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-147"><a href="#cb16-147" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Verify the file has content</span></span>
+<span id="cb16-148"><a href="#cb16-148" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>ifstream ifs<span class="op">(</span>filepath<span class="op">);</span></span>
+<span id="cb16-149"><a href="#cb16-149" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string content<span class="op">((</span><span class="bu">std::</span>istreambuf_iterator<span class="op">&lt;</span><span class="dt">char</span><span class="op">&gt;(</span>ifs<span class="op">)),</span></span>
+<span id="cb16-150"><a href="#cb16-150" aria-hidden="true" tabindex="-1"></a>                        <span class="bu">std::</span>istreambuf_iterator<span class="op">&lt;</span><span class="dt">char</span><span class="op">&gt;());</span></span>
+<span id="cb16-151"><a href="#cb16-151" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>content<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb16-152"><a href="#cb16-152" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-153"><a href="#cb16-153" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Verify it contains the expected data (3 points + header)</span></span>
+<span id="cb16-154"><a href="#cb16-154" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> line_count <span class="op">=</span> <span class="bu">std::</span>count<span class="op">(</span>content<span class="op">.</span>begin<span class="op">(),</span> content<span class="op">.</span>end<span class="op">(),</span> <span class="ch">'</span><span class="sc">\n</span><span class="ch">'</span><span class="op">);</span></span>
+<span id="cb16-155"><a href="#cb16-155" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>line_count <span class="op">&gt;=</span> <span class="dv">3</span><span class="op">);</span><span class="co">// 3 data lines (plus possibly a header)</span></span>
+<span id="cb16-156"><a href="#cb16-156" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-157"><a href="#cb16-157" aria-hidden="true" tabindex="-1"></a>    cleanupTempDir<span class="op">(</span>temp_dir<span class="op">);</span></span>
+<span id="cb16-158"><a href="#cb16-158" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-159"><a href="#cb16-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-160"><a href="#cb16-160" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SaveData round-trips PointData through CSV"</span><span class="op">,</span></span>
+<span id="cb16-161"><a href="#cb16-161" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-162"><a href="#cb16-162" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> temp_dir <span class="op">=</span> makeTempDir<span class="op">();</span></span>
+<span id="cb16-163"><a href="#cb16-163" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> ctx <span class="op">=</span> makeContextWithPoints<span class="op">(</span><span class="st">"pts"</span><span class="op">);</span></span>
+<span id="cb16-164"><a href="#cb16-164" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-165"><a href="#cb16-165" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> filepath <span class="op">=</span> <span class="op">(</span>temp_dir <span class="op">/</span> <span class="st">"roundtrip.csv"</span><span class="op">).</span>string<span class="op">();</span></span>
+<span id="cb16-166"><a href="#cb16-166" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-167"><a href="#cb16-167" aria-hidden="true" tabindex="-1"></a>    SaveData cmd<span class="op">(</span>SaveDataParams<span class="op">{</span></span>
+<span id="cb16-168"><a href="#cb16-168" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>data_key <span class="op">=</span> <span class="st">"pts"</span><span class="op">,</span></span>
+<span id="cb16-169"><a href="#cb16-169" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>format <span class="op">=</span> <span class="st">"csv"</span><span class="op">,</span></span>
+<span id="cb16-170"><a href="#cb16-170" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>path <span class="op">=</span> filepath<span class="op">,</span></span>
+<span id="cb16-171"><a href="#cb16-171" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb16-172"><a href="#cb16-172" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-173"><a href="#cb16-173" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> cmd<span class="op">.</span>execute<span class="op">(</span>ctx<span class="op">);</span></span>
+<span id="cb16-174"><a href="#cb16-174" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>success<span class="op">);</span></span>
+<span id="cb16-175"><a href="#cb16-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-176"><a href="#cb16-176" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Load back via direct loader (CSV saver uses comma delimiter by default)</span></span>
+<span id="cb16-177"><a href="#cb16-177" aria-hidden="true" tabindex="-1"></a>    CSVPointLoaderOptions load_opts<span class="op">;</span></span>
+<span id="cb16-178"><a href="#cb16-178" aria-hidden="true" tabindex="-1"></a>    load_opts<span class="op">.</span>filepath <span class="op">=</span> filepath<span class="op">;</span></span>
+<span id="cb16-179"><a href="#cb16-179" aria-hidden="true" tabindex="-1"></a>    load_opts<span class="op">.</span>column_delim <span class="op">=</span> <span class="st">","</span><span class="op">;</span></span>
+<span id="cb16-180"><a href="#cb16-180" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> loaded <span class="op">=</span> load<span class="op">(</span>load_opts<span class="op">);</span></span>
+<span id="cb16-181"><a href="#cb16-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-182"><a href="#cb16-182" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Original had 3 frames with one point each</span></span>
+<span id="cb16-183"><a href="#cb16-183" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>loaded<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb16-184"><a href="#cb16-184" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>loaded<span class="op">.</span>count<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">0</span><span class="op">))</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb16-185"><a href="#cb16-185" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>loaded<span class="op">.</span>count<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">5</span><span class="op">))</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb16-186"><a href="#cb16-186" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>loaded<span class="op">.</span>count<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">10</span><span class="op">))</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb16-187"><a href="#cb16-187" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-188"><a href="#cb16-188" aria-hidden="true" tabindex="-1"></a>    cleanupTempDir<span class="op">(</span>temp_dir<span class="op">);</span></span>
+<span id="cb16-189"><a href="#cb16-189" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-190"><a href="#cb16-190" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-191"><a href="#cb16-191" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SaveData backs up existing single-file target when requested"</span><span class="op">,</span></span>
+<span id="cb16-192"><a href="#cb16-192" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData][backup]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-193"><a href="#cb16-193" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> temp_dir <span class="op">=</span> makeTempDir<span class="op">();</span></span>
+<span id="cb16-194"><a href="#cb16-194" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> ctx <span class="op">=</span> makeContextWithPoints<span class="op">(</span><span class="st">"pts"</span><span class="op">);</span></span>
+<span id="cb16-195"><a href="#cb16-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-196"><a href="#cb16-196" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> filepath <span class="op">=</span> temp_dir <span class="op">/</span> <span class="st">"points_with_backup.csv"</span><span class="op">;</span></span>
+<span id="cb16-197"><a href="#cb16-197" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb16-198"><a href="#cb16-198" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>ofstream existing<span class="op">(</span>filepath<span class="op">);</span></span>
+<span id="cb16-199"><a href="#cb16-199" aria-hidden="true" tabindex="-1"></a>        existing <span class="op">&lt;&lt;</span> <span class="st">"original file</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb16-200"><a href="#cb16-200" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb16-201"><a href="#cb16-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-202"><a href="#cb16-202" aria-hidden="true" tabindex="-1"></a>    SaveData cmd<span class="op">(</span>SaveDataParams<span class="op">{</span></span>
+<span id="cb16-203"><a href="#cb16-203" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>data_key <span class="op">=</span> <span class="st">"pts"</span><span class="op">,</span></span>
+<span id="cb16-204"><a href="#cb16-204" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>format <span class="op">=</span> <span class="st">"csv"</span><span class="op">,</span></span>
+<span id="cb16-205"><a href="#cb16-205" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>path <span class="op">=</span> filepath<span class="op">.</span>string<span class="op">(),</span></span>
+<span id="cb16-206"><a href="#cb16-206" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>backup_existing <span class="op">=</span> <span class="kw">true</span><span class="op">,</span></span>
+<span id="cb16-207"><a href="#cb16-207" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb16-208"><a href="#cb16-208" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-209"><a href="#cb16-209" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> cmd<span class="op">.</span>execute<span class="op">(</span>ctx<span class="op">);</span></span>
+<span id="cb16-210"><a href="#cb16-210" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>success<span class="op">);</span></span>
+<span id="cb16-211"><a href="#cb16-211" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-212"><a href="#cb16-212" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> backup_path <span class="op">=</span> <span class="bu">std::</span>filesystem::path<span class="op">(</span>filepath<span class="op">.</span>string<span class="op">()</span> <span class="op">+</span> <span class="st">".bak"</span><span class="op">);</span></span>
+<span id="cb16-213"><a href="#cb16-213" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span><span class="bu">std::</span>filesystem::exists<span class="op">(</span>filepath<span class="op">));</span></span>
+<span id="cb16-214"><a href="#cb16-214" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span><span class="bu">std::</span>filesystem::exists<span class="op">(</span>backup_path<span class="op">));</span></span>
+<span id="cb16-215"><a href="#cb16-215" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-216"><a href="#cb16-216" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>ifstream backup_stream<span class="op">(</span>backup_path<span class="op">);</span></span>
+<span id="cb16-217"><a href="#cb16-217" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> backup_content<span class="op">(</span></span>
+<span id="cb16-218"><a href="#cb16-218" aria-hidden="true" tabindex="-1"></a>            <span class="op">(</span><span class="bu">std::</span>istreambuf_iterator<span class="op">&lt;</span><span class="dt">char</span><span class="op">&gt;(</span>backup_stream<span class="op">)),</span></span>
+<span id="cb16-219"><a href="#cb16-219" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>istreambuf_iterator<span class="op">&lt;</span><span class="dt">char</span><span class="op">&gt;());</span></span>
+<span id="cb16-220"><a href="#cb16-220" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>backup_content <span class="op">==</span> <span class="st">"original file</span><span class="sc">\n</span><span class="st">"</span><span class="op">);</span></span>
+<span id="cb16-221"><a href="#cb16-221" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-222"><a href="#cb16-222" aria-hidden="true" tabindex="-1"></a>    cleanupTempDir<span class="op">(</span>temp_dir<span class="op">);</span></span>
+<span id="cb16-223"><a href="#cb16-223" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-224"><a href="#cb16-224" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-225"><a href="#cb16-225" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SavePathResolver prefers matching file origin"</span><span class="op">,</span></span>
+<span id="cb16-226"><a href="#cb16-226" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData][resolver]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-227"><a href="#cb16-227" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> temp_dir <span class="op">=</span> makeTempDir<span class="op">();</span></span>
+<span id="cb16-228"><a href="#cb16-228" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> ctx <span class="op">=</span> makeContextWithPoints<span class="op">(</span><span class="st">"pts"</span><span class="op">);</span></span>
+<span id="cb16-229"><a href="#cb16-229" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> origin_path <span class="op">=</span> <span class="op">(</span>temp_dir <span class="op">/</span> <span class="st">"source_points.csv"</span><span class="op">).</span>string<span class="op">();</span></span>
+<span id="cb16-230"><a href="#cb16-230" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-231"><a href="#cb16-231" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Entity<span class="op">::</span>Lineage<span class="op">::</span>FileOrigin origin<span class="op">{</span></span>
+<span id="cb16-232"><a href="#cb16-232" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="va">m_path</span> <span class="op">=</span> origin_path<span class="op">,</span></span>
+<span id="cb16-233"><a href="#cb16-233" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="va">m_format</span> <span class="op">=</span> <span class="st">"csv"</span><span class="op">,</span></span>
+<span id="cb16-234"><a href="#cb16-234" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="dt">m_data_type</span> <span class="op">=</span> <span class="st">"PointData"</span><span class="op">};</span></span>
+<span id="cb16-235"><a href="#cb16-235" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Entity<span class="op">::</span>Lineage<span class="op">::</span>LineageRecorder<span class="op">::</span>recordFileSource<span class="op">(</span></span>
+<span id="cb16-236"><a href="#cb16-236" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>ctx<span class="op">.</span>data_manager<span class="op">-&gt;</span>getLineageRegistry<span class="op">(),</span> <span class="st">"pts"</span><span class="op">,</span> <span class="bu">std::</span>move<span class="op">(</span>origin<span class="op">));</span></span>
+<span id="cb16-237"><a href="#cb16-237" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-238"><a href="#cb16-238" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> resolution <span class="op">=</span> resolveDefaultSavePath<span class="op">(</span></span>
+<span id="cb16-239"><a href="#cb16-239" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>ctx<span class="op">.</span>data_manager<span class="op">,</span> <span class="st">"pts"</span><span class="op">,</span> <span class="st">"csv"</span><span class="op">,</span> <span class="st">"fallback.csv"</span><span class="op">);</span></span>
+<span id="cb16-240"><a href="#cb16-240" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-241"><a href="#cb16-241" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>resolution<span class="op">.</span><span class="va">m_using_file_origin</span><span class="op">);</span></span>
+<span id="cb16-242"><a href="#cb16-242" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>resolution<span class="op">.</span><span class="va">m_path</span> <span class="op">==</span> origin_path<span class="op">);</span></span>
+<span id="cb16-243"><a href="#cb16-243" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>resolution<span class="op">.</span><span class="va">m_filename</span> <span class="op">==</span> <span class="st">"source_points.csv"</span><span class="op">);</span></span>
+<span id="cb16-244"><a href="#cb16-244" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-245"><a href="#cb16-245" aria-hidden="true" tabindex="-1"></a>    cleanupTempDir<span class="op">(</span>temp_dir<span class="op">);</span></span>
+<span id="cb16-246"><a href="#cb16-246" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-247"><a href="#cb16-247" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-248"><a href="#cb16-248" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SavePathResolver prefers matching multi-file directory origin"</span><span class="op">,</span></span>
+<span id="cb16-249"><a href="#cb16-249" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData][resolver]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-250"><a href="#cb16-250" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> temp_dir <span class="op">=</span> makeTempDir<span class="op">();</span></span>
+<span id="cb16-251"><a href="#cb16-251" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> origin_dir <span class="op">=</span> temp_dir <span class="op">/</span> <span class="st">"line_frames"</span><span class="op">;</span></span>
+<span id="cb16-252"><a href="#cb16-252" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>filesystem::create_directories<span class="op">(</span>origin_dir<span class="op">);</span></span>
+<span id="cb16-253"><a href="#cb16-253" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-254"><a href="#cb16-254" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> dm <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataManager<span class="op">&gt;();</span></span>
+<span id="cb16-255"><a href="#cb16-255" aria-hidden="true" tabindex="-1"></a>    dm<span class="op">-&gt;</span>setOutputPath<span class="op">((</span>temp_dir <span class="op">/</span> <span class="st">"output"</span><span class="op">).</span>string<span class="op">());</span></span>
+<span id="cb16-256"><a href="#cb16-256" aria-hidden="true" tabindex="-1"></a>    dm<span class="op">-&gt;</span>setData<span class="op">&lt;</span>LineData<span class="op">&gt;(</span><span class="st">"lines"</span><span class="op">,</span> TimeKey<span class="op">(</span><span class="st">"time"</span><span class="op">));</span></span>
+<span id="cb16-257"><a href="#cb16-257" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-258"><a href="#cb16-258" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Entity<span class="op">::</span>Lineage<span class="op">::</span>FileOrigin origin<span class="op">{</span></span>
+<span id="cb16-259"><a href="#cb16-259" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="va">m_path</span> <span class="op">=</span> origin_dir<span class="op">.</span>string<span class="op">(),</span></span>
+<span id="cb16-260"><a href="#cb16-260" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="va">m_format</span> <span class="op">=</span> <span class="st">"csv"</span><span class="op">,</span></span>
+<span id="cb16-261"><a href="#cb16-261" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="dt">m_data_type</span> <span class="op">=</span> <span class="st">"LineData"</span><span class="op">,</span></span>
+<span id="cb16-262"><a href="#cb16-262" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span><span class="va">m_source_config_json</span> <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"multi_file": true, "format": "csv"}</span><span class="st">)"</span><span class="op">};</span></span>
+<span id="cb16-263"><a href="#cb16-263" aria-hidden="true" tabindex="-1"></a>    Neuralyzer<span class="op">::</span>Entity<span class="op">::</span>Lineage<span class="op">::</span>LineageRecorder<span class="op">::</span>recordFileSource<span class="op">(</span></span>
+<span id="cb16-264"><a href="#cb16-264" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>dm<span class="op">-&gt;</span>getLineageRegistry<span class="op">(),</span> <span class="st">"lines"</span><span class="op">,</span> <span class="bu">std::</span>move<span class="op">(</span>origin<span class="op">));</span></span>
+<span id="cb16-265"><a href="#cb16-265" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-266"><a href="#cb16-266" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> resolution <span class="op">=</span> resolveDefaultMultiFileSaveDir<span class="op">(</span></span>
+<span id="cb16-267"><a href="#cb16-267" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>dm<span class="op">,</span> <span class="st">"lines"</span><span class="op">,</span> <span class="st">"csv"</span><span class="op">,</span> <span class="st">"line_data"</span><span class="op">);</span></span>
+<span id="cb16-268"><a href="#cb16-268" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-269"><a href="#cb16-269" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>resolution<span class="op">.</span><span class="va">m_using_file_origin</span><span class="op">);</span></span>
+<span id="cb16-270"><a href="#cb16-270" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>resolution<span class="op">.</span><span class="va">m_parent_dir</span> <span class="op">==</span> origin_dir<span class="op">.</span>string<span class="op">());</span></span>
+<span id="cb16-271"><a href="#cb16-271" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-272"><a href="#cb16-272" aria-hidden="true" tabindex="-1"></a>    cleanupTempDir<span class="op">(</span>temp_dir<span class="op">);</span></span>
+<span id="cb16-273"><a href="#cb16-273" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-274"><a href="#cb16-274" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-275"><a href="#cb16-275" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SavePathResolver multi-file save falls back to output directory"</span><span class="op">,</span></span>
+<span id="cb16-276"><a href="#cb16-276" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData][resolver]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-277"><a href="#cb16-277" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> temp_dir <span class="op">=</span> makeTempDir<span class="op">();</span></span>
+<span id="cb16-278"><a href="#cb16-278" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> dm <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataManager<span class="op">&gt;();</span></span>
+<span id="cb16-279"><a href="#cb16-279" aria-hidden="true" tabindex="-1"></a>    dm<span class="op">-&gt;</span>setOutputPath<span class="op">((</span>temp_dir <span class="op">/</span> <span class="st">"output"</span><span class="op">).</span>string<span class="op">());</span></span>
+<span id="cb16-280"><a href="#cb16-280" aria-hidden="true" tabindex="-1"></a>    dm<span class="op">-&gt;</span>setData<span class="op">&lt;</span>LineData<span class="op">&gt;(</span><span class="st">"lines"</span><span class="op">,</span> TimeKey<span class="op">(</span><span class="st">"time"</span><span class="op">));</span></span>
+<span id="cb16-281"><a href="#cb16-281" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-282"><a href="#cb16-282" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> resolution <span class="op">=</span> resolveDefaultMultiFileSaveDir<span class="op">(</span></span>
+<span id="cb16-283"><a href="#cb16-283" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>dm<span class="op">,</span> <span class="st">"lines"</span><span class="op">,</span> <span class="st">"csv"</span><span class="op">,</span> <span class="st">"line_data"</span><span class="op">);</span></span>
+<span id="cb16-284"><a href="#cb16-284" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-285"><a href="#cb16-285" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>resolution<span class="op">.</span><span class="va">m_using_file_origin</span><span class="op">);</span></span>
+<span id="cb16-286"><a href="#cb16-286" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>resolution<span class="op">.</span><span class="va">m_parent_dir</span> <span class="op">==</span> <span class="op">(</span>temp_dir <span class="op">/</span> <span class="st">"output"</span> <span class="op">/</span> <span class="st">"line_data"</span><span class="op">).</span>string<span class="op">());</span></span>
+<span id="cb16-287"><a href="#cb16-287" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-288"><a href="#cb16-288" aria-hidden="true" tabindex="-1"></a>    cleanupTempDir<span class="op">(</span>temp_dir<span class="op">);</span></span>
+<span id="cb16-289"><a href="#cb16-289" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-290"><a href="#cb16-290" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-291"><a href="#cb16-291" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SaveData errors on unknown data_key"</span><span class="op">,</span></span>
+<span id="cb16-292"><a href="#cb16-292" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-293"><a href="#cb16-293" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> dm <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataManager<span class="op">&gt;();</span></span>
+<span id="cb16-294"><a href="#cb16-294" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-295"><a href="#cb16-295" aria-hidden="true" tabindex="-1"></a>    CommandContext ctx<span class="op">;</span></span>
+<span id="cb16-296"><a href="#cb16-296" aria-hidden="true" tabindex="-1"></a>    ctx<span class="op">.</span>data_manager <span class="op">=</span> dm<span class="op">;</span></span>
+<span id="cb16-297"><a href="#cb16-297" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-298"><a href="#cb16-298" aria-hidden="true" tabindex="-1"></a>    SaveData cmd<span class="op">(</span>SaveDataParams<span class="op">{</span></span>
+<span id="cb16-299"><a href="#cb16-299" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>data_key <span class="op">=</span> <span class="st">"nonexistent"</span><span class="op">,</span></span>
+<span id="cb16-300"><a href="#cb16-300" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>format <span class="op">=</span> <span class="st">"csv"</span><span class="op">,</span></span>
+<span id="cb16-301"><a href="#cb16-301" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>path <span class="op">=</span> <span class="st">"/tmp/should_not_exist.csv"</span><span class="op">,</span></span>
+<span id="cb16-302"><a href="#cb16-302" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb16-303"><a href="#cb16-303" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-304"><a href="#cb16-304" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> cmd<span class="op">.</span>execute<span class="op">(</span>ctx<span class="op">);</span></span>
+<span id="cb16-305"><a href="#cb16-305" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>result<span class="op">.</span>success<span class="op">);</span></span>
+<span id="cb16-306"><a href="#cb16-306" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>error_message<span class="op">.</span>find<span class="op">(</span><span class="st">"not found"</span><span class="op">)</span> <span class="op">!=</span> <span class="bu">std::</span>string::npos<span class="op">);</span></span>
+<span id="cb16-307"><a href="#cb16-307" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-308"><a href="#cb16-308" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-309"><a href="#cb16-309" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SaveData errors on unsupported format"</span><span class="op">,</span></span>
+<span id="cb16-310"><a href="#cb16-310" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-311"><a href="#cb16-311" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> ctx <span class="op">=</span> makeContextWithPoints<span class="op">(</span><span class="st">"pts"</span><span class="op">);</span></span>
+<span id="cb16-312"><a href="#cb16-312" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-313"><a href="#cb16-313" aria-hidden="true" tabindex="-1"></a>    SaveData cmd<span class="op">(</span>SaveDataParams<span class="op">{</span></span>
+<span id="cb16-314"><a href="#cb16-314" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>data_key <span class="op">=</span> <span class="st">"pts"</span><span class="op">,</span></span>
+<span id="cb16-315"><a href="#cb16-315" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>format <span class="op">=</span> <span class="st">"totally_fake_format"</span><span class="op">,</span></span>
+<span id="cb16-316"><a href="#cb16-316" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>path <span class="op">=</span> <span class="st">"/tmp/should_not_exist.xyz"</span><span class="op">,</span></span>
+<span id="cb16-317"><a href="#cb16-317" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb16-318"><a href="#cb16-318" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-319"><a href="#cb16-319" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> cmd<span class="op">.</span>execute<span class="op">(</span>ctx<span class="op">);</span></span>
+<span id="cb16-320"><a href="#cb16-320" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>result<span class="op">.</span>success<span class="op">);</span></span>
+<span id="cb16-321"><a href="#cb16-321" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-322"><a href="#cb16-322" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-323"><a href="#cb16-323" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SaveData toJson produces valid JSON"</span><span class="op">,</span></span>
+<span id="cb16-324"><a href="#cb16-324" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-325"><a href="#cb16-325" aria-hidden="true" tabindex="-1"></a>    SaveData <span class="at">const</span> cmd<span class="op">(</span>SaveDataParams<span class="op">{</span></span>
+<span id="cb16-326"><a href="#cb16-326" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>data_key <span class="op">=</span> <span class="st">"my_points"</span><span class="op">,</span></span>
+<span id="cb16-327"><a href="#cb16-327" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>format <span class="op">=</span> <span class="st">"csv"</span><span class="op">,</span></span>
+<span id="cb16-328"><a href="#cb16-328" aria-hidden="true" tabindex="-1"></a>            <span class="op">.</span>path <span class="op">=</span> <span class="st">"/tmp/output.csv"</span><span class="op">,</span></span>
+<span id="cb16-329"><a href="#cb16-329" aria-hidden="true" tabindex="-1"></a>    <span class="op">});</span></span>
+<span id="cb16-330"><a href="#cb16-330" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-331"><a href="#cb16-331" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> json_str <span class="op">=</span> cmd<span class="op">.</span>toJson<span class="op">();</span></span>
+<span id="cb16-332"><a href="#cb16-332" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>json_str<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb16-333"><a href="#cb16-333" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-334"><a href="#cb16-334" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Should be parseable</span></span>
+<span id="cb16-335"><a href="#cb16-335" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> parsed <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>read<span class="op">&lt;</span>SaveDataParams<span class="op">&gt;(</span>json_str<span class="op">);</span></span>
+<span id="cb16-336"><a href="#cb16-336" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>parsed<span class="op">);</span></span>
+<span id="cb16-337"><a href="#cb16-337" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-338"><a href="#cb16-338" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> val <span class="op">=</span> parsed<span class="op">.</span>value<span class="op">();</span></span>
+<span id="cb16-339"><a href="#cb16-339" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>val<span class="op">.</span>data_key <span class="op">==</span> <span class="st">"my_points"</span><span class="op">);</span></span>
+<span id="cb16-340"><a href="#cb16-340" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>val<span class="op">.</span>format <span class="op">==</span> <span class="st">"csv"</span><span class="op">);</span></span>
+<span id="cb16-341"><a href="#cb16-341" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>val<span class="op">.</span>path <span class="op">==</span> <span class="st">"/tmp/output.csv"</span><span class="op">);</span></span>
+<span id="cb16-342"><a href="#cb16-342" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-343"><a href="#cb16-343" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-344"><a href="#cb16-344" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SaveData in a command sequence via factory"</span><span class="op">,</span></span>
+<span id="cb16-345"><a href="#cb16-345" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-346"><a href="#cb16-346" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> temp_dir <span class="op">=</span> makeTempDir<span class="op">();</span></span>
+<span id="cb16-347"><a href="#cb16-347" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> ctx <span class="op">=</span> makeContextWithPoints<span class="op">(</span><span class="st">"pts"</span><span class="op">);</span></span>
+<span id="cb16-348"><a href="#cb16-348" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-349"><a href="#cb16-349" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> filepath <span class="op">=</span> <span class="op">(</span>temp_dir <span class="op">/</span> <span class="st">"factory_save.csv"</span><span class="op">).</span>string<span class="op">();</span></span>
+<span id="cb16-350"><a href="#cb16-350" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-351"><a href="#cb16-351" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create via factory (as would happen in a pipeline)</span></span>
+<span id="cb16-352"><a href="#cb16-352" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{</span></span>
+<span id="cb16-353"><a href="#cb16-353" aria-hidden="true" tabindex="-1"></a><span class="vs">        "data_key": "pts",</span></span>
+<span id="cb16-354"><a href="#cb16-354" aria-hidden="true" tabindex="-1"></a><span class="vs">        "format": "csv",</span></span>
+<span id="cb16-355"><a href="#cb16-355" aria-hidden="true" tabindex="-1"></a><span class="vs">        "path": "</span><span class="st">)"</span> <span class="op">+</span> filepath <span class="op">+</span></span>
+<span id="cb16-356"><a href="#cb16-356" aria-hidden="true" tabindex="-1"></a>                      <span class="st">R"(</span><span class="vs">"</span></span>
+<span id="cb16-357"><a href="#cb16-357" aria-hidden="true" tabindex="-1"></a><span class="vs">    }</span><span class="st">)"</span><span class="op">;</span></span>
+<span id="cb16-358"><a href="#cb16-358" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> generic <span class="op">=</span> rfl<span class="op">::</span>json<span class="op">::</span>read<span class="op">&lt;</span>rfl<span class="op">::</span>Generic<span class="op">&gt;(</span>json<span class="op">).</span>value<span class="op">();</span></span>
+<span id="cb16-359"><a href="#cb16-359" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> cmd <span class="op">=</span> createCommand<span class="op">(</span><span class="st">"SaveData"</span><span class="op">,</span> generic<span class="op">);</span></span>
+<span id="cb16-360"><a href="#cb16-360" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>cmd <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb16-361"><a href="#cb16-361" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-362"><a href="#cb16-362" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result <span class="op">=</span> cmd<span class="op">-&gt;</span>execute<span class="op">(</span>ctx<span class="op">);</span></span>
+<span id="cb16-363"><a href="#cb16-363" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">.</span>success<span class="op">);</span></span>
+<span id="cb16-364"><a href="#cb16-364" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span><span class="bu">std::</span>filesystem::exists<span class="op">(</span>filepath<span class="op">));</span></span>
+<span id="cb16-365"><a href="#cb16-365" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-366"><a href="#cb16-366" aria-hidden="true" tabindex="-1"></a>    cleanupTempDir<span class="op">(</span>temp_dir<span class="op">);</span></span>
+<span id="cb16-367"><a href="#cb16-367" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb16-368"><a href="#cb16-368" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-369"><a href="#cb16-369" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"getCommandInfo returns metadata for SaveData"</span><span class="op">,</span></span>
+<span id="cb16-370"><a href="#cb16-370" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[commands][SaveData][factory]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb16-371"><a href="#cb16-371" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> info <span class="op">=</span> getCommandInfo<span class="op">(</span><span class="st">"SaveData"</span><span class="op">);</span></span>
+<span id="cb16-372"><a href="#cb16-372" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>info<span class="op">.</span>has_value<span class="op">());</span></span>
+<span id="cb16-373"><a href="#cb16-373" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>info<span class="op">-&gt;</span>name <span class="op">==</span> <span class="st">"SaveData"</span><span class="op">);</span></span>
+<span id="cb16-374"><a href="#cb16-374" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>info<span class="op">-&gt;</span>category <span class="op">==</span> <span class="st">"persistence"</span><span class="op">);</span></span>
+<span id="cb16-375"><a href="#cb16-375" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>info<span class="op">-&gt;</span>supports_undo<span class="op">);</span></span>
+<span id="cb16-376"><a href="#cb16-376" aria-hidden="true" tabindex="-1"></a>    REQUIRE_FALSE<span class="op">(</span>info<span class="op">-&gt;</span>parameter_schema<span class="op">.</span>fields<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb16-377"><a href="#cb16-377" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-14 at 17:52:50 +0000</p>
+<p>Updated on 2026-09-14 at 20:30:51 +0000</p>
 
 
 </section>

@@ -398,7 +398,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>enum class</td>
-<td><strong><a href="../../api_generated/Files/MediaToolId_8hpp.html#enum-mediatoolid">MediaToolId</a></strong> { None, Select}<br>Active tool modes for the Media Viewer left toolbar.</td>
+<td><strong><a href="../../api_generated/Files/MediaToolId_8hpp.html#enum-mediatoolid">MediaToolId</a></strong> { None, Select, Pen, Eraser}<br>Active tool modes for the Media Viewer left toolbar.</td>
 </tr>
 </tbody>
 </table>
@@ -431,6 +431,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td></td>
 <td>Pointer / selection tool.</td>
 </tr>
+<tr class="odd">
+<td>Pen</td>
+<td></td>
+<td>Selected-line node editing (append / delete vertices)</td>
+</tr>
+<tr class="even">
+<td>Eraser</td>
+<td></td>
+<td>Brush-style eraser preview (hover circle only in current phase)</td>
+</tr>
 </tbody>
 </table>
 <p>Active tool modes for the Media Viewer left toolbar.</p>
@@ -446,13 +456,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> MediaToolId <span class="op">{</span></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    None<span class="op">,</span>  </span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    Select<span class="op">,</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="ex">Q_DECLARE_METATYPE</span><span class="op">(</span>MediaToolId<span class="op">)</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    Pen<span class="op">,</span>   </span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    Eraser </span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// MEDIA_TOOL_ID_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="ex">Q_DECLARE_METATYPE</span><span class="op">(</span>MediaToolId<span class="op">)</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// MEDIA_TOOL_ID_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-14 at 17:52:53 +0000</p>
+<p>Updated on 2026-09-14 at 20:30:54 +0000</p>
 
 
 </section>
