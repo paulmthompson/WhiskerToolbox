@@ -10,8 +10,8 @@
  * in various plot widgets and as a left ruler in the Media Viewer.
  */
 
-#include "CorePlotting/CoordinateTransform/AxisMapping.hpp"
 #include "Common/AxisTickLayout.hpp"
+#include "CorePlotting/CoordinateTransform/AxisMapping.hpp"
 
 #include <QColor>
 #include <QWidget>
@@ -140,9 +140,8 @@ public:
      * @param sender Object that emits the signal
      * @param signal Pointer to the signal member function
      */
-    template <typename SenderType>
-    void connectToRangeChanged(SenderType * sender, void (SenderType::*signal)())
-    {
+    template<typename SenderType>
+    void connectToRangeChanged(SenderType * sender, void (SenderType::*signal)()) {
         if (sender) {
             connect(sender, signal, this, [this]() { update(); });
         }
@@ -177,6 +176,7 @@ private:
     static constexpr int kTickWidth = 5;
     static constexpr int kMajorTickWidth = 8;
     static constexpr int kLabelOffset = 5;
+    static constexpr int kVerticalLabelGap = 6;///< Gap between tick line and nearest label edge
     static constexpr int kPlotThickness = 50;
     static constexpr int kRulerThickness = 24;
 

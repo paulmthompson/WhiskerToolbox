@@ -2,6 +2,7 @@
 
 #include "PlotZoomProfile.hpp"
 
+#include <QFontMetrics>
 #include <QPainter>
 #include <QString>
 
@@ -90,7 +91,7 @@ void VerticalAxisWidget::setTickConfig(Neuralyzer::Plots::AxisTickConfig config)
 }
 
 QSize VerticalAxisWidget::sizeHint() const {
-    return QSize(_thickness, 200);
+    return {_thickness, 200};
 }
 
 void VerticalAxisWidget::_applyDisplayModeDefaults() {
@@ -185,16 +186,22 @@ void VerticalAxisWidget::paintEvent(QPaintEvent * /* event */) {
 
             painter.setPen(_tickColor(v, tick_interval, is_zero, is_major));
 
-            QRect label_rect;
-            if (ruler_mode) {
-                label_rect = QRect(kLabelOffset + kMajorTickWidth, py - 7,
-                                   width() - kLabelOffset - kMajorTickWidth - 2, 14);
-                painter.drawText(label_rect, Qt::AlignLeft | Qt::AlignVCenter, label);
-            } else {
-                label_rect = QRect(kLabelOffset, py - 7,
-                                   width() - kLabelOffset - kMajorTickWidth - 2, 14);
-                painter.drawText(label_rect, Qt::AlignRight | Qt::AlignVCenter, label);
-            }
+            QFontMetrics const fm(painter.font());
+            int const text_width = fm.horizontalAdvance(label);
+            int const text_height = fm.height();
+
+            bool const axis_on_left = axis_x == 0;
+            int const label_anchor_x = axis_on_left ? (axis_x + tick_w + kLabelOffset)
+                                                    : (axis_x - tick_w - kLabelOffset);
+
+            // Rotated -90°, local +x extends upward on screen. Place the anchor so the
+            // bottom edge of the label sits kVerticalLabelGap pixels below the tick.
+            painter.save();
+            painter.translate(label_anchor_x, py + kVerticalLabelGap + text_width);
+            painter.rotate(-90.0);
+            QRect const label_rect(0, -text_height / 2, text_width + 2, text_height);
+            painter.drawText(label_rect, Qt::AlignLeft | Qt::AlignVCenter, label);
+            painter.restore();
         }
     }
 
@@ -235,13 +242,13 @@ int VerticalAxisWidget::_valueToPixelY(double value, double min, double max) con
 
 QColor VerticalAxisWidget::_tickColor(double value, double tick_interval, bool is_zero, bool is_major) const {
     if (is_zero) {
-        return QColor(255, 100, 100);
+        return {255, 100, 100};
     }
     if (value < 0.0) {
         return _negative_label_color;
     }
     if (is_major) {
-        return QColor(180, 180, 180);
+        return {180, 180, 180};
     }
-    return QColor(100, 100, 100);
+    return {100, 100, 100};
 }

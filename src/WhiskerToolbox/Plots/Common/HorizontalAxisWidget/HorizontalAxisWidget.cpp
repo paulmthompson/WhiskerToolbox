@@ -79,7 +79,7 @@ void HorizontalAxisWidget::setTickConfig(Neuralyzer::Plots::AxisTickConfig confi
 }
 
 QSize HorizontalAxisWidget::sizeHint() const {
-    return QSize(200, _thickness);
+    return {200, _thickness};
 }
 
 void HorizontalAxisWidget::_applyDisplayModeDefaults() {
@@ -166,8 +166,9 @@ void HorizontalAxisWidget::paintEvent(QPaintEvent * /* event */) {
 
             painter.setPen(_tickColor(v, tick_interval, is_zero, is_major));
 
-            QRect const label_rect(px - 30, kMajorTickHeight + kLabelOffset, 60, 14);
-            painter.drawText(label_rect, Qt::AlignHCenter | Qt::AlignTop, label);
+            int const label_y = std::max(0, tick_h / 2 - 7);
+            QRect const label_rect(px + kLabelOffset, label_y, width() - px - kLabelOffset, 14);
+            painter.drawText(label_rect, Qt::AlignLeft | Qt::AlignVCenter, label);
         }
     }
 
@@ -200,13 +201,13 @@ int HorizontalAxisWidget::_valueToPixelX(double value, double min, double max) c
 
 QColor HorizontalAxisWidget::_tickColor(double value, double tick_interval, bool is_zero, bool is_major) const {
     if (is_zero) {
-        return QColor(255, 100, 100);
+        return {255, 100, 100};
     }
     if (value < 0.0) {
         return _negative_label_color;
     }
     if (is_major) {
-        return QColor(180, 180, 180);
+        return {180, 180, 180};
     }
-    return QColor(100, 100, 100);
+    return {100, 100, 100};
 }
