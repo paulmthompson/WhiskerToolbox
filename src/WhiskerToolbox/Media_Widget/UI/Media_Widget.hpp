@@ -11,6 +11,7 @@
 class DataManager;
 class HorizontalAxisWidget;
 class Media_Window;
+class MediaToolOptionsBar_Widget;
 class MediaToolStrip_Widget;
 class MediaWidgetState;
 class EditorRegistry;
@@ -104,6 +105,7 @@ private:
     [[nodiscard]] bool _isUserZoomActive() const;
 
     void _createOptions();
+    void _pruneRemovedFeatures();
     void _createMediaWindow();
 
     // State synchronization helpers
@@ -111,10 +113,12 @@ private:
     void _syncFeatureEnabledToState(QString const & feature_key, QString const & data_type, bool enabled);
     void _connectStateSignals();
     void _setupRulerLayout();
+    void _wireToolUi();
     void _applyRulerPrefs();
     void _updateRulers();
 
     MediaToolStrip_Widget * _tool_strip{nullptr};
+    MediaToolOptionsBar_Widget * _tool_options_bar{nullptr};
     HorizontalAxisWidget * _horizontal_ruler{nullptr};
     VerticalAxisWidget * _vertical_ruler{nullptr};
     RulerCornerWidget * _ruler_corner{nullptr};

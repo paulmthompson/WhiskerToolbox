@@ -193,6 +193,15 @@ enum class PointToolMode {
     Select  ///< Point selection mode
 };
 
+/**
+ * @brief Preferences for the Media Viewer Select tool
+ */
+struct SelectToolPrefs {
+    bool filter_to_key = false;       ///< When false, selection considers all enabled keys
+    std::string filter_key;           ///< Data manager key when filter_to_key is true
+    std::string filter_data_type;     ///< Data type string ("line", "point", "mask", ...)
+};
+
 // ==================== Main State Structure ====================
 
 /**
@@ -268,6 +277,7 @@ struct MediaWidgetStateData {
     MaskInteractionPrefs mask_prefs;   ///< Mask tool preferences
     PointInteractionPrefs point_prefs; ///< Point tool preferences
     RulerPrefs ruler_prefs;          ///< Pixel ruler display preferences
+    SelectToolPrefs select_prefs;    ///< Select tool key-filter preferences
     
     // === Text Overlays ===
     std::vector<TextOverlayData> text_overlays;  ///< All text overlays

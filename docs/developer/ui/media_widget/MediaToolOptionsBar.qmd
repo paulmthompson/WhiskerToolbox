@@ -1,0 +1,45 @@
+---
+title: "Media Viewer Tool Options Bar"
+format: html
+---
+
+## Overview
+
+The Media Viewer shows a horizontal **tool options bar** directly above the horizontal pixel ruler. It displays contextual controls for the active tool selected in the left `MediaToolStrip_Widget`.
+
+## Layout
+
+The `Media_Widget` grid uses three rows:
+
+| Col 0 | Col 1 | Col 2 |
+|-------|-------|-------|
+| Tool strip (row span 3) | Tool options bar (col span 2) | |
+| | Ruler corner | Horizontal ruler |
+| | Vertical ruler | Graphics view |
+
+## Components
+
+| Component | Role |
+|-----------|------|
+| `MediaToolOptionsBar_Widget` | Container with `QStackedWidget` indexed by `MediaToolId` |
+| `SelectToolOptions_Widget` | Select-tool page: optional key filter combo |
+
+## Select Tool Filter
+
+`SelectToolOptions_Widget` reads enabled features from `MediaWidgetState::enabledFeatures()` for **line**, **mask**, and **point** keys only. The combo rebuilds when `featureEnabledChanged` fires (via `DisplayOptionsRegistry::setVisible()` from the feature table). The combo offers:
+
+- **All enabled features** — default (`SelectToolPrefs::filter_to_key == false`)
+- One entry per enabled key — sets `filter_key` and `filter_data_type` in `SelectToolPrefs`
+
+Preferences are stored in `MediaWidgetStateData::select_prefs` and exposed via `selectPrefs()` / `setSelectPrefs()`.
+
+Selection hit-testing is not wired yet; the filter only updates persisted preferences.
+
+When `DataManager` deletes a key, `Media_Widget::_pruneRemovedFeatures()` removes stale display options (emitting `displayOptionsRemoved`), which triggers a combo rebuild. If the active filter targeted the deleted key, it resets to **All enabled features**.
+
+## Wiring
+
+`Media_Widget::_wireToolUi()` connects:
+
+- `MediaToolStrip_Widget::activeToolChanged` → `MediaToolOptionsBar_Widget::setActiveTool`
+- `MediaWidgetState` → `SelectToolOptions_Widget::setState`

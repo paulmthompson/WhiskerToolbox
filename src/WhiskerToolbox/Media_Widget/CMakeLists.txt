@@ -39,6 +39,10 @@ set(MEDIA_WIDGET_SOURCES
     UI/Tools/MediaToolIcons.hpp
     UI/Tools/MediaToolStrip_Widget.hpp
     UI/Tools/MediaToolStrip_Widget.cpp
+    UI/Tools/MediaToolOptionsBar_Widget.hpp
+    UI/Tools/MediaToolOptionsBar_Widget.cpp
+    UI/Tools/SelectToolOptions_Widget.hpp
+    UI/Tools/SelectToolOptions_Widget.cpp
 
     UI/SubWidgets/MediaProcessing_Widget/MediaProcessing_Widget.cpp
     UI/SubWidgets/MediaProcessing_Widget/MediaProcessing_Widget.hpp

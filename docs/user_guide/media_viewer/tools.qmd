@@ -9,4 +9,8 @@ The Media Viewer includes a vertical toolbar on the left edge of the canvas (to 
 
 ## Select Tool
 
-The pointer (mouse) icon is the **Select** tool. It is selected by default. Canvas interaction for this tool is not wired yet; it is a placeholder for future selection behavior.
+The pointer (mouse) icon is the **Select** tool. It is selected by default.
+
+When Select is active, an options bar appears above the horizontal ruler. Use **Selection filter** to limit picking to a specific enabled feature, or leave it on **All enabled features** to consider every key currently enabled in the feature table.
+
+Canvas selection behavior is not wired yet; the filter only stores your preference for a future release.

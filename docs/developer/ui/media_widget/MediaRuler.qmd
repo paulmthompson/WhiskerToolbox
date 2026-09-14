@@ -9,14 +9,15 @@ The Media Viewer displays Inkscape-style horizontal and vertical rulers along th
 
 ## Layout
 
-The `Media_Widget` view uses a three-column grid:
+The `Media_Widget` view uses a three-column, three-row grid:
 
 | Col 0 | Col 1 | Col 2 |
 |-------|-------|-------|
-| Tool strip (row span 2) | Ruler corner | Horizontal ruler |
+| Tool strip (row span 3) | Tool options bar (col span 2) | |
+| | Ruler corner | Horizontal ruler |
 | | Vertical ruler | Graphics view |
 
-See [Media Viewer Tool Strip](MediaToolStrip.qmd) for the left toolbar.
+See [Media Viewer Tool Strip](MediaToolStrip.qmd) and [Media Viewer Tool Options Bar](MediaToolOptionsBar.qmd).
 
 ## Components
 

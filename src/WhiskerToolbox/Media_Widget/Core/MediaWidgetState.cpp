@@ -8,7 +8,7 @@ MediaWidgetState::MediaWidgetState(QObject * parent)
     : EditorState(parent) {
     // Initialize the instance_id in data from the base class
     _data.instance_id = getInstanceId().toStdString();
-    
+
     // Connect registry signals to state signals for backward compatibility
     _connectRegistrySignals();
 }
@@ -17,24 +17,24 @@ void MediaWidgetState::_connectRegistrySignals() {
     // Forward registry signals to state signals
     connect(&_display_options, &DisplayOptionsRegistry::optionsChanged,
             this, [this](QString const & key, QString const & type) {
-        markDirty();
-        emit displayOptionsChanged(key, type);
-        emit stateChanged();
-    });
-    
+                markDirty();
+                emit displayOptionsChanged(key, type);
+                emit stateChanged();
+            });
+
     connect(&_display_options, &DisplayOptionsRegistry::optionsRemoved,
             this, [this](QString const & key, QString const & type) {
-        markDirty();
-        emit displayOptionsRemoved(key, type);
-        emit stateChanged();
-    });
-    
+                markDirty();
+                emit displayOptionsRemoved(key, type);
+                emit stateChanged();
+            });
+
     connect(&_display_options, &DisplayOptionsRegistry::visibilityChanged,
             this, [this](QString const & key, QString const & type, bool visible) {
-        markDirty();
-        emit featureEnabledChanged(key, type, visible);
-        emit stateChanged();
-    });
+                markDirty();
+                emit featureEnabledChanged(key, type, visible);
+                emit stateChanged();
+            });
 }
 
 // === Type Identification ===
@@ -106,7 +106,7 @@ void MediaWidgetState::setZoom(double zoom) {
 }
 
 void MediaWidgetState::setPan(double x, double y) {
-    if (std::abs(_data.viewport.pan_x - x) > 1e-9 || 
+    if (std::abs(_data.viewport.pan_x - x) > 1e-9 ||
         std::abs(_data.viewport.pan_y - y) > 1e-9) {
         _data.viewport.pan_x = x;
         _data.viewport.pan_y = y;
@@ -121,7 +121,7 @@ std::pair<double, double> MediaWidgetState::pan() const {
 }
 
 void MediaWidgetState::setCanvasSize(int width, int height) {
-    if (_data.viewport.canvas_width != width || 
+    if (_data.viewport.canvas_width != width ||
         _data.viewport.canvas_height != height) {
         _data.viewport.canvas_width = width;
         _data.viewport.canvas_height = height;
@@ -145,7 +145,7 @@ void MediaWidgetState::setViewport(ViewportState const & viewport) {
     if (zoom_changed || pan_changed || canvas_changed) {
         _data.viewport = viewport;
         markDirty();
-        
+
         if (zoom_changed) {
             emit zoomChanged(viewport.zoom);
         }
@@ -193,9 +193,9 @@ void MediaWidgetState::clearCanvasCoordOverride() {
 void MediaWidgetState::setFeatureEnabled(QString const & data_key, QString const & data_type, bool enabled) {
     std::string const key_std = data_key.toStdString();
     std::string const type_std = data_type.toStdString();
-    
+
     bool changed = false;
-    
+
     if (type_std == "line") {
         auto it = _data.line_options.find(key_std);
         if (it != _data.line_options.end()) {
@@ -276,7 +276,7 @@ void MediaWidgetState::setFeatureEnabled(QString const & data_key, QString const
             changed = true;
         }
     }
-    
+
     if (changed) {
         markDirty();
         emit featureEnabledChanged(data_key, data_type, enabled);
@@ -286,7 +286,7 @@ void MediaWidgetState::setFeatureEnabled(QString const & data_key, QString const
 bool MediaWidgetState::isFeatureEnabled(QString const & data_key, QString const & data_type) const {
     std::string const key_std = data_key.toStdString();
     std::string const type_std = data_type.toStdString();
-    
+
     if (type_std == "line") {
         auto it = _data.line_options.find(key_std);
         return it != _data.line_options.end() && it->second.is_visible();
@@ -306,52 +306,52 @@ bool MediaWidgetState::isFeatureEnabled(QString const & data_key, QString const 
         auto it = _data.media_options.find(key_std);
         return it != _data.media_options.end() && it->second.is_visible();
     }
-    
+
     return false;
 }
 
 QStringList MediaWidgetState::enabledFeatures(QString const & data_type) const {
     QStringList result;
     std::string const type_std = data_type.toStdString();
-    
+
     if (type_std == "line") {
-        for (auto const & [key, opts] : _data.line_options) {
+        for (auto const & [key, opts]: _data.line_options) {
             if (opts.is_visible()) {
                 result.append(QString::fromStdString(key));
             }
         }
     } else if (type_std == "mask") {
-        for (auto const & [key, opts] : _data.mask_options) {
+        for (auto const & [key, opts]: _data.mask_options) {
             if (opts.is_visible()) {
                 result.append(QString::fromStdString(key));
             }
         }
     } else if (type_std == "point") {
-        for (auto const & [key, opts] : _data.point_options) {
+        for (auto const & [key, opts]: _data.point_options) {
             if (opts.is_visible()) {
                 result.append(QString::fromStdString(key));
             }
         }
     } else if (type_std == "tensor") {
-        for (auto const & [key, opts] : _data.tensor_options) {
+        for (auto const & [key, opts]: _data.tensor_options) {
             if (opts.is_visible()) {
                 result.append(QString::fromStdString(key));
             }
         }
     } else if (type_std == "interval") {
-        for (auto const & [key, opts] : _data.interval_options) {
+        for (auto const & [key, opts]: _data.interval_options) {
             if (opts.is_visible()) {
                 result.append(QString::fromStdString(key));
             }
         }
     } else if (type_std == "media") {
-        for (auto const & [key, opts] : _data.media_options) {
+        for (auto const & [key, opts]: _data.media_options) {
             if (opts.is_visible()) {
                 result.append(QString::fromStdString(key));
             }
         }
     }
-    
+
     return result;
 }
 
@@ -395,7 +395,7 @@ void MediaWidgetState::setMaskOptions(QString const & key, MaskDisplayOptions co
     emit displayOptionsChanged(key, QStringLiteral("mask"));
 }
 
-    
+
 /**
 * @brief Remove mask display options for a key
 * @param key The data key
@@ -539,6 +539,18 @@ void MediaWidgetState::setRulerPrefs(RulerPrefs const & prefs) {
     emit rulerPrefsChanged();
 }
 
+void MediaWidgetState::setSelectPrefs(SelectToolPrefs const & prefs) {
+    if (_data.select_prefs.filter_to_key == prefs.filter_to_key &&
+        _data.select_prefs.filter_key == prefs.filter_key &&
+        _data.select_prefs.filter_data_type == prefs.filter_data_type) {
+        return;
+    }
+
+    _data.select_prefs = prefs;
+    markDirty();
+    emit selectPrefsChanged();
+}
+
 // === Text Overlays ===
 
 int MediaWidgetState::addTextOverlay(TextOverlayData overlay) {
@@ -551,8 +563,8 @@ int MediaWidgetState::addTextOverlay(TextOverlayData overlay) {
 
 bool MediaWidgetState::removeTextOverlay(int overlay_id) {
     auto it = std::find_if(_data.text_overlays.begin(), _data.text_overlays.end(),
-        [overlay_id](TextOverlayData const & o) { return o.id == overlay_id; });
-    
+                           [overlay_id](TextOverlayData const & o) { return o.id == overlay_id; });
+
     if (it != _data.text_overlays.end()) {
         _data.text_overlays.erase(it);
         markDirty();
@@ -564,8 +576,8 @@ bool MediaWidgetState::removeTextOverlay(int overlay_id) {
 
 bool MediaWidgetState::updateTextOverlay(int overlay_id, TextOverlayData const & overlay) {
     auto it = std::find_if(_data.text_overlays.begin(), _data.text_overlays.end(),
-        [overlay_id](TextOverlayData const & o) { return o.id == overlay_id; });
-    
+                           [overlay_id](TextOverlayData const & o) { return o.id == overlay_id; });
+
     if (it != _data.text_overlays.end()) {
         // Preserve the ID
         it->text = overlay.text;
@@ -592,8 +604,8 @@ void MediaWidgetState::clearTextOverlays() {
 
 TextOverlayData const * MediaWidgetState::getTextOverlay(int overlay_id) const {
     auto it = std::find_if(_data.text_overlays.begin(), _data.text_overlays.end(),
-        [overlay_id](TextOverlayData const & o) { return o.id == overlay_id; });
-    
+                           [overlay_id](TextOverlayData const & o) { return o.id == overlay_id; });
+
     if (it != _data.text_overlays.end()) {
         return &(*it);
     }

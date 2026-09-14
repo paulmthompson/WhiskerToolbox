@@ -9,12 +9,15 @@ The Media Viewer includes a vertical tool strip along the left edge of the widge
 
 ## Layout
 
-The `Media_Widget` grid places the tool strip in column 0 spanning both rows:
+The `Media_Widget` grid places the tool strip in column 0 spanning three rows:
 
 | Col 0 | Col 1 | Col 2 |
 |-------|-------|-------|
-| Tool strip (row span 2) | Ruler corner | Horizontal ruler |
+| Tool strip (row span 3) | Tool options bar (col span 2) | |
+| | Ruler corner | Horizontal ruler |
 | | Vertical ruler | Graphics view |
+
+See [Media Viewer Tool Options Bar](MediaToolOptionsBar.qmd) for contextual controls above the horizontal ruler.
 
 ## Components
 

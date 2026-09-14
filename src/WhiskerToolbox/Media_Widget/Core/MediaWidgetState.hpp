@@ -409,6 +409,18 @@ public:
      */
     void setRulerPrefs(RulerPrefs const & prefs);
 
+    /**
+     * @brief Get Select tool preferences
+     * @return Const reference to SelectToolPrefs
+     */
+    [[nodiscard]] SelectToolPrefs const & selectPrefs() const { return _data.select_prefs; }
+
+    /**
+     * @brief Set Select tool preferences
+     * @param prefs The new preferences
+     */
+    void setSelectPrefs(SelectToolPrefs const & prefs);
+
     // === Text Overlays ===
 
     /**
@@ -570,6 +582,11 @@ signals:
      * @brief Emitted when ruler display preferences change
      */
     void rulerPrefsChanged();
+
+    /**
+     * @brief Emitted when Select tool preferences change
+     */
+    void selectPrefsChanged();
 
     // === Text Overlay Signals ===
 
