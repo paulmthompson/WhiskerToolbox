@@ -41,6 +41,7 @@
 
 class CanvasCoord_Widget;
 class DataManager;
+class MediaRuler_Widget;
 class MediaWidgetState;
 class Media_Window;
 class MediaProcessing_Widget;
@@ -109,12 +110,17 @@ private:
     Section * _canvas_coord_section{nullptr};
     CanvasCoord_Widget * _canvas_coord_widget{nullptr};
 
+    // Ruler preference widgets
+    Section * _ruler_section{nullptr};
+    MediaRuler_Widget * _ruler_widget{nullptr};
+
     void resizeEvent(QResizeEvent * event) override;
 
     void _connectStateSignals();
     void _setupFeatureTable();
     void _setupTextOverlays();
     void _setupCanvasCoordSection();
+    void _setupRulerSection();
     void _createStackedWidgets();
     void _connectTextWidgetToScene();
     void _updateChildWidths();

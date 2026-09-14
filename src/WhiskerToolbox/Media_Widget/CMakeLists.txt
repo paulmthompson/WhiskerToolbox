@@ -28,6 +28,13 @@ set(MEDIA_WIDGET_SOURCES
     UI/CanvasCoord_Widget.hpp
     UI/CanvasCoord_Widget.cpp
 
+    UI/MediaRulerViewport.hpp
+
+    UI/Rulers/RulerCornerWidget.hpp
+    UI/Rulers/RulerCornerWidget.cpp
+    UI/Rulers/MediaRuler_Widget.hpp
+    UI/Rulers/MediaRuler_Widget.cpp
+
     UI/SubWidgets/MediaProcessing_Widget/MediaProcessing_Widget.cpp
     UI/SubWidgets/MediaProcessing_Widget/MediaProcessing_Widget.hpp
     UI/SubWidgets/MediaProcessing_Widget/MediaProcessing_Widget.ui
@@ -121,6 +128,8 @@ target_link_libraries(Media_Widget PUBLIC WhiskerToolbox::CoreMath)
 target_link_libraries(Media_Widget PRIVATE Feature_Table_Widget)
 target_link_libraries(Media_Widget PRIVATE ColorAlphaControls)
 target_link_libraries(Media_Widget PRIVATE Collapsible_Widget)
+target_link_libraries(Media_Widget PRIVATE HorizontalAxisWidget)
+target_link_libraries(Media_Widget PRIVATE VerticalAxisWidget)
 target_link_libraries(Media_Widget PRIVATE AutoParamWidget)
 target_link_libraries(Media_Widget PRIVATE GlyphStyleWidget)
 target_link_libraries(Media_Widget PRIVATE LineStyleControls)

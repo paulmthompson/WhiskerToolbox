@@ -9,9 +9,12 @@
 #include <memory>
 
 class DataManager;
+class HorizontalAxisWidget;
 class Media_Window;
 class MediaWidgetState;
 class EditorRegistry;
+class RulerCornerWidget;
+class VerticalAxisWidget;
 
 namespace Ui {
 class Media_Widget;
@@ -106,7 +109,13 @@ private:
     void _syncCanvasSizeToState();
     void _syncFeatureEnabledToState(QString const & feature_key, QString const & data_type, bool enabled);
     void _connectStateSignals();
+    void _setupRulerLayout();
+    void _applyRulerPrefs();
+    void _updateRulers();
 
+    HorizontalAxisWidget * _horizontal_ruler{nullptr};
+    VerticalAxisWidget * _vertical_ruler{nullptr};
+    RulerCornerWidget * _ruler_corner{nullptr};
 
 private slots:
     void _updateCanvasSize();

@@ -22,6 +22,7 @@ add_executable(test_media_widget
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Media_Widget/Core/MediaWidgetStateData.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Media_Widget/UI/Media_Widget.test.cpp
     ${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Media_Widget/UI/MediaPropertiesWidget.test.cpp
+    ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/Media_Widget/MediaRulerViewport.test.cpp
 )
 
 target_link_libraries(test_media_widget PRIVATE 

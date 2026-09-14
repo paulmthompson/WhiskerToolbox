@@ -109,6 +109,34 @@ set_target_compiler_warnings(test_plot_zoom_profile)
 
 enable_whiskertoolbox_shared_test_pch(test_plot_zoom_profile)
 
+# ── AxisTickLayout tests ──────────────────────────────────────────────────────
+
+add_executable(test_axis_tick_layout
+    ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/Plots/Common/AxisTickLayout.test.cpp
+)
+
+target_link_libraries(test_axis_tick_layout PRIVATE
+    Catch2::Catch2WithMain
+)
+
+target_include_directories(test_axis_tick_layout PRIVATE
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src/WhiskerToolbox/Plots/Common>"
+    "$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/src>"
+)
+
+if(ENABLE_DETAILED_TEST_DISCOVERY)
+    catch_discover_tests(test_axis_tick_layout PROPERTIES
+        ENVIRONMENT "ASAN_OPTIONS=detect_leaks=0"
+    )
+else()
+    add_test(NAME test_axis_tick_layout_all COMMAND test_axis_tick_layout)
+endif()
+
+set_target_compiler_warnings(test_axis_tick_layout)
+
+enable_whiskertoolbox_shared_test_pch(test_axis_tick_layout)
+
 # ── Common DataManager integration tests (template-based) ────────────────────
 
 # ── EventRateEstimation tests ─────────────────────────────────────────────────

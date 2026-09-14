@@ -2,6 +2,7 @@
 #include "ui_MediaPropertiesWidget.h"
 
 #include "CanvasCoord_Widget.hpp"
+#include "Rulers/MediaRuler_Widget.hpp"
 #include "Media_Widget/Core/MediaWidgetState.hpp"
 #include "Media_Widget/UI/SubWidgets/MediaInterval_Widget/MediaInterval_Widget.hpp"
 #include "Media_Widget/UI/SubWidgets/MediaLine_Widget/MediaLine_Widget.hpp"
@@ -40,6 +41,7 @@ MediaPropertiesWidget::MediaPropertiesWidget(std::shared_ptr<MediaWidgetState> s
 
     _setupTextOverlays();
     _setupCanvasCoordSection();
+    _setupRulerSection();
     _setupFeatureTable();
     _createStackedWidgets();
     _connectTextWidgetToScene();
@@ -121,6 +123,20 @@ void MediaPropertiesWidget::_setupCanvasCoordSection() {
 
     // Insert after text overlays section (index 1)
     ui->contentLayout->insertWidget(1, _canvas_coord_section);
+}
+
+void MediaPropertiesWidget::_setupRulerSection() {
+    _ruler_section = new Section(this, "Rulers");
+    _ruler_widget = new MediaRuler_Widget(this);
+    _ruler_section->setContentLayout(*new QVBoxLayout());
+    _ruler_section->layout()->addWidget(_ruler_widget);
+    _ruler_section->autoSetContentLayout();
+
+    if (_state) {
+        _ruler_widget->setState(_state.get());
+    }
+
+    ui->contentLayout->insertWidget(2, _ruler_section);
 }
 
 void MediaPropertiesWidget::_connectTextWidgetToScene() {

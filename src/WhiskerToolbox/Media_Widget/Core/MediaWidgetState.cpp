@@ -533,6 +533,12 @@ void MediaWidgetState::setPointPrefs(PointInteractionPrefs const & prefs) {
     emit interactionPrefsChanged(QStringLiteral("point"));
 }
 
+void MediaWidgetState::setRulerPrefs(RulerPrefs const & prefs) {
+    _data.ruler_prefs = prefs;
+    markDirty();
+    emit rulerPrefsChanged();
+}
+
 // === Text Overlays ===
 
 int MediaWidgetState::addTextOverlay(TextOverlayData overlay) {

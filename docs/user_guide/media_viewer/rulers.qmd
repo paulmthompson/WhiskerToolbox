@@ -1,0 +1,24 @@
+---
+title: "Pixel Rulers"
+format: html
+---
+
+## Overview
+
+The Media Viewer can show pixel rulers along the top and left edges of the canvas, similar to Inkscape. Ruler labels show coordinates in **source image pixels** (matching annotation coordinates).
+
+## Toggling Rulers
+
+Open the Media Viewer properties panel and expand the **Rulers** section. Use **Show rulers** to enable or disable the ruler bars.
+
+## Tick Options
+
+| Option | Description |
+|--------|-------------|
+| **Tick mode** | *Auto* chooses readable intervals based on zoom; *Fixed interval* uses a constant spacing in pixels |
+| **Fixed interval** | Spacing between ticks when using fixed mode (e.g. every 50 px) |
+| **Target ticks** | Approximate number of major ticks when using auto mode |
+| **Show minor ticks** | Display smaller ticks between major labels |
+| **Negative color** | Color for tick labels when coordinates are negative (e.g. after panning past the origin) |
+
+Rulers update automatically when you zoom with the mouse wheel or pan with Shift+drag.

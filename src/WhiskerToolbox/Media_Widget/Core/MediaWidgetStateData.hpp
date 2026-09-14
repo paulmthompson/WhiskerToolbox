@@ -120,6 +120,28 @@ struct PointInteractionPrefs {
     float selection_threshold = 10.0f;  ///< Pixel distance for point selection
 };
 
+// ==================== Ruler Preferences ====================
+
+/**
+ * @brief Tick spacing mode for media viewer rulers
+ */
+enum class RulerTickMode {
+    Auto,  ///< Nice-number intervals based on visible range
+    Fixed  ///< Fixed interval in media pixels
+};
+
+/**
+ * @brief User preferences for media viewer pixel rulers
+ */
+struct RulerPrefs {
+    bool enabled = true;                              ///< Whether rulers are visible
+    RulerTickMode tick_mode = RulerTickMode::Auto;    ///< Auto or fixed tick spacing
+    int fixed_interval_px = 100;                      ///< Tick interval when tick_mode == Fixed
+    int target_tick_count = 7;                        ///< Target major ticks when tick_mode == Auto
+    bool show_minor_ticks = true;                     ///< Draw minor ticks between majors
+    std::string negative_color = "#FF9966";           ///< Label/tick color for negative values
+};
+
 // ==================== Viewport State ====================
 
 /**
@@ -245,6 +267,7 @@ struct MediaWidgetStateData {
     LineInteractionPrefs line_prefs;   ///< Line tool preferences
     MaskInteractionPrefs mask_prefs;   ///< Mask tool preferences
     PointInteractionPrefs point_prefs; ///< Point tool preferences
+    RulerPrefs ruler_prefs;          ///< Pixel ruler display preferences
     
     // === Text Overlays ===
     std::vector<TextOverlayData> text_overlays;  ///< All text overlays

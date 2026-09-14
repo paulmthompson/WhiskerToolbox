@@ -1,0 +1,42 @@
+---
+title: "Media Viewer Pixel Rulers"
+format: html
+---
+
+## Overview
+
+The Media Viewer displays Inkscape-style horizontal and vertical rulers along the top and left edges of the canvas. Rulers show **media/source pixel coordinates** (the same space as `MediaCoordinates` and `CanvasCoordinateSystem`), and update automatically when the user zooms or pans.
+
+## Components
+
+| Component | Location | Role |
+|-----------|----------|------|
+| `HorizontalAxisWidget` | Reused from `Plots/Common` | Top ruler (`AxisDisplayMode::Ruler`) |
+| `VerticalAxisWidget` | Reused from `Plots/Common` | Left ruler (inverted Y, left-edge ticks) |
+| `RulerCornerWidget` | `Media_Widget/UI/Rulers` | Top-left corner square |
+| `MediaRuler_Widget` | Properties panel | User preferences |
+| `MediaRulerViewport.hpp` | `computeVisibleMediaViewport()` | Scene-to-media coordinate mapping |
+| `AxisTickLayout.hpp` | `Plots/Common` | Shared tick interval math |
+
+## Coordinate Mapping
+
+Visible media-pixel bounds are computed from the `QGraphicsView` transform:
+
+```cpp
+scene_tl = view.mapToScene(viewport.topLeft())
+media_x = scene_x / x_aspect
+```
+
+Aspect ratios come from `Media_Window::getXAspect()` / `getYAspect()`.
+
+## State
+
+Ruler preferences are stored in `RulerPrefs` inside `MediaWidgetStateData` and exposed via `MediaWidgetState::rulerPrefs()` / `setRulerPrefs()`. Changes emit `rulerPrefsChanged()`.
+
+## Signal Wiring
+
+`Media_Widget::_setupRulerLayout()` connects ruler repaints to:
+
+- `zoomChanged`, `panChanged`, `canvasCoordinateSystemChanged`, `rulerPrefsChanged`
+- Scroll bar `valueChanged` (live pan drag)
+- `resizeEvent`

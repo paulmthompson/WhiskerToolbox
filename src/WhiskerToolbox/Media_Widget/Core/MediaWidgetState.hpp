@@ -397,6 +397,18 @@ public:
      */
     void setPointPrefs(PointInteractionPrefs const & prefs);
 
+    /**
+     * @brief Get ruler display preferences
+     * @return Const reference to RulerPrefs
+     */
+    [[nodiscard]] RulerPrefs const & rulerPrefs() const { return _data.ruler_prefs; }
+
+    /**
+     * @brief Set ruler display preferences
+     * @param prefs The new preferences
+     */
+    void setRulerPrefs(RulerPrefs const & prefs);
+
     // === Text Overlays ===
 
     /**
@@ -553,6 +565,11 @@ signals:
      * @param category "line", "mask", or "point"
      */
     void interactionPrefsChanged(QString const & category);
+
+    /**
+     * @brief Emitted when ruler display preferences change
+     */
+    void rulerPrefsChanged();
 
     // === Text Overlay Signals ===
 

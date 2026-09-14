@@ -2,7 +2,13 @@
 #include "ui_Media_Widget.h"
 
 #include "Core/MediaWidgetState.hpp"
+#include "MediaRulerViewport.hpp"
 #include "Rendering/Media_Window/Media_Window.hpp"
+#include "Rulers/RulerCornerWidget.hpp"
+
+#include "Plots/Common/AxisTickLayout.hpp"
+#include "Plots/Common/HorizontalAxisWidget/HorizontalAxisWidget.hpp"
+#include "Plots/Common/VerticalAxisWidget/VerticalAxisWidget.hpp"
 
 #include "CoreGeometry/ImageSize.hpp"
 #include "DataManager/DataManager.hpp"
@@ -20,6 +26,7 @@
 #define slots Q_SLOTS
 
 #include <QApplication>
+#include <QGridLayout>
 #include <QGraphicsView>
 #include <QMouseEvent>
 #include <QResizeEvent>
@@ -38,6 +45,8 @@ Media_Widget::Media_Widget(EditorRegistry * editor_registry, QWidget * parent)
       _editor_registry{editor_registry} {
     assert(editor_registry != nullptr && "EditorRegistry must not be null");
     ui->setupUi(this);
+
+    _setupRulerLayout();
 
     // Install event filter on graphics view viewport for wheel zoom
     if (ui->graphicsView && ui->graphicsView->viewport()) {
@@ -171,6 +180,7 @@ void Media_Widget::_createOptions() {
 
 void Media_Widget::resizeEvent(QResizeEvent * event) {
     QWidget::resizeEvent(event);
+    _updateRulers();
     // When user has zoomed, avoid rescaling scene contents destructively; just adjust scene rect
     if (_isUserZoomActive()) {
         if (_scene) {
@@ -406,6 +416,7 @@ void Media_Widget::_applyZoom(double factor, bool anchor_under_mouse) {
     }
     ui->graphicsView->scale(factor, factor);
     _state->setZoom(new_zoom);
+    _updateRulers();
 }
 
 bool Media_Widget::eventFilter(QObject * watched, QEvent * event) {
@@ -446,6 +457,7 @@ bool Media_Widget::eventFilter(QObject * watched, QEvent * event) {
             ui->graphicsView->verticalScrollBar()->setValue(
                     ui->graphicsView->verticalScrollBar()->value() - delta.y());
 
+            _updateRulers();
             mouseEvent->accept();
             return true;// Consume the event
         }
@@ -545,6 +557,115 @@ void Media_Widget::_connectStateSignals() {
             this, &Media_Widget::_onStateZoomChanged);
     connect(_state.get(), &MediaWidgetState::panChanged,
             this, &Media_Widget::_onStatePanChanged);
+    connect(_state.get(), &MediaWidgetState::rulerPrefsChanged,
+            this, &Media_Widget::_applyRulerPrefs);
+    connect(_state.get(), &MediaWidgetState::canvasCoordinateSystemChanged,
+            this, &Media_Widget::_updateRulers);
+
+    if (ui->graphicsView) {
+        connect(ui->graphicsView->horizontalScrollBar(), &QScrollBar::valueChanged,
+                this, &Media_Widget::_updateRulers);
+        connect(ui->graphicsView->verticalScrollBar(), &QScrollBar::valueChanged,
+                this, &Media_Widget::_updateRulers);
+    }
+
+    _applyRulerPrefs();
+}
+
+void Media_Widget::_setupRulerLayout() {
+    if (!ui->graphicsView) {
+        return;
+    }
+
+    auto * old_layout = ui->horizontalLayout;
+    if (old_layout) {
+        old_layout->removeWidget(ui->graphicsView);
+    }
+
+    _ruler_corner = new RulerCornerWidget(this);
+    _horizontal_ruler = new HorizontalAxisWidget(this);
+    _vertical_ruler = new VerticalAxisWidget(this);
+
+    _horizontal_ruler->setDisplayMode(Neuralyzer::Plots::AxisDisplayMode::Ruler);
+    _vertical_ruler->setDisplayMode(Neuralyzer::Plots::AxisDisplayMode::Ruler);
+    _vertical_ruler->setInverted(true);
+
+    auto * grid_layout = new QGridLayout();
+    grid_layout->setSpacing(0);
+    grid_layout->setContentsMargins(0, 0, 0, 0);
+    grid_layout->addWidget(_ruler_corner, 0, 0);
+    grid_layout->addWidget(_horizontal_ruler, 0, 1);
+    grid_layout->addWidget(_vertical_ruler, 1, 0);
+    grid_layout->addWidget(ui->graphicsView, 1, 1);
+    grid_layout->setColumnStretch(1, 1);
+    grid_layout->setRowStretch(1, 1);
+
+    if (old_layout) {
+        delete old_layout;
+    }
+    setLayout(grid_layout);
+
+    _horizontal_ruler->setRangeGetter([this]() -> std::pair<double, double> {
+        if (!_scene) {
+            return {0.0, 1.0};
+        }
+        auto const vp = computeVisibleMediaViewport(
+                *ui->graphicsView,
+                _scene->getXAspect(),
+                _scene->getYAspect());
+        return {vp.min_x, vp.max_x};
+    });
+
+    _vertical_ruler->setRangeGetter([this]() -> std::pair<double, double> {
+        if (!_scene) {
+            return {0.0, 1.0};
+        }
+        auto const vp = computeVisibleMediaViewport(
+                *ui->graphicsView,
+                _scene->getXAspect(),
+                _scene->getYAspect());
+        return {vp.min_y, vp.max_y};
+    });
+}
+
+void Media_Widget::_applyRulerPrefs() {
+    if (!_state || !_horizontal_ruler || !_vertical_ruler) {
+        return;
+    }
+
+    RulerPrefs const & prefs = _state->rulerPrefs();
+
+    bool const visible = prefs.enabled;
+    if (_ruler_corner) {
+        _ruler_corner->setVisible(visible);
+    }
+    _horizontal_ruler->setVisible(visible);
+    _vertical_ruler->setVisible(visible);
+
+    Neuralyzer::Plots::AxisTickConfig tick_config;
+    tick_config.mode = prefs.tick_mode == RulerTickMode::Fixed ? Neuralyzer::Plots::AxisTickMode::Fixed
+                                                               : Neuralyzer::Plots::AxisTickMode::Auto;
+    tick_config.fixed_interval = static_cast<double>(prefs.fixed_interval_px);
+    tick_config.target_tick_count = prefs.target_tick_count;
+    tick_config.show_minor_ticks = prefs.show_minor_ticks;
+
+    _horizontal_ruler->setTickConfig(tick_config);
+    _vertical_ruler->setTickConfig(tick_config);
+
+    QColor const negative_color(QString::fromStdString(prefs.negative_color));
+    _horizontal_ruler->setNegativeLabelColor(negative_color);
+    _vertical_ruler->setNegativeLabelColor(negative_color);
+
+    _updateRulers();
+}
+
+void Media_Widget::_updateRulers() {
+    if (_horizontal_ruler) {
+        _horizontal_ruler->update();
+    }
+    if (_vertical_ruler) {
+        _vertical_ruler->update();
+    }
 }
 
 void Media_Widget::_onStateZoomChanged(double zoom) {
@@ -563,6 +684,7 @@ void Media_Widget::_onStateZoomChanged(double zoom) {
         ui->graphicsView->setTransformationAnchor(QGraphicsView::AnchorViewCenter);
         ui->graphicsView->scale(factor, factor);
     }
+    _updateRulers();
 }
 
 void Media_Widget::_onStatePanChanged(double x, double y) {
@@ -576,6 +698,7 @@ void Media_Widget::_onStatePanChanged(double x, double y) {
         ui->graphicsView->horizontalScrollBar()->setValue(static_cast<int>(x));
         ui->graphicsView->verticalScrollBar()->setValue(static_cast<int>(y));
     }
+    _updateRulers();
 }
 
 void Media_Widget::restoreFromState() {
@@ -647,4 +770,6 @@ void Media_Widget::restoreFromState() {
     if (_scene) {
         _scene->UpdateCanvas();
     }
+
+    _applyRulerPrefs();
 }
