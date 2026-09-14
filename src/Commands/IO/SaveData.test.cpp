@@ -10,6 +10,7 @@
 
 #include "DataManager/DataManager.hpp"
 #include "DataManager/Lineage/LineageRecorder.hpp"
+#include "Lines/Line_Data.hpp"
 #include "Points/Point_Data.hpp"
 
 #include "IO/core/LoaderRegistration.hpp"
@@ -250,6 +251,49 @@ TEST_CASE("SavePathResolver prefers matching file origin",
     cleanupTempDir(temp_dir);
 }
 
+TEST_CASE("SavePathResolver prefers matching multi-file directory origin",
+          "[commands][SaveData][resolver]") {
+    auto temp_dir = makeTempDir();
+    auto const origin_dir = temp_dir / "line_frames";
+    std::filesystem::create_directories(origin_dir);
+
+    auto dm = std::make_shared<DataManager>();
+    dm->setOutputPath((temp_dir / "output").string());
+    dm->setData<LineData>("lines", TimeKey("time"));
+
+    Neuralyzer::Entity::Lineage::FileOrigin origin{
+            .m_path = origin_dir.string(),
+            .m_format = "csv",
+            .m_data_type = "LineData",
+            .m_source_config_json = R"({"multi_file": true, "format": "csv"})"};
+    Neuralyzer::Entity::Lineage::LineageRecorder::recordFileSource(
+            *dm->getLineageRegistry(), "lines", std::move(origin));
+
+    auto const resolution = resolveDefaultMultiFileSaveDir(
+            *dm, "lines", "csv", "line_data");
+
+    REQUIRE(resolution.m_using_file_origin);
+    REQUIRE(resolution.m_parent_dir == origin_dir.string());
+
+    cleanupTempDir(temp_dir);
+}
+
+TEST_CASE("SavePathResolver multi-file save falls back to output directory",
+          "[commands][SaveData][resolver]") {
+    auto temp_dir = makeTempDir();
+    auto dm = std::make_shared<DataManager>();
+    dm->setOutputPath((temp_dir / "output").string());
+    dm->setData<LineData>("lines", TimeKey("time"));
+
+    auto const resolution = resolveDefaultMultiFileSaveDir(
+            *dm, "lines", "csv", "line_data");
+
+    REQUIRE_FALSE(resolution.m_using_file_origin);
+    REQUIRE(resolution.m_parent_dir == (temp_dir / "output" / "line_data").string());
+
+    cleanupTempDir(temp_dir);
+}
+
 TEST_CASE("SaveData errors on unknown data_key",
           "[commands][SaveData]") {
     auto dm = std::make_shared<DataManager>();
@@ -284,7 +328,7 @@ TEST_CASE("SaveData errors on unsupported format",
 
 TEST_CASE("SaveData toJson produces valid JSON",
           "[commands][SaveData]") {
-    SaveData cmd(SaveDataParams{
+    SaveData const cmd(SaveDataParams{
             .data_key = "my_points",
             .format = "csv",
             .path = "/tmp/output.csv",

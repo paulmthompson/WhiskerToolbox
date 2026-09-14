@@ -145,18 +145,20 @@ void LineInspector::_connectSignals() {
             filepath = resolution.m_path;
             backup_existing = resolution.m_using_file_origin;
         } else {
-            // Update config with full path
-            std::string parent_dir = config.value("parent_dir", ".");
-            std::filesystem::path const parent_path(parent_dir);
-            if (parent_dir == "." || !parent_path.is_absolute()) {
-                if (parent_dir == ".") {
-                    config["parent_dir"] = dataManager()->getOutputPath();
-                } else {
-                    config["parent_dir"] =
-                            dataManager()->getOutputPath() + "/" + parent_dir;
-                }
+            auto const resolution = commands::resolveDefaultMultiFileSaveDir(
+                    *dataManager(), _active_key, format.toStdString(),
+                    config.value("parent_dir", "."));
+            if (!resolution.m_using_file_origin && dataManager()->getOutputPath().empty()) {
+                QMessageBox::warning(this, "Warning",
+                                     "Please set an output directory in the Data Manager settings");
+                return;
             }
-            filepath = config.value("parent_dir", ".");
+
+            config["parent_dir"] = resolution.m_parent_dir;
+            filepath = resolution.m_parent_dir;
+            if (resolution.m_using_file_origin) {
+                config["overwrite_existing"] = true;
+            }
         }
 
         // Convert nlohmann::json config to rfl::Generic for format_options

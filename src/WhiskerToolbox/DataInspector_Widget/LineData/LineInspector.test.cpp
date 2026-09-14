@@ -1,29 +1,31 @@
 #include "LineInspector.hpp"
-#include "LineTableView.hpp"
 #include "LineTableModel.hpp"
+#include "LineTableView.hpp"
 
-#include "DataExport_Widget/Lines/CSV/CSVLineSaver_Widget.hpp"
-#include "DataManager/DataManager.hpp"
-#include "Lines/Line_Data.hpp"
-#include "IO/core/LoaderRegistration.hpp"
-#include "IO/formats/CSV/lines/Line_Data_CSV.hpp"
-#include "TimeFrame/TimeFrame.hpp"
-#include "TimeFrame/StrongTimeTypes.hpp"
-#include "GroupManagementWidget/GroupManager.hpp"
-#include "Entity/EntityGroupManager.hpp"
 #include "CoreGeometry/lines.hpp"
 #include "CoreGeometry/points.hpp"
+#include "DataExport_Widget/Lines/CSV/CSVLineSaver_Widget.hpp"
+#include "DataManager/DataManager.hpp"
+#include "DataManager/Lineage/LineageRecorder.hpp"
+#include "Entity/EntityGroupManager.hpp"
+#include "GroupManagementWidget/GroupManager.hpp"
+#include "IO/core/LoaderRegistration.hpp"
+#include "IO/formats/CSV/lines/Line_Data_CSV.hpp"
+#include "Lines/Line_Data.hpp"
+#include "TimeFrame/StrongTimeTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
+#include <QAbstractItemModel>
 #include <QApplication>
 #include <QComboBox>
+#include <QItemSelectionModel>
 #include <QLineEdit>
 #include <QPushButton>
-#include <QTableView>
-#include <QAbstractItemModel>
-#include <QItemSelectionModel>
+#include <QRadioButton>
 #include <QSignalSpy>
+#include <QTableView>
 #include <QTest>
 #include <QTimer>
 
@@ -38,8 +40,7 @@
 namespace {
 // Ensures a QApplication exists for the process. Must be called before using any Qt widgets/signals.
 // Uses a leaked pointer intentionally - QApplication must outlive all Qt objects in tests.
-void ensureQApplication()
-{
+void ensureQApplication() {
     if (!QApplication::instance()) {
         static int argc = 1;
         static char app_name[] = "test";
@@ -49,8 +50,7 @@ void ensureQApplication()
 }
 
 struct RegistryInitializer {
-    RegistryInitializer()
-    {
+    RegistryInitializer() {
         static bool initialized = false;
         if (!initialized) {
             registerInternalLoaders();
@@ -61,15 +61,13 @@ struct RegistryInitializer {
 
 [[maybe_unused]] RegistryInitializer const g_registry_init{};
 
-std::filesystem::path makeTempDir()
-{
+std::filesystem::path makeTempDir() {
     auto dir = std::filesystem::temp_directory_path() / "whisker_line_inspector_save_test";
     std::filesystem::create_directories(dir);
     return dir;
 }
 
-void cleanupTempDir(std::filesystem::path const & dir)
-{
+void cleanupTempDir(std::filesystem::path const & dir) {
     std::error_code ec;
     std::filesystem::remove_all(dir, ec);
 }
@@ -85,15 +83,15 @@ TEST_CASE("LineInspector construction", "[LineInspector]") {
 
     SECTION("Constructs with data manager") {
         auto data_manager = std::make_shared<DataManager>();
-        LineInspector inspector(data_manager, nullptr, nullptr);
+        LineInspector const inspector(data_manager, nullptr, nullptr);
 
         // Inspector should be created without crashing
-        app->processEvents();
+        QCoreApplication::processEvents();
     }
 
     SECTION("Returns correct data type") {
         auto data_manager = std::make_shared<DataManager>();
-        LineInspector inspector(data_manager, nullptr, nullptr);
+        LineInspector const inspector(data_manager, nullptr, nullptr);
 
         REQUIRE(inspector.getDataType() == DM_DataType::Line);
         REQUIRE(inspector.getTypeName() == QStringLiteral("Line"));
@@ -109,14 +107,14 @@ TEST_CASE("LineInspector has expected UI", "[LineInspector]") {
 
     SECTION("Contains group filter combo box") {
         auto data_manager = std::make_shared<DataManager>();
-        LineInspector inspector(data_manager, nullptr, nullptr);
+        LineInspector const inspector(data_manager, nullptr, nullptr);
 
         auto * group_filter_combo = inspector.findChild<QComboBox *>("groupFilterCombo");
         REQUIRE(group_filter_combo != nullptr);
-        REQUIRE(group_filter_combo->count() == 1);  // Should have "All Groups" initially
+        REQUIRE(group_filter_combo->count() == 1);// Should have "All Groups" initially
         REQUIRE(group_filter_combo->itemText(0) == QStringLiteral("All Groups"));
 
-        app->processEvents();
+        QCoreApplication::processEvents();
     }
 }
 
@@ -160,7 +158,7 @@ TEST_CASE("LineInspector saves data from DataManager", "[LineInspector][save]") 
         LineInspector inspector(data_manager, nullptr, nullptr);
         inspector.setActiveKey("test_lines");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Set filename for export
         auto * csv_saver = inspector.findChild<CSVLineSaver_Widget *>("csv_line_saver_widget");
@@ -180,7 +178,7 @@ TEST_CASE("LineInspector saves data from DataManager", "[LineInspector][save]") 
         REQUIRE(save_button != nullptr);
         save_button->click();
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         auto const filepath = temp_dir / "saved_lines.csv";
         REQUIRE(std::filesystem::exists(filepath));
@@ -190,11 +188,11 @@ TEST_CASE("LineInspector saves data from DataManager", "[LineInspector][save]") 
         load_opts.filepath = filepath.string();
         auto loaded = load(load_opts);
         std::map<TimeFrameIndex, std::vector<Line2D>> loaded_map;
-        for (auto const& [t, l] : loaded) {
+        for (auto const & [t, l]: loaded) {
             loaded_map[t].push_back(l);
         }
 
-        REQUIRE(loaded_map.size() == 3);  // 3 frames with data
+        REQUIRE(loaded_map.size() == 3);// 3 frames with data
         REQUIRE(loaded_map.count(TimeFrameIndex(0)) == 1);
         REQUIRE(loaded_map.count(TimeFrameIndex(10)) == 1);
         REQUIRE(loaded_map.count(TimeFrameIndex(20)) == 1);
@@ -202,9 +200,86 @@ TEST_CASE("LineInspector saves data from DataManager", "[LineInspector][save]") 
         // Verify line content at frame 0
         auto const & lines_at_0 = loaded_map.at(TimeFrameIndex(0));
         REQUIRE(lines_at_0.size() == 1);
-        REQUIRE(lines_at_0[0].size() == 3);  // 3 points per line
+        REQUIRE(lines_at_0[0].size() == 3);// 3 points per line
         REQUIRE(lines_at_0[0][0].x == Catch::Approx(10.0f));
         REQUIRE(lines_at_0[0][0].y == Catch::Approx(10.0f));
+
+        cleanupTempDir(temp_dir);
+    }
+
+    SECTION("Multi-file save button exports LineData to file-origin directory") {
+        auto temp_dir = makeTempDir();
+        auto const origin_dir = temp_dir / "line_frames";
+        auto const output_dir = temp_dir / "output";
+        std::filesystem::create_directories(origin_dir);
+        std::filesystem::create_directories(output_dir);
+
+        auto data_manager = std::make_shared<DataManager>();
+        data_manager->setOutputPath(output_dir.string());
+
+        constexpr int kNumTimes = 100;
+        std::vector<int> t(kNumTimes);
+        std::iota(t.begin(), t.end(), 0);
+        auto tf = std::make_shared<TimeFrame>(t);
+        data_manager->setTime(TimeKey("time"), tf);
+
+        auto line_data = std::make_shared<LineData>();
+        line_data->setIdentityContext("test_lines", data_manager->getEntityRegistry());
+
+        auto create_line = [](float base_y) -> Line2D {
+            Line2D line;
+            line.push_back(Point2D<float>{10.0f, base_y});
+            line.push_back(Point2D<float>{20.0f, base_y + 5.0f});
+            line.push_back(Point2D<float>{30.0f, base_y + 10.0f});
+            return line;
+        };
+
+        line_data->addAtTime(TimeFrameIndex(0), create_line(10.0f), NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(10), create_line(20.0f), NotifyObservers::No);
+        line_data->addAtTime(TimeFrameIndex(20), create_line(30.0f), NotifyObservers::No);
+        line_data->rebuildAllEntityIds();
+
+        data_manager->setData<LineData>("test_lines", line_data, TimeKey("time"));
+
+        Neuralyzer::Entity::Lineage::FileOrigin origin{
+                .m_path = origin_dir.string(),
+                .m_format = "csv",
+                .m_data_type = "LineData",
+                .m_source_config_json = R"({"multi_file": true, "format": "csv"})"};
+        Neuralyzer::Entity::Lineage::LineageRecorder::recordFileSource(
+                *data_manager->getLineageRegistry(), "test_lines", std::move(origin));
+
+        LineInspector inspector(data_manager, nullptr, nullptr);
+        inspector.setActiveKey("test_lines");
+
+        QCoreApplication::processEvents();
+
+        auto * csv_saver = inspector.findChild<CSVLineSaver_Widget *>("csv_line_saver_widget");
+        REQUIRE(csv_saver != nullptr);
+        auto * multi_file_radio = csv_saver->findChild<QRadioButton *>("multi_file_radio");
+        REQUIRE(multi_file_radio != nullptr);
+        multi_file_radio->setChecked(true);
+
+        auto * filename_edit = csv_saver->findChild<QLineEdit *>("save_filename_edit");
+        REQUIRE(filename_edit != nullptr);
+        filename_edit->setText(QStringLiteral("line_data"));
+
+        QTimer::singleShot(50, []() {
+            if (auto * w = QApplication::activeModalWidget()) {
+                w->close();
+            }
+        });
+
+        auto * save_button = csv_saver->findChild<QPushButton *>("save_action_button");
+        REQUIRE(save_button != nullptr);
+        save_button->click();
+
+        QCoreApplication::processEvents();
+
+        REQUIRE(std::filesystem::exists(origin_dir / "0000000.csv"));
+        REQUIRE(std::filesystem::exists(origin_dir / "0000010.csv"));
+        REQUIRE(std::filesystem::exists(origin_dir / "0000020.csv"));
+        REQUIRE_FALSE(std::filesystem::exists(output_dir / "line_data" / "0000000.csv"));
 
         cleanupTempDir(temp_dir);
     }
@@ -221,8 +296,8 @@ TEST_CASE("LineInspector group filter updates when groups are added", "[LineInsp
         auto entity_group_manager = std::make_unique<EntityGroupManager>();
         auto group_manager = std::make_unique<GroupManager>(entity_group_manager.get(), data_manager);
 
-        LineInspector inspector(data_manager, group_manager.get(), nullptr);
-        app->processEvents();
+        LineInspector const inspector(data_manager, group_manager.get(), nullptr);
+        QCoreApplication::processEvents();
 
         auto * group_filter_combo = inspector.findChild<QComboBox *>("groupFilterCombo");
         REQUIRE(group_filter_combo != nullptr);
@@ -232,8 +307,8 @@ TEST_CASE("LineInspector group filter updates when groups are added", "[LineInsp
         REQUIRE(group_filter_combo->itemText(0) == QStringLiteral("All Groups"));
 
         // Create first group
-        int group1_id = group_manager->createGroup("Group A");
-        app->processEvents();
+        int const group1_id = group_manager->createGroup("Group A");
+        QCoreApplication::processEvents();
 
         // Combo box should now have "All Groups" and "Group A"
         REQUIRE(group_filter_combo->count() == 2);
@@ -241,8 +316,8 @@ TEST_CASE("LineInspector group filter updates when groups are added", "[LineInsp
         REQUIRE(group_filter_combo->itemText(1) == QStringLiteral("Group A"));
 
         // Create second group
-        int group2_id = group_manager->createGroup("Group B");
-        app->processEvents();
+        int const group2_id = group_manager->createGroup("Group B");
+        QCoreApplication::processEvents();
 
         // Combo box should now have "All Groups", "Group A", and "Group B"
         REQUIRE(group_filter_combo->count() == 3);
@@ -251,8 +326,8 @@ TEST_CASE("LineInspector group filter updates when groups are added", "[LineInsp
         REQUIRE(group_filter_combo->itemText(2) == QStringLiteral("Group B"));
 
         // Create third group
-        int group3_id = group_manager->createGroup("Group C");
-        app->processEvents();
+        int const group3_id = group_manager->createGroup("Group C");
+        QCoreApplication::processEvents();
 
         // Combo box should now have all four items
         REQUIRE(group_filter_combo->count() == 4);
@@ -267,23 +342,23 @@ TEST_CASE("LineInspector group filter updates when groups are added", "[LineInsp
         auto entity_group_manager = std::make_unique<EntityGroupManager>();
         auto group_manager = std::make_unique<GroupManager>(entity_group_manager.get(), data_manager);
 
-        LineInspector inspector(data_manager, group_manager.get(), nullptr);
-        app->processEvents();
+        LineInspector const inspector(data_manager, group_manager.get(), nullptr);
+        QCoreApplication::processEvents();
 
         auto * group_filter_combo = inspector.findChild<QComboBox *>("groupFilterCombo");
         REQUIRE(group_filter_combo != nullptr);
 
         // Create groups
-        int group1_id = group_manager->createGroup("Group A");
-        int group2_id = group_manager->createGroup("Group B");
-        int group3_id = group_manager->createGroup("Group C");
-        app->processEvents();
+        int const group1_id = group_manager->createGroup("Group A");
+        int const group2_id = group_manager->createGroup("Group B");
+        int const group3_id = group_manager->createGroup("Group C");
+        QCoreApplication::processEvents();
 
-        REQUIRE(group_filter_combo->count() == 4);  // "All Groups" + 3 groups
+        REQUIRE(group_filter_combo->count() == 4);// "All Groups" + 3 groups
 
         // Remove middle group
         group_manager->removeGroup(group2_id);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Should still have "All Groups" + 2 groups
         REQUIRE(group_filter_combo->count() == 3);
@@ -303,15 +378,15 @@ TEST_CASE("LineTableView construction", "[LineTableView]") {
 
     SECTION("Constructs with data manager") {
         auto data_manager = std::make_shared<DataManager>();
-        LineTableView view(data_manager, nullptr);
+        LineTableView const view(data_manager, nullptr);
 
         // View should be created without crashing
-        app->processEvents();
+        QCoreApplication::processEvents();
     }
 
     SECTION("Returns correct data type") {
         auto data_manager = std::make_shared<DataManager>();
-        LineTableView view(data_manager, nullptr);
+        LineTableView const view(data_manager, nullptr);
 
         REQUIRE(view.getDataType() == DM_DataType::Line);
         REQUIRE(view.getTypeName() == QStringLiteral("Line Table"));
@@ -319,7 +394,7 @@ TEST_CASE("LineTableView construction", "[LineTableView]") {
 
     SECTION("Has table view") {
         auto data_manager = std::make_shared<DataManager>();
-        LineTableView view(data_manager, nullptr);
+        LineTableView const view(data_manager, nullptr);
 
         auto * table_view = view.tableView();
         REQUIRE(table_view != nullptr);
@@ -370,7 +445,7 @@ TEST_CASE("LineTableView displays line data", "[LineTableView]") {
         LineTableView view(data_manager, nullptr);
         view.setActiveKey("test_lines");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         auto * table_view = view.tableView();
         REQUIRE(table_view != nullptr);
@@ -419,10 +494,10 @@ TEST_CASE("LineTableView group filtering", "[LineTableView][Groups]") {
         };
 
         // Add lines at different frames
-        line_data->addAtTime(TimeFrameIndex(0), create_line(10.0f), NotifyObservers::No);  // Will be Group A
-        line_data->addAtTime(TimeFrameIndex(0), create_line(20.0f), NotifyObservers::No);  // Will be Group B
-        line_data->addAtTime(TimeFrameIndex(10), create_line(30.0f), NotifyObservers::No); // Will be Group A
-        line_data->addAtTime(TimeFrameIndex(20), create_line(40.0f), NotifyObservers::No); // Will be ungrouped
+        line_data->addAtTime(TimeFrameIndex(0), create_line(10.0f), NotifyObservers::No); // Will be Group A
+        line_data->addAtTime(TimeFrameIndex(0), create_line(20.0f), NotifyObservers::No); // Will be Group B
+        line_data->addAtTime(TimeFrameIndex(10), create_line(30.0f), NotifyObservers::No);// Will be Group A
+        line_data->addAtTime(TimeFrameIndex(20), create_line(40.0f), NotifyObservers::No);// Will be ungrouped
 
         // Rebuild entity IDs
         line_data->rebuildAllEntityIds();
@@ -435,13 +510,13 @@ TEST_CASE("LineTableView group filtering", "[LineTableView][Groups]") {
         REQUIRE(entity_ids_frame0.size() == 2);
         REQUIRE(entity_ids_frame10.size() == 1);
 
-        EntityId entity0 = entity_ids_frame0[0];  // First line at frame 0
-        EntityId entity1 = entity_ids_frame0[1];   // Second line at frame 0
-        EntityId entity2 = entity_ids_frame10[0];  // Line at frame 10
+        EntityId const entity0 = entity_ids_frame0[0]; // First line at frame 0
+        EntityId const entity1 = entity_ids_frame0[1]; // Second line at frame 0
+        EntityId const entity2 = entity_ids_frame10[0];// Line at frame 10
 
         // Create groups and assign entities
-        int group_a_id = group_manager->createGroup("Group A");
-        int group_b_id = group_manager->createGroup("Group B");
+        int const group_a_id = group_manager->createGroup("Group A");
+        int const group_b_id = group_manager->createGroup("Group B");
 
         // Assign entities to groups
         group_manager->assignEntitiesToGroup(group_a_id, {entity0, entity2});
@@ -452,7 +527,7 @@ TEST_CASE("LineTableView group filtering", "[LineTableView][Groups]") {
         view.setGroupManager(group_manager.get());
         view.setActiveKey("test_lines");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         auto * table_view = view.tableView();
         REQUIRE(table_view != nullptr);
@@ -464,14 +539,14 @@ TEST_CASE("LineTableView group filtering", "[LineTableView][Groups]") {
 
         // Filter by Group A
         view.setGroupFilter(group_a_id);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Should show only 2 lines (entity0 and entity2)
         REQUIRE(model->rowCount() == 2);
         // Verify they are from frames 0 and 10
         std::set<int> frames;
         for (int row = 0; row < model->rowCount(); ++row) {
-            int frame = model->data(model->index(row, 0)).toInt();
+            int const frame = model->data(model->index(row, 0)).toInt();
             frames.insert(frame);
         }
         REQUIRE(frames.count(0) == 1);
@@ -479,7 +554,7 @@ TEST_CASE("LineTableView group filtering", "[LineTableView][Groups]") {
 
         // Filter by Group B
         view.setGroupFilter(group_b_id);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Should show only 1 line (entity1)
         REQUIRE(model->rowCount() == 1);
@@ -487,7 +562,7 @@ TEST_CASE("LineTableView group filtering", "[LineTableView][Groups]") {
 
         // Clear filter
         view.clearGroupFilter();
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Should show all 4 lines again
         REQUIRE(model->rowCount() == 4);
@@ -543,9 +618,9 @@ TEST_CASE("LineInspector and LineTableView integration with groups", "[LineInspe
         REQUIRE(entity_ids_frame0.size() == 2);
         REQUIRE(entity_ids_frame10.size() == 1);
 
-        EntityId entity0 = entity_ids_frame0[0];
-        EntityId entity1 = entity_ids_frame0[1];
-        EntityId entity2 = entity_ids_frame10[0];
+        EntityId const entity0 = entity_ids_frame0[0];
+        EntityId const entity1 = entity_ids_frame0[1];
+        EntityId const entity2 = entity_ids_frame10[0];
 
         // Create inspector and view, and connect them
         LineInspector inspector(data_manager, group_manager.get(), nullptr);
@@ -555,7 +630,7 @@ TEST_CASE("LineInspector and LineTableView integration with groups", "[LineInspe
         inspector.setActiveKey("test_lines");
         view.setActiveKey("test_lines");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         auto * group_filter_combo = inspector.findChild<QComboBox *>("groupFilterCombo");
         REQUIRE(group_filter_combo != nullptr);
@@ -571,40 +646,40 @@ TEST_CASE("LineInspector and LineTableView integration with groups", "[LineInspe
         REQUIRE(group_filter_combo->itemText(0) == QStringLiteral("All Groups"));
 
         // Create groups
-        int group_a_id = group_manager->createGroup("Group A");
-        int group_b_id = group_manager->createGroup("Group B");
-        app->processEvents();
+        int const group_a_id = group_manager->createGroup("Group A");
+        int const group_b_id = group_manager->createGroup("Group B");
+        QCoreApplication::processEvents();
 
         // Combo box should update
-        REQUIRE(group_filter_combo->count() == 3);  // "All Groups" + 2 groups
+        REQUIRE(group_filter_combo->count() == 3);// "All Groups" + 2 groups
         REQUIRE(group_filter_combo->itemText(1) == QStringLiteral("Group A"));
         REQUIRE(group_filter_combo->itemText(2) == QStringLiteral("Group B"));
 
         // Assign entities to groups
         group_manager->assignEntitiesToGroup(group_a_id, {entity0, entity2});
         group_manager->assignEntitiesToGroup(group_b_id, {entity1});
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Table should still show all lines (no filter applied yet)
         REQUIRE(model->rowCount() == 4);
 
         // Filter by Group A using the combo box (this should trigger _onGroupFilterChanged)
         group_filter_combo->setCurrentIndex(1);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Table should now show only 2 lines (entity0 and entity2)
         REQUIRE(model->rowCount() == 2);
 
         // Change filter to Group B using the combo box
         group_filter_combo->setCurrentIndex(2);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Table should now show only 1 line (entity1)
         REQUIRE(model->rowCount() == 1);
 
         // Clear filter by selecting "All Groups" in the combo box
         group_filter_combo->setCurrentIndex(0);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Table should show all 4 lines again
         REQUIRE(model->rowCount() == 4);
@@ -643,24 +718,24 @@ TEST_CASE("LineInspector and LineTableView integration with groups", "[LineInspe
         LineInspector inspector(data_manager, group_manager.get(), nullptr);
         inspector.setActiveKey("test_lines");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         auto * group_filter_combo = inspector.findChild<QComboBox *>("groupFilterCombo");
         REQUIRE(group_filter_combo != nullptr);
 
         // Create first group
-        int group_a_id = group_manager->createGroup("Group A");
-        app->processEvents();
+        int const group_a_id = group_manager->createGroup("Group A");
+        QCoreApplication::processEvents();
 
-        REQUIRE(group_filter_combo->count() == 2);  // "All Groups" + "Group A"
+        REQUIRE(group_filter_combo->count() == 2);// "All Groups" + "Group A"
 
         // Select Group A in combo box
         group_filter_combo->setCurrentIndex(1);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Create second group
-        int group_b_id = group_manager->createGroup("Group B");
-        app->processEvents();
+        int const group_b_id = group_manager->createGroup("Group B");
+        QCoreApplication::processEvents();
 
         // Combo box should have updated with new group
         REQUIRE(group_filter_combo->count() == 3);
@@ -698,11 +773,11 @@ TEST_CASE("LineInspector and LineTableView integration with groups", "[LineInspe
         };
 
         // Add lines at different frames
-        line_data->addAtTime(TimeFrameIndex(0), create_line(10.0f), NotifyObservers::No);  // Will be Group A
-        line_data->addAtTime(TimeFrameIndex(0), create_line(20.0f), NotifyObservers::No);  // Will be Group B
-        line_data->addAtTime(TimeFrameIndex(10), create_line(30.0f), NotifyObservers::No); // Will be Group A
-        line_data->addAtTime(TimeFrameIndex(20), create_line(40.0f), NotifyObservers::No); // Will be Group B
-        line_data->addAtTime(TimeFrameIndex(30), create_line(50.0f), NotifyObservers::No); // Will be ungrouped
+        line_data->addAtTime(TimeFrameIndex(0), create_line(10.0f), NotifyObservers::No); // Will be Group A
+        line_data->addAtTime(TimeFrameIndex(0), create_line(20.0f), NotifyObservers::No); // Will be Group B
+        line_data->addAtTime(TimeFrameIndex(10), create_line(30.0f), NotifyObservers::No);// Will be Group A
+        line_data->addAtTime(TimeFrameIndex(20), create_line(40.0f), NotifyObservers::No);// Will be Group B
+        line_data->addAtTime(TimeFrameIndex(30), create_line(50.0f), NotifyObservers::No);// Will be ungrouped
 
         // Rebuild entity IDs
         line_data->rebuildAllEntityIds();
@@ -719,18 +794,18 @@ TEST_CASE("LineInspector and LineTableView integration with groups", "[LineInspe
         REQUIRE(entity_ids_frame20.size() == 1);
         REQUIRE(entity_ids_frame30.size() == 1);
 
-        EntityId entity0 = entity_ids_frame0[0];  // Group A
-        EntityId entity1 = entity_ids_frame0[1];  // Group B
-        EntityId entity2 = entity_ids_frame10[0]; // Group A
-        EntityId entity3 = entity_ids_frame20[0]; // Group B
-        EntityId entity4 = entity_ids_frame30[0]; // Ungrouped
+        EntityId const entity0 = entity_ids_frame0[0]; // Group A
+        EntityId const entity1 = entity_ids_frame0[1]; // Group B
+        EntityId const entity2 = entity_ids_frame10[0];// Group A
+        EntityId const entity3 = entity_ids_frame20[0];// Group B
+        EntityId const entity4 = entity_ids_frame30[0];// Ungrouped
 
         // Create groups and assign entities
-        int group_a_id = group_manager->createGroup("Group A");
-        int group_b_id = group_manager->createGroup("Group B");
+        int const group_a_id = group_manager->createGroup("Group A");
+        int const group_b_id = group_manager->createGroup("Group B");
         group_manager->assignEntitiesToGroup(group_a_id, {entity0, entity2});
         group_manager->assignEntitiesToGroup(group_b_id, {entity1, entity3});
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Create inspector and view, and connect them
         LineInspector inspector(data_manager, group_manager.get(), nullptr);
@@ -740,7 +815,7 @@ TEST_CASE("LineInspector and LineTableView integration with groups", "[LineInspe
         inspector.setActiveKey("test_lines");
         view.setActiveKey("test_lines");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         auto * group_filter_combo = inspector.findChild<QComboBox *>("groupFilterCombo");
         REQUIRE(group_filter_combo != nullptr);
@@ -752,19 +827,19 @@ TEST_CASE("LineInspector and LineTableView integration with groups", "[LineInspe
 
         // Initially should show all 5 lines
         REQUIRE(model->rowCount() == 5);
-        REQUIRE(group_filter_combo->currentIndex() == 0);  // "All Groups"
+        REQUIRE(group_filter_combo->currentIndex() == 0);// "All Groups"
 
         // Filter by Group A (index 1)
         group_filter_combo->setCurrentIndex(1);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Should show only 2 lines (entity0 and entity2)
         REQUIRE(model->rowCount() == 2);
-        
+
         // Verify the filtered rows contain the correct entities
         std::set<EntityId> filtered_entities;
         for (int row = 0; row < model->rowCount(); ++row) {
-            auto row_data = static_cast<LineTableModel *>(model)->getRowData(row);
+            auto row_data = dynamic_cast<LineTableModel *>(model)->getRowData(row);
             filtered_entities.insert(row_data.entity_id);
         }
         REQUIRE(filtered_entities.count(entity0) == 1);
@@ -775,14 +850,14 @@ TEST_CASE("LineInspector and LineTableView integration with groups", "[LineInspe
 
         // Filter by Group B (index 2)
         group_filter_combo->setCurrentIndex(2);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Should show only 2 lines (entity1 and entity3)
         REQUIRE(model->rowCount() == 2);
-        
+
         filtered_entities.clear();
         for (int row = 0; row < model->rowCount(); ++row) {
-            auto row_data = static_cast<LineTableModel *>(model)->getRowData(row);
+            auto row_data = dynamic_cast<LineTableModel *>(model)->getRowData(row);
             filtered_entities.insert(row_data.entity_id);
         }
         REQUIRE(filtered_entities.count(entity1) == 1);
@@ -793,7 +868,7 @@ TEST_CASE("LineInspector and LineTableView integration with groups", "[LineInspe
 
         // Clear filter (back to "All Groups")
         group_filter_combo->setCurrentIndex(0);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Should show all 5 lines again
         REQUIRE(model->rowCount() == 5);
@@ -824,9 +899,9 @@ TEST_CASE("LineInspector and LineTableView integration with groups", "[LineInspe
         };
 
         // Add initial lines
-        line_data->addAtTime(TimeFrameIndex(0), create_line(10.0f), NotifyObservers::No);  // Will be Group A
-        line_data->addAtTime(TimeFrameIndex(10), create_line(20.0f), NotifyObservers::No); // Will be Group A
-        line_data->addAtTime(TimeFrameIndex(20), create_line(30.0f), NotifyObservers::No);  // Will be ungrouped initially
+        line_data->addAtTime(TimeFrameIndex(0), create_line(10.0f), NotifyObservers::No); // Will be Group A
+        line_data->addAtTime(TimeFrameIndex(10), create_line(20.0f), NotifyObservers::No);// Will be Group A
+        line_data->addAtTime(TimeFrameIndex(20), create_line(30.0f), NotifyObservers::No);// Will be ungrouped initially
 
         // Rebuild entity IDs
         line_data->rebuildAllEntityIds();
@@ -841,14 +916,14 @@ TEST_CASE("LineInspector and LineTableView integration with groups", "[LineInspe
         REQUIRE(entity_ids_frame10.size() == 1);
         REQUIRE(entity_ids_frame20.size() == 1);
 
-        EntityId entity0 = entity_ids_frame0[0];  // Group A
-        EntityId entity1 = entity_ids_frame10[0]; // Group A
-        EntityId entity2 = entity_ids_frame20[0]; // Will be added to Group A later
+        EntityId const entity0 = entity_ids_frame0[0]; // Group A
+        EntityId const entity1 = entity_ids_frame10[0];// Group A
+        EntityId const entity2 = entity_ids_frame20[0];// Will be added to Group A later
 
         // Create group and assign initial entities
-        int group_a_id = group_manager->createGroup("Group A");
+        int const group_a_id = group_manager->createGroup("Group A");
         group_manager->assignEntitiesToGroup(group_a_id, {entity0, entity1});
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Create inspector and view, and connect them
         LineInspector inspector(data_manager, group_manager.get(), nullptr);
@@ -858,7 +933,7 @@ TEST_CASE("LineInspector and LineTableView integration with groups", "[LineInspe
         inspector.setActiveKey("test_lines");
         view.setActiveKey("test_lines");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         auto * group_filter_combo = inspector.findChild<QComboBox *>("groupFilterCombo");
         REQUIRE(group_filter_combo != nullptr);
@@ -870,14 +945,14 @@ TEST_CASE("LineInspector and LineTableView integration with groups", "[LineInspe
 
         // Filter by Group A
         group_filter_combo->setCurrentIndex(1);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Initially should show only 2 lines (entity0 and entity1)
         REQUIRE(model->rowCount() == 2);
-        
+
         std::set<EntityId> filtered_entities;
         for (int row = 0; row < model->rowCount(); ++row) {
-            auto row_data = static_cast<LineTableModel *>(model)->getRowData(row);
+            auto row_data = dynamic_cast<LineTableModel *>(model)->getRowData(row);
             filtered_entities.insert(row_data.entity_id);
         }
         REQUIRE(filtered_entities.count(entity0) == 1);
@@ -886,15 +961,15 @@ TEST_CASE("LineInspector and LineTableView integration with groups", "[LineInspe
 
         // Add entity2 to Group A
         group_manager->assignEntitiesToGroup(group_a_id, {entity2});
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Table should automatically update to show 3 lines now (entity0, entity1, entity2)
         // The view listens to groupModified signal and refreshes automatically
         REQUIRE(model->rowCount() == 3);
-        
+
         filtered_entities.clear();
         for (int row = 0; row < model->rowCount(); ++row) {
-            auto row_data = static_cast<LineTableModel *>(model)->getRowData(row);
+            auto row_data = dynamic_cast<LineTableModel *>(model)->getRowData(row);
             filtered_entities.insert(row_data.entity_id);
         }
         REQUIRE(filtered_entities.count(entity0) == 1);
@@ -955,8 +1030,8 @@ TEST_CASE("LineInspector and LineTableView move and copy operations", "[LineInsp
         REQUIRE(entity_ids_frame0.size() == 2);
         REQUIRE(entity_ids_frame10.size() == 1);
 
-        EntityId entity0 = entity_ids_frame0[0];
-        EntityId entity1 = entity_ids_frame0[1];
+        EntityId const entity0 = entity_ids_frame0[0];
+        EntityId const entity1 = entity_ids_frame0[1];
         EntityId entity2 = entity_ids_frame10[0];
 
         // Create inspector and view, and connect them
@@ -967,7 +1042,7 @@ TEST_CASE("LineInspector and LineTableView move and copy operations", "[LineInsp
         inspector.setActiveKey("source_lines");
         view.setActiveKey("source_lines");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         auto * table_view = view.tableView();
         REQUIRE(table_view != nullptr);
@@ -983,7 +1058,7 @@ TEST_CASE("LineInspector and LineTableView move and copy operations", "[LineInsp
         REQUIRE(selection_model != nullptr);
         selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
         selection_model->select(model->index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify selection
         auto selected_entity_ids = view.getSelectedEntityIds();
@@ -993,25 +1068,25 @@ TEST_CASE("LineInspector and LineTableView move and copy operations", "[LineInsp
 
         // Emit move signal (simulating context menu selection)
         emit view.moveLinesRequested("target_lines");
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Source should now have 2 lines (entity2 and the one at frame 20)
         view.updateView();
-        app->processEvents();
+        QCoreApplication::processEvents();
         REQUIRE(model->rowCount() == 2);
 
         // Target should have 2 lines (entity0 and entity1)
         target_line_data->rebuildAllEntityIds();
         auto target_times = target_line_data->getTimesWithData();
-        REQUIRE(target_times.size() == 1);  // Should have data at frame 0
+        REQUIRE(target_times.size() == 1);// Should have data at frame 0
         REQUIRE(target_line_data->getAtTime(TimeFrameIndex(0)).size() == 2);
 
         // Verify source still has entity2
         auto remaining_entities = view.getSelectedEntityIds();
         // Clear selection first
         selection_model->clearSelection();
-        app->processEvents();
-        
+        QCoreApplication::processEvents();
+
         // Check that entity2 is still in source
         auto source_entity_ids_frame10 = source_line_data->getEntityIdsAtTime(TimeFrameIndex(10));
         REQUIRE(source_entity_ids_frame10.size() == 1);
@@ -1061,8 +1136,8 @@ TEST_CASE("LineInspector and LineTableView move and copy operations", "[LineInsp
         REQUIRE(entity_ids_frame0.size() == 2);
         REQUIRE(entity_ids_frame10.size() == 1);
 
-        EntityId entity0 = entity_ids_frame0[0];
-        EntityId entity1 = entity_ids_frame0[1];
+        EntityId const entity0 = entity_ids_frame0[0];
+        EntityId const entity1 = entity_ids_frame0[1];
 
         // Create inspector and view, and connect them
         LineInspector inspector(data_manager, nullptr, nullptr);
@@ -1072,7 +1147,7 @@ TEST_CASE("LineInspector and LineTableView move and copy operations", "[LineInsp
         inspector.setActiveKey("source_lines");
         view.setActiveKey("source_lines");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         auto * table_view = view.tableView();
         REQUIRE(table_view != nullptr);
@@ -1088,7 +1163,7 @@ TEST_CASE("LineInspector and LineTableView move and copy operations", "[LineInsp
         REQUIRE(selection_model != nullptr);
         selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
         selection_model->select(model->index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify selection
         auto selected_entity_ids = view.getSelectedEntityIds();
@@ -1096,17 +1171,17 @@ TEST_CASE("LineInspector and LineTableView move and copy operations", "[LineInsp
 
         // Emit copy signal (simulating context menu selection)
         emit view.copyLinesRequested("target_lines");
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Source should still have 3 lines (unchanged)
         view.updateView();
-        app->processEvents();
+        QCoreApplication::processEvents();
         REQUIRE(model->rowCount() == 3);
 
         // Target should have 2 lines (copies of entity0 and entity1)
         target_line_data->rebuildAllEntityIds();
         auto target_times = target_line_data->getTimesWithData();
-        REQUIRE(target_times.size() == 1);  // Should have data at frame 0
+        REQUIRE(target_times.size() == 1);// Should have data at frame 0
         REQUIRE(target_line_data->getAtTime(TimeFrameIndex(0)).size() == 2);
 
         // Verify source still has all original lines
@@ -1163,14 +1238,14 @@ TEST_CASE("LineInspector and LineTableView group management context menu", "[Lin
         REQUIRE(entity_ids_frame0.size() == 2);
         REQUIRE(entity_ids_frame10.size() == 1);
 
-        EntityId entity0 = entity_ids_frame0[0];
-        EntityId entity1 = entity_ids_frame0[1];
-        EntityId entity2 = entity_ids_frame10[0];
+        EntityId const entity0 = entity_ids_frame0[0];
+        EntityId const entity1 = entity_ids_frame0[1];
+        EntityId const entity2 = entity_ids_frame10[0];
 
         // Create groups
-        int group_a_id = group_manager->createGroup("Group A");
-        int group_b_id = group_manager->createGroup("Group B");
-        app->processEvents();
+        int const group_a_id = group_manager->createGroup("Group A");
+        int const group_b_id = group_manager->createGroup("Group B");
+        QCoreApplication::processEvents();
 
         // Create inspector and view, and connect them
         LineInspector inspector(data_manager, group_manager.get(), nullptr);
@@ -1180,7 +1255,7 @@ TEST_CASE("LineInspector and LineTableView group management context menu", "[Lin
         inspector.setActiveKey("test_lines");
         view.setActiveKey("test_lines");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         auto * table_view = view.tableView();
         REQUIRE(table_view != nullptr);
@@ -1197,7 +1272,7 @@ TEST_CASE("LineInspector and LineTableView group management context menu", "[Lin
         REQUIRE(selection_model != nullptr);
         selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
         selection_model->select(model->index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify selection
         auto selected_entity_ids = view.getSelectedEntityIds();
@@ -1205,20 +1280,20 @@ TEST_CASE("LineInspector and LineTableView group management context menu", "[Lin
 
         // Emit move to group signal (simulating context menu selection)
         emit view.moveLinesToGroupRequested(group_a_id);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify entities are now in Group A
         REQUIRE(group_manager->getEntityGroup(entity0) == group_a_id);
         REQUIRE(group_manager->getEntityGroup(entity1) == group_a_id);
-        REQUIRE(group_manager->getEntityGroup(entity2) == -1);  // Not selected, should remain ungrouped
+        REQUIRE(group_manager->getEntityGroup(entity2) == -1);// Not selected, should remain ungrouped
 
         // Verify table updates to show group names
         view.updateView();
-        app->processEvents();
-        
+        QCoreApplication::processEvents();
+
         // Check that the group names are updated in the model
         for (int row = 0; row < model->rowCount(); ++row) {
-            auto row_data = static_cast<LineTableModel *>(model)->getRowData(row);
+            auto row_data = dynamic_cast<LineTableModel *>(model)->getRowData(row);
             if (row_data.entity_id == entity0 || row_data.entity_id == entity1) {
                 REQUIRE(row_data.group_name == QStringLiteral("Group A"));
             } else if (row_data.entity_id == entity2) {
@@ -1229,15 +1304,15 @@ TEST_CASE("LineInspector and LineTableView group management context menu", "[Lin
         // Now select entity2 and move it to Group B
         selection_model->clearSelection();
         selection_model->select(model->index(2, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         emit view.moveLinesToGroupRequested(group_b_id);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify entity2 is now in Group B
         REQUIRE(group_manager->getEntityGroup(entity2) == group_b_id);
-        REQUIRE(group_manager->getEntityGroup(entity0) == group_a_id);  // Should still be in Group A
-        REQUIRE(group_manager->getEntityGroup(entity1) == group_a_id);  // Should still be in Group A
+        REQUIRE(group_manager->getEntityGroup(entity0) == group_a_id);// Should still be in Group A
+        REQUIRE(group_manager->getEntityGroup(entity1) == group_a_id);// Should still be in Group A
     }
 
     SECTION("Remove lines from group via context menu") {
@@ -1280,14 +1355,14 @@ TEST_CASE("LineInspector and LineTableView group management context menu", "[Lin
         REQUIRE(entity_ids_frame0.size() == 2);
         REQUIRE(entity_ids_frame10.size() == 1);
 
-        EntityId entity0 = entity_ids_frame0[0];
-        EntityId entity1 = entity_ids_frame0[1];
-        EntityId entity2 = entity_ids_frame10[0];
+        EntityId const entity0 = entity_ids_frame0[0];
+        EntityId const entity1 = entity_ids_frame0[1];
+        EntityId const entity2 = entity_ids_frame10[0];
 
         // Create group and assign entities
-        int group_a_id = group_manager->createGroup("Group A");
+        int const group_a_id = group_manager->createGroup("Group A");
         group_manager->assignEntitiesToGroup(group_a_id, {entity0, entity1, entity2});
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify all entities are in Group A
         REQUIRE(group_manager->getEntityGroup(entity0) == group_a_id);
@@ -1302,7 +1377,7 @@ TEST_CASE("LineInspector and LineTableView group management context menu", "[Lin
         inspector.setActiveKey("test_lines");
         view.setActiveKey("test_lines");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         auto * table_view = view.tableView();
         REQUIRE(table_view != nullptr);
@@ -1314,7 +1389,7 @@ TEST_CASE("LineInspector and LineTableView group management context menu", "[Lin
         REQUIRE(selection_model != nullptr);
         selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
         selection_model->select(model->index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify selection
         auto selected_entity_ids = view.getSelectedEntityIds();
@@ -1322,20 +1397,20 @@ TEST_CASE("LineInspector and LineTableView group management context menu", "[Lin
 
         // Emit remove from group signal (simulating context menu selection)
         emit view.removeLinesFromGroupRequested();
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify selected entities are removed from group
         REQUIRE(group_manager->getEntityGroup(entity0) == -1);
         REQUIRE(group_manager->getEntityGroup(entity1) == -1);
-        REQUIRE(group_manager->getEntityGroup(entity2) == group_a_id);  // Not selected, should remain in group
+        REQUIRE(group_manager->getEntityGroup(entity2) == group_a_id);// Not selected, should remain in group
 
         // Verify table updates to show group names
         view.updateView();
-        app->processEvents();
-        
+        QCoreApplication::processEvents();
+
         // Check that the group names are updated in the model
         for (int row = 0; row < model->rowCount(); ++row) {
-            auto row_data = static_cast<LineTableModel *>(model)->getRowData(row);
+            auto row_data = dynamic_cast<LineTableModel *>(model)->getRowData(row);
             if (row_data.entity_id == entity0 || row_data.entity_id == entity1) {
                 REQUIRE(row_data.group_name == QStringLiteral("No Group"));
             } else if (row_data.entity_id == entity2) {
@@ -1382,13 +1457,13 @@ TEST_CASE("LineInspector and LineTableView group management context menu", "[Lin
         REQUIRE(entity_ids_frame0.size() == 2);
 
         EntityId entity0 = entity_ids_frame0[0];
-        EntityId entity1 = entity_ids_frame0[1];
+        EntityId const entity1 = entity_ids_frame0[1];
 
         // Create groups and assign entity0 to Group A
-        int group_a_id = group_manager->createGroup("Group A");
-        int group_b_id = group_manager->createGroup("Group B");
+        int const group_a_id = group_manager->createGroup("Group A");
+        int const group_b_id = group_manager->createGroup("Group B");
         group_manager->assignEntitiesToGroup(group_a_id, {entity0});
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify initial group assignment
         REQUIRE(group_manager->getEntityGroup(entity0) == group_a_id);
@@ -1402,7 +1477,7 @@ TEST_CASE("LineInspector and LineTableView group management context menu", "[Lin
         inspector.setActiveKey("test_lines");
         view.setActiveKey("test_lines");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         auto * table_view = view.tableView();
         REQUIRE(table_view != nullptr);
@@ -1413,22 +1488,22 @@ TEST_CASE("LineInspector and LineTableView group management context menu", "[Lin
         auto * selection_model = table_view->selectionModel();
         REQUIRE(selection_model != nullptr);
         selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Move entity0 from Group A to Group B
         emit view.moveLinesToGroupRequested(group_b_id);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify entity0 is now in Group B (moved from Group A)
         REQUIRE(group_manager->getEntityGroup(entity0) == group_b_id);
-        REQUIRE(group_manager->getEntityGroup(entity1) == -1);  // Should remain ungrouped
+        REQUIRE(group_manager->getEntityGroup(entity1) == -1);// Should remain ungrouped
 
         // Verify table updates
         view.updateView();
-        app->processEvents();
-        
+        QCoreApplication::processEvents();
+
         // Check that the group name is updated in the model
-        auto row_data = static_cast<LineTableModel *>(model)->getRowData(0);
+        auto row_data = dynamic_cast<LineTableModel *>(model)->getRowData(0);
         REQUIRE(row_data.entity_id == entity0);
         REQUIRE(row_data.group_name == QStringLiteral("Group B"));
     }
@@ -1483,8 +1558,8 @@ TEST_CASE("LineInspector and LineTableView delete lines", "[LineInspector][LineT
         REQUIRE(entity_ids_frame10.size() == 1);
         REQUIRE(entity_ids_frame20.size() == 1);
 
-        EntityId entity0 = entity_ids_frame0[0];
-        EntityId entity1 = entity_ids_frame0[1];
+        EntityId const entity0 = entity_ids_frame0[0];
+        EntityId const entity1 = entity_ids_frame0[1];
         EntityId entity2 = entity_ids_frame10[0];
         EntityId entity3 = entity_ids_frame20[0];
 
@@ -1496,7 +1571,7 @@ TEST_CASE("LineInspector and LineTableView delete lines", "[LineInspector][LineT
         inspector.setActiveKey("test_lines");
         view.setActiveKey("test_lines");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         auto * table_view = view.tableView();
         REQUIRE(table_view != nullptr);
@@ -1514,7 +1589,7 @@ TEST_CASE("LineInspector and LineTableView delete lines", "[LineInspector][LineT
         REQUIRE(selection_model != nullptr);
         selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
         selection_model->select(model->index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify selection
         auto selected_entity_ids = view.getSelectedEntityIds();
@@ -1524,22 +1599,22 @@ TEST_CASE("LineInspector and LineTableView delete lines", "[LineInspector][LineT
 
         // Emit delete signal (simulating context menu selection)
         emit view.deleteLinesRequested();
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify lines were deleted
         view.updateView();
-        app->processEvents();
-        
+        QCoreApplication::processEvents();
+
         // Should now have 2 lines (entity2 and entity3)
         REQUIRE(model->rowCount() == 2);
-        REQUIRE(line_data->getAtTime(TimeFrameIndex(0)).size() == 0);  // Both lines at frame 0 deleted
-        REQUIRE(line_data->getAtTime(TimeFrameIndex(10)).size() == 1);  // entity2 still exists
-        REQUIRE(line_data->getAtTime(TimeFrameIndex(20)).size() == 1);  // entity3 still exists
+        REQUIRE(line_data->getAtTime(TimeFrameIndex(0)).size() == 0); // Both lines at frame 0 deleted
+        REQUIRE(line_data->getAtTime(TimeFrameIndex(10)).size() == 1);// entity2 still exists
+        REQUIRE(line_data->getAtTime(TimeFrameIndex(20)).size() == 1);// entity3 still exists
 
         // Verify entity0 and entity1 are gone
         auto remaining_entity_ids_frame0 = line_data->getEntityIdsAtTime(TimeFrameIndex(0));
         REQUIRE(remaining_entity_ids_frame0.size() == 0);
-        
+
         // Verify entity2 and entity3 still exist
         auto remaining_entity_ids_frame10 = line_data->getEntityIdsAtTime(TimeFrameIndex(10));
         auto remaining_entity_ids_frame20 = line_data->getEntityIdsAtTime(TimeFrameIndex(20));
@@ -1588,7 +1663,7 @@ TEST_CASE("LineInspector and LineTableView delete lines", "[LineInspector][LineT
         inspector.setActiveKey("test_lines");
         view.setActiveKey("test_lines");
 
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         auto * table_view = view.tableView();
         REQUIRE(table_view != nullptr);
@@ -1603,16 +1678,16 @@ TEST_CASE("LineInspector and LineTableView delete lines", "[LineInspector][LineT
         REQUIRE(selection_model != nullptr);
         selection_model->select(model->index(0, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
         selection_model->select(model->index(1, 0), QItemSelectionModel::Select | QItemSelectionModel::Rows);
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Emit delete signal
         emit view.deleteLinesRequested();
-        app->processEvents();
+        QCoreApplication::processEvents();
 
         // Verify all lines were deleted
         view.updateView();
-        app->processEvents();
-        
+        QCoreApplication::processEvents();
+
         REQUIRE(model->rowCount() == 0);
         REQUIRE(line_data->getTimesWithData().size() == 0);
     }

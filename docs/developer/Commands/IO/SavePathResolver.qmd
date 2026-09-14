@@ -5,11 +5,13 @@ format: html
 
 ## Overview
 
-`SavePathResolver` provides a Qt-free helper for choosing the default single-file save target for a `DataManager` key. It first checks `LineageRegistry` for matching `FileOrigin` metadata and falls back to `DataManager::getOutputPath()` plus the UI-provided filename.
+`SavePathResolver` provides Qt-free helpers for choosing provenance-aware default save targets for a `DataManager` key. It checks `LineageRegistry` for matching `FileOrigin` metadata and falls back to `DataManager::getOutputPath()` plus the UI-provided name.
 
-This keeps provenance-aware save defaults out of the inspector widgets and leaves overwrite policy in `SaveData`.
+This keeps provenance-aware save defaults out of the inspector widgets and leaves overwrite policy in `SaveData` (single-file) or the format options (multi-file).
 
 ## API
+
+### Single-file saves
 
 ```cpp
 commands::SavePathResolution resolveDefaultSavePath(
@@ -21,12 +23,32 @@ commands::SavePathResolution resolveDefaultSavePath(
 
 `SavePathResolution` returns the full path, parent directory, filename, and a `m_using_file_origin` flag. Callers use that flag to enable backup-on-overwrite only when saving back to the loaded source file.
 
+### Multi-file saves
+
+```cpp
+commands::MultiFileSavePathResolution resolveDefaultMultiFileSaveDir(
+    DataManager const& data_manager,
+    std::string const& data_key,
+    std::string const& requested_format,
+    std::string const& fallback_parent_dir);
+```
+
+`MultiFileSavePathResolution` returns the parent directory for per-frame output files and a `m_using_file_origin` flag. Callers should set `overwrite_existing = true` in the saver config when `m_using_file_origin` is true, because multi-file savers skip existing files by default.
+
 ## Behavior
 
-- If the key has `FileOrigin` metadata and its format matches the requested saver format, the resolver returns the original load path.
+### `resolveDefaultSavePath`
+
+- If the key has `FileOrigin` metadata and its format matches the requested saver format, the resolver returns the original load path (treated as a single file).
 - If no matching origin exists, the resolver returns `DataManager::getOutputPath() / fallback_filename`.
-- The resolver does not modify `DataManager`, lineage metadata, or the filesystem.
+
+### `resolveDefaultMultiFileSaveDir`
+
+- If the key has `FileOrigin` metadata, the format matches, and the origin describes a multi-file load (`multi_file: true` in `m_source_config_json`, or `m_path` is an existing directory), the resolver returns `m_path` as the parent directory.
+- If no matching multi-file origin exists, the resolver joins `fallback_parent_dir` with `DataManager::getOutputPath()` when the fallback is relative (or `"."`), otherwise uses the absolute fallback path as-is.
+
+Neither resolver modifies `DataManager`, lineage metadata, or the filesystem.
 
 ## Call Sites
 
-Data inspector save handlers use this helper before constructing `SaveDataParams`. `SaveData` remains responsible for the actual write and optional `.bak` backup.
+Data inspector save handlers use these helpers before constructing `SaveDataParams`. `LineInspector` uses `resolveDefaultMultiFileSaveDir` for CSV multi-file line export. `SaveData` remains responsible for the actual write and optional `.bak` backup for single-file targets.
