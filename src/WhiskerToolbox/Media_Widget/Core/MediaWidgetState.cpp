@@ -614,6 +614,16 @@ TextOverlayData const * MediaWidgetState::getTextOverlay(int overlay_id) const {
 
 // === Active Tool State ===
 
+void MediaWidgetState::setActiveMediaTool(MediaToolId tool) {
+    if (_data.active_media_tool == tool) {
+        return;
+    }
+
+    _data.active_media_tool = tool;
+    markDirty();
+    emit activeMediaToolChanged(tool);
+}
+
 void MediaWidgetState::setActiveLineMode(LineToolMode mode) {
     if (_data.active_line_mode != mode) {
         _data.active_line_mode = mode;

@@ -4,11 +4,12 @@
 #include "MaskDilationWidget/MaskDilationWidget.hpp"
 #include "Media_Widget/Core/MediaWidgetState.hpp"
 #include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
+#include "Media_Widget/UI/Tools/MediaToolId.hpp"
 #include "SelectionWidgets/MaskBrushSelectionWidget.hpp"
 #include "SelectionWidgets/MaskNoneSelectionWidget.hpp"
 
-#include "Common/Collapsible_Widget/Section.hpp"
 #include "ColorAlphaControls.hpp"
+#include "Common/Collapsible_Widget/Section.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "DataManager/DataManager.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"
@@ -178,7 +179,7 @@ void MediaMask_Widget::_setMaskColor(QString const & hex_color) {
     }
 }
 
-void MediaMask_Widget::_toggleSelectionMode(const QString& text) {
+void MediaMask_Widget::_toggleSelectionMode(QString const & text) {
     _selection_mode = _selection_modes[text];
 
     // Switch to the appropriate page in the stacked widget
@@ -199,6 +200,11 @@ void MediaMask_Widget::_toggleSelectionMode(const QString& text) {
 void MediaMask_Widget::_clickedInVideo(CanvasCoordinates const & canvas_coords) {
     if (_active_key.empty()) {
         spdlog::debug("MediaMask_Widget: no active mask key");
+        return;
+    }
+
+    if (_state && _scene && _scene->isUnifiedSelectionEnabled() &&
+        _state->activeMediaTool() == MediaToolId::Select) {
         return;
     }
 
@@ -512,7 +518,7 @@ void MediaMask_Widget::_addToMask(CanvasCoordinates const & canvas_coords) {
     int added_count = 0;
     for (auto const & pixel: brush_pixels) {
         std::pair<int, int> const pixel_key = {static_cast<int>(pixel.x),
-                                         static_cast<int>(pixel.y)};
+                                               static_cast<int>(pixel.y)};
         if (existing_pixel_set.find(pixel_key) == existing_pixel_set.end()) {
             primary_mask.push_back(pixel);
             existing_pixel_set.insert(pixel_key);// Update set to avoid adding duplicates within this operation

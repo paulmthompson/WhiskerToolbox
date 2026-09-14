@@ -1,6 +1,8 @@
 #ifndef MEDIA_WIDGET_HPP
 #define MEDIA_WIDGET_HPP
 
+#include "Media_Widget/UI/Tools/MediaToolId.hpp"
+
 #include "EditorState/SelectionContext.hpp"// For SelectionSource
 #include "TimeFrame/StrongTimeTypes.hpp"   // For TimeKey
 
@@ -11,6 +13,7 @@
 class DataManager;
 class HorizontalAxisWidget;
 class Media_Window;
+class MediaSelectToolController;
 class MediaToolOptionsBar_Widget;
 class MediaToolStrip_Widget;
 class MediaWidgetState;
@@ -49,7 +52,7 @@ public:
     void setFeatureColor(std::string const & feature, std::string const & hex_color);
 
     // Method to handle time changes and propagate them
-    void LoadFrame(const TimePosition& position);
+    void LoadFrame(TimePosition const & position);
 
     // Zoom API used by MainWindow actions
     void zoomIn();
@@ -116,9 +119,11 @@ private:
     void _wireToolUi();
     void _applyRulerPrefs();
     void _updateRulers();
+    void _syncActiveMediaTool(MediaToolId tool);
 
     MediaToolStrip_Widget * _tool_strip{nullptr};
     MediaToolOptionsBar_Widget * _tool_options_bar{nullptr};
+    MediaSelectToolController * _select_controller{nullptr};
     HorizontalAxisWidget * _horizontal_ruler{nullptr};
     VerticalAxisWidget * _vertical_ruler{nullptr};
     RulerCornerWidget * _ruler_corner{nullptr};

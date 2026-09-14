@@ -273,7 +273,7 @@ int Feature_Table_Widget::_findRowByFeatureName(QString const & featureName) {
 void Feature_Table_Widget::_updateAllRowAppearances() {
     // Only apply graying out if the Enabled column is present
     bool hasEnabledColumn = false;
-    for (const auto & _column : _columns) {
+    for (auto const & _column: _columns) {
         if (_column == "Enabled") {
             hasEnabledColumn = true;
             break;
@@ -446,6 +446,21 @@ void Feature_Table_Widget::populateTable() {
 void Feature_Table_Widget::_refreshFeatures() {
     _saveCurrentState();
     populateTable();
+}
+
+void Feature_Table_Widget::selectFeature(QString const & feature) {
+    if (feature.isEmpty()) {
+        return;
+    }
+
+    int const row = _findRowByFeatureName(feature);
+    if (row < 0) {
+        return;
+    }
+
+    _highlighted_feature = feature;
+    _selected_feature_for_restoration = feature.toStdString();
+    ui->available_features_table->selectRow(row);
 }
 
 void Feature_Table_Widget::_highlightFeature(int row, int column) {

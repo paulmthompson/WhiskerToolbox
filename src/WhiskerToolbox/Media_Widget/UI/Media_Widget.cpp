@@ -5,6 +5,7 @@
 #include "MediaRulerViewport.hpp"
 #include "Rendering/Media_Window/Media_Window.hpp"
 #include "Rulers/RulerCornerWidget.hpp"
+#include "Selection/MediaSelectToolController.hpp"
 #include "Tools/MediaToolId.hpp"
 #include "Tools/MediaToolOptionsBar_Widget.hpp"
 #include "Tools/MediaToolStrip_Widget.hpp"
@@ -573,6 +574,10 @@ void Media_Widget::_createMediaWindow() {
             _scene->setMediaWidgetState(_state.get());
         }
 
+        if (_select_controller) {
+            _select_controller->setMediaWindow(_scene.get());
+        }
+
         connect(_scene.get(), &Media_Window::groupSelectionInteracted, this, [this]() {
             if (!_selection_context || !_state) {
                 return;
@@ -651,17 +656,44 @@ void Media_Widget::_connectStateSignals() {
     _applyRulerPrefs();
 }
 
+void Media_Widget::_syncActiveMediaTool(MediaToolId tool) {
+    if (_tool_strip) {
+        _tool_strip->setActiveTool(tool);
+    }
+    if (_tool_options_bar) {
+        _tool_options_bar->setActiveTool(tool);
+    }
+    if (_select_controller) {
+        _select_controller->setActive(tool == MediaToolId::Select);
+    }
+}
+
 void Media_Widget::_wireToolUi() {
     if (!_tool_strip || !_tool_options_bar || !_state) {
         return;
     }
 
+    qRegisterMetaType<MediaToolId>("MediaToolId");
+
+    if (!_select_controller) {
+        _select_controller = new MediaSelectToolController(this);
+        _select_controller->setMediaWindow(_scene.get());
+        _select_controller->setState(_state.get());
+    }
+
     _tool_options_bar->setState(_state.get());
 
     connect(_tool_strip, &MediaToolStrip_Widget::activeToolChanged,
-            _tool_options_bar, &MediaToolOptionsBar_Widget::setActiveTool);
+            this, [this](MediaToolId tool) {
+                _state->setActiveMediaTool(tool);
+            });
 
-    _tool_options_bar->setActiveTool(_tool_strip->activeTool());
+    connect(_state.get(), &MediaWidgetState::activeMediaToolChanged,
+            this, [this](MediaToolId tool) {
+                _syncActiveMediaTool(tool);
+            });
+
+    _syncActiveMediaTool(_state->activeMediaTool());
 }
 
 void Media_Widget::_setupRulerLayout() {

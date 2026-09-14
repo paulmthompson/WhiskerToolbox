@@ -34,6 +34,13 @@ public:
     void setTypeFilter(std::vector<DM_DataType> type) { _type_filters = std::move(type); }
     [[nodiscard]] QString getHighlightedFeature() const { return _highlighted_feature; }
 
+    /**
+     * @brief Programmatically highlight a feature row without emitting featureSelected
+     * @param feature Data manager key to highlight
+     * @pre feature must exist in the current table when populated
+     */
+    void selectFeature(QString const & feature);
+
 signals:
     void featureSelected(QString const & feature);
     void addFeature(QString const & feature);

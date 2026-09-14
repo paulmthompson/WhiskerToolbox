@@ -44,6 +44,10 @@ set(MEDIA_WIDGET_SOURCES
     UI/Tools/SelectToolOptions_Widget.hpp
     UI/Tools/SelectToolOptions_Widget.cpp
 
+    Selection/MediaSelectionHit.hpp
+    Selection/MediaSelectToolController.hpp
+    Selection/MediaSelectToolController.cpp
+
     UI/SubWidgets/MediaProcessing_Widget/MediaProcessing_Widget.cpp
     UI/SubWidgets/MediaProcessing_Widget/MediaProcessing_Widget.hpp
     UI/SubWidgets/MediaProcessing_Widget/MediaProcessing_Widget.ui

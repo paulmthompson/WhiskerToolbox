@@ -1,6 +1,8 @@
 #ifndef MEDIA_WIDGET_STATE_DATA_HPP
 #define MEDIA_WIDGET_STATE_DATA_HPP
 
+#include "UI/Tools/MediaToolId.hpp"
+
 /**
  * @file MediaWidgetStateData.hpp
  * @brief Comprehensive serializable state data structure for MediaWidget
@@ -65,8 +67,8 @@
  * Matches the TextOrientation enum in MediaText_Widget.hpp
  */
 enum class TextOverlayOrientation {
-    Horizontal, ///< Normal horizontal text
-    Vertical    ///< Rotated 90 degrees for vertical display
+    Horizontal,///< Normal horizontal text
+    Vertical   ///< Rotated 90 degrees for vertical display
 };
 
 /**
@@ -76,14 +78,14 @@ enum class TextOverlayOrientation {
  * std::string instead of QString/QColor for serialization.
  */
 struct TextOverlayData {
-    int id = -1;                                              ///< Unique identifier (-1 = not assigned)
-    std::string text;                                         ///< Text content to display
-    TextOverlayOrientation orientation = TextOverlayOrientation::Horizontal;  ///< Text orientation
-    float x_position = 0.5f;                                  ///< Relative X position (0.0 - 1.0)
-    float y_position = 0.5f;                                  ///< Relative Y position (0.0 - 1.0)
-    std::string color = "#ffffff";                            ///< Text color in hex format
-    int font_size = 12;                                       ///< Font size in points
-    bool enabled = true;                                      ///< Whether overlay is visible
+    int id = -1;                                                            ///< Unique identifier (-1 = not assigned)
+    std::string text;                                                       ///< Text content to display
+    TextOverlayOrientation orientation = TextOverlayOrientation::Horizontal;///< Text orientation
+    float x_position = 0.5f;                                                ///< Relative X position (0.0 - 1.0)
+    float y_position = 0.5f;                                                ///< Relative Y position (0.0 - 1.0)
+    std::string color = "#ffffff";                                          ///< Text color in hex format
+    int font_size = 12;                                                     ///< Font size in points
+    bool enabled = true;                                                    ///< Whether overlay is visible
 };
 
 // ==================== Interaction Preferences ====================
@@ -95,29 +97,30 @@ struct TextOverlayData {
  * state like "currently drawing" or "drag in progress".
  */
 struct LineInteractionPrefs {
-    std::string smoothing_mode = "SimpleSmooth";  ///< "SimpleSmooth" or "PolynomialFit"
-    int polynomial_order = 3;                      ///< Order for polynomial fit (2-10)
-    bool edge_snapping_enabled = false;           ///< Whether to snap new points to edges
-    int edge_threshold = 100;                      ///< Canny edge detection threshold
-    int edge_search_radius = 20;                   ///< Radius in pixels for edge search
-    int eraser_radius = 10;                        ///< Radius in pixels for line eraser
-    float selection_threshold = 15.0f;            ///< Pixel distance for line selection
+    std::string smoothing_mode = "SimpleSmooth";///< "SimpleSmooth" or "PolynomialFit"
+    int polynomial_order = 3;                   ///< Order for polynomial fit (2-10)
+    bool edge_snapping_enabled = false;         ///< Whether to snap new points to edges
+    int edge_threshold = 100;                   ///< Canny edge detection threshold
+    int edge_search_radius = 20;                ///< Radius in pixels for edge search
+    int eraser_radius = 10;                     ///< Radius in pixels for line eraser
+    float selection_threshold = 15.0f;          ///< Pixel distance for line selection
 };
 
 /**
  * @brief User preferences for mask interaction tools
  */
 struct MaskInteractionPrefs {
-    int brush_size = 15;              ///< Brush size in pixels
-    bool hover_circle_visible = true; ///< Show brush preview circle on hover
-    bool allow_empty_mask = false;    ///< Whether to preserve empty masks during brush removal
+    int brush_size = 15;             ///< Brush size in pixels
+    bool hover_circle_visible = true;///< Show brush preview circle on hover
+    bool allow_empty_mask = false;   ///< Whether to preserve empty masks during brush removal
+    float selection_threshold = 5.0f;///< Scene-pixel distance for mask selection
 };
 
 /**
  * @brief User preferences for point interaction
  */
 struct PointInteractionPrefs {
-    float selection_threshold = 10.0f;  ///< Pixel distance for point selection
+    float selection_threshold = 10.0f;///< Pixel distance for point selection
 };
 
 // ==================== Ruler Preferences ====================
@@ -126,20 +129,20 @@ struct PointInteractionPrefs {
  * @brief Tick spacing mode for media viewer rulers
  */
 enum class RulerTickMode {
-    Auto,  ///< Nice-number intervals based on visible range
-    Fixed  ///< Fixed interval in media pixels
+    Auto,///< Nice-number intervals based on visible range
+    Fixed///< Fixed interval in media pixels
 };
 
 /**
  * @brief User preferences for media viewer pixel rulers
  */
 struct RulerPrefs {
-    bool enabled = true;                              ///< Whether rulers are visible
-    RulerTickMode tick_mode = RulerTickMode::Auto;    ///< Auto or fixed tick spacing
-    int fixed_interval_px = 100;                      ///< Tick interval when tick_mode == Fixed
-    int target_tick_count = 7;                        ///< Target major ticks when tick_mode == Auto
-    bool show_minor_ticks = true;                     ///< Draw minor ticks between majors
-    std::string negative_color = "#FF9966";           ///< Label/tick color for negative values
+    bool enabled = true;                          ///< Whether rulers are visible
+    RulerTickMode tick_mode = RulerTickMode::Auto;///< Auto or fixed tick spacing
+    int fixed_interval_px = 100;                  ///< Tick interval when tick_mode == Fixed
+    int target_tick_count = 7;                    ///< Target major ticks when tick_mode == Auto
+    bool show_minor_ticks = true;                 ///< Draw minor ticks between majors
+    std::string negative_color = "#FF9966";       ///< Label/tick color for negative values
 };
 
 // ==================== Viewport State ====================
@@ -151,11 +154,11 @@ struct RulerPrefs {
  * restoring the exact view the user had.
  */
 struct ViewportState {
-    double zoom = 1.0;        ///< Zoom factor (1.0 = no zoom)
-    double pan_x = 0.0;       ///< Horizontal pan offset in pixels
-    double pan_y = 0.0;       ///< Vertical pan offset in pixels
-    int canvas_width = 640;   ///< Canvas width in pixels
-    int canvas_height = 480;  ///< Canvas height in pixels
+    double zoom = 1.0;      ///< Zoom factor (1.0 = no zoom)
+    double pan_x = 0.0;     ///< Horizontal pan offset in pixels
+    double pan_y = 0.0;     ///< Vertical pan offset in pixels
+    int canvas_width = 640; ///< Canvas width in pixels
+    int canvas_height = 480;///< Canvas height in pixels
 };
 
 // ==================== Tool Mode Enums ====================
@@ -166,11 +169,11 @@ struct ViewportState {
  * Serializes as "None", "Add", "Erase", "Select", or "DrawAllFrames"
  */
 enum class LineToolMode {
-    None,          ///< No line tool active
-    Add,           ///< Adding points to line
-    Erase,         ///< Erasing points from line
-    Select,        ///< Selecting lines
-    DrawAllFrames  ///< Drawing across all frames
+    None,        ///< No line tool active
+    Add,         ///< Adding points to line
+    Erase,       ///< Erasing points from line
+    Select,      ///< Selecting lines
+    DrawAllFrames///< Drawing across all frames
 };
 
 /**
@@ -179,8 +182,8 @@ enum class LineToolMode {
  * Serializes as "None" or "Brush"
  */
 enum class MaskToolMode {
-    None,   ///< No mask tool active
-    Brush   ///< Brush painting mode
+    None,///< No mask tool active
+    Brush///< Brush painting mode
 };
 
 /**
@@ -189,17 +192,17 @@ enum class MaskToolMode {
  * Serializes as "None" or "Select"
  */
 enum class PointToolMode {
-    None,   ///< No point tool active
-    Select  ///< Point selection mode
+    None, ///< No point tool active
+    Select///< Point selection mode
 };
 
 /**
  * @brief Preferences for the Media Viewer Select tool
  */
 struct SelectToolPrefs {
-    bool filter_to_key = false;       ///< When false, selection considers all enabled keys
-    std::string filter_key;           ///< Data manager key when filter_to_key is true
-    std::string filter_data_type;     ///< Data type string ("line", "point", "mask", ...)
+    bool filter_to_key = false;  ///< When false, selection considers all enabled keys
+    std::string filter_key;      ///< Data manager key when filter_to_key is true
+    std::string filter_data_type;///< Data type string ("line", "point", "mask", ...)
 };
 
 // ==================== Main State Structure ====================
@@ -244,15 +247,15 @@ struct SelectToolPrefs {
  */
 struct MediaWidgetStateData {
     // === Identity ===
-    std::string instance_id;                        ///< Unique instance ID (preserved across serialization)
-    std::string display_name = "Media Viewer";      ///< User-visible name for this widget
-    
+    std::string instance_id;                  ///< Unique instance ID (preserved across serialization)
+    std::string display_name = "Media Viewer";///< User-visible name for this widget
+
     // === Primary Display ===
-    std::string displayed_media_key;                ///< Primary media/video data key being displayed
-    
+    std::string displayed_media_key;///< Primary media/video data key being displayed
+
     // === Viewport (nested object in JSON) ===
-    ViewportState viewport;                         ///< Zoom, pan, and canvas state
-    
+    ViewportState viewport;///< Zoom, pan, and canvas state
+
     // === Canvas Coordinate System Override ===
     /// When true, the user has manually set the canvas coordinate system.
     /// The priority chain will not auto-update it from media or data objects.
@@ -261,32 +264,33 @@ struct MediaWidgetStateData {
     int canvas_coord_override_width{640};
     /// User-specified logical height (only used when canvas_coord_override_active is true)
     int canvas_coord_override_height{480};
-    
+
     // === Per-Feature Display Options ===
     // Each key is a data key (e.g., "whisker_1"), value is the display options.
     // The 'is_visible' field in each options struct indicates if that feature is enabled.
-    std::map<std::string, MediaDisplayOptions> media_options;               ///< Media/image display settings
-    std::map<std::string, LineDisplayOptions> line_options;                 ///< Line display settings
-    std::map<std::string, MaskDisplayOptions> mask_options;                 ///< Mask display settings
-    std::map<std::string, PointDisplayOptions> point_options;               ///< Point display settings
-    std::map<std::string, DigitalIntervalDisplayOptions> interval_options;  ///< Interval display settings
-    std::map<std::string, TensorDisplayOptions> tensor_options;             ///< Tensor display settings
-    
+    std::map<std::string, MediaDisplayOptions> media_options;             ///< Media/image display settings
+    std::map<std::string, LineDisplayOptions> line_options;               ///< Line display settings
+    std::map<std::string, MaskDisplayOptions> mask_options;               ///< Mask display settings
+    std::map<std::string, PointDisplayOptions> point_options;             ///< Point display settings
+    std::map<std::string, DigitalIntervalDisplayOptions> interval_options;///< Interval display settings
+    std::map<std::string, TensorDisplayOptions> tensor_options;           ///< Tensor display settings
+
     // === Interaction Preferences (nested objects in JSON) ===
-    LineInteractionPrefs line_prefs;   ///< Line tool preferences
-    MaskInteractionPrefs mask_prefs;   ///< Mask tool preferences
-    PointInteractionPrefs point_prefs; ///< Point tool preferences
-    RulerPrefs ruler_prefs;          ///< Pixel ruler display preferences
-    SelectToolPrefs select_prefs;    ///< Select tool key-filter preferences
-    
+    LineInteractionPrefs line_prefs;  ///< Line tool preferences
+    MaskInteractionPrefs mask_prefs;  ///< Mask tool preferences
+    PointInteractionPrefs point_prefs;///< Point tool preferences
+    RulerPrefs ruler_prefs;           ///< Pixel ruler display preferences
+    SelectToolPrefs select_prefs;     ///< Select tool key-filter preferences
+
     // === Text Overlays ===
-    std::vector<TextOverlayData> text_overlays;  ///< All text overlays
-    int next_overlay_id = 0;                     ///< Counter for assigning overlay IDs
-    
+    std::vector<TextOverlayData> text_overlays;///< All text overlays
+    int next_overlay_id = 0;                   ///< Counter for assigning overlay IDs
+
     // === Active Tool State ===
-    LineToolMode active_line_mode = LineToolMode::None;    ///< Current line tool mode
-    MaskToolMode active_mask_mode = MaskToolMode::None;    ///< Current mask tool mode
-    PointToolMode active_point_mode = PointToolMode::None; ///< Current point tool mode
+    MediaToolId active_media_tool = MediaToolId::Select;  ///< Global Media Viewer toolbar tool
+    LineToolMode active_line_mode = LineToolMode::None;   ///< Current line tool mode
+    MaskToolMode active_mask_mode = MaskToolMode::None;   ///< Current mask tool mode
+    PointToolMode active_point_mode = PointToolMode::None;///< Current point tool mode
 };
 
-#endif // MEDIA_WIDGET_STATE_DATA_HPP
+#endif// MEDIA_WIDGET_STATE_DATA_HPP

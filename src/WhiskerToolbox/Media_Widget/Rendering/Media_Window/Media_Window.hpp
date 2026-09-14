@@ -46,7 +46,9 @@ struct TextOverlay;
 struct DigitalIntervalDisplayOptions;
 struct LineDisplayOptions;
 struct MaskDisplayOptions;
+struct MediaSelectionHit;
 struct PointDisplayOptions;
+struct SelectToolPrefs;
 struct TensorDisplayOptions;
 
 int const default_width = 640;
@@ -192,6 +194,40 @@ public:
     void setGroupSelectionEnabled(bool enabled);
     bool isGroupSelectionEnabled() const;
 
+    /**
+     * @brief Enable unified cross-type selection using closest-hit ranking
+     * @param enabled True when the global Select tool is active
+     */
+    void setUnifiedSelectionEnabled(bool enabled);
+
+    /**
+     * @brief Whether unified cross-type selection is active
+     * @return True when unified selection is enabled
+     */
+    [[nodiscard]] bool isUnifiedSelectionEnabled() const;
+
+    /**
+     * @brief Get the data key of the current canvas selection
+     * @return Selected data manager key, or empty when nothing is selected
+     */
+    [[nodiscard]] std::string const & selectedDataKey() const { return _selected_data_key; }
+
+    /**
+     * @brief Get the data type of the current canvas selection
+     * @return Selected data type string ("line", "point", "mask"), or empty
+     */
+    [[nodiscard]] std::string const & selectedDataType() const { return _selected_data_type; }
+
+    /**
+     * @brief Find the globally closest selectable entity at a scene position
+     * @param scene_pos Position in scene coordinates
+     * @param prefs Select-tool filter preferences
+     * @return Closest hit across enabled line, point, and mask keys, if any
+     */
+    [[nodiscard]] std::optional<MediaSelectionHit> findBestEntityAtPosition(
+            QPointF const & scene_pos,
+            SelectToolPrefs const & prefs) const;
+
     // Public methods for entity finding
     EntityId findPointAtPosition(QPointF const & scene_pos, std::string const & point_key);
     EntityId findEntityAtPosition(QPointF const & scene_pos, std::string & data_key, std::string & data_type);
@@ -310,9 +346,10 @@ private:
 
     // Selection and context menu support
     std::unordered_set<EntityId> _selected_entities;
-    std::string _selected_data_key;      // Key of the data containing selected entities
-    std::string _selected_data_type;     // Type of selected data ("line", "point", "mask")
-    bool _group_selection_enabled = true;// Allow group-based selection to be disabled
+    std::string _selected_data_key;         // Key of the data containing selected entities
+    std::string _selected_data_type;        // Type of selected data ("line", "point", "mask")
+    bool _group_selection_enabled = true;   ///< Legacy line-widget group selection path
+    bool _unified_selection_enabled = false;///< Global Select-tool closest-hit path
     QMenu * _context_menu = nullptr;
     std::unique_ptr<GroupContextMenuHandler> _group_menu_handler;
 
@@ -363,6 +400,19 @@ private:
     EntityId _findLineAtPosition(QPointF const & scene_pos, std::string const & line_key);
     EntityId _findPointAtPosition(QPointF const & scene_pos, std::string const & point_key);
     EntityId _findMaskAtPosition(QPointF const & scene_pos, std::string const & mask_key);
+    [[nodiscard]] std::optional<MediaSelectionHit> _computeLineHitAtPosition(
+            QPointF const & scene_pos,
+            std::string const & line_key) const;
+    [[nodiscard]] std::optional<MediaSelectionHit> _computePointHitAtPosition(
+            QPointF const & scene_pos,
+            std::string const & point_key) const;
+    [[nodiscard]] std::optional<MediaSelectionHit> _computeMaskHitAtPosition(
+            QPointF const & scene_pos,
+            std::string const & mask_key) const;
+    [[nodiscard]] static bool _isSelectionCandidate(
+            std::string const & data_key,
+            std::string const & data_type,
+            SelectToolPrefs const & prefs) ;
     void _createContextMenu();
     void _showContextMenu(QPoint const & global_pos);
     static float _calculateDistanceToLineSegment(float px, float py, float x1, float y1, float x2, float y2);

@@ -33,7 +33,7 @@ The `Media_Widget` grid uses three rows:
 
 Preferences are stored in `MediaWidgetStateData::select_prefs` and exposed via `selectPrefs()` / `setSelectPrefs()`.
 
-Selection hit-testing is not wired yet; the filter only updates persisted preferences.
+Canvas left-click selection uses `Media_Window::findBestEntityAtPosition()` when the Select tool is active. The filter restricts candidate keys before closest-hit ranking across enabled line, mask, and point features.
 
 When `DataManager` deletes a key, `Media_Widget::_pruneRemovedFeatures()` removes stale display options (emitting `displayOptionsRemoved`), which triggers a combo rebuild. If the active filter targeted the deleted key, it resets to **All enabled features**.
 

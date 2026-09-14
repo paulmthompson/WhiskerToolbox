@@ -72,10 +72,10 @@
  * @see SelectionContext for inter-widget communication
  */
 
-#include "EditorState/EditorState.hpp"
-#include "EditorState/StrongTypes.hpp"  // Must be before any TimePosition usage in signals
-#include "MediaWidgetStateData.hpp"
 #include "DisplayOptionsRegistry.hpp"
+#include "EditorState/EditorState.hpp"
+#include "EditorState/StrongTypes.hpp"// Must be before any TimePosition usage in signals
+#include "MediaWidgetStateData.hpp"
 
 #include "CorePlotting/Layout/CanvasCoordinateSystem.hpp"
 #include "TimeFrame/TimeFrame.hpp"
@@ -109,13 +109,12 @@ enum class DisplayType {
  * The type is inferred from the variant alternative passed.
  */
 using DisplayOptionsVariant = std::variant<
-    LineDisplayOptions,
-    MaskDisplayOptions,
-    PointDisplayOptions,
-    TensorDisplayOptions,
-    DigitalIntervalDisplayOptions,
-    MediaDisplayOptions
->;
+        LineDisplayOptions,
+        MaskDisplayOptions,
+        PointDisplayOptions,
+        TensorDisplayOptions,
+        DigitalIntervalDisplayOptions,
+        MediaDisplayOptions>;
 
 /**
  * @brief State class for Media_Widget
@@ -469,6 +468,18 @@ public:
     // === Active Tool State ===
 
     /**
+     * @brief Set the active global Media Viewer toolbar tool
+     * @param tool The toolbar tool identifier
+     */
+    void setActiveMediaTool(MediaToolId tool);
+
+    /**
+     * @brief Get the active global Media Viewer toolbar tool
+     * @return Current toolbar tool
+     */
+    [[nodiscard]] MediaToolId activeMediaTool() const { return _data.active_media_tool; }
+
+    /**
      * @brief Set the active line tool mode
      * @param mode The tool mode
      */
@@ -605,6 +616,12 @@ signals:
      */
     void toolModesChanged(QString const & category);
 
+    /**
+     * @brief Emitted when the global Media Viewer toolbar tool changes
+     * @param tool Newly active toolbar tool
+     */
+    void activeMediaToolChanged(MediaToolId tool);
+
     // === Canvas Image (Transient - for video export) ===
 
     /**
@@ -665,4 +682,4 @@ private:
     void setMediaOptions(QString const & key, MediaDisplayOptions const & options);
 };
 
-#endif // MEDIA_WIDGET_STATE_HPP
+#endif// MEDIA_WIDGET_STATE_HPP

@@ -3,6 +3,7 @@
 
 #include "Media_Widget/Core/MediaWidgetState.hpp"
 #include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
+#include "Media_Widget/UI/Tools/MediaToolId.hpp"
 #include "SelectionWidgets/LineAddSelectionWidget.hpp"
 #include "SelectionWidgets/LineDrawAllFramesSelectionWidget.hpp"
 #include "SelectionWidgets/LineEraseSelectionWidget.hpp"
@@ -285,18 +286,18 @@ void MediaLine_Widget::_clickedInVideoWithModifiers(qreal x_canvas, qreal y_canv
                 // Alt+click: Erase points from selected line
                 spdlog::debug("MediaLine_Widget: Alt+click - erasing points from selected line");
                 _erasePointsFromLine(x_media, y_media, current_time);
+            } else if (_state && _scene && _scene->isUnifiedSelectionEnabled() &&
+                       _state->activeMediaTool() == MediaToolId::Select) {
+                // Unified Select tool handles plain clicks on the canvas
             } else {
-                // Normal click: Select/deselect lines
                 QPointF const scene_pos(x_canvas * _scene->getXAspect(), y_canvas * _scene->getYAspect());
                 std::string data_key, data_type;
                 EntityId const entity_id = _scene->findEntityAtPosition(scene_pos, data_key, data_type);
 
                 if (entity_id != EntityId(0) && data_type == "line" && data_key == _active_key) {
-                    // Use the group-based selection system for consistency
                     _scene->selectEntity(entity_id, data_key, data_type);
                     spdlog::debug("MediaLine_Widget: selected line entity {} in group system", entity_id.id);
                 } else {
-                    // Clear selections if no line found
                     _scene->clearAllSelections();
                     spdlog::debug("MediaLine_Widget: no line found within threshold - cleared selections");
                 }
@@ -473,7 +474,7 @@ void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFr
 void MediaLine_Widget::_applyPolynomialFit(Line2D & line, int order) {
 
     assert(order >= 0 && "Order must be non-negative");
-    
+
     if (line.size() < static_cast<size_t>(order + 1)) {
         // Not enough points for the requested polynomial order
         return;

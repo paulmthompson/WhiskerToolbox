@@ -1,0 +1,28 @@
+---
+title: "Media Viewer Unified Select Tool"
+format: html
+---
+
+## Overview
+
+The global **Select** tool on the left toolbar enables cross-type closest-hit selection on the canvas. `MediaSelectToolController` enables unified selection on `Media_Window` and syncs hits to `MediaWidgetState::displayedDataKey`, which updates the properties panel feature table.
+
+## Components
+
+| Component | Role |
+|-----------|------|
+| `MediaSelectionHit` | Hit-test result: entity id, key, type, scene-pixel distance |
+| `Media_Window::findBestEntityAtPosition` | Ranks hits across enabled line, point, and mask keys |
+| `MediaSelectToolController` | Enables unified selection; syncs canvas picks to state |
+| `SelectToolPrefs` | Optional key filter from `SelectToolOptions_Widget` |
+| `Feature_Table_Widget::selectFeature` | Programmatic row highlight without `featureSelected` |
+
+## Selection flow
+
+1. User clicks canvas with Select tool active.
+2. `Media_Window` calls `findBestEntityAtPosition()` using `SelectToolPrefs`.
+3. Closest entity within per-type thresholds is selected.
+4. `groupSelectionInteracted` fires; `MediaSelectToolController` sets `displayedDataKey`.
+5. `MediaPropertiesWidget` highlights the feature table row and switches the stacked widget page.
+
+Per-datatype subwidgets skip plain left-click selection when `activeMediaTool() == Select`; modifier-driven line/point edits still work.

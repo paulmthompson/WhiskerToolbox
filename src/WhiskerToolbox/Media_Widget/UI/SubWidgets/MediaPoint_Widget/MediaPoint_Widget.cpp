@@ -4,6 +4,7 @@
 #include "Media_Widget/Core/MediaWidgetState.hpp"
 #include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
 #include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
+#include "Media_Widget/UI/Tools/MediaToolId.hpp"
 
 #include "CorePlotting/Layout/CanvasCoordinateSystem.hpp"
 #include "DataManager/DataManager.hpp"
@@ -114,6 +115,12 @@ void MediaPoint_Widget::setActiveKey(std::string const & key) {
 void MediaPoint_Widget::_handlePointClickWithModifiers(qreal x_media, qreal y_media, Qt::KeyboardModifiers modifiers) {
     if (!_selection_enabled || _active_key.empty())
         return;
+
+    if (_state && _scene && _scene->isUnifiedSelectionEnabled() &&
+        _state->activeMediaTool() == MediaToolId::Select &&
+        !(modifiers & (Qt::AltModifier | Qt::ControlModifier))) {
+        return;
+    }
 
     // Check if Alt is held for point creation
     if (modifiers & Qt::AltModifier) {
