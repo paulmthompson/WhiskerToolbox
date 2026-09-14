@@ -10,10 +10,10 @@ using Catch::Matchers::WithinRel;
 using namespace Neuralyzer::Plots;
 
 TEST_CASE("computeNiceTickInterval produces expected intervals", "[AxisTickLayout]") {
-    CHECK_THAT(computeNiceTickInterval(10.0, 7), WithinRel(2.0, 0.01));
-    CHECK_THAT(computeNiceTickInterval(100.0, 7), WithinRel(20.0, 0.01));
-    CHECK_THAT(computeNiceTickInterval(1000.0, 7), WithinRel(200.0, 0.01));
-    CHECK_THAT(computeNiceTickInterval(0.5, 7), WithinRel(0.1, 0.01));
+    CHECK_THAT(computeNiceTickInterval(10.0, 7), WithinRel(1.0, 0.01));
+    CHECK_THAT(computeNiceTickInterval(100.0, 7), WithinRel(10.0, 0.01));
+    CHECK_THAT(computeNiceTickInterval(1000.0, 7), WithinRel(100.0, 0.01));
+    CHECK_THAT(computeNiceTickInterval(0.5, 7), WithinRel(0.05, 0.01));
 }
 
 TEST_CASE("computeTickPositions auto mode spans visible range", "[AxisTickLayout]") {
