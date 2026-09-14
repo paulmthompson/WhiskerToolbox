@@ -48,6 +48,52 @@ namespace {
     return state != nullptr && !active_key.empty() && state->activeMediaTool() == MediaToolId::Pen;
 }
 
+/**
+ * @brief Resolve which line endpoint receives the next appended point
+ * @param policy User-selected append policy
+ * @param click Click position in media coordinates
+ * @param line Selected line geometry
+ * @return Tip or Base endpoint for the append operation
+ */
+[[nodiscard]] LineAppendEndpoint resolveLineAppendEndpoint(LineAppendEndpoint policy,
+                                                           Point2D<float> const & click,
+                                                           Line2D const & line) {
+    if (line.empty()) {
+        return LineAppendEndpoint::Tip;
+    }
+    if (policy != LineAppendEndpoint::Nearest) {
+        return policy;
+    }
+
+    float const dist_to_base = calc_distance(click, line.front());
+    float const dist_to_tip = calc_distance(click, line.back());
+    return dist_to_base <= dist_to_tip ? LineAppendEndpoint::Base : LineAppendEndpoint::Tip;
+}
+
+/**
+ * @brief Append interpolated samples between two points
+ * @param points Output vector receiving interpolated samples (excluding endpoints)
+ * @param from Start point of the interpolation segment
+ * @param to End point of the interpolation segment
+ */
+void appendInterpolationSamples(std::vector<Point2D<float>> & points,
+                                Point2D<float> const & from,
+                                Point2D<float> const & to) {
+    float const dx = to.x - from.x;
+    float const dy = to.y - from.y;
+    float const distance = std::sqrt(dx * dx + dy * dy);
+
+    if (distance <= 5.0f) {
+        return;
+    }
+
+    int const num_interp_points = std::max(2, static_cast<int>(distance / 5.0f));
+    for (int i = 1; i <= num_interp_points; ++i) {
+        float const t = static_cast<float>(i) / static_cast<float>(num_interp_points + 1);
+        points.emplace_back(from.x + t * dx, from.y + t * dy);
+    }
+}
+
 }// namespace
 
 MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Media_Window * scene, MediaWidgetState * state, QWidget * parent)
@@ -338,41 +384,64 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
         y_media = edge_point.second;
     }
 
-    if (_smoothing_mode == Smoothing_Mode::SimpleSmooth) {
-        // Use the original smoothing approach - add point directly
-        line.push_back(Point2D<float>{x_media, y_media});
+    Point2D<float> const new_point{x_media, y_media};
+    LineAppendEndpoint append_endpoint = LineAppendEndpoint::Tip;
+    if (_state) {
+        append_endpoint = resolveLineAppendEndpoint(_state->linePrefs().append_endpoint,
+                                                    new_point,
+                                                    line);
+    }
+
+    if (append_endpoint == LineAppendEndpoint::Base) {
+        if (_smoothing_mode == Smoothing_Mode::SimpleSmooth) {
+            std::vector<Point2D<float>> updated_points;
+            updated_points.reserve(line.size() + 1);
+            updated_points.push_back(new_point);
+            for (Point2D<float> const & existing_point: line) {
+                updated_points.push_back(existing_point);
+            }
+            line = Line2D(std::move(updated_points));
+        } else if (_smoothing_mode == Smoothing_Mode::PolynomialFit) {
+            std::vector<Point2D<float>> updated_points;
+            updated_points.reserve(line.size() + 1);
+            updated_points.push_back(new_point);
+            if (!line.empty()) {
+                appendInterpolationSamples(updated_points, new_point, line.front());
+            }
+            for (Point2D<float> const & existing_point: line) {
+                updated_points.push_back(existing_point);
+            }
+            line = Line2D(std::move(updated_points));
+
+            if (line.size() >= 3) {
+                _applyPolynomialFit(line, _polynomial_order);
+            }
+        }
+    } else if (_smoothing_mode == Smoothing_Mode::SimpleSmooth) {
+        line.push_back(new_point);
     } else if (_smoothing_mode == Smoothing_Mode::PolynomialFit) {
-        // If the line already exists, add interpolated points between the last point and the new point
         if (!line.empty()) {
             Point2D<float> const last_point = line.back();
-
-            // Calculate distance between last point and new point
-            float const dx = x_media - last_point.x;
-            float const dy = y_media - last_point.y;
-            float const distance = std::sqrt(dx * dx + dy * dy);
-
-            // Add interpolated points if the distance is significant
-            if (distance > 5.0f) {// Threshold for adding interpolation
-                int const num_interp_points = std::max(2, static_cast<int>(distance / 5.0f));
-                for (int i = 1; i <= num_interp_points; ++i) {
-                    float const t = static_cast<float>(i) / (num_interp_points + 1);
-                    float const interp_x = last_point.x + t * dx;
-                    float const interp_y = last_point.y + t * dy;
-                    line.push_back(Point2D<float>{interp_x, interp_y});
-                }
+            std::vector<Point2D<float>> interpolated_points;
+            appendInterpolationSamples(interpolated_points, last_point, new_point);
+            for (Point2D<float> const & interpolated_point: interpolated_points) {
+                line.push_back(interpolated_point);
             }
         }
 
-        // Add the actual new point
-        line.push_back(Point2D<float>{x_media, y_media});
+        line.push_back(new_point);
 
-        // Apply polynomial fitting if we have enough points
         if (line.size() >= 3) {
             _applyPolynomialFit(line, _polynomial_order);
         }
     }
 
-    spdlog::debug("MediaLine_Widget: added point ({}, {}) to line {} (EntityID: {})", x_media, y_media, _active_key, selected_entity_id.id);
+    spdlog::debug("MediaLine_Widget: added point ({}, {}) to {} endpoint of line {} (EntityID: {})",
+                  x_media,
+                  y_media,
+                  append_endpoint == LineAppendEndpoint::Base ? "base" : "tip",
+                  _active_key,
+                  selected_entity_id.id);
 }
 
 void MediaLine_Widget::_deleteNearestVertexFromLine(float x_media, float y_media, TimeFrameIndex current_time) {

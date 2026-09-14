@@ -5,23 +5,31 @@ format: html
 
 ## Overview
 
-`PenToolOptions_Widget` is the options-bar page shown when `MediaToolId::Pen` is active in the Media Viewer left tool strip. It provides discoverable usage instructions only; there are no persisted Pen-tool parameters in this phase.
+`PenToolOptions_Widget` is the options-bar page shown when `MediaToolId::Pen` is active in the Media Viewer left tool strip. It provides Pen tool usage instructions and controls for append-endpoint policy.
+
+## Controls
+
+| Control | State field | Description |
+|---------|-------------|-------------|
+| Append to combo | `LineInteractionPrefs::append_endpoint` | Choose tip, base, or nearest endpoint for Ctrl+click appends |
 
 ## Instructions
 
 The widget displays:
 
-- Select a line with the **Select** tool.
 - **Ctrl+click** to append a point.
 - **Alt+click** to delete the nearest vertex.
 - **Right-click** the selected line for additional operations.
+
+Select a line with the **Select** tool before using the Pen tool.
 
 ## Related Code
 
 | Component | Role |
 |-----------|------|
-| `MediaLine_Widget::_addPointToLine` | Appends to the selected line entity |
+| `MediaLine_Widget::_addPointToLine` | Appends to the selected line entity using the configured endpoint |
 | `MediaLine_Widget::_deleteNearestVertexFromLine` | Removes one vertex by nearest hit-test |
 | `SelectToolPrefs::pick_radius_px` | Vertex hit threshold for Alt+click deletion |
+| `LineInteractionPrefs::append_endpoint` | Persisted append-endpoint policy |
 
 See also [Media Viewer Tool Strip](MediaToolStrip.qmd) and [Media Viewer Tool Options Bar](MediaToolOptionsBar.qmd).

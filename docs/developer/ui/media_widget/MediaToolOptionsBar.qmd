@@ -23,7 +23,7 @@ The `Media_Widget` grid uses three rows:
 |-----------|------|
 | `MediaToolOptionsBar_Widget` | Container with `QStackedWidget` (empty placeholder or tool page); fixed height always reserved |
 | `SelectToolOptions_Widget` | Select-tool page: key filter combo and pick radius spinbox |
-| `PenToolOptions_Widget` | Pen-tool page: usage instructions for selected-line node editing |
+| `PenToolOptions_Widget` | Pen-tool page: append-endpoint combo and usage instructions |
 
 ## Select Tool Filter
 
@@ -42,10 +42,11 @@ When `DataManager` deletes a key, `Media_Widget::_pruneRemovedFeatures()` remove
 
 ## Pen Tool
 
-`PenToolOptions_Widget` shows instruction text only (no persisted parameters in this phase). When the Pen tool is active:
+`PenToolOptions_Widget` exposes the append-endpoint policy and usage instructions. When the Pen tool is active:
 
 - Use the **Select** tool first to pick a line entity on the canvas.
-- **Ctrl+click** appends a point to the selected line (`MediaLine_Widget::_addPointToLine`).
+- Choose **Append to:** tip, base, or nearest endpoint (stored in `LineInteractionPrefs::append_endpoint`).
+- **Ctrl+click** appends a point to the selected line at the configured endpoint (`MediaLine_Widget::_addPointToLine`).
 - **Alt+click** deletes the nearest vertex within `SelectToolPrefs::pick_radius_px` (`MediaLine_Widget::_deleteNearestVertexFromLine`).
 - **Right-click** on the selected line opens the line context menu.
 
@@ -56,4 +57,4 @@ Brush/radius erasing with hover preview remains in legacy `LineEraseSelectionWid
 `Media_Widget::_wireToolUi()` connects:
 
 - `MediaToolStrip_Widget::activeToolChanged` → `MediaToolOptionsBar_Widget::setActiveTool`
-- `MediaWidgetState` → `SelectToolOptions_Widget::setState`
+- `MediaWidgetState` → `SelectToolOptions_Widget::setState` and `PenToolOptions_Widget::setState` (via `MediaToolOptionsBar_Widget::setState`)

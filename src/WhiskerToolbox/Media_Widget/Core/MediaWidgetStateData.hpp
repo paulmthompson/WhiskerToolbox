@@ -91,19 +91,31 @@ struct TextOverlayData {
 // ==================== Interaction Preferences ====================
 
 /**
+ * @brief Endpoint policy for Pen tool line appending
+ *
+ * Serializes as "Tip", "Base", or "Nearest"
+ */
+enum class LineAppendEndpoint {
+    Tip,   ///< Append at line.back()
+    Base,  ///< Prepend at line.front()
+    Nearest///< Choose the closer of front/back to the click
+};
+
+/**
  * @brief User preferences for line interaction tools
  * 
  * These are tool settings that persist across sessions, not transient
  * state like "currently drawing" or "drag in progress".
  */
 struct LineInteractionPrefs {
-    std::string smoothing_mode = "SimpleSmooth";///< "SimpleSmooth" or "PolynomialFit"
-    int polynomial_order = 3;                   ///< Order for polynomial fit (2-10)
-    bool edge_snapping_enabled = false;         ///< Whether to snap new points to edges
-    int edge_threshold = 100;                   ///< Canny edge detection threshold
-    int edge_search_radius = 20;                ///< Radius in pixels for edge search
-    int eraser_radius = 10;                     ///< Radius in pixels for line eraser
-    float selection_threshold = 15.0f;          ///< Pixel distance for line selection
+    std::string smoothing_mode = "SimpleSmooth";                 ///< "SimpleSmooth" or "PolynomialFit"
+    int polynomial_order = 3;                                    ///< Order for polynomial fit (2-10)
+    bool edge_snapping_enabled = false;                          ///< Whether to snap new points to edges
+    int edge_threshold = 100;                                    ///< Canny edge detection threshold
+    int edge_search_radius = 20;                                 ///< Radius in pixels for edge search
+    int eraser_radius = 10;                                      ///< Radius in pixels for line eraser
+    float selection_threshold = 15.0f;                           ///< Pixel distance for line selection
+    LineAppendEndpoint append_endpoint = LineAppendEndpoint::Tip;///< Pen append target endpoint
 };
 
 /**

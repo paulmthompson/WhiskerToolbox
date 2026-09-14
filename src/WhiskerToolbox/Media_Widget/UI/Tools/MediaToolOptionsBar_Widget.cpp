@@ -41,6 +41,9 @@ void MediaToolOptionsBar_Widget::setState(MediaWidgetState * state) {
     if (_select_options) {
         _select_options->setState(state);
     }
+    if (_pen_options) {
+        _pen_options->setState(state);
+    }
 }
 
 void MediaToolOptionsBar_Widget::setActiveTool(MediaToolId tool) {
