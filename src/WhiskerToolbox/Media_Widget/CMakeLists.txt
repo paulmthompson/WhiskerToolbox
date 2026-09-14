@@ -35,6 +35,11 @@ set(MEDIA_WIDGET_SOURCES
     UI/Rulers/MediaRuler_Widget.hpp
     UI/Rulers/MediaRuler_Widget.cpp
 
+    UI/Tools/MediaToolId.hpp
+    UI/Tools/MediaToolIcons.hpp
+    UI/Tools/MediaToolStrip_Widget.hpp
+    UI/Tools/MediaToolStrip_Widget.cpp
+
     UI/SubWidgets/MediaProcessing_Widget/MediaProcessing_Widget.cpp
     UI/SubWidgets/MediaProcessing_Widget/MediaProcessing_Widget.hpp
     UI/SubWidgets/MediaProcessing_Widget/MediaProcessing_Widget.ui

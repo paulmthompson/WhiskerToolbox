@@ -11,6 +11,7 @@
 class DataManager;
 class HorizontalAxisWidget;
 class Media_Window;
+class MediaToolStrip_Widget;
 class MediaWidgetState;
 class EditorRegistry;
 class RulerCornerWidget;
@@ -113,6 +114,7 @@ private:
     void _applyRulerPrefs();
     void _updateRulers();
 
+    MediaToolStrip_Widget * _tool_strip{nullptr};
     HorizontalAxisWidget * _horizontal_ruler{nullptr};
     VerticalAxisWidget * _vertical_ruler{nullptr};
     RulerCornerWidget * _ruler_corner{nullptr};

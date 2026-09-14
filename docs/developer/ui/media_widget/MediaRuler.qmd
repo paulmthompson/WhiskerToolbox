@@ -7,6 +7,17 @@ format: html
 
 The Media Viewer displays Inkscape-style horizontal and vertical rulers along the top and left edges of the canvas. Rulers show **media/source pixel coordinates** (the same space as `MediaCoordinates` and `CanvasCoordinateSystem`), and update automatically when the user zooms or pans.
 
+## Layout
+
+The `Media_Widget` view uses a three-column grid:
+
+| Col 0 | Col 1 | Col 2 |
+|-------|-------|-------|
+| Tool strip (row span 2) | Ruler corner | Horizontal ruler |
+| | Vertical ruler | Graphics view |
+
+See [Media Viewer Tool Strip](MediaToolStrip.qmd) for the left toolbar.
+
 ## Components
 
 | Component | Location | Role |

@@ -1,0 +1,39 @@
+---
+title: "Media Viewer Tool Strip"
+format: html
+---
+
+## Overview
+
+The Media Viewer includes a vertical tool strip along the left edge of the widget, to the left of the vertical pixel ruler. It follows an Inkscape/Photoshop-style layout where tools are square icon buttons with exclusive selection.
+
+## Layout
+
+The `Media_Widget` grid places the tool strip in column 0 spanning both rows:
+
+| Col 0 | Col 1 | Col 2 |
+|-------|-------|-------|
+| Tool strip (row span 2) | Ruler corner | Horizontal ruler |
+| | Vertical ruler | Graphics view |
+
+## Components
+
+| Component | Location | Role |
+|-----------|----------|------|
+| `MediaToolStrip_Widget` | `Media_Widget/UI/Tools` | Vertical toolbar with exclusive `QButtonGroup` |
+| `MediaToolId` | `Media_Widget/UI/Tools` | Tool identifiers (`Select` for now) |
+| `MediaToolIcons` | `Media_Widget/UI/Tools` | Programmatic placeholder icons |
+
+## Selection API
+
+- `activeTool()` returns the current `MediaToolId`
+- `setActiveTool(MediaToolId)` updates the checked button
+- `activeToolChanged(MediaToolId)` is emitted when the user selects a different tool
+
+Tool behavior is not wired to canvas interaction yet; the strip only tracks which tool is selected.
+
+## Adding Tools
+
+1. Add a value to `MediaToolId`
+2. Provide an icon (programmatic helper or resource file)
+3. Register the button in `MediaToolStrip_Widget`'s constructor via `_addToolButton()`

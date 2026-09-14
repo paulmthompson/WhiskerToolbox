@@ -1,0 +1,12 @@
+---
+title: "Toolbar"
+format: html
+---
+
+## Overview
+
+The Media Viewer includes a vertical toolbar on the left edge of the canvas (to the left of the pixel ruler). Tools are shown as square icon buttons; one tool is selected at a time.
+
+## Select Tool
+
+The pointer (mouse) icon is the **Select** tool. It is selected by default. Canvas interaction for this tool is not wired yet; it is a placeholder for future selection behavior.

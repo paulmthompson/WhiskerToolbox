@@ -5,6 +5,7 @@
 #include "MediaRulerViewport.hpp"
 #include "Rendering/Media_Window/Media_Window.hpp"
 #include "Rulers/RulerCornerWidget.hpp"
+#include "Tools/MediaToolStrip_Widget.hpp"
 
 #include "Plots/Common/AxisTickLayout.hpp"
 #include "Plots/Common/HorizontalAxisWidget/HorizontalAxisWidget.hpp"
@@ -26,8 +27,8 @@
 #define slots Q_SLOTS
 
 #include <QApplication>
-#include <QGridLayout>
 #include <QGraphicsView>
+#include <QGridLayout>
 #include <QMouseEvent>
 #include <QResizeEvent>
 #include <QScrollBar>
@@ -582,6 +583,7 @@ void Media_Widget::_setupRulerLayout() {
         old_layout->removeWidget(ui->graphicsView);
     }
 
+    _tool_strip = new MediaToolStrip_Widget(this);
     _ruler_corner = new RulerCornerWidget(this);
     _horizontal_ruler = new HorizontalAxisWidget(this);
     _vertical_ruler = new VerticalAxisWidget(this);
@@ -593,11 +595,12 @@ void Media_Widget::_setupRulerLayout() {
     auto * grid_layout = new QGridLayout();
     grid_layout->setSpacing(0);
     grid_layout->setContentsMargins(0, 0, 0, 0);
-    grid_layout->addWidget(_ruler_corner, 0, 0);
-    grid_layout->addWidget(_horizontal_ruler, 0, 1);
-    grid_layout->addWidget(_vertical_ruler, 1, 0);
-    grid_layout->addWidget(ui->graphicsView, 1, 1);
-    grid_layout->setColumnStretch(1, 1);
+    grid_layout->addWidget(_tool_strip, 0, 0, 2, 1);
+    grid_layout->addWidget(_ruler_corner, 0, 1);
+    grid_layout->addWidget(_horizontal_ruler, 0, 2);
+    grid_layout->addWidget(_vertical_ruler, 1, 1);
+    grid_layout->addWidget(ui->graphicsView, 1, 2);
+    grid_layout->setColumnStretch(2, 1);
     grid_layout->setRowStretch(1, 1);
 
     if (old_layout) {
