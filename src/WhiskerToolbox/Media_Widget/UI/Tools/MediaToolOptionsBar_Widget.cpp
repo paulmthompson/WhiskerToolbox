@@ -9,6 +9,7 @@
 #include "EraserToolOptions_Widget.hpp"
 #include "PenToolOptions_Widget.hpp"
 #include "SelectToolOptions_Widget.hpp"
+#include "SmoothToolOptions_Widget.hpp"
 
 #include <QHBoxLayout>
 #include <QSizePolicy>
@@ -25,11 +26,13 @@ MediaToolOptionsBar_Widget::MediaToolOptionsBar_Widget(QWidget * parent)
     _select_options = new SelectToolOptions_Widget(_stack);
     _pen_options = new PenToolOptions_Widget(_stack);
     _eraser_options = new EraserToolOptions_Widget(_stack);
+    _smooth_options = new SmoothToolOptions_Widget(_stack);
 
     _stack->addWidget(_empty_page);
     _stack->addWidget(_select_options);
     _stack->addWidget(_pen_options);
     _stack->addWidget(_eraser_options);
+    _stack->addWidget(_smooth_options);
 
     auto * layout = new QHBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
@@ -49,6 +52,9 @@ void MediaToolOptionsBar_Widget::setState(MediaWidgetState * state) {
     }
     if (_eraser_options) {
         _eraser_options->setState(state);
+    }
+    if (_smooth_options) {
+        _smooth_options->setState(state);
     }
 }
 
@@ -71,6 +77,11 @@ void MediaToolOptionsBar_Widget::setActiveTool(MediaToolId tool) {
         case MediaToolId::Eraser:
             if (_eraser_options) {
                 _stack->setCurrentWidget(_eraser_options);
+            }
+            break;
+        case MediaToolId::Smooth:
+            if (_smooth_options) {
+                _stack->setCurrentWidget(_smooth_options);
             }
             break;
         case MediaToolId::None:

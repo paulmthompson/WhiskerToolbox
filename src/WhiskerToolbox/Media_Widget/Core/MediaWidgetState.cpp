@@ -562,6 +562,16 @@ void MediaWidgetState::setEraserPrefs(EraserToolPrefs const & prefs) {
     emit eraserPrefsChanged();
 }
 
+void MediaWidgetState::setSmoothPrefs(SmoothToolPrefs const & prefs) {
+    if (_data.smooth_prefs.radius_px == prefs.radius_px) {
+        return;
+    }
+
+    _data.smooth_prefs = prefs;
+    markDirty();
+    emit smoothPrefsChanged();
+}
+
 // === Text Overlays ===
 
 int MediaWidgetState::addTextOverlay(TextOverlayData overlay) {

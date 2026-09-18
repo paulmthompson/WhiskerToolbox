@@ -15,7 +15,8 @@ enum class MediaToolId {
     None,  ///< No global tool active (canvas pan/zoom and per-datatype modes only)
     Select,///< Pointer / selection tool
     Pen,   ///< Selected-line node editing (append / delete vertices)
-    Eraser ///< Brush-style eraser preview (hover circle only in current phase)
+    Eraser,///< Brush-style eraser for selected-line vertex removal
+    Smooth ///< Brush-style local smoothing on the selected line
 };
 
 Q_DECLARE_METATYPE(MediaToolId)

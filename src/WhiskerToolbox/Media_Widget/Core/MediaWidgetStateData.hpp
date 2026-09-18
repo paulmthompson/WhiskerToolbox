@@ -118,16 +118,16 @@ enum class PenLineTargetMode {
  * state like "currently drawing" or "drag in progress".
  */
 struct LineInteractionPrefs {
-    std::string smoothing_mode = "SimpleSmooth";                 ///< "SimpleSmooth" or "PolynomialFit"
-    int polynomial_order = 3;                                    ///< Order for polynomial fit (2-10)
-    bool edge_snapping_enabled = false;                          ///< Whether to snap new points to edges
-    int edge_threshold = 100;                                    ///< Canny edge detection threshold
-    int edge_search_radius = 20;                                 ///< Radius in pixels for edge search
-    int eraser_radius = 10;                                      ///< Radius in pixels for line eraser
-    float selection_threshold = 15.0f;                           ///< Pixel distance for line selection
-    LineAppendEndpoint append_endpoint = LineAppendEndpoint::Tip;///< Pen append target endpoint
+    std::string smoothing_mode = "SimpleSmooth";                        ///< "SimpleSmooth" or "PolynomialFit"
+    int polynomial_order = 3;                                           ///< Order for polynomial fit (2-10)
+    bool edge_snapping_enabled = false;                                 ///< Whether to snap new points to edges
+    int edge_threshold = 100;                                           ///< Canny edge detection threshold
+    int edge_search_radius = 20;                                        ///< Radius in pixels for edge search
+    int eraser_radius = 10;                                             ///< Radius in pixels for line eraser
+    float selection_threshold = 15.0f;                                  ///< Pixel distance for line selection
+    LineAppendEndpoint append_endpoint = LineAppendEndpoint::Tip;       ///< Pen append target endpoint
     PenLineTargetMode pen_target_mode = PenLineTargetMode::SelectedLine;///< Pen create vs edit target
-    std::string pen_new_line_key;                                ///< LineData key when pen_target_mode == NewLine
+    std::string pen_new_line_key;                                       ///< LineData key when pen_target_mode == NewLine
 };
 
 /**
@@ -237,6 +237,13 @@ struct EraserToolPrefs {
     int radius_px = 10;///< Eraser hover circle radius in scene pixels
 };
 
+/**
+ * @brief Preferences for the Media Viewer Smooth tool
+ */
+struct SmoothToolPrefs {
+    int radius_px = 10;///< Smooth brush hover circle radius in scene pixels
+};
+
 // ==================== Main State Structure ====================
 
 /**
@@ -314,6 +321,7 @@ struct MediaWidgetStateData {
     RulerPrefs ruler_prefs;           ///< Pixel ruler display preferences
     SelectToolPrefs select_prefs;     ///< Select tool key-filter preferences
     EraserToolPrefs eraser_prefs;     ///< Eraser tool hover circle preferences
+    SmoothToolPrefs smooth_prefs;     ///< Smooth tool hover circle preferences
 
     // === Text Overlays ===
     std::vector<TextOverlayData> text_overlays;///< All text overlays

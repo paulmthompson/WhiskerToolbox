@@ -110,6 +110,37 @@ namespace MediaToolIcons {
     return QIcon(pixmap);
 }
 
+/**
+ * @brief Create a smooth-curve icon for local line smoothing
+ * @param size Icon size in pixels
+ * @return Icon suitable for a toolbar button
+ */
+[[nodiscard]] inline QIcon createSmoothToolIcon(int size = 20) {
+    QPixmap pixmap(size, size);
+    pixmap.fill(Qt::transparent);
+
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+
+    double const scale = static_cast<double>(size) / 20.0;
+    painter.scale(scale, scale);
+
+    QPainterPath curve;
+    curve.moveTo(3.0, 14.0);
+    curve.cubicTo(6.0, 4.0, 10.0, 16.0, 17.0, 6.0);
+
+    painter.setPen(QPen(QColor(90, 170, 230), 2.0, Qt::SolidLine, Qt::RoundCap));
+    painter.drawPath(curve);
+
+    painter.setPen(QPen(QColor(20, 20, 20), 1.0));
+    painter.setBrush(QColor(200, 220, 240));
+    painter.drawEllipse(QPointF(3.0, 14.0), 1.8, 1.8);
+    painter.drawEllipse(QPointF(10.0, 10.0), 1.8, 1.8);
+    painter.drawEllipse(QPointF(17.0, 6.0), 1.8, 1.8);
+
+    return QIcon(pixmap);
+}
+
 }// namespace MediaToolIcons
 
 #endif// MEDIA_TOOL_ICONS_HPP

@@ -73,7 +73,7 @@ TEST_CASE("TextOverlayData serialization", "[MediaWidgetStateData]") {
 
 TEST_CASE("LineInteractionPrefs serialization", "[MediaWidgetStateData]") {
     SECTION("Default values") {
-        LineInteractionPrefs prefs;
+        LineInteractionPrefs const prefs;
         auto json = rfl::json::write(prefs);
         auto result = rfl::json::read<LineInteractionPrefs>(json);
 
@@ -152,7 +152,7 @@ TEST_CASE("PointInteractionPrefs serialization", "[MediaWidgetStateData]") {
 
 TEST_CASE("EraserToolPrefs serialization", "[MediaWidgetStateData]") {
     SECTION("Default values") {
-        EraserToolPrefs prefs;
+        EraserToolPrefs const prefs;
         auto json = rfl::json::write(prefs);
         auto result = rfl::json::read<EraserToolPrefs>(json);
 
@@ -172,11 +172,33 @@ TEST_CASE("EraserToolPrefs serialization", "[MediaWidgetStateData]") {
     }
 }
 
+TEST_CASE("SmoothToolPrefs serialization", "[MediaWidgetStateData]") {
+    SECTION("Default values") {
+        SmoothToolPrefs const prefs;
+        auto json = rfl::json::write(prefs);
+        auto result = rfl::json::read<SmoothToolPrefs>(json);
+
+        REQUIRE(result);
+        REQUIRE(result.value().radius_px == 10);
+    }
+
+    SECTION("Custom values round-trip") {
+        SmoothToolPrefs prefs;
+        prefs.radius_px = 24;
+
+        auto json = rfl::json::write(prefs);
+        auto result = rfl::json::read<SmoothToolPrefs>(json);
+
+        REQUIRE(result);
+        REQUIRE(result.value().radius_px == 24);
+    }
+}
+
 // ==================== ViewportState Tests ====================
 
 TEST_CASE("ViewportState serialization", "[MediaWidgetStateData]") {
     SECTION("Default values") {
-        ViewportState viewport;
+        ViewportState const viewport;
         auto json = rfl::json::write(viewport);
         auto result = rfl::json::read<ViewportState>(json);
 
@@ -232,7 +254,7 @@ TEST_CASE("Tool mode enums serialize as strings", "[MediaWidgetStateData]") {
             MaskToolMode mode = MaskToolMode::Brush;
         };
 
-        TestData data;
+        TestData const data;
         auto json = rfl::json::write(data);
         REQUIRE(json.find("\"Brush\"") != std::string::npos);
     }
@@ -242,7 +264,7 @@ TEST_CASE("Tool mode enums serialize as strings", "[MediaWidgetStateData]") {
             PointToolMode mode = PointToolMode::Select;
         };
 
-        TestData data;
+        TestData const data;
         auto json = rfl::json::write(data);
         REQUIRE(json.find("\"Select\"") != std::string::npos);
     }
@@ -252,7 +274,7 @@ TEST_CASE("Tool mode enums serialize as strings", "[MediaWidgetStateData]") {
 
 TEST_CASE("MediaWidgetStateData full serialization", "[MediaWidgetStateData]") {
     SECTION("Empty state serializes correctly") {
-        MediaWidgetStateData data;
+        MediaWidgetStateData const data;
         auto json = rfl::json::write(data);
         REQUIRE_FALSE(json.empty());
 

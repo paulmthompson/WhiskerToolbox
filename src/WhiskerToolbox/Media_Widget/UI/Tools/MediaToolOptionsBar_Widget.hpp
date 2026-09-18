@@ -15,6 +15,7 @@ class QStackedWidget;
 class EraserToolOptions_Widget;
 class PenToolOptions_Widget;
 class SelectToolOptions_Widget;
+class SmoothToolOptions_Widget;
 
 /**
  * @brief Contextual tool options displayed above the horizontal ruler
@@ -57,6 +58,12 @@ public:
      */
     [[nodiscard]] EraserToolOptions_Widget * eraserOptionsWidget() const { return _eraser_options; }
 
+    /**
+     * @brief Access Smooth tool options widget
+     * @return Smooth options widget (never null after construction)
+     */
+    [[nodiscard]] SmoothToolOptions_Widget * smoothOptionsWidget() const { return _smooth_options; }
+
     [[nodiscard]] QSize sizeHint() const override;
 
 private:
@@ -67,6 +74,7 @@ private:
     SelectToolOptions_Widget * _select_options{nullptr};
     PenToolOptions_Widget * _pen_options{nullptr};
     EraserToolOptions_Widget * _eraser_options{nullptr};
+    SmoothToolOptions_Widget * _smooth_options{nullptr};
 };
 
 #endif// MEDIA_TOOL_OPTIONS_BAR_WIDGET_HPP

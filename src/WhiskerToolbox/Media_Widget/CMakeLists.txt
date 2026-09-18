@@ -51,6 +51,9 @@ set(MEDIA_WIDGET_SOURCES
     UI/Tools/EraserToolOptions_Widget.hpp
     UI/Tools/EraserToolOptions_Widget.cpp
     UI/Tools/EraserToolOptions_Widget.ui
+    UI/Tools/SmoothToolOptions_Widget.hpp
+    UI/Tools/SmoothToolOptions_Widget.cpp
+    UI/Tools/SmoothToolOptions_Widget.ui
 
     Selection/MediaSelectionHit.hpp
     Selection/MediaSelectToolController.hpp

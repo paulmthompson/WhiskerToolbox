@@ -37,7 +37,11 @@ MediaToolStrip_Widget::MediaToolStrip_Widget(QWidget * parent)
 
     _addToolButton(MediaToolId::Eraser,
                    MediaToolIcons::createEraserToolIcon(),
-                   tr("Eraser — brush preview"));
+                   tr("Eraser — remove vertices from selected line"));
+
+    _addToolButton(MediaToolId::Smooth,
+                   MediaToolIcons::createSmoothToolIcon(),
+                   tr("Smooth — local smoothing on selected line"));
 
     _layout->addStretch();
 

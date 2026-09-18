@@ -432,6 +432,18 @@ public:
      */
     void setEraserPrefs(EraserToolPrefs const & prefs);
 
+    /**
+     * @brief Get Smooth tool preferences
+     * @return Const reference to SmoothToolPrefs
+     */
+    [[nodiscard]] SmoothToolPrefs const & smoothPrefs() const { return _data.smooth_prefs; }
+
+    /**
+     * @brief Set Smooth tool preferences
+     * @param prefs The new preferences
+     */
+    void setSmoothPrefs(SmoothToolPrefs const & prefs);
+
     // === Text Overlays ===
 
     /**
@@ -615,6 +627,11 @@ signals:
      * @brief Emitted when Eraser tool preferences change
      */
     void eraserPrefsChanged();
+
+    /**
+     * @brief Emitted when Smooth tool preferences change
+     */
+    void smoothPrefsChanged();
 
     // === Text Overlay Signals ===
 

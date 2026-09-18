@@ -22,7 +22,7 @@ void ensureQtApplication() {
 TEST_CASE("MediaToolStrip_Widget selects Select tool by default", "[MediaToolStrip]") {
     ensureQtApplication();
 
-    MediaToolStrip_Widget strip;
+    MediaToolStrip_Widget const strip;
     REQUIRE(strip.activeTool() == MediaToolId::Select);
 }
 
@@ -73,4 +73,12 @@ TEST_CASE("MediaToolStrip_Widget selects Eraser tool", "[MediaToolStrip]") {
     MediaToolStrip_Widget strip;
     strip.setActiveTool(MediaToolId::Eraser);
     REQUIRE(strip.activeTool() == MediaToolId::Eraser);
+}
+
+TEST_CASE("MediaToolStrip_Widget selects Smooth tool", "[MediaToolStrip]") {
+    ensureQtApplication();
+
+    MediaToolStrip_Widget strip;
+    strip.setActiveTool(MediaToolId::Smooth);
+    REQUIRE(strip.activeTool() == MediaToolId::Smooth);
 }

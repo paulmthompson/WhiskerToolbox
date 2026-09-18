@@ -120,7 +120,7 @@ private:
     void _applyRulerPrefs();
     void _updateRulers();
     void _syncActiveMediaTool(MediaToolId tool);
-    void _syncEraserHoverCircle();
+    void _syncBrushHoverCircle();
 
     MediaToolStrip_Widget * _tool_strip{nullptr};
     MediaToolOptionsBar_Widget * _tool_options_bar{nullptr};
