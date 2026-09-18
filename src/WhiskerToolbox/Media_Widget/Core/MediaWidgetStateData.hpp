@@ -1,6 +1,7 @@
 #ifndef MEDIA_WIDGET_STATE_DATA_HPP
 #define MEDIA_WIDGET_STATE_DATA_HPP
 
+#include "Core/LineEditOperations.hpp"
 #include "UI/Tools/MediaToolId.hpp"
 
 /**
@@ -242,6 +243,9 @@ struct EraserToolPrefs {
  */
 struct SmoothToolPrefs {
     int radius_px = 10;///< Smooth brush hover circle radius in scene pixels
+    LineSmoothAlgorithm algorithm = LineSmoothAlgorithm::MovingAverage;
+    int polynomial_order = 3;///< Polynomial order when algorithm is PolynomialFit
+    int strength = 1;        ///< Moving-average passes (1-3)
 };
 
 // ==================== Main State Structure ====================

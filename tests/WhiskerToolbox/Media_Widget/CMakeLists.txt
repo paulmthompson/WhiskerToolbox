@@ -30,6 +30,7 @@ add_executable(test_media_widget
     ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/Media_Widget/SmoothToolOptions_Widget.test.cpp
     ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/Media_Widget/MediaSelectionHit.test.cpp
     ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/Media_Widget/LineDrawOperations.test.cpp
+    ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/Media_Widget/LineEditOperations.test.cpp
 )
 
 target_link_libraries(test_media_widget PRIVATE 

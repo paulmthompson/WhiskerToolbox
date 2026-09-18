@@ -1,0 +1,34 @@
+---
+title: "Line Edit Operations"
+format: html
+---
+
+## Overview
+
+`LineEditOperations.hpp` provides Qt-free helpers for in-place line geometry edits in the Media Viewer.
+
+## API
+
+| Function / type | Purpose |
+|-----------------|---------|
+| `LineSmoothAlgorithm` | `MovingAverage` or `PolynomialFit` local smoothing mode |
+| `LineSmoothBrushParams` | Brush center, radius, algorithm, polynomial order, and strength |
+| `applyPolynomialFitToLine` | Fit and resample an entire `Line2D` with a parametric polynomial |
+| `smoothPolylineLocally` | Smooth only the vertex subrange inside a circular brush |
+
+## Local Smoothing Behavior
+
+`smoothPolylineLocally` selects vertices within `radius_px` of `center`, expands to the contiguous index range `[begin, end]`, applies the chosen algorithm to that subrange, and splices the result back into the parent line.
+
+- **Moving Average:** runs `CoreGeometry::smooth_line` on the subrange for `strength` passes (1–3).
+- **Polynomial Fit:** runs `applyPolynomialFitToLine` on the subrange and may change local vertex count.
+
+## Related Code
+
+| Component | Role |
+|-----------|------|
+| `MediaLine_Widget::_smoothPointsInLine` | Applies brush smoothing to the selected line entity |
+| `SmoothToolOptions_Widget` | Exposes brush radius, algorithm, strength, and polynomial order |
+| `Media_Widget::_syncBrushHoverCircle` | Shows the shared hover circle for Eraser and Smooth tools |
+
+See also [Smooth Tool Options Widget](SmoothToolOptions_Widget.qmd) and [Line Draw Operations](LineDrawOperations.qmd).

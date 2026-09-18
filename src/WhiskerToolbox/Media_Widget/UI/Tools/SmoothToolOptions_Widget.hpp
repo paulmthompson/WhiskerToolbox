@@ -15,7 +15,7 @@ class SmoothToolOptions_Widget;
 class MediaWidgetState;
 
 /**
- * @brief Displays Smooth tool hover-circle size controls
+ * @brief Displays Smooth tool brush and algorithm controls
  */
 class SmoothToolOptions_Widget : public QWidget {
     Q_OBJECT
@@ -32,9 +32,14 @@ public:
 
 private slots:
     void _onSmoothSizeChanged(int radius_px);
+    void _onAlgorithmChanged(int index);
+    void _onStrengthChanged(int strength);
+    void _onPolynomialOrderChanged(int order);
     void _syncFromState();
 
 private:
+    void _updateAlgorithmDependentControls();
+
     Ui::SmoothToolOptions_Widget * ui;
     MediaWidgetState * _state{nullptr};
     bool _updating_from_state{false};

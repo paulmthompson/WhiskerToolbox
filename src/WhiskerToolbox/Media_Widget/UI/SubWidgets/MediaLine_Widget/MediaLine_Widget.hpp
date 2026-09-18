@@ -88,6 +88,7 @@ private:
     // Flag to prevent infinite loops during percentage updates
     bool _is_updating_percentages{false};
     bool _is_eraser_dragging{false};
+    bool _is_smooth_dragging{false};
 
     void _setupSelectionModePages();
     void _addPointToLine(float x_media, float y_media, TimeFrameIndex current_time);
@@ -98,21 +99,13 @@ private:
     [[nodiscard]] std::string _resolveSelectedLineKey() const;
     void _deleteNearestVertexFromLine(float x_media, float y_media, TimeFrameIndex current_time);
     void _erasePointsFromLine(float x_media, float y_media, TimeFrameIndex current_time);
+    void _smoothPointsInLine(float x_media, float y_media, TimeFrameIndex current_time);
 
     /**
      * @brief Resolve eraser radius for the active global tool or legacy erase widget
      * @return Radius in scene/media pixels
      */
     [[nodiscard]] float _eraserRadiusPx() const;
-
-    /**
-     * @brief Apply polynomial fit to a line
-     * @param line The line to fit
-     * @param order The order of the polynomial to fit
-     * @pre order >= 0 (enforcement: runtime_check via caller UI).
-     * @pre line.size() > order for successful fit (enforcement: runtime_check)
-     */
-    static void _applyPolynomialFit(Line2D & line, int order);
 
     void _detectEdges();
     std::pair<float, float> _findNearestEdge(float x, float y);

@@ -2,6 +2,7 @@
 #include "ui_MediaLine_Widget.h"
 
 #include "Core/LineDrawOperations.hpp"
+#include "Core/LineEditOperations.hpp"
 #include "Media_Widget/Core/MediaWidgetState.hpp"
 #include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
 #include "Media_Widget/UI/Tools/MediaToolId.hpp"
@@ -11,9 +12,7 @@
 #include "SelectionWidgets/LineNoneSelectionWidget.hpp"
 
 #include "CoreGeometry/point_geometry.hpp"
-#include "CoreMath/polynomial_fit.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DataManager/transforms/Lines/Line_Angle/line_angle.hpp"
 #include "ImageProcessing/OpenCVUtility.hpp"
 #include "Lines/Line_Data.hpp"
 #include "Media/Media_Data.hpp"
@@ -54,6 +53,13 @@ namespace {
  */
 [[nodiscard]] bool isEraserToolActive(MediaWidgetState const * state, std::string const & active_key) {
     return state != nullptr && !active_key.empty() && state->activeMediaTool() == MediaToolId::Eraser;
+}
+
+/**
+ * @brief Whether the Smooth toolbar tool owns local smoothing gestures for the active line key
+ */
+[[nodiscard]] bool isSmoothToolActive(MediaWidgetState const * state, std::string const & active_key) {
+    return state != nullptr && !active_key.empty() && state->activeMediaTool() == MediaToolId::Smooth;
 }
 
 /**
@@ -371,6 +377,17 @@ void MediaLine_Widget::_clickedInVideoWithModifiers(qreal x_canvas, qreal y_canv
         return;
     }
 
+    if (isSmoothToolActive(_state, _active_key)) {
+        if ((modifiers & Qt::ControlModifier) || (modifiers & Qt::AltModifier)) {
+            return;
+        }
+
+        spdlog::debug("MediaLine_Widget: Smooth tool click - smoothing vertices within radius");
+        _is_smooth_dragging = true;
+        _smoothPointsInLine(x_media, y_media, current_time);
+        return;
+    }
+
     switch (_selection_mode) {
         case Selection_Mode::None: {
             spdlog::debug("MediaLine_Widget: selection mode is None");
@@ -388,23 +405,30 @@ void MediaLine_Widget::_clickedInVideoWithModifiers(qreal x_canvas, qreal y_canv
 }
 
 void MediaLine_Widget::_mouseMovedInVideo(qreal x_canvas, qreal y_canvas) {
-    if (!_is_eraser_dragging || !isEraserToolActive(_state, _active_key)) {
-        return;
-    }
-
     auto line_data = _data_manager->getData<LineData>(_active_key);
     if (!line_data) {
         return;
     }
 
     auto const current_time = _state->current_position.convertTo(line_data->getTimeFrame().get());
-    _erasePointsFromLine(static_cast<float>(x_canvas),
-                         static_cast<float>(y_canvas),
-                         current_time);
+
+    if (_is_eraser_dragging && isEraserToolActive(_state, _active_key)) {
+        _erasePointsFromLine(static_cast<float>(x_canvas),
+                             static_cast<float>(y_canvas),
+                             current_time);
+        return;
+    }
+
+    if (_is_smooth_dragging && isSmoothToolActive(_state, _active_key)) {
+        _smoothPointsInLine(static_cast<float>(x_canvas),
+                            static_cast<float>(y_canvas),
+                            current_time);
+    }
 }
 
 void MediaLine_Widget::_mouseReleasedInVideo() {
     _is_eraser_dragging = false;
+    _is_smooth_dragging = false;
 }
 
 std::optional<TimeFrameIndex> MediaLine_Widget::_currentLineTime(std::string const & line_key) const {
@@ -580,7 +604,7 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
             line = Line2D(std::move(updated_points));
 
             if (line.size() >= 3) {
-                _applyPolynomialFit(line, _polynomial_order);
+                applyPolynomialFitToLine(line, _polynomial_order);
             }
         }
     } else if (_smoothing_mode == Smoothing_Mode::SimpleSmooth) {
@@ -598,7 +622,7 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
         line.push_back(new_point);
 
         if (line.size() >= 3) {
-            _applyPolynomialFit(line, _polynomial_order);
+            applyPolynomialFitToLine(line, _polynomial_order);
         }
     }
 
@@ -761,54 +785,59 @@ void MediaLine_Widget::_erasePointsFromLine(float x_media, float y_media, TimeFr
                   line.size());
 }
 
-void MediaLine_Widget::_applyPolynomialFit(Line2D & line, int order) {
+void MediaLine_Widget::_smoothPointsInLine(float x_media, float y_media, TimeFrameIndex current_time) {
+    static_cast<void>(current_time);
 
-    assert(order >= 0 && "Order must be non-negative");
-
-    if (line.size() < static_cast<size_t>(order + 1)) {
-        // Not enough points for the requested polynomial order
+    auto selected_entities = _scene->getSelectedEntities();
+    if (selected_entities.empty()) {
+        spdlog::debug("MediaLine_Widget: no line selected - cannot smooth points");
         return;
     }
 
-    // Extract x and y coordinates
-    std::vector<double> t(line.size());
-    std::vector<double> x_coords(line.size());
-    std::vector<double> y_coords(line.size());
-
-    // Use parameter t along the curve (0 to 1)
-    for (size_t i = 0; i < line.size(); ++i) {
-        t[i] = static_cast<double>(i) / (line.size() - 1);
-        x_coords[i] = line[i].x;
-        y_coords[i] = line[i].y;
-    }
-
-    // Fit polynomials to x(t) and y(t) using the function from line_angle.hpp
-    std::vector<double> const x_coeffs = fit_polynomial(t, x_coords, order);
-    std::vector<double> const y_coeffs = fit_polynomial(t, y_coords, order);
-
-    if (x_coeffs.empty() || y_coeffs.empty()) {
-        // Fall back to simple smoothing if fitting failed
-        smooth_line(line);
+    auto line_data = _data_manager->getData<LineData>(_active_key);
+    if (!line_data) {
+        spdlog::debug("MediaLine_Widget: no line data for active key");
         return;
     }
 
-    // Generate smooth curve with more points
-    int const num_points = std::max(100, static_cast<int>(line.size()) * 2);
-    std::vector<Point2D<float>> smooth_line;
-    smooth_line.reserve(num_points);
-
-    for (int i = 0; i < num_points; ++i) {
-        double const t_param = static_cast<double>(i) / (num_points - 1);
-
-        // Evaluate polynomials at t_param using the function from line_angle.hpp
-        double const x_val = evaluate_polynomial(x_coeffs, t_param);
-        double const y_val = evaluate_polynomial(y_coeffs, t_param);
-
-        smooth_line.emplace_back(static_cast<float>(x_val), static_cast<float>(y_val));
+    if (_state == nullptr) {
+        return;
     }
 
-    // Replace the original line with the smooth one
-    line = Line2D(smooth_line);
+    EntityId const selected_entity_id = *selected_entities.begin();
+
+    auto line_ref = line_data->getMutableData(selected_entity_id, NotifyObservers::Yes);
+    if (!line_ref.has_value()) {
+        spdlog::debug("MediaLine_Widget: could not get mutable reference to line with EntityID {}", selected_entity_id.id);
+        return;
+    }
+
+    Line2D & line = line_ref.value().get();
+    if (line.empty()) {
+        spdlog::debug("MediaLine_Widget: selected line is empty - nothing to smooth");
+        return;
+    }
+
+    SmoothToolPrefs const & prefs = _state->smoothPrefs();
+    LineSmoothBrushParams params;
+    params.center = {x_media, y_media};
+    params.radius_px = static_cast<float>(prefs.radius_px);
+    params.algorithm = prefs.algorithm;
+    params.polynomial_order = prefs.polynomial_order;
+    params.strength = prefs.strength;
+
+    if (!smoothPolylineLocally(line, params)) {
+        return;
+    }
+
+    line_data->notifyObservers();
+    _scene->UpdateCanvas();
+    spdlog::debug("MediaLine_Widget: smoothed vertices near ({}, {}) on line {} (EntityID: {}, {} vertices)",
+                  x_media,
+                  y_media,
+                  _active_key,
+                  selected_entity_id.id,
+                  line.size());
 }
 
 void MediaLine_Widget::_setSmoothingMode(int index) {

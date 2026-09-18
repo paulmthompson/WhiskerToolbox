@@ -563,7 +563,10 @@ void MediaWidgetState::setEraserPrefs(EraserToolPrefs const & prefs) {
 }
 
 void MediaWidgetState::setSmoothPrefs(SmoothToolPrefs const & prefs) {
-    if (_data.smooth_prefs.radius_px == prefs.radius_px) {
+    if (_data.smooth_prefs.radius_px == prefs.radius_px &&
+        _data.smooth_prefs.algorithm == prefs.algorithm &&
+        _data.smooth_prefs.polynomial_order == prefs.polynomial_order &&
+        _data.smooth_prefs.strength == prefs.strength) {
         return;
     }
 

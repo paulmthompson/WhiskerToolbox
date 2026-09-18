@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>640</width>
+    <width>900</width>
     <height>24</height>
    </rect>
   </property>
@@ -45,7 +45,7 @@
       <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="minimumWidth">
-      <number>120</number>
+      <number>100</number>
      </property>
     </widget>
    </item>
@@ -62,6 +62,86 @@
      </property>
      <property name="suffix">
       <string> px</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="algorithm_label">
+     <property name="text">
+      <string>Algorithm:</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QComboBox" name="algorithm_combo">
+     <item>
+      <property name="text">
+       <string>Moving Average</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Polynomial Fit</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="strength_label">
+     <property name="text">
+      <string>Strength:</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QSlider" name="strength_slider">
+     <property name="minimum">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <number>3</number>
+     </property>
+     <property name="value">
+      <number>1</number>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+     <property name="minimumWidth">
+      <number>60</number>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QSpinBox" name="strength_spinbox">
+     <property name="minimum">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <number>3</number>
+     </property>
+     <property name="value">
+      <number>1</number>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="polynomial_order_label">
+     <property name="text">
+      <string>Order:</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QSpinBox" name="polynomial_order_spinbox">
+     <property name="minimum">
+      <number>1</number>
+     </property>
+     <property name="maximum">
+      <number>8</number>
+     </property>
+     <property name="value">
+      <number>3</number>
      </property>
     </widget>
    </item>

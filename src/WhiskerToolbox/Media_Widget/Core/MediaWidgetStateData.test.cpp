@@ -185,12 +185,18 @@ TEST_CASE("SmoothToolPrefs serialization", "[MediaWidgetStateData]") {
     SECTION("Custom values round-trip") {
         SmoothToolPrefs prefs;
         prefs.radius_px = 24;
+        prefs.algorithm = LineSmoothAlgorithm::PolynomialFit;
+        prefs.polynomial_order = 5;
+        prefs.strength = 2;
 
         auto json = rfl::json::write(prefs);
         auto result = rfl::json::read<SmoothToolPrefs>(json);
 
         REQUIRE(result);
         REQUIRE(result.value().radius_px == 24);
+        REQUIRE(result.value().algorithm == LineSmoothAlgorithm::PolynomialFit);
+        REQUIRE(result.value().polynomial_order == 5);
+        REQUIRE(result.value().strength == 2);
     }
 }
 

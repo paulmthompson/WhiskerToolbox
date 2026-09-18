@@ -7,6 +7,7 @@
  */
 
 #include "Media_Widget/UI/SubWidgets/MediaLine_Widget/MediaLine_Widget.hpp"
+#include "Core/LineEditOperations.hpp"
 #include "Media_Widget/Core/MediaWidgetState.hpp"
 #include "Media_Widget/MediaWidgetRegistration.hpp"
 #include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
@@ -172,6 +173,16 @@ void enableEraserTool(MediaWidgetState * state, int radius_px = 15) {
     state->setActiveMediaTool(MediaToolId::Eraser);
 }
 
+void enableSmoothTool(MediaWidgetState * state, int radius_px = 15) {
+    REQUIRE(state != nullptr);
+    SmoothToolPrefs prefs = state->smoothPrefs();
+    prefs.radius_px = radius_px;
+    prefs.algorithm = LineSmoothAlgorithm::MovingAverage;
+    prefs.strength = 2;
+    state->setSmoothPrefs(prefs);
+    state->setActiveMediaTool(MediaToolId::Smooth);
+}
+
 constexpr Qt::KeyboardModifiers kPenAppendModifier = Qt::ControlModifier;
 
 /**
@@ -212,6 +223,11 @@ void simulateLineEraserStroke(MediaLine_Widget * line_widget,
     }
 
     QMetaObject::invokeMethod(line_widget, "_mouseReleasedInVideo", Qt::DirectConnection);
+}
+
+void simulateLineSmoothStroke(MediaLine_Widget * line_widget,
+                              std::vector<std::pair<qreal, qreal>> const & points) {
+    simulateLineEraserStroke(line_widget, points);
 }
 
 }// namespace
@@ -423,6 +439,64 @@ TEST_CASE("Eraser tool removes contiguous line vertices within hover radius",
         REQUIRE(line.size() == 2);
         REQUIRE(line.front().x == Catch::Approx(100.0f));
         REQUIRE(line.back().x == Catch::Approx(140.0f));
+    }
+}
+
+TEST_CASE("Smooth tool smooths selected line vertices within hover radius",
+          "[MediaWidget][MediaLine_Widget][Integration]") {
+    auto * app = ensureQApplication();
+    REQUIRE(app != nullptr);
+
+    qRegisterMetaType<qreal>("qreal");
+    qRegisterMetaType<Qt::KeyboardModifiers>("Qt::KeyboardModifiers");
+
+    constexpr int kTargetFrame = 50;
+
+    auto data_manager = createDataManagerWithLine("test_line", 100, {640, 480});
+    auto time_frame = data_manager->getTime(TimeKey("time"));
+    REQUIRE(time_frame != nullptr);
+
+    auto line_data = data_manager->getData<LineData>("test_line");
+    REQUIRE(line_data != nullptr);
+
+    Line2D initial_line({Point2D<float>{100.0f, 100.0f},
+                         Point2D<float>{110.0f, 105.0f},
+                         Point2D<float>{120.0f, 100.0f},
+                         Point2D<float>{130.0f, 105.0f},
+                         Point2D<float>{140.0f, 100.0f}});
+    line_data->addAtTime(TimeFrameIndex{kTargetFrame}, initial_line, NotifyObservers::No);
+
+    auto entity_ids = line_data->getEntityIdsAtTime(TimeFrameIndex{kTargetFrame});
+    REQUIRE_FALSE(entity_ids.empty());
+    EntityId line_entity_id = entity_ids[0];
+
+    auto state = std::make_shared<MediaWidgetState>();
+    auto media_window = std::make_unique<Media_Window>(data_manager);
+    state->current_position = TimePosition(TimeFrameIndex{kTargetFrame}, time_frame);
+
+    {
+        MediaPropertiesWidget props_widget(state, data_manager, media_window.get());
+        props_widget.resize(900, 700);
+        props_widget.show();
+        app->processEvents();
+
+        auto line_widget = selectLineFeature(props_widget, "test_line", app);
+        REQUIRE(line_widget != nullptr);
+
+        enableSmoothTool(state.get(), 15);
+        media_window->selectEntity(line_entity_id, "test_line", "line");
+        app->processEvents();
+
+        simulateLineSmoothStroke(line_widget, {{120.0, 102.5}});
+        app->processEvents();
+
+        auto line_ref_after = line_data->getDataByEntityId(line_entity_id);
+        REQUIRE(line_ref_after.has_value());
+        auto const & line = line_ref_after.value().get();
+        REQUIRE(line.size() == initial_line.size());
+        REQUIRE(line.front().x == Catch::Approx(100.0f));
+        REQUIRE(line.back().x == Catch::Approx(140.0f));
+        REQUIRE(line[2].y != Catch::Approx(100.0f));
     }
 }
 

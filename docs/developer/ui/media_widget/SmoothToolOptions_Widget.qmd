@@ -1,0 +1,37 @@
+---
+title: "Smooth Tool Options Widget"
+format: html
+---
+
+## Overview
+
+`SmoothToolOptions_Widget` is the options-bar page shown when `MediaToolId::Smooth` is active in the Media Viewer left tool strip. It configures the hover-circle radius and local smoothing algorithm for brush-based edits on the selected line.
+
+## Controls
+
+| Control | State field | Description |
+|---------|-------------|-------------|
+| Brush size slider / spinbox | `SmoothToolPrefs::radius_px` | Hover circle radius in scene pixels (1–50, default 10) |
+| Algorithm combo | `SmoothToolPrefs::algorithm` | `MovingAverage` or `PolynomialFit` |
+| Strength slider / spinbox | `SmoothToolPrefs::strength` | Moving-average passes (1–3, enabled for Moving Average only) |
+| Order spinbox | `SmoothToolPrefs::polynomial_order` | Polynomial order (1–8, enabled for Polynomial Fit only) |
+
+## Behavior
+
+When the Smooth tool is active:
+
+- Left-click drag on a **selected line** smooths vertices within the hover circle.
+- Smoothing is continuous during drag, matching the Eraser tool interaction model.
+- Endpoints outside the brush are preserved for moving-average smoothing.
+
+`Media_Widget::_syncBrushHoverCircle()` enables the shared `Media_Window` hover circle and applies `SmoothToolPrefs::radius_px`.
+
+## Related Code
+
+| Component | Role |
+|-----------|------|
+| `MediaLine_Widget::_smoothPointsInLine` | Mutates the selected line via `smoothPolylineLocally` |
+| `LineEditOperations` | Qt-free local smoothing and polynomial-fit helpers |
+| `Media_Window::setShowHoverCircle` / `setHoverCircleRadius` | Shared hover-circle rendering |
+
+See also [Media Viewer Tool Strip](MediaToolStrip.qmd), [Media Viewer Tool Options Bar](MediaToolOptionsBar.qmd), and [Line Edit Operations](LineEditOperations.qmd).
