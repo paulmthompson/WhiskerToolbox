@@ -892,111 +892,124 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-508"><a href="#cb1-508" aria-hidden="true" tabindex="-1"></a>    <span class="ex">emit</span> eraserPrefsChanged<span class="op">();</span></span>
 <span id="cb1-509"><a href="#cb1-509" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-510"><a href="#cb1-510" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-511"><a href="#cb1-511" aria-hidden="true" tabindex="-1"></a><span class="co">// === Text Overlays ===</span></span>
-<span id="cb1-512"><a href="#cb1-512" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-513"><a href="#cb1-513" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> MediaWidgetState<span class="op">::</span>addTextOverlay<span class="op">(</span>TextOverlayData overlay<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-514"><a href="#cb1-514" aria-hidden="true" tabindex="-1"></a>    overlay<span class="op">.</span>id <span class="op">=</span> _data<span class="op">.</span>next_overlay_id<span class="op">++;</span></span>
-<span id="cb1-515"><a href="#cb1-515" aria-hidden="true" tabindex="-1"></a>    _data<span class="op">.</span>text_overlays<span class="op">.</span>push_back<span class="op">(</span>overlay<span class="op">);</span></span>
-<span id="cb1-516"><a href="#cb1-516" aria-hidden="true" tabindex="-1"></a>    markDirty<span class="op">();</span></span>
-<span id="cb1-517"><a href="#cb1-517" aria-hidden="true" tabindex="-1"></a>    <span class="ex">emit</span> textOverlaysChanged<span class="op">();</span></span>
-<span id="cb1-518"><a href="#cb1-518" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> overlay<span class="op">.</span>id<span class="op">;</span></span>
-<span id="cb1-519"><a href="#cb1-519" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-520"><a href="#cb1-520" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-521"><a href="#cb1-521" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> MediaWidgetState<span class="op">::</span>removeTextOverlay<span class="op">(</span><span class="dt">int</span> overlay_id<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-522"><a href="#cb1-522" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> it <span class="op">=</span> <span class="bu">std::</span>find_if<span class="op">(</span>_data<span class="op">.</span>text_overlays<span class="op">.</span>begin<span class="op">(),</span> _data<span class="op">.</span>text_overlays<span class="op">.</span>end<span class="op">(),</span></span>
-<span id="cb1-523"><a href="#cb1-523" aria-hidden="true" tabindex="-1"></a>                           <span class="op">[</span>overlay_id<span class="op">](</span>TextOverlayData <span class="at">const</span> <span class="op">&amp;</span> o<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> o<span class="op">.</span>id <span class="op">==</span> overlay_id<span class="op">;</span> <span class="op">});</span></span>
-<span id="cb1-524"><a href="#cb1-524" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-525"><a href="#cb1-525" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>it <span class="op">!=</span> _data<span class="op">.</span>text_overlays<span class="op">.</span>end<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-526"><a href="#cb1-526" aria-hidden="true" tabindex="-1"></a>        _data<span class="op">.</span>text_overlays<span class="op">.</span>erase<span class="op">(</span>it<span class="op">);</span></span>
-<span id="cb1-527"><a href="#cb1-527" aria-hidden="true" tabindex="-1"></a>        markDirty<span class="op">();</span></span>
-<span id="cb1-528"><a href="#cb1-528" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> textOverlaysChanged<span class="op">();</span></span>
-<span id="cb1-529"><a href="#cb1-529" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb1-530"><a href="#cb1-530" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-531"><a href="#cb1-531" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-511"><a href="#cb1-511" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaWidgetState<span class="op">::</span>setSmoothPrefs<span class="op">(</span>SmoothToolPrefs <span class="at">const</span> <span class="op">&amp;</span> prefs<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-512"><a href="#cb1-512" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_data<span class="op">.</span>smooth_prefs<span class="op">.</span>radius_px <span class="op">==</span> prefs<span class="op">.</span>radius_px <span class="op">&amp;&amp;</span></span>
+<span id="cb1-513"><a href="#cb1-513" aria-hidden="true" tabindex="-1"></a>        _data<span class="op">.</span>smooth_prefs<span class="op">.</span>algorithm <span class="op">==</span> prefs<span class="op">.</span>algorithm <span class="op">&amp;&amp;</span></span>
+<span id="cb1-514"><a href="#cb1-514" aria-hidden="true" tabindex="-1"></a>        _data<span class="op">.</span>smooth_prefs<span class="op">.</span>polynomial_order <span class="op">==</span> prefs<span class="op">.</span>polynomial_order <span class="op">&amp;&amp;</span></span>
+<span id="cb1-515"><a href="#cb1-515" aria-hidden="true" tabindex="-1"></a>        _data<span class="op">.</span>smooth_prefs<span class="op">.</span>strength <span class="op">==</span> prefs<span class="op">.</span>strength<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-516"><a href="#cb1-516" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-517"><a href="#cb1-517" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-518"><a href="#cb1-518" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-519"><a href="#cb1-519" aria-hidden="true" tabindex="-1"></a>    _data<span class="op">.</span>smooth_prefs <span class="op">=</span> prefs<span class="op">;</span></span>
+<span id="cb1-520"><a href="#cb1-520" aria-hidden="true" tabindex="-1"></a>    markDirty<span class="op">();</span></span>
+<span id="cb1-521"><a href="#cb1-521" aria-hidden="true" tabindex="-1"></a>    <span class="ex">emit</span> smoothPrefsChanged<span class="op">();</span></span>
+<span id="cb1-522"><a href="#cb1-522" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-523"><a href="#cb1-523" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-524"><a href="#cb1-524" aria-hidden="true" tabindex="-1"></a><span class="co">// === Text Overlays ===</span></span>
+<span id="cb1-525"><a href="#cb1-525" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-526"><a href="#cb1-526" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> MediaWidgetState<span class="op">::</span>addTextOverlay<span class="op">(</span>TextOverlayData overlay<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-527"><a href="#cb1-527" aria-hidden="true" tabindex="-1"></a>    overlay<span class="op">.</span>id <span class="op">=</span> _data<span class="op">.</span>next_overlay_id<span class="op">++;</span></span>
+<span id="cb1-528"><a href="#cb1-528" aria-hidden="true" tabindex="-1"></a>    _data<span class="op">.</span>text_overlays<span class="op">.</span>push_back<span class="op">(</span>overlay<span class="op">);</span></span>
+<span id="cb1-529"><a href="#cb1-529" aria-hidden="true" tabindex="-1"></a>    markDirty<span class="op">();</span></span>
+<span id="cb1-530"><a href="#cb1-530" aria-hidden="true" tabindex="-1"></a>    <span class="ex">emit</span> textOverlaysChanged<span class="op">();</span></span>
+<span id="cb1-531"><a href="#cb1-531" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> overlay<span class="op">.</span>id<span class="op">;</span></span>
 <span id="cb1-532"><a href="#cb1-532" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb1-533"><a href="#cb1-533" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-534"><a href="#cb1-534" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> MediaWidgetState<span class="op">::</span>updateTextOverlay<span class="op">(</span><span class="dt">int</span> overlay_id<span class="op">,</span> TextOverlayData <span class="at">const</span> <span class="op">&amp;</span> overlay<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-534"><a href="#cb1-534" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> MediaWidgetState<span class="op">::</span>removeTextOverlay<span class="op">(</span><span class="dt">int</span> overlay_id<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb1-535"><a href="#cb1-535" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> it <span class="op">=</span> <span class="bu">std::</span>find_if<span class="op">(</span>_data<span class="op">.</span>text_overlays<span class="op">.</span>begin<span class="op">(),</span> _data<span class="op">.</span>text_overlays<span class="op">.</span>end<span class="op">(),</span></span>
 <span id="cb1-536"><a href="#cb1-536" aria-hidden="true" tabindex="-1"></a>                           <span class="op">[</span>overlay_id<span class="op">](</span>TextOverlayData <span class="at">const</span> <span class="op">&amp;</span> o<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> o<span class="op">.</span>id <span class="op">==</span> overlay_id<span class="op">;</span> <span class="op">});</span></span>
 <span id="cb1-537"><a href="#cb1-537" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-538"><a href="#cb1-538" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>it <span class="op">!=</span> _data<span class="op">.</span>text_overlays<span class="op">.</span>end<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-539"><a href="#cb1-539" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Preserve the ID</span></span>
-<span id="cb1-540"><a href="#cb1-540" aria-hidden="true" tabindex="-1"></a>        it<span class="op">-&gt;</span>text <span class="op">=</span> overlay<span class="op">.</span>text<span class="op">;</span></span>
-<span id="cb1-541"><a href="#cb1-541" aria-hidden="true" tabindex="-1"></a>        it<span class="op">-&gt;</span>orientation <span class="op">=</span> overlay<span class="op">.</span>orientation<span class="op">;</span></span>
-<span id="cb1-542"><a href="#cb1-542" aria-hidden="true" tabindex="-1"></a>        it<span class="op">-&gt;</span>x_position <span class="op">=</span> overlay<span class="op">.</span>x_position<span class="op">;</span></span>
-<span id="cb1-543"><a href="#cb1-543" aria-hidden="true" tabindex="-1"></a>        it<span class="op">-&gt;</span>y_position <span class="op">=</span> overlay<span class="op">.</span>y_position<span class="op">;</span></span>
-<span id="cb1-544"><a href="#cb1-544" aria-hidden="true" tabindex="-1"></a>        it<span class="op">-&gt;</span>color <span class="op">=</span> overlay<span class="op">.</span>color<span class="op">;</span></span>
-<span id="cb1-545"><a href="#cb1-545" aria-hidden="true" tabindex="-1"></a>        it<span class="op">-&gt;</span>font_size <span class="op">=</span> overlay<span class="op">.</span>font_size<span class="op">;</span></span>
-<span id="cb1-546"><a href="#cb1-546" aria-hidden="true" tabindex="-1"></a>        it<span class="op">-&gt;</span>enabled <span class="op">=</span> overlay<span class="op">.</span>enabled<span class="op">;</span></span>
-<span id="cb1-547"><a href="#cb1-547" aria-hidden="true" tabindex="-1"></a>        markDirty<span class="op">();</span></span>
-<span id="cb1-548"><a href="#cb1-548" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> textOverlaysChanged<span class="op">();</span></span>
-<span id="cb1-549"><a href="#cb1-549" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb1-550"><a href="#cb1-550" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-551"><a href="#cb1-551" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
-<span id="cb1-552"><a href="#cb1-552" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-553"><a href="#cb1-553" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-554"><a href="#cb1-554" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaWidgetState<span class="op">::</span>clearTextOverlays<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-555"><a href="#cb1-555" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_data<span class="op">.</span>text_overlays<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-556"><a href="#cb1-556" aria-hidden="true" tabindex="-1"></a>        _data<span class="op">.</span>text_overlays<span class="op">.</span>clear<span class="op">();</span></span>
-<span id="cb1-557"><a href="#cb1-557" aria-hidden="true" tabindex="-1"></a>        markDirty<span class="op">();</span></span>
-<span id="cb1-558"><a href="#cb1-558" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> textOverlaysChanged<span class="op">();</span></span>
-<span id="cb1-559"><a href="#cb1-559" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-560"><a href="#cb1-560" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-561"><a href="#cb1-561" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-562"><a href="#cb1-562" aria-hidden="true" tabindex="-1"></a>TextOverlayData <span class="at">const</span> <span class="op">*</span> MediaWidgetState<span class="op">::</span>getTextOverlay<span class="op">(</span><span class="dt">int</span> overlay_id<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb1-563"><a href="#cb1-563" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> it <span class="op">=</span> <span class="bu">std::</span>find_if<span class="op">(</span>_data<span class="op">.</span>text_overlays<span class="op">.</span>begin<span class="op">(),</span> _data<span class="op">.</span>text_overlays<span class="op">.</span>end<span class="op">(),</span></span>
-<span id="cb1-564"><a href="#cb1-564" aria-hidden="true" tabindex="-1"></a>                           <span class="op">[</span>overlay_id<span class="op">](</span>TextOverlayData <span class="at">const</span> <span class="op">&amp;</span> o<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> o<span class="op">.</span>id <span class="op">==</span> overlay_id<span class="op">;</span> <span class="op">});</span></span>
-<span id="cb1-565"><a href="#cb1-565" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-566"><a href="#cb1-566" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>it <span class="op">!=</span> _data<span class="op">.</span>text_overlays<span class="op">.</span>end<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-567"><a href="#cb1-567" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">&amp;(*</span>it<span class="op">);</span></span>
-<span id="cb1-568"><a href="#cb1-568" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-569"><a href="#cb1-569" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">nullptr</span><span class="op">;</span></span>
-<span id="cb1-570"><a href="#cb1-570" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-571"><a href="#cb1-571" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-572"><a href="#cb1-572" aria-hidden="true" tabindex="-1"></a><span class="co">// === Active Tool State ===</span></span>
-<span id="cb1-573"><a href="#cb1-573" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-574"><a href="#cb1-574" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaWidgetState<span class="op">::</span>setActiveMediaTool<span class="op">(</span>MediaToolId tool<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-575"><a href="#cb1-575" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_data<span class="op">.</span>active_media_tool <span class="op">==</span> tool<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-576"><a href="#cb1-576" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
-<span id="cb1-577"><a href="#cb1-577" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-539"><a href="#cb1-539" aria-hidden="true" tabindex="-1"></a>        _data<span class="op">.</span>text_overlays<span class="op">.</span>erase<span class="op">(</span>it<span class="op">);</span></span>
+<span id="cb1-540"><a href="#cb1-540" aria-hidden="true" tabindex="-1"></a>        markDirty<span class="op">();</span></span>
+<span id="cb1-541"><a href="#cb1-541" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> textOverlaysChanged<span class="op">();</span></span>
+<span id="cb1-542"><a href="#cb1-542" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-543"><a href="#cb1-543" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-544"><a href="#cb1-544" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-545"><a href="#cb1-545" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-546"><a href="#cb1-546" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-547"><a href="#cb1-547" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> MediaWidgetState<span class="op">::</span>updateTextOverlay<span class="op">(</span><span class="dt">int</span> overlay_id<span class="op">,</span> TextOverlayData <span class="at">const</span> <span class="op">&amp;</span> overlay<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-548"><a href="#cb1-548" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> it <span class="op">=</span> <span class="bu">std::</span>find_if<span class="op">(</span>_data<span class="op">.</span>text_overlays<span class="op">.</span>begin<span class="op">(),</span> _data<span class="op">.</span>text_overlays<span class="op">.</span>end<span class="op">(),</span></span>
+<span id="cb1-549"><a href="#cb1-549" aria-hidden="true" tabindex="-1"></a>                           <span class="op">[</span>overlay_id<span class="op">](</span>TextOverlayData <span class="at">const</span> <span class="op">&amp;</span> o<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> o<span class="op">.</span>id <span class="op">==</span> overlay_id<span class="op">;</span> <span class="op">});</span></span>
+<span id="cb1-550"><a href="#cb1-550" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-551"><a href="#cb1-551" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>it <span class="op">!=</span> _data<span class="op">.</span>text_overlays<span class="op">.</span>end<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-552"><a href="#cb1-552" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Preserve the ID</span></span>
+<span id="cb1-553"><a href="#cb1-553" aria-hidden="true" tabindex="-1"></a>        it<span class="op">-&gt;</span>text <span class="op">=</span> overlay<span class="op">.</span>text<span class="op">;</span></span>
+<span id="cb1-554"><a href="#cb1-554" aria-hidden="true" tabindex="-1"></a>        it<span class="op">-&gt;</span>orientation <span class="op">=</span> overlay<span class="op">.</span>orientation<span class="op">;</span></span>
+<span id="cb1-555"><a href="#cb1-555" aria-hidden="true" tabindex="-1"></a>        it<span class="op">-&gt;</span>x_position <span class="op">=</span> overlay<span class="op">.</span>x_position<span class="op">;</span></span>
+<span id="cb1-556"><a href="#cb1-556" aria-hidden="true" tabindex="-1"></a>        it<span class="op">-&gt;</span>y_position <span class="op">=</span> overlay<span class="op">.</span>y_position<span class="op">;</span></span>
+<span id="cb1-557"><a href="#cb1-557" aria-hidden="true" tabindex="-1"></a>        it<span class="op">-&gt;</span>color <span class="op">=</span> overlay<span class="op">.</span>color<span class="op">;</span></span>
+<span id="cb1-558"><a href="#cb1-558" aria-hidden="true" tabindex="-1"></a>        it<span class="op">-&gt;</span>font_size <span class="op">=</span> overlay<span class="op">.</span>font_size<span class="op">;</span></span>
+<span id="cb1-559"><a href="#cb1-559" aria-hidden="true" tabindex="-1"></a>        it<span class="op">-&gt;</span>enabled <span class="op">=</span> overlay<span class="op">.</span>enabled<span class="op">;</span></span>
+<span id="cb1-560"><a href="#cb1-560" aria-hidden="true" tabindex="-1"></a>        markDirty<span class="op">();</span></span>
+<span id="cb1-561"><a href="#cb1-561" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> textOverlaysChanged<span class="op">();</span></span>
+<span id="cb1-562"><a href="#cb1-562" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-563"><a href="#cb1-563" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-564"><a href="#cb1-564" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-565"><a href="#cb1-565" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-566"><a href="#cb1-566" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-567"><a href="#cb1-567" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaWidgetState<span class="op">::</span>clearTextOverlays<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-568"><a href="#cb1-568" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>_data<span class="op">.</span>text_overlays<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-569"><a href="#cb1-569" aria-hidden="true" tabindex="-1"></a>        _data<span class="op">.</span>text_overlays<span class="op">.</span>clear<span class="op">();</span></span>
+<span id="cb1-570"><a href="#cb1-570" aria-hidden="true" tabindex="-1"></a>        markDirty<span class="op">();</span></span>
+<span id="cb1-571"><a href="#cb1-571" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> textOverlaysChanged<span class="op">();</span></span>
+<span id="cb1-572"><a href="#cb1-572" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-573"><a href="#cb1-573" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-574"><a href="#cb1-574" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-575"><a href="#cb1-575" aria-hidden="true" tabindex="-1"></a>TextOverlayData <span class="at">const</span> <span class="op">*</span> MediaWidgetState<span class="op">::</span>getTextOverlay<span class="op">(</span><span class="dt">int</span> overlay_id<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb1-576"><a href="#cb1-576" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> it <span class="op">=</span> <span class="bu">std::</span>find_if<span class="op">(</span>_data<span class="op">.</span>text_overlays<span class="op">.</span>begin<span class="op">(),</span> _data<span class="op">.</span>text_overlays<span class="op">.</span>end<span class="op">(),</span></span>
+<span id="cb1-577"><a href="#cb1-577" aria-hidden="true" tabindex="-1"></a>                           <span class="op">[</span>overlay_id<span class="op">](</span>TextOverlayData <span class="at">const</span> <span class="op">&amp;</span> o<span class="op">)</span> <span class="op">{</span> <span class="cf">return</span> o<span class="op">.</span>id <span class="op">==</span> overlay_id<span class="op">;</span> <span class="op">});</span></span>
 <span id="cb1-578"><a href="#cb1-578" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-579"><a href="#cb1-579" aria-hidden="true" tabindex="-1"></a>    _data<span class="op">.</span>active_media_tool <span class="op">=</span> tool<span class="op">;</span></span>
-<span id="cb1-580"><a href="#cb1-580" aria-hidden="true" tabindex="-1"></a>    markDirty<span class="op">();</span></span>
-<span id="cb1-581"><a href="#cb1-581" aria-hidden="true" tabindex="-1"></a>    <span class="ex">emit</span> activeMediaToolChanged<span class="op">(</span>tool<span class="op">);</span></span>
-<span id="cb1-582"><a href="#cb1-582" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-583"><a href="#cb1-583" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-584"><a href="#cb1-584" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaWidgetState<span class="op">::</span>setActiveLineMode<span class="op">(</span>LineToolMode mode<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-585"><a href="#cb1-585" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_data<span class="op">.</span>active_line_mode <span class="op">!=</span> mode<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-586"><a href="#cb1-586" aria-hidden="true" tabindex="-1"></a>        _data<span class="op">.</span>active_line_mode <span class="op">=</span> mode<span class="op">;</span></span>
-<span id="cb1-587"><a href="#cb1-587" aria-hidden="true" tabindex="-1"></a>        markDirty<span class="op">();</span></span>
-<span id="cb1-588"><a href="#cb1-588" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> toolModesChanged<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"line"</span><span class="op">));</span></span>
-<span id="cb1-589"><a href="#cb1-589" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-590"><a href="#cb1-590" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-579"><a href="#cb1-579" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>it <span class="op">!=</span> _data<span class="op">.</span>text_overlays<span class="op">.</span>end<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-580"><a href="#cb1-580" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">&amp;(*</span>it<span class="op">);</span></span>
+<span id="cb1-581"><a href="#cb1-581" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-582"><a href="#cb1-582" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb1-583"><a href="#cb1-583" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-584"><a href="#cb1-584" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-585"><a href="#cb1-585" aria-hidden="true" tabindex="-1"></a><span class="co">// === Active Tool State ===</span></span>
+<span id="cb1-586"><a href="#cb1-586" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-587"><a href="#cb1-587" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaWidgetState<span class="op">::</span>setActiveMediaTool<span class="op">(</span>MediaToolId tool<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-588"><a href="#cb1-588" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_data<span class="op">.</span>active_media_tool <span class="op">==</span> tool<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-589"><a href="#cb1-589" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-590"><a href="#cb1-590" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-591"><a href="#cb1-591" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-592"><a href="#cb1-592" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaWidgetState<span class="op">::</span>setActiveMaskMode<span class="op">(</span>MaskToolMode mode<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-593"><a href="#cb1-593" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_data<span class="op">.</span>active_mask_mode <span class="op">!=</span> mode<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-594"><a href="#cb1-594" aria-hidden="true" tabindex="-1"></a>        _data<span class="op">.</span>active_mask_mode <span class="op">=</span> mode<span class="op">;</span></span>
-<span id="cb1-595"><a href="#cb1-595" aria-hidden="true" tabindex="-1"></a>        markDirty<span class="op">();</span></span>
-<span id="cb1-596"><a href="#cb1-596" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> toolModesChanged<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"mask"</span><span class="op">));</span></span>
-<span id="cb1-597"><a href="#cb1-597" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-598"><a href="#cb1-598" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-599"><a href="#cb1-599" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-600"><a href="#cb1-600" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaWidgetState<span class="op">::</span>setActivePointMode<span class="op">(</span>PointToolMode mode<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-601"><a href="#cb1-601" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_data<span class="op">.</span>active_point_mode <span class="op">!=</span> mode<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-602"><a href="#cb1-602" aria-hidden="true" tabindex="-1"></a>        _data<span class="op">.</span>active_point_mode <span class="op">=</span> mode<span class="op">;</span></span>
-<span id="cb1-603"><a href="#cb1-603" aria-hidden="true" tabindex="-1"></a>        markDirty<span class="op">();</span></span>
-<span id="cb1-604"><a href="#cb1-604" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> toolModesChanged<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"point"</span><span class="op">));</span></span>
-<span id="cb1-605"><a href="#cb1-605" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-606"><a href="#cb1-606" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-607"><a href="#cb1-607" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-608"><a href="#cb1-608" aria-hidden="true" tabindex="-1"></a><span class="co">// === Canvas Image (Transient) ===</span></span>
-<span id="cb1-609"><a href="#cb1-609" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-610"><a href="#cb1-610" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaWidgetState<span class="op">::</span>setCanvasImage<span class="op">(</span><span class="ex">QImage</span> <span class="at">const</span> <span class="op">&amp;</span> image<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-611"><a href="#cb1-611" aria-hidden="true" tabindex="-1"></a>    _canvas_image <span class="op">=</span> image<span class="op">;</span></span>
-<span id="cb1-612"><a href="#cb1-612" aria-hidden="true" tabindex="-1"></a>    <span class="ex">emit</span> canvasImageChanged<span class="op">(</span>image<span class="op">);</span></span>
-<span id="cb1-613"><a href="#cb1-613" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-592"><a href="#cb1-592" aria-hidden="true" tabindex="-1"></a>    _data<span class="op">.</span>active_media_tool <span class="op">=</span> tool<span class="op">;</span></span>
+<span id="cb1-593"><a href="#cb1-593" aria-hidden="true" tabindex="-1"></a>    markDirty<span class="op">();</span></span>
+<span id="cb1-594"><a href="#cb1-594" aria-hidden="true" tabindex="-1"></a>    <span class="ex">emit</span> activeMediaToolChanged<span class="op">(</span>tool<span class="op">);</span></span>
+<span id="cb1-595"><a href="#cb1-595" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-596"><a href="#cb1-596" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-597"><a href="#cb1-597" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaWidgetState<span class="op">::</span>setActiveLineMode<span class="op">(</span>LineToolMode mode<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-598"><a href="#cb1-598" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_data<span class="op">.</span>active_line_mode <span class="op">!=</span> mode<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-599"><a href="#cb1-599" aria-hidden="true" tabindex="-1"></a>        _data<span class="op">.</span>active_line_mode <span class="op">=</span> mode<span class="op">;</span></span>
+<span id="cb1-600"><a href="#cb1-600" aria-hidden="true" tabindex="-1"></a>        markDirty<span class="op">();</span></span>
+<span id="cb1-601"><a href="#cb1-601" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> toolModesChanged<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"line"</span><span class="op">));</span></span>
+<span id="cb1-602"><a href="#cb1-602" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-603"><a href="#cb1-603" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-604"><a href="#cb1-604" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-605"><a href="#cb1-605" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaWidgetState<span class="op">::</span>setActiveMaskMode<span class="op">(</span>MaskToolMode mode<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-606"><a href="#cb1-606" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_data<span class="op">.</span>active_mask_mode <span class="op">!=</span> mode<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-607"><a href="#cb1-607" aria-hidden="true" tabindex="-1"></a>        _data<span class="op">.</span>active_mask_mode <span class="op">=</span> mode<span class="op">;</span></span>
+<span id="cb1-608"><a href="#cb1-608" aria-hidden="true" tabindex="-1"></a>        markDirty<span class="op">();</span></span>
+<span id="cb1-609"><a href="#cb1-609" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> toolModesChanged<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"mask"</span><span class="op">));</span></span>
+<span id="cb1-610"><a href="#cb1-610" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-611"><a href="#cb1-611" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-612"><a href="#cb1-612" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-613"><a href="#cb1-613" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaWidgetState<span class="op">::</span>setActivePointMode<span class="op">(</span>PointToolMode mode<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-614"><a href="#cb1-614" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_data<span class="op">.</span>active_point_mode <span class="op">!=</span> mode<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-615"><a href="#cb1-615" aria-hidden="true" tabindex="-1"></a>        _data<span class="op">.</span>active_point_mode <span class="op">=</span> mode<span class="op">;</span></span>
+<span id="cb1-616"><a href="#cb1-616" aria-hidden="true" tabindex="-1"></a>        markDirty<span class="op">();</span></span>
+<span id="cb1-617"><a href="#cb1-617" aria-hidden="true" tabindex="-1"></a>        <span class="ex">emit</span> toolModesChanged<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"point"</span><span class="op">));</span></span>
+<span id="cb1-618"><a href="#cb1-618" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-619"><a href="#cb1-619" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-620"><a href="#cb1-620" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-621"><a href="#cb1-621" aria-hidden="true" tabindex="-1"></a><span class="co">// === Canvas Image (Transient) ===</span></span>
+<span id="cb1-622"><a href="#cb1-622" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-623"><a href="#cb1-623" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaWidgetState<span class="op">::</span>setCanvasImage<span class="op">(</span><span class="ex">QImage</span> <span class="at">const</span> <span class="op">&amp;</span> image<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-624"><a href="#cb1-624" aria-hidden="true" tabindex="-1"></a>    _canvas_image <span class="op">=</span> image<span class="op">;</span></span>
+<span id="cb1-625"><a href="#cb1-625" aria-hidden="true" tabindex="-1"></a>    <span class="ex">emit</span> canvasImageChanged<span class="op">(</span>image<span class="op">);</span></span>
+<span id="cb1-626"><a href="#cb1-626" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-14 at 20:30:54 +0000</p>
+<p>Updated on 2026-09-18 at 14:28:05 +0000</p>
 
 
 </section>

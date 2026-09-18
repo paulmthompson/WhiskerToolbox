@@ -693,125 +693,131 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-141"><a href="#cb4-141" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-142"><a href="#cb4-142" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setEraserPrefs<span class="op">(</span>EraserToolPrefs <span class="at">const</span> <span class="op">&amp;</span> prefs<span class="op">);</span></span>
 <span id="cb4-143"><a href="#cb4-143" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-144"><a href="#cb4-144" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Text Overlays ===</span></span>
+<span id="cb4-144"><a href="#cb4-144" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> SmoothToolPrefs <span class="at">const</span> <span class="op">&amp;</span> smoothPrefs<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _data<span class="op">.</span>smooth_prefs<span class="op">;</span> <span class="op">}</span></span>
 <span id="cb4-145"><a href="#cb4-145" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-146"><a href="#cb4-146" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>TextOverlayData<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> textOverlays<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _data<span class="op">.</span>text_overlays<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-146"><a href="#cb4-146" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setSmoothPrefs<span class="op">(</span>SmoothToolPrefs <span class="at">const</span> <span class="op">&amp;</span> prefs<span class="op">);</span></span>
 <span id="cb4-147"><a href="#cb4-147" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-148"><a href="#cb4-148" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> addTextOverlay<span class="op">(</span>TextOverlayData overlay<span class="op">);</span></span>
+<span id="cb4-148"><a href="#cb4-148" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Text Overlays ===</span></span>
 <span id="cb4-149"><a href="#cb4-149" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-150"><a href="#cb4-150" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> removeTextOverlay<span class="op">(</span><span class="dt">int</span> overlay_id<span class="op">);</span></span>
+<span id="cb4-150"><a href="#cb4-150" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>TextOverlayData<span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> textOverlays<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _data<span class="op">.</span>text_overlays<span class="op">;</span> <span class="op">}</span></span>
 <span id="cb4-151"><a href="#cb4-151" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-152"><a href="#cb4-152" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> updateTextOverlay<span class="op">(</span><span class="dt">int</span> overlay_id<span class="op">,</span> TextOverlayData <span class="at">const</span> <span class="op">&amp;</span> overlay<span class="op">);</span></span>
+<span id="cb4-152"><a href="#cb4-152" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> addTextOverlay<span class="op">(</span>TextOverlayData overlay<span class="op">);</span></span>
 <span id="cb4-153"><a href="#cb4-153" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-154"><a href="#cb4-154" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> clearTextOverlays<span class="op">();</span></span>
+<span id="cb4-154"><a href="#cb4-154" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> removeTextOverlay<span class="op">(</span><span class="dt">int</span> overlay_id<span class="op">);</span></span>
 <span id="cb4-155"><a href="#cb4-155" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-156"><a href="#cb4-156" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> TextOverlayData <span class="at">const</span> <span class="op">*</span> getTextOverlay<span class="op">(</span><span class="dt">int</span> overlay_id<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb4-156"><a href="#cb4-156" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> updateTextOverlay<span class="op">(</span><span class="dt">int</span> overlay_id<span class="op">,</span> TextOverlayData <span class="at">const</span> <span class="op">&amp;</span> overlay<span class="op">);</span></span>
 <span id="cb4-157"><a href="#cb4-157" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-158"><a href="#cb4-158" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Active Tool State ===</span></span>
+<span id="cb4-158"><a href="#cb4-158" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> clearTextOverlays<span class="op">();</span></span>
 <span id="cb4-159"><a href="#cb4-159" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-160"><a href="#cb4-160" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setActiveMediaTool<span class="op">(</span>MediaToolId tool<span class="op">);</span></span>
+<span id="cb4-160"><a href="#cb4-160" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> TextOverlayData <span class="at">const</span> <span class="op">*</span> getTextOverlay<span class="op">(</span><span class="dt">int</span> overlay_id<span class="op">)</span> <span class="at">const</span><span class="op">;</span></span>
 <span id="cb4-161"><a href="#cb4-161" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-162"><a href="#cb4-162" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> MediaToolId activeMediaTool<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _data<span class="op">.</span>active_media_tool<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-162"><a href="#cb4-162" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Active Tool State ===</span></span>
 <span id="cb4-163"><a href="#cb4-163" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-164"><a href="#cb4-164" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setActiveLineMode<span class="op">(</span>LineToolMode mode<span class="op">);</span></span>
+<span id="cb4-164"><a href="#cb4-164" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setActiveMediaTool<span class="op">(</span>MediaToolId tool<span class="op">);</span></span>
 <span id="cb4-165"><a href="#cb4-165" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-166"><a href="#cb4-166" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> LineToolMode activeLineMode<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _data<span class="op">.</span>active_line_mode<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-166"><a href="#cb4-166" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> MediaToolId activeMediaTool<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _data<span class="op">.</span>active_media_tool<span class="op">;</span> <span class="op">}</span></span>
 <span id="cb4-167"><a href="#cb4-167" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-168"><a href="#cb4-168" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setActiveMaskMode<span class="op">(</span>MaskToolMode mode<span class="op">);</span></span>
+<span id="cb4-168"><a href="#cb4-168" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setActiveLineMode<span class="op">(</span>LineToolMode mode<span class="op">);</span></span>
 <span id="cb4-169"><a href="#cb4-169" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-170"><a href="#cb4-170" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> MaskToolMode activeMaskMode<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _data<span class="op">.</span>active_mask_mode<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-170"><a href="#cb4-170" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> LineToolMode activeLineMode<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _data<span class="op">.</span>active_line_mode<span class="op">;</span> <span class="op">}</span></span>
 <span id="cb4-171"><a href="#cb4-171" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-172"><a href="#cb4-172" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setActivePointMode<span class="op">(</span>PointToolMode mode<span class="op">);</span></span>
+<span id="cb4-172"><a href="#cb4-172" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setActiveMaskMode<span class="op">(</span>MaskToolMode mode<span class="op">);</span></span>
 <span id="cb4-173"><a href="#cb4-173" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-174"><a href="#cb4-174" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> PointToolMode activePointMode<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _data<span class="op">.</span>active_point_mode<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-174"><a href="#cb4-174" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> MaskToolMode activeMaskMode<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _data<span class="op">.</span>active_mask_mode<span class="op">;</span> <span class="op">}</span></span>
 <span id="cb4-175"><a href="#cb4-175" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-176"><a href="#cb4-176" aria-hidden="true" tabindex="-1"></a><span class="ex">signals</span><span class="op">:</span></span>
-<span id="cb4-177"><a href="#cb4-177" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Primary Display ===</span></span>
-<span id="cb4-178"><a href="#cb4-178" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-179"><a href="#cb4-179" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> displayedDataKeyChanged<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">);</span></span>
-<span id="cb4-180"><a href="#cb4-180" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-181"><a href="#cb4-181" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Viewport Signals ===</span></span>
+<span id="cb4-176"><a href="#cb4-176" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setActivePointMode<span class="op">(</span>PointToolMode mode<span class="op">);</span></span>
+<span id="cb4-177"><a href="#cb4-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-178"><a href="#cb4-178" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> PointToolMode activePointMode<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _data<span class="op">.</span>active_point_mode<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb4-179"><a href="#cb4-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-180"><a href="#cb4-180" aria-hidden="true" tabindex="-1"></a><span class="ex">signals</span><span class="op">:</span></span>
+<span id="cb4-181"><a href="#cb4-181" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Primary Display ===</span></span>
 <span id="cb4-182"><a href="#cb4-182" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-183"><a href="#cb4-183" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> zoomChanged<span class="op">(</span><span class="dt">double</span> zoom<span class="op">);</span></span>
+<span id="cb4-183"><a href="#cb4-183" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> displayedDataKeyChanged<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">);</span></span>
 <span id="cb4-184"><a href="#cb4-184" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-185"><a href="#cb4-185" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> panChanged<span class="op">(</span><span class="dt">double</span> x<span class="op">,</span> <span class="dt">double</span> y<span class="op">);</span></span>
+<span id="cb4-185"><a href="#cb4-185" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Viewport Signals ===</span></span>
 <span id="cb4-186"><a href="#cb4-186" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-187"><a href="#cb4-187" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> canvasSizeChanged<span class="op">(</span><span class="dt">int</span> width<span class="op">,</span> <span class="dt">int</span> height<span class="op">);</span></span>
+<span id="cb4-187"><a href="#cb4-187" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> zoomChanged<span class="op">(</span><span class="dt">double</span> zoom<span class="op">);</span></span>
 <span id="cb4-188"><a href="#cb4-188" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-189"><a href="#cb4-189" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> viewportChanged<span class="op">();</span></span>
+<span id="cb4-189"><a href="#cb4-189" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> panChanged<span class="op">(</span><span class="dt">double</span> x<span class="op">,</span> <span class="dt">double</span> y<span class="op">);</span></span>
 <span id="cb4-190"><a href="#cb4-190" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-191"><a href="#cb4-191" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> canvasCoordinateSystemChanged<span class="op">(</span>CanvasCoordinateSystem <span class="at">const</span> <span class="op">&amp;</span> coord_system<span class="op">);</span></span>
+<span id="cb4-191"><a href="#cb4-191" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> canvasSizeChanged<span class="op">(</span><span class="dt">int</span> width<span class="op">,</span> <span class="dt">int</span> height<span class="op">);</span></span>
 <span id="cb4-192"><a href="#cb4-192" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-193"><a href="#cb4-193" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Feature Signals ===</span></span>
+<span id="cb4-193"><a href="#cb4-193" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> viewportChanged<span class="op">();</span></span>
 <span id="cb4-194"><a href="#cb4-194" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-195"><a href="#cb4-195" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> featureEnabledChanged<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span> <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">data_type</span><span class="op">,</span> <span class="dt">bool</span> enabled<span class="op">);</span></span>
+<span id="cb4-195"><a href="#cb4-195" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> canvasCoordinateSystemChanged<span class="op">(</span>CanvasCoordinateSystem <span class="at">const</span> <span class="op">&amp;</span> coord_system<span class="op">);</span></span>
 <span id="cb4-196"><a href="#cb4-196" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-197"><a href="#cb4-197" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> displayOptionsChanged<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span> <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">data_type</span><span class="op">);</span></span>
+<span id="cb4-197"><a href="#cb4-197" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Feature Signals ===</span></span>
 <span id="cb4-198"><a href="#cb4-198" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-199"><a href="#cb4-199" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> displayOptionsRemoved<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span> <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">data_type</span><span class="op">);</span></span>
+<span id="cb4-199"><a href="#cb4-199" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> featureEnabledChanged<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span> <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">data_type</span><span class="op">,</span> <span class="dt">bool</span> enabled<span class="op">);</span></span>
 <span id="cb4-200"><a href="#cb4-200" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-201"><a href="#cb4-201" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Interaction Preference Signals ===</span></span>
+<span id="cb4-201"><a href="#cb4-201" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> displayOptionsChanged<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span> <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">data_type</span><span class="op">);</span></span>
 <span id="cb4-202"><a href="#cb4-202" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-203"><a href="#cb4-203" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> interactionPrefsChanged<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> category<span class="op">);</span></span>
+<span id="cb4-203"><a href="#cb4-203" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> displayOptionsRemoved<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span> <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">data_type</span><span class="op">);</span></span>
 <span id="cb4-204"><a href="#cb4-204" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-205"><a href="#cb4-205" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> rulerPrefsChanged<span class="op">();</span></span>
+<span id="cb4-205"><a href="#cb4-205" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Interaction Preference Signals ===</span></span>
 <span id="cb4-206"><a href="#cb4-206" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-207"><a href="#cb4-207" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> selectPrefsChanged<span class="op">();</span></span>
+<span id="cb4-207"><a href="#cb4-207" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> interactionPrefsChanged<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> category<span class="op">);</span></span>
 <span id="cb4-208"><a href="#cb4-208" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-209"><a href="#cb4-209" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> eraserPrefsChanged<span class="op">();</span></span>
+<span id="cb4-209"><a href="#cb4-209" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> rulerPrefsChanged<span class="op">();</span></span>
 <span id="cb4-210"><a href="#cb4-210" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-211"><a href="#cb4-211" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Text Overlay Signals ===</span></span>
+<span id="cb4-211"><a href="#cb4-211" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> selectPrefsChanged<span class="op">();</span></span>
 <span id="cb4-212"><a href="#cb4-212" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-213"><a href="#cb4-213" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> textOverlaysChanged<span class="op">();</span></span>
+<span id="cb4-213"><a href="#cb4-213" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> eraserPrefsChanged<span class="op">();</span></span>
 <span id="cb4-214"><a href="#cb4-214" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-215"><a href="#cb4-215" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Tool Mode Signals ===</span></span>
+<span id="cb4-215"><a href="#cb4-215" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> smoothPrefsChanged<span class="op">();</span></span>
 <span id="cb4-216"><a href="#cb4-216" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-217"><a href="#cb4-217" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> toolModesChanged<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> category<span class="op">);</span></span>
+<span id="cb4-217"><a href="#cb4-217" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Text Overlay Signals ===</span></span>
 <span id="cb4-218"><a href="#cb4-218" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-219"><a href="#cb4-219" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> activeMediaToolChanged<span class="op">(</span>MediaToolId tool<span class="op">);</span></span>
+<span id="cb4-219"><a href="#cb4-219" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> textOverlaysChanged<span class="op">();</span></span>
 <span id="cb4-220"><a href="#cb4-220" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-221"><a href="#cb4-221" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Canvas Image (Transient - for video export) ===</span></span>
+<span id="cb4-221"><a href="#cb4-221" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Tool Mode Signals ===</span></span>
 <span id="cb4-222"><a href="#cb4-222" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-223"><a href="#cb4-223" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> canvasImageChanged<span class="op">(</span><span class="ex">QImage</span> <span class="at">const</span> <span class="op">&amp;</span> image<span class="op">);</span></span>
+<span id="cb4-223"><a href="#cb4-223" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> toolModesChanged<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> category<span class="op">);</span></span>
 <span id="cb4-224"><a href="#cb4-224" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-225"><a href="#cb4-225" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
-<span id="cb4-226"><a href="#cb4-226" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Canvas Image (Transient - not serialized) ===</span></span>
-<span id="cb4-227"><a href="#cb4-227" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-228"><a href="#cb4-228" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setCanvasImage<span class="op">(</span><span class="ex">QImage</span> <span class="at">const</span> <span class="op">&amp;</span> image<span class="op">);</span></span>
-<span id="cb4-229"><a href="#cb4-229" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-230"><a href="#cb4-230" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="ex">QImage</span> <span class="at">const</span> <span class="op">&amp;</span> canvasImage<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _canvas_image<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb4-231"><a href="#cb4-231" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-232"><a href="#cb4-232" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
-<span id="cb4-233"><a href="#cb4-233" aria-hidden="true" tabindex="-1"></a>    MediaWidgetStateData _data<span class="op">;</span></span>
-<span id="cb4-234"><a href="#cb4-234" aria-hidden="true" tabindex="-1"></a>    DisplayOptionsRegistry _display_options<span class="op">{&amp;</span>_data<span class="op">,</span> <span class="kw">this</span><span class="op">};</span></span>
+<span id="cb4-225"><a href="#cb4-225" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> activeMediaToolChanged<span class="op">(</span>MediaToolId tool<span class="op">);</span></span>
+<span id="cb4-226"><a href="#cb4-226" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-227"><a href="#cb4-227" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Canvas Image (Transient - for video export) ===</span></span>
+<span id="cb4-228"><a href="#cb4-228" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-229"><a href="#cb4-229" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> canvasImageChanged<span class="op">(</span><span class="ex">QImage</span> <span class="at">const</span> <span class="op">&amp;</span> image<span class="op">);</span></span>
+<span id="cb4-230"><a href="#cb4-230" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-231"><a href="#cb4-231" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb4-232"><a href="#cb4-232" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Canvas Image (Transient - not serialized) ===</span></span>
+<span id="cb4-233"><a href="#cb4-233" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-234"><a href="#cb4-234" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setCanvasImage<span class="op">(</span><span class="ex">QImage</span> <span class="at">const</span> <span class="op">&amp;</span> image<span class="op">);</span></span>
 <span id="cb4-235"><a href="#cb4-235" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-236"><a href="#cb4-236" aria-hidden="true" tabindex="-1"></a>    CanvasCoordinateSystem _canvas_coord_system<span class="op">;</span></span>
+<span id="cb4-236"><a href="#cb4-236" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="ex">QImage</span> <span class="at">const</span> <span class="op">&amp;</span> canvasImage<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> _canvas_image<span class="op">;</span> <span class="op">}</span></span>
 <span id="cb4-237"><a href="#cb4-237" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-238"><a href="#cb4-238" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QImage</span> _canvas_image<span class="op">;</span></span>
-<span id="cb4-239"><a href="#cb4-239" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-240"><a href="#cb4-240" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Helper to forward registry signals to state signals</span></span>
-<span id="cb4-241"><a href="#cb4-241" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _connectRegistrySignals<span class="op">();</span></span>
-<span id="cb4-242"><a href="#cb4-242" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-238"><a href="#cb4-238" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb4-239"><a href="#cb4-239" aria-hidden="true" tabindex="-1"></a>    MediaWidgetStateData _data<span class="op">;</span></span>
+<span id="cb4-240"><a href="#cb4-240" aria-hidden="true" tabindex="-1"></a>    DisplayOptionsRegistry _display_options<span class="op">{&amp;</span>_data<span class="op">,</span> <span class="kw">this</span><span class="op">};</span></span>
+<span id="cb4-241"><a href="#cb4-241" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-242"><a href="#cb4-242" aria-hidden="true" tabindex="-1"></a>    CanvasCoordinateSystem _canvas_coord_system<span class="op">;</span></span>
 <span id="cb4-243"><a href="#cb4-243" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-244"><a href="#cb4-244" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> removeMaskOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">);</span></span>
-<span id="cb4-245"><a href="#cb4-245" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> removeLineOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">);</span></span>
-<span id="cb4-246"><a href="#cb4-246" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> removePointOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">);</span></span>
-<span id="cb4-247"><a href="#cb4-247" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> removeTensorOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">);</span></span>
-<span id="cb4-248"><a href="#cb4-248" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> removeIntervalOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">);</span></span>
-<span id="cb4-249"><a href="#cb4-249" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> removeMediaOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">);</span></span>
-<span id="cb4-250"><a href="#cb4-250" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-251"><a href="#cb4-251" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-252"><a href="#cb4-252" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setLineOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span> LineDisplayOptions <span class="at">const</span> <span class="op">&amp;</span> options<span class="op">);</span></span>
-<span id="cb4-253"><a href="#cb4-253" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setMaskOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span> MaskDisplayOptions <span class="at">const</span> <span class="op">&amp;</span> options<span class="op">);</span></span>
-<span id="cb4-254"><a href="#cb4-254" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setPointOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span> PointDisplayOptions <span class="at">const</span> <span class="op">&amp;</span> options<span class="op">);</span></span>
-<span id="cb4-255"><a href="#cb4-255" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setTensorOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span> TensorDisplayOptions <span class="at">const</span> <span class="op">&amp;</span> options<span class="op">);</span></span>
-<span id="cb4-256"><a href="#cb4-256" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setIntervalOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span> DigitalIntervalDisplayOptions <span class="at">const</span> <span class="op">&amp;</span> options<span class="op">);</span></span>
-<span id="cb4-257"><a href="#cb4-257" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setMediaOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span> MediaDisplayOptions <span class="at">const</span> <span class="op">&amp;</span> options<span class="op">);</span></span>
-<span id="cb4-258"><a href="#cb4-258" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb4-259"><a href="#cb4-259" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-260"><a href="#cb4-260" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// MEDIA_WIDGET_STATE_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-244"><a href="#cb4-244" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QImage</span> _canvas_image<span class="op">;</span></span>
+<span id="cb4-245"><a href="#cb4-245" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-246"><a href="#cb4-246" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Helper to forward registry signals to state signals</span></span>
+<span id="cb4-247"><a href="#cb4-247" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _connectRegistrySignals<span class="op">();</span></span>
+<span id="cb4-248"><a href="#cb4-248" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-249"><a href="#cb4-249" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-250"><a href="#cb4-250" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> removeMaskOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">);</span></span>
+<span id="cb4-251"><a href="#cb4-251" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> removeLineOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">);</span></span>
+<span id="cb4-252"><a href="#cb4-252" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> removePointOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">);</span></span>
+<span id="cb4-253"><a href="#cb4-253" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> removeTensorOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">);</span></span>
+<span id="cb4-254"><a href="#cb4-254" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> removeIntervalOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">);</span></span>
+<span id="cb4-255"><a href="#cb4-255" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> removeMediaOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">);</span></span>
+<span id="cb4-256"><a href="#cb4-256" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-257"><a href="#cb4-257" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-258"><a href="#cb4-258" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setLineOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span> LineDisplayOptions <span class="at">const</span> <span class="op">&amp;</span> options<span class="op">);</span></span>
+<span id="cb4-259"><a href="#cb4-259" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setMaskOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span> MaskDisplayOptions <span class="at">const</span> <span class="op">&amp;</span> options<span class="op">);</span></span>
+<span id="cb4-260"><a href="#cb4-260" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setPointOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span> PointDisplayOptions <span class="at">const</span> <span class="op">&amp;</span> options<span class="op">);</span></span>
+<span id="cb4-261"><a href="#cb4-261" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setTensorOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span> TensorDisplayOptions <span class="at">const</span> <span class="op">&amp;</span> options<span class="op">);</span></span>
+<span id="cb4-262"><a href="#cb4-262" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setIntervalOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span> DigitalIntervalDisplayOptions <span class="at">const</span> <span class="op">&amp;</span> options<span class="op">);</span></span>
+<span id="cb4-263"><a href="#cb4-263" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> setMediaOptions<span class="op">(</span><span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> key<span class="op">,</span> MediaDisplayOptions <span class="at">const</span> <span class="op">&amp;</span> options<span class="op">);</span></span>
+<span id="cb4-264"><a href="#cb4-264" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb4-265"><a href="#cb4-265" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-266"><a href="#cb4-266" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// MEDIA_WIDGET_STATE_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-14 at 20:30:54 +0000</p>
+<p>Updated on 2026-09-18 at 14:28:05 +0000</p>
 
 
 </section>

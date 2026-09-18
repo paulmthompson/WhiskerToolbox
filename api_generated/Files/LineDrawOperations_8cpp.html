@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>StateManagement – Neuralyzer</title>
+<title>src/WhiskerToolbox/Media_Widget/Core/LineDrawOperations.cpp – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -25,6 +25,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -313,7 +348,17 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#statemanagement" id="toc-statemanagement" class="nav-link active" data-scroll-target="#statemanagement">StateManagement</a></li>
+  <li><a href="#srcwhiskertoolboxmedia_widgetcorelinedrawoperations.cpp" id="toc-srcwhiskertoolboxmedia_widgetcorelinedrawoperations.cpp" class="nav-link active" data-scroll-target="#srcwhiskertoolboxmedia_widgetcorelinedrawoperations.cpp">src/WhiskerToolbox/Media_Widget/Core/LineDrawOperations.cpp</a>
+  <ul class="collapse">
+  <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
+  <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-mediacoordstolinedatacoords" id="toc-function-mediacoordstolinedatacoords" class="nav-link" data-scroll-target="#function-mediacoordstolinedatacoords">function mediaCoordsToLineDataCoords</a></li>
+  <li><a href="#function-commitnewlineattime" id="toc-function-commitnewlineattime" class="nav-link" data-scroll-target="#function-commitnewlineattime">function commitNewLineAtTime</a></li>
+  <li><a href="#function-entityexistsattime" id="toc-function-entityexistsattime" class="nav-link" data-scroll-target="#function-entityexistsattime">function entityExistsAtTime</a></li>
+  </ul></li>
+  <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -323,7 +368,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">StateManagement</h1>
+<h1 class="title">src/WhiskerToolbox/Media_Widget/Core/LineDrawOperations.cpp</h1>
 </div>
 
 
@@ -340,12 +385,159 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="statemanagement" class="level1">
-<h1>StateManagement</h1>
+<section id="srcwhiskertoolboxmedia_widgetcorelinedrawoperations.cpp" class="level1">
+<h1>src/WhiskerToolbox/Media_Widget/Core/LineDrawOperations.cpp</h1>
+<p>Qt-free helpers for committing line geometry from Media Viewer pen tools.</p>
+<section id="functions" class="level2">
+<h2 class="anchored" data-anchor-id="functions">Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><a href="../../api_generated/Classes/structPoint2D.html">Point2D</a>&lt; float &gt;</td>
+<td><strong><a href="../../api_generated/Files/LineDrawOperations_8cpp.html#function-mediacoordstolinedatacoords">mediaCoordsToLineDataCoords</a></strong>(float x_media, float y_media, <a href="../../api_generated/Classes/classMedia__Window.html">Media_Window</a> const * scene, <a href="../../api_generated/Classes/classMediaWidgetState.html">MediaWidgetState</a> const * state, <a href="../../api_generated/Classes/classLineData.html">LineData</a> const &amp; line_data, std::string const &amp; line_key)<br>Convert media-space click coordinates to a <a href="../../api_generated/Classes/classLineData.html">LineData</a> key’s coordinate system.</td>
+</tr>
+<tr class="even">
+<td>std::optional&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt;</td>
+<td><strong><a href="../../api_generated/Files/LineDrawOperations_8cpp.html#function-commitnewlineattime">commitNewLineAtTime</a></strong>(<a href="../../api_generated/Classes/classLineData.html">LineData</a> &amp; line_data, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Add a new line entry at a frame and return the created entity id.</td>
+</tr>
+<tr class="odd">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Files/LineDrawOperations_8cpp.html#function-entityexistsattime">entityExistsAtTime</a></strong>(<a href="../../api_generated/Classes/classLineData.html">LineData</a> const &amp; line_data, <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> entity_id, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time)<br>Whether an entity exists at a specific frame in line data.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="functions-documentation">Functions Documentation</h2>
+<section id="function-mediacoordstolinedatacoords" class="level3">
+<h3 class="anchored" data-anchor-id="function-mediacoordstolinedatacoords">function mediaCoordsToLineDataCoords</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>Point2D<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> mediaCoordsToLineDataCoords<span class="op">(</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_media<span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_media<span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    Media_Window <span class="at">const</span> <span class="op">*</span> scene<span class="op">,</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    MediaWidgetState <span class="at">const</span> <span class="op">*</span> state<span class="op">,</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    LineData <span class="at">const</span> <span class="op">&amp;</span> line_data<span class="op">,</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> line_key</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Convert media-space click coordinates to a <a href="../../api_generated/Classes/classLineData.html">LineData</a> key’s coordinate system.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>x_media</strong> X coordinate in media space</li>
+<li><strong>y_media</strong> Y coordinate in media space</li>
+<li><strong>scene</strong> Media canvas (non-owning)</li>
+<li><strong>state</strong> Media widget state for display options (non-owning)</li>
+<li><strong>line_data</strong> Target line data object</li>
+<li><strong>line_key</strong> Data manager key for display-option lookup</li>
+</ul>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/structPoint.html">Point</a> in line data coordinates</p>
+</section>
+<section id="function-commitnewlineattime" class="level3">
+<h3 class="anchored" data-anchor-id="function-commitnewlineattime">function commitNewLineAtTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> commitNewLineAtTime<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    LineData <span class="op">&amp;</span> line_data<span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex time<span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Add a new line entry at a frame and return the created entity id.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>line_data</strong> <a href="../../api_generated/Classes/structLine.html">Line</a> data to modify</li>
+<li><strong>time</strong> Frame to write at</li>
+<li><strong>line</strong> <a href="../../api_generated/Classes/structLine.html">Line</a> geometry to store</li>
+<li><strong>notify</strong> Whether to notify observers after the write</li>
+</ul>
+<p><strong>Return</strong>: Entity id of the new entry, or nullopt if commit failed</p>
+</section>
+<section id="function-entityexistsattime" class="level3">
+<h3 class="anchored" data-anchor-id="function-entityexistsattime">function entityExistsAtTime</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> entityExistsAtTime<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    LineData <span class="at">const</span> <span class="op">&amp;</span> line_data<span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    EntityId entity_id<span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex time</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether an entity exists at a specific frame in line data.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>line_data</strong> <a href="../../api_generated/Classes/structLine.html">Line</a> data to query</li>
+<li><strong>entity_id</strong> Entity to test</li>
+<li><strong>time</strong> Expected frame</li>
+</ul>
+<p><strong>Return</strong>: True when the entity is stored at time</p>
+</section>
+</section>
+<section id="source-code" class="level2">
+<h2 class="anchored" data-anchor-id="source-code">Source code</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"LineDrawOperations.hpp"</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Core/MediaWidgetState.hpp"</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DisplayOptions/DisplayOptions.hpp"</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Rendering/Media_Window/Media_Window.hpp"</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"CorePlotting/Layout/CanvasCoordinateSystem.hpp"</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Lines/Line_Data.hpp"</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QString&gt;</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;</span> mediaCoordsToLineDataCoords<span class="op">(</span><span class="dt">float</span> x_media<span class="op">,</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>                                           <span class="dt">float</span> y_media<span class="op">,</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>                                           Media_Window <span class="at">const</span> <span class="op">*</span> scene<span class="op">,</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>                                           MediaWidgetState <span class="at">const</span> <span class="op">*</span> state<span class="op">,</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>                                           LineData <span class="at">const</span> <span class="op">&amp;</span> line_data<span class="op">,</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>                                           <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> line_key<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>scene <span class="op">==</span> <span class="kw">nullptr</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{</span>x_media<span class="op">,</span> y_media<span class="op">};</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> <span class="at">const</span> scene_x <span class="op">=</span> x_media <span class="op">*</span> scene<span class="op">-&gt;</span>getXAspect<span class="op">();</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> <span class="at">const</span> scene_y <span class="op">=</span> y_media <span class="op">*</span> scene<span class="op">-&gt;</span>getYAspect<span class="op">();</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    CoordinateMappingMode mapping <span class="op">=</span> CoordinateMappingMode<span class="op">::</span>ScaleToCanvas<span class="op">;</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>state <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">*</span> config <span class="op">=</span> state<span class="op">-&gt;</span>displayOptions<span class="op">().</span>get<span class="op">&lt;</span>LineDisplayOptions<span class="op">&gt;(</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>                    <span class="ex">QString::fromStdString</span><span class="op">(</span>line_key<span class="op">)))</span> <span class="op">{</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>            mapping <span class="op">=</span> config<span class="op">-&gt;</span>coordinate_mapping<span class="op">;</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">[</span>canvas_width<span class="op">,</span> canvas_height<span class="op">]</span> <span class="op">=</span> scene<span class="op">-&gt;</span>getCanvasSize<span class="op">();</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> factors <span class="op">=</span> computeScalingFactors<span class="op">(</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>            canvas_width<span class="op">,</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>            canvas_height<span class="op">,</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>            scene<span class="op">-&gt;</span>canvasCoordinateSystem<span class="op">(),</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>            line_data<span class="op">.</span>getImageSize<span class="op">(),</span></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>            mapping<span class="op">);</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">{</span>scene_x <span class="op">/</span> factors<span class="op">.</span>x<span class="op">,</span> scene_y <span class="op">/</span> factors<span class="op">.</span>y<span class="op">};</span></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span>EntityId<span class="op">&gt;</span> commitNewLineAtTime<span class="op">(</span>LineData <span class="op">&amp;</span> line_data<span class="op">,</span></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>                                            TimeFrameIndex time<span class="op">,</span></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>                                            Line2D <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">,</span></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>                                            NotifyObservers notify<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>    EntityId <span class="at">const</span> entity_id <span class="op">=</span> line_data<span class="op">.</span>addAtTime<span class="op">(</span>time<span class="op">,</span> line<span class="op">,</span> notify<span class="op">);</span></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>entity_id <span class="op">==</span> EntityId<span class="op">(</span><span class="dv">0</span><span class="op">))</span> <span class="op">{</span></span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="bu">std::</span>nullopt<span class="op">;</span></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> entity_id<span class="op">;</span></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> entityExistsAtTime<span class="op">(</span>LineData <span class="at">const</span> <span class="op">&amp;</span> line_data<span class="op">,</span> EntityId entity_id<span class="op">,</span> TimeFrameIndex time<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> entity_time <span class="op">=</span> line_data<span class="op">.</span>getTimeByEntityId<span class="op">(</span>entity_id<span class="op">);</span></span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> entity_time<span class="op">.</span>has_value<span class="op">()</span> <span class="op">&amp;&amp;</span> entity_time<span class="op">.</span>value<span class="op">()</span> <span class="op">==</span> time<span class="op">;</span></span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-14 at 20:30:50 +0000</p>
+<p>Updated on 2026-09-18 at 14:28:05 +0000</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

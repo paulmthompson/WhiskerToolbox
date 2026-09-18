@@ -315,7 +315,7 @@ ul.task-list li input[type="checkbox"] {
   <ul>
   <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
   <li><a href="#controls" id="toc-controls" class="nav-link" data-scroll-target="#controls">Controls</a></li>
-  <li><a href="#instructions" id="toc-instructions" class="nav-link" data-scroll-target="#instructions">Instructions</a></li>
+  <li><a href="#interaction" id="toc-interaction" class="nav-link" data-scroll-target="#interaction">Interaction</a></li>
   <li><a href="#related-code" id="toc-related-code" class="nav-link" data-scroll-target="#related-code">Related Code</a></li>
   </ul>
 </nav>
@@ -345,7 +345,7 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="overview" class="level2">
 <h2 class="anchored" data-anchor-id="overview">Overview</h2>
-<p><code>PenToolOptions_Widget</code> is the options-bar page shown when <code>MediaToolId::Pen</code> is active in the Media Viewer left tool strip. It provides Pen tool usage instructions and controls for append-endpoint policy.</p>
+<p><code>PenToolOptions_Widget</code> is the options-bar page shown when <code>MediaToolId::Pen</code> is active in the Media Viewer left tool strip. It provides Pen tool usage instructions, pen target selection, and append-endpoint policy.</p>
 </section>
 <section id="controls" class="level2">
 <h2 class="anchored" data-anchor-id="controls">Controls</h2>
@@ -364,22 +364,28 @@ ul.task-list li input[type="checkbox"] {
 </thead>
 <tbody>
 <tr class="odd">
+<td>Pen target combo</td>
+<td><code>LineInteractionPrefs::pen_target_mode</code>, <code>pen_new_line_key</code></td>
+<td><strong>Selected line</strong> edits the current selection; <strong>New line · {key}</strong> creates a new <code>LineData</code> entity on click</td>
+</tr>
+<tr class="even">
 <td>Append to combo</td>
 <td><code>LineInteractionPrefs::append_endpoint</code></td>
-<td>Choose tip, base, or nearest endpoint for Ctrl+click appends</td>
+<td>Choose tip, base, or nearest endpoint for appends</td>
 </tr>
 </tbody>
 </table>
+<p>The pen target combo is rebuilt from <code>MediaWidgetState::enabledFeatures("line")</code>, mirroring <code>SelectToolOptions_Widget</code>.</p>
 </section>
-<section id="instructions" class="level2">
-<h2 class="anchored" data-anchor-id="instructions">Instructions</h2>
-<p>The widget displays:</p>
+<section id="interaction" class="level2">
+<h2 class="anchored" data-anchor-id="interaction">Interaction</h2>
 <ul>
-<li><strong>Ctrl+click</strong> to append a point.</li>
-<li><strong>Alt+click</strong> to delete the nearest vertex.</li>
+<li><strong>Ctrl+click</strong> appends to the selected line.</li>
+<li><strong>Click</strong> (new-line target) creates the first vertex of a new line.</li>
+<li>After a new line is created, <code>MediaLine_Widget</code> auto-selects the entity and switches the pen target back to <strong>Selected line</strong>.</li>
+<li><strong>Alt+click</strong> deletes the nearest vertex on the selected line at the current frame.</li>
 <li><strong>Right-click</strong> the selected line for additional operations.</li>
 </ul>
-<p>Select a line with the <strong>Select</strong> tool before using the Pen tool.</p>
 </section>
 <section id="related-code" class="level2">
 <h2 class="anchored" data-anchor-id="related-code">Related Code</h2>
@@ -396,24 +402,24 @@ ul.task-list li input[type="checkbox"] {
 </thead>
 <tbody>
 <tr class="odd">
-<td><code>MediaLine_Widget::_addPointToLine</code></td>
-<td>Appends to the selected line entity using the configured endpoint</td>
+<td><code>MediaLine_Widget::_handlePenToolClick</code></td>
+<td>Dispatches create vs append</td>
 </tr>
 <tr class="even">
-<td><code>MediaLine_Widget::_deleteNearestVertexFromLine</code></td>
-<td>Removes one vertex by nearest hit-test</td>
+<td><code>MediaLine_Widget::_createNewLineAtCurrentTime</code></td>
+<td>Immediate <code>addAtTime</code> + auto-select</td>
 </tr>
 <tr class="odd">
-<td><code>SelectToolPrefs::pick_radius_px</code></td>
-<td>Vertex hit threshold for Alt+click deletion</td>
+<td><code>LineDrawOperations::commitNewLineAtTime</code></td>
+<td>Qt-free commit helper returning <code>EntityId</code></td>
 </tr>
 <tr class="even">
-<td><code>LineInteractionPrefs::append_endpoint</code></td>
-<td>Persisted append-endpoint policy</td>
+<td><code>LineDrawOperations::entityExistsAtTime</code></td>
+<td>Frame guard before append/delete</td>
 </tr>
 </tbody>
 </table>
-<p>See also <a href="../../../developer/ui/media_widget/MediaToolStrip.html">Media Viewer Tool Strip</a> and <a href="../../../developer/ui/media_widget/MediaToolOptionsBar.html">Media Viewer Tool Options Bar</a>.</p>
+<p>See also <a href="../../../developer/ui/media_widget/MediaToolStrip.html">Media Viewer Tool Strip</a> and <a href="../../../developer/ui/media_widget/LineDrawOperations.html">Line Draw Operations</a>.</p>
 
 
 </section>

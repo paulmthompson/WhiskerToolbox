@@ -622,19 +622,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-clearattime">clearAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeIndexAndFrame.html">TimeIndexAndFrame</a> const &amp; time_index_and_frame, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Clear all data at a specific time with timeframe conversion.</td>
 </tr>
 <tr class="even">
-<td>void</td>
+<td><a href="../../api_generated/Classes/structEntityId.html">EntityId</a></td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-addattime">addAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, TData const &amp; data, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Add data at a specific time (by copying).</td>
 </tr>
 <tr class="odd">
-<td>void</td>
+<td><a href="../../api_generated/Classes/structEntityId.html">EntityId</a></td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-addattime">addAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeIndexAndFrame.html">TimeIndexAndFrame</a> const &amp; time_index_and_frame, TData const &amp; data, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Add data at a specific time with timeframe conversion (by copying).</td>
 </tr>
 <tr class="even">
-<td>void</td>
+<td><a href="../../api_generated/Classes/structEntityId.html">EntityId</a></td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-addattime">addAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, TData &amp;&amp; data, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Add data at a specific time (by moving).</td>
 </tr>
 <tr class="odd">
-<td>void</td>
+<td><a href="../../api_generated/Classes/structEntityId.html">EntityId</a></td>
 <td><strong><a href="../../api_generated/Classes/classRaggedTimeSeries.html#function-addattime">addAtTime</a></strong>(<a href="../../api_generated/Classes/structTimeIndexAndFrame.html">TimeIndexAndFrame</a> const &amp; time_index_and_frame, TData &amp;&amp; data, <a href="../../api_generated/Files/Observer__Data_8hpp.html#enum-notifyobservers">NotifyObservers</a> notify)<br>Add data at a specific time with timeframe conversion (by moving).</td>
 </tr>
 <tr class="even">
@@ -1249,7 +1249,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-addattime" class="level3">
 <h3 class="anchored" data-anchor-id="function-addattime">function addAtTime</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> addAtTime<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> EntityId addAtTime<span class="op">(</span></span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex time<span class="op">,</span></span>
 <span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>    TData <span class="at">const</span> <span class="op">&amp;</span> data<span class="op">,</span></span>
 <span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
@@ -1261,11 +1261,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>data</strong> The data to add (will be copied)</li>
 <li><strong>notify</strong> Whether to notify observers after the operation</li>
 </ul>
+<p><strong>Return</strong>: Entity id assigned to the new entry, or <a href="../../api_generated/Classes/structEntityId.html">EntityId(0)</a> when no identity registry is set</p>
 <p>This overload is called when you pass an existing lvalue (e.g., a named variable). It will create a copy of the data.</p>
 </section>
 <section id="function-addattime-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-addattime-1">function addAtTime</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> addAtTime<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> EntityId addAtTime<span class="op">(</span></span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    TimeIndexAndFrame <span class="at">const</span> <span class="op">&amp;</span> time_index_and_frame<span class="op">,</span></span>
 <span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    TData <span class="at">const</span> <span class="op">&amp;</span> data<span class="op">,</span></span>
 <span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
@@ -1277,10 +1278,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>data</strong> The data to add (will be copied)</li>
 <li><strong>notify</strong> Whether to notify observers after the operation</li>
 </ul>
+<p><strong>Return</strong>: Entity id assigned to the new entry, or <a href="../../api_generated/Classes/structEntityId.html">EntityId(0)</a> when no identity registry is set</p>
 </section>
 <section id="function-addattime-2" class="level3">
 <h3 class="anchored" data-anchor-id="function-addattime-2">function addAtTime</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> addAtTime<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> EntityId addAtTime<span class="op">(</span></span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex time<span class="op">,</span></span>
 <span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    TData <span class="op">&amp;&amp;</span> data<span class="op">,</span></span>
 <span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
@@ -1292,11 +1294,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>data</strong> The data to add (will be moved)</li>
 <li><strong>notify</strong> Whether to notify observers after the operation</li>
 </ul>
+<p><strong>Return</strong>: Entity id assigned to the new entry, or <a href="../../api_generated/Classes/structEntityId.html">EntityId(0)</a> when no identity registry is set</p>
 <p>This overload is called when you pass an rvalue (e.g., a temporary object or the result of std::move()). It will move the data, avoiding a copy.</p>
 </section>
 <section id="function-addattime-3" class="level3">
 <h3 class="anchored" data-anchor-id="function-addattime-3">function addAtTime</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> addAtTime<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> EntityId addAtTime<span class="op">(</span></span>
 <span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    TimeIndexAndFrame <span class="at">const</span> <span class="op">&amp;</span> time_index_and_frame<span class="op">,</span></span>
 <span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    TData <span class="op">&amp;&amp;</span> data<span class="op">,</span></span>
 <span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    NotifyObservers notify</span>
@@ -1308,6 +1311,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>data</strong> The data to add (will be moved)</li>
 <li><strong>notify</strong> Whether to notify observers after the operation</li>
 </ul>
+<p><strong>Return</strong>: Entity id assigned to the new entry, or <a href="../../api_generated/Classes/structEntityId.html">EntityId(0)</a> when no identity registry is set</p>
 </section>
 <section id="function-emplaceattime" class="level3">
 <h3 class="anchored" data-anchor-id="function-emplaceattime">function emplaceAtTime</h3>
@@ -1705,7 +1709,7 @@ inline auto flattened_data() const</code></pre>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb72"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>EntityRegistry <span class="op">*</span> _identity_registry <span class="op">{</span><span class="kw">nullptr</span><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Pointer to <a href="">EntityRegistry</a> for automatic <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> management.</p>
 <hr>
-<p>Updated on 2026-09-14 at 20:30:49 +0000</p>
+<p>Updated on 2026-09-18 at 14:28:01 +0000</p>
 
 
 </section>

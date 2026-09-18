@@ -410,7 +410,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classPenToolOptions__Widget.html">PenToolOptions_Widget</a></strong> <br>Displays Pen tool usage instructions and append-endpoint controls.</td>
+<td><strong><a href="../../api_generated/Classes/classPenToolOptions__Widget.html">PenToolOptions_Widget</a></strong> <br>Displays Pen tool target, append-endpoint controls, and usage instructions.</td>
 </tr>
 </tbody>
 </table>
@@ -439,19 +439,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span> <span class="ex">slots</span><span class="op">:</span></span>
 <span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _onAppendEndpointChanged<span class="op">(</span><span class="dt">int</span> index<span class="op">);</span></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _syncFromState<span class="op">();</span></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _populateAppendEndpointCombo<span class="op">();</span></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    Ui<span class="op">::</span>PenToolOptions_Widget <span class="op">*</span> ui<span class="op">;</span></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    MediaWidgetState <span class="op">*</span> _state<span class="op">{</span><span class="kw">nullptr</span><span class="op">};</span></span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> _updating_from_state<span class="op">{</span><span class="kw">false</span><span class="op">};</span></span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// PEN_TOOL_OPTIONS_WIDGET_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _onPenTargetComboChanged<span class="op">(</span><span class="dt">int</span> index<span class="op">);</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _onEnabledFeaturesChanged<span class="op">();</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _syncFromState<span class="op">();</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="kw">private</span><span class="op">:</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _populateAppendEndpointCombo<span class="op">();</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> _rebuildPenTargetCombo<span class="op">();</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">int</span> _indexForCurrentPenTarget<span class="op">()</span> <span class="at">const</span><span class="op">;</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    Ui<span class="op">::</span>PenToolOptions_Widget <span class="op">*</span> ui<span class="op">;</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    MediaWidgetState <span class="op">*</span> _state<span class="op">{</span><span class="kw">nullptr</span><span class="op">};</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> _updating_from_state<span class="op">{</span><span class="kw">false</span><span class="op">};</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// PEN_TOOL_OPTIONS_WIDGET_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-14 at 20:30:54 +0000</p>
+<p>Updated on 2026-09-18 at 14:28:05 +0000</p>
 
 
 </section>

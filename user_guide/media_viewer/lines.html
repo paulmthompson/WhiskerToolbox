@@ -1010,8 +1010,15 @@ ul.task-list li input[type="checkbox"] {
 </nav>
 <div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#creating-and-editing-lines" id="toc-creating-and-editing-lines" class="nav-link" data-scroll-target="#creating-and-editing-lines">Creating and Editing Lines</a></li>
+  </ul>
+</nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
@@ -1036,8 +1043,25 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<section id="overview" class="level2">
+<h2 class="anchored" data-anchor-id="overview">Overview</h2>
+<p>The <strong>Lines</strong> page in the Media Viewer properties panel controls styling and specialized line workflows such as <strong>Draw Across All Frames</strong>.</p>
+</section>
+<section id="creating-and-editing-lines" class="level2">
+<h2 class="anchored" data-anchor-id="creating-and-editing-lines">Creating and Editing Lines</h2>
+<p>Use the <strong>Pen</strong> tool on the left toolbar for single-frame line work:</p>
+<ol type="1">
+<li>Enable a <code>LineData</code> key in the feature table so it appears in the Pen tool <strong>Pen target</strong> list.</li>
+<li>Activate the <strong>Pen</strong> tool.</li>
+<li>To start a new line on the current frame, choose <strong>New line · {your key}</strong> and click on the canvas. The first click creates the line and selects it; further <strong>Ctrl+click</strong> gestures append vertices.</li>
+<li>To extend an existing line, choose <strong>Selected line</strong>, select the line with the <strong>Select</strong> tool (or keep the selection from a just-created line), then <strong>Ctrl+click</strong> to append.</li>
+</ol>
+<p>Use <strong>Append to</strong> in the Pen options bar to control whether new vertices attach at the tip, base, or nearest endpoint.</p>
+<p>For batch placement across many frames, use <strong>Draw Across All Frames</strong> in the line properties panel.</p>
+<p>See also: <a href="../../user_guide/media_viewer/tools.html">Toolbar</a></p>
 
 
+</section>
 
 </main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">

@@ -360,6 +360,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-selectoptionswidget" id="toc-function-selectoptionswidget" class="nav-link" data-scroll-target="#function-selectoptionswidget">function selectOptionsWidget</a></li>
   <li><a href="#function-penoptionswidget" id="toc-function-penoptionswidget" class="nav-link" data-scroll-target="#function-penoptionswidget">function penOptionsWidget</a></li>
   <li><a href="#function-eraseroptionswidget" id="toc-function-eraseroptionswidget" class="nav-link" data-scroll-target="#function-eraseroptionswidget">function eraserOptionsWidget</a></li>
+  <li><a href="#function-smoothoptionswidget" id="toc-function-smoothoptionswidget" class="nav-link" data-scroll-target="#function-smoothoptionswidget">function smoothOptionsWidget</a></li>
   <li><a href="#function-sizehint" id="toc-function-sizehint" class="nav-link" data-scroll-target="#function-sizehint">function sizeHint</a></li>
   </ul></li>
   <li><a href="#public-attributes-documentation" id="toc-public-attributes-documentation" class="nav-link" data-scroll-target="#public-attributes-documentation">Public Attributes Documentation</a>
@@ -433,6 +434,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classMediaToolOptionsBar__Widget.html#function-eraseroptionswidget">eraserOptionsWidget</a></strong>() const<br>Access Eraser tool options widget.</td>
 </tr>
 <tr class="odd">
+<td><a href="../../api_generated/Classes/classSmoothToolOptions__Widget.html">SmoothToolOptions_Widget</a> *</td>
+<td><strong><a href="../../api_generated/Classes/classMediaToolOptionsBar__Widget.html#function-smoothoptionswidget">smoothOptionsWidget</a></strong>() const<br>Access Smooth tool options widget.</td>
+</tr>
+<tr class="even">
 <td>QSize</td>
 <td><strong><a href="../../api_generated/Classes/classMediaToolOptionsBar__Widget.html#function-sizehint">sizeHint</a></strong>() const override</td>
 </tr>
@@ -504,18 +509,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Access Eraser tool options widget.</p>
 <p><strong>Return</strong>: Eraser options widget (never null after construction)</p>
 </section>
+<section id="function-smoothoptionswidget" class="level3">
+<h3 class="anchored" data-anchor-id="function-smoothoptionswidget">function smoothOptionsWidget</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> SmoothToolOptions_Widget <span class="op">*</span> smoothOptionsWidget<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Access Smooth tool options widget.</p>
+<p><strong>Return</strong>: Smooth options widget (never null after construction)</p>
+</section>
 <section id="function-sizehint" class="level3">
 <h3 class="anchored" data-anchor-id="function-sizehint">function sizeHint</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QSize</span> sizeHint<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QSize</span> sizeHint<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </section>
 <section id="public-attributes-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-attributes-documentation">Public Attributes Documentation</h2>
 <section id="variable-kbarheight" class="level3">
 <h3 class="anchored" data-anchor-id="variable-kbarheight">variable kBarHeight</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">constexpr</span> <span class="dt">int</span> kBarHeight <span class="op">=</span> <span class="dv">28</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">constexpr</span> <span class="dt">int</span> kBarHeight <span class="op">=</span> <span class="dv">28</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-14 at 20:30:49 +0000</p>
+<p>Updated on 2026-09-18 at 14:28:01 +0000</p>
 
 
 </section>
