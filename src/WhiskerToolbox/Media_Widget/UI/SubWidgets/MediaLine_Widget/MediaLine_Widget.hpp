@@ -91,6 +91,11 @@ private:
 
     void _setupSelectionModePages();
     void _addPointToLine(float x_media, float y_media, TimeFrameIndex current_time);
+    void _handlePenToolClick(float x_media, float y_media);
+    void _createNewLineAtCurrentTime(float x_media, float y_media, std::string const & line_key);
+    void _switchPenTargetToSelectedLine();
+    [[nodiscard]] std::optional<TimeFrameIndex> _currentLineTime(std::string const & line_key) const;
+    [[nodiscard]] std::string _resolveSelectedLineKey() const;
     void _deleteNearestVertexFromLine(float x_media, float y_media, TimeFrameIndex current_time);
     void _erasePointsFromLine(float x_media, float y_media, TimeFrameIndex current_time);
 

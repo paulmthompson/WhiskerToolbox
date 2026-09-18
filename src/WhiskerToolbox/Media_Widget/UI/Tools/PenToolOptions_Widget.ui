@@ -24,6 +24,20 @@
     <number>2</number>
    </property>
    <item>
+    <widget class="QLabel" name="pen_target_label">
+     <property name="text">
+      <string>Pen target:</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QComboBox" name="pen_target_combo">
+     <property name="minimumWidth">
+      <number>180</number>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLabel" name="append_endpoint_label">
      <property name="text">
       <string>Append to:</string>
@@ -40,7 +54,7 @@
    <item>
     <widget class="QLabel" name="instruction_label">
      <property name="text">
-      <string>Ctrl+click append · Alt+click delete nearest vertex · Right-click for more options</string>
+      <string>Ctrl+click append · Click place new line · Alt+click delete nearest vertex · Right-click for more options</string>
      </property>
      <property name="wordWrap">
       <bool>false</bool>

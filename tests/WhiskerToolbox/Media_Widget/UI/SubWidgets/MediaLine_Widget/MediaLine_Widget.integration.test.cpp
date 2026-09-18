@@ -145,6 +145,25 @@ void enablePenTool(MediaWidgetState * state) {
     state->setActiveMediaTool(MediaToolId::Pen);
 }
 
+void setPenNewLineTarget(MediaWidgetState * state, std::string const & line_key) {
+    REQUIRE(state != nullptr);
+    LineInteractionPrefs prefs = state->linePrefs();
+    prefs.pen_target_mode = PenLineTargetMode::NewLine;
+    prefs.pen_new_line_key = line_key;
+    state->setLinePrefs(prefs);
+}
+
+EntityId selectedLineEntityId(Media_Window const * media_window) {
+    if (media_window == nullptr) {
+        return EntityId(0);
+    }
+    auto const selected = media_window->getSelectedEntities();
+    if (selected.empty()) {
+        return EntityId(0);
+    }
+    return *selected.begin();
+}
+
 void enableEraserTool(MediaWidgetState * state, int radius_px = 15) {
     REQUIRE(state != nullptr);
     EraserToolPrefs prefs = state->eraserPrefs();
@@ -153,13 +172,15 @@ void enableEraserTool(MediaWidgetState * state, int radius_px = 15) {
     state->setActiveMediaTool(MediaToolId::Eraser);
 }
 
+constexpr Qt::KeyboardModifiers kPenAppendModifier = Qt::ControlModifier;
+
 /**
  * @brief Simulate a click with modifiers on a MediaLine_Widget
  * 
  * @param line_widget The MediaLine_Widget to interact with
  * @param x_media X coordinate in media space
  * @param y_media Y coordinate in media space
- * @param modifiers Keyboard modifiers (Qt::ControlModifier for add, Qt::AltModifier for erase)
+ * @param modifiers Keyboard modifiers (Ctrl+click append, plain click new line, Alt+click delete)
  */
 void simulateLineClick(MediaLine_Widget * line_widget,
                        qreal x_media,
@@ -264,10 +285,10 @@ TEST_CASE("Points can be added to a line by clicking in media widget",
         size_t initial_point_count = line_ref.value().get().size();
         REQUIRE(initial_point_count == 2);
 
-        // Simulate Ctrl+click to add a point (Ctrl modifier is used for adding points)
+        // Simulate Ctrl+click to append a point with the Pen tool
         constexpr qreal kClickX = 140.0;
         constexpr qreal kClickY = 140.0;
-        simulateLineClick(line_widget, kClickX, kClickY, Qt::ControlModifier);
+        simulateLineClick(line_widget, kClickX, kClickY, kPenAppendModifier);
         app->processEvents();
 
         // Verify point was added to the line
@@ -285,7 +306,7 @@ TEST_CASE("Points can be added to a line by clicking in media widget",
     }
 }
 
-TEST_CASE("Pen tool Ctrl+click can append to the line base",
+TEST_CASE("Pen tool click can append to the line base",
           "[MediaWidget][MediaLine_Widget][Integration]") {
     auto * app = ensureQApplication();
     REQUIRE(app != nullptr);
@@ -334,7 +355,7 @@ TEST_CASE("Pen tool Ctrl+click can append to the line base",
 
         constexpr qreal kClickX = 80.0;
         constexpr qreal kClickY = 80.0;
-        simulateLineClick(line_widget, kClickX, kClickY, Qt::ControlModifier);
+        simulateLineClick(line_widget, kClickX, kClickY, kPenAppendModifier);
         app->processEvents();
 
         auto line_ref_after = line_data->getDataByEntityId(line_entity_id);
@@ -452,15 +473,15 @@ TEST_CASE("Multiple points can be added to a line",
         app->processEvents();
 
         // Add first point
-        simulateLineClick(line_widget, 70.0, 70.0, Qt::ControlModifier);
+        simulateLineClick(line_widget, 70.0, 70.0, kPenAppendModifier);
         app->processEvents();
 
         // Add second point
-        simulateLineClick(line_widget, 80.0, 80.0, Qt::ControlModifier);
+        simulateLineClick(line_widget, 80.0, 80.0, kPenAppendModifier);
         app->processEvents();
 
         // Add third point
-        simulateLineClick(line_widget, 90.0, 90.0, Qt::ControlModifier);
+        simulateLineClick(line_widget, 90.0, 90.0, kPenAppendModifier);
         app->processEvents();
 
         // Verify all three points were added
@@ -519,7 +540,7 @@ TEST_CASE("Adding points to line works at correct time frame",
         media_window->selectEntity(entity_ids_frame1[0], "test_line", "line");
         app->processEvents();
 
-        simulateLineClick(line_widget, 120.0, 120.0, Qt::ControlModifier);
+        simulateLineClick(line_widget, 120.0, 120.0, kPenAppendModifier);
         app->processEvents();
 
         // Add point to line at frame 60
@@ -529,7 +550,7 @@ TEST_CASE("Adding points to line works at correct time frame",
         media_window->selectEntity(entity_ids_frame2[0], "test_line", "line");
         app->processEvents();
 
-        simulateLineClick(line_widget, 220.0, 220.0, Qt::ControlModifier);
+        simulateLineClick(line_widget, 220.0, 220.0, kPenAppendModifier);
         app->processEvents();
 
         // Verify both lines have the correct point counts
@@ -620,7 +641,7 @@ TEST_CASE("Full integration: EditorRegistry creation with line point addition",
     app->processEvents();
 
     // Add a point
-    simulateLineClick(line_widget, 170.0, 170.0, Qt::ControlModifier);
+    simulateLineClick(line_widget, 170.0, 170.0, kPenAppendModifier);
     app->processEvents();
 
     // Verify point was added at frame 42
@@ -688,5 +709,157 @@ TEST_CASE("Pen tool Alt+click deletes only the nearest vertex",
         REQUIRE(line[0].y == Catch::Approx(100.0f));
         REQUIRE(line[1].x == Catch::Approx(140.0f));
         REQUIRE(line[1].y == Catch::Approx(140.0f));
+    }
+}
+
+TEST_CASE("Pen tool new-line target creates line on empty frame and auto-switches",
+          "[MediaWidget][MediaLine_Widget][Integration]") {
+    auto * app = ensureQApplication();
+    REQUIRE(app != nullptr);
+
+    qRegisterMetaType<qreal>("qreal");
+    qRegisterMetaType<Qt::KeyboardModifiers>("Qt::KeyboardModifiers");
+
+    constexpr int kTargetFrame = 25;
+
+    auto data_manager = createDataManagerWithLine("test_line", 100, {640, 480});
+    auto time_frame = data_manager->getTime(TimeKey("time"));
+    REQUIRE(time_frame != nullptr);
+
+    auto line_data = data_manager->getData<LineData>("test_line");
+    REQUIRE(line_data != nullptr);
+
+    auto state = std::make_shared<MediaWidgetState>();
+    auto media_window = std::make_unique<Media_Window>(data_manager);
+    state->current_position = TimePosition(TimeFrameIndex{kTargetFrame}, time_frame);
+
+    {
+        MediaPropertiesWidget props_widget(state, data_manager, media_window.get());
+        props_widget.show();
+        app->processEvents();
+
+        auto * line_widget = selectLineFeature(props_widget, "test_line", app);
+        REQUIRE(line_widget != nullptr);
+
+        enablePenTool(state.get());
+        setPenNewLineTarget(state.get(), "test_line");
+
+        simulateLineClick(line_widget, 150.0, 160.0, Qt::NoModifier);
+        app->processEvents();
+
+        auto ids_at_frame = line_data->getEntityIdsAtTime(TimeFrameIndex{kTargetFrame});
+        REQUIRE_FALSE(ids_at_frame.empty());
+        EntityId const new_entity_id = ids_at_frame[0];
+
+        auto selected_entities = media_window->getSelectedEntities();
+        REQUIRE(selected_entities.count(new_entity_id) > 0);
+        REQUIRE(state->linePrefs().pen_target_mode == PenLineTargetMode::SelectedLine);
+        REQUIRE(state->linePrefs().pen_new_line_key.empty());
+
+        auto line_ref = line_data->getDataByEntityId(new_entity_id);
+        REQUIRE(line_ref.has_value());
+        REQUIRE(line_ref.value().get().size() == 1);
+        REQUIRE(line_ref.value().get().front().x == Catch::Approx(150.0f));
+        REQUIRE(line_ref.value().get().front().y == Catch::Approx(160.0f));
+
+        simulateLineClick(line_widget, 170.0, 180.0, kPenAppendModifier);
+        app->processEvents();
+
+        auto line_ref_after = line_data->getDataByEntityId(new_entity_id);
+        REQUIRE(line_ref_after.has_value());
+        REQUIRE(line_ref_after.value().get().size() == 2);
+    }
+}
+
+TEST_CASE("Pen tool new-line target can create a second line on the same frame",
+          "[MediaWidget][MediaLine_Widget][Integration]") {
+    auto * app = ensureQApplication();
+    REQUIRE(app != nullptr);
+
+    qRegisterMetaType<qreal>("qreal");
+    qRegisterMetaType<Qt::KeyboardModifiers>("Qt::KeyboardModifiers");
+
+    constexpr int kTargetFrame = 30;
+
+    auto data_manager = createDataManagerWithLine("test_line", 100, {640, 480});
+    auto time_frame = data_manager->getTime(TimeKey("time"));
+    REQUIRE(time_frame != nullptr);
+
+    auto line_data = data_manager->getData<LineData>("test_line");
+    REQUIRE(line_data != nullptr);
+
+    auto state = std::make_shared<MediaWidgetState>();
+    auto media_window = std::make_unique<Media_Window>(data_manager);
+    state->current_position = TimePosition(TimeFrameIndex{kTargetFrame}, time_frame);
+
+    {
+        MediaPropertiesWidget props_widget(state, data_manager, media_window.get());
+        props_widget.show();
+        app->processEvents();
+
+        auto * line_widget = selectLineFeature(props_widget, "test_line", app);
+        REQUIRE(line_widget != nullptr);
+
+        enablePenTool(state.get());
+        setPenNewLineTarget(state.get(), "test_line");
+        simulateLineClick(line_widget, 10.0, 10.0, Qt::NoModifier);
+        app->processEvents();
+
+        EntityId const first_line_id = selectedLineEntityId(media_window.get());
+        REQUIRE(first_line_id != EntityId(0));
+
+        setPenNewLineTarget(state.get(), "test_line");
+        simulateLineClick(line_widget, 20.0, 20.0, Qt::NoModifier);
+        app->processEvents();
+
+        EntityId const second_line_id = selectedLineEntityId(media_window.get());
+        REQUIRE(second_line_id != EntityId(0));
+        REQUIRE(first_line_id != second_line_id);
+    }
+}
+
+TEST_CASE("Pen append is blocked when selected line is not on current frame",
+          "[MediaWidget][MediaLine_Widget][Integration]") {
+    auto * app = ensureQApplication();
+    REQUIRE(app != nullptr);
+
+    qRegisterMetaType<qreal>("qreal");
+    qRegisterMetaType<Qt::KeyboardModifiers>("Qt::KeyboardModifiers");
+
+    auto data_manager = createDataManagerWithLine("test_line", 100, {640, 480});
+    auto time_frame = data_manager->getTime(TimeKey("time"));
+    REQUIRE(time_frame != nullptr);
+
+    auto line_data = data_manager->getData<LineData>("test_line");
+    REQUIRE(line_data != nullptr);
+
+    Line2D initial_line({Point2D<float>{50.0f, 50.0f}, Point2D<float>{60.0f, 60.0f}});
+    line_data->addAtTime(TimeFrameIndex{10}, initial_line, NotifyObservers::No);
+    auto entity_ids = line_data->getEntityIdsAtTime(TimeFrameIndex{10});
+    REQUIRE_FALSE(entity_ids.empty());
+    EntityId const line_entity_id = entity_ids[0];
+
+    auto state = std::make_shared<MediaWidgetState>();
+    auto media_window = std::make_unique<Media_Window>(data_manager);
+    state->current_position = TimePosition(TimeFrameIndex{20}, time_frame);
+
+    {
+        MediaPropertiesWidget props_widget(state, data_manager, media_window.get());
+        props_widget.show();
+        app->processEvents();
+
+        auto * line_widget = selectLineFeature(props_widget, "test_line", app);
+        REQUIRE(line_widget != nullptr);
+
+        enablePenTool(state.get());
+        media_window->selectEntity(line_entity_id, "test_line", "line");
+        app->processEvents();
+
+        simulateLineClick(line_widget, 70.0, 70.0, Qt::NoModifier);
+        app->processEvents();
+
+        auto line_ref = line_data->getDataByEntityId(line_entity_id);
+        REQUIRE(line_ref.has_value());
+        REQUIRE(line_ref.value().get().size() == 2);
     }
 }

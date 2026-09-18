@@ -102,6 +102,16 @@ enum class LineAppendEndpoint {
 };
 
 /**
+ * @brief Pen tool target for line create/edit operations
+ *
+ * Serializes as "SelectedLine" or "NewLine"
+ */
+enum class PenLineTargetMode {
+    SelectedLine,///< Append to or delete from the currently selected line entity
+    NewLine      ///< Create a new Line2D entity in pen_new_line_key on click
+};
+
+/**
  * @brief User preferences for line interaction tools
  * 
  * These are tool settings that persist across sessions, not transient
@@ -116,6 +126,8 @@ struct LineInteractionPrefs {
     int eraser_radius = 10;                                      ///< Radius in pixels for line eraser
     float selection_threshold = 15.0f;                           ///< Pixel distance for line selection
     LineAppendEndpoint append_endpoint = LineAppendEndpoint::Tip;///< Pen append target endpoint
+    PenLineTargetMode pen_target_mode = PenLineTargetMode::SelectedLine;///< Pen create vs edit target
+    std::string pen_new_line_key;                                ///< LineData key when pen_target_mode == NewLine
 };
 
 /**

@@ -87,6 +87,8 @@ TEST_CASE("LineInteractionPrefs serialization", "[MediaWidgetStateData]") {
         REQUIRE(data.eraser_radius == 10);
         REQUIRE(data.selection_threshold == Approx(15.0f));
         REQUIRE(data.append_endpoint == LineAppendEndpoint::Tip);
+        REQUIRE(data.pen_target_mode == PenLineTargetMode::SelectedLine);
+        REQUIRE(data.pen_new_line_key.empty());
     }
 
     SECTION("Custom values round-trip") {
@@ -99,6 +101,8 @@ TEST_CASE("LineInteractionPrefs serialization", "[MediaWidgetStateData]") {
         prefs.eraser_radius = 15;
         prefs.selection_threshold = 20.0f;
         prefs.append_endpoint = LineAppendEndpoint::Nearest;
+        prefs.pen_target_mode = PenLineTargetMode::NewLine;
+        prefs.pen_new_line_key = "whisker_a";
 
         auto json = rfl::json::write(prefs);
         auto result = rfl::json::read<LineInteractionPrefs>(json);
@@ -113,6 +117,8 @@ TEST_CASE("LineInteractionPrefs serialization", "[MediaWidgetStateData]") {
         REQUIRE(data.eraser_radius == 15);
         REQUIRE(data.selection_threshold == Approx(20.0f));
         REQUIRE(data.append_endpoint == LineAppendEndpoint::Nearest);
+        REQUIRE(data.pen_target_mode == PenLineTargetMode::NewLine);
+        REQUIRE(data.pen_new_line_key == "whisker_a");
     }
 }
 

@@ -15,7 +15,7 @@ class PenToolOptions_Widget;
 class MediaWidgetState;
 
 /**
- * @brief Displays Pen tool usage instructions and append-endpoint controls
+ * @brief Displays Pen tool target, append-endpoint controls, and usage instructions
  */
 class PenToolOptions_Widget : public QWidget {
     Q_OBJECT
@@ -32,10 +32,14 @@ public:
 
 private slots:
     void _onAppendEndpointChanged(int index);
+    void _onPenTargetComboChanged(int index);
+    void _onEnabledFeaturesChanged();
     void _syncFromState();
 
 private:
     void _populateAppendEndpointCombo();
+    void _rebuildPenTargetCombo();
+    [[nodiscard]] int _indexForCurrentPenTarget() const;
 
     Ui::PenToolOptions_Widget * ui;
     MediaWidgetState * _state{nullptr};

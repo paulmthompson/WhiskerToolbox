@@ -1,6 +1,7 @@
 #include "MediaLine_Widget.hpp"
 #include "ui_MediaLine_Widget.h"
 
+#include "Core/LineDrawOperations.hpp"
 #include "Media_Widget/Core/MediaWidgetState.hpp"
 #include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
 #include "Media_Widget/UI/Tools/MediaToolId.hpp"
@@ -44,8 +45,8 @@ namespace {
  * @param active_key Active line data key
  * @return True when Pen tool is active for a non-empty line key
  */
-[[nodiscard]] bool isPenLineEditActive(MediaWidgetState const * state, std::string const & active_key) {
-    return state != nullptr && !active_key.empty() && state->activeMediaTool() == MediaToolId::Pen;
+[[nodiscard]] bool isPenLineEditActive(MediaWidgetState const * state) {
+    return state != nullptr && state->activeMediaTool() == MediaToolId::Pen;
 }
 
 /**
@@ -165,6 +166,13 @@ MediaLine_Widget::MediaLine_Widget(std::shared_ptr<DataManager> data_manager, Me
 
 
     _setupSelectionModePages();
+
+    if (_scene != nullptr) {
+        connect(_scene, &Media_Window::leftClickMediaWithEvent, this, &MediaLine_Widget::_clickedInVideoWithModifiers);
+        connect(_scene, &Media_Window::mouseMove, this, &MediaLine_Widget::_mouseMovedInVideo);
+        connect(_scene, &Media_Window::leftRelease, this, &MediaLine_Widget::_mouseReleasedInVideo);
+        connect(_scene, &Media_Window::rightClickMedia, this, &MediaLine_Widget::_rightClickedInVideo);
+    }
 }
 
 void MediaLine_Widget::_setupSelectionModePages() {
@@ -225,11 +233,6 @@ void MediaLine_Widget::showEvent(QShowEvent * event) {
     // Debug: Check initial selection state
     auto initial_selections = _scene->getSelectedEntities();
     spdlog::debug("MediaLine_Widget: initial selected entities on show: {}", initial_selections.size());
-
-    connect(_scene, &Media_Window::leftClickMediaWithEvent, this, &MediaLine_Widget::_clickedInVideoWithModifiers);
-    connect(_scene, &Media_Window::mouseMove, this, &MediaLine_Widget::_mouseMovedInVideo);
-    connect(_scene, &Media_Window::leftRelease, this, &MediaLine_Widget::_mouseReleasedInVideo);
-    connect(_scene, &Media_Window::rightClickMedia, this, &MediaLine_Widget::_rightClickedInVideo);
 }
 
 void MediaLine_Widget::hideEvent(QHideEvent * event) {
@@ -242,11 +245,6 @@ void MediaLine_Widget::hideEvent(QHideEvent * event) {
     if (!_scene) {
         return;
     }
-
-    disconnect(_scene, &Media_Window::leftClickMediaWithEvent, this, &MediaLine_Widget::_clickedInVideoWithModifiers);
-    disconnect(_scene, &Media_Window::mouseMove, this, &MediaLine_Widget::_mouseMovedInVideo);
-    disconnect(_scene, &Media_Window::leftRelease, this, &MediaLine_Widget::_mouseReleasedInVideo);
-    disconnect(_scene, &Media_Window::rightClickMedia, this, &MediaLine_Widget::_rightClickedInVideo);
 
     _is_eraser_dragging = false;
 
@@ -311,6 +309,43 @@ void MediaLine_Widget::setActiveKey(std::string const & key) {
 }
 
 void MediaLine_Widget::_clickedInVideoWithModifiers(qreal x_canvas, qreal y_canvas, Qt::KeyboardModifiers modifiers) {
+    auto const x_media = static_cast<float>(x_canvas);
+    auto const y_media = static_cast<float>(y_canvas);
+
+    if (isPenLineEditActive(_state)) {
+        if (modifiers & Qt::AltModifier) {
+            std::string const line_key = _resolveSelectedLineKey();
+            auto const current_time_opt = _currentLineTime(line_key);
+            if (!current_time_opt.has_value()) {
+                return;
+            }
+            spdlog::debug("MediaLine_Widget: Pen tool Alt+click - deleting nearest vertex");
+            _deleteNearestVertexFromLine(x_media, y_media, current_time_opt.value());
+            return;
+        }
+
+        if (modifiers & Qt::ShiftModifier) {
+            return;
+        }
+
+        LineInteractionPrefs const & prefs = _state->linePrefs();
+
+        if (prefs.pen_target_mode == PenLineTargetMode::NewLine) {
+            if (modifiers & Qt::ControlModifier) {
+                return;
+            }
+            spdlog::debug("MediaLine_Widget: Pen tool click - new line");
+            _handlePenToolClick(x_media, y_media);
+            return;
+        }
+
+        if (modifiers & Qt::ControlModifier) {
+            spdlog::debug("MediaLine_Widget: Pen tool Ctrl+click - append");
+            _handlePenToolClick(x_media, y_media);
+        }
+        return;
+    }
+
     if (_active_key.empty()) {
         spdlog::debug("MediaLine_Widget: no active key");
         return;
@@ -322,21 +357,8 @@ void MediaLine_Widget::_clickedInVideoWithModifiers(qreal x_canvas, qreal y_canv
         return;
     }
 
-    auto const x_media = static_cast<float>(x_canvas);
-    auto const y_media = static_cast<float>(y_canvas);
     auto const current_position = _state->current_position;
     auto const current_time = current_position.convertTo(line_data->getTimeFrame().get());
-
-    if (isPenLineEditActive(_state, _active_key)) {
-        if (modifiers & Qt::ControlModifier) {
-            spdlog::debug("MediaLine_Widget: Pen tool Ctrl+click - adding point to selected line");
-            _addPointToLine(x_media, y_media, current_time);
-        } else if (modifiers & Qt::AltModifier) {
-            spdlog::debug("MediaLine_Widget: Pen tool Alt+click - deleting nearest vertex");
-            _deleteNearestVertexFromLine(x_media, y_media, current_time);
-        }
-        return;
-    }
 
     if (isEraserToolActive(_state, _active_key)) {
         if ((modifiers & Qt::ControlModifier) || (modifiers & Qt::AltModifier)) {
@@ -385,6 +407,94 @@ void MediaLine_Widget::_mouseReleasedInVideo() {
     _is_eraser_dragging = false;
 }
 
+std::optional<TimeFrameIndex> MediaLine_Widget::_currentLineTime(std::string const & line_key) const {
+    if (_state == nullptr || line_key.empty()) {
+        return std::nullopt;
+    }
+
+    auto line_data = _data_manager->getData<LineData>(line_key);
+    if (!line_data) {
+        return std::nullopt;
+    }
+
+    return _state->current_position.convertTo(line_data->getTimeFrame().get());
+}
+
+std::string MediaLine_Widget::_resolveSelectedLineKey() const {
+    if (_scene != nullptr && !_scene->selectedDataKey().empty()) {
+        return _scene->selectedDataKey();
+    }
+    return _active_key;
+}
+
+void MediaLine_Widget::_switchPenTargetToSelectedLine() {
+    if (_state == nullptr) {
+        return;
+    }
+
+    LineInteractionPrefs prefs = _state->linePrefs();
+    prefs.pen_target_mode = PenLineTargetMode::SelectedLine;
+    prefs.pen_new_line_key.clear();
+    _state->setLinePrefs(prefs);
+}
+
+void MediaLine_Widget::_handlePenToolClick(float x_media, float y_media) {
+    if (_state == nullptr) {
+        return;
+    }
+
+    LineInteractionPrefs const & prefs = _state->linePrefs();
+    if (prefs.pen_target_mode == PenLineTargetMode::NewLine) {
+        if (prefs.pen_new_line_key.empty()) {
+            spdlog::debug("MediaLine_Widget: Pen new-line target has no key");
+            return;
+        }
+        _createNewLineAtCurrentTime(x_media, y_media, prefs.pen_new_line_key);
+        return;
+    }
+
+    std::string const line_key = _resolveSelectedLineKey();
+    auto const current_time_opt = _currentLineTime(line_key);
+    if (!current_time_opt.has_value()) {
+        return;
+    }
+
+    _addPointToLine(x_media, y_media, current_time_opt.value());
+}
+
+void MediaLine_Widget::_createNewLineAtCurrentTime(float x_media, float y_media, std::string const & line_key) {
+    auto line_data = _data_manager->getData<LineData>(line_key);
+    if (!line_data) {
+        spdlog::debug("MediaLine_Widget: no line data for pen target key {}", line_key);
+        return;
+    }
+
+    auto const current_time_opt = _currentLineTime(line_key);
+    if (!current_time_opt.has_value()) {
+        return;
+    }
+
+    Point2D<float> const data_coords =
+            mediaCoordsToLineDataCoords(x_media, y_media, _scene, _state, *line_data, line_key);
+
+    std::optional<EntityId> const new_entity_id =
+            commitNewLineAtTime(*line_data, current_time_opt.value(), Line2D{data_coords}, NotifyObservers::Yes);
+    if (!new_entity_id.has_value()) {
+        spdlog::debug("MediaLine_Widget: failed to create new line at current time");
+        return;
+    }
+
+    _scene->selectEntity(new_entity_id.value(), line_key, "line");
+    _switchPenTargetToSelectedLine();
+    _scene->UpdateCanvas();
+
+    spdlog::debug("MediaLine_Widget: created new line entity {} in key {} at ({}, {})",
+                  new_entity_id.value().id,
+                  line_key,
+                  data_coords.x,
+                  data_coords.y);
+}
+
 void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIndex current_time) {
     // Get the EntityID for the selected line from the group system
     auto selected_entities = _scene->getSelectedEntities();
@@ -393,13 +503,20 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
         return;
     }
 
-    auto line_data = _data_manager->getData<LineData>(_active_key);
+    std::string const line_key = _resolveSelectedLineKey();
+    auto line_data = _data_manager->getData<LineData>(line_key);
     if (!line_data) {
-        spdlog::debug("MediaLine_Widget: no line data for active key");
+        spdlog::debug("MediaLine_Widget: no line data for key {}", line_key);
         return;
     }
 
     EntityId const selected_entity_id = *selected_entities.begin();
+
+    if (!entityExistsAtTime(*line_data, selected_entity_id, current_time)) {
+        spdlog::debug("MediaLine_Widget: selected line EntityID {} is not present at current frame",
+                      selected_entity_id.id);
+        return;
+    }
 
     auto line_ref = line_data->getMutableData(selected_entity_id, NotifyObservers::Yes);
     if (!line_ref.has_value()) {
@@ -408,6 +525,11 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
     }
 
     Line2D & line = line_ref.value().get();
+
+    Point2D<float> const data_coords =
+            mediaCoordsToLineDataCoords(x_media, y_media, _scene, _state, *line_data, line_key);
+    x_media = data_coords.x;
+    y_media = data_coords.y;
 
     // Check if edge snapping is enabled
     bool use_edge_snapping = false;
@@ -484,26 +606,36 @@ void MediaLine_Widget::_addPointToLine(float x_media, float y_media, TimeFrameIn
                   x_media,
                   y_media,
                   append_endpoint == LineAppendEndpoint::Base ? "base" : "tip",
-                  _active_key,
+                  line_key,
                   selected_entity_id.id);
 }
 
 void MediaLine_Widget::_deleteNearestVertexFromLine(float x_media, float y_media, TimeFrameIndex current_time) {
-    static_cast<void>(current_time);
-
     auto selected_entities = _scene->getSelectedEntities();
     if (selected_entities.empty()) {
         spdlog::debug("MediaLine_Widget: no line selected - cannot delete vertex");
         return;
     }
 
-    auto line_data = _data_manager->getData<LineData>(_active_key);
+    std::string const line_key = _resolveSelectedLineKey();
+    auto line_data = _data_manager->getData<LineData>(line_key);
     if (!line_data) {
-        spdlog::debug("MediaLine_Widget: no line data for active key");
+        spdlog::debug("MediaLine_Widget: no line data for key {}", line_key);
         return;
     }
 
     EntityId const selected_entity_id = *selected_entities.begin();
+
+    if (!entityExistsAtTime(*line_data, selected_entity_id, current_time)) {
+        spdlog::debug("MediaLine_Widget: selected line EntityID {} is not present at current frame",
+                      selected_entity_id.id);
+        return;
+    }
+
+    Point2D<float> const data_coords =
+            mediaCoordsToLineDataCoords(x_media, y_media, _scene, _state, *line_data, line_key);
+    x_media = data_coords.x;
+    y_media = data_coords.y;
 
     auto line_ref = line_data->getMutableData(selected_entity_id, NotifyObservers::Yes);
     if (!line_ref.has_value()) {
@@ -554,7 +686,7 @@ void MediaLine_Widget::_deleteNearestVertexFromLine(float x_media, float y_media
     _scene->UpdateCanvas();
 
     spdlog::debug("MediaLine_Widget: deleted vertex {} near ({}, {}) from line {} (EntityID: {})",
-                  nearest_index, x_media, y_media, _active_key, selected_entity_id.id);
+                  nearest_index, x_media, y_media, line_key, selected_entity_id.id);
 }
 
 float MediaLine_Widget::_eraserRadiusPx() const {
@@ -1041,7 +1173,7 @@ void MediaLine_Widget::_setSegmentEndPercentage(int percentage) {
 }
 
 void MediaLine_Widget::_rightClickedInVideo(qreal x_canvas, qreal y_canvas) {
-    if (!isPenLineEditActive(_state, _active_key)) {
+    if (!isPenLineEditActive(_state)) {
         return;
     }
 

@@ -5,31 +5,32 @@ format: html
 
 ## Overview
 
-`PenToolOptions_Widget` is the options-bar page shown when `MediaToolId::Pen` is active in the Media Viewer left tool strip. It provides Pen tool usage instructions and controls for append-endpoint policy.
+`PenToolOptions_Widget` is the options-bar page shown when `MediaToolId::Pen` is active in the Media Viewer left tool strip. It provides Pen tool usage instructions, pen target selection, and append-endpoint policy.
 
 ## Controls
 
 | Control | State field | Description |
 |---------|-------------|-------------|
-| Append to combo | `LineInteractionPrefs::append_endpoint` | Choose tip, base, or nearest endpoint for Ctrl+click appends |
+| Pen target combo | `LineInteractionPrefs::pen_target_mode`, `pen_new_line_key` | **Selected line** edits the current selection; **New line · {key}** creates a new `LineData` entity on click |
+| Append to combo | `LineInteractionPrefs::append_endpoint` | Choose tip, base, or nearest endpoint for appends |
 
-## Instructions
+The pen target combo is rebuilt from `MediaWidgetState::enabledFeatures("line")`, mirroring `SelectToolOptions_Widget`.
 
-The widget displays:
+## Interaction
 
-- **Ctrl+click** to append a point.
-- **Alt+click** to delete the nearest vertex.
+- **Ctrl+click** appends to the selected line.
+- **Click** (new-line target) creates the first vertex of a new line.
+- After a new line is created, `MediaLine_Widget` auto-selects the entity and switches the pen target back to **Selected line**.
+- **Alt+click** deletes the nearest vertex on the selected line at the current frame.
 - **Right-click** the selected line for additional operations.
-
-Select a line with the **Select** tool before using the Pen tool.
 
 ## Related Code
 
 | Component | Role |
 |-----------|------|
-| `MediaLine_Widget::_addPointToLine` | Appends to the selected line entity using the configured endpoint |
-| `MediaLine_Widget::_deleteNearestVertexFromLine` | Removes one vertex by nearest hit-test |
-| `SelectToolPrefs::pick_radius_px` | Vertex hit threshold for Alt+click deletion |
-| `LineInteractionPrefs::append_endpoint` | Persisted append-endpoint policy |
+| `MediaLine_Widget::_handlePenToolClick` | Dispatches create vs append |
+| `MediaLine_Widget::_createNewLineAtCurrentTime` | Immediate `addAtTime` + auto-select |
+| `LineDrawOperations::commitNewLineAtTime` | Qt-free commit helper returning `EntityId` |
+| `LineDrawOperations::entityExistsAtTime` | Frame guard before append/delete |
 
-See also [Media Viewer Tool Strip](MediaToolStrip.qmd) and [Media Viewer Tool Options Bar](MediaToolOptionsBar.qmd).
+See also [Media Viewer Tool Strip](MediaToolStrip.qmd) and [Line Draw Operations](LineDrawOperations.qmd).

@@ -1,0 +1,20 @@
+---
+title: "Line Draw Operations"
+format: html
+---
+
+## Overview
+
+`LineDrawOperations.hpp` provides Qt-free helpers for committing line geometry from Media Viewer pen tools.
+
+## API
+
+| Function | Purpose |
+|----------|---------|
+| `mediaCoordsToLineDataCoords` | Convert canvas click coordinates into a target `LineData` key's coordinate system |
+| `commitNewLineAtTime` | `addAtTime` wrapper that returns the new `EntityId` |
+| `entityExistsAtTime` | Verify a selected entity is present on the current frame before append/delete |
+
+## Usage
+
+`MediaLine_Widget` calls `commitNewLineAtTime` when the Pen tool target is **New line · {key}**. Draw Across All Frames continues to use its own batch apply path in the properties panel.

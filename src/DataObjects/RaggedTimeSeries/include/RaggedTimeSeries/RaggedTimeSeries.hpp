@@ -811,8 +811,9 @@ public:
      * @param time The time to add the data at
      * @param data The data to add (will be copied)
      * @param notify Whether to notify observers after the operation
+     * @return Entity id assigned to the new entry, or EntityId(0) when no identity registry is set
      */
-    void addAtTime(TimeFrameIndex time, TData const & data, NotifyObservers notify) {
+    [[nodiscard]] EntityId addAtTime(TimeFrameIndex time, TData const & data, NotifyObservers notify) {
         auto [start, end] = _storage.getTimeRange(time);
         int const local_index = static_cast<int>(end - start);
         EntityId entity_id = EntityId(0);
@@ -827,6 +828,8 @@ public:
         if (notify == NotifyObservers::Yes) {
             notifyObservers();
         }
+
+        return entity_id;
     }
 
     /**
@@ -835,12 +838,13 @@ public:
      * @param time_index_and_frame The time and timeframe to add at
      * @param data The data to add (will be copied)
      * @param notify Whether to notify observers after the operation
+     * @return Entity id assigned to the new entry, or EntityId(0) when no identity registry is set
      */
-    void addAtTime(TimeIndexAndFrame const & time_index_and_frame, TData const & data, NotifyObservers notify) {
+    [[nodiscard]] EntityId addAtTime(TimeIndexAndFrame const & time_index_and_frame, TData const & data, NotifyObservers notify) {
         TimeFrameIndex const converted_time = convert_time_index(time_index_and_frame.index,
                                                                  time_index_and_frame.time_frame,
                                                                  _time_frame.get());
-        addAtTime(converted_time, data, notify);
+        return addAtTime(converted_time, data, notify);
     }
 
     /**
@@ -852,8 +856,9 @@ public:
      * @param time The time to add the data at
      * @param data The data to add (will be moved)
      * @param notify Whether to notify observers after the operation
+     * @return Entity id assigned to the new entry, or EntityId(0) when no identity registry is set
      */
-    void addAtTime(TimeFrameIndex time, TData && data, NotifyObservers notify) {
+    [[nodiscard]] EntityId addAtTime(TimeFrameIndex time, TData && data, NotifyObservers notify) {
         auto [start, end] = _storage.getTimeRange(time);
         int const local_index = static_cast<int>(end - start);
         EntityId entity_id = EntityId(0);
@@ -868,6 +873,8 @@ public:
         if (notify == NotifyObservers::Yes) {
             notifyObservers();
         }
+
+        return entity_id;
     }
 
     /**
@@ -876,12 +883,13 @@ public:
      * @param time_index_and_frame The time and timeframe to add at
      * @param data The data to add (will be moved)
      * @param notify Whether to notify observers after the operation
+     * @return Entity id assigned to the new entry, or EntityId(0) when no identity registry is set
      */
-    void addAtTime(TimeIndexAndFrame const & time_index_and_frame, TData && data, NotifyObservers notify) {
+    [[nodiscard]] EntityId addAtTime(TimeIndexAndFrame const & time_index_and_frame, TData && data, NotifyObservers notify) {
         TimeFrameIndex const converted_time = convert_time_index(time_index_and_frame.index,
                                                                  time_index_and_frame.time_frame,
                                                                  _time_frame.get());
-        addAtTime(converted_time, std::move(data), notify);
+        return addAtTime(converted_time, std::move(data), notify);
     }
 
     /**

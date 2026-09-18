@@ -14,6 +14,8 @@ set(MEDIA_WIDGET_SOURCES
     Core/MediaWidgetState.hpp
     Core/MediaWidgetState.cpp
     Core/MediaWidgetStateData.hpp
+    Core/LineDrawOperations.hpp
+    Core/LineDrawOperations.cpp
 
     Rendering/Media_Window/Media_Window.hpp
     Rendering/Media_Window/Media_Window.cpp

@@ -2,3 +2,22 @@
 title: "Line Data"
 format: html
 ---
+
+## Overview
+
+The **Lines** page in the Media Viewer properties panel controls styling and specialized line workflows such as **Draw Across All Frames**.
+
+## Creating and Editing Lines
+
+Use the **Pen** tool on the left toolbar for single-frame line work:
+
+1. Enable a `LineData` key in the feature table so it appears in the Pen tool **Pen target** list.
+2. Activate the **Pen** tool.
+3. To start a new line on the current frame, choose **New line · {your key}** and click on the canvas. The first click creates the line and selects it; further **Ctrl+click** gestures append vertices.
+4. To extend an existing line, choose **Selected line**, select the line with the **Select** tool (or keep the selection from a just-created line), then **Ctrl+click** to append.
+
+Use **Append to** in the Pen options bar to control whether new vertices attach at the tip, base, or nearest endpoint.
+
+For batch placement across many frames, use **Draw Across All Frames** in the line properties panel.
+
+See also: [Toolbar](tools.qmd)

@@ -14,3 +14,21 @@ The pointer (mouse) icon is the **Select** tool. It is selected by default. Clic
 When Select is active, tool options appear in the bar above the horizontal ruler. When no tool is active, the bar stays in place as an empty strip so the canvas layout does not shift. Use **Selection filter** to limit picking to a specific enabled feature, or leave it on **All enabled features** to consider every key currently enabled in the feature table. Adjust **Pick radius** to control how close the cursor must be to an entity (in scene pixels).
 
 Click the canvas to select the closest enabled line, point, or mask entity. Hold **Ctrl** to toggle multi-selection. The properties panel feature table and datatype page update automatically to match the selected key.
+
+## Pen Tool
+
+The pen icon is the **Pen** tool for line editing and creation. Options appear in the bar above the horizontal ruler:
+
+- **Pen target** — choose **Selected line** to append vertices to the currently selected `LineData` entity, or **New line · {key}** to start a new line in an enabled line layer. After the first click in **New line** mode, the tool auto-selects the new entity and switches back to **Selected line** so **Ctrl+click** appends further vertices to that stroke.
+- **Append to** — when appending to a selected line, choose whether new vertices go to the tip, base, or nearest endpoint.
+
+On the canvas with Pen active:
+
+- **Ctrl+click** to append a vertex to the selected line.
+- **Click** (new-line target) to place the first vertex of a new line.
+- **Alt+click** to delete the nearest vertex on the selected line.
+- **Right-click** a selected line for move/copy and other line actions.
+
+## Eraser Tool
+
+The eraser icon removes line vertices within a brush radius. Adjust **Eraser radius** in the options bar. Click or drag on the canvas to erase vertices from the selected line.
