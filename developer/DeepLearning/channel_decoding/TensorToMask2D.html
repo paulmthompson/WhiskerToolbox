@@ -1621,7 +1621,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="coordinate-scaling" class="level2">
 <h2 class="anchored" data-anchor-id="coordinate-scaling">Coordinate scaling</h2>
-<p>When <code>DecoderContext::target_image_size</code> is non-zero, mask coordinates are upsampled from tensor space to the original image size by iterating destination pixels and sampling the nearest source pixel (inverse nearest-neighbor mapping).</p>
+<p>When <code>DecoderContext::target_image_size</code> is non-zero, mask coordinates are upsampled from tensor space to the original image size by iterating destination pixels and sampling the nearest source pixel via <code>map_dest_to_source()</code> in <code>mask_utils</code> (same inverse nearest-neighbor mapping as <code>resize_mask</code> and MaskInspector scaling).</p>
 <p>When <code>target_image_size</code> is <code>{0, 0}</code>, mask pixels are returned in tensor pixel coordinates (integer <code>x</code>, <code>y</code> in <code>[0, width)</code> × <code>[0, height)</code>).</p>
 </section>
 <section id="validation" class="level2">

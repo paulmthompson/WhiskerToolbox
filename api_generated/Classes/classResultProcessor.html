@@ -364,6 +364,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-acceptresults" id="toc-function-acceptresults" class="nav-link" data-scroll-target="#function-acceptresults">function acceptResults</a></li>
   <li><a href="#function-flushfeaturevectors" id="toc-function-flushfeaturevectors" class="nav-link" data-scroll-target="#function-flushfeaturevectors">function flushFeatureVectors</a></li>
   <li><a href="#function-clear" id="toc-function-clear" class="nav-link" data-scroll-target="#function-clear">function clear</a></li>
+  <li><a href="#function-setsourceimagesize" id="toc-function-setsourceimagesize" class="nav-link" data-scroll-target="#function-setsourceimagesize">function setSourceImageSize</a></li>
   <li><a href="#function-setreservation" id="toc-function-setreservation" class="nav-link" data-scroll-target="#function-setreservation">function setReservation</a></li>
   <li><a href="#function-startmergetimer" id="toc-function-startmergetimer" class="nav-link" data-scroll-target="#function-startmergetimer">function startMergeTimer</a></li>
   <li><a href="#function-stopmergetimer" id="toc-function-stopmergetimer" class="nav-link" data-scroll-target="#function-stopmergetimer">function stopMergeTimer</a></li>
@@ -466,13 +467,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classResultProcessor.html#function-setreservation">setReservation</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classWriteReservation.html">WriteReservation</a> &gt; reservation)<br>Set the reservation to drain on timer ticks. Call before <a href="">startMergeTimer()</a>.</td>
+<td><strong><a href="../../api_generated/Classes/classResultProcessor.html#function-setsourceimagesize">setSourceImageSize</a></strong>(<a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size)<br>Set source image size for mask output coordinate space.</td>
 </tr>
 <tr class="odd">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classResultProcessor.html#function-startmergetimer">startMergeTimer</a></strong>()<br>Start periodic merge timer (200 ms). Drains reservation on each tick.</td>
+<td><strong><a href="../../api_generated/Classes/classResultProcessor.html#function-setreservation">setReservation</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classWriteReservation.html">WriteReservation</a> &gt; reservation)<br>Set the reservation to drain on timer ticks. Call before <a href="">startMergeTimer()</a>.</td>
 </tr>
 <tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classResultProcessor.html#function-startmergetimer">startMergeTimer</a></strong>()<br>Start periodic merge timer (200 ms). Drains reservation on each tick.</td>
+</tr>
+<tr class="odd">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classResultProcessor.html#function-stopmergetimer">stopMergeTimer</a></strong>()<br>Stop merge timer and perform final drain.</td>
 </tr>
@@ -535,11 +540,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clear<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Clear accumulated feature vectors (call at batch start).</p>
 </section>
+<section id="function-setsourceimagesize" class="level3">
+<h3 class="anchored" data-anchor-id="function-setsourceimagesize">function setSourceImageSize</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setSourceImageSize<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    ImageSize source_image_size</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Set source image size for mask output coordinate space.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>source_image_size</strong> Original media dimensions used during inference.</li>
+</ul>
+</section>
 <section id="function-setreservation" class="level3">
 <h3 class="anchored" data-anchor-id="function-setreservation">function setReservation</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setReservation<span class="op">(</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> WriteReservation <span class="op">&gt;</span> reservation</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setReservation<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> WriteReservation <span class="op">&gt;</span> reservation</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Set the reservation to drain on timer ticks. Call before <a href="">startMergeTimer()</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -548,15 +564,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-startmergetimer" class="level3">
 <h3 class="anchored" data-anchor-id="function-startmergetimer">function startMergeTimer</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> startMergeTimer<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> startMergeTimer<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Start periodic merge timer (200 ms). Drains reservation on each tick.</p>
 </section>
 <section id="function-stopmergetimer" class="level3">
 <h3 class="anchored" data-anchor-id="function-stopmergetimer">function stopMergeTimer</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> stopMergeTimer<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> stopMergeTimer<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Stop merge timer and perform final drain.</p>
 <hr>
-<p>Updated on 2026-09-18 at 14:28:01 +0000</p>
+<p>Updated on 2026-09-18 at 19:58:53 +0000</p>
 
 
 </section>

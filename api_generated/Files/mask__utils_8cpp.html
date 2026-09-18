@@ -356,6 +356,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-apply_binary_image_algorithm" id="toc-function-apply_binary_image_algorithm" class="nav-link" data-scroll-target="#function-apply_binary_image_algorithm">function apply_binary_image_algorithm</a></li>
   <li><a href="#function-mask_to_binary_image" id="toc-function-mask_to_binary_image" class="nav-link" data-scroll-target="#function-mask_to_binary_image">function mask_to_binary_image</a></li>
   <li><a href="#function-binary_image_to_mask" id="toc-function-binary_image_to_mask" class="nav-link" data-scroll-target="#function-binary_image_to_mask">function binary_image_to_mask</a></li>
+  <li><a href="#function-map_dest_to_source" id="toc-function-map_dest_to_source" class="nav-link" data-scroll-target="#function-map_dest_to_source">function map_dest_to_source</a></li>
   <li><a href="#function-resize_mask" id="toc-function-resize_mask" class="nav-link" data-scroll-target="#function-resize_mask">function resize_mask</a></li>
   </ul></li>
   <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
@@ -400,7 +401,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classMaskData.html">MaskData</a> &gt;</td>
-<td><strong><a href="../../api_generated/Files/mask__utils_8cpp.html#function-apply-binary-image-algorithm">apply_binary_image_algorithm</a></strong>(<a href="../../api_generated/Classes/classMaskData.html">MaskData</a> const * mask_data, std::function&lt; <a href="../../api_generated/Classes/structImage.html">Image</a>(<a href="../../api_generated/Classes/structImage.html">Image</a> const &amp;)&gt; binary_processor, std::function&lt; void(int)&gt; progress_callback =<a href="int"></a>, bool preserve_empty_masks =false)<br>Applies a binary image processing function to mask data.</td>
+<td><strong><a href="../../api_generated/Files/mask__utils_8cpp.html#function-apply-binary-image-algorithm">apply_binary_image_algorithm</a></strong>(<a href="../../api_generated/Classes/classMaskData.html">MaskData</a> const * mask_data, const std::function&lt; <a href="../../api_generated/Classes/structImage.html">Image</a>(<a href="../../api_generated/Classes/structImage.html">Image</a> const &amp;)&gt; &amp; binary_processor, const std::function&lt; void(int)&gt; &amp; progress_callback =<a href="int"></a> {}, bool preserve_empty_masks =false)<br>Applies a binary image processing function to mask data.</td>
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Classes/structImage.html">Image</a></td>
@@ -411,6 +412,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Files/mask__utils_8cpp.html#function-binary-image-to-mask">binary_image_to_mask</a></strong>(<a href="../../api_generated/Classes/structImage.html">Image</a> const &amp; binary_image)<br>Converts a binary image back to mask points.</td>
 </tr>
 <tr class="even">
+<td>int</td>
+<td><strong><a href="../../api_generated/Files/mask__utils_8cpp.html#function-map-dest-to-source">map_dest_to_source</a></strong>(int dest_coord, int source_size, int dest_size)<br>Map a destination pixel coordinate to the nearest source index.</td>
+</tr>
+<tr class="odd">
 <td><a href="../../api_generated/Classes/classMask2D.html">Mask2D</a></td>
 <td><strong><a href="../../api_generated/Files/mask__utils_8cpp.html#function-resize-mask">resize_mask</a></strong>(<a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> const &amp; mask, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> const &amp; source_size, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> const &amp; dest_size)<br>Resize a mask from one image size to another using nearest neighbor interpolation.</td>
 </tr>
@@ -423,8 +428,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="function-apply_binary_image_algorithm">function apply_binary_image_algorithm</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> MaskData <span class="op">&gt;</span> apply_binary_image_algorithm<span class="op">(</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    MaskData <span class="at">const</span> <span class="op">*</span> mask_data<span class="op">,</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span> Image<span class="op">(</span>Image <span class="at">const</span> <span class="op">&amp;)&gt;</span> binary_processor<span class="op">,</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span> <span class="dt">void</span><span class="op">(</span><span class="dt">int</span><span class="op">)&gt;</span> progress_callback <span class="op">=[](</span><span class="dt">int</span><span class="op">){},</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> <span class="bu">std::</span>function<span class="op">&lt;</span> Image<span class="op">(</span>Image <span class="at">const</span> <span class="op">&amp;)&gt;</span> <span class="op">&amp;</span> binary_processor<span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> <span class="bu">std::</span>function<span class="op">&lt;</span> <span class="dt">void</span><span class="op">(</span><span class="dt">int</span><span class="op">)&gt;</span> <span class="op">&amp;</span> progress_callback <span class="op">=[](</span><span class="dt">int</span><span class="op">)</span> <span class="op">{},</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> preserve_empty_masks <span class="op">=</span><span class="kw">false</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Applies a binary image processing function to mask data.</p>
@@ -465,13 +470,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Return</strong>: <a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> Mask containing points where image value &gt; 0</p>
 </section>
+<section id="function-map_dest_to_source" class="level3">
+<h3 class="anchored" data-anchor-id="function-map_dest_to_source">function map_dest_to_source</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> map_dest_to_source<span class="op">(</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> dest_coord<span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> source_size<span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> dest_size</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Map a destination pixel coordinate to the nearest source index.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>dest_coord</strong> Destination pixel index along one axis.</li>
+<li><strong>source_size</strong> Source image extent along that axis (must be &gt; 0).</li>
+<li><strong>dest_size</strong> Destination image extent along that axis (must be &gt; 0).</li>
+</ul>
+<p><strong>Return</strong>: Clamped source index in <code>[0, source_size - 1]</code>.</p>
+<p><strong>Precondition</strong>: source_size &gt; 0 and dest_size &gt; 0</p>
+<p>Uses inverse nearest-neighbor sampling consistent with OpenCV / PyTorch <code>align_corners=false</code> resize: <code>src = (dest + 0.5) * source_size / dest_size - 0.5</code>.</p>
+</section>
 <section id="function-resize_mask" class="level3">
 <h3 class="anchored" data-anchor-id="function-resize_mask">function resize_mask</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>Mask2D resize_mask<span class="op">(</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    Mask2D <span class="at">const</span> <span class="op">&amp;</span> mask<span class="op">,</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    ImageSize <span class="at">const</span> <span class="op">&amp;</span> source_size<span class="op">,</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    ImageSize <span class="at">const</span> <span class="op">&amp;</span> dest_size</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>Mask2D resize_mask<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    Mask2D <span class="at">const</span> <span class="op">&amp;</span> mask<span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    ImageSize <span class="at">const</span> <span class="op">&amp;</span> source_size<span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    ImageSize <span class="at">const</span> <span class="op">&amp;</span> dest_size</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Resize a mask from one image size to another using nearest neighbor interpolation.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -491,185 +514,190 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="source-code" class="level2">
 <h2 class="anchored" data-anchor-id="source-code">Source code</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"mask_utils.hpp"</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Masks/Mask_Data.hpp"</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;algorithm&gt;</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cmath&gt;</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>MaskData<span class="op">&gt;</span> apply_binary_image_algorithm<span class="op">(</span></span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    MaskData <span class="at">const</span> <span class="op">*</span> mask_data<span class="op">,</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span>Image<span class="op">(</span>Image <span class="at">const</span> <span class="op">&amp;)&gt;</span> binary_processor<span class="op">,</span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">(</span><span class="dt">int</span><span class="op">)&gt;</span> progress_callback<span class="op">,</span></span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> preserve_empty_masks<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result_mask_data <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>MaskData<span class="op">&gt;();</span></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>mask_data<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        progress_callback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result_mask_data<span class="op">;</span></span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Copy image size from input</span></span>
-<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>    result_mask_data<span class="op">-&gt;</span>setImageSize<span class="op">(</span>mask_data<span class="op">-&gt;</span>getImageSize<span class="op">());</span></span>
-<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get image dimensions</span></span>
-<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> image_size <span class="op">=</span> mask_data<span class="op">-&gt;</span>getImageSize<span class="op">();</span></span>
-<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>image_size<span class="op">.</span>width <span class="op">&lt;=</span> <span class="dv">0</span> <span class="op">||</span> image_size<span class="op">.</span>height <span class="op">&lt;=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Use default size if mask data doesn't specify</span></span>
-<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>        image_size<span class="op">.</span>width <span class="op">=</span> <span class="dv">256</span><span class="op">;</span></span>
-<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>        image_size<span class="op">.</span>height <span class="op">=</span> <span class="dv">256</span><span class="op">;</span></span>
-<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>        result_mask_data<span class="op">-&gt;</span>setImageSize<span class="op">(</span>image_size<span class="op">);</span></span>
-<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Count total masks to process for progress calculation</span></span>
-<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> total_masks <span class="op">=</span> mask_data<span class="op">-&gt;</span>getTotalEntryCount<span class="op">();</span></span>
-<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>total_masks <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>        progress_callback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
-<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result_mask_data<span class="op">;</span></span>
-<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>    progress_callback<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
-<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> processed_masks <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="op">[</span>time<span class="op">,</span> entity_id<span class="op">,</span> mask<span class="op">]</span> <span class="op">:</span> mask_data<span class="op">-&gt;</span>flattened_data<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>mask<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>preserve_empty_masks<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>                result_mask_data<span class="op">-&gt;</span>emplaceAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span>time<span class="op">.</span>getValue<span class="op">()),</span> Mask2D<span class="op">());</span></span>
-<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb5-54"><a href="#cb5-54" aria-hidden="true" tabindex="-1"></a>            processed_masks<span class="op">++;</span></span>
-<span id="cb5-55"><a href="#cb5-55" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span><span class="op">;</span></span>
-<span id="cb5-56"><a href="#cb5-56" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb5-57"><a href="#cb5-57" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb5-58"><a href="#cb5-58" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Convert mask to binary image</span></span>
-<span id="cb5-59"><a href="#cb5-59" aria-hidden="true" tabindex="-1"></a>        Image binary_image <span class="op">=</span> mask_to_binary_image<span class="op">(</span>mask<span class="op">,</span> image_size<span class="op">);</span></span>
-<span id="cb5-60"><a href="#cb5-60" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb5-61"><a href="#cb5-61" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Apply the binary processing algorithm</span></span>
-<span id="cb5-62"><a href="#cb5-62" aria-hidden="true" tabindex="-1"></a>        Image processed_image <span class="op">=</span> binary_processor<span class="op">(</span>binary_image<span class="op">);</span></span>
-<span id="cb5-63"><a href="#cb5-63" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb5-64"><a href="#cb5-64" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Convert processed image back to mask points</span></span>
-<span id="cb5-65"><a href="#cb5-65" aria-hidden="true" tabindex="-1"></a>        Mask2D processed_mask <span class="op">=</span> binary_image_to_mask<span class="op">(</span>processed_image<span class="op">);</span></span>
-<span id="cb5-66"><a href="#cb5-66" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb5-67"><a href="#cb5-67" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Add the processed mask to result (only if it has points)</span></span>
-<span id="cb5-68"><a href="#cb5-68" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>processed_mask<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb5-69"><a href="#cb5-69" aria-hidden="true" tabindex="-1"></a>            result_mask_data<span class="op">-&gt;</span>addAtTime<span class="op">(</span>time<span class="op">,</span> processed_mask<span class="op">,</span> NotifyObservers<span class="op">::</span>No<span class="op">);</span></span>
-<span id="cb5-70"><a href="#cb5-70" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb5-71"><a href="#cb5-71" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb5-72"><a href="#cb5-72" aria-hidden="true" tabindex="-1"></a>        processed_masks<span class="op">++;</span></span>
-<span id="cb5-73"><a href="#cb5-73" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb5-74"><a href="#cb5-74" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Update progress</span></span>
-<span id="cb5-75"><a href="#cb5-75" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> progress <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span></span>
-<span id="cb5-76"><a href="#cb5-76" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>round<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>processed_masks<span class="op">)</span> <span class="op">/</span> total_masks <span class="op">*</span> <span class="fl">100.0</span><span class="op">)</span></span>
-<span id="cb5-77"><a href="#cb5-77" aria-hidden="true" tabindex="-1"></a>        <span class="op">);</span></span>
-<span id="cb5-78"><a href="#cb5-78" aria-hidden="true" tabindex="-1"></a>        progress_callback<span class="op">(</span>progress<span class="op">);</span></span>
-<span id="cb5-79"><a href="#cb5-79" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-80"><a href="#cb5-80" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-81"><a href="#cb5-81" aria-hidden="true" tabindex="-1"></a>    progress_callback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
-<span id="cb5-82"><a href="#cb5-82" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result_mask_data<span class="op">;</span></span>
-<span id="cb5-83"><a href="#cb5-83" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb5-84"><a href="#cb5-84" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-85"><a href="#cb5-85" aria-hidden="true" tabindex="-1"></a>Image mask_to_binary_image<span class="op">(</span>Mask2D <span class="at">const</span> <span class="op">&amp;</span> mask<span class="op">,</span> ImageSize image_size<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-86"><a href="#cb5-86" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">uint8_t</span><span class="op">&gt;</span> image_data<span class="op">(</span>image_size<span class="op">.</span>width <span class="op">*</span> image_size<span class="op">.</span>height<span class="op">,</span> <span class="dv">0</span><span class="op">);</span></span>
-<span id="cb5-87"><a href="#cb5-87" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-88"><a href="#cb5-88" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Set mask points to 1 in the binary image</span></span>
-<span id="cb5-89"><a href="#cb5-89" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> point <span class="op">:</span> mask<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-90"><a href="#cb5-90" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> x <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>point<span class="op">.</span>x<span class="op">);</span></span>
-<span id="cb5-91"><a href="#cb5-91" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> y <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>point<span class="op">.</span>y<span class="op">);</span></span>
-<span id="cb5-92"><a href="#cb5-92" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb5-93"><a href="#cb5-93" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Check bounds</span></span>
-<span id="cb5-94"><a href="#cb5-94" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>x <span class="op">&gt;=</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> x <span class="op">&lt;</span> image_size<span class="op">.</span>width <span class="op">&amp;&amp;</span> </span>
-<span id="cb5-95"><a href="#cb5-95" aria-hidden="true" tabindex="-1"></a>            y <span class="op">&gt;=</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> y <span class="op">&lt;</span> image_size<span class="op">.</span>height<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-96"><a href="#cb5-96" aria-hidden="true" tabindex="-1"></a>            image_data<span class="op">[</span>y <span class="op">*</span> image_size<span class="op">.</span>width <span class="op">+</span> x<span class="op">]</span> <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb5-97"><a href="#cb5-97" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb5-98"><a href="#cb5-98" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-99"><a href="#cb5-99" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-100"><a href="#cb5-100" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Image<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>image_data<span class="op">),</span> image_size<span class="op">);</span></span>
-<span id="cb5-101"><a href="#cb5-101" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb5-102"><a href="#cb5-102" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-103"><a href="#cb5-103" aria-hidden="true" tabindex="-1"></a>Mask2D binary_image_to_mask<span class="op">(</span>Image <span class="at">const</span> <span class="op">&amp;</span> binary_image<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-104"><a href="#cb5-104" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Point2D<span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;&gt;</span> mask_points<span class="op">;</span></span>
-<span id="cb5-105"><a href="#cb5-105" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-106"><a href="#cb5-106" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> y <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> y <span class="op">&lt;</span> binary_image<span class="op">.</span>size<span class="op">.</span>height<span class="op">;</span> <span class="op">++</span>y<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-107"><a href="#cb5-107" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> x <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> x <span class="op">&lt;</span> binary_image<span class="op">.</span>size<span class="op">.</span>width<span class="op">;</span> <span class="op">++</span>x<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-108"><a href="#cb5-108" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>binary_image<span class="op">.</span>at<span class="op">(</span>y<span class="op">,</span> x<span class="op">)</span> <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-109"><a href="#cb5-109" aria-hidden="true" tabindex="-1"></a>                mask_points<span class="op">.</span>push_back<span class="op">({</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span>x<span class="op">),</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span>y<span class="op">)});</span></span>
-<span id="cb5-110"><a href="#cb5-110" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb5-111"><a href="#cb5-111" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb5-112"><a href="#cb5-112" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-113"><a href="#cb5-113" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-114"><a href="#cb5-114" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Mask2D<span class="op">(</span>mask_points<span class="op">);</span></span>
-<span id="cb5-115"><a href="#cb5-115" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> </span>
-<span id="cb5-116"><a href="#cb5-116" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-117"><a href="#cb5-117" aria-hidden="true" tabindex="-1"></a>Mask2D resize_mask<span class="op">(</span>Mask2D <span class="at">const</span> <span class="op">&amp;</span> mask<span class="op">,</span> ImageSize <span class="at">const</span> <span class="op">&amp;</span> source_size<span class="op">,</span> ImageSize <span class="at">const</span> <span class="op">&amp;</span> dest_size<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-118"><a href="#cb5-118" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Validate input parameters</span></span>
-<span id="cb5-119"><a href="#cb5-119" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>mask<span class="op">.</span>empty<span class="op">()</span> <span class="op">||</span> source_size<span class="op">.</span>width <span class="op">&lt;=</span> <span class="dv">0</span> <span class="op">||</span> source_size<span class="op">.</span>height <span class="op">&lt;=</span> <span class="dv">0</span> <span class="op">||</span></span>
-<span id="cb5-120"><a href="#cb5-120" aria-hidden="true" tabindex="-1"></a>        dest_size<span class="op">.</span>width <span class="op">&lt;=</span> <span class="dv">0</span> <span class="op">||</span> dest_size<span class="op">.</span>height <span class="op">&lt;=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-121"><a href="#cb5-121" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
-<span id="cb5-122"><a href="#cb5-122" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-123"><a href="#cb5-123" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-124"><a href="#cb5-124" aria-hidden="true" tabindex="-1"></a>    <span class="co">// If sizes are the same, return a copy of the original mask</span></span>
-<span id="cb5-125"><a href="#cb5-125" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>source_size<span class="op">.</span>width <span class="op">==</span> dest_size<span class="op">.</span>width <span class="op">&amp;&amp;</span> source_size<span class="op">.</span>height <span class="op">==</span> dest_size<span class="op">.</span>height<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-126"><a href="#cb5-126" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> mask<span class="op">;</span></span>
-<span id="cb5-127"><a href="#cb5-127" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-128"><a href="#cb5-128" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-129"><a href="#cb5-129" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create a binary image from the mask</span></span>
-<span id="cb5-130"><a href="#cb5-130" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">uint8_t</span><span class="op">&gt;</span> source_image<span class="op">(</span>source_size<span class="op">.</span>width <span class="op">*</span> source_size<span class="op">.</span>height<span class="op">,</span> <span class="dv">0</span><span class="op">);</span></span>
-<span id="cb5-131"><a href="#cb5-131" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-132"><a href="#cb5-132" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Set mask pixels to 1</span></span>
-<span id="cb5-133"><a href="#cb5-133" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> point<span class="op">:</span> mask<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-134"><a href="#cb5-134" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>point<span class="op">.</span>x <span class="op">&lt;</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span>source_size<span class="op">.</span>width<span class="op">)</span> <span class="op">&amp;&amp;</span></span>
-<span id="cb5-135"><a href="#cb5-135" aria-hidden="true" tabindex="-1"></a>            point<span class="op">.</span>y <span class="op">&lt;</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span>source_size<span class="op">.</span>height<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb5-136"><a href="#cb5-136" aria-hidden="true" tabindex="-1"></a>            source_image<span class="op">[</span>point<span class="op">.</span>y <span class="op">*</span> source_size<span class="op">.</span>width <span class="op">+</span> point<span class="op">.</span>x<span class="op">]</span> <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb5-137"><a href="#cb5-137" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb5-138"><a href="#cb5-138" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-139"><a href="#cb5-139" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-140"><a href="#cb5-140" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create the destination image</span></span>
-<span id="cb5-141"><a href="#cb5-141" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">uint8_t</span><span class="op">&gt;</span> dest_image<span class="op">(</span>dest_size<span class="op">.</span>width <span class="op">*</span> dest_size<span class="op">.</span>height<span class="op">,</span> <span class="dv">0</span><span class="op">);</span></span>
-<span id="cb5-142"><a href="#cb5-142" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-143"><a href="#cb5-143" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Calculate scaling factors</span></span>
-<span id="cb5-144"><a href="#cb5-144" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> x_scale <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>source_size<span class="op">.</span>width<span class="op">)</span> <span class="op">/</span> dest_size<span class="op">.</span>width<span class="op">;</span></span>
-<span id="cb5-145"><a href="#cb5-145" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> y_scale <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>source_size<span class="op">.</span>height<span class="op">)</span> <span class="op">/</span> dest_size<span class="op">.</span>height<span class="op">;</span></span>
-<span id="cb5-146"><a href="#cb5-146" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-147"><a href="#cb5-147" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Perform nearest neighbor interpolation</span></span>
-<span id="cb5-148"><a href="#cb5-148" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> dest_y <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> dest_y <span class="op">&lt;</span> dest_size<span class="op">.</span>height<span class="op">;</span> <span class="op">++</span>dest_y<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-149"><a href="#cb5-149" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> dest_x <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> dest_x <span class="op">&lt;</span> dest_size<span class="op">.</span>width<span class="op">;</span> <span class="op">++</span>dest_x<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-150"><a href="#cb5-150" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Find the nearest source pixel using OpenCV-like mapping</span></span>
-<span id="cb5-151"><a href="#cb5-151" aria-hidden="true" tabindex="-1"></a>            <span class="co">// OpenCV uses: src_x = (dest_x + 0.5) * scale - 0.5</span></span>
-<span id="cb5-152"><a href="#cb5-152" aria-hidden="true" tabindex="-1"></a>            <span class="co">// But for integer coordinates, we can simplify to: src_x = dest_x * scale</span></span>
-<span id="cb5-153"><a href="#cb5-153" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int</span> source_x <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;((</span>dest_x <span class="op">+</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">*</span> x_scale <span class="op">-</span> <span class="fl">0.5</span><span class="op">);</span></span>
-<span id="cb5-154"><a href="#cb5-154" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int</span> source_y <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;((</span>dest_y <span class="op">+</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">*</span> y_scale <span class="op">-</span> <span class="fl">0.5</span><span class="op">);</span></span>
-<span id="cb5-155"><a href="#cb5-155" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-156"><a href="#cb5-156" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Clamp to source bounds</span></span>
-<span id="cb5-157"><a href="#cb5-157" aria-hidden="true" tabindex="-1"></a>            source_x <span class="op">=</span> <span class="bu">std::</span>max<span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="bu">std::</span>min<span class="op">(</span>source_x<span class="op">,</span> source_size<span class="op">.</span>width <span class="op">-</span> <span class="dv">1</span><span class="op">));</span></span>
-<span id="cb5-158"><a href="#cb5-158" aria-hidden="true" tabindex="-1"></a>            source_y <span class="op">=</span> <span class="bu">std::</span>max<span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="bu">std::</span>min<span class="op">(</span>source_y<span class="op">,</span> source_size<span class="op">.</span>height <span class="op">-</span> <span class="dv">1</span><span class="op">));</span></span>
-<span id="cb5-159"><a href="#cb5-159" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-160"><a href="#cb5-160" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Copy the pixel value</span></span>
-<span id="cb5-161"><a href="#cb5-161" aria-hidden="true" tabindex="-1"></a>            dest_image<span class="op">[</span>dest_y <span class="op">*</span> dest_size<span class="op">.</span>width <span class="op">+</span> dest_x<span class="op">]</span> <span class="op">=</span> </span>
-<span id="cb5-162"><a href="#cb5-162" aria-hidden="true" tabindex="-1"></a>                source_image<span class="op">[</span>source_y <span class="op">*</span> source_size<span class="op">.</span>width <span class="op">+</span> source_x<span class="op">];</span></span>
-<span id="cb5-163"><a href="#cb5-163" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb5-164"><a href="#cb5-164" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-165"><a href="#cb5-165" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-166"><a href="#cb5-166" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Extract the new mask points from the resized binary image</span></span>
-<span id="cb5-167"><a href="#cb5-167" aria-hidden="true" tabindex="-1"></a>    Mask2D resized_mask<span class="op">;</span></span>
-<span id="cb5-168"><a href="#cb5-168" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> y <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> y <span class="op">&lt;</span> dest_size<span class="op">.</span>height<span class="op">;</span> <span class="op">++</span>y<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-169"><a href="#cb5-169" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> x <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> x <span class="op">&lt;</span> dest_size<span class="op">.</span>width<span class="op">;</span> <span class="op">++</span>x<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-170"><a href="#cb5-170" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>dest_image<span class="op">[</span>y <span class="op">*</span> dest_size<span class="op">.</span>width <span class="op">+</span> x<span class="op">]</span> <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb5-171"><a href="#cb5-171" aria-hidden="true" tabindex="-1"></a>                resized_mask<span class="op">.</span>push_back<span class="op">({</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span>x<span class="op">),</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span>y<span class="op">)});</span></span>
-<span id="cb5-172"><a href="#cb5-172" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb5-173"><a href="#cb5-173" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb5-174"><a href="#cb5-174" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb5-175"><a href="#cb5-175" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-176"><a href="#cb5-176" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> resized_mask<span class="op">;</span></span>
-<span id="cb5-177"><a href="#cb5-177" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"mask_utils.hpp"</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Masks/Mask_Data.hpp"</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;algorithm&gt;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cassert&gt;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cmath&gt;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cstddef&gt;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>MaskData<span class="op">&gt;</span> apply_binary_image_algorithm<span class="op">(</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        MaskData <span class="at">const</span> <span class="op">*</span> mask_data<span class="op">,</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">const</span> <span class="bu">std::</span>function<span class="op">&lt;</span>Image<span class="op">(</span>Image <span class="at">const</span> <span class="op">&amp;)&gt;&amp;</span> binary_processor<span class="op">,</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">const</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">(</span><span class="dt">int</span><span class="op">)&gt;&amp;</span> progress_callback<span class="op">,</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> preserve_empty_masks<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result_mask_data <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>MaskData<span class="op">&gt;();</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>mask_data<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>        progress_callback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result_mask_data<span class="op">;</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Copy image size from input</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    result_mask_data<span class="op">-&gt;</span>setImageSize<span class="op">(</span>mask_data<span class="op">-&gt;</span>getImageSize<span class="op">());</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get image dimensions</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> image_size <span class="op">=</span> mask_data<span class="op">-&gt;</span>getImageSize<span class="op">();</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>image_size<span class="op">.</span>width <span class="op">&lt;=</span> <span class="dv">0</span> <span class="op">||</span> image_size<span class="op">.</span>height <span class="op">&lt;=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Use default size if mask data doesn't specify</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>        image_size<span class="op">.</span>width <span class="op">=</span> <span class="dv">256</span><span class="op">;</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>        image_size<span class="op">.</span>height <span class="op">=</span> <span class="dv">256</span><span class="op">;</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>        result_mask_data<span class="op">-&gt;</span>setImageSize<span class="op">(</span>image_size<span class="op">);</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Count total masks to process for progress calculation</span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> <span class="at">const</span> total_masks <span class="op">=</span> mask_data<span class="op">-&gt;</span>getTotalEntryCount<span class="op">();</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>total_masks <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>        progress_callback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result_mask_data<span class="op">;</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>    progress_callback<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> processed_masks <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="op">[</span>time<span class="op">,</span> entity_id<span class="op">,</span> mask<span class="op">]:</span> mask_data<span class="op">-&gt;</span>flattened_data<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>mask<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>preserve_empty_masks<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>                result_mask_data<span class="op">-&gt;</span>emplaceAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span>time<span class="op">.</span>getValue<span class="op">()),</span> Mask2D<span class="op">());</span></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>            processed_masks<span class="op">++;</span></span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span><span class="op">;</span></span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Convert mask to binary image</span></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>        Image <span class="at">const</span> binary_image <span class="op">=</span> mask_to_binary_image<span class="op">(</span>mask<span class="op">,</span> image_size<span class="op">);</span></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Apply the binary processing algorithm</span></span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a>        Image <span class="at">const</span> processed_image <span class="op">=</span> binary_processor<span class="op">(</span>binary_image<span class="op">);</span></span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Convert processed image back to mask points</span></span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a>        Mask2D <span class="at">const</span> processed_mask <span class="op">=</span> binary_image_to_mask<span class="op">(</span>processed_image<span class="op">);</span></span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Add the processed mask to result (only if it has points)</span></span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>processed_mask<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a>            result_mask_data<span class="op">-&gt;</span>addAtTime<span class="op">(</span>time<span class="op">,</span> processed_mask<span class="op">,</span> NotifyObservers<span class="op">::</span>No<span class="op">);</span></span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a>        processed_masks<span class="op">++;</span></span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Update progress</span></span>
+<span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> <span class="at">const</span> progress <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span></span>
+<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a>                <span class="bu">std::</span>round<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>processed_masks<span class="op">)</span> <span class="op">/</span> total_masks <span class="op">*</span> <span class="fl">100.0</span><span class="op">));</span></span>
+<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a>        progress_callback<span class="op">(</span>progress<span class="op">);</span></span>
+<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a>    progress_callback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
+<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result_mask_data<span class="op">;</span></span>
+<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a>Image mask_to_binary_image<span class="op">(</span>Mask2D <span class="at">const</span> <span class="op">&amp;</span> mask<span class="op">,</span> ImageSize image_size<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">uint8_t</span><span class="op">&gt;</span> image_data<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">size_type</span><span class="op">&gt;(</span>image_size<span class="op">.</span>width <span class="op">*</span> image_size<span class="op">.</span>height<span class="op">),</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Set mask points to 1 in the binary image</span></span>
+<span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> point<span class="op">:</span> mask<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-90"><a href="#cb6-90" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> <span class="at">const</span> x <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>point<span class="op">.</span>x<span class="op">);</span></span>
+<span id="cb6-91"><a href="#cb6-91" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> <span class="at">const</span> y <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span>point<span class="op">.</span>y<span class="op">);</span></span>
+<span id="cb6-92"><a href="#cb6-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-93"><a href="#cb6-93" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Check bounds</span></span>
+<span id="cb6-94"><a href="#cb6-94" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>x <span class="op">&gt;=</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> x <span class="op">&lt;</span> image_size<span class="op">.</span>width <span class="op">&amp;&amp;</span></span>
+<span id="cb6-95"><a href="#cb6-95" aria-hidden="true" tabindex="-1"></a>            y <span class="op">&gt;=</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> y <span class="op">&lt;</span> image_size<span class="op">.</span>height<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-96"><a href="#cb6-96" aria-hidden="true" tabindex="-1"></a>            image_data<span class="op">[</span>y <span class="op">*</span> image_size<span class="op">.</span>width <span class="op">+</span> x<span class="op">]</span> <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb6-97"><a href="#cb6-97" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-98"><a href="#cb6-98" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-99"><a href="#cb6-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-100"><a href="#cb6-100" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="op">{</span><span class="bu">std::</span>move<span class="op">(</span>image_data<span class="op">),</span> image_size<span class="op">};</span></span>
+<span id="cb6-101"><a href="#cb6-101" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-102"><a href="#cb6-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-103"><a href="#cb6-103" aria-hidden="true" tabindex="-1"></a>Mask2D binary_image_to_mask<span class="op">(</span>Image <span class="at">const</span> <span class="op">&amp;</span> binary_image<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-104"><a href="#cb6-104" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Point2D<span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;&gt;</span> mask_points<span class="op">;</span></span>
+<span id="cb6-105"><a href="#cb6-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-106"><a href="#cb6-106" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> y <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> y <span class="op">&lt;</span> binary_image<span class="op">.</span>size<span class="op">.</span>height<span class="op">;</span> <span class="op">++</span>y<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-107"><a href="#cb6-107" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> x <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> x <span class="op">&lt;</span> binary_image<span class="op">.</span>size<span class="op">.</span>width<span class="op">;</span> <span class="op">++</span>x<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-108"><a href="#cb6-108" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>binary_image<span class="op">.</span>at<span class="op">(</span>y<span class="op">,</span> x<span class="op">)</span> <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-109"><a href="#cb6-109" aria-hidden="true" tabindex="-1"></a>                mask_points<span class="op">.</span>emplace_back<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span>x<span class="op">),</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span>y<span class="op">));</span></span>
+<span id="cb6-110"><a href="#cb6-110" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb6-111"><a href="#cb6-111" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-112"><a href="#cb6-112" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-113"><a href="#cb6-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-114"><a href="#cb6-114" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Mask2D<span class="op">(</span>mask_points<span class="op">);</span></span>
+<span id="cb6-115"><a href="#cb6-115" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-116"><a href="#cb6-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-117"><a href="#cb6-117" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> map_dest_to_source<span class="op">(</span><span class="dt">int</span> dest_coord<span class="op">,</span> <span class="dt">int</span> source_size<span class="op">,</span> <span class="dt">int</span> dest_size<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-118"><a href="#cb6-118" aria-hidden="true" tabindex="-1"></a>    <span class="ot">assert</span><span class="op">(</span>source_size <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> <span class="st">"map_dest_to_source: source_size must be &gt; 0"</span><span class="op">);</span></span>
+<span id="cb6-119"><a href="#cb6-119" aria-hidden="true" tabindex="-1"></a>    <span class="ot">assert</span><span class="op">(</span>dest_size <span class="op">&gt;</span> <span class="dv">0</span> <span class="op">&amp;&amp;</span> <span class="st">"map_dest_to_source: dest_size must be &gt; 0"</span><span class="op">);</span></span>
+<span id="cb6-120"><a href="#cb6-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-121"><a href="#cb6-121" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>source_size <span class="op">==</span> <span class="dv">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-122"><a href="#cb6-122" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb6-123"><a href="#cb6-123" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-124"><a href="#cb6-124" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-125"><a href="#cb6-125" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> <span class="at">const</span> scale <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>source_size<span class="op">)</span> <span class="op">/</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>dest_size<span class="op">);</span></span>
+<span id="cb6-126"><a href="#cb6-126" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> <span class="at">const</span> source <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span></span>
+<span id="cb6-127"><a href="#cb6-127" aria-hidden="true" tabindex="-1"></a>            <span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>dest_coord<span class="op">)</span> <span class="op">+</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">*</span> scale <span class="op">-</span> <span class="fl">0.5</span><span class="op">);</span></span>
+<span id="cb6-128"><a href="#cb6-128" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>clamp<span class="op">(</span>source<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> source_size <span class="op">-</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb6-129"><a href="#cb6-129" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-130"><a href="#cb6-130" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-131"><a href="#cb6-131" aria-hidden="true" tabindex="-1"></a>Mask2D resize_mask<span class="op">(</span>Mask2D <span class="at">const</span> <span class="op">&amp;</span> mask<span class="op">,</span> ImageSize <span class="at">const</span> <span class="op">&amp;</span> source_size<span class="op">,</span> ImageSize <span class="at">const</span> <span class="op">&amp;</span> dest_size<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-132"><a href="#cb6-132" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Validate input parameters</span></span>
+<span id="cb6-133"><a href="#cb6-133" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>mask<span class="op">.</span>empty<span class="op">()</span> <span class="op">||</span> source_size<span class="op">.</span>width <span class="op">&lt;=</span> <span class="dv">0</span> <span class="op">||</span> source_size<span class="op">.</span>height <span class="op">&lt;=</span> <span class="dv">0</span> <span class="op">||</span></span>
+<span id="cb6-134"><a href="#cb6-134" aria-hidden="true" tabindex="-1"></a>        dest_size<span class="op">.</span>width <span class="op">&lt;=</span> <span class="dv">0</span> <span class="op">||</span> dest_size<span class="op">.</span>height <span class="op">&lt;=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-135"><a href="#cb6-135" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb6-136"><a href="#cb6-136" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-137"><a href="#cb6-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-138"><a href="#cb6-138" aria-hidden="true" tabindex="-1"></a>    <span class="co">// If sizes are the same, return a copy of the original mask</span></span>
+<span id="cb6-139"><a href="#cb6-139" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>source_size<span class="op">.</span>width <span class="op">==</span> dest_size<span class="op">.</span>width <span class="op">&amp;&amp;</span> source_size<span class="op">.</span>height <span class="op">==</span> dest_size<span class="op">.</span>height<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-140"><a href="#cb6-140" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> mask<span class="op">;</span></span>
+<span id="cb6-141"><a href="#cb6-141" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-142"><a href="#cb6-142" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-143"><a href="#cb6-143" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create a binary image from the mask</span></span>
+<span id="cb6-144"><a href="#cb6-144" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">uint8_t</span><span class="op">&gt;</span> source_image<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">size_type</span><span class="op">&gt;(</span>source_size<span class="op">.</span>width <span class="op">*</span> source_size<span class="op">.</span>height<span class="op">),</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb6-145"><a href="#cb6-145" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-146"><a href="#cb6-146" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Set mask pixels to 1</span></span>
+<span id="cb6-147"><a href="#cb6-147" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> point<span class="op">:</span> mask<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-148"><a href="#cb6-148" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>point<span class="op">.</span>x <span class="op">&lt;</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span>source_size<span class="op">.</span>width<span class="op">)</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb6-149"><a href="#cb6-149" aria-hidden="true" tabindex="-1"></a>            point<span class="op">.</span>y <span class="op">&lt;</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span>source_size<span class="op">.</span>height<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb6-150"><a href="#cb6-150" aria-hidden="true" tabindex="-1"></a>            source_image<span class="op">[</span>point<span class="op">.</span>y <span class="op">*</span> source_size<span class="op">.</span>width <span class="op">+</span> point<span class="op">.</span>x<span class="op">]</span> <span class="op">=</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb6-151"><a href="#cb6-151" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-152"><a href="#cb6-152" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-153"><a href="#cb6-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-154"><a href="#cb6-154" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create the destination image</span></span>
+<span id="cb6-155"><a href="#cb6-155" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">uint8_t</span><span class="op">&gt;</span> dest_image<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">size_type</span><span class="op">&gt;(</span>dest_size<span class="op">.</span>width <span class="op">*</span> dest_size<span class="op">.</span>height<span class="op">),</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb6-156"><a href="#cb6-156" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-157"><a href="#cb6-157" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Perform nearest neighbor interpolation</span></span>
+<span id="cb6-158"><a href="#cb6-158" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> dest_y <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> dest_y <span class="op">&lt;</span> dest_size<span class="op">.</span>height<span class="op">;</span> <span class="op">++</span>dest_y<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-159"><a href="#cb6-159" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> <span class="at">const</span> source_y <span class="op">=</span></span>
+<span id="cb6-160"><a href="#cb6-160" aria-hidden="true" tabindex="-1"></a>                map_dest_to_source<span class="op">(</span>dest_y<span class="op">,</span> source_size<span class="op">.</span>height<span class="op">,</span> dest_size<span class="op">.</span>height<span class="op">);</span></span>
+<span id="cb6-161"><a href="#cb6-161" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-162"><a href="#cb6-162" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> dest_x <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> dest_x <span class="op">&lt;</span> dest_size<span class="op">.</span>width<span class="op">;</span> <span class="op">++</span>dest_x<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-163"><a href="#cb6-163" aria-hidden="true" tabindex="-1"></a>            <span class="dt">int</span> <span class="at">const</span> source_x <span class="op">=</span></span>
+<span id="cb6-164"><a href="#cb6-164" aria-hidden="true" tabindex="-1"></a>                    map_dest_to_source<span class="op">(</span>dest_x<span class="op">,</span> source_size<span class="op">.</span>width<span class="op">,</span> dest_size<span class="op">.</span>width<span class="op">);</span></span>
+<span id="cb6-165"><a href="#cb6-165" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-166"><a href="#cb6-166" aria-hidden="true" tabindex="-1"></a>            dest_image<span class="op">[</span>dest_y <span class="op">*</span> dest_size<span class="op">.</span>width <span class="op">+</span> dest_x<span class="op">]</span> <span class="op">=</span></span>
+<span id="cb6-167"><a href="#cb6-167" aria-hidden="true" tabindex="-1"></a>                    source_image<span class="op">[</span>source_y <span class="op">*</span> source_size<span class="op">.</span>width <span class="op">+</span> source_x<span class="op">];</span></span>
+<span id="cb6-168"><a href="#cb6-168" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-169"><a href="#cb6-169" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-170"><a href="#cb6-170" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-171"><a href="#cb6-171" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Extract the new mask points from the resized binary image</span></span>
+<span id="cb6-172"><a href="#cb6-172" aria-hidden="true" tabindex="-1"></a>    Mask2D resized_mask<span class="op">;</span></span>
+<span id="cb6-173"><a href="#cb6-173" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> y <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> y <span class="op">&lt;</span> dest_size<span class="op">.</span>height<span class="op">;</span> <span class="op">++</span>y<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-174"><a href="#cb6-174" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> x <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> x <span class="op">&lt;</span> dest_size<span class="op">.</span>width<span class="op">;</span> <span class="op">++</span>x<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-175"><a href="#cb6-175" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>dest_image<span class="op">[</span>y <span class="op">*</span> dest_size<span class="op">.</span>width <span class="op">+</span> x<span class="op">]</span> <span class="op">&gt;</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-176"><a href="#cb6-176" aria-hidden="true" tabindex="-1"></a>                resized_mask<span class="op">.</span>push_back<span class="op">({</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span>x<span class="op">),</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span>y<span class="op">)});</span></span>
+<span id="cb6-177"><a href="#cb6-177" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb6-178"><a href="#cb6-178" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-179"><a href="#cb6-179" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-180"><a href="#cb6-180" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-181"><a href="#cb6-181" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> resized_mask<span class="op">;</span></span>
+<span id="cb6-182"><a href="#cb6-182" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-18 at 14:28:03 +0000</p>
+<p>Updated on 2026-09-18 at 19:58:57 +0000</p>
 
 
 </section>
