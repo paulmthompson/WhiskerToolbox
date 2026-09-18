@@ -30,10 +30,10 @@ class MaskData;
  * @note The binary_processor function should expect Image struct and return Image struct
  */
 std::shared_ptr<MaskData> apply_binary_image_algorithm(
-    MaskData const * mask_data,
-    std::function<Image(Image const &)> binary_processor,
-    std::function<void(int)> progress_callback = [](int){},
-    bool preserve_empty_masks = false);
+        MaskData const * mask_data,
+        const std::function<Image(Image const &)>& binary_processor,
+        const std::function<void(int)>& progress_callback = [](int) {},
+        bool preserve_empty_masks = false);
 
 /**
  * @brief Converts a single mask to a binary image
@@ -53,6 +53,21 @@ Image mask_to_binary_image(Mask2D const & mask, ImageSize image_size);
 Mask2D binary_image_to_mask(Image const & binary_image);
 
 /**
+ * @brief Map a destination pixel coordinate to the nearest source index.
+ *
+ * Uses inverse nearest-neighbor sampling consistent with OpenCV / PyTorch
+ * `align_corners=false` resize: `src = (dest + 0.5) * source_size / dest_size - 0.5`.
+ *
+ * @param dest_coord Destination pixel index along one axis.
+ * @param source_size Source image extent along that axis (must be > 0).
+ * @param dest_size Destination image extent along that axis (must be > 0).
+ * @return Clamped source index in `[0, source_size - 1]`.
+ *
+ * @pre source_size > 0 and dest_size > 0
+ */
+[[nodiscard]] int map_dest_to_source(int dest_coord, int source_size, int dest_size);
+
+/**
  * @brief Resize a mask from one image size to another using nearest neighbor interpolation
  *
  * Converts mask coordinates from source image dimensions to destination image dimensions
@@ -70,4 +85,4 @@ Mask2D binary_image_to_mask(Image const & binary_image);
  */
 Mask2D resize_mask(Mask2D const & mask, ImageSize const & source_size, ImageSize const & dest_size);
 
-#endif // MASK_UTILS_HPP 
+#endif// MASK_UTILS_HPP

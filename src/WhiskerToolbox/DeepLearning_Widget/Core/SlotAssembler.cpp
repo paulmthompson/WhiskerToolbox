@@ -347,7 +347,7 @@ void encodeDynamicSlot(
                     entry.slot_name);
             return false;
         }
-        at::Tensor write_target =
+        at::Tensor const write_target =
                 temp.dim() > 0 && temp.size(0) > 1 ? temp.narrow(0, 0, 1) : temp;
         write_target.copy_(*encoded);
         return true;
@@ -714,11 +714,19 @@ void assertOutputDataKeyReady(
  *
  * @pre data_key is non-empty and refers to an existing object of the matching type.
  */
+void ensureMaskDataImageSize(MaskData & mask_data, ImageSize const & source_image_size) {
+    if (!mask_data.getImageSize().isDefined() &&
+        source_image_size.width > 0 && source_image_size.height > 0) {
+        mask_data.setImageSize(source_image_size);
+    }
+}
+
 void writeDecodedGeometryToDataManager(
         DataManager & dm,
         std::string const & data_key,
         TimeFrameIndex const frame_idx,
-        dl::DecodedGeometryVariant decoded) {
+        dl::DecodedGeometryVariant decoded,
+        ImageSize source_image_size) {
     assertOutputDataKeyReady(dm, data_key);
 
     std::visit(
@@ -728,7 +736,9 @@ void writeDecodedGeometryToDataManager(
                     if (geometry.empty()) {
                         return;
                     }
-                    dm.getData<MaskData>(data_key)->addAtTime(
+                    auto mask_data = dm.getData<MaskData>(data_key);
+                    ensureMaskDataImageSize(*mask_data, source_image_size);
+                    mask_data->addAtTime(
                             frame_idx,
                             std::forward<decltype(geometry)>(geometry),
                             NotifyObservers::Yes);
@@ -823,7 +833,7 @@ void decodeOutputs(
         if (!decoded) continue;
 
         writeDecodedGeometryToDataManager(
-                dm, binding.data_key, frame_idx, std::move(*decoded));
+                dm, binding.data_key, frame_idx, std::move(*decoded), source_image_size);
     }
 }
 

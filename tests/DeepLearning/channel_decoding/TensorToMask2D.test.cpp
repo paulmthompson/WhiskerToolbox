@@ -6,10 +6,12 @@
 #include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/masks.hpp"
 #include "CoreGeometry/points.hpp"
+#include "Masks/utils/mask_utils.hpp"
 
 #include <ATen/Functions.h>  // at::zeros, at::ones
 #include <ATen/core/Tensor.h>// at::Tensor
 
+#include <set>
 #include <stdexcept>
 
 using Catch::Matchers::WithinAbs;
@@ -99,8 +101,8 @@ TEST_CASE("TensorToMask2D - scaling to target image size", "[channel_decoding][T
     dl::TensorToMask2D decoder;
 
     // Single pixel at (5, 5) in 10x10 tensor, upsampled via nearest-neighbor
-    // to 100x100 target. Scale factor is 10x, so source pixel (5,5) maps to
-    // a 10x10 block of destination pixels at x=[50..59], y=[50..59].
+    // to 100x100 target. Source pixel (5,5) maps to a 10x10 block at
+    // x=[55..64], y=[55..64] using map_dest_to_source convention.
     auto tensor = at::zeros({1, 1, 10, 10});
     tensor[0][0][5][5] = 1.0f;
 
@@ -118,16 +120,56 @@ TEST_CASE("TensorToMask2D - scaling to target image size", "[channel_decoding][T
     // Nearest-neighbor: 1 source pixel becomes a 10x10 block → 100 mask pixels
     REQUIRE(mask.size() == 100);
 
-    // Every pixel in the block should be within x=[50..59], y=[50..59]
     for (auto const & p: mask) {
-        CHECK(p.x >= 50);
-        CHECK(p.x <= 59);
-        CHECK(p.y >= 50);
-        CHECK(p.y <= 59);
+        CHECK(p.x >= 55);
+        CHECK(p.x <= 64);
+        CHECK(p.y >= 55);
+        CHECK(p.y <= 64);
+    }
+}
+
+TEST_CASE("TensorToMask2D - matches resize_mask at 256 to 640x480",
+          "[channel_decoding][TensorToMask2D]") {
+    dl::TensorToMask2D decoder;
+
+    ImageSize const source_size{256, 256};
+    ImageSize const dest_size{640, 480};
+
+    Mask2D source_mask;
+    for (int y = 40; y < 80; ++y) {
+        for (int x = 100; x < 140; ++x) {
+            source_mask.push_back({static_cast<uint32_t>(x), static_cast<uint32_t>(y)});
+        }
     }
 
-    // No mask pixels should exist outside the block
-    // (implicitly guaranteed by size == 100 and all within [50..59]^2)
+    auto const expected = resize_mask(source_mask, source_size, dest_size);
+    REQUIRE(!expected.empty());
+
+    auto tensor = at::zeros({1, 1, source_size.height, source_size.width});
+    for (auto const & point: source_mask) {
+        tensor[0][0][point.y][point.x] = 1.0f;
+    }
+
+    dl::DecoderContext ctx;
+    ctx.source_channel = 0;
+    ctx.batch_index = 0;
+    ctx.height = source_size.height;
+    ctx.width = source_size.width;
+    ctx.target_image_size = dest_size;
+    dl::MaskDecoderParams params;
+    params.threshold = 0.5f;
+
+    auto const decoded = decoder.decode(tensor, ctx, params);
+
+    auto to_point_set = [](Mask2D const & mask) {
+        std::set<std::pair<uint32_t, uint32_t>> points;
+        for (auto const & p: mask) {
+            points.insert({p.x, p.y});
+        }
+        return points;
+    };
+
+    CHECK(to_point_set(decoded) == to_point_set(expected));
 }
 
 TEST_CASE("TensorToMask2D - batch index", "[channel_decoding][TensorToMask2D]") {

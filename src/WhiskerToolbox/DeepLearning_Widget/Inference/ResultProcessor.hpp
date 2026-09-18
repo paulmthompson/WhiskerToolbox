@@ -14,7 +14,8 @@
 #ifndef DEEP_LEARNING_RESULT_PROCESSOR_HPP
 #define DEEP_LEARNING_RESULT_PROCESSOR_HPP
 
-#include "DeepLearning_Widget/Inference/BatchInferenceResult.hpp"    // FrameResult
+#include "CoreGeometry/ImageSize.hpp"
+#include "DeepLearning_Widget/Inference/BatchInferenceResult.hpp"// FrameResult
 
 #include <QObject>
 
@@ -64,6 +65,13 @@ public:
      * @brief Clear accumulated feature vectors (call at batch start).
      */
     void clear();
+
+    /**
+     * @brief Set source image size for mask output coordinate space.
+     *
+     * @param source_image_size Original media dimensions used during inference.
+     */
+    void setSourceImageSize(ImageSize source_image_size);
 
     /**
      * @brief Set the reservation to drain on timer ticks. Call before startMergeTimer().

@@ -145,6 +145,7 @@ endif()
 target_link_libraries(DeepLearning PUBLIC reflectcpp::reflectcpp)
 target_link_libraries(DeepLearning PUBLIC spdlog::spdlog_header_only)
 target_link_libraries(DeepLearning PRIVATE DataManager)
+target_link_libraries(DeepLearning PRIVATE WhiskerToolbox::MaskData)
 target_link_libraries(DeepLearning PRIVATE Commands)
 
 set_target_compiler_warnings(DeepLearning)

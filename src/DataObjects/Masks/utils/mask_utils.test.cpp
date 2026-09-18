@@ -1,5 +1,5 @@
-#include "CoreGeometry/masks.hpp"
 #include "mask_utils.hpp"
+#include "CoreGeometry/masks.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <cmath>
@@ -9,6 +9,25 @@
  * @brief Tests for mask utility functions
  */
 
+
+TEST_CASE("map_dest_to_source function", "[masks][resize]") {
+    SECTION("identity when sizes match") {
+        CHECK(map_dest_to_source(5, 10, 10) == 5);
+    }
+
+    SECTION("10x upsample maps source 5 to dest block 55..64") {
+        for (int dest = 55; dest <= 64; ++dest) {
+            CHECK(map_dest_to_source(dest, 10, 100) == 5);
+        }
+        CHECK(map_dest_to_source(54, 10, 100) == 4);
+        CHECK(map_dest_to_source(65, 10, 100) == 6);
+    }
+
+    SECTION("256 to 640 width mapping is clamped") {
+        CHECK(map_dest_to_source(0, 256, 640) == 0);
+        CHECK(map_dest_to_source(639, 256, 640) == 255);
+    }
+}
 
 TEST_CASE("resize_mask function", "[masks][resize]") {
 

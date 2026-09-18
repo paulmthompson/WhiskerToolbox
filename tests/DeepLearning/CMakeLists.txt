@@ -56,6 +56,7 @@ add_executable(test_DeepLearning
 target_link_libraries(test_DeepLearning PRIVATE
     Catch2::Catch2WithMain
     NEURALYZER_GEOMETRY
+    WhiskerToolbox::MaskData
     "${TORCH_LIBRARIES}"
     reflectcpp::reflectcpp
 )

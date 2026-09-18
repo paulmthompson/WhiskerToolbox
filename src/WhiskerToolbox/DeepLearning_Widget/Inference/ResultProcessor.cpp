@@ -32,6 +32,7 @@ struct ResultProcessor::Impl {
     std::shared_ptr<DeepLearningState> _state;
     std::shared_ptr<WriteReservation> _write_reservation;
     QTimer * _merge_timer = nullptr;
+    ImageSize _source_image_size{-1, -1};
 
     std::map<std::string, std::vector<std::pair<int, std::vector<float>>>>
             _pending_feature_rows;
@@ -72,6 +73,10 @@ void ResultProcessor::acceptResults(std::vector<FrameResult> results) {
                                     _impl->_dm->getData<MaskData>(fr.data_key);
                         }
                         if (mask_data) {
+                            if (!mask_data->getImageSize().isDefined() &&
+                                _impl->_source_image_size.isDefined()) {
+                                mask_data->setImageSize(_impl->_source_image_size);
+                            }
                             mask_data->addAtTime(
                                     frame_idx,
                                     std::forward<decltype(decoded)>(decoded),
@@ -152,6 +157,11 @@ void ResultProcessor::flushFeatureVectors() {
 
 void ResultProcessor::clear() {
     _impl->_pending_feature_rows.clear();
+    _impl->_source_image_size = {-1, -1};
+}
+
+void ResultProcessor::setSourceImageSize(ImageSize source_image_size) {
+    _impl->_source_image_size = source_image_size;
 }
 
 void ResultProcessor::setReservation(

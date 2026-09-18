@@ -1,12 +1,10 @@
 #include "Mask_Data.hpp"
 
 #include "Entity/EntityRegistry.hpp"
+#include "Masks/utils/mask_utils.hpp"
 #include "RaggedTimeSeries/map_timeseries.hpp"
 
-#include <algorithm>
-#include <cmath>
 #include <iostream>
-#include <ranges>
 
 // ========== Constructors ==========
 
@@ -24,15 +22,14 @@ void MaskData::changeImageSize(ImageSize const & image_size) {
         return;
     }
 
-    float const scale_x = static_cast<float>(image_size.width) / static_cast<float>(_image_size.width);
-    float const scale_y = static_cast<float>(image_size.height) / static_cast<float>(_image_size.height);
+    ImageSize const old_size = _image_size;
 
     for (size_t i = 0; i < _storage.size(); ++i) {
-        Mask2D& mask = _storage.getMutableData(i);
-        for (auto & point: mask) {
-            point.x = static_cast<uint32_t>(std::round(static_cast<float>(point.x) * scale_x));
-            point.y = static_cast<uint32_t>(std::round(static_cast<float>(point.y) * scale_y));
+        Mask2D & mask = _storage.getMutableData(i);
+        if (mask.empty()) {
+            continue;
         }
+        mask = resize_mask(mask, old_size, image_size);
     }
     _image_size = image_size;
 }

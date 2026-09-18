@@ -5,6 +5,8 @@
 
 #include "TensorToMask2D.hpp"
 
+#include "Masks/utils/mask_utils.hpp"
+
 #include <ATen/core/Tensor.h>// at::Tensor
 #include <spdlog/spdlog.h>
 #include <torch/types.h>// kCPU, kFloat32
@@ -116,19 +118,12 @@ Mask2D TensorToMask2D::decode(at::Tensor const & tensor,
     int const dest_w = ctx.target_image_size.width;
     int const dest_h = ctx.target_image_size.height;
 
-    float const x_scale = static_cast<float>(w) / static_cast<float>(dest_w);
-    float const y_scale = static_cast<float>(h) / static_cast<float>(dest_h);
-
     Mask2D mask;
     for (int dest_y = 0; dest_y < dest_h; ++dest_y) {
-        int const src_y = std::clamp(
-                static_cast<int>((static_cast<float>(dest_y) + 0.5f) * y_scale),
-                0, h - 1);
+        int const src_y = map_dest_to_source(dest_y, h, dest_h);
 
         for (int dest_x = 0; dest_x < dest_w; ++dest_x) {
-            int const src_x = std::clamp(
-                    static_cast<int>((static_cast<float>(dest_x) + 0.5f) * x_scale),
-                    0, w - 1);
+            int const src_x = map_dest_to_source(dest_x, w, dest_w);
 
             if (accessor[src_y][src_x] > params.threshold) {
                 mask.push_back(Point2D<uint32_t>{

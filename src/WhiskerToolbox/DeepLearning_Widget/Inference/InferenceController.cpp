@@ -200,6 +200,7 @@ void InferenceController::runBatch(int start, int end, int batch_size) {
         emit runningChanged(false);
     });
 
+    _impl->_result_processor->setSourceImageSize(source_size);
     _impl->_result_processor->setReservation(reservation);
     _impl->_result_processor->startMergeTimer();
     _impl->_batch_worker = worker;
@@ -306,6 +307,7 @@ void InferenceController::runBatchIntervals(
         emit runningChanged(false);
     });
 
+    _impl->_result_processor->setSourceImageSize(source_size);
     _impl->_result_processor->setReservation(reservation);
     _impl->_result_processor->startMergeTimer();
     _impl->_batch_worker = worker;

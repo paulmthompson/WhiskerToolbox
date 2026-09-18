@@ -14,11 +14,13 @@
  */
 
 #include "Masks/Mask_Data.hpp"
+#include "Masks/utils/mask_utils.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
 #include <memory>
+#include <set>
 #include <vector>
 
 TEST_CASE("MaskData - ImageSize get/set", "[mask][imagesize]") {
@@ -59,6 +61,41 @@ TEST_CASE("MaskData - Point-list construction verifies data",
     REQUIRE(masks.size() == 1);
     REQUIRE(masks[0].size() == 4);
     REQUIRE(masks[0][0].x == 10);
+}
+
+TEST_CASE("MaskData - changeImageSize matches resize_mask", "[mask][imagesize][scaling]") {
+    MaskData mask_data;
+    ImageSize const old_size{10, 10};
+    ImageSize const new_size{20, 20};
+    mask_data.setImageSize(old_size);
+
+    Mask2D mask;
+    for (uint32_t x = 2; x <= 4; ++x) {
+        for (uint32_t y = 2; y <= 4; ++y) {
+            mask.push_back({x, y});
+        }
+    }
+    mask_data.addAtTime(TimeFrameIndex(0), mask, NotifyObservers::No);
+
+    auto const expected = resize_mask(mask, old_size, new_size);
+
+    mask_data.changeImageSize(new_size);
+
+    REQUIRE(mask_data.getImageSize().width == 20);
+    REQUIRE(mask_data.getImageSize().height == 20);
+
+    auto const scaled = mask_data.getAtTime(TimeFrameIndex(0));
+    REQUIRE(scaled.size() == 1);
+
+    auto to_set = [](Mask2D const & points) {
+        std::set<std::pair<uint32_t, uint32_t>> out;
+        for (auto const & p: points) {
+            out.insert({p.x, p.y});
+        }
+        return out;
+    };
+
+    CHECK(to_set(scaled[0]) == to_set(expected));
 }
 
 TEST_CASE("MaskData - Empty mask vectors", "[mask][data][empty]") {
