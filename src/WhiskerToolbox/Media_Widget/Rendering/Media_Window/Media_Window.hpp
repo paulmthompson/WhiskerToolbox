@@ -179,6 +179,17 @@ public:
     void setShowHoverCircle(bool show);
     void setHoverCircleRadius(int radius);
 
+    /**
+     * @brief Enable spdlog debug timing for hover-circle and mouse-move performance
+     * @param enabled When true, emits rate-limited `[HoverCirclePerf]` debug lines
+     */
+    void setHoverCirclePerfLogging(bool enabled) { _debug_performance = enabled; }
+
+    /**
+     * @brief Whether hover-circle performance logging is enabled
+     */
+    [[nodiscard]] bool hoverCirclePerfLogging() const { return _debug_performance; }
+
     // Temporary line visualization for drawing modes
     void setShowTemporaryLine(bool show);
     void updateTemporaryLine(std::vector<Point2D<float>> const & points, std::string const & line_key = "");

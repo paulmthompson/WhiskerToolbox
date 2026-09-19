@@ -24,6 +24,7 @@
 #include <QButtonGroup>
 #include <QCheckBox>
 #include <QCursor>
+#include <QElapsedTimer>
 #include <QGroupBox>
 #include <QLabel>
 #include <QMenu>
@@ -412,17 +413,35 @@ void MediaLine_Widget::_mouseMovedInVideo(qreal x_canvas, qreal y_canvas) {
 
     auto const current_time = _state->current_position.convertTo(line_data->getTimeFrame().get());
 
+    bool const perf_logging = _scene != nullptr && _scene->hoverCirclePerfLogging();
+
     if (_is_eraser_dragging && isEraserToolActive(_state, _active_key)) {
+        QElapsedTimer timer;
+        if (perf_logging) {
+            timer.start();
+        }
         _erasePointsFromLine(static_cast<float>(x_canvas),
                              static_cast<float>(y_canvas),
                              current_time);
+        if (perf_logging) {
+            spdlog::debug("[HoverCirclePerf] MediaLine_Widget eraser_drag us={} update_canvas=true",
+                          timer.nsecsElapsed() / 1000);
+        }
         return;
     }
 
     if (_is_smooth_dragging && isSmoothToolActive(_state, _active_key)) {
+        QElapsedTimer timer;
+        if (perf_logging) {
+            timer.start();
+        }
         _smoothPointsInLine(static_cast<float>(x_canvas),
                             static_cast<float>(y_canvas),
                             current_time);
+        if (perf_logging) {
+            spdlog::debug("[HoverCirclePerf] MediaLine_Widget smooth_drag us={} update_canvas=true",
+                          timer.nsecsElapsed() / 1000);
+        }
     }
 }
 

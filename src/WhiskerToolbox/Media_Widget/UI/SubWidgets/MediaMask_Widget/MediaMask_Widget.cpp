@@ -662,10 +662,28 @@ void MediaMask_Widget::_mouseMoveInVideo(CanvasCoordinates const & canvas_coords
         return;
     }
 
+    bool const perf_logging = _scene != nullptr && _scene->hoverCirclePerfLogging();
+    QElapsedTimer timer;
+    if (perf_logging) {
+        timer.start();
+    }
+
     if (_is_adding_mode) {
         _addToMask(canvas_coords);
     } else {
         _removeFromMask(canvas_coords);
+    }
+
+    if (perf_logging) {
+        static int drag_move_count = 0;
+        ++drag_move_count;
+        qint64 const us = timer.nsecsElapsed() / 1000;
+        if (drag_move_count % 50 == 0 || us > 5000) {
+            spdlog::debug("[HoverCirclePerf] MediaMask_Widget mask_drag move#={} us={} mode={}",
+                          drag_move_count,
+                          us,
+                          _is_adding_mode ? "add" : "remove");
+        }
     }
 }
 

@@ -42,21 +42,31 @@
 #include <QKeyEvent>
 #include <QMenu>
 #include <QPainter>
+#include <spdlog/spdlog.h>
+
 #include <algorithm>
 #include <cmath>
 
-#include <iostream>
+namespace {
 
-/*
+constexpr int kHoverPerfLogEveryMoves = 50;
+constexpr qint64 kHoverPerfSlowThresholdUs = 5000;
+constexpr qint64 kHoverUpdateSlowThresholdUs = 1000;
 
-The Media_Window class
+[[nodiscard]] qint64 elapsedMicros(QElapsedTimer const & timer) {
+    return timer.nsecsElapsed() / 1000;
+}
 
-*/
-
+}// namespace
 
 Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject * parent)
     : QGraphicsScene(parent),
       _data_manager{std::move(data_manager)} {
+
+    if (qEnvironmentVariableIsSet("WHISKER_HOVER_CIRCLE_PERF")) {
+        _debug_performance = true;
+        spdlog::debug("[HoverCirclePerf] enabled via WHISKER_HOVER_CIRCLE_PERF");
+    }
 
     _data_manager->addObserver([this]() {
         _addRemoveData();
@@ -526,22 +536,11 @@ void Media_Window::LoadFrame(TimePosition const & position) {
 }
 
 void Media_Window::UpdateCanvas() {
-
+    QElapsedTimer total_timer;
+    QElapsedTimer phase_timer;
     if (_debug_performance) {
-        std::cout << "========== Update Canvas called ==========" << std::endl;
-
-        // Debug: Show current item counts before clearing
-        std::cout << "BEFORE CLEAR - Items in scene: " << items().size() << std::endl;
-        std::cout << "  Lines: " << _line_paths.size() << std::endl;
-        std::cout << "  Points: " << _points.size() << std::endl;
-        std::cout << "  Masks: " << _masks.size() << std::endl;
-        std::cout << "  Mask bounding boxes: " << _mask_bounding_boxes.size() << std::endl;
-        std::cout << "  Mask outlines: " << _mask_outlines.size() << std::endl;
-        std::cout << "  Intervals: " << _intervals.size() << std::endl;
-        std::cout << "  Tensors: " << _tensors.size() << std::endl;
-        std::cout << "  Text items: " << _text_items.size() << std::endl;
-        std::cout << "  Drawing points accumulated: " << _drawing_points.size() << std::endl;
-        std::cout << "  Hover circle item exists: " << (_hover_circle_item ? "YES" : "NO") << std::endl;
+        total_timer.start();
+        phase_timer.start();
     }
 
     _clearLines();
@@ -553,6 +552,12 @@ void Media_Window::UpdateCanvas() {
     _clearTensors();
     _clearTextOverlays();
     _clearMedia();
+
+    qint64 clear_us = 0;
+    if (_debug_performance) {
+        clear_us = elapsedMicros(phase_timer);
+        phase_timer.restart();
+    }
 
     // Resolve the canvas coordinate system before any plotting
     resolveCanvasCoordinateSystem();
@@ -576,17 +581,10 @@ void Media_Window::UpdateCanvas() {
     // Note: Hover circle is now handled efficiently via _updateHoverCirclePosition()
     // and doesn't need to be redrawn on every UpdateCanvas() call
 
+    qint64 plot_us = 0;
     if (_debug_performance) {
-        // Debug: Show item counts after plotting
-        std::cout << "AFTER PLOTTING - Items in scene: " << items().size() << std::endl;
-        std::cout << "  Lines plotted: " << _line_paths.size() << std::endl;
-        std::cout << "  Points plotted: " << _points.size() << std::endl;
-        std::cout << "  Masks plotted: " << _masks.size() << std::endl;
-        std::cout << "  Mask bounding boxes plotted: " << _mask_bounding_boxes.size() << std::endl;
-        std::cout << "  Mask outlines plotted: " << _mask_outlines.size() << std::endl;
-        std::cout << "  Intervals plotted: " << _intervals.size() << std::endl;
-        std::cout << "  Tensors plotted: " << _tensors.size() << std::endl;
-        std::cout << "  Text items plotted: " << _text_items.size() << std::endl;
+        plot_us = elapsedMicros(phase_timer);
+        phase_timer.restart();
     }
 
     // Save the entire QGraphicsScene as an image
@@ -601,16 +599,36 @@ void Media_Window::UpdateCanvas() {
     this->render(&painter, QRectF(0, 0, _canvasWidth, _canvasHeight),
                  QRect(0, 0, _canvasWidth, _canvasHeight));
 
+    qint64 render_us = 0;
+    if (_debug_performance) {
+        render_us = elapsedMicros(phase_timer);
+    }
 
     if (!_media_widget_state) {
-        std::cout << "Media_Window::UpdateCanvas: no media widget state" << std::endl;
+        spdlog::debug("Media_Window::UpdateCanvas: no media widget state");
         return;
     }
 
     _media_widget_state->setCanvasImage(scene_image);
 
-
     emit canvasUpdated(scene_image);
+
+    if (_debug_performance) {
+        qreal const hover_z = _hover_circle_item != nullptr ? _hover_circle_item->zValue() : -1.0;
+        spdlog::debug(
+                "[HoverCirclePerf] UpdateCanvas total_us={} clear_us={} plot_us={} render_us={} "
+                "lines={} masks={} points={} scene_items={} hover_z={:.1f} hover_visible={}",
+                elapsedMicros(total_timer),
+                clear_us,
+                plot_us,
+                render_us,
+                _line_paths.size(),
+                _masks.size(),
+                _points.size(),
+                items().size(),
+                hover_z,
+                _show_hover_circle);
+    }
 }
 
 
@@ -1085,31 +1103,50 @@ void Media_Window::mouseReleaseEvent(QGraphicsSceneMouseEvent * event) {
 }
 void Media_Window::mouseMoveEvent(QGraphicsSceneMouseEvent * event) {
     static int move_count = 0;
-    move_count++;
+    ++move_count;
 
-    auto pos = event->scenePos();
+    QElapsedTimer total_timer;
+    if (_debug_performance) {
+        total_timer.start();
+    }
 
+    auto const pos = event->scenePos();
     _hover_position = pos;
 
     if (_is_drawing) {
         _drawing_points.push_back(pos);
-        if (_debug_performance && move_count % 10 == 0) {// Only print every 10th move to avoid spam
-            std::cout << "Mouse MOVE #" << move_count << " - Drawing: adding point (total: "
-                      << _drawing_points.size() << ")" << std::endl;
-        }
-    } else if (_debug_performance && move_count % 50 == 0) {// Print every 50th move when not drawing
-        std::cout << "Mouse MOVE #" << move_count << " - Hover only" << std::endl;
     }
 
     // Emit legacy signal
     emit mouseMove(event->scenePos().x(), event->scenePos().y());
+    qint64 const after_mouse_move_us = _debug_performance ? elapsedMicros(total_timer) : 0;
 
     // Emit strong-typed coordinate signal
     CanvasCoordinates const canvas_coords(static_cast<float>(event->scenePos().x()),
                                           static_cast<float>(event->scenePos().y()));
     emit mouseMoveCanvas(canvas_coords);
+    qint64 const after_mouse_move_canvas_us = _debug_performance ? elapsedMicros(total_timer) : 0;
 
     QGraphicsScene::mouseMoveEvent(event);
+
+    if (_debug_performance) {
+        qint64 const total_us = elapsedMicros(total_timer);
+        if (move_count % kHoverPerfLogEveryMoves == 0 || total_us > kHoverPerfSlowThresholdUs) {
+            spdlog::debug(
+                    "[HoverCirclePerf] mouseMoveEvent move#={} pos=({:.1f},{:.1f}) total_us={} "
+                    "mouseMove_slots_us={} mouseMoveCanvas_slots_us={} scene_event_us={} "
+                    "hover_visible={} drawing={}",
+                    move_count,
+                    pos.x(),
+                    pos.y(),
+                    total_us,
+                    after_mouse_move_us,
+                    after_mouse_move_canvas_us - after_mouse_move_us,
+                    total_us - after_mouse_move_canvas_us,
+                    _show_hover_circle,
+                    _is_drawing);
+        }
+    }
 }
 
 void Media_Window::contextMenuEvent(QGraphicsSceneContextMenuEvent * event) {
@@ -2091,7 +2128,7 @@ void Media_Window::setShowHoverCircle(bool show) {
     _show_hover_circle = show;
     if (_show_hover_circle) {
         if (_debug_performance) {
-            std::cout << "Hover circle enabled" << std::endl;
+            spdlog::debug("[HoverCirclePerf] hover circle enabled radius={}", _hover_circle_radius);
         }
 
         // Create the hover circle item if it doesn't exist
@@ -2102,7 +2139,8 @@ void Media_Window::setShowHoverCircle(bool show) {
             _hover_circle_item->setVisible(false);// Initially hidden until mouse moves
             // DO NOT add to _points vector - hover circle is managed separately
             if (_debug_performance) {
-                std::cout << "  Created new hover circle item" << std::endl;
+                spdlog::debug("[HoverCirclePerf] created hover circle item z={:.1f}",
+                              _hover_circle_item->zValue());
             }
         }
 
@@ -2110,7 +2148,7 @@ void Media_Window::setShowHoverCircle(bool show) {
         connect(this, &Media_Window::mouseMove, this, &Media_Window::_updateHoverCirclePosition);
     } else {
         if (_debug_performance) {
-            std::cout << "Hover circle disabled" << std::endl;
+            spdlog::debug("[HoverCirclePerf] hover circle disabled");
         }
 
         // Remove the hover circle item
@@ -2118,9 +2156,6 @@ void Media_Window::setShowHoverCircle(bool show) {
             removeItem(_hover_circle_item);
             delete _hover_circle_item;
             _hover_circle_item = nullptr;
-            if (_debug_performance) {
-                std::cout << "  Deleted hover circle item" << std::endl;
-            }
         }
 
         // Disconnect the mouse move signal
@@ -2140,8 +2175,13 @@ void Media_Window::setHoverCircleRadius(int radius) {
 }
 
 void Media_Window::_updateHoverCirclePosition() {
-    static int call_count = 0;
-    call_count++;
+    static int update_count = 0;
+    ++update_count;
+
+    QElapsedTimer timer;
+    if (_debug_performance) {
+        timer.start();
+    }
 
     if (_hover_circle_item && _show_hover_circle) {
         // Update the position of the existing hover circle item
@@ -2151,14 +2191,24 @@ void Media_Window::_updateHoverCirclePosition() {
         _hover_circle_item->setVisible(true);
 
         if (_debug_performance) {
-            std::cout << "Hover circle updated (call #" << call_count << ") at ("
-                      << _hover_position.x() << ", " << _hover_position.y() << ")" << std::endl;
+            qint64 const us = elapsedMicros(timer);
+            if (update_count % kHoverPerfLogEveryMoves == 0 || us > kHoverUpdateSlowThresholdUs) {
+                spdlog::debug(
+                        "[HoverCirclePerf] hoverUpdate update#={} us={} pos=({:.1f},{:.1f}) radius={} z={:.1f}",
+                        update_count,
+                        us,
+                        _hover_position.x(),
+                        _hover_position.y(),
+                        _hover_circle_radius,
+                        _hover_circle_item->zValue());
+            }
         }
-    } else {
-        if (_debug_performance) {
-            std::cout << "Hover circle update skipped (call #" << call_count << ") - item: "
-                      << (_hover_circle_item ? "exists" : "null") << ", show: " << _show_hover_circle << std::endl;
-        }
+    } else if (_debug_performance && update_count % kHoverPerfLogEveryMoves == 0) {
+        spdlog::debug(
+                "[HoverCirclePerf] hoverUpdate skipped update#={} item={} show={}",
+                update_count,
+                _hover_circle_item != nullptr ? "exists" : "null",
+                _show_hover_circle);
     }
 }
 
