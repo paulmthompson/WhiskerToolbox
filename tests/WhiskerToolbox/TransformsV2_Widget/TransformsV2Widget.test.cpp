@@ -24,6 +24,7 @@
 #include <QListWidget>
 #include <QPushButton>
 #include <QSpinBox>
+#include <QTableWidget>
 #include <QTextEdit>
 
 #include "AutoParamWidget/AutoParamWidget.hpp"
@@ -49,6 +50,7 @@
 #include "TransformsV2/core/TypeChainResolver.hpp"
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "Masks/Mask_Data.hpp"
 #include "Tensors/TensorData.hpp"
 #include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/TimeIndexStorage.hpp"
@@ -672,6 +674,52 @@ TEST_CASE("TransformsV2Properties_Widget responds to data focus changes",
         auto * step_list = widget.findChild<PipelineStepListWidget *>();
         REQUIRE(step_list != nullptr);
         CHECK(step_list->addStep("CalculateMaskArea"));
+    }
+
+    SECTION("feature table selection after V1 setDataFocus shows mask transforms not line") {
+        // Regression: after V1 transform poisons SelectionContext with type "line",
+        // clicking a mask key in the feature table must still filter TransformsV2 to MaskData.
+        auto time_frame = std::make_shared<TimeFrame>(std::vector<int>{0});
+        data_manager->setTime(TimeKey("mask_time"), time_frame);
+
+        auto mask_data = std::make_shared<MaskData>();
+        mask_data->setTimeFrame(time_frame);
+        data_manager->setData<MaskData>("left_whisker_mask", mask_data, TimeKey("mask_time"));
+
+        TransformsV2Properties_Widget const widget(state, selection_context.get());
+        QApplication::processEvents();
+
+        SelectionSource const v1_source{EditorLib::EditorInstanceId("DataTransformWidget"),
+                                        QStringLiteral("DataTransformWidget")};
+        SelectionSource const dm_source{EditorLib::EditorInstanceId("DataManagerWidget"),
+                                        QStringLiteral("feature_table")};
+
+        selection_context->setDataFocus(EditorLib::SelectedDataKey("line_output"), "line", v1_source);
+        selection_context->setSelectedData(EditorLib::SelectedDataKey("left_whisker_mask"), dm_source);
+        QApplication::processEvents();
+
+        auto * step_list = widget.findChild<PipelineStepListWidget *>();
+        REQUIRE(step_list != nullptr);
+
+        QTableWidget * browser_table = nullptr;
+        for (auto * table: step_list->findChildren<QTableWidget *>()) {
+            if (table->columnCount() == 3) {
+                browser_table = table;
+                break;
+            }
+        }
+        REQUIRE(browser_table != nullptr);
+
+        std::vector<std::string> available_names;
+        for (int row = 0; row < browser_table->rowCount(); ++row) {
+            if (auto * item = browser_table->item(row, 0)) {
+                available_names.push_back(item->text().toStdString());
+            }
+        }
+
+        REQUIRE_FALSE(available_names.empty());
+        CHECK(std::ranges::find(available_names, "CalculateMaskArea") != available_names.end());
+        CHECK(std::ranges::find(available_names, "CalculateLineAngle") == available_names.end());
     }
 }
 

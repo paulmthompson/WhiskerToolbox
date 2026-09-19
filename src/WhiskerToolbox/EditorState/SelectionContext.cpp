@@ -30,9 +30,10 @@ void SelectionContext::setSelectedData(SelectedDataKey const & data_key, Selecti
     // This bridges the legacy setSelectedData API to the new dataFocusChanged pattern
     bool const focus_changed = (_data_focus != data_key);
     _data_focus = data_key;
-    // Note: We don't know the data type here, so keep existing _data_focus_type
-
     if (focus_changed) {
+        // Clear stale type when the key changes. Callers that know the type should
+        // use setDataFocus(); consumers with DataManager access resolve it themselves.
+        _data_focus_type.clear();
         emit dataFocusChanged(data_key, _data_focus_type, source);
     }
 

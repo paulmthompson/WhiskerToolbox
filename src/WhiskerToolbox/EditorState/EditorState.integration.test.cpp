@@ -10,8 +10,8 @@
  */
 
 #include "EditorState/EditorState.hpp"
-#include "EditorState/SelectionContext.hpp"
 #include "EditorState/EditorRegistry.hpp"
+#include "EditorState/SelectionContext.hpp"
 #include "EditorState/StrongTypes.hpp"
 
 #include "DataManager/DataManager.hpp"
@@ -30,7 +30,7 @@
 
 TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext][integration]") {
     int argc = 0;
-    QCoreApplication app(argc, nullptr);
+    QCoreApplication const app(argc, nullptr);
 
     SECTION("MediaWidgetState can be registered with EditorRegistry") {
         EditorRegistry workspace;
@@ -72,7 +72,7 @@ TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext
         auto * selection_context = workspace.selectionContext();
 
         // Simulate external selection (from DataManager_Widget)
-        SelectionSource external_source{EditorInstanceId(external_state->getInstanceId()), "feature_table"};
+        SelectionSource const external_source{EditorInstanceId(external_state->getInstanceId()), "feature_table"};
         selection_context->setSelectedData(SelectedDataKey("external_data_key"), external_source);
 
         // Verify SelectionContext received the selection
@@ -96,7 +96,7 @@ TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext
         auto * selection_context = workspace.selectionContext();
 
         // Simulate selection originating from Media_Widget itself
-        SelectionSource own_source{EditorInstanceId(media_state->getInstanceId()), "feature_table"};
+        SelectionSource const own_source{EditorInstanceId(media_state->getInstanceId()), "feature_table"};
 
         // First set a value
         media_state->setDisplayedDataKey("initial_key");
@@ -128,7 +128,7 @@ TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext
         auto * selection_context = workspace.selectionContext();
 
         // Media 1 selects something
-        SelectionSource source1{EditorInstanceId(media_state1->getInstanceId()), "feature_table"};
+        SelectionSource const source1{EditorInstanceId(media_state1->getInstanceId()), "feature_table"};
         selection_context->setSelectedData(SelectedDataKey("data_from_media1"), source1);
 
         // Media 2 should respond (simulating the slot handler)
@@ -190,20 +190,20 @@ TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext
 
         QObject::connect(selection_context, &SelectionContext::selectionChanged,
                          [&](SelectionSource const & source) {
-            // Simulate Media_Widget's _onExternalSelectionChanged behavior
-            if (source.editor_instance_id.toString() != media_state->getInstanceId()) {
-                media_received_selection = true;
-                received_key = selection_context->primarySelectedData().toString();
-                media_state->setDisplayedDataKey(received_key);
-            }
-        });
+                             // Simulate Media_Widget's _onExternalSelectionChanged behavior
+                             if (source.editor_instance_id.toString() != media_state->getInstanceId()) {
+                                 media_received_selection = true;
+                                 received_key = selection_context->primarySelectedData().toString();
+                                 media_state->setDisplayedDataKey(received_key);
+                             }
+                         });
 
         // Simulate DataManager_Widget selecting a feature
         dm_state->setSelectedDataKey("whisker_data");
 
         // This would normally trigger the state -> SelectionContext connection in the widget
         // Here we simulate it:
-        SelectionSource dm_source{EditorInstanceId(dm_state->getInstanceId()), "feature_table"};
+        SelectionSource const dm_source{EditorInstanceId(dm_state->getInstanceId()), "feature_table"};
         selection_context->setSelectedData(SelectedDataKey(dm_state->selectedDataKey()), dm_source);
 
         // Verify the chain worked
@@ -215,7 +215,7 @@ TEST_CASE("Cross-widget selection coordination", "[EditorState][SelectionContext
 
 TEST_CASE("Workspace serialization with multiple widget states", "[EditorState][EditorRegistry][integration]") {
     int argc = 0;
-    QCoreApplication app(argc, nullptr);
+    QCoreApplication const app(argc, nullptr);
 
     SECTION("Workspace with mixed state types serializes correctly") {
         EditorRegistry workspace;
@@ -248,7 +248,7 @@ TEST_CASE("Workspace serialization with multiple widget states", "[EditorState][
 
 TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][integration]") {
     int argc = 0;
-    QCoreApplication app(argc, nullptr);
+    QCoreApplication const app(argc, nullptr);
 
     SECTION("DataTransformWidgetState can be registered with EditorRegistry") {
         EditorRegistry workspace;
@@ -266,14 +266,14 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
 
     SECTION("DataTransformWidgetState tracks input data key changes") {
         auto state = std::make_shared<DataTransformWidgetState>();
-        
-        QSignalSpy input_spy(state.get(), &DataTransformWidgetState::selectedInputDataKeyChanged);
-        
+
+        QSignalSpy const input_spy(state.get(), &DataTransformWidgetState::selectedInputDataKeyChanged);
+
         state->setSelectedInputDataKey("mask_data");
-        
+
         REQUIRE(input_spy.count() == 1);
         REQUIRE(state->selectedInputDataKey() == "mask_data");
-        
+
         // Setting same value should not emit again
         state->setSelectedInputDataKey("mask_data");
         REQUIRE(input_spy.count() == 1);
@@ -281,11 +281,11 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
 
     SECTION("DataTransformWidgetState tracks operation selection") {
         auto state = std::make_shared<DataTransformWidgetState>();
-        
-        QSignalSpy op_spy(state.get(), &DataTransformWidgetState::selectedOperationChanged);
-        
+
+        QSignalSpy const op_spy(state.get(), &DataTransformWidgetState::selectedOperationChanged);
+
         state->setSelectedOperation("Calculate Area");
-        
+
         REQUIRE(op_spy.count() == 1);
         REQUIRE(state->selectedOperation() == "Calculate Area");
     }
@@ -296,13 +296,13 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
         state->setSelectedInputDataKey("test_input");
         state->setSelectedOperation("Filter");
         state->setLastOutputName("filtered_output");
-        
-        std::string json = state->toJson();
+
+        std::string const json = state->toJson();
         REQUIRE_FALSE(json.empty());
-        
+
         auto restored_state = std::make_shared<DataTransformWidgetState>();
         REQUIRE(restored_state->fromJson(json));
-        
+
         REQUIRE(restored_state->getDisplayName() == "My Transform");
         REQUIRE(restored_state->selectedInputDataKey() == "test_input");
         REQUIRE(restored_state->selectedOperation() == "Filter");
@@ -313,7 +313,7 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
     SECTION("DataTransform responds to SelectionContext from DataManager_Widget") {
         // This is the key Phase 2.7 test: DataTransform_Widget receives input
         // selection entirely from SelectionContext, not from an embedded feature table
-        
+
         EditorRegistry workspace;
 
         auto dm_state = std::make_shared<DataManagerWidgetState>();
@@ -330,17 +330,17 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
 
         QObject::connect(selection_context, &SelectionContext::selectionChanged,
                          [&](SelectionSource const & source) {
-            // Simulate DataTransform_Widget's _onExternalSelectionChanged behavior (legacy)
-            if (source.editor_instance_id.toString() != transform_state->getInstanceId()) {
-                transform_received_selection = true;
-                received_key = selection_context->primarySelectedData().toString();
-                transform_state->setSelectedInputDataKey(received_key);
-            }
-        });
+                             // Simulate DataTransform_Widget's _onExternalSelectionChanged behavior (legacy)
+                             if (source.editor_instance_id.toString() != transform_state->getInstanceId()) {
+                                 transform_received_selection = true;
+                                 received_key = selection_context->primarySelectedData().toString();
+                                 transform_state->setSelectedInputDataKey(received_key);
+                             }
+                         });
 
         // Simulate DataManager_Widget selecting a feature
         dm_state->setSelectedDataKey("analog_signal");
-        SelectionSource dm_source{EditorInstanceId(dm_state->getInstanceId()), "feature_table"};
+        SelectionSource const dm_source{EditorInstanceId(dm_state->getInstanceId()), "feature_table"};
         selection_context->setSelectedData(SelectedDataKey(dm_state->selectedDataKey()), dm_source);
 
         // Verify the chain worked
@@ -352,7 +352,7 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
     SECTION("DataTransform responds to dataFocusChanged (Phase 4.2 passive awareness)") {
         // Phase 4.2 test: DataTransform_Widget uses dataFocusChanged signal
         // via the DataFocusAware interface pattern
-        
+
         EditorRegistry workspace;
 
         auto dm_state = std::make_shared<DataManagerWidgetState>();
@@ -372,19 +372,19 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
                          [&](SelectedDataKey const & data_key,
                              QString const & data_type,
                              SelectionSource const & source) {
-            // Simulate DataTransform_Widget's onDataFocusChanged behavior
-            if (source.editor_instance_id.toString() != transform_state->getInstanceId()) {
-                transform_received_focus = true;
-                received_key = data_key.toString();
-                received_type = data_type;
-                transform_state->setSelectedInputDataKey(data_key.toString());
-            }
-        });
+                             // Simulate DataTransform_Widget's onDataFocusChanged behavior
+                             if (source.editor_instance_id.toString() != transform_state->getInstanceId()) {
+                                 transform_received_focus = true;
+                                 received_key = data_key.toString();
+                                 received_type = data_type;
+                                 transform_state->setSelectedInputDataKey(data_key.toString());
+                             }
+                         });
 
         // Simulate DataManager_Widget selecting a feature using setSelectedData
         // This should now also emit dataFocusChanged for passive awareness
         dm_state->setSelectedDataKey("line_data");
-        SelectionSource dm_source{EditorInstanceId(dm_state->getInstanceId()), "feature_table"};
+        SelectionSource const dm_source{EditorInstanceId(dm_state->getInstanceId()), "feature_table"};
         selection_context->setSelectedData(SelectedDataKey(dm_state->selectedDataKey()), dm_source);
 
         // Verify the dataFocusChanged signal was emitted and received
@@ -395,7 +395,7 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
 
     SECTION("setDataFocus emits dataFocusChanged with type information") {
         // Test the explicit setDataFocus API which includes type information
-        
+
         EditorRegistry workspace;
 
         auto transform_state = std::make_shared<DataTransformWidgetState>();
@@ -412,13 +412,13 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
                          [&](SelectedDataKey const & data_key,
                              QString const & data_type,
                              SelectionSource const & /* source */) {
-            received_signal = true;
-            received_key = data_key.toString();
-            received_type = data_type;
-        });
+                             received_signal = true;
+                             received_key = data_key.toString();
+                             received_type = data_type;
+                         });
 
         // Use explicit setDataFocus with type information
-        SelectionSource source{EditorInstanceId("external_widget"), "feature_table"};
+        SelectionSource const source{EditorInstanceId("external_widget"), "feature_table"};
         selection_context->setDataFocus(SelectedDataKey("mask_data"), "MaskData", source);
 
         REQUIRE(received_signal);
@@ -426,6 +426,32 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
         REQUIRE(received_type == "MaskData");
         REQUIRE(selection_context->dataFocus().toString() == "mask_data");
         REQUIRE(selection_context->dataFocusType() == "MaskData");
+    }
+
+    SECTION("setSelectedData does not preserve stale type after V1 setDataFocus") {
+        // Regression: V1 DataTransform_Widget calls setDataFocus(output, "line", ...).
+        // A subsequent feature-table click uses setSelectedData(mask_key), which must
+        // not re-emit the stale "line" type for the new key.
+        EditorRegistry const workspace;
+        auto * selection_context = workspace.selectionContext();
+
+        SelectionSource const v1_source{EditorInstanceId("DataTransformWidget"), "DataTransformWidget"};
+        SelectionSource const dm_source{EditorInstanceId("DataManagerWidget"), "feature_table"};
+
+        QString received_type;
+        QObject::connect(selection_context, &SelectionContext::dataFocusChanged,
+                         [&](SelectedDataKey const & /* data_key */,
+                             QString const & data_type,
+                             SelectionSource const & /* source */) {
+                             received_type = data_type;
+                         });
+
+        selection_context->setDataFocus(SelectedDataKey("line_output"), "line", v1_source);
+        selection_context->setSelectedData(SelectedDataKey("left_whisker_mask"), dm_source);
+
+        REQUIRE(selection_context->dataFocus().toString() == "left_whisker_mask");
+        REQUIRE(selection_context->dataFocusType() != "line");
+        REQUIRE(received_type != "line");
     }
 
     SECTION("DataTransform ignores own selections (no circular updates)") {
@@ -440,7 +466,7 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
         transform_state->setSelectedInputDataKey("initial_key");
 
         // Simulate selection originating from DataTransform itself
-        SelectionSource own_source{EditorInstanceId(transform_state->getInstanceId()), "internal"};
+        SelectionSource const own_source{EditorInstanceId(transform_state->getInstanceId()), "internal"};
         selection_context->setSelectedData(SelectedDataKey("new_key"), own_source);
 
         // Handler should filter out own selections
@@ -485,19 +511,19 @@ TEST_CASE("DataTransformWidgetState integration", "[EditorState][DataTransform][
                          [&](SelectedDataKey const & data_key,
                              QString const & /* data_type */,
                              SelectionSource const & source) {
-            // Simulate Media and Transform responding via dataFocusChanged
-            if (source.editor_instance_id.toString() != media_state->getInstanceId()) {
-                media_received = true;
-                media_state->setDisplayedDataKey(data_key.toString());
-            }
-            if (source.editor_instance_id.toString() != transform_state->getInstanceId()) {
-                transform_received = true;
-                transform_state->setSelectedInputDataKey(data_key.toString());
-            }
-        });
+                             // Simulate Media and Transform responding via dataFocusChanged
+                             if (source.editor_instance_id.toString() != media_state->getInstanceId()) {
+                                 media_received = true;
+                                 media_state->setDisplayedDataKey(data_key.toString());
+                             }
+                             if (source.editor_instance_id.toString() != transform_state->getInstanceId()) {
+                                 transform_received = true;
+                                 transform_state->setSelectedInputDataKey(data_key.toString());
+                             }
+                         });
 
         // DataManager selects -> both Media and Transform should respond via dataFocusChanged
-        SelectionSource dm_source{EditorInstanceId(dm_state->getInstanceId()), "feature_table"};
+        SelectionSource const dm_source{EditorInstanceId(dm_state->getInstanceId()), "feature_table"};
         selection_context->setSelectedData(SelectedDataKey("shared_data"), dm_source);
 
         REQUIRE(media_received);

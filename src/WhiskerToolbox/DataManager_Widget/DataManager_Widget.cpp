@@ -25,6 +25,8 @@
 #include "OutputDirectoryWidget/OutputDirectoryWidget.hpp"
 #include "TimeFrame_Table_Widget/TimeFrame_Table_Widget.hpp"
 
+#include "DataManager/utils/ContainerTypeIndex.hpp"
+#include "DataManager/utils/DataTypeIndexBridge.hpp"
 #include "DataManager/utils/DerivedTimeFrame.hpp"
 
 #include <QAction>
@@ -115,7 +117,18 @@ DataManager_Widget::DataManager_Widget(
                 this, [this](QString const & key) {
                     if (_selection_context) {
                         SelectionSource const source{EditorInstanceId(_state->getInstanceId()), QStringLiteral("feature_table")};
-                        _selection_context->setSelectedData(SelectedDataKey(key), source);
+                        QString type_str;
+                        try {
+                            auto const dm_type = _data_manager->getType(key.toStdString());
+                            auto const container =
+                                    Neuralyzer::TypeTraits::dmDataTypeToContainerTypeIndex(dm_type);
+                            type_str = QString::fromStdString(
+                                    Neuralyzer::TypeTraits::TypeIndexMapper::containerToString(container));
+                        } catch (...) {
+                            type_str = QString::fromStdString(
+                                    convert_data_type_to_string(_data_manager->getType(key.toStdString())));
+                        }
+                        _selection_context->setDataFocus(SelectedDataKey(key), type_str, source);
                     }
                 });
 

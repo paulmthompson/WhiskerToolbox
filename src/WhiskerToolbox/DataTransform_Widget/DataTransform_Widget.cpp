@@ -3,10 +3,10 @@
 #include "ui_DataTransform_Widget.h"
 
 #include "DataManager/DataManager.hpp"
-#include "DataManager/transforms/data_transforms.hpp"
 #include "DataManager/transforms/ParameterFactory.hpp"
 #include "DataManager/transforms/TransformPipeline.hpp"
 #include "DataManager/transforms/TransformRegistry.hpp"
+#include "DataManager/transforms/data_transforms.hpp"
 #include "DataTransformWidgetState.hpp"
 #include "EditorState/EditorRegistry.hpp"
 #include "EditorState/SelectionContext.hpp"
@@ -863,7 +863,7 @@ void DataTransform_Widget::onDataFocusChanged(EditorLib::SelectedDataKey const &
         return;
     }
 
-    const QString& selected_key = data_key.toString();
+    QString const & selected_key = data_key.toString();
 
     if (selected_key.isEmpty()) {
         // Clear UI when nothing is selected
@@ -906,6 +906,8 @@ void DataTransform_Widget::onDataFocusChanged(EditorLib::SelectedDataKey const &
     // Get available operations for this data type
     std::vector<std::string> const operation_names = _registry->getOperationNamesForVariant(data_variant.value());
 
+    _currentSelectedDataVariant = data_variant.value();
+
     ui->operationComboBox->clear();
 
     if (operation_names.empty()) {
@@ -920,8 +922,6 @@ void DataTransform_Widget::onDataFocusChanged(EditorLib::SelectedDataKey const &
         ui->do_transform_button->setEnabled(true);
         ui->operationComboBox->setCurrentIndex(0);
     }
-
-    _currentSelectedDataVariant = data_variant.value();
 
     // Update current parameter widget if it's a scaling widget or boolean operation widget
     if (_currentParameterWidget) {

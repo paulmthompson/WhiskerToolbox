@@ -107,13 +107,17 @@ void TransformsV2Properties_Widget::onDataFocusChanged(
         return;
     }
 
+    std::string const previous_key = _input_data_key;
     _input_data_key = data_key.toStdString();
 
-    // If the data_type is provided, use it directly.
-    // Otherwise, look it up from DataManager (the SelectionContext may not
-    // always provide the type — e.g. DataManager_Widget uses setSelectedData
-    // which doesn't carry the type string).
-    if (!data_type.isEmpty()) {
+    // When the key changes, prefer DataManager over the signal type — the signal may
+    // carry a stale type (e.g. after a V1 transform calls setDataFocus with the output type).
+    if (_input_data_key != previous_key) {
+        _input_data_type_name = resolveDataTypeFromManager(_input_data_key);
+        if (_input_data_type_name.empty() && !data_type.isEmpty()) {
+            _input_data_type_name = data_type.toStdString();
+        }
+    } else if (!data_type.isEmpty()) {
         _input_data_type_name = data_type.toStdString();
     } else {
         _input_data_type_name = resolveDataTypeFromManager(_input_data_key);
