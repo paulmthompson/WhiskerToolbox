@@ -83,7 +83,7 @@ std::shared_ptr<MaskData> apply_binary_image_algorithm(
 }
 
 Image mask_to_binary_image(Mask2D const & mask, ImageSize image_size) {
-    std::vector<uint8_t> image_data(static_cast<size_type>(image_size.width * image_size.height), 0);
+    std::vector<uint8_t> image_data(static_cast<size_t>(image_size.width * image_size.height), 0);
 
     // Set mask points to 1 in the binary image
     for (auto const & point: mask) {
@@ -141,7 +141,7 @@ Mask2D resize_mask(Mask2D const & mask, ImageSize const & source_size, ImageSize
     }
 
     // Create a binary image from the mask
-    std::vector<uint8_t> source_image(static_cast<size_type>(source_size.width * source_size.height), 0);
+    std::vector<uint8_t> source_image(static_cast<size_t>(source_size.width * source_size.height), 0);
 
     // Set mask pixels to 1
     for (auto const & point: mask) {
@@ -152,7 +152,7 @@ Mask2D resize_mask(Mask2D const & mask, ImageSize const & source_size, ImageSize
     }
 
     // Create the destination image
-    std::vector<uint8_t> dest_image(static_cast<size_type>(dest_size.width * dest_size.height), 0);
+    std::vector<uint8_t> dest_image(static_cast<size_t>(dest_size.width * dest_size.height), 0);
 
     // Perform nearest neighbor interpolation
     for (int dest_y = 0; dest_y < dest_size.height; ++dest_y) {
