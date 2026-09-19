@@ -1046,53 +1046,71 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-662"><a href="#cb1-662" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
 <span id="cb1-663"><a href="#cb1-663" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-664"><a href="#cb1-664" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-665"><a href="#cb1-665" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_is_adding_mode<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-666"><a href="#cb1-666" aria-hidden="true" tabindex="-1"></a>        _addToMask<span class="op">(</span>canvas_coords<span class="op">);</span></span>
-<span id="cb1-667"><a href="#cb1-667" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
-<span id="cb1-668"><a href="#cb1-668" aria-hidden="true" tabindex="-1"></a>        _removeFromMask<span class="op">(</span>canvas_coords<span class="op">);</span></span>
+<span id="cb1-665"><a href="#cb1-665" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> perf_logging <span class="op">=</span> _scene <span class="op">!=</span> <span class="kw">nullptr</span> <span class="op">&amp;&amp;</span> _scene<span class="op">-&gt;</span>hoverCirclePerfLogging<span class="op">();</span></span>
+<span id="cb1-666"><a href="#cb1-666" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QElapsedTimer</span> timer<span class="op">;</span></span>
+<span id="cb1-667"><a href="#cb1-667" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>perf_logging<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-668"><a href="#cb1-668" aria-hidden="true" tabindex="-1"></a>        timer<span class="op">.</span>start<span class="op">();</span></span>
 <span id="cb1-669"><a href="#cb1-669" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-670"><a href="#cb1-670" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-671"><a href="#cb1-671" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-672"><a href="#cb1-672" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaMask_Widget<span class="op">::</span>_mouseReleased<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb1-673"><a href="#cb1-673" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Stop dragging when mouse is released</span></span>
-<span id="cb1-674"><a href="#cb1-674" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> was_dragging <span class="op">=</span> _is_dragging<span class="op">;</span></span>
-<span id="cb1-675"><a href="#cb1-675" aria-hidden="true" tabindex="-1"></a>    _is_dragging <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-670"><a href="#cb1-670" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-671"><a href="#cb1-671" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_is_adding_mode<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-672"><a href="#cb1-672" aria-hidden="true" tabindex="-1"></a>        _addToMask<span class="op">(</span>canvas_coords<span class="op">);</span></span>
+<span id="cb1-673"><a href="#cb1-673" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb1-674"><a href="#cb1-674" aria-hidden="true" tabindex="-1"></a>        _removeFromMask<span class="op">(</span>canvas_coords<span class="op">);</span></span>
+<span id="cb1-675"><a href="#cb1-675" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-676"><a href="#cb1-676" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-677"><a href="#cb1-677" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Update canvas once when brush or eraser drag operation is completed</span></span>
-<span id="cb1-678"><a href="#cb1-678" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>was_dragging <span class="op">&amp;&amp;</span> <span class="op">(</span>_isEraserInteractionActive<span class="op">()</span> <span class="op">||</span> _selection_mode <span class="op">==</span> Selection_Mode<span class="op">::</span>Brush<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-679"><a href="#cb1-679" aria-hidden="true" tabindex="-1"></a>        _scene<span class="op">-&gt;</span>UpdateCanvas<span class="op">();</span></span>
-<span id="cb1-680"><a href="#cb1-680" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>_debug_performance<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-681"><a href="#cb1-681" aria-hidden="true" tabindex="-1"></a>            spdlog<span class="op">::</span>debug<span class="op">(</span><span class="st">"MediaMask_Widget: brush/eraser drag finished, canvas updated"</span><span class="op">);</span></span>
-<span id="cb1-682"><a href="#cb1-682" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-683"><a href="#cb1-683" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-684"><a href="#cb1-684" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-685"><a href="#cb1-685" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-686"><a href="#cb1-686" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaMask_Widget<span class="op">::</span>_onAllowEmptyMaskChanged<span class="op">(</span><span class="dt">bool</span> allow<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-687"><a href="#cb1-687" aria-hidden="true" tabindex="-1"></a>    _allow_empty_mask <span class="op">=</span> allow<span class="op">;</span></span>
-<span id="cb1-688"><a href="#cb1-688" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_debug_performance<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-689"><a href="#cb1-689" aria-hidden="true" tabindex="-1"></a>        spdlog<span class="op">::</span>debug<span class="op">(</span><span class="st">"MediaMask_Widget: allow empty mask </span><span class="sc">{}</span><span class="st">"</span><span class="op">,</span> allow <span class="op">?</span> <span class="st">"enabled"</span> <span class="op">:</span> <span class="st">"disabled"</span><span class="op">);</span></span>
-<span id="cb1-690"><a href="#cb1-690" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-691"><a href="#cb1-691" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-692"><a href="#cb1-692" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-693"><a href="#cb1-693" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaMask_Widget<span class="op">::</span>resizeEvent<span class="op">(</span><span class="ex">QResizeEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-694"><a href="#cb1-694" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QWidget::resizeEvent</span><span class="op">(</span>event<span class="op">);</span></span>
-<span id="cb1-695"><a href="#cb1-695" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-696"><a href="#cb1-696" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Ensure the stacked widget components resize properly</span></span>
-<span id="cb1-697"><a href="#cb1-697" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> <span class="at">const</span> availableWidth <span class="op">=</span> width<span class="op">()</span> <span class="op">-</span> <span class="dv">20</span><span class="op">;</span><span class="co">// Account for margins</span></span>
-<span id="cb1-698"><a href="#cb1-698" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-699"><a href="#cb1-699" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Update stacked widget width</span></span>
-<span id="cb1-700"><a href="#cb1-700" aria-hidden="true" tabindex="-1"></a>    ui<span class="op">-&gt;</span>mode_stacked_widget<span class="op">-&gt;</span>setFixedWidth<span class="op">(</span>availableWidth<span class="op">);</span></span>
-<span id="cb1-701"><a href="#cb1-701" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-702"><a href="#cb1-702" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Update all widgets in the stacked widget</span></span>
-<span id="cb1-703"><a href="#cb1-703" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> ui<span class="op">-&gt;</span>mode_stacked_widget<span class="op">-&gt;</span>count<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-704"><a href="#cb1-704" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QWidget</span> <span class="op">*</span> widget <span class="op">=</span> ui<span class="op">-&gt;</span>mode_stacked_widget<span class="op">-&gt;</span>widget<span class="op">(</span>i<span class="op">);</span></span>
-<span id="cb1-705"><a href="#cb1-705" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>widget<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-706"><a href="#cb1-706" aria-hidden="true" tabindex="-1"></a>            widget<span class="op">-&gt;</span>setFixedWidth<span class="op">(</span>availableWidth<span class="op">);</span></span>
-<span id="cb1-707"><a href="#cb1-707" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-677"><a href="#cb1-677" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>perf_logging<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-678"><a href="#cb1-678" aria-hidden="true" tabindex="-1"></a>        <span class="at">static</span> <span class="dt">int</span> drag_move_count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb1-679"><a href="#cb1-679" aria-hidden="true" tabindex="-1"></a>        <span class="op">++</span>drag_move_count<span class="op">;</span></span>
+<span id="cb1-680"><a href="#cb1-680" aria-hidden="true" tabindex="-1"></a>        <span class="ex">qint64</span> <span class="at">const</span> us <span class="op">=</span> timer<span class="op">.</span>nsecsElapsed<span class="op">()</span> <span class="op">/</span> <span class="dv">1000</span><span class="op">;</span></span>
+<span id="cb1-681"><a href="#cb1-681" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>drag_move_count <span class="op">%</span> <span class="dv">50</span> <span class="op">==</span> <span class="dv">0</span> <span class="op">||</span> us <span class="op">&gt;</span> <span class="dv">5000</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-682"><a href="#cb1-682" aria-hidden="true" tabindex="-1"></a>            spdlog<span class="op">::</span>debug<span class="op">(</span><span class="st">"[HoverCirclePerf] MediaMask_Widget mask_drag move#=</span><span class="sc">{}</span><span class="st"> us=</span><span class="sc">{}</span><span class="st"> mode=</span><span class="sc">{}</span><span class="st">"</span><span class="op">,</span></span>
+<span id="cb1-683"><a href="#cb1-683" aria-hidden="true" tabindex="-1"></a>                          drag_move_count<span class="op">,</span></span>
+<span id="cb1-684"><a href="#cb1-684" aria-hidden="true" tabindex="-1"></a>                          us<span class="op">,</span></span>
+<span id="cb1-685"><a href="#cb1-685" aria-hidden="true" tabindex="-1"></a>                          _is_adding_mode <span class="op">?</span> <span class="st">"add"</span> <span class="op">:</span> <span class="st">"remove"</span><span class="op">);</span></span>
+<span id="cb1-686"><a href="#cb1-686" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-687"><a href="#cb1-687" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-688"><a href="#cb1-688" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-689"><a href="#cb1-689" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-690"><a href="#cb1-690" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaMask_Widget<span class="op">::</span>_mouseReleased<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-691"><a href="#cb1-691" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Stop dragging when mouse is released</span></span>
+<span id="cb1-692"><a href="#cb1-692" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> <span class="at">const</span> was_dragging <span class="op">=</span> _is_dragging<span class="op">;</span></span>
+<span id="cb1-693"><a href="#cb1-693" aria-hidden="true" tabindex="-1"></a>    _is_dragging <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb1-694"><a href="#cb1-694" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-695"><a href="#cb1-695" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Update canvas once when brush or eraser drag operation is completed</span></span>
+<span id="cb1-696"><a href="#cb1-696" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>was_dragging <span class="op">&amp;&amp;</span> <span class="op">(</span>_isEraserInteractionActive<span class="op">()</span> <span class="op">||</span> _selection_mode <span class="op">==</span> Selection_Mode<span class="op">::</span>Brush<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-697"><a href="#cb1-697" aria-hidden="true" tabindex="-1"></a>        _scene<span class="op">-&gt;</span>UpdateCanvas<span class="op">();</span></span>
+<span id="cb1-698"><a href="#cb1-698" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>_debug_performance<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-699"><a href="#cb1-699" aria-hidden="true" tabindex="-1"></a>            spdlog<span class="op">::</span>debug<span class="op">(</span><span class="st">"MediaMask_Widget: brush/eraser drag finished, canvas updated"</span><span class="op">);</span></span>
+<span id="cb1-700"><a href="#cb1-700" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-701"><a href="#cb1-701" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-702"><a href="#cb1-702" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-703"><a href="#cb1-703" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-704"><a href="#cb1-704" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaMask_Widget<span class="op">::</span>_onAllowEmptyMaskChanged<span class="op">(</span><span class="dt">bool</span> allow<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-705"><a href="#cb1-705" aria-hidden="true" tabindex="-1"></a>    _allow_empty_mask <span class="op">=</span> allow<span class="op">;</span></span>
+<span id="cb1-706"><a href="#cb1-706" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_debug_performance<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-707"><a href="#cb1-707" aria-hidden="true" tabindex="-1"></a>        spdlog<span class="op">::</span>debug<span class="op">(</span><span class="st">"MediaMask_Widget: allow empty mask </span><span class="sc">{}</span><span class="st">"</span><span class="op">,</span> allow <span class="op">?</span> <span class="st">"enabled"</span> <span class="op">:</span> <span class="st">"disabled"</span><span class="op">);</span></span>
 <span id="cb1-708"><a href="#cb1-708" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-709"><a href="#cb1-709" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-709"><a href="#cb1-709" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-710"><a href="#cb1-710" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-711"><a href="#cb1-711" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaMask_Widget<span class="op">::</span>resizeEvent<span class="op">(</span><span class="ex">QResizeEvent</span> <span class="op">*</span> event<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-712"><a href="#cb1-712" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QWidget::resizeEvent</span><span class="op">(</span>event<span class="op">);</span></span>
+<span id="cb1-713"><a href="#cb1-713" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-714"><a href="#cb1-714" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Ensure the stacked widget components resize properly</span></span>
+<span id="cb1-715"><a href="#cb1-715" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> <span class="at">const</span> availableWidth <span class="op">=</span> width<span class="op">()</span> <span class="op">-</span> <span class="dv">20</span><span class="op">;</span><span class="co">// Account for margins</span></span>
+<span id="cb1-716"><a href="#cb1-716" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-717"><a href="#cb1-717" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Update stacked widget width</span></span>
+<span id="cb1-718"><a href="#cb1-718" aria-hidden="true" tabindex="-1"></a>    ui<span class="op">-&gt;</span>mode_stacked_widget<span class="op">-&gt;</span>setFixedWidth<span class="op">(</span>availableWidth<span class="op">);</span></span>
+<span id="cb1-719"><a href="#cb1-719" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-720"><a href="#cb1-720" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Update all widgets in the stacked widget</span></span>
+<span id="cb1-721"><a href="#cb1-721" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> ui<span class="op">-&gt;</span>mode_stacked_widget<span class="op">-&gt;</span>count<span class="op">();</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-722"><a href="#cb1-722" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QWidget</span> <span class="op">*</span> widget <span class="op">=</span> ui<span class="op">-&gt;</span>mode_stacked_widget<span class="op">-&gt;</span>widget<span class="op">(</span>i<span class="op">);</span></span>
+<span id="cb1-723"><a href="#cb1-723" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>widget<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-724"><a href="#cb1-724" aria-hidden="true" tabindex="-1"></a>            widget<span class="op">-&gt;</span>setFixedWidth<span class="op">(</span>availableWidth<span class="op">);</span></span>
+<span id="cb1-725"><a href="#cb1-725" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-726"><a href="#cb1-726" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-727"><a href="#cb1-727" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-18 at 19:59:00 +0000</p>
+<p>Updated on 2026-09-19 at 16:30:50 +0000</p>
 
 
 </section>

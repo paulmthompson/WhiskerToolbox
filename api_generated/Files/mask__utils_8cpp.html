@@ -599,7 +599,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a>Image mask_to_binary_image<span class="op">(</span>Mask2D <span class="at">const</span> <span class="op">&amp;</span> mask<span class="op">,</span> ImageSize image_size<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">uint8_t</span><span class="op">&gt;</span> image_data<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">size_type</span><span class="op">&gt;(</span>image_size<span class="op">.</span>width <span class="op">*</span> image_size<span class="op">.</span>height<span class="op">),</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">uint8_t</span><span class="op">&gt;</span> image_data<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">size_t</span><span class="op">&gt;(</span>image_size<span class="op">.</span>width <span class="op">*</span> image_size<span class="op">.</span>height<span class="op">),</span> <span class="dv">0</span><span class="op">);</span></span>
 <span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Set mask points to 1 in the binary image</span></span>
 <span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> point<span class="op">:</span> mask<span class="op">)</span> <span class="op">{</span></span>
@@ -657,7 +657,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-141"><a href="#cb6-141" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb6-142"><a href="#cb6-142" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-143"><a href="#cb6-143" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create a binary image from the mask</span></span>
-<span id="cb6-144"><a href="#cb6-144" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">uint8_t</span><span class="op">&gt;</span> source_image<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">size_type</span><span class="op">&gt;(</span>source_size<span class="op">.</span>width <span class="op">*</span> source_size<span class="op">.</span>height<span class="op">),</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb6-144"><a href="#cb6-144" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">uint8_t</span><span class="op">&gt;</span> source_image<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">size_t</span><span class="op">&gt;(</span>source_size<span class="op">.</span>width <span class="op">*</span> source_size<span class="op">.</span>height<span class="op">),</span> <span class="dv">0</span><span class="op">);</span></span>
 <span id="cb6-145"><a href="#cb6-145" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-146"><a href="#cb6-146" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Set mask pixels to 1</span></span>
 <span id="cb6-147"><a href="#cb6-147" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> point<span class="op">:</span> mask<span class="op">)</span> <span class="op">{</span></span>
@@ -668,7 +668,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-152"><a href="#cb6-152" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb6-153"><a href="#cb6-153" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-154"><a href="#cb6-154" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create the destination image</span></span>
-<span id="cb6-155"><a href="#cb6-155" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">uint8_t</span><span class="op">&gt;</span> dest_image<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">size_type</span><span class="op">&gt;(</span>dest_size<span class="op">.</span>width <span class="op">*</span> dest_size<span class="op">.</span>height<span class="op">),</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb6-155"><a href="#cb6-155" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">uint8_t</span><span class="op">&gt;</span> dest_image<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">size_t</span><span class="op">&gt;(</span>dest_size<span class="op">.</span>width <span class="op">*</span> dest_size<span class="op">.</span>height<span class="op">),</span> <span class="dv">0</span><span class="op">);</span></span>
 <span id="cb6-156"><a href="#cb6-156" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-157"><a href="#cb6-157" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Perform nearest neighbor interpolation</span></span>
 <span id="cb6-158"><a href="#cb6-158" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> dest_y <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> dest_y <span class="op">&lt;</span> dest_size<span class="op">.</span>height<span class="op">;</span> <span class="op">++</span>dest_y<span class="op">)</span> <span class="op">{</span></span>
@@ -697,7 +697,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-181"><a href="#cb6-181" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> resized_mask<span class="op">;</span></span>
 <span id="cb6-182"><a href="#cb6-182" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-18 at 19:58:57 +0000</p>
+<p>Updated on 2026-09-19 at 16:30:48 +0000</p>
 
 
 </section>

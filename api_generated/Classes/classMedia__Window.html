@@ -412,6 +412,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-getdrawingmask" id="toc-function-getdrawingmask" class="nav-link" data-scroll-target="#function-getdrawingmask">function getDrawingMask</a></li>
   <li><a href="#function-setshowhovercircle" id="toc-function-setshowhovercircle" class="nav-link" data-scroll-target="#function-setshowhovercircle">function setShowHoverCircle</a></li>
   <li><a href="#function-sethovercircleradius" id="toc-function-sethovercircleradius" class="nav-link" data-scroll-target="#function-sethovercircleradius">function setHoverCircleRadius</a></li>
+  <li><a href="#function-sethovercircleperflogging" id="toc-function-sethovercircleperflogging" class="nav-link" data-scroll-target="#function-sethovercircleperflogging">function setHoverCirclePerfLogging</a></li>
+  <li><a href="#function-hovercircleperflogging" id="toc-function-hovercircleperflogging" class="nav-link" data-scroll-target="#function-hovercircleperflogging">function hoverCirclePerfLogging</a></li>
   <li><a href="#function-setshowtemporaryline" id="toc-function-setshowtemporaryline" class="nav-link" data-scroll-target="#function-setshowtemporaryline">function setShowTemporaryLine</a></li>
   <li><a href="#function-updatetemporaryline" id="toc-function-updatetemporaryline" class="nav-link" data-scroll-target="#function-updatetemporaryline">function updateTemporaryLine</a></li>
   <li><a href="#function-cleartemporaryline" id="toc-function-cleartemporaryline" class="nav-link" data-scroll-target="#function-cleartemporaryline">function clearTemporaryLine</a></li>
@@ -703,6 +705,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>void</td>
 <td><strong><a href="../../api_generated/Classes/classMedia__Window.html#function-sethovercircleradius">setHoverCircleRadius</a></strong>(int radius)</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMedia__Window.html#function-sethovercircleperflogging">setHoverCirclePerfLogging</a></strong>(bool enabled)<br>Enable spdlog debug timing for hover-circle and mouse-move performance.</td>
+</tr>
+<tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/classMedia__Window.html#function-hovercircleperflogging">hoverCirclePerfLogging</a></strong>() const<br>Whether hover-circle performance logging is enabled.</td>
 </tr>
 <tr class="odd">
 <td>void</td>
@@ -1141,48 +1151,64 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> radius</span>
 <span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
+<section id="function-sethovercircleperflogging" class="level3">
+<h3 class="anchored" data-anchor-id="function-sethovercircleperflogging">function setHoverCirclePerfLogging</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">void</span> setHoverCirclePerfLogging<span class="op">(</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> enabled</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Enable spdlog debug timing for hover-circle and mouse-move performance.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>enabled</strong> When true, emits rate-limited <code>[HoverCirclePerf]</code> debug lines</li>
+</ul>
+</section>
+<section id="function-hovercircleperflogging" class="level3">
+<h3 class="anchored" data-anchor-id="function-hovercircleperflogging">function hoverCirclePerfLogging</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> hoverCirclePerfLogging<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Whether hover-circle performance logging is enabled.</p>
+</section>
 <section id="function-setshowtemporaryline" class="level3">
 <h3 class="anchored" data-anchor-id="function-setshowtemporaryline">function setShowTemporaryLine</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb50"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setShowTemporaryLine<span class="op">(</span></span>
-<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show</span>
-<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setShowTemporaryLine<span class="op">(</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-updatetemporaryline" class="level3">
 <h3 class="anchored" data-anchor-id="function-updatetemporaryline">function updateTemporaryLine</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> updateTemporaryLine<span class="op">(</span></span>
-<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> Point2D<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> points<span class="op">,</span></span>
-<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> line_key <span class="op">=</span><span class="st">""</span></span>
-<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> updateTemporaryLine<span class="op">(</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> Point2D<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> points<span class="op">,</span></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> line_key <span class="op">=</span><span class="st">""</span></span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-cleartemporaryline" class="level3">
 <h3 class="anchored" data-anchor-id="function-cleartemporaryline">function clearTemporaryLine</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb52"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearTemporaryLine<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearTemporaryLine<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-clearallselections" class="level3">
 <h3 class="anchored" data-anchor-id="function-clearallselections">function clearAllSelections</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearAllSelections<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> clearAllSelections<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-hasselections" class="level3">
 <h3 class="anchored" data-anchor-id="function-hasselections">function hasSelections</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb54"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasSelections<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb56"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasSelections<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-getselectedentities" class="level3">
 <h3 class="anchored" data-anchor-id="function-getselectedentities">function getSelectedEntities</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> getSelectedEntities<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb57"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unordered_set<span class="op">&lt;</span> EntityId <span class="op">&gt;</span> getSelectedEntities<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-selectentity" class="level3">
 <h3 class="anchored" data-anchor-id="function-selectentity">function selectEntity</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb56"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> selectEntity<span class="op">(</span></span>
-<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>    EntityId entity_id<span class="op">,</span></span>
-<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
-<span id="cb56-4"><a href="#cb56-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">data_type</span></span>
-<span id="cb56-5"><a href="#cb56-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> selectEntity<span class="op">(</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>    EntityId entity_id<span class="op">,</span></span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">data_type</span></span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-setunifiedselectionenabled" class="level3">
 <h3 class="anchored" data-anchor-id="function-setunifiedselectionenabled">function setUnifiedSelectionEnabled</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb57"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setUnifiedSelectionEnabled<span class="op">(</span></span>
-<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> enabled</span>
-<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setUnifiedSelectionEnabled<span class="op">(</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> enabled</span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Enable unified cross-type selection using closest-hit ranking.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1191,28 +1217,28 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-isunifiedselectionenabled" class="level3">
 <h3 class="anchored" data-anchor-id="function-isunifiedselectionenabled">function isUnifiedSelectionEnabled</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb58"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isUnifiedSelectionEnabled<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb60"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isUnifiedSelectionEnabled<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Whether unified cross-type selection is active.</p>
 <p><strong>Return</strong>: True when unified selection is enabled</p>
 </section>
 <section id="function-selecteddatakey" class="level3">
 <h3 class="anchored" data-anchor-id="function-selecteddatakey">function selectedDataKey</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb59"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> selectedDataKey<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb61"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> selectedDataKey<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the data key of the current canvas selection.</p>
 <p><strong>Return</strong>: Selected data manager key, or empty when nothing is selected</p>
 </section>
 <section id="function-selecteddatatype" class="level3">
 <h3 class="anchored" data-anchor-id="function-selecteddatatype">function selectedDataType</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb60"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> selectedDataType<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb62"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> selectedDataType<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the data type of the current canvas selection.</p>
 <p><strong>Return</strong>: Selected data type string (“line”, “point”, “mask”), or empty</p>
 </section>
 <section id="function-findbestentityatposition" class="level3">
 <h3 class="anchored" data-anchor-id="function-findbestentityatposition">function findBestEntityAtPosition</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb61"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> MediaSelectionHit <span class="op">&gt;</span> findBestEntityAtPosition<span class="op">(</span></span>
-<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPointF</span> <span class="at">const</span> <span class="op">&amp;</span> scene_pos<span class="op">,</span></span>
-<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a>    SelectToolPrefs <span class="at">const</span> <span class="op">&amp;</span> prefs</span>
-<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb63"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> MediaSelectionHit <span class="op">&gt;</span> findBestEntityAtPosition<span class="op">(</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QPointF</span> <span class="at">const</span> <span class="op">&amp;</span> scene_pos<span class="op">,</span></span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>    SelectToolPrefs <span class="at">const</span> <span class="op">&amp;</span> prefs</span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Find the globally closest selectable entity at a scene position.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1223,9 +1249,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-getlineconfig" class="level3">
 <h3 class="anchored" data-anchor-id="function-getlineconfig">function getLineConfig</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb62"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> LineDisplayOptions <span class="op">*</span> <span class="op">&gt;</span> getLineConfig<span class="op">(</span></span>
-<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> line_key</span>
-<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb64"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> LineDisplayOptions <span class="op">*</span> <span class="op">&gt;</span> getLineConfig<span class="op">(</span></span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> line_key</span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get mutable line display options for a key.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1235,9 +1261,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-getmaskconfig" class="level3">
 <h3 class="anchored" data-anchor-id="function-getmaskconfig">function getMaskConfig</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb63"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> MaskDisplayOptions <span class="op">*</span> <span class="op">&gt;</span> getMaskConfig<span class="op">(</span></span>
-<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> mask_key</span>
-<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb65"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> MaskDisplayOptions <span class="op">*</span> <span class="op">&gt;</span> getMaskConfig<span class="op">(</span></span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> mask_key</span>
+<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get mutable mask display options for a key.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1247,9 +1273,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-getpointconfig" class="level3">
 <h3 class="anchored" data-anchor-id="function-getpointconfig">function getPointConfig</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb64"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> PointDisplayOptions <span class="op">*</span> <span class="op">&gt;</span> getPointConfig<span class="op">(</span></span>
-<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> point_key</span>
-<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb66"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> PointDisplayOptions <span class="op">*</span> <span class="op">&gt;</span> getPointConfig<span class="op">(</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> point_key</span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get mutable point display options for a key.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1259,9 +1285,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-getintervalconfig" class="level3">
 <h3 class="anchored" data-anchor-id="function-getintervalconfig">function getIntervalConfig</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb65"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> DigitalIntervalDisplayOptions <span class="op">*</span> <span class="op">&gt;</span> getIntervalConfig<span class="op">(</span></span>
-<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> interval_key</span>
-<span id="cb65-3"><a href="#cb65-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb67"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> DigitalIntervalDisplayOptions <span class="op">*</span> <span class="op">&gt;</span> getIntervalConfig<span class="op">(</span></span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> interval_key</span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get mutable interval display options for a key.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1271,9 +1297,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-gettensorconfig" class="level3">
 <h3 class="anchored" data-anchor-id="function-gettensorconfig">function getTensorConfig</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb66"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> TensorDisplayOptions <span class="op">*</span> <span class="op">&gt;</span> getTensorConfig<span class="op">(</span></span>
-<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> tensor_key</span>
-<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb68"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>optional<span class="op">&lt;</span> TensorDisplayOptions <span class="op">*</span> <span class="op">&gt;</span> getTensorConfig<span class="op">(</span></span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> tensor_key</span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get mutable tensor display options for a key.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1283,9 +1309,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-haspreviewmaskdata" class="level3">
 <h3 class="anchored" data-anchor-id="function-haspreviewmaskdata">function hasPreviewMaskData</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb67"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasPreviewMaskData<span class="op">(</span></span>
-<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> mask_key</span>
-<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb69"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> hasPreviewMaskData<span class="op">(</span></span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> mask_key</span>
+<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Check if preview mask data is available for a given key.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1295,9 +1321,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-getpreviewmaskdata" class="level3">
 <h3 class="anchored" data-anchor-id="function-getpreviewmaskdata">function getPreviewMaskData</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb68"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> Mask2D <span class="op">&gt;</span> getPreviewMaskData<span class="op">(</span></span>
-<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> mask_key</span>
-<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb70"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> Mask2D <span class="op">&gt;</span> getPreviewMaskData<span class="op">(</span></span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> mask_key</span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get preview mask data for a given key and time.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1307,11 +1333,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-setpreviewmaskdata" class="level3">
 <h3 class="anchored" data-anchor-id="function-setpreviewmaskdata">function setPreviewMaskData</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb69"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setPreviewMaskData<span class="op">(</span></span>
-<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> mask_key<span class="op">,</span></span>
-<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> Mask2D <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> preview_data<span class="op">,</span></span>
-<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> active</span>
-<span id="cb69-5"><a href="#cb69-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb71"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setPreviewMaskData<span class="op">(</span></span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> mask_key<span class="op">,</span></span>
+<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> Mask2D <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> preview_data<span class="op">,</span></span>
+<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> active</span>
+<span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Set preview mask data for a given key.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1325,38 +1351,38 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="protected-functions-documentation">Protected Functions Documentation</h2>
 <section id="function-mousepressevent" class="level3">
 <h3 class="anchored" data-anchor-id="function-mousepressevent">function mousePressEvent</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb70"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> mousePressEvent<span class="op">(</span></span>
-<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QGraphicsSceneMouseEvent</span> <span class="op">*</span> event</span>
-<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="function-mousereleaseevent" class="level3">
-<h3 class="anchored" data-anchor-id="function-mousereleaseevent">function mouseReleaseEvent</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb71"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> mouseReleaseEvent<span class="op">(</span></span>
-<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QGraphicsSceneMouseEvent</span> <span class="op">*</span> event</span>
-<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="function-mousemoveevent" class="level3">
-<h3 class="anchored" data-anchor-id="function-mousemoveevent">function mouseMoveEvent</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb72"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> mouseMoveEvent<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb72"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> mousePressEvent<span class="op">(</span></span>
 <span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QGraphicsSceneMouseEvent</span> <span class="op">*</span> event</span>
 <span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
+<section id="function-mousereleaseevent" class="level3">
+<h3 class="anchored" data-anchor-id="function-mousereleaseevent">function mouseReleaseEvent</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb73"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> mouseReleaseEvent<span class="op">(</span></span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QGraphicsSceneMouseEvent</span> <span class="op">*</span> event</span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-mousemoveevent" class="level3">
+<h3 class="anchored" data-anchor-id="function-mousemoveevent">function mouseMoveEvent</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb74"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> mouseMoveEvent<span class="op">(</span></span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QGraphicsSceneMouseEvent</span> <span class="op">*</span> event</span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
 <section id="function-contextmenuevent" class="level3">
 <h3 class="anchored" data-anchor-id="function-contextmenuevent">function contextMenuEvent</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb73"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> contextMenuEvent<span class="op">(</span></span>
-<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QGraphicsSceneContextMenuEvent</span> <span class="op">*</span> event</span>
-<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb75"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> contextMenuEvent<span class="op">(</span></span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QGraphicsSceneContextMenuEvent</span> <span class="op">*</span> event</span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </section>
 <section id="friends-1" class="level2">
 <h2 class="anchored" data-anchor-id="friends-1">Friends</h2>
 <section id="friend-mediamask_widget" class="level3">
 <h3 class="anchored" data-anchor-id="friend-mediamask_widget">friend MediaMask_Widget</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb74"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="kw">friend</span> <span class="kw">class</span> MediaMask_Widget<span class="op">(</span></span>
-<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>    MediaMask_Widget </span>
-<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a><span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb76"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="kw">friend</span> <span class="kw">class</span> MediaMask_Widget<span class="op">(</span></span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>    MediaMask_Widget </span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a><span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-18 at 19:58:54 +0000</p>
+<p>Updated on 2026-09-19 at 16:30:45 +0000</p>
 
 
 </section>
