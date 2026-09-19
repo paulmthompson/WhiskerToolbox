@@ -387,10 +387,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"ui_DataTransform_Widget.h"</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager/DataManager.hpp"</span></span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager/transforms/data_transforms.hpp"</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager/transforms/ParameterFactory.hpp"</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager/transforms/TransformPipeline.hpp"</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager/transforms/TransformRegistry.hpp"</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager/transforms/ParameterFactory.hpp"</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager/transforms/TransformPipeline.hpp"</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager/transforms/TransformRegistry.hpp"</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager/transforms/data_transforms.hpp"</span></span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataTransformWidgetState.hpp"</span></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"EditorState/EditorRegistry.hpp"</span></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"EditorState/SelectionContext.hpp"</span></span>
@@ -1247,7 +1247,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-863"><a href="#cb1-863" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
 <span id="cb1-864"><a href="#cb1-864" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-865"><a href="#cb1-865" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-866"><a href="#cb1-866" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> <span class="ex">QString</span><span class="op">&amp;</span> selected_key <span class="op">=</span> data_key<span class="op">.</span>toString<span class="op">();</span></span>
+<span id="cb1-866"><a href="#cb1-866" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> selected_key <span class="op">=</span> data_key<span class="op">.</span>toString<span class="op">();</span></span>
 <span id="cb1-867"><a href="#cb1-867" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-868"><a href="#cb1-868" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>selected_key<span class="op">.</span>isEmpty<span class="op">())</span> <span class="op">{</span></span>
 <span id="cb1-869"><a href="#cb1-869" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Clear UI when nothing is selected</span></span>
@@ -1290,22 +1290,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-906"><a href="#cb1-906" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get available operations for this data type</span></span>
 <span id="cb1-907"><a href="#cb1-907" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> operation_names <span class="op">=</span> _registry<span class="op">-&gt;</span>getOperationNamesForVariant<span class="op">(</span>data_variant<span class="op">.</span>value<span class="op">());</span></span>
 <span id="cb1-908"><a href="#cb1-908" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-909"><a href="#cb1-909" aria-hidden="true" tabindex="-1"></a>    ui<span class="op">-&gt;</span>operationComboBox<span class="op">-&gt;</span>clear<span class="op">();</span></span>
+<span id="cb1-909"><a href="#cb1-909" aria-hidden="true" tabindex="-1"></a>    _currentSelectedDataVariant <span class="op">=</span> data_variant<span class="op">.</span>value<span class="op">();</span></span>
 <span id="cb1-910"><a href="#cb1-910" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-911"><a href="#cb1-911" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>operation_names<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-912"><a href="#cb1-912" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>operationComboBox<span class="op">-&gt;</span>addItem<span class="op">(</span><span class="st">"No operations available"</span><span class="op">);</span></span>
-<span id="cb1-913"><a href="#cb1-913" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>operationComboBox<span class="op">-&gt;</span>setEnabled<span class="op">(</span><span class="kw">false</span><span class="op">);</span></span>
-<span id="cb1-914"><a href="#cb1-914" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>do_transform_button<span class="op">-&gt;</span>setEnabled<span class="op">(</span><span class="kw">false</span><span class="op">);</span></span>
-<span id="cb1-915"><a href="#cb1-915" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
-<span id="cb1-916"><a href="#cb1-916" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> op_name<span class="op">:</span> operation_names<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-917"><a href="#cb1-917" aria-hidden="true" tabindex="-1"></a>            ui<span class="op">-&gt;</span>operationComboBox<span class="op">-&gt;</span>addItem<span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>op_name<span class="op">));</span></span>
-<span id="cb1-918"><a href="#cb1-918" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-919"><a href="#cb1-919" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>operationComboBox<span class="op">-&gt;</span>setEnabled<span class="op">(</span><span class="kw">true</span><span class="op">);</span></span>
-<span id="cb1-920"><a href="#cb1-920" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>do_transform_button<span class="op">-&gt;</span>setEnabled<span class="op">(</span><span class="kw">true</span><span class="op">);</span></span>
-<span id="cb1-921"><a href="#cb1-921" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>operationComboBox<span class="op">-&gt;</span>setCurrentIndex<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
-<span id="cb1-922"><a href="#cb1-922" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb1-923"><a href="#cb1-923" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-924"><a href="#cb1-924" aria-hidden="true" tabindex="-1"></a>    _currentSelectedDataVariant <span class="op">=</span> data_variant<span class="op">.</span>value<span class="op">();</span></span>
+<span id="cb1-911"><a href="#cb1-911" aria-hidden="true" tabindex="-1"></a>    ui<span class="op">-&gt;</span>operationComboBox<span class="op">-&gt;</span>clear<span class="op">();</span></span>
+<span id="cb1-912"><a href="#cb1-912" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-913"><a href="#cb1-913" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>operation_names<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-914"><a href="#cb1-914" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>operationComboBox<span class="op">-&gt;</span>addItem<span class="op">(</span><span class="st">"No operations available"</span><span class="op">);</span></span>
+<span id="cb1-915"><a href="#cb1-915" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>operationComboBox<span class="op">-&gt;</span>setEnabled<span class="op">(</span><span class="kw">false</span><span class="op">);</span></span>
+<span id="cb1-916"><a href="#cb1-916" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>do_transform_button<span class="op">-&gt;</span>setEnabled<span class="op">(</span><span class="kw">false</span><span class="op">);</span></span>
+<span id="cb1-917"><a href="#cb1-917" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb1-918"><a href="#cb1-918" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> op_name<span class="op">:</span> operation_names<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-919"><a href="#cb1-919" aria-hidden="true" tabindex="-1"></a>            ui<span class="op">-&gt;</span>operationComboBox<span class="op">-&gt;</span>addItem<span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>op_name<span class="op">));</span></span>
+<span id="cb1-920"><a href="#cb1-920" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-921"><a href="#cb1-921" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>operationComboBox<span class="op">-&gt;</span>setEnabled<span class="op">(</span><span class="kw">true</span><span class="op">);</span></span>
+<span id="cb1-922"><a href="#cb1-922" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>do_transform_button<span class="op">-&gt;</span>setEnabled<span class="op">(</span><span class="kw">true</span><span class="op">);</span></span>
+<span id="cb1-923"><a href="#cb1-923" aria-hidden="true" tabindex="-1"></a>        ui<span class="op">-&gt;</span>operationComboBox<span class="op">-&gt;</span>setCurrentIndex<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
+<span id="cb1-924"><a href="#cb1-924" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-925"><a href="#cb1-925" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-926"><a href="#cb1-926" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Update current parameter widget if it's a scaling widget or boolean operation widget</span></span>
 <span id="cb1-927"><a href="#cb1-927" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_currentParameterWidget<span class="op">)</span> <span class="op">{</span></span>
@@ -1341,7 +1341,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-957"><a href="#cb1-957" aria-hidden="true" tabindex="-1"></a>    onDataFocusChanged<span class="op">(</span>EditorLib<span class="op">::</span>SelectedDataKey<span class="op">(</span>selected_key<span class="op">),</span> <span class="ex">QString</span><span class="op">{});</span></span>
 <span id="cb1-958"><a href="#cb1-958" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-19 at 16:30:49 +0000</p>
+<p>Updated on 2026-09-19 at 17:01:10 +0000</p>
 
 
 </section>

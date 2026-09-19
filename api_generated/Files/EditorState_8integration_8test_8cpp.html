@@ -448,8 +448,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="source-code">Source code</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"EditorState/EditorState.hpp"</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"EditorState/SelectionContext.hpp"</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"EditorState/EditorRegistry.hpp"</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"EditorState/EditorRegistry.hpp"</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"EditorState/SelectionContext.hpp"</span></span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"EditorState/StrongTypes.hpp"</span></span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager/DataManager.hpp"</span></span>
@@ -468,7 +468,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"Cross-widget selection coordination"</span><span class="op">,</span> <span class="st">"[EditorState][SelectionContext][integration]"</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> argc <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QCoreApplication</span> app<span class="op">(</span>argc<span class="op">,</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QCoreApplication</span> <span class="at">const</span> app<span class="op">(</span>argc<span class="op">,</span> <span class="kw">nullptr</span><span class="op">);</span></span>
 <span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"MediaWidgetState can be registered with EditorRegistry"</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>        EditorRegistry workspace<span class="op">;</span></span>
@@ -510,7 +510,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> selection_context <span class="op">=</span> workspace<span class="op">.</span>selectionContext<span class="op">();</span></span>
 <span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Simulate external selection (from DataManager_Widget)</span></span>
-<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a>        SelectionSource external_source<span class="op">{</span>EditorInstanceId<span class="op">(</span>external_state<span class="op">-&gt;</span>getInstanceId<span class="op">()),</span> <span class="st">"feature_table"</span><span class="op">};</span></span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a>        SelectionSource <span class="at">const</span> external_source<span class="op">{</span>EditorInstanceId<span class="op">(</span>external_state<span class="op">-&gt;</span>getInstanceId<span class="op">()),</span> <span class="st">"feature_table"</span><span class="op">};</span></span>
 <span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a>        selection_context<span class="op">-&gt;</span>setSelectedData<span class="op">(</span>SelectedDataKey<span class="op">(</span><span class="st">"external_data_key"</span><span class="op">),</span> external_source<span class="op">);</span></span>
 <span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Verify SelectionContext received the selection</span></span>
@@ -534,7 +534,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> selection_context <span class="op">=</span> workspace<span class="op">.</span>selectionContext<span class="op">();</span></span>
 <span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Simulate selection originating from Media_Widget itself</span></span>
-<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a>        SelectionSource own_source<span class="op">{</span>EditorInstanceId<span class="op">(</span>media_state<span class="op">-&gt;</span>getInstanceId<span class="op">()),</span> <span class="st">"feature_table"</span><span class="op">};</span></span>
+<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a>        SelectionSource <span class="at">const</span> own_source<span class="op">{</span>EditorInstanceId<span class="op">(</span>media_state<span class="op">-&gt;</span>getInstanceId<span class="op">()),</span> <span class="st">"feature_table"</span><span class="op">};</span></span>
 <span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a>        <span class="co">// First set a value</span></span>
 <span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a>        media_state<span class="op">-&gt;</span>setDisplayedDataKey<span class="op">(</span><span class="st">"initial_key"</span><span class="op">);</span></span>
@@ -566,7 +566,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-118"><a href="#cb4-118" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> selection_context <span class="op">=</span> workspace<span class="op">.</span>selectionContext<span class="op">();</span></span>
 <span id="cb4-119"><a href="#cb4-119" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-120"><a href="#cb4-120" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Media 1 selects something</span></span>
-<span id="cb4-121"><a href="#cb4-121" aria-hidden="true" tabindex="-1"></a>        SelectionSource source1<span class="op">{</span>EditorInstanceId<span class="op">(</span>media_state1<span class="op">-&gt;</span>getInstanceId<span class="op">()),</span> <span class="st">"feature_table"</span><span class="op">};</span></span>
+<span id="cb4-121"><a href="#cb4-121" aria-hidden="true" tabindex="-1"></a>        SelectionSource <span class="at">const</span> source1<span class="op">{</span>EditorInstanceId<span class="op">(</span>media_state1<span class="op">-&gt;</span>getInstanceId<span class="op">()),</span> <span class="st">"feature_table"</span><span class="op">};</span></span>
 <span id="cb4-122"><a href="#cb4-122" aria-hidden="true" tabindex="-1"></a>        selection_context<span class="op">-&gt;</span>setSelectedData<span class="op">(</span>SelectedDataKey<span class="op">(</span><span class="st">"data_from_media1"</span><span class="op">),</span> source1<span class="op">);</span></span>
 <span id="cb4-123"><a href="#cb4-123" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-124"><a href="#cb4-124" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Media 2 should respond (simulating the slot handler)</span></span>
@@ -628,20 +628,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-180"><a href="#cb4-180" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-181"><a href="#cb4-181" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QObject::connect</span><span class="op">(</span>selection_context<span class="op">,</span> <span class="op">&amp;</span>SelectionContext<span class="op">::</span>selectionChanged<span class="op">,</span></span>
 <span id="cb4-182"><a href="#cb4-182" aria-hidden="true" tabindex="-1"></a>                         <span class="op">[&amp;](</span>SelectionSource <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb4-183"><a href="#cb4-183" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Simulate Media_Widget's _onExternalSelectionChanged behavior</span></span>
-<span id="cb4-184"><a href="#cb4-184" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>source<span class="op">.</span>editor_instance_id<span class="op">.</span>toString<span class="op">()</span> <span class="op">!=</span> media_state<span class="op">-&gt;</span>getInstanceId<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb4-185"><a href="#cb4-185" aria-hidden="true" tabindex="-1"></a>                media_received_selection <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb4-186"><a href="#cb4-186" aria-hidden="true" tabindex="-1"></a>                received_key <span class="op">=</span> selection_context<span class="op">-&gt;</span>primarySelectedData<span class="op">().</span>toString<span class="op">();</span></span>
-<span id="cb4-187"><a href="#cb4-187" aria-hidden="true" tabindex="-1"></a>                media_state<span class="op">-&gt;</span>setDisplayedDataKey<span class="op">(</span>received_key<span class="op">);</span></span>
-<span id="cb4-188"><a href="#cb4-188" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb4-189"><a href="#cb4-189" aria-hidden="true" tabindex="-1"></a>        <span class="op">});</span></span>
+<span id="cb4-183"><a href="#cb4-183" aria-hidden="true" tabindex="-1"></a>                             <span class="co">// Simulate Media_Widget's _onExternalSelectionChanged behavior</span></span>
+<span id="cb4-184"><a href="#cb4-184" aria-hidden="true" tabindex="-1"></a>                             <span class="cf">if</span> <span class="op">(</span>source<span class="op">.</span>editor_instance_id<span class="op">.</span>toString<span class="op">()</span> <span class="op">!=</span> media_state<span class="op">-&gt;</span>getInstanceId<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb4-185"><a href="#cb4-185" aria-hidden="true" tabindex="-1"></a>                                 media_received_selection <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb4-186"><a href="#cb4-186" aria-hidden="true" tabindex="-1"></a>                                 received_key <span class="op">=</span> selection_context<span class="op">-&gt;</span>primarySelectedData<span class="op">().</span>toString<span class="op">();</span></span>
+<span id="cb4-187"><a href="#cb4-187" aria-hidden="true" tabindex="-1"></a>                                 media_state<span class="op">-&gt;</span>setDisplayedDataKey<span class="op">(</span>received_key<span class="op">);</span></span>
+<span id="cb4-188"><a href="#cb4-188" aria-hidden="true" tabindex="-1"></a>                             <span class="op">}</span></span>
+<span id="cb4-189"><a href="#cb4-189" aria-hidden="true" tabindex="-1"></a>                         <span class="op">});</span></span>
 <span id="cb4-190"><a href="#cb4-190" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-191"><a href="#cb4-191" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Simulate DataManager_Widget selecting a feature</span></span>
 <span id="cb4-192"><a href="#cb4-192" aria-hidden="true" tabindex="-1"></a>        dm_state<span class="op">-&gt;</span>setSelectedDataKey<span class="op">(</span><span class="st">"whisker_data"</span><span class="op">);</span></span>
 <span id="cb4-193"><a href="#cb4-193" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-194"><a href="#cb4-194" aria-hidden="true" tabindex="-1"></a>        <span class="co">// This would normally trigger the state -&gt; SelectionContext connection in the widget</span></span>
 <span id="cb4-195"><a href="#cb4-195" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Here we simulate it:</span></span>
-<span id="cb4-196"><a href="#cb4-196" aria-hidden="true" tabindex="-1"></a>        SelectionSource dm_source<span class="op">{</span>EditorInstanceId<span class="op">(</span>dm_state<span class="op">-&gt;</span>getInstanceId<span class="op">()),</span> <span class="st">"feature_table"</span><span class="op">};</span></span>
+<span id="cb4-196"><a href="#cb4-196" aria-hidden="true" tabindex="-1"></a>        SelectionSource <span class="at">const</span> dm_source<span class="op">{</span>EditorInstanceId<span class="op">(</span>dm_state<span class="op">-&gt;</span>getInstanceId<span class="op">()),</span> <span class="st">"feature_table"</span><span class="op">};</span></span>
 <span id="cb4-197"><a href="#cb4-197" aria-hidden="true" tabindex="-1"></a>        selection_context<span class="op">-&gt;</span>setSelectedData<span class="op">(</span>SelectedDataKey<span class="op">(</span>dm_state<span class="op">-&gt;</span>selectedDataKey<span class="op">()),</span> dm_source<span class="op">);</span></span>
 <span id="cb4-198"><a href="#cb4-198" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-199"><a href="#cb4-199" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Verify the chain worked</span></span>
@@ -653,7 +653,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-205"><a href="#cb4-205" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-206"><a href="#cb4-206" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"Workspace serialization with multiple widget states"</span><span class="op">,</span> <span class="st">"[EditorState][EditorRegistry][integration]"</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb4-207"><a href="#cb4-207" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> argc <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb4-208"><a href="#cb4-208" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QCoreApplication</span> app<span class="op">(</span>argc<span class="op">,</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb4-208"><a href="#cb4-208" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QCoreApplication</span> <span class="at">const</span> app<span class="op">(</span>argc<span class="op">,</span> <span class="kw">nullptr</span><span class="op">);</span></span>
 <span id="cb4-209"><a href="#cb4-209" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-210"><a href="#cb4-210" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Workspace with mixed state types serializes correctly"</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb4-211"><a href="#cb4-211" aria-hidden="true" tabindex="-1"></a>        EditorRegistry workspace<span class="op">;</span></span>
@@ -686,7 +686,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-238"><a href="#cb4-238" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-239"><a href="#cb4-239" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"DataTransformWidgetState integration"</span><span class="op">,</span> <span class="st">"[EditorState][DataTransform][integration]"</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb4-240"><a href="#cb4-240" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> argc <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb4-241"><a href="#cb4-241" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QCoreApplication</span> app<span class="op">(</span>argc<span class="op">,</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb4-241"><a href="#cb4-241" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QCoreApplication</span> <span class="at">const</span> app<span class="op">(</span>argc<span class="op">,</span> <span class="kw">nullptr</span><span class="op">);</span></span>
 <span id="cb4-242"><a href="#cb4-242" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-243"><a href="#cb4-243" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"DataTransformWidgetState can be registered with EditorRegistry"</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb4-244"><a href="#cb4-244" aria-hidden="true" tabindex="-1"></a>        EditorRegistry workspace<span class="op">;</span></span>
@@ -704,14 +704,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-256"><a href="#cb4-256" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-257"><a href="#cb4-257" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"DataTransformWidgetState tracks input data key changes"</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb4-258"><a href="#cb4-258" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataTransformWidgetState<span class="op">&gt;();</span></span>
-<span id="cb4-259"><a href="#cb4-259" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb4-260"><a href="#cb4-260" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QSignalSpy</span> input_spy<span class="op">(</span>state<span class="op">.</span>get<span class="op">(),</span> <span class="op">&amp;</span>DataTransformWidgetState<span class="op">::</span>selectedInputDataKeyChanged<span class="op">);</span></span>
-<span id="cb4-261"><a href="#cb4-261" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-259"><a href="#cb4-259" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-260"><a href="#cb4-260" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QSignalSpy</span> <span class="at">const</span> input_spy<span class="op">(</span>state<span class="op">.</span>get<span class="op">(),</span> <span class="op">&amp;</span>DataTransformWidgetState<span class="op">::</span>selectedInputDataKeyChanged<span class="op">);</span></span>
+<span id="cb4-261"><a href="#cb4-261" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-262"><a href="#cb4-262" aria-hidden="true" tabindex="-1"></a>        state<span class="op">-&gt;</span>setSelectedInputDataKey<span class="op">(</span><span class="st">"mask_data"</span><span class="op">);</span></span>
-<span id="cb4-263"><a href="#cb4-263" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-263"><a href="#cb4-263" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-264"><a href="#cb4-264" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>input_spy<span class="op">.</span>count<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
 <span id="cb4-265"><a href="#cb4-265" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>state<span class="op">-&gt;</span>selectedInputDataKey<span class="op">()</span> <span class="op">==</span> <span class="st">"mask_data"</span><span class="op">);</span></span>
-<span id="cb4-266"><a href="#cb4-266" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-266"><a href="#cb4-266" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-267"><a href="#cb4-267" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Setting same value should not emit again</span></span>
 <span id="cb4-268"><a href="#cb4-268" aria-hidden="true" tabindex="-1"></a>        state<span class="op">-&gt;</span>setSelectedInputDataKey<span class="op">(</span><span class="st">"mask_data"</span><span class="op">);</span></span>
 <span id="cb4-269"><a href="#cb4-269" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>input_spy<span class="op">.</span>count<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
@@ -719,11 +719,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-271"><a href="#cb4-271" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-272"><a href="#cb4-272" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"DataTransformWidgetState tracks operation selection"</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb4-273"><a href="#cb4-273" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataTransformWidgetState<span class="op">&gt;();</span></span>
-<span id="cb4-274"><a href="#cb4-274" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb4-275"><a href="#cb4-275" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QSignalSpy</span> op_spy<span class="op">(</span>state<span class="op">.</span>get<span class="op">(),</span> <span class="op">&amp;</span>DataTransformWidgetState<span class="op">::</span>selectedOperationChanged<span class="op">);</span></span>
-<span id="cb4-276"><a href="#cb4-276" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-274"><a href="#cb4-274" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-275"><a href="#cb4-275" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QSignalSpy</span> <span class="at">const</span> op_spy<span class="op">(</span>state<span class="op">.</span>get<span class="op">(),</span> <span class="op">&amp;</span>DataTransformWidgetState<span class="op">::</span>selectedOperationChanged<span class="op">);</span></span>
+<span id="cb4-276"><a href="#cb4-276" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-277"><a href="#cb4-277" aria-hidden="true" tabindex="-1"></a>        state<span class="op">-&gt;</span>setSelectedOperation<span class="op">(</span><span class="st">"Calculate Area"</span><span class="op">);</span></span>
-<span id="cb4-278"><a href="#cb4-278" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-278"><a href="#cb4-278" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-279"><a href="#cb4-279" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>op_spy<span class="op">.</span>count<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
 <span id="cb4-280"><a href="#cb4-280" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>state<span class="op">-&gt;</span>selectedOperation<span class="op">()</span> <span class="op">==</span> <span class="st">"Calculate Area"</span><span class="op">);</span></span>
 <span id="cb4-281"><a href="#cb4-281" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
@@ -734,13 +734,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-286"><a href="#cb4-286" aria-hidden="true" tabindex="-1"></a>        state<span class="op">-&gt;</span>setSelectedInputDataKey<span class="op">(</span><span class="st">"test_input"</span><span class="op">);</span></span>
 <span id="cb4-287"><a href="#cb4-287" aria-hidden="true" tabindex="-1"></a>        state<span class="op">-&gt;</span>setSelectedOperation<span class="op">(</span><span class="st">"Filter"</span><span class="op">);</span></span>
 <span id="cb4-288"><a href="#cb4-288" aria-hidden="true" tabindex="-1"></a>        state<span class="op">-&gt;</span>setLastOutputName<span class="op">(</span><span class="st">"filtered_output"</span><span class="op">);</span></span>
-<span id="cb4-289"><a href="#cb4-289" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb4-290"><a href="#cb4-290" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string json <span class="op">=</span> state<span class="op">-&gt;</span>toJson<span class="op">();</span></span>
+<span id="cb4-289"><a href="#cb4-289" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-290"><a href="#cb4-290" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> state<span class="op">-&gt;</span>toJson<span class="op">();</span></span>
 <span id="cb4-291"><a href="#cb4-291" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>json<span class="op">.</span>empty<span class="op">());</span></span>
-<span id="cb4-292"><a href="#cb4-292" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-292"><a href="#cb4-292" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-293"><a href="#cb4-293" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> restored_state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataTransformWidgetState<span class="op">&gt;();</span></span>
 <span id="cb4-294"><a href="#cb4-294" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>restored_state<span class="op">-&gt;</span>fromJson<span class="op">(</span>json<span class="op">));</span></span>
-<span id="cb4-295"><a href="#cb4-295" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-295"><a href="#cb4-295" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-296"><a href="#cb4-296" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>restored_state<span class="op">-&gt;</span>getDisplayName<span class="op">()</span> <span class="op">==</span> <span class="st">"My Transform"</span><span class="op">);</span></span>
 <span id="cb4-297"><a href="#cb4-297" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>restored_state<span class="op">-&gt;</span>selectedInputDataKey<span class="op">()</span> <span class="op">==</span> <span class="st">"test_input"</span><span class="op">);</span></span>
 <span id="cb4-298"><a href="#cb4-298" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>restored_state<span class="op">-&gt;</span>selectedOperation<span class="op">()</span> <span class="op">==</span> <span class="st">"Filter"</span><span class="op">);</span></span>
@@ -751,7 +751,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-303"><a href="#cb4-303" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"DataTransform responds to SelectionContext from DataManager_Widget"</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb4-304"><a href="#cb4-304" aria-hidden="true" tabindex="-1"></a>        <span class="co">// This is the key Phase 2.7 test: DataTransform_Widget receives input</span></span>
 <span id="cb4-305"><a href="#cb4-305" aria-hidden="true" tabindex="-1"></a>        <span class="co">// selection entirely from SelectionContext, not from an embedded feature table</span></span>
-<span id="cb4-306"><a href="#cb4-306" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-306"><a href="#cb4-306" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-307"><a href="#cb4-307" aria-hidden="true" tabindex="-1"></a>        EditorRegistry workspace<span class="op">;</span></span>
 <span id="cb4-308"><a href="#cb4-308" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-309"><a href="#cb4-309" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> dm_state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataManagerWidgetState<span class="op">&gt;();</span></span>
@@ -768,17 +768,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-320"><a href="#cb4-320" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-321"><a href="#cb4-321" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QObject::connect</span><span class="op">(</span>selection_context<span class="op">,</span> <span class="op">&amp;</span>SelectionContext<span class="op">::</span>selectionChanged<span class="op">,</span></span>
 <span id="cb4-322"><a href="#cb4-322" aria-hidden="true" tabindex="-1"></a>                         <span class="op">[&amp;](</span>SelectionSource <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb4-323"><a href="#cb4-323" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Simulate DataTransform_Widget's _onExternalSelectionChanged behavior (legacy)</span></span>
-<span id="cb4-324"><a href="#cb4-324" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>source<span class="op">.</span>editor_instance_id<span class="op">.</span>toString<span class="op">()</span> <span class="op">!=</span> transform_state<span class="op">-&gt;</span>getInstanceId<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb4-325"><a href="#cb4-325" aria-hidden="true" tabindex="-1"></a>                transform_received_selection <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb4-326"><a href="#cb4-326" aria-hidden="true" tabindex="-1"></a>                received_key <span class="op">=</span> selection_context<span class="op">-&gt;</span>primarySelectedData<span class="op">().</span>toString<span class="op">();</span></span>
-<span id="cb4-327"><a href="#cb4-327" aria-hidden="true" tabindex="-1"></a>                transform_state<span class="op">-&gt;</span>setSelectedInputDataKey<span class="op">(</span>received_key<span class="op">);</span></span>
-<span id="cb4-328"><a href="#cb4-328" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb4-329"><a href="#cb4-329" aria-hidden="true" tabindex="-1"></a>        <span class="op">});</span></span>
+<span id="cb4-323"><a href="#cb4-323" aria-hidden="true" tabindex="-1"></a>                             <span class="co">// Simulate DataTransform_Widget's _onExternalSelectionChanged behavior (legacy)</span></span>
+<span id="cb4-324"><a href="#cb4-324" aria-hidden="true" tabindex="-1"></a>                             <span class="cf">if</span> <span class="op">(</span>source<span class="op">.</span>editor_instance_id<span class="op">.</span>toString<span class="op">()</span> <span class="op">!=</span> transform_state<span class="op">-&gt;</span>getInstanceId<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb4-325"><a href="#cb4-325" aria-hidden="true" tabindex="-1"></a>                                 transform_received_selection <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb4-326"><a href="#cb4-326" aria-hidden="true" tabindex="-1"></a>                                 received_key <span class="op">=</span> selection_context<span class="op">-&gt;</span>primarySelectedData<span class="op">().</span>toString<span class="op">();</span></span>
+<span id="cb4-327"><a href="#cb4-327" aria-hidden="true" tabindex="-1"></a>                                 transform_state<span class="op">-&gt;</span>setSelectedInputDataKey<span class="op">(</span>received_key<span class="op">);</span></span>
+<span id="cb4-328"><a href="#cb4-328" aria-hidden="true" tabindex="-1"></a>                             <span class="op">}</span></span>
+<span id="cb4-329"><a href="#cb4-329" aria-hidden="true" tabindex="-1"></a>                         <span class="op">});</span></span>
 <span id="cb4-330"><a href="#cb4-330" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-331"><a href="#cb4-331" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Simulate DataManager_Widget selecting a feature</span></span>
 <span id="cb4-332"><a href="#cb4-332" aria-hidden="true" tabindex="-1"></a>        dm_state<span class="op">-&gt;</span>setSelectedDataKey<span class="op">(</span><span class="st">"analog_signal"</span><span class="op">);</span></span>
-<span id="cb4-333"><a href="#cb4-333" aria-hidden="true" tabindex="-1"></a>        SelectionSource dm_source<span class="op">{</span>EditorInstanceId<span class="op">(</span>dm_state<span class="op">-&gt;</span>getInstanceId<span class="op">()),</span> <span class="st">"feature_table"</span><span class="op">};</span></span>
+<span id="cb4-333"><a href="#cb4-333" aria-hidden="true" tabindex="-1"></a>        SelectionSource <span class="at">const</span> dm_source<span class="op">{</span>EditorInstanceId<span class="op">(</span>dm_state<span class="op">-&gt;</span>getInstanceId<span class="op">()),</span> <span class="st">"feature_table"</span><span class="op">};</span></span>
 <span id="cb4-334"><a href="#cb4-334" aria-hidden="true" tabindex="-1"></a>        selection_context<span class="op">-&gt;</span>setSelectedData<span class="op">(</span>SelectedDataKey<span class="op">(</span>dm_state<span class="op">-&gt;</span>selectedDataKey<span class="op">()),</span> dm_source<span class="op">);</span></span>
 <span id="cb4-335"><a href="#cb4-335" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-336"><a href="#cb4-336" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Verify the chain worked</span></span>
@@ -790,7 +790,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-342"><a href="#cb4-342" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"DataTransform responds to dataFocusChanged (Phase 4.2 passive awareness)"</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb4-343"><a href="#cb4-343" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Phase 4.2 test: DataTransform_Widget uses dataFocusChanged signal</span></span>
 <span id="cb4-344"><a href="#cb4-344" aria-hidden="true" tabindex="-1"></a>        <span class="co">// via the DataFocusAware interface pattern</span></span>
-<span id="cb4-345"><a href="#cb4-345" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-345"><a href="#cb4-345" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-346"><a href="#cb4-346" aria-hidden="true" tabindex="-1"></a>        EditorRegistry workspace<span class="op">;</span></span>
 <span id="cb4-347"><a href="#cb4-347" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-348"><a href="#cb4-348" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> dm_state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataManagerWidgetState<span class="op">&gt;();</span></span>
@@ -810,19 +810,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-362"><a href="#cb4-362" aria-hidden="true" tabindex="-1"></a>                         <span class="op">[&amp;](</span>SelectedDataKey <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
 <span id="cb4-363"><a href="#cb4-363" aria-hidden="true" tabindex="-1"></a>                             <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">data_type</span><span class="op">,</span></span>
 <span id="cb4-364"><a href="#cb4-364" aria-hidden="true" tabindex="-1"></a>                             SelectionSource <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb4-365"><a href="#cb4-365" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Simulate DataTransform_Widget's onDataFocusChanged behavior</span></span>
-<span id="cb4-366"><a href="#cb4-366" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>source<span class="op">.</span>editor_instance_id<span class="op">.</span>toString<span class="op">()</span> <span class="op">!=</span> transform_state<span class="op">-&gt;</span>getInstanceId<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb4-367"><a href="#cb4-367" aria-hidden="true" tabindex="-1"></a>                transform_received_focus <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb4-368"><a href="#cb4-368" aria-hidden="true" tabindex="-1"></a>                received_key <span class="op">=</span> data_key<span class="op">.</span>toString<span class="op">();</span></span>
-<span id="cb4-369"><a href="#cb4-369" aria-hidden="true" tabindex="-1"></a>                <span class="dt">received_type</span> <span class="op">=</span> <span class="dt">data_type</span><span class="op">;</span></span>
-<span id="cb4-370"><a href="#cb4-370" aria-hidden="true" tabindex="-1"></a>                transform_state<span class="op">-&gt;</span>setSelectedInputDataKey<span class="op">(</span>data_key<span class="op">.</span>toString<span class="op">());</span></span>
-<span id="cb4-371"><a href="#cb4-371" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb4-372"><a href="#cb4-372" aria-hidden="true" tabindex="-1"></a>        <span class="op">});</span></span>
+<span id="cb4-365"><a href="#cb4-365" aria-hidden="true" tabindex="-1"></a>                             <span class="co">// Simulate DataTransform_Widget's onDataFocusChanged behavior</span></span>
+<span id="cb4-366"><a href="#cb4-366" aria-hidden="true" tabindex="-1"></a>                             <span class="cf">if</span> <span class="op">(</span>source<span class="op">.</span>editor_instance_id<span class="op">.</span>toString<span class="op">()</span> <span class="op">!=</span> transform_state<span class="op">-&gt;</span>getInstanceId<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb4-367"><a href="#cb4-367" aria-hidden="true" tabindex="-1"></a>                                 transform_received_focus <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb4-368"><a href="#cb4-368" aria-hidden="true" tabindex="-1"></a>                                 received_key <span class="op">=</span> data_key<span class="op">.</span>toString<span class="op">();</span></span>
+<span id="cb4-369"><a href="#cb4-369" aria-hidden="true" tabindex="-1"></a>                                 <span class="dt">received_type</span> <span class="op">=</span> <span class="dt">data_type</span><span class="op">;</span></span>
+<span id="cb4-370"><a href="#cb4-370" aria-hidden="true" tabindex="-1"></a>                                 transform_state<span class="op">-&gt;</span>setSelectedInputDataKey<span class="op">(</span>data_key<span class="op">.</span>toString<span class="op">());</span></span>
+<span id="cb4-371"><a href="#cb4-371" aria-hidden="true" tabindex="-1"></a>                             <span class="op">}</span></span>
+<span id="cb4-372"><a href="#cb4-372" aria-hidden="true" tabindex="-1"></a>                         <span class="op">});</span></span>
 <span id="cb4-373"><a href="#cb4-373" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-374"><a href="#cb4-374" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Simulate DataManager_Widget selecting a feature using setSelectedData</span></span>
 <span id="cb4-375"><a href="#cb4-375" aria-hidden="true" tabindex="-1"></a>        <span class="co">// This should now also emit dataFocusChanged for passive awareness</span></span>
 <span id="cb4-376"><a href="#cb4-376" aria-hidden="true" tabindex="-1"></a>        dm_state<span class="op">-&gt;</span>setSelectedDataKey<span class="op">(</span><span class="st">"line_data"</span><span class="op">);</span></span>
-<span id="cb4-377"><a href="#cb4-377" aria-hidden="true" tabindex="-1"></a>        SelectionSource dm_source<span class="op">{</span>EditorInstanceId<span class="op">(</span>dm_state<span class="op">-&gt;</span>getInstanceId<span class="op">()),</span> <span class="st">"feature_table"</span><span class="op">};</span></span>
+<span id="cb4-377"><a href="#cb4-377" aria-hidden="true" tabindex="-1"></a>        SelectionSource <span class="at">const</span> dm_source<span class="op">{</span>EditorInstanceId<span class="op">(</span>dm_state<span class="op">-&gt;</span>getInstanceId<span class="op">()),</span> <span class="st">"feature_table"</span><span class="op">};</span></span>
 <span id="cb4-378"><a href="#cb4-378" aria-hidden="true" tabindex="-1"></a>        selection_context<span class="op">-&gt;</span>setSelectedData<span class="op">(</span>SelectedDataKey<span class="op">(</span>dm_state<span class="op">-&gt;</span>selectedDataKey<span class="op">()),</span> dm_source<span class="op">);</span></span>
 <span id="cb4-379"><a href="#cb4-379" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-380"><a href="#cb4-380" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Verify the dataFocusChanged signal was emitted and received</span></span>
@@ -833,7 +833,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-385"><a href="#cb4-385" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-386"><a href="#cb4-386" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"setDataFocus emits dataFocusChanged with type information"</span><span class="op">)</span> <span class="op">{</span></span>
 <span id="cb4-387"><a href="#cb4-387" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test the explicit setDataFocus API which includes type information</span></span>
-<span id="cb4-388"><a href="#cb4-388" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-388"><a href="#cb4-388" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-389"><a href="#cb4-389" aria-hidden="true" tabindex="-1"></a>        EditorRegistry workspace<span class="op">;</span></span>
 <span id="cb4-390"><a href="#cb4-390" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-391"><a href="#cb4-391" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> transform_state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataTransformWidgetState<span class="op">&gt;();</span></span>
@@ -850,13 +850,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-402"><a href="#cb4-402" aria-hidden="true" tabindex="-1"></a>                         <span class="op">[&amp;](</span>SelectedDataKey <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
 <span id="cb4-403"><a href="#cb4-403" aria-hidden="true" tabindex="-1"></a>                             <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">data_type</span><span class="op">,</span></span>
 <span id="cb4-404"><a href="#cb4-404" aria-hidden="true" tabindex="-1"></a>                             SelectionSource <span class="at">const</span> <span class="op">&amp;</span> <span class="co">/* source */</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb4-405"><a href="#cb4-405" aria-hidden="true" tabindex="-1"></a>            received_signal <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb4-406"><a href="#cb4-406" aria-hidden="true" tabindex="-1"></a>            received_key <span class="op">=</span> data_key<span class="op">.</span>toString<span class="op">();</span></span>
-<span id="cb4-407"><a href="#cb4-407" aria-hidden="true" tabindex="-1"></a>            <span class="dt">received_type</span> <span class="op">=</span> <span class="dt">data_type</span><span class="op">;</span></span>
-<span id="cb4-408"><a href="#cb4-408" aria-hidden="true" tabindex="-1"></a>        <span class="op">});</span></span>
+<span id="cb4-405"><a href="#cb4-405" aria-hidden="true" tabindex="-1"></a>                             received_signal <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb4-406"><a href="#cb4-406" aria-hidden="true" tabindex="-1"></a>                             received_key <span class="op">=</span> data_key<span class="op">.</span>toString<span class="op">();</span></span>
+<span id="cb4-407"><a href="#cb4-407" aria-hidden="true" tabindex="-1"></a>                             <span class="dt">received_type</span> <span class="op">=</span> <span class="dt">data_type</span><span class="op">;</span></span>
+<span id="cb4-408"><a href="#cb4-408" aria-hidden="true" tabindex="-1"></a>                         <span class="op">});</span></span>
 <span id="cb4-409"><a href="#cb4-409" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-410"><a href="#cb4-410" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Use explicit setDataFocus with type information</span></span>
-<span id="cb4-411"><a href="#cb4-411" aria-hidden="true" tabindex="-1"></a>        SelectionSource source<span class="op">{</span>EditorInstanceId<span class="op">(</span><span class="st">"external_widget"</span><span class="op">),</span> <span class="st">"feature_table"</span><span class="op">};</span></span>
+<span id="cb4-411"><a href="#cb4-411" aria-hidden="true" tabindex="-1"></a>        SelectionSource <span class="at">const</span> source<span class="op">{</span>EditorInstanceId<span class="op">(</span><span class="st">"external_widget"</span><span class="op">),</span> <span class="st">"feature_table"</span><span class="op">};</span></span>
 <span id="cb4-412"><a href="#cb4-412" aria-hidden="true" tabindex="-1"></a>        selection_context<span class="op">-&gt;</span>setDataFocus<span class="op">(</span>SelectedDataKey<span class="op">(</span><span class="st">"mask_data"</span><span class="op">),</span> <span class="st">"MaskData"</span><span class="op">,</span> source<span class="op">);</span></span>
 <span id="cb4-413"><a href="#cb4-413" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-414"><a href="#cb4-414" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>received_signal<span class="op">);</span></span>
@@ -866,86 +866,112 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-418"><a href="#cb4-418" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>selection_context<span class="op">-&gt;</span>dataFocusType<span class="op">()</span> <span class="op">==</span> <span class="st">"MaskData"</span><span class="op">);</span></span>
 <span id="cb4-419"><a href="#cb4-419" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb4-420"><a href="#cb4-420" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-421"><a href="#cb4-421" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"DataTransform ignores own selections (no circular updates)"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb4-422"><a href="#cb4-422" aria-hidden="true" tabindex="-1"></a>        EditorRegistry workspace<span class="op">;</span></span>
-<span id="cb4-423"><a href="#cb4-423" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-424"><a href="#cb4-424" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> transform_state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataTransformWidgetState<span class="op">&gt;();</span></span>
-<span id="cb4-425"><a href="#cb4-425" aria-hidden="true" tabindex="-1"></a>        workspace<span class="op">.</span>registerState<span class="op">(</span>transform_state<span class="op">);</span></span>
-<span id="cb4-426"><a href="#cb4-426" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-427"><a href="#cb4-427" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> selection_context <span class="op">=</span> workspace<span class="op">.</span>selectionContext<span class="op">();</span></span>
-<span id="cb4-428"><a href="#cb4-428" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-429"><a href="#cb4-429" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Set initial state</span></span>
-<span id="cb4-430"><a href="#cb4-430" aria-hidden="true" tabindex="-1"></a>        transform_state<span class="op">-&gt;</span>setSelectedInputDataKey<span class="op">(</span><span class="st">"initial_key"</span><span class="op">);</span></span>
-<span id="cb4-431"><a href="#cb4-431" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-432"><a href="#cb4-432" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Simulate selection originating from DataTransform itself</span></span>
-<span id="cb4-433"><a href="#cb4-433" aria-hidden="true" tabindex="-1"></a>        SelectionSource own_source<span class="op">{</span>EditorInstanceId<span class="op">(</span>transform_state<span class="op">-&gt;</span>getInstanceId<span class="op">()),</span> <span class="st">"internal"</span><span class="op">};</span></span>
-<span id="cb4-434"><a href="#cb4-434" aria-hidden="true" tabindex="-1"></a>        selection_context<span class="op">-&gt;</span>setSelectedData<span class="op">(</span>SelectedDataKey<span class="op">(</span><span class="st">"new_key"</span><span class="op">),</span> own_source<span class="op">);</span></span>
-<span id="cb4-435"><a href="#cb4-435" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-436"><a href="#cb4-436" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Handler should filter out own selections</span></span>
-<span id="cb4-437"><a href="#cb4-437" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>own_source<span class="op">.</span>editor_instance_id<span class="op">.</span>toString<span class="op">()</span> <span class="op">!=</span> transform_state<span class="op">-&gt;</span>getInstanceId<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb4-438"><a href="#cb4-438" aria-hidden="true" tabindex="-1"></a>            transform_state<span class="op">-&gt;</span>setSelectedInputDataKey<span class="op">(</span>selection_context<span class="op">-&gt;</span>primarySelectedData<span class="op">().</span>toString<span class="op">());</span></span>
-<span id="cb4-439"><a href="#cb4-439" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb4-440"><a href="#cb4-440" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-441"><a href="#cb4-441" aria-hidden="true" tabindex="-1"></a>        <span class="co">// State should remain unchanged</span></span>
-<span id="cb4-442"><a href="#cb4-442" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>transform_state<span class="op">-&gt;</span>selectedInputDataKey<span class="op">()</span> <span class="op">==</span> <span class="st">"initial_key"</span><span class="op">);</span></span>
-<span id="cb4-443"><a href="#cb4-443" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb4-444"><a href="#cb4-444" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-445"><a href="#cb4-445" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Multiple widget types coexist with DataTransformWidgetState"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb4-446"><a href="#cb4-446" aria-hidden="true" tabindex="-1"></a>        EditorRegistry workspace<span class="op">;</span></span>
-<span id="cb4-447"><a href="#cb4-447" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-448"><a href="#cb4-448" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> dm_state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataManagerWidgetState<span class="op">&gt;();</span></span>
-<span id="cb4-449"><a href="#cb4-449" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> media_state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>MediaWidgetState<span class="op">&gt;();</span></span>
+<span id="cb4-421"><a href="#cb4-421" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"setSelectedData does not preserve stale type after V1 setDataFocus"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-422"><a href="#cb4-422" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Regression: V1 DataTransform_Widget calls setDataFocus(output, "line", ...).</span></span>
+<span id="cb4-423"><a href="#cb4-423" aria-hidden="true" tabindex="-1"></a>        <span class="co">// A subsequent feature-table click uses setSelectedData(mask_key), which must</span></span>
+<span id="cb4-424"><a href="#cb4-424" aria-hidden="true" tabindex="-1"></a>        <span class="co">// not re-emit the stale "line" type for the new key.</span></span>
+<span id="cb4-425"><a href="#cb4-425" aria-hidden="true" tabindex="-1"></a>        EditorRegistry <span class="at">const</span> workspace<span class="op">;</span></span>
+<span id="cb4-426"><a href="#cb4-426" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> selection_context <span class="op">=</span> workspace<span class="op">.</span>selectionContext<span class="op">();</span></span>
+<span id="cb4-427"><a href="#cb4-427" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-428"><a href="#cb4-428" aria-hidden="true" tabindex="-1"></a>        SelectionSource <span class="at">const</span> v1_source<span class="op">{</span>EditorInstanceId<span class="op">(</span><span class="st">"DataTransformWidget"</span><span class="op">),</span> <span class="st">"DataTransformWidget"</span><span class="op">};</span></span>
+<span id="cb4-429"><a href="#cb4-429" aria-hidden="true" tabindex="-1"></a>        SelectionSource <span class="at">const</span> dm_source<span class="op">{</span>EditorInstanceId<span class="op">(</span><span class="st">"DataManagerWidget"</span><span class="op">),</span> <span class="st">"feature_table"</span><span class="op">};</span></span>
+<span id="cb4-430"><a href="#cb4-430" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-431"><a href="#cb4-431" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QString</span> <span class="dt">received_type</span><span class="op">;</span></span>
+<span id="cb4-432"><a href="#cb4-432" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QObject::connect</span><span class="op">(</span>selection_context<span class="op">,</span> <span class="op">&amp;</span>SelectionContext<span class="op">::</span>dataFocusChanged<span class="op">,</span></span>
+<span id="cb4-433"><a href="#cb4-433" aria-hidden="true" tabindex="-1"></a>                         <span class="op">[&amp;](</span>SelectedDataKey <span class="at">const</span> <span class="op">&amp;</span> <span class="co">/* data_key */</span><span class="op">,</span></span>
+<span id="cb4-434"><a href="#cb4-434" aria-hidden="true" tabindex="-1"></a>                             <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="dt">data_type</span><span class="op">,</span></span>
+<span id="cb4-435"><a href="#cb4-435" aria-hidden="true" tabindex="-1"></a>                             SelectionSource <span class="at">const</span> <span class="op">&amp;</span> <span class="co">/* source */</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-436"><a href="#cb4-436" aria-hidden="true" tabindex="-1"></a>                             <span class="dt">received_type</span> <span class="op">=</span> <span class="dt">data_type</span><span class="op">;</span></span>
+<span id="cb4-437"><a href="#cb4-437" aria-hidden="true" tabindex="-1"></a>                         <span class="op">});</span></span>
+<span id="cb4-438"><a href="#cb4-438" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-439"><a href="#cb4-439" aria-hidden="true" tabindex="-1"></a>        selection_context<span class="op">-&gt;</span>setDataFocus<span class="op">(</span>SelectedDataKey<span class="op">(</span><span class="st">"line_output"</span><span class="op">),</span> <span class="st">"line"</span><span class="op">,</span> v1_source<span class="op">);</span></span>
+<span id="cb4-440"><a href="#cb4-440" aria-hidden="true" tabindex="-1"></a>        selection_context<span class="op">-&gt;</span>setSelectedData<span class="op">(</span>SelectedDataKey<span class="op">(</span><span class="st">"left_whisker_mask"</span><span class="op">),</span> dm_source<span class="op">);</span></span>
+<span id="cb4-441"><a href="#cb4-441" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-442"><a href="#cb4-442" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>selection_context<span class="op">-&gt;</span>dataFocus<span class="op">().</span>toString<span class="op">()</span> <span class="op">==</span> <span class="st">"left_whisker_mask"</span><span class="op">);</span></span>
+<span id="cb4-443"><a href="#cb4-443" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>selection_context<span class="op">-&gt;</span>dataFocusType<span class="op">()</span> <span class="op">!=</span> <span class="st">"line"</span><span class="op">);</span></span>
+<span id="cb4-444"><a href="#cb4-444" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span><span class="dt">received_type</span> <span class="op">!=</span> <span class="st">"line"</span><span class="op">);</span></span>
+<span id="cb4-445"><a href="#cb4-445" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-446"><a href="#cb4-446" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-447"><a href="#cb4-447" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"DataTransform ignores own selections (no circular updates)"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-448"><a href="#cb4-448" aria-hidden="true" tabindex="-1"></a>        EditorRegistry workspace<span class="op">;</span></span>
+<span id="cb4-449"><a href="#cb4-449" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-450"><a href="#cb4-450" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> transform_state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataTransformWidgetState<span class="op">&gt;();</span></span>
-<span id="cb4-451"><a href="#cb4-451" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-452"><a href="#cb4-452" aria-hidden="true" tabindex="-1"></a>        workspace<span class="op">.</span>registerState<span class="op">(</span>dm_state<span class="op">);</span></span>
-<span id="cb4-453"><a href="#cb4-453" aria-hidden="true" tabindex="-1"></a>        workspace<span class="op">.</span>registerState<span class="op">(</span>media_state<span class="op">);</span></span>
-<span id="cb4-454"><a href="#cb4-454" aria-hidden="true" tabindex="-1"></a>        workspace<span class="op">.</span>registerState<span class="op">(</span>transform_state<span class="op">);</span></span>
-<span id="cb4-455"><a href="#cb4-455" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-456"><a href="#cb4-456" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>workspace<span class="op">.</span>allStates<span class="op">().</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb4-451"><a href="#cb4-451" aria-hidden="true" tabindex="-1"></a>        workspace<span class="op">.</span>registerState<span class="op">(</span>transform_state<span class="op">);</span></span>
+<span id="cb4-452"><a href="#cb4-452" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-453"><a href="#cb4-453" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> selection_context <span class="op">=</span> workspace<span class="op">.</span>selectionContext<span class="op">();</span></span>
+<span id="cb4-454"><a href="#cb4-454" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-455"><a href="#cb4-455" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Set initial state</span></span>
+<span id="cb4-456"><a href="#cb4-456" aria-hidden="true" tabindex="-1"></a>        transform_state<span class="op">-&gt;</span>setSelectedInputDataKey<span class="op">(</span><span class="st">"initial_key"</span><span class="op">);</span></span>
 <span id="cb4-457"><a href="#cb4-457" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-458"><a href="#cb4-458" aria-hidden="true" tabindex="-1"></a>        <span class="co">// All have unique IDs</span></span>
-<span id="cb4-459"><a href="#cb4-459" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>dm_state<span class="op">-&gt;</span>getInstanceId<span class="op">()</span> <span class="op">!=</span> media_state<span class="op">-&gt;</span>getInstanceId<span class="op">());</span></span>
-<span id="cb4-460"><a href="#cb4-460" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>dm_state<span class="op">-&gt;</span>getInstanceId<span class="op">()</span> <span class="op">!=</span> transform_state<span class="op">-&gt;</span>getInstanceId<span class="op">());</span></span>
-<span id="cb4-461"><a href="#cb4-461" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>media_state<span class="op">-&gt;</span>getInstanceId<span class="op">()</span> <span class="op">!=</span> transform_state<span class="op">-&gt;</span>getInstanceId<span class="op">());</span></span>
-<span id="cb4-462"><a href="#cb4-462" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-463"><a href="#cb4-463" aria-hidden="true" tabindex="-1"></a>        <span class="co">// All have correct type names</span></span>
-<span id="cb4-464"><a href="#cb4-464" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>dm_state<span class="op">-&gt;</span>getTypeName<span class="op">()</span> <span class="op">==</span> <span class="st">"DataManagerWidget"</span><span class="op">);</span></span>
-<span id="cb4-465"><a href="#cb4-465" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>media_state<span class="op">-&gt;</span>getTypeName<span class="op">()</span> <span class="op">==</span> <span class="st">"MediaWidget"</span><span class="op">);</span></span>
-<span id="cb4-466"><a href="#cb4-466" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>transform_state<span class="op">-&gt;</span>getTypeName<span class="op">()</span> <span class="op">==</span> <span class="st">"DataTransformWidget"</span><span class="op">);</span></span>
-<span id="cb4-467"><a href="#cb4-467" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-468"><a href="#cb4-468" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> selection_context <span class="op">=</span> workspace<span class="op">.</span>selectionContext<span class="op">();</span></span>
-<span id="cb4-469"><a href="#cb4-469" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-470"><a href="#cb4-470" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Track dataFocusChanged for passive awareness widgets</span></span>
-<span id="cb4-471"><a href="#cb4-471" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> media_received <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
-<span id="cb4-472"><a href="#cb4-472" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> transform_received <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb4-458"><a href="#cb4-458" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Simulate selection originating from DataTransform itself</span></span>
+<span id="cb4-459"><a href="#cb4-459" aria-hidden="true" tabindex="-1"></a>        SelectionSource <span class="at">const</span> own_source<span class="op">{</span>EditorInstanceId<span class="op">(</span>transform_state<span class="op">-&gt;</span>getInstanceId<span class="op">()),</span> <span class="st">"internal"</span><span class="op">};</span></span>
+<span id="cb4-460"><a href="#cb4-460" aria-hidden="true" tabindex="-1"></a>        selection_context<span class="op">-&gt;</span>setSelectedData<span class="op">(</span>SelectedDataKey<span class="op">(</span><span class="st">"new_key"</span><span class="op">),</span> own_source<span class="op">);</span></span>
+<span id="cb4-461"><a href="#cb4-461" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-462"><a href="#cb4-462" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Handler should filter out own selections</span></span>
+<span id="cb4-463"><a href="#cb4-463" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>own_source<span class="op">.</span>editor_instance_id<span class="op">.</span>toString<span class="op">()</span> <span class="op">!=</span> transform_state<span class="op">-&gt;</span>getInstanceId<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb4-464"><a href="#cb4-464" aria-hidden="true" tabindex="-1"></a>            transform_state<span class="op">-&gt;</span>setSelectedInputDataKey<span class="op">(</span>selection_context<span class="op">-&gt;</span>primarySelectedData<span class="op">().</span>toString<span class="op">());</span></span>
+<span id="cb4-465"><a href="#cb4-465" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-466"><a href="#cb4-466" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-467"><a href="#cb4-467" aria-hidden="true" tabindex="-1"></a>        <span class="co">// State should remain unchanged</span></span>
+<span id="cb4-468"><a href="#cb4-468" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>transform_state<span class="op">-&gt;</span>selectedInputDataKey<span class="op">()</span> <span class="op">==</span> <span class="st">"initial_key"</span><span class="op">);</span></span>
+<span id="cb4-469"><a href="#cb4-469" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-470"><a href="#cb4-470" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-471"><a href="#cb4-471" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Multiple widget types coexist with DataTransformWidgetState"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-472"><a href="#cb4-472" aria-hidden="true" tabindex="-1"></a>        EditorRegistry workspace<span class="op">;</span></span>
 <span id="cb4-473"><a href="#cb4-473" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-474"><a href="#cb4-474" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QObject::connect</span><span class="op">(</span>selection_context<span class="op">,</span> <span class="op">&amp;</span>SelectionContext<span class="op">::</span>dataFocusChanged<span class="op">,</span></span>
-<span id="cb4-475"><a href="#cb4-475" aria-hidden="true" tabindex="-1"></a>                         <span class="op">[&amp;](</span>SelectedDataKey <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
-<span id="cb4-476"><a href="#cb4-476" aria-hidden="true" tabindex="-1"></a>                             <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="co">/* data_type */</span><span class="op">,</span></span>
-<span id="cb4-477"><a href="#cb4-477" aria-hidden="true" tabindex="-1"></a>                             SelectionSource <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb4-478"><a href="#cb4-478" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Simulate Media and Transform responding via dataFocusChanged</span></span>
-<span id="cb4-479"><a href="#cb4-479" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>source<span class="op">.</span>editor_instance_id<span class="op">.</span>toString<span class="op">()</span> <span class="op">!=</span> media_state<span class="op">-&gt;</span>getInstanceId<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb4-480"><a href="#cb4-480" aria-hidden="true" tabindex="-1"></a>                media_received <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb4-481"><a href="#cb4-481" aria-hidden="true" tabindex="-1"></a>                media_state<span class="op">-&gt;</span>setDisplayedDataKey<span class="op">(</span>data_key<span class="op">.</span>toString<span class="op">());</span></span>
-<span id="cb4-482"><a href="#cb4-482" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb4-483"><a href="#cb4-483" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>source<span class="op">.</span>editor_instance_id<span class="op">.</span>toString<span class="op">()</span> <span class="op">!=</span> transform_state<span class="op">-&gt;</span>getInstanceId<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb4-484"><a href="#cb4-484" aria-hidden="true" tabindex="-1"></a>                transform_received <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
-<span id="cb4-485"><a href="#cb4-485" aria-hidden="true" tabindex="-1"></a>                transform_state<span class="op">-&gt;</span>setSelectedInputDataKey<span class="op">(</span>data_key<span class="op">.</span>toString<span class="op">());</span></span>
-<span id="cb4-486"><a href="#cb4-486" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb4-487"><a href="#cb4-487" aria-hidden="true" tabindex="-1"></a>        <span class="op">});</span></span>
+<span id="cb4-474"><a href="#cb4-474" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> dm_state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataManagerWidgetState<span class="op">&gt;();</span></span>
+<span id="cb4-475"><a href="#cb4-475" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> media_state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>MediaWidgetState<span class="op">&gt;();</span></span>
+<span id="cb4-476"><a href="#cb4-476" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> transform_state <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>DataTransformWidgetState<span class="op">&gt;();</span></span>
+<span id="cb4-477"><a href="#cb4-477" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-478"><a href="#cb4-478" aria-hidden="true" tabindex="-1"></a>        workspace<span class="op">.</span>registerState<span class="op">(</span>dm_state<span class="op">);</span></span>
+<span id="cb4-479"><a href="#cb4-479" aria-hidden="true" tabindex="-1"></a>        workspace<span class="op">.</span>registerState<span class="op">(</span>media_state<span class="op">);</span></span>
+<span id="cb4-480"><a href="#cb4-480" aria-hidden="true" tabindex="-1"></a>        workspace<span class="op">.</span>registerState<span class="op">(</span>transform_state<span class="op">);</span></span>
+<span id="cb4-481"><a href="#cb4-481" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-482"><a href="#cb4-482" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>workspace<span class="op">.</span>allStates<span class="op">().</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb4-483"><a href="#cb4-483" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-484"><a href="#cb4-484" aria-hidden="true" tabindex="-1"></a>        <span class="co">// All have unique IDs</span></span>
+<span id="cb4-485"><a href="#cb4-485" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>dm_state<span class="op">-&gt;</span>getInstanceId<span class="op">()</span> <span class="op">!=</span> media_state<span class="op">-&gt;</span>getInstanceId<span class="op">());</span></span>
+<span id="cb4-486"><a href="#cb4-486" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>dm_state<span class="op">-&gt;</span>getInstanceId<span class="op">()</span> <span class="op">!=</span> transform_state<span class="op">-&gt;</span>getInstanceId<span class="op">());</span></span>
+<span id="cb4-487"><a href="#cb4-487" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>media_state<span class="op">-&gt;</span>getInstanceId<span class="op">()</span> <span class="op">!=</span> transform_state<span class="op">-&gt;</span>getInstanceId<span class="op">());</span></span>
 <span id="cb4-488"><a href="#cb4-488" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-489"><a href="#cb4-489" aria-hidden="true" tabindex="-1"></a>        <span class="co">// DataManager selects -&gt; both Media and Transform should respond via dataFocusChanged</span></span>
-<span id="cb4-490"><a href="#cb4-490" aria-hidden="true" tabindex="-1"></a>        SelectionSource dm_source<span class="op">{</span>EditorInstanceId<span class="op">(</span>dm_state<span class="op">-&gt;</span>getInstanceId<span class="op">()),</span> <span class="st">"feature_table"</span><span class="op">};</span></span>
-<span id="cb4-491"><a href="#cb4-491" aria-hidden="true" tabindex="-1"></a>        selection_context<span class="op">-&gt;</span>setSelectedData<span class="op">(</span>SelectedDataKey<span class="op">(</span><span class="st">"shared_data"</span><span class="op">),</span> dm_source<span class="op">);</span></span>
-<span id="cb4-492"><a href="#cb4-492" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-493"><a href="#cb4-493" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>media_received<span class="op">);</span></span>
-<span id="cb4-494"><a href="#cb4-494" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>transform_received<span class="op">);</span></span>
-<span id="cb4-495"><a href="#cb4-495" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>media_state<span class="op">-&gt;</span>displayedDataKey<span class="op">()</span> <span class="op">==</span> <span class="st">"shared_data"</span><span class="op">);</span></span>
-<span id="cb4-496"><a href="#cb4-496" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>transform_state<span class="op">-&gt;</span>selectedInputDataKey<span class="op">()</span> <span class="op">==</span> <span class="st">"shared_data"</span><span class="op">);</span></span>
-<span id="cb4-497"><a href="#cb4-497" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb4-498"><a href="#cb4-498" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-489"><a href="#cb4-489" aria-hidden="true" tabindex="-1"></a>        <span class="co">// All have correct type names</span></span>
+<span id="cb4-490"><a href="#cb4-490" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>dm_state<span class="op">-&gt;</span>getTypeName<span class="op">()</span> <span class="op">==</span> <span class="st">"DataManagerWidget"</span><span class="op">);</span></span>
+<span id="cb4-491"><a href="#cb4-491" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>media_state<span class="op">-&gt;</span>getTypeName<span class="op">()</span> <span class="op">==</span> <span class="st">"MediaWidget"</span><span class="op">);</span></span>
+<span id="cb4-492"><a href="#cb4-492" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>transform_state<span class="op">-&gt;</span>getTypeName<span class="op">()</span> <span class="op">==</span> <span class="st">"DataTransformWidget"</span><span class="op">);</span></span>
+<span id="cb4-493"><a href="#cb4-493" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-494"><a href="#cb4-494" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> selection_context <span class="op">=</span> workspace<span class="op">.</span>selectionContext<span class="op">();</span></span>
+<span id="cb4-495"><a href="#cb4-495" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-496"><a href="#cb4-496" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Track dataFocusChanged for passive awareness widgets</span></span>
+<span id="cb4-497"><a href="#cb4-497" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> media_received <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb4-498"><a href="#cb4-498" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> transform_received <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb4-499"><a href="#cb4-499" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-500"><a href="#cb4-500" aria-hidden="true" tabindex="-1"></a>        <span class="ex">QObject::connect</span><span class="op">(</span>selection_context<span class="op">,</span> <span class="op">&amp;</span>SelectionContext<span class="op">::</span>dataFocusChanged<span class="op">,</span></span>
+<span id="cb4-501"><a href="#cb4-501" aria-hidden="true" tabindex="-1"></a>                         <span class="op">[&amp;](</span>SelectedDataKey <span class="at">const</span> <span class="op">&amp;</span> data_key<span class="op">,</span></span>
+<span id="cb4-502"><a href="#cb4-502" aria-hidden="true" tabindex="-1"></a>                             <span class="ex">QString</span> <span class="at">const</span> <span class="op">&amp;</span> <span class="co">/* data_type */</span><span class="op">,</span></span>
+<span id="cb4-503"><a href="#cb4-503" aria-hidden="true" tabindex="-1"></a>                             SelectionSource <span class="at">const</span> <span class="op">&amp;</span> source<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-504"><a href="#cb4-504" aria-hidden="true" tabindex="-1"></a>                             <span class="co">// Simulate Media and Transform responding via dataFocusChanged</span></span>
+<span id="cb4-505"><a href="#cb4-505" aria-hidden="true" tabindex="-1"></a>                             <span class="cf">if</span> <span class="op">(</span>source<span class="op">.</span>editor_instance_id<span class="op">.</span>toString<span class="op">()</span> <span class="op">!=</span> media_state<span class="op">-&gt;</span>getInstanceId<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb4-506"><a href="#cb4-506" aria-hidden="true" tabindex="-1"></a>                                 media_received <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb4-507"><a href="#cb4-507" aria-hidden="true" tabindex="-1"></a>                                 media_state<span class="op">-&gt;</span>setDisplayedDataKey<span class="op">(</span>data_key<span class="op">.</span>toString<span class="op">());</span></span>
+<span id="cb4-508"><a href="#cb4-508" aria-hidden="true" tabindex="-1"></a>                             <span class="op">}</span></span>
+<span id="cb4-509"><a href="#cb4-509" aria-hidden="true" tabindex="-1"></a>                             <span class="cf">if</span> <span class="op">(</span>source<span class="op">.</span>editor_instance_id<span class="op">.</span>toString<span class="op">()</span> <span class="op">!=</span> transform_state<span class="op">-&gt;</span>getInstanceId<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb4-510"><a href="#cb4-510" aria-hidden="true" tabindex="-1"></a>                                 transform_received <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb4-511"><a href="#cb4-511" aria-hidden="true" tabindex="-1"></a>                                 transform_state<span class="op">-&gt;</span>setSelectedInputDataKey<span class="op">(</span>data_key<span class="op">.</span>toString<span class="op">());</span></span>
+<span id="cb4-512"><a href="#cb4-512" aria-hidden="true" tabindex="-1"></a>                             <span class="op">}</span></span>
+<span id="cb4-513"><a href="#cb4-513" aria-hidden="true" tabindex="-1"></a>                         <span class="op">});</span></span>
+<span id="cb4-514"><a href="#cb4-514" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-515"><a href="#cb4-515" aria-hidden="true" tabindex="-1"></a>        <span class="co">// DataManager selects -&gt; both Media and Transform should respond via dataFocusChanged</span></span>
+<span id="cb4-516"><a href="#cb4-516" aria-hidden="true" tabindex="-1"></a>        SelectionSource <span class="at">const</span> dm_source<span class="op">{</span>EditorInstanceId<span class="op">(</span>dm_state<span class="op">-&gt;</span>getInstanceId<span class="op">()),</span> <span class="st">"feature_table"</span><span class="op">};</span></span>
+<span id="cb4-517"><a href="#cb4-517" aria-hidden="true" tabindex="-1"></a>        selection_context<span class="op">-&gt;</span>setSelectedData<span class="op">(</span>SelectedDataKey<span class="op">(</span><span class="st">"shared_data"</span><span class="op">),</span> dm_source<span class="op">);</span></span>
+<span id="cb4-518"><a href="#cb4-518" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-519"><a href="#cb4-519" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>media_received<span class="op">);</span></span>
+<span id="cb4-520"><a href="#cb4-520" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>transform_received<span class="op">);</span></span>
+<span id="cb4-521"><a href="#cb4-521" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>media_state<span class="op">-&gt;</span>displayedDataKey<span class="op">()</span> <span class="op">==</span> <span class="st">"shared_data"</span><span class="op">);</span></span>
+<span id="cb4-522"><a href="#cb4-522" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>transform_state<span class="op">-&gt;</span>selectedInputDataKey<span class="op">()</span> <span class="op">==</span> <span class="st">"shared_data"</span><span class="op">);</span></span>
+<span id="cb4-523"><a href="#cb4-523" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-524"><a href="#cb4-524" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-19 at 16:30:50 +0000</p>
+<p>Updated on 2026-09-19 at 17:01:10 +0000</p>
 
 
 </section>
