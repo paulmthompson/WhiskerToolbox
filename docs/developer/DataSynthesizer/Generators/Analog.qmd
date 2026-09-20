@@ -85,6 +85,32 @@ The peaks occur at quarter-cycle offsets (`t = cycle_length/(4×num_cycles)` and
 
 ---
 
+### SawtoothWave
+
+**Registration name**: `"SawtoothWave"` · **Category**: Periodic
+
+**Formula**: rising linear ramp from `−amplitude` to `+amplitude` over each cycle,
+with a sharp reset (discontinuity) at the cycle boundary.
+
+The normalized position within a cycle is:
+`pos = fmod((num_cycles/cycle_length) × t + phase / (2π) + 0.5, 1.0)`,
+giving `y[t] = amplitude × (2 × pos − 1) + dc_offset`.
+
+| Parameter | Type | Required | Default | Constraint |
+|-----------|------|----------|---------|------------|
+| `num_samples` | `int` | ✅ | — | > 0 |
+| `amplitude` | `float` | ✅ | — | — |
+| `num_cycles` | `float` | ✅ | — | > 0 |
+| `cycle_length` | `int` | ☐ | `num_samples` | > 0 |
+| `phase` | `float` | ☐ | 0.0 | — |
+| `dc_offset` | `float` | ☐ | 0.0 | — |
+
+At `phase = 0`, `t = 0` the output is exactly 0, rising positively (consistent
+with SineWave phase conventions). The discontinuity (sharp reset from near
+`+amplitude` to near `−amplitude`) occurs at the half-cycle point.
+
+---
+
 ### GaussianNoise
 
 **Registration name**: `"GaussianNoise"` · **Category**: Noise
@@ -188,6 +214,7 @@ src/DataSynthesizer/Generators/Analog/
 ├── SineWaveGenerator.cpp
 ├── SquareWaveGenerator.cpp
 ├── TriangleWaveGenerator.cpp
+├── SawtoothWaveGenerator.cpp
 ├── GaussianNoiseGenerator.cpp
 └── UniformNoiseGenerator.cpp
 
@@ -197,6 +224,7 @@ tests/DataSynthesizer/
 ├── SineWaveGenerator.test.cpp
 ├── SquareWaveGenerator.test.cpp
 ├── TriangleWaveGenerator.test.cpp
+├── SawtoothWaveGenerator.test.cpp
 ├── GaussianNoiseGenerator.test.cpp
 └── UniformNoiseGenerator.test.cpp
 ```
