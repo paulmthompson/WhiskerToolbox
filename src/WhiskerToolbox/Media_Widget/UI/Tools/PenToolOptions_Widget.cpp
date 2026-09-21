@@ -4,6 +4,7 @@
  */
 
 #include "PenToolOptions_Widget.hpp"
+#include "ToolOptionsLayoutHelpers.hpp"
 #include "ui_PenToolOptions_Widget.h"
 
 #include "Core/MediaWidgetState.hpp"
@@ -55,6 +56,8 @@ PenToolOptions_Widget::PenToolOptions_Widget(QWidget * parent)
     : QWidget(parent),
       ui(new Ui::PenToolOptions_Widget) {
     ui->setupUi(this);
+    configureShrinkableToolOptionsPage(this);
+    configureCompactInstructionLabel(ui->instruction_label);
     _populateAppendEndpointCombo();
     _rebuildPenTargetCombo();
 

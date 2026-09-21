@@ -26,6 +26,20 @@ The `Media_Widget` grid uses three rows:
 | `PenToolOptions_Widget` | Pen-tool page: append-endpoint combo and usage instructions |
 | `EraserToolOptions_Widget` | Eraser-tool page: hover-circle radius slider/spinbox |
 
+## Cursor Coordinates
+
+The right side of the tool options bar shows a live **media-space** cursor readout (`X: …  Y: …`) in source-image pixels. The label uses a fixed width so it remains visible when the dock is narrow. Values update on every mouse move over the canvas and reset to `--` when the pointer leaves the viewport.
+
+Tool option pages use `ToolOptionsLayoutHelpers` so long instruction text lives in tooltips instead of forcing horizontal scroll. The media `QGraphicsView` uses `AdjustIgnored` so zoom/pan stays inside the canvas rather than expanding the dock widget.
+
+| Source | Signal / path |
+|--------|----------------|
+| `Media_Window::mouseMoveMediaCoords` | Emitted from `mouseMoveEvent` alongside `mouseMoveCanvas` |
+| `MediaToolOptionsBar_Widget::setMediaCoordinates` | Formats fixed-width text in the bar label |
+| `Media_Widget` viewport `Leave` event | Clears the readout via `setMediaCoordinates(std::nullopt)` |
+
+External widgets with access to `Media_Window` can connect to `mouseMoveMediaCoords` directly for custom cursor feedback.
+
 ## Select Tool Filter
 
 `SelectToolOptions_Widget` reads enabled features from `MediaWidgetState::enabledFeatures()` for **line**, **mask**, and **point** keys only. The combo rebuilds when `featureEnabledChanged` fires (via `DisplayOptionsRegistry::setVisible()` from the feature table). The combo offers:

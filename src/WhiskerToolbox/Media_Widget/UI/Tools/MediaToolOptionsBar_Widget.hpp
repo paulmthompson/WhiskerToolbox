@@ -6,11 +6,15 @@
  * @brief Horizontal options strip above the Media Viewer rulers
  */
 
+#include "Media_Widget/DisplayOptions/CoordinateTypes.hpp"
 #include "Media_Widget/UI/Tools/MediaToolId.hpp"
 
 #include <QWidget>
 
+#include <optional>
+
 class MediaWidgetState;
+class QLabel;
 class QStackedWidget;
 class EraserToolOptions_Widget;
 class PenToolOptions_Widget;
@@ -25,6 +29,7 @@ class MediaToolOptionsBar_Widget : public QWidget {
 
 public:
     static constexpr int kBarHeight = 28;
+    static constexpr int kCoordinateLabelWidth = 130;
 
     explicit MediaToolOptionsBar_Widget(QWidget * parent = nullptr);
 
@@ -64,6 +69,12 @@ public:
      */
     [[nodiscard]] SmoothToolOptions_Widget * smoothOptionsWidget() const { return _smooth_options; }
 
+    /**
+     * @brief Update the live media-space cursor readout
+     * @param coords Current cursor position in media pixels, or nullopt when the cursor left the canvas
+     */
+    void setMediaCoordinates(std::optional<MediaCoordinates> coords);
+
     [[nodiscard]] QSize sizeHint() const override;
 
 private:
@@ -75,6 +86,7 @@ private:
     PenToolOptions_Widget * _pen_options{nullptr};
     EraserToolOptions_Widget * _eraser_options{nullptr};
     SmoothToolOptions_Widget * _smooth_options{nullptr};
+    QLabel * _coordinate_label{nullptr};
 };
 
 #endif// MEDIA_TOOL_OPTIONS_BAR_WIDGET_HPP

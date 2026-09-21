@@ -449,6 +449,7 @@ signals:
     void leftClickMediaCoords(MediaCoordinates const & coords);
     void rightClickMediaCoords(MediaCoordinates const & coords);
     void mouseMoveCanvas(CanvasCoordinates const & coords);
+    void mouseMoveMediaCoords(MediaCoordinates const & coords);
 
     // Mouse event signal with full event information (for modifier detection)
     void leftClickMediaWithEvent(qreal x_media, qreal y_media, Qt::KeyboardModifiers modifiers);

@@ -6,6 +6,7 @@
 #include "SelectToolOptions_Widget.hpp"
 
 #include "Core/MediaWidgetState.hpp"
+#include "ToolOptionsLayoutHelpers.hpp"
 
 #include <QComboBox>
 #include <QHBoxLayout>
@@ -60,6 +61,7 @@ QString formatFeatureLabel(QString const & data_type, QString const & key) {
 SelectToolOptions_Widget::SelectToolOptions_Widget(QWidget * parent)
     : QWidget(parent) {
     _buildUi();
+    configureShrinkableToolOptionsPage(this);
 }
 
 void SelectToolOptions_Widget::setState(MediaWidgetState * state) {

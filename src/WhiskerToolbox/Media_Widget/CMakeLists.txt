@@ -45,6 +45,7 @@ set(MEDIA_WIDGET_SOURCES
     UI/Tools/MediaToolStrip_Widget.cpp
     UI/Tools/MediaToolOptionsBar_Widget.hpp
     UI/Tools/MediaToolOptionsBar_Widget.cpp
+    UI/Tools/ToolOptionsLayoutHelpers.hpp
     UI/Tools/SelectToolOptions_Widget.hpp
     UI/Tools/SelectToolOptions_Widget.cpp
     UI/Tools/PenToolOptions_Widget.hpp

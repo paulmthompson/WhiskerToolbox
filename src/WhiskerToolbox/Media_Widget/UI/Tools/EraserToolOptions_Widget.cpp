@@ -4,6 +4,7 @@
  */
 
 #include "EraserToolOptions_Widget.hpp"
+#include "ToolOptionsLayoutHelpers.hpp"
 #include "ui_EraserToolOptions_Widget.h"
 
 #include "Core/MediaWidgetState.hpp"
@@ -15,6 +16,8 @@ EraserToolOptions_Widget::EraserToolOptions_Widget(QWidget * parent)
     : QWidget(parent),
       ui(new Ui::EraserToolOptions_Widget) {
     ui->setupUi(this);
+    configureShrinkableToolOptionsPage(this);
+    configureCompactInstructionLabel(ui->instruction_label);
 
     connect(ui->eraser_size_slider, &QSlider::valueChanged,
             ui->eraser_size_spinbox, &QSpinBox::setValue);

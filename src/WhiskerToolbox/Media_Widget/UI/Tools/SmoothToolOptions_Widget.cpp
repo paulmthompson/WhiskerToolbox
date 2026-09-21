@@ -4,6 +4,7 @@
  */
 
 #include "SmoothToolOptions_Widget.hpp"
+#include "ToolOptionsLayoutHelpers.hpp"
 #include "ui_SmoothToolOptions_Widget.h"
 
 #include "Core/LineEditOperations.hpp"
@@ -41,6 +42,8 @@ SmoothToolOptions_Widget::SmoothToolOptions_Widget(QWidget * parent)
     : QWidget(parent),
       ui(new Ui::SmoothToolOptions_Widget) {
     ui->setupUi(this);
+    configureShrinkableToolOptionsPage(this);
+    configureCompactInstructionLabel(ui->instruction_label);
 
     connect(ui->smooth_size_slider, &QSlider::valueChanged,
             ui->smooth_size_spinbox, &QSpinBox::setValue);

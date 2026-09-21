@@ -40,9 +40,9 @@ TEST_CASE("PenToolOptions_Widget shows Pen tool instructions", "[PenToolOptions]
     PenToolOptions_Widget widget;
     auto * label = findInstructionLabel(widget);
     REQUIRE(label != nullptr);
-    REQUIRE(label->text().contains(QStringLiteral("Click append")));
-    REQUIRE(label->text().contains(QStringLiteral("Alt+click")));
-    REQUIRE(label->text().contains(QStringLiteral("nearest vertex")));
+    REQUIRE(label->toolTip().contains(QStringLiteral("Ctrl+click append")));
+    REQUIRE(label->toolTip().contains(QStringLiteral("Alt+click")));
+    REQUIRE(label->toolTip().contains(QStringLiteral("nearest vertex")));
 }
 
 TEST_CASE("PenToolOptions_Widget append endpoint combo syncs with state", "[PenToolOptions]") {

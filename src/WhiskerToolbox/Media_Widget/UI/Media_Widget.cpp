@@ -33,6 +33,7 @@
 #include <QGraphicsView>
 #include <QGridLayout>
 #include <QMouseEvent>
+#include <QPointF>
 #include <QResizeEvent>
 #include <QScrollBar>
 #include <QTimer>
@@ -54,6 +55,7 @@ Media_Widget::Media_Widget(EditorRegistry * editor_registry, QWidget * parent)
 
     // Install event filter on graphics view viewport for wheel zoom
     if (ui->graphicsView && ui->graphicsView->viewport()) {
+        ui->graphicsView->setMouseTracking(true);
         ui->graphicsView->viewport()->installEventFilter(this);
         ui->graphicsView->setTransformationAnchor(QGraphicsView::AnchorViewCenter);
         ui->graphicsView->setResizeAnchor(QGraphicsView::AnchorViewCenter);
@@ -500,6 +502,11 @@ void Media_Widget::_applyZoom(double factor, bool anchor_under_mouse) {
 
 bool Media_Widget::eventFilter(QObject * watched, QEvent * event) {
     if (watched == ui->graphicsView->viewport()) {
+        if (event->type() == QEvent::Leave) {
+            _clearCoordinateDisplay();
+            return QWidget::eventFilter(watched, event);
+        }
+
         // Handle wheel events for zoom
         if (event->type() == QEvent::Wheel) {
             auto * wheelEvent = dynamic_cast<QWheelEvent *>(event);
@@ -529,6 +536,10 @@ bool Media_Widget::eventFilter(QObject * watched, QEvent * event) {
             auto * mouseEvent = dynamic_cast<QMouseEvent *>(event);
             QPoint const delta = mouseEvent->pos() - _last_pan_point;
             _last_pan_point = mouseEvent->pos();
+
+            if (_scene && ui->graphicsView) {
+                _updateCoordinateDisplayFromScenePos(ui->graphicsView->mapToScene(mouseEvent->pos()));
+            }
 
             // Apply panning by translating the view
             ui->graphicsView->horizontalScrollBar()->setValue(
@@ -586,6 +597,15 @@ void Media_Widget::_createMediaWindow() {
             _selection_context->setActiveEditor(instance_id);
             _selection_context->notifyInteraction(instance_id);
         });
+
+        if (_tool_options_bar) {
+            connect(_scene.get(), &Media_Window::mouseMoveMediaCoords, this,
+                    [this](MediaCoordinates const & coords) {
+                        if (_tool_options_bar) {
+                            _tool_options_bar->setMediaCoordinates(coords);
+                        }
+                    });
+        }
     }
 }
 
@@ -935,4 +955,21 @@ void Media_Widget::restoreFromState() {
     }
 
     _applyRulerPrefs();
+}
+
+void Media_Widget::_updateCoordinateDisplayFromScenePos(QPointF const & scene_pos) {
+    if (!_tool_options_bar || !_scene) {
+        return;
+    }
+
+    MediaCoordinates const media_coords(
+            static_cast<float>(scene_pos.x() / _scene->getXAspect()),
+            static_cast<float>(scene_pos.y() / _scene->getYAspect()));
+    _tool_options_bar->setMediaCoordinates(media_coords);
+}
+
+void Media_Widget::_clearCoordinateDisplay() {
+    if (_tool_options_bar) {
+        _tool_options_bar->setMediaCoordinates(std::nullopt);
+    }
 }

@@ -6,6 +6,7 @@
 #include "EditorState/SelectionContext.hpp"// For SelectionSource
 #include "TimeFrame/StrongTimeTypes.hpp"   // For TimeKey
 
+#include <QPointF>
 #include <QWidget>
 
 #include <memory>
@@ -121,6 +122,8 @@ private:
     void _updateRulers();
     void _syncActiveMediaTool(MediaToolId tool);
     void _syncBrushHoverCircle();
+    void _updateCoordinateDisplayFromScenePos(QPointF const & scene_pos);
+    void _clearCoordinateDisplay();
 
     MediaToolStrip_Widget * _tool_strip{nullptr};
     MediaToolOptionsBar_Widget * _tool_options_bar{nullptr};

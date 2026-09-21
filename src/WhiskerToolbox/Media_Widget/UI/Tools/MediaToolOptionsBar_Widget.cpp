@@ -12,6 +12,7 @@
 #include "SmoothToolOptions_Widget.hpp"
 
 #include <QHBoxLayout>
+#include <QLabel>
 #include <QSizePolicy>
 #include <QStackedWidget>
 
@@ -33,11 +34,21 @@ MediaToolOptionsBar_Widget::MediaToolOptionsBar_Widget(QWidget * parent)
     _stack->addWidget(_pen_options);
     _stack->addWidget(_eraser_options);
     _stack->addWidget(_smooth_options);
+    _stack->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+    _stack->setMinimumWidth(0);
+
+    _coordinate_label = new QLabel(this);
+    _coordinate_label->setObjectName(QStringLiteral("MediaCoordinateLabel"));
+    _coordinate_label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
+    _coordinate_label->setFixedWidth(kCoordinateLabelWidth);
+    _coordinate_label->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+    setMediaCoordinates(std::nullopt);
 
     auto * layout = new QHBoxLayout(this);
     layout->setContentsMargins(0, 0, 0, 0);
     layout->setSpacing(0);
-    layout->addWidget(_stack);
+    layout->addWidget(_stack, 1);
+    layout->addWidget(_coordinate_label, 0, Qt::AlignRight);
 
     _applyStyle();
     setActiveTool(MediaToolId::Select);
@@ -97,11 +108,31 @@ QSize MediaToolOptionsBar_Widget::sizeHint() const {
     return {QWidget::sizeHint().width(), kBarHeight};
 }
 
+void MediaToolOptionsBar_Widget::setMediaCoordinates(std::optional<MediaCoordinates> coords) {
+    if (!_coordinate_label) {
+        return;
+    }
+
+    if (!coords.has_value()) {
+        _coordinate_label->setText(QStringLiteral("X:   --  Y:   --"));
+        return;
+    }
+
+    _coordinate_label->setText(
+            QStringLiteral("X: %1  Y: %2")
+                    .arg(static_cast<double>(coords->x), 6, 'f', 1)
+                    .arg(static_cast<double>(coords->y), 6, 'f', 1));
+}
+
 void MediaToolOptionsBar_Widget::_applyStyle() {
     setStyleSheet(QStringLiteral(R"(
         #MediaToolOptionsBar_Widget {
             background-color: rgb(36, 36, 36);
             border-bottom: 1px solid rgb(90, 90, 90);
+        }
+        #MediaCoordinateLabel {
+            color: rgb(150, 150, 150);
+            padding-right: 6px;
         }
     )"));
 }

@@ -1121,10 +1121,13 @@ void Media_Window::mouseMoveEvent(QGraphicsSceneMouseEvent * event) {
     emit mouseMove(event->scenePos().x(), event->scenePos().y());
     qint64 const after_mouse_move_us = _debug_performance ? elapsedMicros(total_timer) : 0;
 
-    // Emit strong-typed coordinate signal
+    // Emit strong-typed coordinate signals
     CanvasCoordinates const canvas_coords(static_cast<float>(event->scenePos().x()),
                                           static_cast<float>(event->scenePos().y()));
     emit mouseMoveCanvas(canvas_coords);
+    MediaCoordinates const media_coords(static_cast<float>(event->scenePos().x() / getXAspect()),
+                                        static_cast<float>(event->scenePos().y() / getYAspect()));
+    emit mouseMoveMediaCoords(media_coords);
     qint64 const after_mouse_move_canvas_us = _debug_performance ? elapsedMicros(total_timer) : 0;
 
     QGraphicsScene::mouseMoveEvent(event);
