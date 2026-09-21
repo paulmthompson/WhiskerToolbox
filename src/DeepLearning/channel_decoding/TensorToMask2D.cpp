@@ -5,7 +5,7 @@
 
 #include "TensorToMask2D.hpp"
 
-#include "Masks/utils/mask_utils.hpp"
+#include "spatial/SpatialResize.hpp"
 
 #include <ATen/core/Tensor.h>// at::Tensor
 #include <spdlog/spdlog.h>
@@ -120,10 +120,10 @@ Mask2D TensorToMask2D::decode(at::Tensor const & tensor,
 
     Mask2D mask;
     for (int dest_y = 0; dest_y < dest_h; ++dest_y) {
-        int const src_y = map_dest_to_source(dest_y, h, dest_h);
+        int const src_y = spatial::discrete_dest_to_source(dest_y, h, dest_h);
 
         for (int dest_x = 0; dest_x < dest_w; ++dest_x) {
-            int const src_x = map_dest_to_source(dest_x, w, dest_w);
+            int const src_x = spatial::discrete_dest_to_source(dest_x, w, dest_w);
 
             if (accessor[src_y][src_x] > params.threshold) {
                 mask.push_back(Point2D<uint32_t>{

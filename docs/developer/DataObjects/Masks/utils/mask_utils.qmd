@@ -30,7 +30,7 @@ t = (x + 0.5) * T / I - 0.5
 Inverse NN when expanding a mask raster (destination pixel `d` samples source `s`):
 
 ```
-s = floor((d + 0.5) * S / D - 0.5)   // clamped; Phase 1 may switch to round at half-integers
+s = lround((d + 0.5) * S / D - 0.5)   // clamped; std::lround (half away from zero)
 ```
 
 ### Edge-aligned (legacy — not supported for new code)

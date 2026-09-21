@@ -15,6 +15,8 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR})
 find_package(reflectcpp CONFIG REQUIRED)
 
 add_executable(test_DeepLearning
+    spatial/SpatialResize.test.cpp
+
     channel_encoding/ImageEncoder.test.cpp
     channel_encoding/Point2DEncoder.test.cpp
     channel_encoding/Mask2DEncoder.test.cpp

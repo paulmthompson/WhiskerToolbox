@@ -90,7 +90,7 @@ TEST_CASE("TensorToPoint2D - all zeros returns origin", "[channel_decoding][Tens
 TEST_CASE("TensorToPoint2D - scaling to target image size", "[channel_decoding][TensorToPoint2D]") {
     dl::TensorToPoint2D decoder;
 
-    // Peak at (5, 5) in 10x10 tensor → should map to (50, 50) in 100x100 target
+    // Peak at (5, 5) in 10x10 tensor → pixel-center maps to (54.5, 54.5) in 100x100
     auto tensor = at::zeros({1, 1, 10, 10});
     tensor[0][0][5][5] = 1.0f;
 
@@ -104,8 +104,8 @@ TEST_CASE("TensorToPoint2D - scaling to target image size", "[channel_decoding][
     params.subpixel = false;
 
     auto const pt = decoder.decode(tensor, ctx, params);
-    CHECK_THAT(pt.x, WithinAbs(50.0f, 1e-3f));
-    CHECK_THAT(pt.y, WithinAbs(50.0f, 1e-3f));
+    CHECK_THAT(pt.x, WithinAbs(54.5f, 1e-3f));
+    CHECK_THAT(pt.y, WithinAbs(54.5f, 1e-3f));
 }
 
 TEST_CASE("TensorToPoint2D - batch index", "[channel_decoding][TensorToPoint2D]") {

@@ -102,7 +102,7 @@ TEST_CASE("TensorToMask2D - scaling to target image size", "[channel_decoding][T
 
     // Single pixel at (5, 5) in 10x10 tensor, upsampled via nearest-neighbor
     // to 100x100 target. Source pixel (5,5) maps to a 10x10 block at
-    // x=[55..64], y=[55..64] using map_dest_to_source convention.
+    // x=[50..59], y=[50..59] using pixel-center discrete_dest_to_source convention.
     auto tensor = at::zeros({1, 1, 10, 10});
     tensor[0][0][5][5] = 1.0f;
 
@@ -121,10 +121,10 @@ TEST_CASE("TensorToMask2D - scaling to target image size", "[channel_decoding][T
     REQUIRE(mask.size() == 100);
 
     for (auto const & p: mask) {
-        CHECK(p.x >= 55);
-        CHECK(p.x <= 64);
-        CHECK(p.y >= 55);
-        CHECK(p.y <= 64);
+        CHECK(p.x >= 50);
+        CHECK(p.x <= 59);
+        CHECK(p.y >= 50);
+        CHECK(p.y <= 59);
     }
 }
 

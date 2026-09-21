@@ -11,8 +11,8 @@
 
 std::shared_ptr<MaskData> apply_binary_image_algorithm(
         MaskData const * mask_data,
-        const std::function<Image(Image const &)>& binary_processor,
-        const std::function<void(int)>& progress_callback,
+        std::function<Image(Image const &)> const & binary_processor,
+        std::function<void(int)> const & progress_callback,
         bool preserve_empty_masks) {
 
     auto result_mask_data = std::make_shared<MaskData>();
@@ -123,8 +123,8 @@ int map_dest_to_source(int dest_coord, int source_size, int dest_size) {
     }
 
     double const scale = static_cast<double>(source_size) / static_cast<double>(dest_size);
-    int const source = static_cast<int>(
-            (static_cast<double>(dest_coord) + 0.5) * scale - 0.5);
+    int const source = static_cast<int>(std::lround(
+            (static_cast<double>(dest_coord) + 0.5) * scale - 0.5));
     return std::clamp(source, 0, source_size - 1);
 }
 

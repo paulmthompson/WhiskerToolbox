@@ -49,7 +49,7 @@ TEST_CASE("pixel-center vs edge-aligned convention delta", "[masks][resize][conv
         CHECK(std::abs(center_y - edge_y) <= 1);
     }
 
-    CHECK(map_dest_to_source(297, tensor_w, image_size.width) == 118);
+    CHECK(map_dest_to_source(297, tensor_w, image_size.width) == 119);
     CHECK(map_dest_to_source_edge_aligned(297, tensor_w, image_size.width) == 119);
     CHECK(map_dest_to_source(281, tensor_w, image_size.width) ==
           map_dest_to_source_edge_aligned(281, tensor_w, image_size.width));
@@ -60,12 +60,12 @@ TEST_CASE("map_dest_to_source function", "[masks][resize]") {
         CHECK(map_dest_to_source(5, 10, 10) == 5);
     }
 
-    SECTION("10x upsample maps source 5 to dest block 55..64") {
-        for (int dest = 55; dest <= 64; ++dest) {
+    SECTION("10x upsample maps source 5 to dest block 50..59") {
+        for (int dest = 50; dest <= 59; ++dest) {
             CHECK(map_dest_to_source(dest, 10, 100) == 5);
         }
-        CHECK(map_dest_to_source(54, 10, 100) == 4);
-        CHECK(map_dest_to_source(65, 10, 100) == 6);
+        CHECK(map_dest_to_source(49, 10, 100) == 4);
+        CHECK(map_dest_to_source(60, 10, 100) == 6);
     }
 
     SECTION("256 to 640 width mapping is clamped") {
@@ -190,23 +190,19 @@ TEST_CASE("resize_mask function", "[masks][resize]") {
     }
 
     SECTION("Aspect ratio change") {
-        // Create a horizontal line in a square source, positioned to survive aspect ratio change
-        // Use y=2 instead of y=5 so it maps better to the 5-pixel tall destination
-        Mask2D horizontal_line = {{2, 2}, {3, 2}, {4, 2}, {5, 2}};
+        // Horizontal line at y=3 (maps to dest y=1 under pixel-center 10→5 downsampling)
+        Mask2D horizontal_line = {{2, 3}, {3, 3}, {4, 3}, {5, 3}};
         ImageSize source_size{10, 10};
         ImageSize dest_size{20, 5};// Wide and short destination
 
         auto resized = resize_mask(horizontal_line, source_size, dest_size);
 
-        // Should have pixels, roughly stretched horizontally and compressed vertically
         REQUIRE(!resized.empty());
 
-        // Y coordinates should be compressed (y=2 in source maps to y=1 in dest)
-        // X coordinates should be stretched (x=2-5 in source maps to roughly x=4-10 in dest)
         for (auto const & point: resized) {
-            REQUIRE(point.y <= 2); // Should be in upper part due to compression
-            REQUIRE(point.x >= 3); // Should be in central/right part due to stretching
-            REQUIRE(point.x <= 12);// Upper bound for stretched coordinates
+            REQUIRE(point.y == 1);
+            REQUIRE(point.x >= 4);
+            REQUIRE(point.x <= 11);
         }
     }
 

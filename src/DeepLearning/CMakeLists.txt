@@ -44,6 +44,9 @@ set(DEEP_LEARNING_SOURCES
     channel_encoding/EncoderDispatch.hpp
     channel_encoding/EncoderDispatch.cpp
 
+    spatial/SpatialResize.hpp
+    spatial/SpatialResize.cpp
+
     channel_decoding/ChannelDecoder.hpp
     channel_decoding/DecoderParamSchemas.hpp
     channel_decoding/TensorToPoint2D.hpp
@@ -145,7 +148,6 @@ endif()
 target_link_libraries(DeepLearning PUBLIC reflectcpp::reflectcpp)
 target_link_libraries(DeepLearning PUBLIC spdlog::spdlog_header_only)
 target_link_libraries(DeepLearning PRIVATE DataManager)
-target_link_libraries(DeepLearning PRIVATE WhiskerToolbox::MaskData)
 target_link_libraries(DeepLearning PRIVATE Commands)
 
 set_target_compiler_warnings(DeepLearning)

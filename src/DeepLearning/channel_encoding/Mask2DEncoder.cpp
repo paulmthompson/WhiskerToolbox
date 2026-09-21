@@ -1,9 +1,9 @@
 #include "Mask2DEncoder.hpp"
 
-#include <ATen/core/Tensor.h> // at::Tensor
+#include "spatial/SpatialResize.hpp"
 
-#include <algorithm>
-#include <cmath>
+#include <ATen/core/Tensor.h>// at::Tensor
+
 #include <stdexcept>
 
 namespace dl {
@@ -31,18 +31,13 @@ void Mask2DEncoder::encode(Mask2D const & mask,
 
     auto channel = tensor[ctx.batch_index][ctx.target_channel];
 
-    float const sx = static_cast<float>(ctx.width) / static_cast<float>(source_size.width);
-    float const sy = static_cast<float>(ctx.height) / static_cast<float>(source_size.height);
-
     auto accessor = channel.accessor<float, 2>();
 
     for (auto const & point: mask) {
-        int const px = std::clamp(
-                static_cast<int>(std::round(static_cast<float>(point.x) * sx)),
-                0, ctx.width - 1);
-        int const py = std::clamp(
-                static_cast<int>(std::round(static_cast<float>(point.y) * sy)),
-                0, ctx.height - 1);
+        int const px = spatial::discrete_image_to_tensor(
+                static_cast<int>(point.x), source_size.width, ctx.width);
+        int const py = spatial::discrete_image_to_tensor(
+                static_cast<int>(point.y), source_size.height, ctx.height);
         accessor[py][px] = 1.0f;
     }
 }

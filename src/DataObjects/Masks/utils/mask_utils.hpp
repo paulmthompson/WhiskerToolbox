@@ -21,7 +21,7 @@
  * in continuous image space. Inverse nearest-neighbor mapping per axis:
  *
  * @code
- * src = clamp(floor((dest + 0.5) * source_size / dest_size - 0.5), 0, source_size - 1)
+ * src = clamp(lround((dest + 0.5) * source_size / dest_size - 0.5), 0, source_size - 1)
  * @endcode
  *
  * see `docs/developer/DataObjects/Masks/utils/mask_utils.qmd` for the

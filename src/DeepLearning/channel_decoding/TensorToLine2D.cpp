@@ -5,6 +5,8 @@
 
 #include "TensorToLine2D.hpp"
 
+#include "spatial/SpatialResize.hpp"
+
 #include <ATen/core/Tensor.h>// at::Tensor
 #include <spdlog/spdlog.h>
 #include <torch/types.h>// kCPU, kFloat32
@@ -258,9 +260,8 @@ Point2D<float> scale_to_target(float const x, float const y,
     if (target.width <= 0 || target.height <= 0) {
         return {x, y};
     }
-    float const sx = static_cast<float>(target.width) / static_cast<float>(tensor_w);
-    float const sy = static_cast<float>(target.height) / static_cast<float>(tensor_h);
-    return {x * sx, y * sy};
+    return {spatial::continuous_tensor_to_image(x, tensor_w, target.width),
+            spatial::continuous_tensor_to_image(y, tensor_h, target.height)};
 }
 
 }// namespace

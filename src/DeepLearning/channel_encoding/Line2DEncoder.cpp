@@ -1,7 +1,9 @@
 #include "Line2DEncoder.hpp"
 
-#include <ATen/core/TensorAccessor.h> // at::TensorAccessor
-#include <ATen/core/Tensor.h> // at::Tensor
+#include "spatial/SpatialResize.hpp"
+
+#include <ATen/core/Tensor.h>        // at::Tensor
+#include <ATen/core/TensorAccessor.h>// at::TensorAccessor
 
 #include <algorithm>
 #include <cmath>
@@ -19,14 +21,13 @@ std::string Line2DEncoder::inputTypeName() const {
 
 namespace {
 
-/// Scale a point from source image coordinates to tensor coordinates
+/// Scale a point from source image coordinates to continuous tensor coordinates.
 Point2D<float> scale_point(Point2D<float> const point,
                            ImageSize const source_size,
                            int const target_h,
                            int const target_w) {
-    float const sx = static_cast<float>(target_w) / static_cast<float>(source_size.width);
-    float const sy = static_cast<float>(target_h) / static_cast<float>(source_size.height);
-    return {point.x * sx, point.y * sy};
+    return {spatial::continuous_image_to_tensor(point.x, source_size.width, target_w),
+            spatial::continuous_image_to_tensor(point.y, source_size.height, target_h)};
 }
 
 /// Bresenham-style line rasterization between two pixel coordinates.
@@ -140,10 +141,10 @@ void Line2DEncoder::encode(Line2D const & line,
 
         if (params.mode == RasterMode::Binary) {
             rasterize_segment_binary(
-                    static_cast<int>(std::round(p0.x)),
-                    static_cast<int>(std::round(p0.y)),
-                    static_cast<int>(std::round(p1.x)),
-                    static_cast<int>(std::round(p1.y)),
+                    spatial::discrete_tensor_nearest(p0.x, ctx.width),
+                    spatial::discrete_tensor_nearest(p0.y, ctx.height),
+                    spatial::discrete_tensor_nearest(p1.x, ctx.width),
+                    spatial::discrete_tensor_nearest(p1.y, ctx.height),
                     accessor, ctx.height, ctx.width);
         } else {
             rasterize_segment_heatmap(p0, p1, accessor,

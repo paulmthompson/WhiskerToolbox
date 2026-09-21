@@ -1,5 +1,7 @@
 #include "Point2DEncoder.hpp"
 
+#include "spatial/SpatialResize.hpp"
+
 #include <ATen/core/Tensor.h>// at::Tensor
 
 #include <algorithm>
@@ -18,14 +20,13 @@ std::string Point2DEncoder::inputTypeName() const {
 
 namespace {
 
-/// Scale a point from source image coordinates to tensor coordinates
+/// Scale a point from source image coordinates to continuous tensor coordinates.
 Point2D<float> scale_point(Point2D<float> const point,
                            ImageSize const source_size,
                            int const target_h,
                            int const target_w) {
-    float const sx = static_cast<float>(target_w) / static_cast<float>(source_size.width);
-    float const sy = static_cast<float>(target_h) / static_cast<float>(source_size.height);
-    return {point.x * sx, point.y * sy};
+    return {spatial::continuous_image_to_tensor(point.x, source_size.width, target_w),
+            spatial::continuous_image_to_tensor(point.y, source_size.height, target_h)};
 }
 
 /// Place a single point with Binary mode (set 1.0 at nearest pixel)
@@ -33,8 +34,8 @@ void encode_binary(Point2D<float> const scaled_point,
                    at::Tensor & channel,
                    int const h,
                    int const w) {
-    int const px = std::clamp(static_cast<int>(std::round(scaled_point.x)), 0, w - 1);
-    int const py = std::clamp(static_cast<int>(std::round(scaled_point.y)), 0, h - 1);
+    int const px = spatial::discrete_tensor_nearest(scaled_point.x, w);
+    int const py = spatial::discrete_tensor_nearest(scaled_point.y, h);
     channel[py][px] = 1.0f;
 }
 

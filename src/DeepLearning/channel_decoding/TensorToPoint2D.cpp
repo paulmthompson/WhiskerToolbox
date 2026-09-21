@@ -5,6 +5,8 @@
 
 #include "TensorToPoint2D.hpp"
 
+#include "spatial/SpatialResize.hpp"
+
 #include <ATen/core/Tensor.h>        // at::Tensor
 #include <ATen/core/TensorAccessor.h>// at::TensorAccessor
 #include <spdlog/spdlog.h>
@@ -86,9 +88,8 @@ Point2D<float> scale_to_target(Point2D<float> const point,
     if (target.width <= 0 || target.height <= 0) {
         return point;
     }
-    float const sx = static_cast<float>(target.width) / static_cast<float>(tensor_w);
-    float const sy = static_cast<float>(target.height) / static_cast<float>(tensor_h);
-    return {point.x * sx, point.y * sy};
+    return {spatial::continuous_tensor_to_image(point.x, tensor_w, target.width),
+            spatial::continuous_tensor_to_image(point.y, tensor_h, target.height)};
 }
 
 /**
