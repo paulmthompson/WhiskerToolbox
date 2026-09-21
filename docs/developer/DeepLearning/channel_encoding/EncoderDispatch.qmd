@@ -17,6 +17,25 @@ Concrete encoders register via `EncoderFactory` (`EncoderFactory.hpp`) for
 name-based lookup; `EncoderDispatch` is the params-variant entry point used
 during input assembly.
 
+## Spatial scaling contract
+
+All encoders created through `EncoderFactory` must map between
+`source_image_size` and tensor `(H, W)` using a **single shared convention**
+that pairs with the decoders in `DecoderFactory`:
+
+| Category | Target convention |
+|---|---|
+| Images (`ImageEncoder`) | Pixel-center grid, PyTorch `align_corners=false` bilinear resize |
+| Points / lines | Pixel-center continuous coordinates (subpixel floats in tensor space) |
+| Masks (`Mask2DEncoder`) | Pixel-center discrete nearest index on the same grid |
+
+Do not add per-encoder `round(x * scale)` helpers. Shared helpers will live in
+`SpatialResize.hpp` (planned); mask raster resize today uses
+[`mask_utils.hpp`](../../DataObjects/Masks/utils/mask_utils.qmd).
+
+Individual encoders are being aligned in a follow-up phase; the factory headers
+document the contract even before all implementations match it.
+
 ## Pipeline position
 
 ```

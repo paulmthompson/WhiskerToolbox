@@ -1,14 +1,59 @@
 #include "mask_utils.hpp"
+
 #include "CoreGeometry/masks.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <cmath>
 #include <set>
+#include <utility>
+#include <vector>
+
+namespace {
 
 /**
- * @brief Tests for mask utility functions
+ * @brief Legacy edge-aligned discrete index (test reference only).
+ *
+ * Not a supported production API. Documents the delta vs pixel-center mapping.
  */
+int map_dest_to_source_edge_aligned(int image_coord, int tensor_size, int image_size) {
+    double const scale = static_cast<double>(tensor_size) / static_cast<double>(image_size);
+    int const tensor_coord = static_cast<int>(std::lround(static_cast<double>(image_coord) * scale));
+    return std::clamp(tensor_coord, 0, tensor_size - 1);
+}
 
+}// namespace
+
+TEST_CASE("pixel-center vs edge-aligned convention delta", "[masks][resize][convention]") {
+    ImageSize const image_size{640, 480};
+    int const tensor_w = 256;
+    int const tensor_h = 256;
+
+    std::vector<std::pair<int, int>> const probe_points{
+            {297, 161},
+            {301, 178},
+            {228, 230},
+            {209, 245},
+            {281, 188},
+    };
+
+    for (auto const & [x, y]: probe_points) {
+        int const center_x = map_dest_to_source(x, tensor_w, image_size.width);
+        int const center_y = map_dest_to_source(y, tensor_h, image_size.height);
+        int const edge_x = map_dest_to_source_edge_aligned(x, tensor_w, image_size.width);
+        int const edge_y = map_dest_to_source_edge_aligned(y, tensor_h, image_size.height);
+
+        INFO("probe (" << x << ", " << y << ") center tensor (" << center_x << ", " << center_y
+                       << ") edge tensor (" << edge_x << ", " << edge_y << ")");
+
+        CHECK(std::abs(center_x - edge_x) <= 1);
+        CHECK(std::abs(center_y - edge_y) <= 1);
+    }
+
+    CHECK(map_dest_to_source(297, tensor_w, image_size.width) == 118);
+    CHECK(map_dest_to_source_edge_aligned(297, tensor_w, image_size.width) == 119);
+    CHECK(map_dest_to_source(281, tensor_w, image_size.width) ==
+          map_dest_to_source_edge_aligned(281, tensor_w, image_size.width));
+}
 
 TEST_CASE("map_dest_to_source function", "[masks][resize]") {
     SECTION("identity when sizes match") {

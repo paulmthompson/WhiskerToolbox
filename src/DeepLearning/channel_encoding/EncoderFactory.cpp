@@ -1,3 +1,10 @@
+/**
+ * @file EncoderFactory.cpp
+ * @brief Implementation of @ref dl::EncoderFactory encoder registration.
+ *
+ * @see EncoderFactory.hpp for the spatial scaling contract shared with decoders.
+ */
+
 #include "EncoderFactory.hpp"
 
 #include "ImageEncoder.hpp"
@@ -7,8 +14,7 @@
 
 namespace dl {
 
-std::unique_ptr<ChannelEncoder> EncoderFactory::create(std::string const & encoder_name)
-{
+std::unique_ptr<ChannelEncoder> EncoderFactory::create(std::string const & encoder_name) {
     if (encoder_name == "ImageEncoder") {
         return std::make_unique<ImageEncoder>();
     }
@@ -24,9 +30,8 @@ std::unique_ptr<ChannelEncoder> EncoderFactory::create(std::string const & encod
     return nullptr;
 }
 
-std::vector<std::string> EncoderFactory::availableEncoders()
-{
+std::vector<std::string> EncoderFactory::availableEncoders() {
     return {"ImageEncoder", "Point2DEncoder", "Mask2DEncoder", "Line2DEncoder"};
 }
 
-} // namespace dl
+}// namespace dl

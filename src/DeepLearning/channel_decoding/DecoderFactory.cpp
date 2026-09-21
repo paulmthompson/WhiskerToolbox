@@ -1,3 +1,10 @@
+/**
+ * @file DecoderFactory.cpp
+ * @brief Implementation of @ref dl::DecoderFactory decoder registration.
+ *
+ * @see DecoderFactory.hpp for the spatial scaling contract shared with encoders.
+ */
+
 #include "DecoderFactory.hpp"
 
 #include "TensorToFeatureVector.hpp"
@@ -7,8 +14,7 @@
 
 namespace dl {
 
-std::unique_ptr<ChannelDecoder> DecoderFactory::create(std::string const & decoder_name)
-{
+std::unique_ptr<ChannelDecoder> DecoderFactory::create(std::string const & decoder_name) {
     if (decoder_name == "TensorToPoint2D") {
         return std::make_unique<TensorToPoint2D>();
     }
@@ -24,9 +30,8 @@ std::unique_ptr<ChannelDecoder> DecoderFactory::create(std::string const & decod
     return nullptr;
 }
 
-std::vector<std::string> DecoderFactory::availableDecoders()
-{
+std::vector<std::string> DecoderFactory::availableDecoders() {
     return {"TensorToPoint2D", "TensorToMask2D", "TensorToLine2D", "TensorToFeatureVector"};
 }
 
-} // namespace dl
+}// namespace dl

@@ -16,6 +16,22 @@ Concrete decoders register via `DecoderFactory` (`DecoderFactory.hpp`) for
 name-based lookup; `DecoderDispatch` is the params-variant entry point used
 during inference.
 
+## Spatial scaling contract
+
+All decoders created through `DecoderFactory` must upsample from tensor
+`(H, W)` to `DecoderContext::target_image_size` using the **same convention**
+as the encoders in `EncoderFactory`:
+
+| Decoder | Target convention |
+|---|---|
+| `TensorToMask2D` | Pixel-center inverse NN raster (see `map_dest_to_source` / `resize_mask`) |
+| `TensorToPoint2D` / `TensorToLine2D` | Pixel-center continuous inverse of encoder mapping |
+| `TensorToFeatureVector` | No spatial resize |
+
+Encode and decode must be paired inverses per data type (continuous vs mask
+raster). See [`mask_utils.qmd`](../../DataObjects/Masks/utils/mask_utils.qmd)
+for pixel-center vs legacy edge-aligned formulas.
+
 ## Pipeline position
 
 ```

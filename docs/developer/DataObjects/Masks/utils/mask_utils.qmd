@@ -1,0 +1,76 @@
+---
+title: "mask_utils"
+---
+
+## Overview
+
+`mask_utils.hpp` provides mask raster helpers: sparse `Mask2D` ↔ dense `Image`,
+nearest-neighbor resize between canvas sizes, and batch binary processing.
+
+**Header:** `src/DataObjects/Masks/utils/mask_utils.hpp`  
+**Tests:** `src/DataObjects/Masks/utils/mask_utils.test.cpp`
+
+## Spatial conventions
+
+Only **resize** functions carry a grid convention. Placement helpers
+(`mask_to_binary_image`, `binary_image_to_mask`) write/read integer indices
+without resampling.
+
+### Pixel-center (canonical target)
+
+Used by `map_dest_to_source`, `resize_mask`, `TensorToMask2D`, PyTorch
+`ImageEncoder`, and OpenCV `cv2.resize` sampling.
+
+Continuous image → tensor coordinate (one axis):
+
+```
+t = (x + 0.5) * T / I - 0.5
+```
+
+Inverse NN when expanding a mask raster (destination pixel `d` samples source `s`):
+
+```
+s = floor((d + 0.5) * S / D - 0.5)   // clamped; Phase 1 may switch to round at half-integers
+```
+
+### Edge-aligned (legacy — not supported for new code)
+
+Previously used by `Mask2DEncoder` (`round(x * T/I)`) and some training point
+transforms (`x * out_w / in_w`). Corner `0→0`, `W-1→out_w-1`.
+
+```
+t = round(x * T / I)
+```
+
+This is **not** paired with `map_dest_to_source` and causes 1–2 px shifts at
+640×480 → 256×256. Do not add a second public `resize_mask_*` API for this;
+compare conventions in unit tests only.
+
+### Comparison at 640×480 → 256 (width axis)
+
+| Image `x` | Pixel-center `map_dest_to_source(x,256,640)` | Edge-aligned `round(x*256/640)` |
+|---:|---:|---:|
+| 297 | 118 | 119 |
+| 301 | 120 | 120 |
+| 228 | 90 | 91 |
+| 209 | 83 | 84 |
+| 281 | 112 | 112 |
+
+Rows where the two columns differ by 1 are exactly the half-integer boundary
+cases in continuous space.
+
+## Functions
+
+| Function | Resize? | Convention |
+|---|---|---|
+| `map_dest_to_source` | Yes (1D index map) | Pixel-center inverse NN |
+| `resize_mask` | Yes | Pixel-center inverse NN on binary raster |
+| `mask_to_binary_image` | No | N/A |
+| `binary_image_to_mask` | No | N/A |
+| `apply_binary_image_algorithm` | No | Uses canvas size as-is |
+
+## Related
+
+- [EncoderFactory](../../../DeepLearning/channel_encoding/EncoderDispatch.qmd) — encoder spatial contract
+- [DecoderFactory](../../../DeepLearning/channel_decoding/DecoderDispatch.qmd) — decoder spatial contract
+- [TensorToMask2D](../../../DeepLearning/channel_decoding/TensorToMask2D.qmd) — model mask decode

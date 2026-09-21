@@ -48,7 +48,9 @@ When `DecoderContext::target_image_size` is non-zero, mask coordinates are
 upsampled from tensor space to the original image size by iterating destination
 pixels and sampling the nearest source pixel via `map_dest_to_source()` in
 `mask_utils` (same inverse nearest-neighbor mapping as `resize_mask` and
-MaskInspector scaling).
+MaskInspector scaling). See
+[mask_utils](../../DataObjects/Masks/utils/mask_utils.qmd) for the pixel-center
+spatial convention and comparison with legacy edge-aligned mapping.
 
 When `target_image_size` is `{0, 0}`, mask pixels are returned in tensor pixel
 coordinates (integer `x`, `y` in `[0, width)` × `[0, height)`).
