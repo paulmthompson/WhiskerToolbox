@@ -361,11 +361,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-penoptionswidget" id="toc-function-penoptionswidget" class="nav-link" data-scroll-target="#function-penoptionswidget">function penOptionsWidget</a></li>
   <li><a href="#function-eraseroptionswidget" id="toc-function-eraseroptionswidget" class="nav-link" data-scroll-target="#function-eraseroptionswidget">function eraserOptionsWidget</a></li>
   <li><a href="#function-smoothoptionswidget" id="toc-function-smoothoptionswidget" class="nav-link" data-scroll-target="#function-smoothoptionswidget">function smoothOptionsWidget</a></li>
+  <li><a href="#function-setmediacoordinates" id="toc-function-setmediacoordinates" class="nav-link" data-scroll-target="#function-setmediacoordinates">function setMediaCoordinates</a></li>
   <li><a href="#function-sizehint" id="toc-function-sizehint" class="nav-link" data-scroll-target="#function-sizehint">function sizeHint</a></li>
   </ul></li>
   <li><a href="#public-attributes-documentation" id="toc-public-attributes-documentation" class="nav-link" data-scroll-target="#public-attributes-documentation">Public Attributes Documentation</a>
   <ul class="collapse">
   <li><a href="#variable-kbarheight" id="toc-variable-kbarheight" class="nav-link" data-scroll-target="#variable-kbarheight">variable kBarHeight</a></li>
+  <li><a href="#variable-kcoordinatelabelwidth" id="toc-variable-kcoordinatelabelwidth" class="nav-link" data-scroll-target="#variable-kcoordinatelabelwidth">variable kCoordinateLabelWidth</a></li>
   </ul></li>
   </ul></li>
   </ul>
@@ -438,6 +440,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classMediaToolOptionsBar__Widget.html#function-smoothoptionswidget">smoothOptionsWidget</a></strong>() const<br>Access Smooth tool options widget.</td>
 </tr>
 <tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaToolOptionsBar__Widget.html#function-setmediacoordinates">setMediaCoordinates</a></strong>(std::optional&lt; <a href="../../api_generated/Classes/structMediaCoordinates.html">MediaCoordinates</a> &gt; coords)<br>Update the live media-space cursor readout.</td>
+</tr>
+<tr class="odd">
 <td>QSize</td>
 <td><strong><a href="../../api_generated/Classes/classMediaToolOptionsBar__Widget.html#function-sizehint">sizeHint</a></strong>() const override</td>
 </tr>
@@ -457,6 +463,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>constexpr int</td>
 <td><strong><a href="../../api_generated/Classes/classMediaToolOptionsBar__Widget.html#variable-kbarheight">kBarHeight</a></strong></td>
+</tr>
+<tr class="even">
+<td>constexpr int</td>
+<td><strong><a href="../../api_generated/Classes/classMediaToolOptionsBar__Widget.html#variable-kcoordinatelabelwidth">kCoordinateLabelWidth</a></strong></td>
 </tr>
 </tbody>
 </table>
@@ -515,18 +525,33 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Access Smooth tool options widget.</p>
 <p><strong>Return</strong>: Smooth options widget (never null after construction)</p>
 </section>
+<section id="function-setmediacoordinates" class="level3">
+<h3 class="anchored" data-anchor-id="function-setmediacoordinates">function setMediaCoordinates</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setMediaCoordinates<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>optional<span class="op">&lt;</span> MediaCoordinates <span class="op">&gt;</span> coords</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Update the live media-space cursor readout.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>coords</strong> Current cursor position in media pixels, or nullopt when the cursor left the canvas</li>
+</ul>
+</section>
 <section id="function-sizehint" class="level3">
 <h3 class="anchored" data-anchor-id="function-sizehint">function sizeHint</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QSize</span> sizeHint<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">QSize</span> sizeHint<span class="op">()</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </section>
 <section id="public-attributes-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-attributes-documentation">Public Attributes Documentation</h2>
 <section id="variable-kbarheight" class="level3">
 <h3 class="anchored" data-anchor-id="variable-kbarheight">variable kBarHeight</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">constexpr</span> <span class="dt">int</span> kBarHeight <span class="op">=</span> <span class="dv">28</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">constexpr</span> <span class="dt">int</span> kBarHeight <span class="op">=</span> <span class="dv">28</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="variable-kcoordinatelabelwidth" class="level3">
+<h3 class="anchored" data-anchor-id="variable-kcoordinatelabelwidth">variable kCoordinateLabelWidth</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="kw">constexpr</span> <span class="dt">int</span> kCoordinateLabelWidth <span class="op">=</span> <span class="dv">130</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-19 at 17:01:04 +0000</p>
+<p>Updated on 2026-09-21 at 13:46:31 +0000</p>
 
 
 </section>

@@ -822,23 +822,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-323"><a href="#cb4-323" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> leftClickMediaCoords<span class="op">(</span>MediaCoordinates <span class="at">const</span> <span class="op">&amp;</span> coords<span class="op">);</span></span>
 <span id="cb4-324"><a href="#cb4-324" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> rightClickMediaCoords<span class="op">(</span>MediaCoordinates <span class="at">const</span> <span class="op">&amp;</span> coords<span class="op">);</span></span>
 <span id="cb4-325"><a href="#cb4-325" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> mouseMoveCanvas<span class="op">(</span>CanvasCoordinates <span class="at">const</span> <span class="op">&amp;</span> coords<span class="op">);</span></span>
-<span id="cb4-326"><a href="#cb4-326" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-327"><a href="#cb4-327" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Mouse event signal with full event information (for modifier detection)</span></span>
-<span id="cb4-328"><a href="#cb4-328" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> leftClickMediaWithEvent<span class="op">(</span><span class="ex">qreal</span> x_media<span class="op">,</span> <span class="ex">qreal</span> y_media<span class="op">,</span> <span class="ex">Qt::KeyboardModifiers</span> modifiers<span class="op">);</span></span>
-<span id="cb4-329"><a href="#cb4-329" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-330"><a href="#cb4-330" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> groupSelectionInteracted<span class="op">();</span></span>
-<span id="cb4-331"><a href="#cb4-331" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb4-332"><a href="#cb4-332" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-333"><a href="#cb4-333" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> DisplayOptionsT<span class="op">&gt;</span></span>
-<span id="cb4-334"><a href="#cb4-334" aria-hidden="true" tabindex="-1"></a><span class="ex">QRgb</span> plot_color_with_alpha<span class="op">(</span>DisplayOptionsT <span class="at">const</span> <span class="op">*</span> opts<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb4-335"><a href="#cb4-335" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> color <span class="op">=</span> <span class="ex">QColor</span><span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>opts<span class="op">-&gt;</span>hex_color<span class="op">()));</span></span>
-<span id="cb4-336"><a href="#cb4-336" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> output_color <span class="op">=</span> <span class="fu">qRgba</span><span class="op">(</span>color<span class="op">.</span>red<span class="op">(),</span> color<span class="op">.</span>green<span class="op">(),</span> color<span class="op">.</span>blue<span class="op">(),</span> <span class="bu">std::</span>lround<span class="op">(</span>opts<span class="op">-&gt;</span>alpha<span class="op">()</span> <span class="op">*</span> <span class="fl">255.0</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb4-337"><a href="#cb4-337" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> output_color<span class="op">;</span></span>
-<span id="cb4-338"><a href="#cb4-338" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb4-339"><a href="#cb4-339" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-340"><a href="#cb4-340" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// MEDIA_WINDOW_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb4-326"><a href="#cb4-326" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> mouseMoveMediaCoords<span class="op">(</span>MediaCoordinates <span class="at">const</span> <span class="op">&amp;</span> coords<span class="op">);</span></span>
+<span id="cb4-327"><a href="#cb4-327" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-328"><a href="#cb4-328" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Mouse event signal with full event information (for modifier detection)</span></span>
+<span id="cb4-329"><a href="#cb4-329" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> leftClickMediaWithEvent<span class="op">(</span><span class="ex">qreal</span> x_media<span class="op">,</span> <span class="ex">qreal</span> y_media<span class="op">,</span> <span class="ex">Qt::KeyboardModifiers</span> modifiers<span class="op">);</span></span>
+<span id="cb4-330"><a href="#cb4-330" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-331"><a href="#cb4-331" aria-hidden="true" tabindex="-1"></a>    <span class="dt">void</span> groupSelectionInteracted<span class="op">();</span></span>
+<span id="cb4-332"><a href="#cb4-332" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb4-333"><a href="#cb4-333" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-334"><a href="#cb4-334" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> DisplayOptionsT<span class="op">&gt;</span></span>
+<span id="cb4-335"><a href="#cb4-335" aria-hidden="true" tabindex="-1"></a><span class="ex">QRgb</span> plot_color_with_alpha<span class="op">(</span>DisplayOptionsT <span class="at">const</span> <span class="op">*</span> opts<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-336"><a href="#cb4-336" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> color <span class="op">=</span> <span class="ex">QColor</span><span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>opts<span class="op">-&gt;</span>hex_color<span class="op">()));</span></span>
+<span id="cb4-337"><a href="#cb4-337" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> output_color <span class="op">=</span> <span class="fu">qRgba</span><span class="op">(</span>color<span class="op">.</span>red<span class="op">(),</span> color<span class="op">.</span>green<span class="op">(),</span> color<span class="op">.</span>blue<span class="op">(),</span> <span class="bu">std::</span>lround<span class="op">(</span>opts<span class="op">-&gt;</span>alpha<span class="op">()</span> <span class="op">*</span> <span class="fl">255.0</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb4-338"><a href="#cb4-338" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> output_color<span class="op">;</span></span>
+<span id="cb4-339"><a href="#cb4-339" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-340"><a href="#cb4-340" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-341"><a href="#cb4-341" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// MEDIA_WINDOW_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-19 at 17:01:10 +0000</p>
+<p>Updated on 2026-09-21 at 13:46:37 +0000</p>
 
 
 </section>

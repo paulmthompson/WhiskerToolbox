@@ -316,6 +316,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
   <li><a href="#layout" id="toc-layout" class="nav-link" data-scroll-target="#layout">Layout</a></li>
   <li><a href="#components" id="toc-components" class="nav-link" data-scroll-target="#components">Components</a></li>
+  <li><a href="#cursor-coordinates" id="toc-cursor-coordinates" class="nav-link" data-scroll-target="#cursor-coordinates">Cursor Coordinates</a></li>
   <li><a href="#select-tool-filter" id="toc-select-tool-filter" class="nav-link" data-scroll-target="#select-tool-filter">Select Tool Filter</a></li>
   <li><a href="#pen-tool" id="toc-pen-tool" class="nav-link" data-scroll-target="#pen-tool">Pen Tool</a></li>
   <li><a href="#eraser-tool" id="toc-eraser-tool" class="nav-link" data-scroll-target="#eraser-tool">Eraser Tool</a></li>
@@ -412,6 +413,38 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 </tbody>
 </table>
+</section>
+<section id="cursor-coordinates" class="level2">
+<h2 class="anchored" data-anchor-id="cursor-coordinates">Cursor Coordinates</h2>
+<p>The right side of the tool options bar shows a live <strong>media-space</strong> cursor readout (<code>X: …  Y: …</code>) in source-image pixels. The label uses a fixed width so it remains visible when the dock is narrow. Values update on every mouse move over the canvas and reset to <code>--</code> when the pointer leaves the viewport.</p>
+<p>Tool option pages use <code>ToolOptionsLayoutHelpers</code> so long instruction text lives in tooltips instead of forcing horizontal scroll. The media <code>QGraphicsView</code> uses <code>AdjustIgnored</code> so zoom/pan stays inside the canvas rather than expanding the dock widget.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 66%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Source</th>
+<th>Signal / path</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>Media_Window::mouseMoveMediaCoords</code></td>
+<td>Emitted from <code>mouseMoveEvent</code> alongside <code>mouseMoveCanvas</code></td>
+</tr>
+<tr class="even">
+<td><code>MediaToolOptionsBar_Widget::setMediaCoordinates</code></td>
+<td>Formats fixed-width text in the bar label</td>
+</tr>
+<tr class="odd">
+<td><code>Media_Widget</code> viewport <code>Leave</code> event</td>
+<td>Clears the readout via <code>setMediaCoordinates(std::nullopt)</code></td>
+</tr>
+</tbody>
+</table>
+<p>External widgets with access to <code>Media_Window</code> can connect to <code>mouseMoveMediaCoords</code> directly for custom cursor feedback.</p>
 </section>
 <section id="select-tool-filter" class="level2">
 <h2 class="anchored" data-anchor-id="select-tool-filter">Select Tool Filter</h2>
