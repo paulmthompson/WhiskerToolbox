@@ -46,9 +46,9 @@ ul.task-list li input[type="checkbox"] {
 <link href="../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-e3eac3a3110e10f27c3b9898c188aa9f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-9c87c2d8867b59c9dd0045721cb71297.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-e3eac3a3110e10f27c3b9898c188aa9f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -1175,7 +1175,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/hole__filling_8hpp.html#file-hole-filling.hpp">hpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/hole__filling_8test_8cpp.html#file-hole-filling.test.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/mask__utils_8cpp.html#file-mask-utils.cpp">cpp</a></strong></li>
-<li><strong>file <a href="../api_generated/Files/mask__utils_8hpp.html#file-mask-utils.hpp">hpp</a></strong></li>
+<li><strong>file <a href="../api_generated/Files/mask__utils_8hpp.html#file-mask-utils.hpp">hpp</a></strong> <br>Utilities for mask raster conversion, resize, and binary image processing.</li>
 <li><strong>file <a href="../api_generated/Files/mask__utils_8test_8cpp.html#file-mask-utils.test.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/medial__axis__skeletonize_8cpp.html#file-medial-axis-skeletonize.cpp">cpp</a></strong> <br>Medial-axis skeletonization via distance transform and single-pass thinning.</li>
 <li><strong>file <a href="../api_generated/Files/medial__axis__skeletonize_8hpp.html#file-medial-axis-skeletonize.hpp">hpp</a></strong> <br>Medial-axis skeletonization via distance transform and single-pass thinning.</li>
@@ -1366,8 +1366,8 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/ChannelDecoder_8hpp.html#file-channeldecoder.hpp">hpp</a></strong> <br>Base interface for channel decoders and per-decoder parameter structs.</li>
 <li><strong>file <a href="../api_generated/Files/DecoderDispatch_8cpp.html#file-decoderdispatch.cpp">cpp</a></strong> <br>Implementation of type-safe channel decoder dispatch.</li>
 <li><strong>file <a href="../api_generated/Files/DecoderDispatch_8hpp.html#file-decoderdispatch.hpp">hpp</a></strong> <br>Type-safe dispatch for channel decoders (params variant → geometry).</li>
-<li><strong>file <a href="../api_generated/Files/DecoderFactory_8cpp.html#file-decoderfactory.cpp">cpp</a></strong></li>
-<li><strong>file <a href="../api_generated/Files/DecoderFactory_8hpp.html#file-decoderfactory.hpp">hpp</a></strong></li>
+<li><strong>file <a href="../api_generated/Files/DecoderFactory_8cpp.html#file-decoderfactory.cpp">cpp</a></strong> <br>Implementation of <a href="../api_generated/Classes/classdl_1_1DecoderFactory.html">dl::DecoderFactory</a> decoder registration.</li>
+<li><strong>file <a href="../api_generated/Files/DecoderFactory_8hpp.html#file-decoderfactory.hpp">hpp</a></strong> <br>Factory for channel decoders that map model output tensors back into <a href="../api_generated/Classes/classDataManager.html">DataManager</a> geometry types.</li>
 <li><strong>file <a href="../api_generated/Files/DecoderParamSchemas_8hpp.html#file-decoderparamschemas.hpp">hpp</a></strong> <br><a href="../api_generated/Classes/structParameterUIHints.html">ParameterUIHints</a> specializations for per-decoder parameter structs.</li>
 <li><strong>file <a href="../api_generated/Files/TensorToFeatureVector_8cpp.html#file-tensortofeaturevector.cpp">cpp</a></strong> <br>Implementation of the feature vector decoder.</li>
 <li><strong>file <a href="../api_generated/Files/TensorToFeatureVector_8hpp.html#file-tensortofeaturevector.hpp">hpp</a></strong> <br>Decoder that extracts a flat feature vector from a 1D or 2D tensor.</li>
@@ -1383,8 +1383,8 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/ChannelEncoder_8hpp.html#file-channelencoder.hpp">hpp</a></strong> <br>Base class for channel encoders and per-encoder parameter structs.</li>
 <li><strong>file <a href="../api_generated/Files/EncoderDispatch_8cpp.html#file-encoderdispatch.cpp">cpp</a></strong> <br>Implementation of type-safe channel encoder dispatch.</li>
 <li><strong>file <a href="../api_generated/Files/EncoderDispatch_8hpp.html#file-encoderdispatch.hpp">hpp</a></strong> <br>Type-safe dispatch for channel encoders (params variant → tensor).</li>
-<li><strong>file <a href="../api_generated/Files/EncoderFactory_8cpp.html#file-encoderfactory.cpp">cpp</a></strong></li>
-<li><strong>file <a href="../api_generated/Files/EncoderFactory_8hpp.html#file-encoderfactory.hpp">hpp</a></strong></li>
+<li><strong>file <a href="../api_generated/Files/EncoderFactory_8cpp.html#file-encoderfactory.cpp">cpp</a></strong> <br>Implementation of <a href="../api_generated/Classes/classdl_1_1EncoderFactory.html">dl::EncoderFactory</a> encoder registration.</li>
+<li><strong>file <a href="../api_generated/Files/EncoderFactory_8hpp.html#file-encoderfactory.hpp">hpp</a></strong> <br>Factory for channel encoders that map <a href="../api_generated/Classes/classDataManager.html">DataManager</a> geometry and images into model input tensors.</li>
 <li><strong>file <a href="../api_generated/Files/EncoderParamSchemas_8hpp.html#file-encoderparamschemas.hpp">hpp</a></strong> <br><a href="../api_generated/Classes/structParameterUIHints.html">ParameterUIHints</a> specializations for per-encoder parameter structs.</li>
 <li><strong>file <a href="../api_generated/Files/ImageEncoder_8cpp.html#file-imageencoder.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/ImageEncoder_8hpp.html#file-imageencoder.hpp">hpp</a></strong> <br>Encoder for image pixel data (grayscale or RGB) into tensor channels.</li>
@@ -1486,6 +1486,11 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/RuntimeModel_8hpp.html#file-runtimemodel.hpp">hpp</a></strong> <br>ModelBase implementation driven by a JSON RuntimeModelSpec.</li>
 <li><strong>file <a href="../api_generated/Files/RuntimeModelSpec_8cpp.html#file-runtimemodelspec.cpp">cpp</a></strong> <br>Implementation of runtime model specification parsing and validation.</li>
 <li><strong>file <a href="../api_generated/Files/RuntimeModelSpec_8hpp.html#file-runtimemodelspec.hpp">hpp</a></strong> <br>JSON-serializable runtime model specification types and helpers.</li>
+</ul></li>
+<li><strong>dir <a href="../api_generated/Files/dir_b87cf43b5d7f27d60d41fe04d5b95d02.html#dir-src/deeplearning/spatial">src/DeepLearning/spatial</a></strong>
+<ul>
+<li><strong>file <a href="../api_generated/Files/SpatialResize_8cpp.html#file-spatialresize.cpp">cpp</a></strong> <br>Implementation of pixel-center spatial mapping for DeepLearning.</li>
+<li><strong>file <a href="../api_generated/Files/SpatialResize_8hpp.html#file-spatialresize.hpp">hpp</a></strong> <br>Pixel-center spatial coordinate mapping for DeepLearning encode/decode.</li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_cf7746b1542bc8690e2f0d5ef2b429ae.html#dir-src/deeplearning/storage">src/DeepLearning/storage</a></strong>
 <ul>
@@ -4137,7 +4142,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/tableview__design__doc_8md.html#file-tableview-design-doc.md">tableview_design_doc.md</a></strong></li>
 </ul>
 <hr>
-<p>Updated on 2026-09-21 at 13:46:38 +0000</p>
+<p>Updated on 2026-09-22 at 20:01:42 +0000</p>
 
 
 </section>

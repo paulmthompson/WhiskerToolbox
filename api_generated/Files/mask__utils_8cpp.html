@@ -81,9 +81,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-e3eac3a3110e10f27c3b9898c188aa9f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-9c87c2d8867b59c9dd0045721cb71297.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-e3eac3a3110e10f27c3b9898c188aa9f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -401,7 +401,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classMaskData.html">MaskData</a> &gt;</td>
-<td><strong><a href="../../api_generated/Files/mask__utils_8cpp.html#function-apply-binary-image-algorithm">apply_binary_image_algorithm</a></strong>(<a href="../../api_generated/Classes/classMaskData.html">MaskData</a> const * mask_data, const std::function&lt; <a href="../../api_generated/Classes/structImage.html">Image</a>(<a href="../../api_generated/Classes/structImage.html">Image</a> const &amp;)&gt; &amp; binary_processor, const std::function&lt; void(int)&gt; &amp; progress_callback =<a href="int"></a> {}, bool preserve_empty_masks =false)<br>Applies a binary image processing function to mask data.</td>
+<td><strong><a href="../../api_generated/Files/mask__utils_8cpp.html#function-apply-binary-image-algorithm">apply_binary_image_algorithm</a></strong>(<a href="../../api_generated/Classes/classMaskData.html">MaskData</a> const * mask_data, std::function&lt; <a href="../../api_generated/Classes/structImage.html">Image</a>(<a href="../../api_generated/Classes/structImage.html">Image</a> const &amp;)&gt; const &amp; binary_processor, std::function&lt; void(int)&gt; const &amp; progress_callback =<a href="int"></a> {}, bool preserve_empty_masks =false)<br>Applies a binary image processing function to mask data.</td>
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Classes/structImage.html">Image</a></td>
@@ -413,11 +413,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>int</td>
-<td><strong><a href="../../api_generated/Files/mask__utils_8cpp.html#function-map-dest-to-source">map_dest_to_source</a></strong>(int dest_coord, int source_size, int dest_size)<br>Map a destination pixel coordinate to the nearest source index.</td>
+<td><strong><a href="../../api_generated/Files/mask__utils_8cpp.html#function-map-dest-to-source">map_dest_to_source</a></strong>(int dest_coord, int source_size, int dest_size)<br>Map a destination pixel index to the nearest source index (one axis).</td>
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/classMask2D.html">Mask2D</a></td>
-<td><strong><a href="../../api_generated/Files/mask__utils_8cpp.html#function-resize-mask">resize_mask</a></strong>(<a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> const &amp; mask, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> const &amp; source_size, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> const &amp; dest_size)<br>Resize a mask from one image size to another using nearest neighbor interpolation.</td>
+<td><strong><a href="../../api_generated/Files/mask__utils_8cpp.html#function-resize-mask">resize_mask</a></strong>(<a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> const &amp; mask, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> const &amp; source_size, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> const &amp; dest_size)<br>Resize a mask raster between canvas sizes using inverse nearest-neighbor.</td>
 </tr>
 </tbody>
 </table>
@@ -428,21 +428,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="function-apply_binary_image_algorithm">function apply_binary_image_algorithm</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> MaskData <span class="op">&gt;</span> apply_binary_image_algorithm<span class="op">(</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    MaskData <span class="at">const</span> <span class="op">*</span> mask_data<span class="op">,</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> <span class="bu">std::</span>function<span class="op">&lt;</span> Image<span class="op">(</span>Image <span class="at">const</span> <span class="op">&amp;)&gt;</span> <span class="op">&amp;</span> binary_processor<span class="op">,</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> <span class="bu">std::</span>function<span class="op">&lt;</span> <span class="dt">void</span><span class="op">(</span><span class="dt">int</span><span class="op">)&gt;</span> <span class="op">&amp;</span> progress_callback <span class="op">=[](</span><span class="dt">int</span><span class="op">)</span> <span class="op">{},</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span> Image<span class="op">(</span>Image <span class="at">const</span> <span class="op">&amp;)&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> binary_processor<span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>function<span class="op">&lt;</span> <span class="dt">void</span><span class="op">(</span><span class="dt">int</span><span class="op">)&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> progress_callback <span class="op">=[](</span><span class="dt">int</span><span class="op">)</span> <span class="op">{},</span></span>
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> preserve_empty_masks <span class="op">=</span><span class="kw">false</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Applies a binary image processing function to mask data.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>mask_data</strong> The input mask data to process</li>
-<li><strong>binary_processor</strong> Function that takes a binary image and returns a processed binary image</li>
-<li><strong>progress_callback</strong> Function for progress reporting (0-100)</li>
-<li><strong>preserve_empty_masks</strong> If true, empty masks will be preserved in output (default: false)</li>
+<li><strong>mask_data</strong> The input mask data to process.</li>
+<li><strong>binary_processor</strong> Function that takes a binary image and returns a processed binary image.</li>
+<li><strong>progress_callback</strong> Function for progress reporting (0–100).</li>
+<li><strong>preserve_empty_masks</strong> If true, empty masks are preserved in the output.</li>
 </ul>
-<p><strong>Return</strong>: A new <a href="../../api_generated/Classes/classMaskData.html">MaskData</a> containing the processed masks</p>
-<p><strong>Note</strong>: The binary_processor function should expect <a href="../../api_generated/Classes/structImage.html">Image</a> struct and return <a href="../../api_generated/Classes/structImage.html">Image</a> struct</p>
-<p>This utility function abstracts the common pattern of converting mask data to binary images, applying an algorithm, and converting back to mask data. It handles the conversion process and provides progress reporting.</p>
+<p><strong>Return</strong>: A new <a href="../../api_generated/Classes/classMaskData.html">MaskData</a> containing the processed masks.</p>
+<p><strong>Note</strong>:</p>
+<ul>
+<li>No spatial resize — uses <code>mask_data</code> image size as-is.</li>
+<li><code>binary_processor</code> should expect <code>[Image](/api_generated/Classes/structImage.md)</code> and return <code>[Image](/api_generated/Classes/structImage.md)</code>.</li>
+</ul>
+<p>Abstracts the common pattern of converting mask data to binary images, applying an algorithm, and converting back to mask data.</p>
 </section>
 <section id="function-mask_to_binary_image" class="level3">
 <h3 class="anchored" data-anchor-id="function-mask_to_binary_image">function mask_to_binary_image</h3>
@@ -453,10 +457,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Converts a single mask to a binary image.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>mask</strong> The mask points to convert</li>
-<li><strong>image_size</strong> The dimensions of the output image</li>
+<li><strong>mask</strong> The mask points to convert.</li>
+<li><strong>image_size</strong> The dimensions of the output image.</li>
 </ul>
-<p><strong>Return</strong>: <a href="../../api_generated/Classes/structImage.html">Image</a> Binary image where mask points are set to 1, others to 0</p>
+<p><strong>Return</strong>: Binary image where mask points are set to 1 and others to 0.</p>
+<p><strong>Note</strong>: No spatial resize — writes mask points into <code>image_size</code> verbatim.</p>
 </section>
 <section id="function-binary_image_to_mask" class="level3">
 <h3 class="anchored" data-anchor-id="function-binary_image_to_mask">function binary_image_to_mask</h3>
@@ -466,9 +471,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Converts a binary image back to mask points.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>binary_image</strong> The binary image to convert</li>
+<li><strong>binary_image</strong> The binary image to convert.</li>
 </ul>
-<p><strong>Return</strong>: <a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> Mask containing points where image value &gt; 0</p>
+<p><strong>Return</strong>: Mask containing points where the image value is greater than zero.</p>
+<p><strong>Note</strong>: No spatial resize — reads <code>binary_image</code> pixels directly.</p>
 </section>
 <section id="function-map_dest_to_source" class="level3">
 <h3 class="anchored" data-anchor-id="function-map_dest_to_source">function map_dest_to_source</h3>
@@ -477,16 +483,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> source_size<span class="op">,</span></span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> dest_size</span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Map a destination pixel coordinate to the nearest source index.</p>
+<p>Map a destination pixel index to the nearest source index (one axis).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>dest_coord</strong> Destination pixel index along one axis.</li>
-<li><strong>source_size</strong> Source image extent along that axis (must be &gt; 0).</li>
-<li><strong>dest_size</strong> Destination image extent along that axis (must be &gt; 0).</li>
+<li><strong>source_size</strong> Source extent along that axis (must be &gt; 0).</li>
+<li><strong>dest_size</strong> Destination extent along that axis (must be &gt; 0).</li>
 </ul>
 <p><strong>Return</strong>: Clamped source index in <code>[0, source_size - 1]</code>.</p>
+<p><strong>Note</strong>: Spatial convention: <strong>PixelCenter</strong> (<code>align_corners=false</code>). Inverse nearest-neighbor: samples the source cell that owns the destination pixel center.</p>
 <p><strong>Precondition</strong>: source_size &gt; 0 and dest_size &gt; 0</p>
-<p>Uses inverse nearest-neighbor sampling consistent with OpenCV / PyTorch <code>align_corners=false</code> resize: <code>src = (dest + 0.5) * source_size / dest_size - 0.5</code>.</p>
 </section>
 <section id="function-resize_mask" class="level3">
 <h3 class="anchored" data-anchor-id="function-resize_mask">function resize_mask</h3>
@@ -495,21 +501,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    ImageSize <span class="at">const</span> <span class="op">&amp;</span> source_size<span class="op">,</span></span>
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    ImageSize <span class="at">const</span> <span class="op">&amp;</span> dest_size</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Resize a mask from one image size to another using nearest neighbor interpolation.</p>
+<p>Resize a mask raster between canvas sizes using inverse nearest-neighbor.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>mask</strong> The input mask to resize</li>
-<li><strong>source_size</strong> The original image size that the mask coordinates correspond to</li>
-<li><strong>dest_size</strong> The target image size to resize the mask to</li>
+<li><strong>mask</strong> Input mask in <code>source_size</code> coordinates.</li>
+<li><strong>source_size</strong> Canvas the input coordinates refer to.</li>
+<li><strong>dest_size</strong> Target canvas size.</li>
 </ul>
-<p><strong>Return</strong>: New mask with coordinates scaled to the destination image size</p>
+<p><strong>Return</strong>: Mask in <code>dest_size</code> coordinates, or empty on invalid input.</p>
 <p><strong>Note</strong>:</p>
 <ul>
-<li>If source or destination dimensions are invalid (&lt;=0), returns empty mask</li>
-<li>Uses custom nearest neighbor interpolation to maintain binary mask properties</li>
-<li>Does not depend on OpenCV - uses only standard library functions</li>
+<li>Spatial convention: <strong>PixelCenter</strong> (<code>align_corners=false</code>), same as <code>TensorToMask2D</code> when upsampling model output to <code>target_image_size</code>.</li>
+<li>Returns empty if <code>mask</code> is empty or any canvas dimension is invalid (&lt;= 0).</li>
+<li>Uses nearest-neighbor resampling to keep the mask binary.</li>
 </ul>
-<p>Converts mask coordinates from source image dimensions to destination image dimensions using custom nearest neighbor interpolation. This ensures the mask remains homogeneous (binary) after resizing.</p>
+<p>Rasterizes the source mask, resamples the binary grid with <a href="../../api_generated/Files/mask__utils_8cpp.html#function-map-dest-to-source">map_dest_to_source</a> per destination pixel, then re-extracts mask points.</p>
 </section>
 </section>
 <section id="source-code" class="level2">
@@ -527,8 +533,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>MaskData<span class="op">&gt;</span> apply_binary_image_algorithm<span class="op">(</span></span>
 <span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        MaskData <span class="at">const</span> <span class="op">*</span> mask_data<span class="op">,</span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>        <span class="at">const</span> <span class="bu">std::</span>function<span class="op">&lt;</span>Image<span class="op">(</span>Image <span class="at">const</span> <span class="op">&amp;)&gt;&amp;</span> binary_processor<span class="op">,</span></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>        <span class="at">const</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">(</span><span class="dt">int</span><span class="op">)&gt;&amp;</span> progress_callback<span class="op">,</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>function<span class="op">&lt;</span>Image<span class="op">(</span>Image <span class="at">const</span> <span class="op">&amp;)&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> binary_processor<span class="op">,</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">(</span><span class="dt">int</span><span class="op">)&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> progress_callback<span class="op">,</span></span>
 <span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> preserve_empty_masks<span class="op">)</span> <span class="op">{</span></span>
 <span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result_mask_data <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>MaskData<span class="op">&gt;();</span></span>
@@ -639,8 +645,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-123"><a href="#cb6-123" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb6-124"><a href="#cb6-124" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-125"><a href="#cb6-125" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> <span class="at">const</span> scale <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>source_size<span class="op">)</span> <span class="op">/</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>dest_size<span class="op">);</span></span>
-<span id="cb6-126"><a href="#cb6-126" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> <span class="at">const</span> source <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span></span>
-<span id="cb6-127"><a href="#cb6-127" aria-hidden="true" tabindex="-1"></a>            <span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>dest_coord<span class="op">)</span> <span class="op">+</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">*</span> scale <span class="op">-</span> <span class="fl">0.5</span><span class="op">);</span></span>
+<span id="cb6-126"><a href="#cb6-126" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> <span class="at">const</span> source <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span><span class="bu">std::</span>lround<span class="op">(</span></span>
+<span id="cb6-127"><a href="#cb6-127" aria-hidden="true" tabindex="-1"></a>            <span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>dest_coord<span class="op">)</span> <span class="op">+</span> <span class="fl">0.5</span><span class="op">)</span> <span class="op">*</span> scale <span class="op">-</span> <span class="fl">0.5</span><span class="op">));</span></span>
 <span id="cb6-128"><a href="#cb6-128" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>clamp<span class="op">(</span>source<span class="op">,</span> <span class="dv">0</span><span class="op">,</span> source_size <span class="op">-</span> <span class="dv">1</span><span class="op">);</span></span>
 <span id="cb6-129"><a href="#cb6-129" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb6-130"><a href="#cb6-130" aria-hidden="true" tabindex="-1"></a></span>
@@ -697,7 +703,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-181"><a href="#cb6-181" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> resized_mask<span class="op">;</span></span>
 <span id="cb6-182"><a href="#cb6-182" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-21 at 13:46:35 +0000</p>
+<p>Updated on 2026-09-22 at 20:01:39 +0000</p>
 
 
 </section>

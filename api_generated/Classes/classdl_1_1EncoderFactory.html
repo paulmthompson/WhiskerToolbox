@@ -81,9 +81,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-e3eac3a3110e10f27c3b9898c188aa9f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-9c87c2d8867b59c9dd0045721cb71297.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-e3eac3a3110e10f27c3b9898c188aa9f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -386,7 +386,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="dlencoderfactory" class="level1">
 <h1>dl::EncoderFactory</h1>
-<p><a href="#detailed-description">More…</a></p>
+<p>Factory for creating <a href="../../api_generated/Classes/classdl_1_1ChannelEncoder.html">ChannelEncoder</a> instances by string key. <a href="#detailed-description">More…</a></p>
 <p><code>#include &lt;EncoderFactory.hpp&gt;</code></p>
 <section id="public-functions" class="level2">
 <h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
@@ -413,13 +413,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> dl<span class="op">::</span>EncoderFactory<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Factory for creating <a href="../../api_generated/Classes/classdl_1_1ChannelEncoder.html">ChannelEncoder</a> instances by string key.</p>
-<p>The following keys are registered by default:</p>
-<ul>
-<li>“ImageEncoder” → <a href="../../api_generated/Classes/classdl_1_1ImageEncoder.html">ImageEncoder</a></li>
-<li>“Point2DEncoder” → <a href="../../api_generated/Classes/classdl_1_1Point2DEncoder.html">Point2DEncoder</a></li>
-<li>“Mask2DEncoder” → <a href="../../api_generated/Classes/classdl_1_1Mask2DEncoder.html">Mask2DEncoder</a></li>
-<li>“Line2DEncoder” → <a href="../../api_generated/Classes/classdl_1_1Line2DEncoder.html">Line2DEncoder</a></li>
-</ul>
+<p>Registered keys: <code>[ImageEncoder](/api_generated/Classes/classdl_1_1ImageEncoder.md)</code>, <code>[Point2DEncoder](/api_generated/Classes/classdl_1_1Point2DEncoder.md)</code>, <code>[Mask2DEncoder](/api_generated/Classes/classdl_1_1Mask2DEncoder.md)</code>, <code>[Line2DEncoder](/api_generated/Classes/classdl_1_1Line2DEncoder.md)</code>.</p>
 </section>
 <section id="public-functions-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
@@ -429,14 +423,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> encoder_name</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create an encoder instance by name.</p>
-<p>Returns nullptr if the name is not recognized. Returns nullptr if the name is not recognized.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>encoder_name</strong> Factory key (e.g.&nbsp;<code>"ImageEncoder"</code>).</li>
+</ul>
+<p><strong>Return</strong>: Encoder instance, or <code>nullptr</code> if the name is not recognized.</p>
 </section>
 <section id="function-availableencoders" class="level3">
 <h3 class="anchored" data-anchor-id="function-availableencoders">function availableEncoders</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> availableEncoders<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the list of all registered encoder names.</p>
+<p><strong>Return</strong>: Names accepted by <a href="../../api_generated/Classes/classdl_1_1EncoderFactory.html#function-create">create</a> (e.g.&nbsp;<code>"ImageEncoder"</code>, <code>"Mask2DEncoder"</code>).</p>
 <hr>
-<p>Updated on 2026-09-21 at 13:46:33 +0000</p>
+<p>Updated on 2026-09-22 at 20:01:37 +0000</p>
 
 
 </section>
