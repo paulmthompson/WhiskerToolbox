@@ -2,6 +2,7 @@
 
 #include "Media_Widget/Core/MediaWidgetState.hpp"
 #include "Media_Widget/Core/MediaWidgetStateData.hpp"
+#include "Media_Widget/Core/Media_KeymapActions.hpp"
 #include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
 #include "Media_Widget/Selection/MediaSelectionHit.hpp"
 #include "Media_Widget/UI/Media_Widget.hpp"
@@ -2775,35 +2776,13 @@ void Media_Window::setKeymapManager(KeymapSystem::KeymapManager * manager) {
     _key_adapter->setTypeId(EditorLib::EditorTypeId(QStringLiteral("MediaWidget")));
 
     _key_adapter->setHandler([this](QString const & action_id) -> bool {
-        // Only handle group assignment actions
-        if (!action_id.startsWith(QStringLiteral("media.assign_group_"))) {
-            return false;
-        }
-
-        if (!_group_manager || _selected_entities.empty()) {
-            return false;
-        }
-
-        // Extract group number from action_id: "media.assign_group_N" → N
-        bool ok = false;
-        int const group_number = action_id.mid(QStringLiteral("media.assign_group_").length()).toInt(&ok);
-        if (!ok || group_number < 1 || group_number > 9) {
-            return false;
-        }
-
-        auto groups = _group_manager->getGroupsForContextMenu();
-        if (group_number > static_cast<int>(groups.size())) {
-            return false;
-        }
-
-        auto it = groups.begin();
-        std::advance(it, group_number - 1);
-        int const group_id = it->first;
-
-        _group_manager->assignEntitiesToGroup(group_id, _selected_entities);
-        clearAllSelections();
-        UpdateCanvas();
-        return true;
+        MediaKeymapContext ctx;
+        ctx.state = _media_widget_state;
+        ctx.group_manager = _group_manager;
+        ctx.selected_entities = &_selected_entities;
+        ctx.refresh_canvas = [this]() { UpdateCanvas(); };
+        ctx.clear_selection = [this]() { clearAllSelections(); };
+        return handleMediaKeyAction(action_id, ctx);
     });
 
     manager->registerAdapter(_key_adapter);

@@ -14,6 +14,8 @@ set(MEDIA_WIDGET_SOURCES
     Core/MediaWidgetState.hpp
     Core/MediaWidgetState.cpp
     Core/MediaWidgetStateData.hpp
+    Core/Media_KeymapActions.hpp
+    Core/Media_KeymapActions.cpp
     Core/LineDrawOperations.hpp
     Core/LineDrawOperations.cpp
     Core/LineEditOperations.hpp

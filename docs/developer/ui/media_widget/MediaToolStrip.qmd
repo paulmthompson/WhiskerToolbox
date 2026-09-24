@@ -24,7 +24,8 @@ See [Media Viewer Tool Options Bar](MediaToolOptionsBar.qmd) for contextual cont
 | Component | Location | Role |
 |-----------|----------|------|
 | `MediaToolStrip_Widget` | `Media_Widget/UI/Tools` | Vertical toolbar with exclusive `QButtonGroup` |
-| `MediaToolId` | `Media_Widget/UI/Tools` | Tool identifiers (`None`, `Select`, `Pen`, `Eraser`) |
+| `MediaToolId` | `Media_Widget/UI/Tools` | Tool identifiers (`None`, `Select`, `Pen`, `Eraser`, `Smooth`) |
+| `Media_KeymapActions` | `Media_Widget/Core` | Keymap dispatch for tool switching and pen options |
 | `MediaToolIcons` | `Media_Widget/UI/Tools` | Programmatic placeholder icons |
 
 ## Selection API
@@ -35,6 +36,21 @@ See [Media Viewer Tool Options Bar](MediaToolOptionsBar.qmd) for contextual cont
 - Clicking the active tool button again sets `MediaToolId::None`
 
 `Media_Widget` wires `activeMediaTool` in state; `MediaSelectToolController` enables unified canvas selection only when `Select` is active. The **Pen** tool routes Ctrl+click / Alt+click line edits through `MediaLine_Widget`. The **Eraser** tool removes line vertices or mask pixels under the hover circle via `MediaLine_Widget` and `MediaMask_Widget`.
+
+## Keyboard Shortcuts
+
+Tool switching is registered in `MediaWidgetRegistration.cpp` and dispatched through `handleMediaKeyAction()` in `Media_KeymapActions.cpp` via the `Media_Window` `KeyActionAdapter`. Default bindings (Inkscape-style):
+
+| Action ID | Default Key |
+|-----------|-------------|
+| `media.tool.select` | S |
+| `media.tool.pen` | P |
+| `media.tool.eraser` | E |
+| `media.tool.smooth` | Shift+S |
+| `media.tool.none` | Escape |
+| `media.pen.cycle_append_endpoint` | X (Pen tool active only) |
+
+Keyboard tool keys always activate the named tool. **Escape** deselects the active tool (equivalent to clicking the active toolbar button again). See [Media Keymap Actions](../../Media_Widget/Core/Media_KeymapActions.qmd).
 
 ## Adding Tools
 

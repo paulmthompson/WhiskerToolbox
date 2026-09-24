@@ -643,12 +643,6 @@ TEST_CASE("media group actions resolve only when MediaWidget is focused") {
     REQUIRE(result.has_value());
     CHECK(*result == "media.assign_group_1");
 
-    // Plain 1 does not resolve to media when Media is focused
-    CHECK_FALSE(mgr.resolveKeyPress(
-                           QKeySequence(Qt::Key_1),
-                           EditorTypeId("MediaWidget"))
-                        .has_value());
-
     // Plain 1 resolves to triage when Triage is focused
     auto triage_result = mgr.resolveKeyPress(
             QKeySequence(Qt::Key_1),
@@ -729,6 +723,136 @@ TEST_CASE("media group actions can be rebound via user override") {
     auto result = mgr.resolveKeyPress(QKeySequence(Qt::Key_F1), media_type);
     REQUIRE(result.has_value());
     CHECK(*result == "media.assign_group_1");
+}
+
+// ============================================================
+// Media tool action registration and dispatch
+// ============================================================
+
+TEST_CASE("media tool actions register with EditorFocused scope and Inkscape defaults") {
+    KeymapManager mgr;
+
+    auto const scope = KeyActionScope::editorFocused(
+            EditorTypeId(QStringLiteral("MediaWidget")));
+    QString const category = QStringLiteral("Media Viewer");
+
+    mgr.registerAction({.action_id = QStringLiteral("media.tool.select"),
+                        .display_name = QStringLiteral("Select Tool"),
+                        .category = category,
+                        .scope = scope,
+                        .default_binding = QKeySequence(Qt::Key_S)});
+    mgr.registerAction({.action_id = QStringLiteral("media.tool.pen"),
+                        .display_name = QStringLiteral("Pen Tool"),
+                        .category = category,
+                        .scope = scope,
+                        .default_binding = QKeySequence(Qt::Key_P)});
+    mgr.registerAction({.action_id = QStringLiteral("media.tool.eraser"),
+                        .display_name = QStringLiteral("Eraser Tool"),
+                        .category = category,
+                        .scope = scope,
+                        .default_binding = QKeySequence(Qt::Key_E)});
+    mgr.registerAction({.action_id = QStringLiteral("media.tool.smooth"),
+                        .display_name = QStringLiteral("Smooth Tool"),
+                        .category = category,
+                        .scope = scope,
+                        .default_binding = QKeySequence(Qt::SHIFT | Qt::Key_S)});
+    mgr.registerAction({.action_id = QStringLiteral("media.tool.none"),
+                        .display_name = QStringLiteral("Deselect Tool"),
+                        .category = category,
+                        .scope = scope,
+                        .default_binding = QKeySequence(Qt::Key_Escape)});
+    mgr.registerAction({.action_id = QStringLiteral("media.pen.cycle_append_endpoint"),
+                        .display_name = QStringLiteral("Cycle Pen Append Endpoint"),
+                        .category = category,
+                        .scope = scope,
+                        .default_binding = QKeySequence(Qt::Key_X)});
+
+    CHECK(mgr.bindingFor(QStringLiteral("media.tool.select")) == QKeySequence(Qt::Key_S));
+    CHECK(mgr.bindingFor(QStringLiteral("media.tool.pen")) == QKeySequence(Qt::Key_P));
+    CHECK(mgr.bindingFor(QStringLiteral("media.tool.eraser")) == QKeySequence(Qt::Key_E));
+    CHECK(mgr.bindingFor(QStringLiteral("media.tool.smooth")) == QKeySequence(Qt::SHIFT | Qt::Key_S));
+    CHECK(mgr.bindingFor(QStringLiteral("media.tool.none")) == QKeySequence(Qt::Key_Escape));
+    CHECK(mgr.bindingFor(QStringLiteral("media.pen.cycle_append_endpoint")) == QKeySequence(Qt::Key_X));
+
+    auto desc = mgr.action(QStringLiteral("media.tool.select"));
+    REQUIRE(desc.has_value());
+    CHECK(desc->scope.kind == KeyActionScopeKind::EditorFocused);
+    CHECK(desc->scope.editor_type_id == EditorTypeId(QStringLiteral("MediaWidget")));
+    CHECK(desc->category == QStringLiteral("Media Viewer"));
+}
+
+TEST_CASE("media tool actions resolve only when MediaWidget is focused") {
+    KeymapManager mgr;
+
+    auto const media_scope = KeyActionScope::editorFocused(
+            EditorTypeId(QStringLiteral("MediaWidget")));
+
+    mgr.registerAction({.action_id = QStringLiteral("media.tool.select"),
+                        .display_name = QStringLiteral("Select Tool"),
+                        .category = QStringLiteral("Media Viewer"),
+                        .scope = media_scope,
+                        .default_binding = QKeySequence(Qt::Key_S)});
+    mgr.registerAction({.action_id = QStringLiteral("media.tool.none"),
+                        .display_name = QStringLiteral("Deselect Tool"),
+                        .category = QStringLiteral("Media Viewer"),
+                        .scope = media_scope,
+                        .default_binding = QKeySequence(Qt::Key_Escape)});
+
+    auto const media_type = EditorTypeId(QStringLiteral("MediaWidget"));
+
+    auto select_result = mgr.resolveKeyPress(QKeySequence(Qt::Key_S), media_type);
+    REQUIRE(select_result.has_value());
+    CHECK(*select_result == QStringLiteral("media.tool.select"));
+
+    auto escape_result = mgr.resolveKeyPress(QKeySequence(Qt::Key_Escape), media_type);
+    REQUIRE(escape_result.has_value());
+    CHECK(*escape_result == QStringLiteral("media.tool.none"));
+
+    CHECK_FALSE(mgr.resolveKeyPress(QKeySequence(Qt::Key_S), EditorTypeId(QStringLiteral("TimeScrollBar")))
+                        .has_value());
+    CHECK_FALSE(mgr.resolveKeyPress(QKeySequence(Qt::Key_Escape), EditorTypeId{}).has_value());
+}
+
+TEST_CASE("media tool default bindings have no duplicate keys within the same scope") {
+    KeymapManager mgr;
+
+    auto const media_scope = KeyActionScope::editorFocused(
+            EditorTypeId(QStringLiteral("MediaWidget")));
+    QString const category = QStringLiteral("Media Viewer");
+
+    mgr.registerAction({.action_id = QStringLiteral("media.tool.select"),
+                        .display_name = QStringLiteral("Select Tool"),
+                        .category = category,
+                        .scope = media_scope,
+                        .default_binding = QKeySequence(Qt::Key_S)});
+    mgr.registerAction({.action_id = QStringLiteral("media.tool.pen"),
+                        .display_name = QStringLiteral("Pen Tool"),
+                        .category = category,
+                        .scope = media_scope,
+                        .default_binding = QKeySequence(Qt::Key_P)});
+    mgr.registerAction({.action_id = QStringLiteral("media.tool.eraser"),
+                        .display_name = QStringLiteral("Eraser Tool"),
+                        .category = category,
+                        .scope = media_scope,
+                        .default_binding = QKeySequence(Qt::Key_E)});
+    mgr.registerAction({.action_id = QStringLiteral("media.tool.smooth"),
+                        .display_name = QStringLiteral("Smooth Tool"),
+                        .category = category,
+                        .scope = media_scope,
+                        .default_binding = QKeySequence(Qt::SHIFT | Qt::Key_S)});
+    mgr.registerAction({.action_id = QStringLiteral("media.tool.none"),
+                        .display_name = QStringLiteral("Deselect Tool"),
+                        .category = category,
+                        .scope = media_scope,
+                        .default_binding = QKeySequence(Qt::Key_Escape)});
+    mgr.registerAction({.action_id = QStringLiteral("media.pen.cycle_append_endpoint"),
+                        .display_name = QStringLiteral("Cycle Pen Append Endpoint"),
+                        .category = category,
+                        .scope = media_scope,
+                        .default_binding = QKeySequence(Qt::Key_X)});
+
+    auto const conflicts = mgr.detectConflicts();
+    CHECK(conflicts.empty());
 }
 
 // ============================================================

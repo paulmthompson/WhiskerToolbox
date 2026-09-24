@@ -7,6 +7,20 @@ format: html
 
 The Media Viewer includes a vertical toolbar on the left edge of the canvas (to the left of the pixel ruler). Tools are shown as square icon buttons; one tool is selected at a time.
 
+## Keyboard Shortcuts
+
+When the Media Viewer is the active editor, the following default shortcuts are available. Rebind them in **View → Tools → Keybinding Editor** under the **Media Viewer** category.
+
+| Key | Action |
+|-----|--------|
+| S | Select Tool |
+| P | Pen Tool |
+| E | Eraser Tool |
+| Shift+S | Smooth Tool |
+| Escape | Deselect Tool (no global tool active) |
+| X | Cycle Pen append endpoint (Tip → Base → Nearest) when Pen is active |
+| Alt+1–9 | Assign selected entities to group 1–9 |
+
 ## Select Tool
 
 The pointer (mouse) icon is the **Select** tool. It is selected by default. Click the button again to deactivate it — no global tool is required to be active at all times. When Select is off, canvas clicks are not handled by unified entity picking (pan/zoom and per-datatype editing modes still work).

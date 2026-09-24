@@ -161,6 +161,36 @@ Each step in this phase registers action descriptors for an existing set of hard
 
 ---
 
+### ✅ Step 2.2b — Media_Widget tool shortcuts (editor-focused)
+
+**Completed.** Six tool-related actions are registered as `EditorFocused("MediaWidget")` in `MediaWidgetModule::registerTypes()`. Dispatch is handled by `handleMediaKeyAction()` in `Media_KeymapActions.cpp`, called from the existing `KeyActionAdapter` in `Media_Window`.
+
+**Actions registered:**
+
+| Action ID | Display Name | Scope | Default Key |
+|-----------|-------------|-------|-------------|
+| `media.tool.select` | Select Tool | EditorFocused("MediaWidget") | S |
+| `media.tool.pen` | Pen Tool | EditorFocused("MediaWidget") | P |
+| `media.tool.eraser` | Eraser Tool | EditorFocused("MediaWidget") | E |
+| `media.tool.smooth` | Smooth Tool | EditorFocused("MediaWidget") | Shift+S |
+| `media.tool.none` | Deselect Tool | EditorFocused("MediaWidget") | Escape |
+| `media.pen.cycle_append_endpoint` | Cycle Pen Append Endpoint | EditorFocused("MediaWidget") | X |
+
+**Handler behavior:** Tool keys call `MediaWidgetState::setActiveMediaTool()`. `media.tool.none` sets `MediaToolId::None`. `media.pen.cycle_append_endpoint` advances append policy Tip → Base → Nearest → Tip and only consumes the key when the Pen tool is active.
+
+**Modified files:**
+
+| File | Change |
+|------|--------|
+| `src/WhiskerToolbox/Media_Widget/MediaWidgetRegistration.cpp` | Added `registerToolActions()`. Fixed `setKeymapManager()` to run when `KeymapManager` is available even without `GroupManager`. |
+| `src/WhiskerToolbox/Media_Widget/Core/Media_KeymapActions.hpp/.cpp` | New dispatch helper for tool, pen-option, and group-assignment actions. |
+| `src/WhiskerToolbox/Media_Widget/Rendering/Media_Window/Media_Window.cpp` | Delegates keymap handling to `handleMediaKeyAction()`. |
+| `src/WhiskerToolbox/Media_Widget/CMakeLists.txt` | Added `Media_KeymapActions` sources. |
+| `tests/WhiskerToolbox/Media_Widget/Media_KeymapActions.test.cpp` | Unit tests for tool switch and append-endpoint cycling. |
+| `tests/WhiskerToolbox/KeymapSystem/test_keymap_manager.cpp` | Registration, resolution, and default-binding conflict tests for media tool actions. |
+
+---
+
 ### ✅ Step 2.3 — Plot polygon editing (editor-focused)
 
 **Completed for ScatterPlotWidget.** Three polygon editing actions are registered as `EditorFocused("ScatterPlotWidget")` in `ScatterPlotWidgetModule::registerTypes()`. A `KeyActionAdapter` in `ScatterPlotOpenGLWidget` handles the dispatch, and the old `keyPressEvent()` polygon handling has been removed.

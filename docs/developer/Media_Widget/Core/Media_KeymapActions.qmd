@@ -1,0 +1,40 @@
+---
+title: "Media Keymap Actions"
+format: html
+---
+
+## Overview
+
+`Media_KeymapActions.hpp` / `Media_KeymapActions.cpp` provide free-function dispatch for Media Viewer keyboard shortcuts registered with `KeymapManager`. The `Media_Window::setKeymapManager()` adapter builds a `MediaKeymapContext` and calls `handleMediaKeyAction()`.
+
+## Context
+
+```cpp
+struct MediaKeymapContext {
+    MediaWidgetState * state = nullptr;
+    GroupManager * group_manager = nullptr;
+    std::unordered_set<EntityId> const * selected_entities = nullptr;
+    std::function<void()> refresh_canvas;
+    std::function<void()> clear_selection;
+};
+```
+
+## Registered Actions
+
+Actions are registered in `MediaWidgetRegistration.cpp` (`registerToolActions()` and `registerGroupActions()`), scoped `EditorFocused("MediaWidget")`, category `"Media Viewer"`.
+
+| Action ID | Handler behavior |
+|-----------|------------------|
+| `media.tool.select` / `pen` / `eraser` / `smooth` / `none` | `MediaWidgetState::setActiveMediaTool()` |
+| `media.pen.cycle_append_endpoint` | Cycles `LineInteractionPrefs::append_endpoint` when Pen is active; returns `false` otherwise |
+| `media.assign_group_1`–`9` | Assigns `selected_entities` to group N via `GroupManager` |
+
+## Helper Functions
+
+- `cycleLineAppendEndpoint(LineAppendEndpoint)` — advances Tip → Base → Nearest → Tip
+- `handleMediaKeyAction(QString const & action_id, MediaKeymapContext const & ctx)` — returns `true` when the key event should be consumed
+
+## Related
+
+- [Media Viewer Tool Strip](../../ui/media_widget/MediaToolStrip.qmd)
+- [Keymap System](../../KeymapSystem/index.qmd)

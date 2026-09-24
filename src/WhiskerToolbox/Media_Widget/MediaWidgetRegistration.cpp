@@ -44,8 +44,55 @@ static void registerGroupActions(KeymapSystem::KeymapManager * keymap_manager) {
     }
 }
 
+/// @brief Register Media Viewer tool and pen-option keyboard actions with the keymap manager
+static void registerToolActions(KeymapSystem::KeymapManager * keymap_manager) {
+    if (!keymap_manager) {
+        return;
+    }
+
+    auto const scope = KeymapSystem::KeyActionScope::editorFocused(
+            EditorLib::EditorTypeId(QStringLiteral("MediaWidget")));
+    QString const category = QStringLiteral("Media Viewer");
+
+    keymap_manager->registerAction({.action_id = QStringLiteral("media.tool.select"),
+                                    .display_name = QStringLiteral("Select Tool"),
+                                    .category = category,
+                                    .scope = scope,
+                                    .default_binding = QKeySequence(Qt::Key_S)});
+
+    keymap_manager->registerAction({.action_id = QStringLiteral("media.tool.pen"),
+                                    .display_name = QStringLiteral("Pen Tool"),
+                                    .category = category,
+                                    .scope = scope,
+                                    .default_binding = QKeySequence(Qt::Key_P)});
+
+    keymap_manager->registerAction({.action_id = QStringLiteral("media.tool.eraser"),
+                                    .display_name = QStringLiteral("Eraser Tool"),
+                                    .category = category,
+                                    .scope = scope,
+                                    .default_binding = QKeySequence(Qt::Key_E)});
+
+    keymap_manager->registerAction({.action_id = QStringLiteral("media.tool.smooth"),
+                                    .display_name = QStringLiteral("Smooth Tool"),
+                                    .category = category,
+                                    .scope = scope,
+                                    .default_binding = QKeySequence(Qt::SHIFT | Qt::Key_S)});
+
+    keymap_manager->registerAction({.action_id = QStringLiteral("media.tool.none"),
+                                    .display_name = QStringLiteral("Deselect Tool"),
+                                    .category = category,
+                                    .scope = scope,
+                                    .default_binding = QKeySequence(Qt::Key_Escape)});
+
+    keymap_manager->registerAction({.action_id = QStringLiteral("media.pen.cycle_append_endpoint"),
+                                    .display_name = QStringLiteral("Cycle Pen Append Endpoint"),
+                                    .category = category,
+                                    .scope = scope,
+                                    .default_binding = QKeySequence(Qt::Key_X)});
+}
+
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager,
+                   const std::shared_ptr<DataManager>& data_manager,
                    GroupManager * group_manager,
                    KeymapSystem::KeymapManager * keymap_manager) {
 
@@ -54,8 +101,9 @@ void registerTypes(EditorRegistry * registry,
         return;
     }
 
-    // Register configurable keyboard shortcuts for group assignment
+    // Register configurable keyboard shortcuts for group assignment and tools
     registerGroupActions(keymap_manager);
+    registerToolActions(keymap_manager);
 
     // Capture dependencies for lambdas
     auto const & dm = std::move(data_manager);
@@ -87,11 +135,12 @@ void registerTypes(EditorRegistry * registry,
                                 auto * widget = new Media_Widget(registry);
                                 widget->setDataManager(dm);
 
-                                // Set the group manager if available
-                                if (gm) {
-                                    auto * media_window = widget->getMediaWindow();
-                                    if (media_window) {
+                                auto * media_window = widget->getMediaWindow();
+                                if (media_window) {
+                                    if (gm) {
                                         media_window->setGroupManager(gm);
+                                    }
+                                    if (km) {
                                         media_window->setKeymapManager(km);
                                     }
                                 }
@@ -125,11 +174,12 @@ void registerTypes(EditorRegistry * registry,
                                 // share the same state instance that receives LoadFrame updates
                                 auto state = view->getState();
 
-                                // Set the group manager if available
-                                if (gm) {
-                                    auto * media_window = view->getMediaWindow();
-                                    if (media_window) {
+                                auto * media_window = view->getMediaWindow();
+                                if (media_window) {
+                                    if (gm) {
                                         media_window->setGroupManager(gm);
+                                    }
+                                    if (km) {
                                         media_window->setKeymapManager(km);
                                     }
                                 }

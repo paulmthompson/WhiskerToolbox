@@ -113,8 +113,8 @@ public:
     /**
      * @brief Set the KeymapManager for configurable keyboard shortcuts
      *
-     * Creates a KeyActionAdapter that handles group-assignment actions
-     * (media.assign_group_1 through media.assign_group_9).
+     * Creates a KeyActionAdapter that handles Media Viewer keymap actions
+     * (tool switching, pen options, and group assignment).
      *
      * @param manager Pointer to the KeymapManager instance (can be nullptr)
      */

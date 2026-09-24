@@ -63,7 +63,7 @@ namespace MediaWidgetModule {
  * @param keymap_manager Optional KeymapManager for registering keyboard shortcuts (can be nullptr)
  */
 void registerTypes(EditorRegistry * registry,
-                   std::shared_ptr<DataManager> data_manager,
+                   const std::shared_ptr<DataManager>& data_manager,
                    GroupManager * group_manager = nullptr,
                    KeymapSystem::KeymapManager * keymap_manager = nullptr);
 
