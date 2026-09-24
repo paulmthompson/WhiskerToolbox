@@ -444,6 +444,20 @@ public:
      */
     void setSmoothPrefs(SmoothToolPrefs const & prefs);
 
+    // === Developer Mode ===
+
+    /**
+     * @brief Toggle the developer diagnostics panel
+     * @param enabled Whether developer mode is active
+     */
+    void setDeveloperMode(bool enabled);
+
+    /**
+     * @brief Get whether developer mode is enabled
+     * @return true if developer diagnostics are shown
+     */
+    [[nodiscard]] bool developerMode() const { return _data.developer_mode; }
+
     // === Text Overlays ===
 
     /**
@@ -655,6 +669,12 @@ signals:
      * @param tool Newly active toolbar tool
      */
     void activeMediaToolChanged(MediaToolId tool);
+
+    /**
+     * @brief Emitted when developer mode is toggled
+     * @param enabled Whether developer diagnostics are shown
+     */
+    void developerModeChanged(bool enabled);
 
     // === Canvas Image (Transient - for video export) ===
 

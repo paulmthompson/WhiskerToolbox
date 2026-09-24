@@ -1,20 +1,22 @@
 
+#include "UI/MediaPropertiesWidget.hpp"
 #include "Core/MediaWidgetState.hpp"
-#include "Media_Widget/UI/SubWidgets/MediaText_Widget/MediaText_Widget.hpp"
-#include "Media_Widget/UI/SubWidgets/MediaMask_Widget/MediaMask_Widget.hpp"
 #include "Media_Widget/DisplayOptions/CoordinateTypes.hpp"
 #include "Media_Widget/Rendering/Media_Window/Media_Window.hpp"
-#include "UI/MediaPropertiesWidget.hpp"
+#include "Media_Widget/UI/SubWidgets/MediaMask_Widget/MediaMask_Widget.hpp"
+#include "Media_Widget/UI/SubWidgets/MediaText_Widget/MediaText_Widget.hpp"
+#include "UI/MediaDebugPanel.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "Feature_Table_Widget/Feature_Table_Widget.hpp"
 #include "Masks/Mask_Data.hpp"
-#include "TimeFrame/TimeFrame.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
+#include "TimeFrame/TimeFrame.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 
 #include <QApplication>
+#include <QCheckBox>
 #include <QComboBox>
 #include <QLabel>
 #include <QMetaObject>
@@ -46,7 +48,7 @@ TEST_CASE("MediaPropertiesWidget construction", "[MediaPropertiesWidget]") {
         auto state = std::make_shared<MediaWidgetState>();
         auto dm = std::make_shared<DataManager>();
 
-        MediaPropertiesWidget widget(state, dm);
+        MediaPropertiesWidget const widget(state, dm);
 
         REQUIRE(widget.getMediaWindow() == nullptr);
     }
@@ -55,7 +57,7 @@ TEST_CASE("MediaPropertiesWidget construction", "[MediaPropertiesWidget]") {
         auto dm = std::make_shared<DataManager>();
 
         // Should not crash with nullptr state
-        MediaPropertiesWidget widget(nullptr, dm);
+        MediaPropertiesWidget const widget(nullptr, dm);
 
         REQUIRE(widget.getMediaWindow() == nullptr);
     }
@@ -64,7 +66,7 @@ TEST_CASE("MediaPropertiesWidget construction", "[MediaPropertiesWidget]") {
         auto state = std::make_shared<MediaWidgetState>();
 
         // Should not crash with nullptr data manager
-        MediaPropertiesWidget widget(state, nullptr);
+        MediaPropertiesWidget const widget(state, nullptr);
 
         REQUIRE(widget.getMediaWindow() == nullptr);
     }
@@ -108,7 +110,7 @@ TEST_CASE("MediaPropertiesWidget has expected UI", "[MediaPropertiesWidget]") {
         auto state = std::make_shared<MediaWidgetState>();
         auto dm = std::make_shared<DataManager>();
 
-        MediaPropertiesWidget widget(state, dm);
+        MediaPropertiesWidget const widget(state, dm);
 
         // Find the scroll area
         auto * scrollArea = widget.findChild<QScrollArea *>("scrollArea");
@@ -120,7 +122,7 @@ TEST_CASE("MediaPropertiesWidget has expected UI", "[MediaPropertiesWidget]") {
         auto state = std::make_shared<MediaWidgetState>();
         auto dm = std::make_shared<DataManager>();
 
-        MediaPropertiesWidget widget(state, dm);
+        MediaPropertiesWidget const widget(state, dm);
 
         // Find the feature table widget
         auto * featureTable = widget.findChild<Feature_Table_Widget *>("feature_table_widget");
@@ -131,7 +133,7 @@ TEST_CASE("MediaPropertiesWidget has expected UI", "[MediaPropertiesWidget]") {
         auto state = std::make_shared<MediaWidgetState>();
         auto dm = std::make_shared<DataManager>();
 
-        MediaPropertiesWidget widget(state, dm);
+        MediaPropertiesWidget const widget(state, dm);
 
         // Find the stacked widget
         auto * stackedWidget = widget.findChild<QStackedWidget *>("stackedWidget");
@@ -142,12 +144,46 @@ TEST_CASE("MediaPropertiesWidget has expected UI", "[MediaPropertiesWidget]") {
         auto state = std::make_shared<MediaWidgetState>();
         auto dm = std::make_shared<DataManager>();
 
-        MediaPropertiesWidget widget(state, dm);
+        MediaPropertiesWidget const widget(state, dm);
 
         // Find the MediaText_Widget (should be created as child)
         auto * textWidget = widget.findChild<MediaText_Widget *>();
         REQUIRE(textWidget != nullptr);
     }
+}
+
+TEST_CASE("MediaPropertiesWidget developer mode toggles debug panel visibility", "[MediaPropertiesWidget][DeveloperMode]") {
+    if (!QApplication::instance()) {
+        static int argc = 1;
+        static char app_name[] = "test";
+        static std::array<char *, 1> argv = {app_name};
+        new QApplication(argc, argv.data());
+    }
+
+    auto state = std::make_shared<MediaWidgetState>();
+    auto dm = std::make_shared<DataManager>();
+    MediaPropertiesWidget const widget(state, dm);
+
+    QCheckBox * developer_mode_cb = nullptr;
+    for (auto * checkbox: widget.findChildren<QCheckBox *>()) {
+        if (checkbox->text() == QStringLiteral("Developer Mode")) {
+            developer_mode_cb = checkbox;
+            break;
+        }
+    }
+    REQUIRE(developer_mode_cb != nullptr);
+
+    auto * debug_panel = widget.findChild<MediaDebugPanel *>();
+    REQUIRE(debug_panel != nullptr);
+    REQUIRE(debug_panel->isHidden());
+
+    developer_mode_cb->setChecked(true);
+    REQUIRE_FALSE(debug_panel->isHidden());
+    REQUIRE(state->developerMode());
+
+    developer_mode_cb->setChecked(false);
+    REQUIRE(debug_panel->isHidden());
+    REQUIRE_FALSE(state->developerMode());
 }
 
 Q_DECLARE_METATYPE(CanvasCoordinates)
@@ -188,7 +224,7 @@ TEST_CASE("MediaPropertiesWidget raises MediaMask_Widget when mask feature selec
     data_manager->setData<MaskData>("test_mask", mask, TimeKey("time"));
 
     // Allow Feature_Table to observe update and rebuild
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     // Find the feature table and its internal QTableWidget
     auto feature_table = widget.findChild<Feature_Table_Widget *>("feature_table_widget");
@@ -196,7 +232,7 @@ TEST_CASE("MediaPropertiesWidget raises MediaMask_Widget when mask feature selec
 
     // Ensure it is populated (defensive)
     feature_table->populateTable();
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     auto table = feature_table->findChild<QTableWidget *>("available_features_table");
     REQUIRE(table != nullptr);
@@ -232,7 +268,7 @@ TEST_CASE("MediaPropertiesWidget raises MediaMask_Widget when mask feature selec
     REQUIRE(invoked);
 
     // Process resulting signal/slot delivery
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     // Verify the stacked widget switched to the mask page
     // _featureSelected sets index 3 for DM_DataType::Mask
@@ -283,27 +319,33 @@ TEST_CASE("MediaPropertiesWidget brush drag creates mask pixels", "[MediaPropert
     constexpr int kWidgetHeight = 700;
     widget.resize(kWidgetWidth, kWidgetHeight);
     widget.show();
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     // Select the mask feature via feature table
     auto feature_table = widget.findChild<Feature_Table_Widget *>("feature_table_widget");
     REQUIRE(feature_table != nullptr);
     feature_table->populateTable();
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     auto table = feature_table->findChild<QTableWidget *>("available_features_table");
     REQUIRE(table != nullptr);
     int featureColumnIndex = -1;
     for (int c = 0; c < table->columnCount(); ++c) {
         auto * headerItem = table->horizontalHeaderItem(c);
-        if (headerItem && headerItem->text() == QString("Feature")) { featureColumnIndex = c; break; }
+        if (headerItem && headerItem->text() == QString("Feature")) {
+            featureColumnIndex = c;
+            break;
+        }
     }
     if (featureColumnIndex == -1) featureColumnIndex = 0;
 
     int mask_row = -1;
     for (int r = 0; r < table->rowCount(); ++r) {
         auto * item = table->item(r, featureColumnIndex);
-        if (item && item->text() == QString::fromStdString("test_mask")) { mask_row = r; break; }
+        if (item && item->text() == QString::fromStdString("test_mask")) {
+            mask_row = r;
+            break;
+        }
     }
     REQUIRE(mask_row >= 0);
 
@@ -314,7 +356,7 @@ TEST_CASE("MediaPropertiesWidget brush drag creates mask pixels", "[MediaPropert
             Q_ARG(int, mask_row),
             Q_ARG(int, featureColumnIndex));
     REQUIRE(invoked);
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     // Verify mask page raised and obtain the MediaMask_Widget
     auto stack = widget.findChild<QStackedWidget *>("stackedWidget");
@@ -325,13 +367,13 @@ TEST_CASE("MediaPropertiesWidget brush drag creates mask pixels", "[MediaPropert
 
     // Ensure the widget is shown so its showEvent connections are made
     mask_widget->show();
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     // Switch mouse mode to Brush via combo box
     auto combo = mask_widget->findChild<QComboBox *>("selection_mode_combo");
     REQUIRE(combo != nullptr);
     combo->setCurrentText("Brush");
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     // Simulate left-click drag within canvas using the private slots
     // Choose coordinates well within the default canvas (after resize)
@@ -341,9 +383,9 @@ TEST_CASE("MediaPropertiesWidget brush drag creates mask pixels", "[MediaPropert
     constexpr float kY1 = 135.0f;
     constexpr float kX2 = 180.0f;
     constexpr float kY2 = 150.0f;
-    const CanvasCoordinates p0{kX0, kY0};
-    const CanvasCoordinates p1{kX1, kY1};
-    const CanvasCoordinates p2{kX2, kY2};
+    CanvasCoordinates const p0{kX0, kY0};
+    CanvasCoordinates const p1{kX1, kY1};
+    CanvasCoordinates const p2{kX2, kY2};
 
     invoked = QMetaObject::invokeMethod(mask_widget, "_clickedInVideo", Qt::DirectConnection,
                                         Q_ARG(CanvasCoordinates, p0));
@@ -357,7 +399,7 @@ TEST_CASE("MediaPropertiesWidget brush drag creates mask pixels", "[MediaPropert
     invoked = QMetaObject::invokeMethod(mask_widget, "_mouseReleased", Qt::DirectConnection);
     REQUIRE(invoked);
 
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     // Verify that mask now contains pixels at current time/frame
     auto current_index_and_frame = TimeIndexAndFrame(state->current_position.index, state->current_position.time_frame.get());
@@ -405,27 +447,33 @@ TEST_CASE("MediaPropertiesWidget brush drag creates mask pixels (non-default mas
     constexpr int kWidgetHeight = 700;
     widget.resize(kWidgetWidth, kWidgetHeight);
     widget.show();
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     // Select the mask feature via feature table
     auto feature_table = widget.findChild<Feature_Table_Widget *>("feature_table_widget");
     REQUIRE(feature_table != nullptr);
     feature_table->populateTable();
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     auto table = feature_table->findChild<QTableWidget *>("available_features_table");
     REQUIRE(table != nullptr);
     int featureColumnIndex = -1;
     for (int c = 0; c < table->columnCount(); ++c) {
         auto * headerItem = table->horizontalHeaderItem(c);
-        if (headerItem && headerItem->text() == QString("Feature")) { featureColumnIndex = c; break; }
+        if (headerItem && headerItem->text() == QString("Feature")) {
+            featureColumnIndex = c;
+            break;
+        }
     }
     if (featureColumnIndex == -1) featureColumnIndex = 0;
 
     int mask_row = -1;
     for (int r = 0; r < table->rowCount(); ++r) {
         auto * item = table->item(r, featureColumnIndex);
-        if (item && item->text() == QString::fromStdString("mask_small")) { mask_row = r; break; }
+        if (item && item->text() == QString::fromStdString("mask_small")) {
+            mask_row = r;
+            break;
+        }
     }
     REQUIRE(mask_row >= 0);
 
@@ -436,7 +484,7 @@ TEST_CASE("MediaPropertiesWidget brush drag creates mask pixels (non-default mas
             Q_ARG(int, mask_row),
             Q_ARG(int, featureColumnIndex));
     REQUIRE(invoked);
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     auto stack = widget.findChild<QStackedWidget *>("stackedWidget");
     REQUIRE(stack != nullptr);
@@ -444,17 +492,17 @@ TEST_CASE("MediaPropertiesWidget brush drag creates mask pixels (non-default mas
     auto mask_widget = qobject_cast<MediaMask_Widget *>(stack->widget(3));
     REQUIRE(mask_widget != nullptr);
     mask_widget->show();
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     auto combo = mask_widget->findChild<QComboBox *>("selection_mode_combo");
     REQUIRE(combo != nullptr);
     combo->setCurrentText("Brush");
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     // Drag a short stroke
-    const CanvasCoordinates p0{150.0f, 120.0f};
-    const CanvasCoordinates p1{165.0f, 135.0f};
-    const CanvasCoordinates p2{180.0f, 150.0f};
+    CanvasCoordinates const p0{150.0f, 120.0f};
+    CanvasCoordinates const p1{165.0f, 135.0f};
+    CanvasCoordinates const p2{180.0f, 150.0f};
     invoked = QMetaObject::invokeMethod(mask_widget, "_clickedInVideo", Qt::DirectConnection, Q_ARG(CanvasCoordinates, p0));
     REQUIRE(invoked);
     invoked = QMetaObject::invokeMethod(mask_widget, "_mouseMoveInVideo", Qt::DirectConnection, Q_ARG(CanvasCoordinates, p1));
@@ -463,7 +511,7 @@ TEST_CASE("MediaPropertiesWidget brush drag creates mask pixels (non-default mas
     REQUIRE(invoked);
     invoked = QMetaObject::invokeMethod(mask_widget, "_mouseReleased", Qt::DirectConnection);
     REQUIRE(invoked);
-    app->processEvents();
+    QCoreApplication::processEvents();
 
     auto const current_index_and_frame = TimeIndexAndFrame(state->current_position.index, state->current_position.time_frame.get());
     auto const & masks_at_time = mask->getAtTime(current_index_and_frame);

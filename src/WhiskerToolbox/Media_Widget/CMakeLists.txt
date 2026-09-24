@@ -14,6 +14,7 @@ set(MEDIA_WIDGET_SOURCES
     Core/MediaWidgetState.hpp
     Core/MediaWidgetState.cpp
     Core/MediaWidgetStateData.hpp
+    Core/MediaSceneDiagnostics.hpp
     Core/Media_KeymapActions.hpp
     Core/Media_KeymapActions.cpp
     Core/LineDrawOperations.hpp
@@ -30,6 +31,9 @@ set(MEDIA_WIDGET_SOURCES
     UI/MediaPropertiesWidget.hpp
     UI/MediaPropertiesWidget.cpp
     UI/MediaPropertiesWidget.ui
+
+    UI/MediaDebugPanel.hpp
+    UI/MediaDebugPanel.cpp
 
     UI/CanvasCoord_Widget.hpp
     UI/CanvasCoord_Widget.cpp

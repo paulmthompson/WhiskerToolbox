@@ -562,6 +562,14 @@ void MediaWidgetState::setEraserPrefs(EraserToolPrefs const & prefs) {
     emit eraserPrefsChanged();
 }
 
+void MediaWidgetState::setDeveloperMode(bool enabled) {
+    if (_data.developer_mode != enabled) {
+        _data.developer_mode = enabled;
+        markDirty();
+        emit developerModeChanged(enabled);
+    }
+}
+
 void MediaWidgetState::setSmoothPrefs(SmoothToolPrefs const & prefs) {
     if (_data.smooth_prefs.radius_px == prefs.radius_px &&
         _data.smooth_prefs.algorithm == prefs.algorithm &&

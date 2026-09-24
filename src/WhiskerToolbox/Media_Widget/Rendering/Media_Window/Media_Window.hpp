@@ -6,6 +6,7 @@
 #include "CoreGeometry/masks.hpp"
 #include "CorePlotting/Layout/CanvasCoordinateSystem.hpp"
 #include "Entity/EntityTypes.hpp"
+#include "Media_Widget/Core/MediaSceneDiagnostics.hpp"
 #include "TimeFrame/TimeFrame.hpp"// TimePosition
 
 #include <QGraphicsScene>
@@ -135,6 +136,12 @@ public:
      *
      */
     void UpdateCanvas();
+
+    /**
+     * @brief Get current scene element counts for developer diagnostics
+     * @return Snapshot of internal vector sizes and total scene item count
+     */
+    [[nodiscard]] MediaSceneDiagnostics getSceneDiagnostics() const;
 
     /**
      * @brief Get X scaling factor from canvas coordinate system to canvas pixels

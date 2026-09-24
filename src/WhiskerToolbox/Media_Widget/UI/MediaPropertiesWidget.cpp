@@ -2,6 +2,7 @@
 #include "ui_MediaPropertiesWidget.h"
 
 #include "CanvasCoord_Widget.hpp"
+#include "MediaDebugPanel.hpp"
 #include "Media_Widget/Core/MediaWidgetState.hpp"
 #include "Media_Widget/UI/SubWidgets/MediaInterval_Widget/MediaInterval_Widget.hpp"
 #include "Media_Widget/UI/SubWidgets/MediaLine_Widget/MediaLine_Widget.hpp"
@@ -16,6 +17,7 @@
 #include "Common/Collapsible_Widget/Section.hpp"
 #include "DataManager/DataManager.hpp"
 
+#include <QCheckBox>
 #include <QResizeEvent>
 #include <QTimer>
 #include <QVBoxLayout>
@@ -44,6 +46,7 @@ MediaPropertiesWidget::MediaPropertiesWidget(std::shared_ptr<MediaWidgetState> s
     _setupRulerSection();
     _setupFeatureTable();
     _createStackedWidgets();
+    _setupDebugPanel();
     _connectTextWidgetToScene();
     _connectStateSignals();
 }
@@ -95,6 +98,10 @@ void MediaPropertiesWidget::setMediaWindow(Media_Window * media_window) {
 
         _createStackedWidgets();
     }
+
+    if (_debug_panel != nullptr) {
+        _debug_panel->setMediaWindow(_media_window);
+    }
 }
 
 void MediaPropertiesWidget::_setupTextOverlays() {
@@ -137,6 +144,51 @@ void MediaPropertiesWidget::_setupRulerSection() {
     }
 
     ui->contentLayout->insertWidget(2, _ruler_section);
+}
+
+void MediaPropertiesWidget::_setupDebugPanel() {
+    auto * scroll_layout = qobject_cast<QVBoxLayout *>(ui->scrollAreaWidgetContents->layout());
+    if (scroll_layout == nullptr) {
+        return;
+    }
+
+    int const spacer_index = scroll_layout->count() - 1;
+
+    _developer_mode_cb = new QCheckBox(QStringLiteral("Developer Mode"), ui->scrollAreaWidgetContents);
+    scroll_layout->insertWidget(spacer_index, _developer_mode_cb);
+
+    _debug_panel = new MediaDebugPanel(_state, _media_window, ui->scrollAreaWidgetContents);
+    _debug_panel->setVisible(false);
+    scroll_layout->insertWidget(spacer_index + 1, _debug_panel);
+
+    if (_state) {
+        _developer_mode_cb->setChecked(_state->developerMode());
+        _debug_panel->setVisible(_state->developerMode());
+    }
+
+    connect(_developer_mode_cb, &QCheckBox::toggled, this, [this](bool checked) {
+        if (_updating_from_state) {
+            return;
+        }
+        if (_state) {
+            _state->setDeveloperMode(checked);
+        }
+        if (_debug_panel != nullptr) {
+            _debug_panel->setVisible(checked);
+        }
+    });
+
+    if (_state) {
+        connect(_state.get(), &MediaWidgetState::developerModeChanged, this, [this](bool enabled) {
+            if (_updating_from_state) {
+                return;
+            }
+            _updating_from_state = true;
+            _developer_mode_cb->setChecked(enabled);
+            _debug_panel->setVisible(enabled);
+            _updating_from_state = false;
+        });
+    }
 }
 
 void MediaPropertiesWidget::_connectTextWidgetToScene() {

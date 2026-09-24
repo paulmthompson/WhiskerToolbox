@@ -336,6 +336,9 @@ struct MediaWidgetStateData {
     LineToolMode active_line_mode = LineToolMode::None;   ///< Current line tool mode
     MaskToolMode active_mask_mode = MaskToolMode::None;   ///< Current mask tool mode
     PointToolMode active_point_mode = PointToolMode::None;///< Current point tool mode
+
+    // === UI Preferences ===
+    bool developer_mode = false;///< Toggle developer diagnostics panel
 };
 
 #endif// MEDIA_WIDGET_STATE_DATA_HPP

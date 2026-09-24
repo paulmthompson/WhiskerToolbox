@@ -32,6 +32,7 @@ add_executable(test_media_widget
     ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/Media_Widget/LineDrawOperations.test.cpp
     ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/Media_Widget/LineEditOperations.test.cpp
     ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/Media_Widget/Media_KeymapActions.test.cpp
+    ${CMAKE_SOURCE_DIR}/tests/WhiskerToolbox/Media_Widget/Media_Window.test.cpp
 )
 
 target_link_libraries(test_media_widget PRIVATE 

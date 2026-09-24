@@ -41,11 +41,13 @@
 
 class CanvasCoord_Widget;
 class DataManager;
+class MediaDebugPanel;
 class MediaRuler_Widget;
 class MediaWidgetState;
 class Media_Window;
 class MediaProcessing_Widget;
 class MediaText_Widget;
+class QCheckBox;
 class Section;
 
 namespace Ui {
@@ -115,6 +117,11 @@ private:
     MediaRuler_Widget * _ruler_widget{nullptr};
     bool _syncing_from_table{false};
 
+    // Developer diagnostics
+    QCheckBox * _developer_mode_cb{nullptr};
+    MediaDebugPanel * _debug_panel{nullptr};
+    bool _updating_from_state{false};
+
     void resizeEvent(QResizeEvent * event) override;
 
     void _connectStateSignals();
@@ -124,6 +131,7 @@ private:
     void _setupTextOverlays();
     void _setupCanvasCoordSection();
     void _setupRulerSection();
+    void _setupDebugPanel();
     void _createStackedWidgets();
     void _connectTextWidgetToScene();
     void _updateChildWidths();

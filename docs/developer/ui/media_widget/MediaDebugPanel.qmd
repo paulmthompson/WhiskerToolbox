@@ -1,0 +1,44 @@
+---
+title: "Media Debug Panel"
+format: html
+---
+
+## Overview
+
+The Media Widget provides a **Developer Mode** diagnostics panel, gated behind a checkbox at the bottom of the properties sidebar (`MediaPropertiesWidget`). When enabled, `MediaDebugPanel` shows real-time counts of scene elements managed by `Media_Window`.
+
+Developer mode is off by default and persists via `MediaWidgetStateData::developer_mode` in workspace serialization.
+
+## Components
+
+| Component | Path | Role |
+|-----------|------|------|
+| `MediaSceneDiagnostics` | `src/WhiskerToolbox/Media_Widget/Core/MediaSceneDiagnostics.hpp` | Lightweight count snapshot struct |
+| `Media_Window::getSceneDiagnostics()` | `Rendering/Media_Window/Media_Window.hpp` | Reads internal QGraphicsScene vector sizes |
+| `MediaDebugPanel` | `UI/MediaDebugPanel.hpp` | Collapsible `Section` with count labels |
+| Toggle wiring | `UI/MediaPropertiesWidget.cpp` | Checkbox + panel visibility via `MediaWidgetState` |
+
+## Scene Element Counts
+
+The **Scene Elements** section reports counts from these `Media_Window` vectors:
+
+- `line_paths`
+- `masks`
+- `mask_bounding_boxes`
+- `mask_outlines`
+- `points` (includes line dots, markers, and selection highlights)
+- `intervals`
+- `tensors`
+- `text_items`
+- `total_scene_items` (`QGraphicsScene::items().size()`)
+
+Counts refresh automatically on `Media_Window::canvasUpdated`.
+
+## Extension Roadmap
+
+Future sections may include:
+
+- Enabled data keys table (logical counts from `DataManager`)
+- Viewport/zoom/pan readout
+- `UpdateCanvas()` timing breakdown
+- On-canvas overlays (if needed)

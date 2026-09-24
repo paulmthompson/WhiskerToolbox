@@ -536,6 +536,20 @@ void Media_Window::LoadFrame(TimePosition const & position) {
     UpdateCanvas();
 }
 
+MediaSceneDiagnostics Media_Window::getSceneDiagnostics() const {
+    MediaSceneDiagnostics diagnostics;
+    diagnostics.line_paths = static_cast<std::size_t>(_line_paths.size());
+    diagnostics.masks = static_cast<std::size_t>(_masks.size());
+    diagnostics.mask_bounding_boxes = static_cast<std::size_t>(_mask_bounding_boxes.size());
+    diagnostics.mask_outlines = static_cast<std::size_t>(_mask_outlines.size());
+    diagnostics.points = static_cast<std::size_t>(_points.size());
+    diagnostics.intervals = static_cast<std::size_t>(_intervals.size());
+    diagnostics.tensors = static_cast<std::size_t>(_tensors.size());
+    diagnostics.text_items = static_cast<std::size_t>(_text_items.size());
+    diagnostics.total_scene_items = static_cast<std::size_t>(items().size());
+    return diagnostics;
+}
+
 void Media_Window::UpdateCanvas() {
     QElapsedTimer total_timer;
     QElapsedTimer phase_timer;
