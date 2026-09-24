@@ -4,6 +4,7 @@
 #include "TimeFrame/TimeFrame.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <map>
 #include <memory>
@@ -21,9 +22,9 @@ class ViewRaggedAnalogStorage;
  * @brief Storage type enumeration for ragged analog storage
  */
 enum class RaggedAnalogStorageType {
-    Owning,  ///< Owns the data in SoA layout
-    View,    ///< References another storage via indices
-    Lazy     ///< Lazy-evaluated transform
+    Owning,///< Owns the data in SoA layout
+    View,  ///< References another storage via indices
+    Lazy   ///< Lazy-evaluated transform
 };
 
 // =============================================================================
@@ -42,11 +43,11 @@ enum class RaggedAnalogStorageType {
  *       need EntityId support.
  */
 struct RaggedAnalogStorageCache {
-    TimeFrameIndex const* times_ptr = nullptr;
-    float const* values_ptr = nullptr;
+    TimeFrameIndex const * times_ptr = nullptr;
+    float const * values_ptr = nullptr;
     size_t cache_size = 0;
-    bool is_contiguous = false;  ///< True if storage is contiguous (owning)
-    
+    bool is_contiguous = false;///< True if storage is contiguous (owning)
+
     /**
      * @brief Check if the cache is valid for fast-path access
      * 
@@ -56,12 +57,12 @@ struct RaggedAnalogStorageCache {
     [[nodiscard]] constexpr bool isValid() const noexcept {
         return is_contiguous;
     }
-    
+
     // Convenience accessors for cached data
     [[nodiscard]] TimeFrameIndex getTime(size_t idx) const noexcept {
         return times_ptr[idx];
     }
-    
+
     [[nodiscard]] float getValue(size_t idx) const noexcept {
         return values_ptr[idx];
     }
@@ -91,14 +92,14 @@ template<typename Derived>
 class RaggedAnalogStorageBase {
 public:
     // ========== Size & Bounds ==========
-    
+
     /**
      * @brief Get total number of float entries across all times
      */
     [[nodiscard]] size_t size() const {
-        return static_cast<Derived const*>(this)->sizeImpl();
+        return static_cast<Derived const *>(this)->sizeImpl();
     }
-    
+
     /**
      * @brief Check if storage is empty
      */
@@ -107,41 +108,41 @@ public:
     }
 
     // ========== Element Access ==========
-    
+
     /**
      * @brief Get the TimeFrameIndex at a flat index
      * @param idx Flat index in [0, size())
      */
     [[nodiscard]] TimeFrameIndex getTime(size_t idx) const {
-        return static_cast<Derived const*>(this)->getTimeImpl(idx);
+        return static_cast<Derived const *>(this)->getTimeImpl(idx);
     }
-    
+
     /**
      * @brief Get the float value at a flat index
      * @param idx Flat index in [0, size())
      */
     [[nodiscard]] float getValue(size_t idx) const {
-        return static_cast<Derived const*>(this)->getValueImpl(idx);
+        return static_cast<Derived const *>(this)->getValueImpl(idx);
     }
 
     // ========== Time-based Access ==========
-    
+
     /**
      * @brief Get range of flat indices for a specific time
      * @param time The TimeFrameIndex to query
      * @return Pair of (start_idx, end_idx) where end is exclusive, or (0,0) if not found
      */
     [[nodiscard]] std::pair<size_t, size_t> getTimeRange(TimeFrameIndex time) const {
-        return static_cast<Derived const*>(this)->getTimeRangeImpl(time);
+        return static_cast<Derived const *>(this)->getTimeRangeImpl(time);
     }
-    
+
     /**
      * @brief Get number of distinct times with data
      */
     [[nodiscard]] size_t getTimeCount() const {
-        return static_cast<Derived const*>(this)->getTimeCountImpl();
+        return static_cast<Derived const *>(this)->getTimeCountImpl();
     }
-    
+
     /**
      * @brief Check if data exists at a specific time
      */
@@ -149,7 +150,7 @@ public:
         auto [start, end] = getTimeRange(time);
         return start < end;
     }
-    
+
     /**
      * @brief Get values at a specific time as a span
      * 
@@ -157,25 +158,25 @@ public:
      * @return span of float values, empty if no data at this time
      */
     [[nodiscard]] std::span<float const> getValuesAtTime(TimeFrameIndex time) const {
-        return static_cast<Derived const*>(this)->getValuesAtTimeImpl(time);
+        return static_cast<Derived const *>(this)->getValuesAtTimeImpl(time);
     }
 
     // ========== Storage Type ==========
-    
+
     /**
      * @brief Get the storage type identifier
      */
     [[nodiscard]] RaggedAnalogStorageType getStorageType() const {
-        return static_cast<Derived const*>(this)->getStorageTypeImpl();
+        return static_cast<Derived const *>(this)->getStorageTypeImpl();
     }
-    
+
     /**
      * @brief Check if this is a view (doesn't own data)
      */
     [[nodiscard]] bool isView() const {
         return getStorageType() == RaggedAnalogStorageType::View;
     }
-    
+
     /**
      * @brief Check if this is lazy storage
      */
@@ -184,14 +185,14 @@ public:
     }
 
     // ========== Cache Optimization ==========
-    
+
     /**
      * @brief Try to get cached pointers for fast-path access
      * 
      * @return RaggedAnalogStorageCache with valid pointers if contiguous, invalid otherwise
      */
     [[nodiscard]] RaggedAnalogStorageCache tryGetCache() const {
-        return static_cast<Derived const*>(this)->tryGetCacheImpl();
+        return static_cast<Derived const *>(this)->tryGetCacheImpl();
     }
 
 protected:
@@ -218,76 +219,47 @@ protected:
 class OwningRaggedAnalogStorage : public RaggedAnalogStorageBase<OwningRaggedAnalogStorage> {
 public:
     OwningRaggedAnalogStorage() = default;
-    
+
     // ========== Modification ==========
-    
+
     /**
      * @brief Append a single float value at a specific time
-     * 
+     *
+     * Tail append at a new time is O(1). Revisiting an existing time inserts at
+     * the end of that time's contiguous block (O(n) shift when interleaved).
+     *
      * @param time The TimeFrameIndex for this entry
      * @param value The float value to store
      */
     void append(TimeFrameIndex time, float value) {
-        size_t const idx = _times.size();
-        
-        _times.push_back(time);
-        _values.push_back(value);
-        
-        _updateTimeRanges(time, idx);
+        _insertValuesAtTime(time, std::span<float const>(&value, 1));
     }
-    
+
     /**
      * @brief Append multiple float values at a specific time
-     * 
+     *
      * More efficient than calling append() multiple times.
-     * 
+     *
      * @param time The TimeFrameIndex for these entries
      * @param values Vector of float values to store
      */
-    void appendBatch(TimeFrameIndex time, std::vector<float> const& values) {
-        if (values.empty()) return;
-        
-        size_t const start_idx = _times.size();
-        _times.reserve(_times.size() + values.size());
-        _values.reserve(_values.size() + values.size());
-        
-        for (float v : values) {
-            _times.push_back(time);
-            _values.push_back(v);
+    void appendBatch(TimeFrameIndex time, std::vector<float> const & values) {
+        if (values.empty()) {
+            return;
         }
-        
-        // Update time ranges once for the whole batch
-        auto it = _time_ranges.find(time);
-        if (it == _time_ranges.end()) {
-            _time_ranges[time] = {start_idx, _times.size()};
-        } else {
-            it->second.second = _times.size();
-        }
+        _insertValuesAtTime(time, values);
     }
-    
+
     /**
      * @brief Append multiple float values at a specific time (move version)
      */
-    void appendBatch(TimeFrameIndex time, std::vector<float>&& values) {
-        if (values.empty()) return;
-        
-        size_t const start_idx = _times.size();
-        _times.reserve(_times.size() + values.size());
-        _values.reserve(_values.size() + values.size());
-        
-        for (float v : values) {
-            _times.push_back(time);
-            _values.push_back(v);
+    void appendBatch(TimeFrameIndex time, std::vector<float> && values) {
+        if (values.empty()) {
+            return;
         }
-        
-        auto it = _time_ranges.find(time);
-        if (it == _time_ranges.end()) {
-            _time_ranges[time] = {start_idx, _times.size()};
-        } else {
-            it->second.second = _times.size();
-        }
+        _insertValuesAtTime(time, values);
     }
-    
+
     /**
      * @brief Set/replace all data at a specific time
      * 
@@ -297,18 +269,18 @@ public:
      * @param time The TimeFrameIndex to set data for
      * @param values Vector of float values
      */
-    void setAtTime(TimeFrameIndex time, std::vector<float> const& values) {
+    void setAtTime(TimeFrameIndex time, std::vector<float> const & values) {
         // If time already exists, we need to rebuild
         auto it = _time_ranges.find(time);
         if (it != _time_ranges.end()) {
             // Remove existing data at this time
             removeAtTime(time);
         }
-        
+
         // Append the new data
         appendBatch(time, values);
     }
-    
+
     /**
      * @brief Remove all entries at a specific time
      * @param time The TimeFrameIndex to remove all entries for
@@ -319,22 +291,22 @@ public:
         if (it == _time_ranges.end()) {
             return 0;
         }
-        
+
         auto [start, end] = it->second;
         size_t const count = end - start;
-        
+
         // Erase the range from all vectors
         _times.erase(_times.begin() + static_cast<std::ptrdiff_t>(start),
                      _times.begin() + static_cast<std::ptrdiff_t>(end));
         _values.erase(_values.begin() + static_cast<std::ptrdiff_t>(start),
                       _values.begin() + static_cast<std::ptrdiff_t>(end));
-        
+
         // Rebuild acceleration structures
         _rebuildTimeRanges();
-        
+
         return count;
     }
-    
+
     /**
      * @brief Reserve capacity for expected number of entries
      */
@@ -342,7 +314,7 @@ public:
         _times.reserve(capacity);
         _values.reserve(capacity);
     }
-    
+
     /**
      * @brief Clear all data
      */
@@ -353,24 +325,24 @@ public:
     }
 
     // ========== CRTP Implementation ==========
-    
+
     [[nodiscard]] size_t sizeImpl() const { return _times.size(); }
-    
+
     [[nodiscard]] TimeFrameIndex getTimeImpl(size_t idx) const { return _times[idx]; }
-    
+
     [[nodiscard]] float getValueImpl(size_t idx) const { return _values[idx]; }
-    
+
     [[nodiscard]] std::pair<size_t, size_t> getTimeRangeImpl(TimeFrameIndex time) const {
         auto it = _time_ranges.find(time);
         return it != _time_ranges.end() ? it->second : std::pair<size_t, size_t>{0, 0};
     }
-    
+
     [[nodiscard]] size_t getTimeCountImpl() const { return _time_ranges.size(); }
-    
-    [[nodiscard]] RaggedAnalogStorageType getStorageTypeImpl() const { 
-        return RaggedAnalogStorageType::Owning; 
+
+    [[nodiscard]] RaggedAnalogStorageType getStorageTypeImpl() const {
+        return RaggedAnalogStorageType::Owning;
     }
-    
+
     [[nodiscard]] std::span<float const> getValuesAtTimeImpl(TimeFrameIndex time) const {
         auto it = _time_ranges.find(time);
         if (it == _time_ranges.end()) {
@@ -388,43 +360,161 @@ public:
      */
     [[nodiscard]] RaggedAnalogStorageCache tryGetCacheImpl() const {
         return RaggedAnalogStorageCache{
-            _times.data(),
-            _values.data(),
-            _times.size(),
-            true  // is_contiguous
+                _times.data(),
+                _values.data(),
+                _times.size(),
+                true// is_contiguous
         };
     }
 
     // ========== Direct Array Access ==========
-    
-    [[nodiscard]] std::vector<TimeFrameIndex> const& times() const { return _times; }
-    [[nodiscard]] std::vector<float> const& values() const { return _values; }
-    
+
+    [[nodiscard]] std::vector<TimeFrameIndex> const & times() const { return _times; }
+    [[nodiscard]] std::vector<float> const & values() const { return _values; }
+
     [[nodiscard]] std::span<TimeFrameIndex const> timesSpan() const { return _times; }
     [[nodiscard]] std::span<float const> valuesSpan() const { return _values; }
-    
+
     /**
      * @brief Get the time ranges map for iteration
      */
-    [[nodiscard]] std::map<TimeFrameIndex, std::pair<size_t, size_t>> const& timeRanges() const {
+    [[nodiscard]] std::map<TimeFrameIndex, std::pair<size_t, size_t>> const & timeRanges() const {
         return _time_ranges;
     }
 
 private:
+    [[nodiscard]] size_t _resolveInsertIndex(TimeFrameIndex time) const {
+        auto const it = _time_ranges.find(time);
+        if (it == _time_ranges.end()) {
+            return _times.size();
+        }
+        return it->second.second;
+    }
+
+    void _insertValuesAtTime(TimeFrameIndex time, std::span<float const> values) {
+        size_t const insert_idx = _resolveInsertIndex(time);
+        size_t const count = values.size();
+
+        _times.reserve(_times.size() + count);
+        _values.reserve(_values.size() + count);
+
+        if (insert_idx == _times.size()) {
+            for (float value: values) {
+                _times.push_back(time);
+                _values.push_back(value);
+            }
+
+            auto it = _time_ranges.find(time);
+            if (it == _time_ranges.end()) {
+                _time_ranges[time] = {insert_idx, insert_idx + count};
+            } else {
+                assert(insert_idx == it->second.second);
+                it->second.second = insert_idx + count;
+            }
+        } else {
+            std::vector<TimeFrameIndex> times_chunk(count, time);
+            auto const times_it = _times.begin() + static_cast<std::ptrdiff_t>(insert_idx);
+            _times.insert(times_it, times_chunk.begin(), times_chunk.end());
+            auto const values_it = _values.begin() + static_cast<std::ptrdiff_t>(insert_idx);
+            _values.insert(values_it, values.begin(), values.end());
+
+            for (auto & [unused_time, range]: _time_ranges) {
+                (void) unused_time;
+                if (range.first >= insert_idx) {
+                    range.first += count;
+                }
+                if (range.second >= insert_idx) {
+                    range.second += count;
+                }
+            }
+        }
+
+        _validateTimeRanges();
+    }
+
     void _updateTimeRanges(TimeFrameIndex time, size_t idx) {
         auto it = _time_ranges.find(time);
         if (it == _time_ranges.end()) {
             _time_ranges[time] = {idx, idx + 1};
         } else {
+            assert(idx == it->second.second);
             it->second.second = idx + 1;
         }
     }
-    
+
+    [[nodiscard]] bool _hasValidTimeRanges() const {
+        for (auto const & [time, range]: _time_ranges) {
+            if (range.first >= range.second) {
+                return false;
+            }
+            for (size_t i = range.first; i < range.second; ++i) {
+                if (_times[i] != time) {
+                    return false;
+                }
+            }
+        }
+        for (size_t i = 0; i < _times.size(); ++i) {
+            auto const it = _time_ranges.find(_times[i]);
+            if (it == _time_ranges.end()) {
+                return false;
+            }
+            if (i < it->second.first || i >= it->second.second) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    void _compactTimeBlocks() {
+        struct Entry {
+            TimeFrameIndex time;
+            float value;
+            size_t orig_index;
+        };
+
+        std::vector<Entry> entries;
+        entries.reserve(_times.size());
+        for (size_t i = 0; i < _times.size(); ++i) {
+            entries.push_back({_times[i], _values[i], i});
+        }
+
+        std::stable_sort(entries.begin(), entries.end(), [](Entry const & a, Entry const & b) {
+            if (a.time != b.time) {
+                return a.time < b.time;
+            }
+            return a.orig_index < b.orig_index;
+        });
+
+        _times.clear();
+        _values.clear();
+        for (auto const & entry: entries) {
+            _times.push_back(entry.time);
+            _values.push_back(entry.value);
+        }
+    }
+
     void _rebuildTimeRanges() {
+        if (!_hasValidTimeRanges()) {
+            _compactTimeBlocks();
+        }
+
         _time_ranges.clear();
         for (size_t i = 0; i < _times.size(); ++i) {
             _updateTimeRanges(_times[i], i);
         }
+
+        _validateTimeRanges();
+    }
+
+    void _validateTimeRanges() const {
+#ifndef NDEBUG
+        for (auto const & [time, range]: _time_ranges) {
+            assert(range.first < range.second);
+            for (size_t i = range.first; i < range.second; ++i) {
+                assert(_times[i] == time);
+            }
+        }
+#endif
     }
 
     std::vector<TimeFrameIndex> _times;
@@ -457,8 +547,8 @@ public:
      * @param num_elements Number of elements in the view
      */
     explicit LazyRaggedAnalogStorage(ViewType view, size_t num_elements)
-        : _view(std::move(view))
-        , _num_elements(num_elements) {
+        : _view(std::move(view)),
+          _num_elements(num_elements) {
         static_assert(std::ranges::random_access_range<ViewType>,
                       "LazyRaggedAnalogStorage requires random access range");
         _buildLocalIndices();
@@ -495,14 +585,14 @@ public:
 
     [[nodiscard]] size_t getTimeCountImpl() const { return _time_ranges.size(); }
 
-    [[nodiscard]] RaggedAnalogStorageType getStorageTypeImpl() const { 
-        return RaggedAnalogStorageType::Lazy; 
+    [[nodiscard]] RaggedAnalogStorageType getStorageTypeImpl() const {
+        return RaggedAnalogStorageType::Lazy;
     }
-    
+
     [[nodiscard]] std::span<float const> getValuesAtTimeImpl(TimeFrameIndex time) const {
         // Lazy storage can't return a span - would need to materialize
         // Return empty span; caller should iterate using getValue() instead
-        (void)time;
+        (void) time;
         return {};
     }
 
@@ -512,13 +602,13 @@ public:
      * Returns an invalid cache, forcing callers to use virtual dispatch.
      */
     [[nodiscard]] RaggedAnalogStorageCache tryGetCacheImpl() const {
-        return RaggedAnalogStorageCache{};  // Invalid cache
+        return RaggedAnalogStorageCache{};// Invalid cache
     }
 
     /**
      * @brief Get reference to underlying view
      */
-    [[nodiscard]] ViewType const& getView() const {
+    [[nodiscard]] ViewType const & getView() const {
         return _view;
     }
 
@@ -528,10 +618,10 @@ private:
      */
     void _buildLocalIndices() {
         _time_ranges.clear();
-        
+
         for (size_t i = 0; i < _num_elements; ++i) {
             TimeFrameIndex time = getTimeImpl(i);
-            
+
             auto it = _time_ranges.find(time);
             if (it == _time_ranges.end()) {
                 _time_ranges[time] = {i, i + 1};
@@ -565,7 +655,7 @@ public:
      */
     explicit ViewRaggedAnalogStorage(std::shared_ptr<OwningRaggedAnalogStorage const> source)
         : _source(std::move(source)) {}
-    
+
     /**
      * @brief Set the indices this view includes
      */
@@ -573,7 +663,7 @@ public:
         _indices = std::move(indices);
         _rebuildLocalTimeRanges();
     }
-    
+
     /**
      * @brief Create view of all entries
      */
@@ -584,71 +674,71 @@ public:
         }
         _rebuildLocalTimeRanges();
     }
-    
+
     /**
      * @brief Filter by time range [start, end] inclusive
      */
     void filterByTimeRange(TimeFrameIndex start, TimeFrameIndex end) {
         _indices.clear();
-        
-        for (auto const& [time, range] : _source->timeRanges()) {
+
+        for (auto const & [time, range]: _source->timeRanges()) {
             if (time >= start && time <= end) {
                 for (size_t i = range.first; i < range.second; ++i) {
                     _indices.push_back(i);
                 }
             }
         }
-        
+
         _rebuildLocalTimeRanges();
     }
-    
+
     /**
      * @brief Get the source storage
      */
     [[nodiscard]] std::shared_ptr<OwningRaggedAnalogStorage const> source() const {
         return _source;
     }
-    
+
     /**
      * @brief Get the indices vector
      */
-    [[nodiscard]] std::vector<size_t> const& indices() const {
+    [[nodiscard]] std::vector<size_t> const & indices() const {
         return _indices;
     }
 
     // ========== CRTP Implementation ==========
-    
+
     [[nodiscard]] size_t sizeImpl() const { return _indices.size(); }
-    
+
     [[nodiscard]] TimeFrameIndex getTimeImpl(size_t idx) const {
         return _source->getTime(_indices[idx]);
     }
-    
+
     [[nodiscard]] float getValueImpl(size_t idx) const {
         return _source->getValue(_indices[idx]);
     }
-    
+
     [[nodiscard]] std::pair<size_t, size_t> getTimeRangeImpl(TimeFrameIndex time) const {
         auto it = _local_time_ranges.find(time);
         return it != _local_time_ranges.end() ? it->second : std::pair<size_t, size_t>{0, 0};
     }
-    
+
     [[nodiscard]] size_t getTimeCountImpl() const { return _local_time_ranges.size(); }
-    
-    [[nodiscard]] RaggedAnalogStorageType getStorageTypeImpl() const { 
-        return RaggedAnalogStorageType::View; 
+
+    [[nodiscard]] RaggedAnalogStorageType getStorageTypeImpl() const {
+        return RaggedAnalogStorageType::View;
     }
-    
+
     [[nodiscard]] std::span<float const> getValuesAtTimeImpl(TimeFrameIndex time) const {
         // Only return span if indices are contiguous for this time range
         auto it = _local_time_ranges.find(time);
         if (it == _local_time_ranges.end()) {
             return {};
         }
-        
+
         auto [start, end] = it->second;
         if (start >= end) return {};
-        
+
         // Check if the view indices for this time are contiguous in source
         size_t const src_start = _indices[start];
         bool contiguous = true;
@@ -658,12 +748,12 @@ public:
                 break;
             }
         }
-        
+
         if (contiguous) {
             return std::span<float const>(_source->values().data() + src_start, end - start);
         }
-        
-        return {};  // Non-contiguous
+
+        return {};// Non-contiguous
     }
 
     /**
@@ -673,34 +763,33 @@ public:
         if (_indices.empty()) {
             return RaggedAnalogStorageCache{nullptr, nullptr, 0, true};
         }
-        
+
         // Check if indices form a contiguous range
         size_t const start_idx = _indices[0];
         bool is_contiguous = true;
-        
+
         for (size_t i = 1; i < _indices.size(); ++i) {
             if (_indices[i] != start_idx + i) {
                 is_contiguous = false;
                 break;
             }
         }
-        
+
         if (is_contiguous) {
             return RaggedAnalogStorageCache{
-                _source->times().data() + start_idx,
-                _source->values().data() + start_idx,
-                _indices.size(),
-                true
-            };
+                    _source->times().data() + start_idx,
+                    _source->values().data() + start_idx,
+                    _indices.size(),
+                    true};
         }
-        
-        return RaggedAnalogStorageCache{};  // Invalid
+
+        return RaggedAnalogStorageCache{};// Invalid
     }
 
 private:
     void _rebuildLocalTimeRanges() {
         _local_time_ranges.clear();
-        
+
         for (size_t i = 0; i < _indices.size(); ++i) {
             TimeFrameIndex const time = _source->getTime(_indices[i]);
             auto it = _local_time_ranges.find(time);
@@ -711,7 +800,7 @@ private:
             }
         }
     }
-    
+
     std::shared_ptr<OwningRaggedAnalogStorage const> _source;
     std::vector<size_t> _indices;
     std::map<TimeFrameIndex, std::pair<size_t, size_t>> _local_time_ranges;
@@ -739,16 +828,16 @@ public:
     // Default constructor creates empty owning storage
     RaggedAnalogStorageWrapper()
         : _impl(std::make_unique<StorageModel<OwningRaggedAnalogStorage>>(
-              OwningRaggedAnalogStorage{})) {}
+                  OwningRaggedAnalogStorage{})) {}
 
     // Move-only semantics
-    RaggedAnalogStorageWrapper(RaggedAnalogStorageWrapper&&) noexcept = default;
-    RaggedAnalogStorageWrapper& operator=(RaggedAnalogStorageWrapper&&) noexcept = default;
-    RaggedAnalogStorageWrapper(RaggedAnalogStorageWrapper const&) = delete;
-    RaggedAnalogStorageWrapper& operator=(RaggedAnalogStorageWrapper const&) = delete;
+    RaggedAnalogStorageWrapper(RaggedAnalogStorageWrapper &&) noexcept = default;
+    RaggedAnalogStorageWrapper & operator=(RaggedAnalogStorageWrapper &&) noexcept = default;
+    RaggedAnalogStorageWrapper(RaggedAnalogStorageWrapper const &) = delete;
+    RaggedAnalogStorageWrapper & operator=(RaggedAnalogStorageWrapper const &) = delete;
 
     // ========== Unified Interface ==========
-    
+
     [[nodiscard]] size_t size() const { return _impl->size(); }
     [[nodiscard]] bool empty() const { return _impl->size() == 0; }
 
@@ -767,12 +856,12 @@ public:
     [[nodiscard]] size_t getTimeCount() const {
         return _impl->getTimeCount();
     }
-    
+
     [[nodiscard]] bool hasDataAtTime(TimeFrameIndex time) const {
         auto [start, end] = getTimeRange(time);
         return start < end;
     }
-    
+
     [[nodiscard]] std::span<float const> getValuesAtTime(TimeFrameIndex time) const {
         return _impl->getValuesAtTime(time);
     }
@@ -784,32 +873,32 @@ public:
     [[nodiscard]] bool isView() const {
         return getStorageType() == RaggedAnalogStorageType::View;
     }
-    
+
     [[nodiscard]] bool isLazy() const {
         return getStorageType() == RaggedAnalogStorageType::Lazy;
     }
 
     // ========== Cache Optimization ==========
-    
+
     [[nodiscard]] RaggedAnalogStorageCache tryGetCache() const {
         return _impl->tryGetCache();
     }
 
     // ========== Mutation Operations ==========
-    
+
     void append(TimeFrameIndex time, float value) {
         _impl->append(time, value);
     }
 
-    void appendBatch(TimeFrameIndex time, std::vector<float> const& values) {
+    void appendBatch(TimeFrameIndex time, std::vector<float> const & values) {
         _impl->appendBatch(time, values);
     }
-    
-    void appendBatch(TimeFrameIndex time, std::vector<float>&& values) {
+
+    void appendBatch(TimeFrameIndex time, std::vector<float> && values) {
         _impl->appendBatchMove(time, std::move(values));
     }
-    
-    void setAtTime(TimeFrameIndex time, std::vector<float> const& values) {
+
+    void setAtTime(TimeFrameIndex time, std::vector<float> const & values) {
         _impl->setAtTime(time, values);
     }
 
@@ -824,32 +913,32 @@ public:
     void clear() {
         _impl->clear();
     }
-    
+
     /**
      * @brief Get the time ranges map (owning storage only)
      */
-    [[nodiscard]] std::map<TimeFrameIndex, std::pair<size_t, size_t>> const& timeRanges() const {
+    [[nodiscard]] std::map<TimeFrameIndex, std::pair<size_t, size_t>> const & timeRanges() const {
         return _impl->timeRanges();
     }
 
     // ========== Type Access ==========
-    
+
     template<typename StorageType>
-    [[nodiscard]] StorageType* tryGet() {
-        auto* model = dynamic_cast<StorageModel<StorageType>*>(_impl.get());
+    [[nodiscard]] StorageType * tryGet() {
+        auto * model = dynamic_cast<StorageModel<StorageType> *>(_impl.get());
         return model ? &model->_storage : nullptr;
     }
 
     template<typename StorageType>
-    [[nodiscard]] StorageType const* tryGet() const {
-        auto const* model = dynamic_cast<StorageModel<StorageType> const*>(_impl.get());
+    [[nodiscard]] StorageType const * tryGet() const {
+        auto const * model = dynamic_cast<StorageModel<StorageType> const *>(_impl.get());
         return model ? &model->_storage : nullptr;
     }
 
 private:
     struct StorageConcept {
         virtual ~StorageConcept() = default;
-        
+
         virtual size_t size() const = 0;
         virtual TimeFrameIndex getTime(size_t idx) const = 0;
         virtual float getValue(size_t idx) const = 0;
@@ -858,16 +947,16 @@ private:
         virtual std::span<float const> getValuesAtTime(TimeFrameIndex time) const = 0;
         virtual RaggedAnalogStorageType getStorageType() const = 0;
         virtual RaggedAnalogStorageCache tryGetCache() const = 0;
-        
+
         // Mutation
         virtual void append(TimeFrameIndex time, float value) = 0;
-        virtual void appendBatch(TimeFrameIndex time, std::vector<float> const& values) = 0;
-        virtual void appendBatchMove(TimeFrameIndex time, std::vector<float>&& values) = 0;
-        virtual void setAtTime(TimeFrameIndex time, std::vector<float> const& values) = 0;
+        virtual void appendBatch(TimeFrameIndex time, std::vector<float> const & values) = 0;
+        virtual void appendBatchMove(TimeFrameIndex time, std::vector<float> && values) = 0;
+        virtual void setAtTime(TimeFrameIndex time, std::vector<float> const & values) = 0;
         virtual size_t removeAtTime(TimeFrameIndex time) = 0;
         virtual void reserve(size_t capacity) = 0;
         virtual void clear() = 0;
-        virtual std::map<TimeFrameIndex, std::pair<size_t, size_t>> const& timeRanges() const = 0;
+        virtual std::map<TimeFrameIndex, std::pair<size_t, size_t>> const & timeRanges() const = 0;
     };
 
     template<typename StorageImpl>
@@ -878,31 +967,31 @@ private:
             : _storage(std::move(storage)) {}
 
         size_t size() const override { return _storage.size(); }
-        
+
         TimeFrameIndex getTime(size_t idx) const override {
             return _storage.getTime(idx);
         }
-        
+
         float getValue(size_t idx) const override {
             return _storage.getValue(idx);
         }
-        
+
         std::pair<size_t, size_t> getTimeRange(TimeFrameIndex time) const override {
             return _storage.getTimeRange(time);
         }
-        
+
         size_t getTimeCount() const override {
             return _storage.getTimeCount();
         }
-        
+
         std::span<float const> getValuesAtTime(TimeFrameIndex time) const override {
             return _storage.getValuesAtTime(time);
         }
-        
+
         RaggedAnalogStorageType getStorageType() const override {
             return _storage.getStorageType();
         }
-        
+
         RaggedAnalogStorageCache tryGetCache() const override {
             if constexpr (requires { _storage.tryGetCache(); }) {
                 return _storage.tryGetCache();
@@ -919,31 +1008,31 @@ private:
                 throw std::runtime_error("append() not supported for view/lazy storage");
             }
         }
-        
-        void appendBatch(TimeFrameIndex time, std::vector<float> const& values) override {
+
+        void appendBatch(TimeFrameIndex time, std::vector<float> const & values) override {
             if constexpr (requires { _storage.appendBatch(time, values); }) {
                 _storage.appendBatch(time, values);
             } else {
                 throw std::runtime_error("appendBatch() not supported for view/lazy storage");
             }
         }
-        
-        void appendBatchMove(TimeFrameIndex time, std::vector<float>&& values) override {
+
+        void appendBatchMove(TimeFrameIndex time, std::vector<float> && values) override {
             if constexpr (requires { _storage.appendBatch(time, std::move(values)); }) {
                 _storage.appendBatch(time, std::move(values));
             } else {
                 throw std::runtime_error("appendBatch() not supported for view/lazy storage");
             }
         }
-        
-        void setAtTime(TimeFrameIndex time, std::vector<float> const& values) override {
+
+        void setAtTime(TimeFrameIndex time, std::vector<float> const & values) override {
             if constexpr (requires { _storage.setAtTime(time, values); }) {
                 _storage.setAtTime(time, values);
             } else {
                 throw std::runtime_error("setAtTime() not supported for view/lazy storage");
             }
         }
-        
+
         size_t removeAtTime(TimeFrameIndex time) override {
             if constexpr (requires { _storage.removeAtTime(time); }) {
                 return _storage.removeAtTime(time);
@@ -951,14 +1040,14 @@ private:
                 throw std::runtime_error("removeAtTime() not supported for view/lazy storage");
             }
         }
-        
+
         void reserve(size_t capacity) override {
             if constexpr (requires { _storage.reserve(capacity); }) {
                 _storage.reserve(capacity);
             }
             // No-op for storage types that don't support reserve
         }
-        
+
         void clear() override {
             if constexpr (requires { _storage.clear(); }) {
                 _storage.clear();
@@ -966,8 +1055,8 @@ private:
                 throw std::runtime_error("clear() not supported for view/lazy storage");
             }
         }
-        
-        std::map<TimeFrameIndex, std::pair<size_t, size_t>> const& timeRanges() const override {
+
+        std::map<TimeFrameIndex, std::pair<size_t, size_t>> const & timeRanges() const override {
             if constexpr (requires { _storage.timeRanges(); }) {
                 return _storage.timeRanges();
             } else {
@@ -980,4 +1069,4 @@ private:
     std::unique_ptr<StorageConcept> _impl;
 };
 
-#endif // RAGGED_ANALOG_STORAGE_HPP
+#endif// RAGGED_ANALOG_STORAGE_HPP

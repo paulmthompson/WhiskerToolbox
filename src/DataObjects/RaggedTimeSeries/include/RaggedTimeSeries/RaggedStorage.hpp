@@ -5,6 +5,7 @@
 #include "TimeFrame/TimeFrameIndex.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cstddef>
 #include <map>
 #include <memory>
@@ -246,38 +247,25 @@ public:
     // ========== Modification ==========
 
     /**
-     * @brief Append a new entry (most efficient insertion)
-     * 
-     * Entries should be appended in time order for optimal time_ranges performance.
-     * 
+     * @brief Append a new entry
+     *
+     * Tail append at a new time is O(1). Revisiting an existing time inserts at
+     * the end of that time's contiguous block (O(n) shift when interleaved).
+     *
      * @param time The TimeFrameIndex for this entry
      * @param data The data to store (will be moved)
      * @param entity_id The EntityId for this entry
      */
     void append(TimeFrameIndex time, TData && data, EntityId entity_id) {
-        size_t const idx = _times.size();
-
-        _times.push_back(time);
-        _data.push_back(std::move(data));
-        _entity_ids.push_back(entity_id);
-
-        // Update acceleration structures
-        _entity_to_index[entity_id] = idx;
-        _updateTimeRanges(time, idx);
+        _insertEntry(time, std::move(data), entity_id);
     }
 
     /**
      * @brief Append a new entry (copy version)
      */
     void append(TimeFrameIndex time, TData const & data, EntityId entity_id) {
-        size_t const idx = _times.size();
-
-        _times.push_back(time);
-        _data.push_back(data);
-        _entity_ids.push_back(entity_id);
-
-        _entity_to_index[entity_id] = idx;
-        _updateTimeRanges(time, idx);
+        TData copy = data;
+        _insertEntry(time, std::move(copy), entity_id);
     }
 
     /**
@@ -461,18 +449,146 @@ public:
     }
 
 private:
+    /**
+     * @brief Resolve the flat index where a new entry for @p time should be inserted.
+     */
+    [[nodiscard]] size_t _resolveInsertIndex(TimeFrameIndex time) const {
+        auto const it = _time_ranges.find(time);
+        if (it == _time_ranges.end()) {
+            return _times.size();
+        }
+        return it->second.second;
+    }
+
+    /**
+     * @brief Insert one entry, preserving one contiguous block per time.
+     */
+    void _insertEntry(TimeFrameIndex time, TData && data, EntityId entity_id) {
+        size_t const insert_idx = _resolveInsertIndex(time);
+
+        if (insert_idx == _times.size()) {
+            _times.push_back(time);
+            _data.push_back(std::move(data));
+            _entity_ids.push_back(entity_id);
+            _entity_to_index[entity_id] = insert_idx;
+
+            auto it = _time_ranges.find(time);
+            if (it == _time_ranges.end()) {
+                _time_ranges[time] = {insert_idx, insert_idx + 1};
+            } else {
+                assert(insert_idx == it->second.second);
+                it->second.second = insert_idx + 1;
+            }
+        } else {
+            auto const times_it = _times.begin() + static_cast<std::ptrdiff_t>(insert_idx);
+            _times.insert(times_it, time);
+            auto const data_it = _data.begin() + static_cast<std::ptrdiff_t>(insert_idx);
+            _data.insert(data_it, std::move(data));
+            auto const entity_it = _entity_ids.begin() + static_cast<std::ptrdiff_t>(insert_idx);
+            _entity_ids.insert(entity_it, entity_id);
+
+            for (auto & [eid, idx]: _entity_to_index) {
+                if (idx >= insert_idx) {
+                    ++idx;
+                }
+            }
+            _entity_to_index[entity_id] = insert_idx;
+
+            for (auto & [unused_time, range]: _time_ranges) {
+                (void) unused_time;
+                if (range.first >= insert_idx) {
+                    ++range.first;
+                }
+                if (range.second >= insert_idx) {
+                    ++range.second;
+                }
+            }
+        }
+
+        _validateTimeRanges();
+    }
+
+    /**
+     * @brief Extend or create the time range for @p time during rebuild.
+     *
+     * @pre Entries for @p time form a single contiguous block in @_times.
+     */
     void _updateTimeRanges(TimeFrameIndex time, size_t idx) {
         auto it = _time_ranges.find(time);
         if (it == _time_ranges.end()) {
-            // New time - start and end are both idx
             _time_ranges[time] = {idx, idx + 1};
         } else {
-            // Existing time - extend end (assumes appending in order)
+            assert(idx == it->second.second);
             it->second.second = idx + 1;
         }
     }
 
+    /**
+     * @brief @return true when every stored index lies in the correct time range.
+     */
+    [[nodiscard]] bool _hasValidTimeRanges() const {
+        for (auto const & [time, range]: _time_ranges) {
+            if (range.first >= range.second) {
+                return false;
+            }
+            for (size_t i = range.first; i < range.second; ++i) {
+                if (_times[i] != time) {
+                    return false;
+                }
+            }
+        }
+        for (size_t i = 0; i < _times.size(); ++i) {
+            auto const it = _time_ranges.find(_times[i]);
+            if (it == _time_ranges.end()) {
+                return false;
+            }
+            if (i < it->second.first || i >= it->second.second) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * @brief Stable-group entries by time, preserving within-time append order.
+     */
+    void _compactTimeBlocks() {
+        struct Entry {
+            TimeFrameIndex time;
+            TData data;
+            EntityId entity_id;
+            size_t orig_index;
+        };
+
+        std::vector<Entry> entries;
+        entries.reserve(_times.size());
+        for (size_t i = 0; i < _times.size(); ++i) {
+            entries.push_back(
+                    {_times[i], std::move(_data[i]), _entity_ids[i], i});
+        }
+
+        std::stable_sort(entries.begin(), entries.end(), [](Entry const & a, Entry const & b) {
+            if (a.time != b.time) {
+                return a.time < b.time;
+            }
+            return a.orig_index < b.orig_index;
+        });
+
+        _times.clear();
+        _data.clear();
+        _entity_ids.clear();
+        for (auto & entry: entries) {
+            _times.push_back(entry.time);
+            _data.push_back(std::move(entry.data));
+            _entity_ids.push_back(entry.entity_id);
+        }
+    }
+
     void _rebuildAccelerationStructures() {
+        if (!_hasValidTimeRanges()) {
+            _compactTimeBlocks();
+        }
+
         _entity_to_index.clear();
         _time_ranges.clear();
 
@@ -480,6 +596,19 @@ private:
             _entity_to_index[_entity_ids[i]] = i;
             _updateTimeRanges(_times[i], i);
         }
+
+        _validateTimeRanges();
+    }
+
+    void _validateTimeRanges() const {
+#ifndef NDEBUG
+        for (auto const & [time, range]: _time_ranges) {
+            assert(range.first < range.second);
+            for (size_t i = range.first; i < range.second; ++i) {
+                assert(_times[i] == time);
+            }
+        }
+#endif
     }
 
     std::vector<TimeFrameIndex> _times;
