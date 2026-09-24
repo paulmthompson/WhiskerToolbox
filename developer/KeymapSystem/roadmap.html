@@ -1516,6 +1516,7 @@ ul.task-list li input[type="checkbox"] {
   <ul class="collapse">
   <li><a href="#step-2.1-timeline-actions-always-routed" id="toc-step-2.1-timeline-actions-always-routed" class="nav-link" data-scroll-target="#step-2.1-timeline-actions-always-routed">✅ Step 2.1 — Timeline actions (always-routed)</a></li>
   <li><a href="#step-2.2-media_widget-group-assignment-editor-focused" id="toc-step-2.2-media_widget-group-assignment-editor-focused" class="nav-link" data-scroll-target="#step-2.2-media_widget-group-assignment-editor-focused">✅ Step 2.2 — Media_Widget group assignment (editor-focused)</a></li>
+  <li><a href="#step-2.2b-media_widget-tool-shortcuts-editor-focused" id="toc-step-2.2b-media_widget-tool-shortcuts-editor-focused" class="nav-link" data-scroll-target="#step-2.2b-media_widget-tool-shortcuts-editor-focused">✅ Step 2.2b — Media_Widget tool shortcuts (editor-focused)</a></li>
   <li><a href="#step-2.3-plot-polygon-editing-editor-focused" id="toc-step-2.3-plot-polygon-editing-editor-focused" class="nav-link" data-scroll-target="#step-2.3-plot-polygon-editing-editor-focused">✅ Step 2.3 — Plot polygon editing (editor-focused)</a></li>
   <li><a href="#step-2.3-remaining-temporalprojection-analysisdashboard-polygon-editing" id="toc-step-2.3-remaining-temporalprojection-analysisdashboard-polygon-editing" class="nav-link" data-scroll-target="#step-2.3-remaining-temporalprojection-analysisdashboard-polygon-editing">Step 2.3 (remaining) — TemporalProjection / AnalysisDashboard polygon editing</a></li>
   <li><a href="#step-2.4-auto-generated-focus-actions" id="toc-step-2.4-auto-generated-focus-actions" class="nav-link" data-scroll-target="#step-2.4-auto-generated-focus-actions">Step 2.4 — Auto-generated focus actions</a></li>
@@ -1984,6 +1985,106 @@ ul.task-list li input[type="checkbox"] {
 </tbody>
 </table>
 <p><strong>Test count:</strong> 27 passing (19 original + 4 timeline + 4 media group).</p>
+<hr>
+</section>
+<section id="step-2.2b-media_widget-tool-shortcuts-editor-focused" class="level3">
+<h3 class="anchored" data-anchor-id="step-2.2b-media_widget-tool-shortcuts-editor-focused">✅ Step 2.2b — Media_Widget tool shortcuts (editor-focused)</h3>
+<p><strong>Completed.</strong> Six tool-related actions are registered as <code>EditorFocused("MediaWidget")</code> in <code>MediaWidgetModule::registerTypes()</code>. Dispatch is handled by <code>handleMediaKeyAction()</code> in <code>Media_KeymapActions.cpp</code>, called from the existing <code>KeyActionAdapter</code> in <code>Media_Window</code>.</p>
+<p><strong>Actions registered:</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 29%">
+<col style="width: 15%">
+<col style="width: 29%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Action ID</th>
+<th>Display Name</th>
+<th>Scope</th>
+<th>Default Key</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>media.tool.select</code></td>
+<td>Select Tool</td>
+<td>EditorFocused(“MediaWidget”)</td>
+<td>S</td>
+</tr>
+<tr class="even">
+<td><code>media.tool.pen</code></td>
+<td>Pen Tool</td>
+<td>EditorFocused(“MediaWidget”)</td>
+<td>P</td>
+</tr>
+<tr class="odd">
+<td><code>media.tool.eraser</code></td>
+<td>Eraser Tool</td>
+<td>EditorFocused(“MediaWidget”)</td>
+<td>E</td>
+</tr>
+<tr class="even">
+<td><code>media.tool.smooth</code></td>
+<td>Smooth Tool</td>
+<td>EditorFocused(“MediaWidget”)</td>
+<td>Shift+S</td>
+</tr>
+<tr class="odd">
+<td><code>media.tool.none</code></td>
+<td>Deselect Tool</td>
+<td>EditorFocused(“MediaWidget”)</td>
+<td>Escape</td>
+</tr>
+<tr class="even">
+<td><code>media.pen.cycle_append_endpoint</code></td>
+<td>Cycle Pen Append Endpoint</td>
+<td>EditorFocused(“MediaWidget”)</td>
+<td>X</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Handler behavior:</strong> Tool keys call <code>MediaWidgetState::setActiveMediaTool()</code>. <code>media.tool.none</code> sets <code>MediaToolId::None</code>. <code>media.pen.cycle_append_endpoint</code> advances append policy Tip → Base → Nearest → Tip and only consumes the key when the Pen tool is active.</p>
+<p><strong>Modified files:</strong></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 42%">
+<col style="width: 57%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>File</th>
+<th>Change</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>src/WhiskerToolbox/Media_Widget/MediaWidgetRegistration.cpp</code></td>
+<td>Added <code>registerToolActions()</code>. Fixed <code>setKeymapManager()</code> to run when <code>KeymapManager</code> is available even without <code>GroupManager</code>.</td>
+</tr>
+<tr class="even">
+<td><code>src/WhiskerToolbox/Media_Widget/Core/Media_KeymapActions.hpp/.cpp</code></td>
+<td>New dispatch helper for tool, pen-option, and group-assignment actions.</td>
+</tr>
+<tr class="odd">
+<td><code>src/WhiskerToolbox/Media_Widget/Rendering/Media_Window/Media_Window.cpp</code></td>
+<td>Delegates keymap handling to <code>handleMediaKeyAction()</code>.</td>
+</tr>
+<tr class="even">
+<td><code>src/WhiskerToolbox/Media_Widget/CMakeLists.txt</code></td>
+<td>Added <code>Media_KeymapActions</code> sources.</td>
+</tr>
+<tr class="odd">
+<td><code>tests/WhiskerToolbox/Media_Widget/Media_KeymapActions.test.cpp</code></td>
+<td>Unit tests for tool switch and append-endpoint cycling.</td>
+</tr>
+<tr class="even">
+<td><code>tests/WhiskerToolbox/KeymapSystem/test_keymap_manager.cpp</code></td>
+<td>Registration, resolution, and default-binding conflict tests for media tool actions.</td>
+</tr>
+</tbody>
+</table>
 <hr>
 </section>
 <section id="step-2.3-plot-polygon-editing-editor-focused" class="level3">

@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>DataViewer – Neuralyzer</title>
+<title>MediaDebugPanel – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -25,6 +25,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -313,7 +348,22 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#dataviewer" id="toc-dataviewer" class="nav-link active" data-scroll-target="#dataviewer">DataViewer</a></li>
+  <li><a href="#mediadebugpanel" id="toc-mediadebugpanel" class="nav-link active" data-scroll-target="#mediadebugpanel">MediaDebugPanel</a>
+  <ul class="collapse">
+  <li><a href="#public-slots" id="toc-public-slots" class="nav-link" data-scroll-target="#public-slots">Public Slots</a></li>
+  <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
+  <li><a href="#public-slots-documentation" id="toc-public-slots-documentation" class="nav-link" data-scroll-target="#public-slots-documentation">Public Slots Documentation</a>
+  <ul class="collapse">
+  <li><a href="#slot-refresh" id="toc-slot-refresh" class="nav-link" data-scroll-target="#slot-refresh">slot refresh</a></li>
+  </ul></li>
+  <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
+  <ul class="collapse">
+  <li><a href="#function-mediadebugpanel" id="toc-function-mediadebugpanel" class="nav-link" data-scroll-target="#function-mediadebugpanel">function MediaDebugPanel</a></li>
+  <li><a href="#function-mediadebugpanel-1" id="toc-function-mediadebugpanel-1" class="nav-link" data-scroll-target="#function-mediadebugpanel-1">function ~MediaDebugPanel</a></li>
+  <li><a href="#function-setmediawindow" id="toc-function-setmediawindow" class="nav-link" data-scroll-target="#function-setmediawindow">function setMediaWindow</a></li>
+  </ul></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -323,7 +373,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">DataViewer</h1>
+<h1 class="title">MediaDebugPanel</h1>
 </div>
 
 
@@ -340,12 +390,107 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="dataviewer" class="level1">
-<h1>DataViewer</h1>
+<section id="mediadebugpanel" class="level1">
+<h1>MediaDebugPanel</h1>
+<p>Developer diagnostics panel showing scene element counts. <a href="#detailed-description">More…</a></p>
+<p><code>#include &lt;MediaDebugPanel.hpp&gt;</code></p>
+<p>Inherits from QWidget</p>
+<section id="public-slots" class="level2">
+<h2 class="anchored" data-anchor-id="public-slots">Public Slots</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaDebugPanel.html#slot-refresh">refresh</a></strong>()<br>Refresh all sections from current diagnostics.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="public-functions" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions">Public Functions</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classMediaDebugPanel.html#function-mediadebugpanel">MediaDebugPanel</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classMediaWidgetState.html">MediaWidgetState</a> &gt; state, <a href="../../api_generated/Classes/classMedia__Window.html">Media_Window</a> * media_window, QWidget * parent =nullptr)<br>Construct the debug panel.</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Classes/classMediaDebugPanel.html#function-~mediadebugpanel">~MediaDebugPanel</a></strong>() override =default</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classMediaDebugPanel.html#function-setmediawindow">setMediaWindow</a></strong>(<a href="../../api_generated/Classes/classMedia__Window.html">Media_Window</a> * media_window)<br>Update the <a href="">Media_Window</a> reference and reconnect refresh signals.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MediaDebugPanel<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Developer diagnostics panel showing scene element counts.</p>
+<p>Organized into a collapsible <a href="../../api_generated/Classes/classSection.html">Section</a>:</p>
+<ul>
+<li>Scene Elements (counts of each internal QGraphicsScene vector)</li>
+</ul>
+</section>
+<section id="public-slots-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-slots-documentation">Public Slots Documentation</h2>
+<section id="slot-refresh" class="level3">
+<h3 class="anchored" data-anchor-id="slot-refresh">slot refresh</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> refresh<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Refresh all sections from current diagnostics.</p>
+</section>
+</section>
+<section id="public-functions-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-functions-documentation">Public Functions Documentation</h2>
+<section id="function-mediadebugpanel" class="level3">
+<h3 class="anchored" data-anchor-id="function-mediadebugpanel">function MediaDebugPanel</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">explicit</span> MediaDebugPanel<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> MediaWidgetState <span class="op">&gt;</span> state<span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    Media_Window <span class="op">*</span> media_window<span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QWidget</span> <span class="op">*</span> parent <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Construct the debug panel.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>state</strong> Shared media widget state</li>
+<li><strong>media_window</strong> Non-owning pointer to the media canvas</li>
+<li><strong>parent</strong> Parent widget</li>
+</ul>
+</section>
+<section id="function-mediadebugpanel-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-mediadebugpanel-1">function ~MediaDebugPanel</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="op">~</span>MediaDebugPanel<span class="op">()</span> <span class="kw">override</span> <span class="op">=</span><span class="cf">default</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-setmediawindow" class="level3">
+<h3 class="anchored" data-anchor-id="function-setmediawindow">function setMediaWindow</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setMediaWindow<span class="op">(</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    Media_Window <span class="op">*</span> media_window</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Update the <a href="">Media_Window</a> reference and reconnect refresh signals.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>media_window</strong> Non-owning pointer to the media canvas</li>
+</ul>
 <hr>
-<p>Updated on 2026-09-22 at 20:01:38 +0000</p>
+<p>Updated on 2026-09-24 at 21:31:34 +0000</p>
 
 
+</section>
+</section>
 </section>
 
 </main> <!-- /main -->

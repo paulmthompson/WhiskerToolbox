@@ -429,7 +429,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classOwningRaggedStorage.html#function-append">append</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, TData &amp;&amp; data, <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> entity_id)<br>Append a new entry (most efficient insertion)</td>
+<td><strong><a href="../../api_generated/Classes/classOwningRaggedStorage.html#function-append">append</a></strong>(<a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, TData &amp;&amp; data, <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> entity_id)<br>Append a new entry.</td>
 </tr>
 <tr class="odd">
 <td>void</td>
@@ -633,14 +633,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    TData <span class="op">&amp;&amp;</span> data<span class="op">,</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    EntityId entity_id</span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Append a new entry (most efficient insertion)</p>
+<p>Append a new entry.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>time</strong> The <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> for this entry</li>
 <li><strong>data</strong> The data to store (will be moved)</li>
 <li><strong>entity_id</strong> The <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> for this entry</li>
 </ul>
-<p>Entries should be appended in time order for optimal time_ranges performance.</p>
+<p>Tail append at a new time is O(1). Revisiting an existing time inserts at the end of that time’s contiguous block (O(n) shift when interleaved).</p>
 </section>
 <section id="function-append-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-append-1">function append</h3>
@@ -787,7 +787,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>map<span class="op">&lt;</span> TimeFrameIndex<span class="op">,</span> <span class="bu">std::</span>pair<span class="op">&lt;</span> <span class="dt">size_t</span><span class="op">,</span> <span class="dt">size_t</span> <span class="op">&gt;</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> timeRanges<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the time ranges map for iteration.</p>
 <hr>
-<p>Updated on 2026-09-22 at 20:01:35 +0000</p>
+<p>Updated on 2026-09-24 at 21:31:33 +0000</p>
 
 
 </section>

@@ -354,6 +354,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
   <ul class="collapse">
   <li><a href="#function-registergroupactions" id="toc-function-registergroupactions" class="nav-link" data-scroll-target="#function-registergroupactions">function registerGroupActions</a></li>
+  <li><a href="#function-registertoolactions" id="toc-function-registertoolactions" class="nav-link" data-scroll-target="#function-registertoolactions">function registerToolActions</a></li>
   <li><a href="#function-registertypes" id="toc-function-registertypes" class="nav-link" data-scroll-target="#function-registertypes">function registerTypes</a></li>
   </ul></li>
   </ul></li>
@@ -401,7 +402,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>void</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceMediaWidgetModule.html#function-registertypes">registerTypes</a></strong>(<a href="../../api_generated/Classes/classEditorRegistry.html">EditorRegistry</a> * registry, std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; data_manager, <a href="../../api_generated/Classes/classGroupManager.html">GroupManager</a> * group_manager =nullptr, <a href="../../api_generated/Classes/classKeymapSystem_1_1KeymapManager.html">KeymapSystem::KeymapManager</a> * keymap_manager =nullptr)<br>Register all Media Widget editor types with the registry.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceMediaWidgetModule.html#function-registertoolactions">registerToolActions</a></strong>(<a href="../../api_generated/Classes/classKeymapSystem_1_1KeymapManager.html">KeymapSystem::KeymapManager</a> * keymap_manager)<br>Register Media Viewer tool and pen-option keyboard actions with the keymap manager.</td>
+</tr>
+<tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceMediaWidgetModule.html#function-registertypes">registerTypes</a></strong>(<a href="../../api_generated/Classes/classEditorRegistry.html">EditorRegistry</a> * registry, const std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; &amp; data_manager, <a href="../../api_generated/Classes/classGroupManager.html">GroupManager</a> * group_manager =nullptr, <a href="../../api_generated/Classes/classKeymapSystem_1_1KeymapManager.html">KeymapSystem::KeymapManager</a> * keymap_manager =nullptr)<br>Register all Media Widget editor types with the registry.</td>
 </tr>
 </tbody>
 </table>
@@ -415,14 +420,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Register the 9 group-assignment keyboard actions with the keymap manager.</p>
 </section>
+<section id="function-registertoolactions" class="level3">
+<h3 class="anchored" data-anchor-id="function-registertoolactions">function registerToolActions</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="dt">void</span> registerToolActions<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    KeymapSystem<span class="op">::</span>KeymapManager <span class="op">*</span> keymap_manager</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Register Media Viewer tool and pen-option keyboard actions with the keymap manager.</p>
+</section>
 <section id="function-registertypes" class="level3">
 <h3 class="anchored" data-anchor-id="function-registertypes">function registerTypes</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> registerTypes<span class="op">(</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    EditorRegistry <span class="op">*</span> registry<span class="op">,</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> data_manager<span class="op">,</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    GroupManager <span class="op">*</span> group_manager <span class="op">=</span><span class="kw">nullptr</span><span class="op">,</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    KeymapSystem<span class="op">::</span>KeymapManager <span class="op">*</span> keymap_manager <span class="op">=</span><span class="kw">nullptr</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> registerTypes<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    EditorRegistry <span class="op">*</span> registry<span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    GroupManager <span class="op">*</span> group_manager <span class="op">=</span><span class="kw">nullptr</span><span class="op">,</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    KeymapSystem<span class="op">::</span>KeymapManager <span class="op">*</span> keymap_manager <span class="op">=</span><span class="kw">nullptr</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Register all Media Widget editor types with the registry.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -439,7 +451,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p>Currently, the Media Widget uses a custom factory function because the properties widget needs a reference to <a href="../../api_generated/Classes/classMedia__Window.html">Media_Window</a> owned by the view.</p>
 <hr>
-<p>Updated on 2026-09-22 at 20:01:37 +0000</p>
+<p>Updated on 2026-09-24 at 21:31:35 +0000</p>
 
 
 </section>

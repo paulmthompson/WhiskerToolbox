@@ -317,6 +317,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#layout" id="toc-layout" class="nav-link" data-scroll-target="#layout">Layout</a></li>
   <li><a href="#components" id="toc-components" class="nav-link" data-scroll-target="#components">Components</a></li>
   <li><a href="#selection-api" id="toc-selection-api" class="nav-link" data-scroll-target="#selection-api">Selection API</a></li>
+  <li><a href="#keyboard-shortcuts" id="toc-keyboard-shortcuts" class="nav-link" data-scroll-target="#keyboard-shortcuts">Keyboard Shortcuts</a></li>
   <li><a href="#adding-tools" id="toc-adding-tools" class="nav-link" data-scroll-target="#adding-tools">Adding Tools</a></li>
   </ul>
 </nav>
@@ -403,9 +404,14 @@ ul.task-list li input[type="checkbox"] {
 <tr class="even">
 <td><code>MediaToolId</code></td>
 <td><code>Media_Widget/UI/Tools</code></td>
-<td>Tool identifiers (<code>None</code>, <code>Select</code>, <code>Pen</code>, <code>Eraser</code>)</td>
+<td>Tool identifiers (<code>None</code>, <code>Select</code>, <code>Pen</code>, <code>Eraser</code>, <code>Smooth</code>)</td>
 </tr>
 <tr class="odd">
+<td><code>Media_KeymapActions</code></td>
+<td><code>Media_Widget/Core</code></td>
+<td>Keymap dispatch for tool switching and pen options</td>
+</tr>
+<tr class="even">
 <td><code>MediaToolIcons</code></td>
 <td><code>Media_Widget/UI/Tools</code></td>
 <td>Programmatic placeholder icons</td>
@@ -422,6 +428,45 @@ ul.task-list li input[type="checkbox"] {
 <li>Clicking the active tool button again sets <code>MediaToolId::None</code></li>
 </ul>
 <p><code>Media_Widget</code> wires <code>activeMediaTool</code> in state; <code>MediaSelectToolController</code> enables unified canvas selection only when <code>Select</code> is active. The <strong>Pen</strong> tool routes Ctrl+click / Alt+click line edits through <code>MediaLine_Widget</code>. The <strong>Eraser</strong> tool removes line vertices or mask pixels under the hover circle via <code>MediaLine_Widget</code> and <code>MediaMask_Widget</code>.</p>
+</section>
+<section id="keyboard-shortcuts" class="level2">
+<h2 class="anchored" data-anchor-id="keyboard-shortcuts">Keyboard Shortcuts</h2>
+<p>Tool switching is registered in <code>MediaWidgetRegistration.cpp</code> and dispatched through <code>handleMediaKeyAction()</code> in <code>Media_KeymapActions.cpp</code> via the <code>Media_Window</code> <code>KeyActionAdapter</code>. Default bindings (Inkscape-style):</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Action ID</th>
+<th>Default Key</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>media.tool.select</code></td>
+<td>S</td>
+</tr>
+<tr class="even">
+<td><code>media.tool.pen</code></td>
+<td>P</td>
+</tr>
+<tr class="odd">
+<td><code>media.tool.eraser</code></td>
+<td>E</td>
+</tr>
+<tr class="even">
+<td><code>media.tool.smooth</code></td>
+<td>Shift+S</td>
+</tr>
+<tr class="odd">
+<td><code>media.tool.none</code></td>
+<td>Escape</td>
+</tr>
+<tr class="even">
+<td><code>media.pen.cycle_append_endpoint</code></td>
+<td>X (Pen tool active only)</td>
+</tr>
+</tbody>
+</table>
+<p>Keyboard tool keys always activate the named tool. <strong>Escape</strong> deselects the active tool (equivalent to clicking the active toolbar button again). See <a href="../../../developer/Media_Widget/Core/Media_KeymapActions.html">Media Keymap Actions</a>.</p>
 </section>
 <section id="adding-tools" class="level2">
 <h2 class="anchored" data-anchor-id="adding-tools">Adding Tools</h2>

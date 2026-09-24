@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>DataViewer – Neuralyzer</title>
+<title>MediaSceneDiagnostics – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -25,6 +25,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -313,7 +348,23 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#dataviewer" id="toc-dataviewer" class="nav-link active" data-scroll-target="#dataviewer">DataViewer</a></li>
+  <li><a href="#mediascenediagnostics" id="toc-mediascenediagnostics" class="nav-link active" data-scroll-target="#mediascenediagnostics">MediaSceneDiagnostics</a>
+  <ul class="collapse">
+  <li><a href="#public-attributes" id="toc-public-attributes" class="nav-link" data-scroll-target="#public-attributes">Public Attributes</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
+  <li><a href="#public-attributes-documentation" id="toc-public-attributes-documentation" class="nav-link" data-scroll-target="#public-attributes-documentation">Public Attributes Documentation</a>
+  <ul class="collapse">
+  <li><a href="#variable-line_paths" id="toc-variable-line_paths" class="nav-link" data-scroll-target="#variable-line_paths">variable line_paths</a></li>
+  <li><a href="#variable-masks" id="toc-variable-masks" class="nav-link" data-scroll-target="#variable-masks">variable masks</a></li>
+  <li><a href="#variable-mask_bounding_boxes" id="toc-variable-mask_bounding_boxes" class="nav-link" data-scroll-target="#variable-mask_bounding_boxes">variable mask_bounding_boxes</a></li>
+  <li><a href="#variable-mask_outlines" id="toc-variable-mask_outlines" class="nav-link" data-scroll-target="#variable-mask_outlines">variable mask_outlines</a></li>
+  <li><a href="#variable-points" id="toc-variable-points" class="nav-link" data-scroll-target="#variable-points">variable points</a></li>
+  <li><a href="#variable-intervals" id="toc-variable-intervals" class="nav-link" data-scroll-target="#variable-intervals">variable intervals</a></li>
+  <li><a href="#variable-tensors" id="toc-variable-tensors" class="nav-link" data-scroll-target="#variable-tensors">variable tensors</a></li>
+  <li><a href="#variable-text_items" id="toc-variable-text_items" class="nav-link" data-scroll-target="#variable-text_items">variable text_items</a></li>
+  <li><a href="#variable-total_scene_items" id="toc-variable-total_scene_items" class="nav-link" data-scroll-target="#variable-total_scene_items">variable total_scene_items</a></li>
+  </ul></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -323,7 +374,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">DataViewer</h1>
+<h1 class="title">MediaSceneDiagnostics</h1>
 </div>
 
 
@@ -340,12 +391,109 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="dataviewer" class="level1">
-<h1>DataViewer</h1>
+<section id="mediascenediagnostics" class="level1">
+<h1>MediaSceneDiagnostics</h1>
+<p>Snapshot of scene element counts in <a href="">Media_Window</a>. <a href="#detailed-description">More…</a></p>
+<p><code>#include &lt;MediaSceneDiagnostics.hpp&gt;</code></p>
+<section id="public-attributes" class="level2">
+<h2 class="anchored" data-anchor-id="public-attributes">Public Attributes</h2>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th></th>
+<th>Name</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>std::size_t</td>
+<td><strong><a href="../../api_generated/Classes/structMediaSceneDiagnostics.html#variable-line-paths">line_paths</a></strong></td>
+</tr>
+<tr class="even">
+<td>std::size_t</td>
+<td><strong><a href="../../api_generated/Classes/structMediaSceneDiagnostics.html#variable-masks">masks</a></strong></td>
+</tr>
+<tr class="odd">
+<td>std::size_t</td>
+<td><strong><a href="../../api_generated/Classes/structMediaSceneDiagnostics.html#variable-mask-bounding-boxes">mask_bounding_boxes</a></strong></td>
+</tr>
+<tr class="even">
+<td>std::size_t</td>
+<td><strong><a href="../../api_generated/Classes/structMediaSceneDiagnostics.html#variable-mask-outlines">mask_outlines</a></strong></td>
+</tr>
+<tr class="odd">
+<td>std::size_t</td>
+<td><strong><a href="../../api_generated/Classes/structMediaSceneDiagnostics.html#variable-points">points</a></strong></td>
+</tr>
+<tr class="even">
+<td>std::size_t</td>
+<td><strong><a href="../../api_generated/Classes/structMediaSceneDiagnostics.html#variable-intervals">intervals</a></strong></td>
+</tr>
+<tr class="odd">
+<td>std::size_t</td>
+<td><strong><a href="../../api_generated/Classes/structMediaSceneDiagnostics.html#variable-tensors">tensors</a></strong></td>
+</tr>
+<tr class="even">
+<td>std::size_t</td>
+<td><strong><a href="../../api_generated/Classes/structMediaSceneDiagnostics.html#variable-text-items">text_items</a></strong></td>
+</tr>
+<tr class="odd">
+<td>std::size_t</td>
+<td><strong><a href="../../api_generated/Classes/structMediaSceneDiagnostics.html#variable-total-scene-items">total_scene_items</a></strong> <br>QGraphicsScene::items().<a href="">size()</a></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> MediaSceneDiagnostics<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Snapshot of scene element counts in <a href="">Media_Window</a>.</p>
+<p>Captures the number of QGraphicsScene items in each internal vector at the time getSceneDiagnostics() is called (typically after UpdateCanvas()).</p>
+</section>
+<section id="public-attributes-documentation" class="level2">
+<h2 class="anchored" data-anchor-id="public-attributes-documentation">Public Attributes Documentation</h2>
+<section id="variable-line_paths" class="level3">
+<h3 class="anchored" data-anchor-id="variable-line_paths">variable line_paths</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t line_paths <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="variable-masks" class="level3">
+<h3 class="anchored" data-anchor-id="variable-masks">variable masks</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t masks <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="variable-mask_bounding_boxes" class="level3">
+<h3 class="anchored" data-anchor-id="variable-mask_bounding_boxes">variable mask_bounding_boxes</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t mask_bounding_boxes <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="variable-mask_outlines" class="level3">
+<h3 class="anchored" data-anchor-id="variable-mask_outlines">variable mask_outlines</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t mask_outlines <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="variable-points" class="level3">
+<h3 class="anchored" data-anchor-id="variable-points">variable points</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t points <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="variable-intervals" class="level3">
+<h3 class="anchored" data-anchor-id="variable-intervals">variable intervals</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t intervals <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="variable-tensors" class="level3">
+<h3 class="anchored" data-anchor-id="variable-tensors">variable tensors</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t tensors <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="variable-text_items" class="level3">
+<h3 class="anchored" data-anchor-id="variable-text_items">variable text_items</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t text_items <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="variable-total_scene_items" class="level3">
+<h3 class="anchored" data-anchor-id="variable-total_scene_items">variable total_scene_items</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>size_t total_scene_items <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>QGraphicsScene::items().<a href="">size()</a></p>
 <hr>
-<p>Updated on 2026-09-22 at 20:01:38 +0000</p>
+<p>Updated on 2026-09-24 at 21:31:33 +0000</p>
 
 
+</section>
+</section>
 </section>
 
 </main> <!-- /main -->

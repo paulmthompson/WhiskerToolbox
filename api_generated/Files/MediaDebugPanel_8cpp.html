@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Neuralyzer::Plots – Neuralyzer</title>
+<title>src/WhiskerToolbox/Media_Widget/UI/MediaDebugPanel.cpp – Neuralyzer</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -25,6 +25,41 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -313,7 +348,10 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#neuralyzerplots" id="toc-neuralyzerplots" class="nav-link active" data-scroll-target="#neuralyzerplots">Neuralyzer::Plots</a></li>
+  <li><a href="#srcwhiskertoolboxmedia_widgetuimediadebugpanel.cpp" id="toc-srcwhiskertoolboxmedia_widgetuimediadebugpanel.cpp" class="nav-link active" data-scroll-target="#srcwhiskertoolboxmedia_widgetuimediadebugpanel.cpp">src/WhiskerToolbox/Media_Widget/UI/MediaDebugPanel.cpp</a>
+  <ul class="collapse">
+  <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
+  </ul></li>
   </ul>
 </nav>
     </div>
@@ -323,7 +361,7 @@ ul.task-list li input[type="checkbox"] {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Neuralyzer::Plots</h1>
+<h1 class="title">src/WhiskerToolbox/Media_Widget/UI/MediaDebugPanel.cpp</h1>
 </div>
 
 
@@ -340,12 +378,137 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
-<section id="neuralyzerplots" class="level1">
-<h1>Neuralyzer::Plots</h1>
+<section id="srcwhiskertoolboxmedia_widgetuimediadebugpanel.cpp" class="level1">
+<h1>src/WhiskerToolbox/Media_Widget/UI/MediaDebugPanel.cpp</h1>
+<p>Implementation of the developer diagnostics panel for Media Widget.</p>
+<section id="source-code" class="level2">
+<h2 class="anchored" data-anchor-id="source-code">Source code</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"MediaDebugPanel.hpp"</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Core/MediaWidgetState.hpp"</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Rendering/Media_Window/Media_Window.hpp"</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Common/Collapsible_Widget/Section.hpp"</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QFormLayout&gt;</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QLabel&gt;</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QVBoxLayout&gt;</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="op">{</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="ex">QLabel</span> <span class="op">*</span> createCountValueLabel<span class="op">(</span><span class="ex">QWidget</span> <span class="op">*</span> parent<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> label <span class="op">=</span> <span class="kw">new</span> <span class="ex">QLabel</span><span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"0"</span><span class="op">),</span> parent<span class="op">);</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    label<span class="op">-&gt;</span>setAlignment<span class="op">(</span><span class="ex">Qt::AlignRight</span> <span class="op">|</span> <span class="ex">Qt::AlignVCenter</span><span class="op">);</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> label<span class="op">;</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>MediaDebugPanel<span class="op">::</span>MediaDebugPanel<span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>MediaWidgetState<span class="op">&gt;</span> state<span class="op">,</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>                                 Media_Window <span class="op">*</span> media_window<span class="op">,</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>                                 <span class="ex">QWidget</span> <span class="op">*</span> parent<span class="op">)</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="op">:</span> <span class="ex">QWidget</span><span class="op">(</span>parent<span class="op">),</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>      _state<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>state<span class="op">)),</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>      _media_window<span class="op">(</span>media_window<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    _buildUI<span class="op">();</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    _connectSignals<span class="op">();</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    refresh<span class="op">();</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaDebugPanel<span class="op">::</span>setMediaWindow<span class="op">(</span>Media_Window <span class="op">*</span> media_window<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_media_window <span class="op">==</span> media_window<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_media_window <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>        <span class="fu">disconnect</span><span class="op">(</span>_media_window<span class="op">,</span> <span class="kw">nullptr</span><span class="op">,</span> <span class="kw">this</span><span class="op">,</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>    _media_window <span class="op">=</span> media_window<span class="op">;</span></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>    _connectSignals<span class="op">();</span></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>    refresh<span class="op">();</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaDebugPanel<span class="op">::</span>refresh<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>    _refreshSceneElements<span class="op">();</span></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaDebugPanel<span class="op">::</span>_buildUI<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> root_layout <span class="op">=</span> <span class="kw">new</span> <span class="ex">QVBoxLayout</span><span class="op">(</span><span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>    root_layout<span class="op">-&gt;</span>setContentsMargins<span class="op">(</span><span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">,</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>    _scene_elements_section <span class="op">=</span> <span class="kw">new</span> Section<span class="op">(</span><span class="kw">this</span><span class="op">,</span> <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Scene Elements"</span><span class="op">));</span></span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">*</span> form_layout <span class="op">=</span> <span class="kw">new</span> <span class="ex">QFormLayout</span><span class="op">();</span></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>    form_layout<span class="op">-&gt;</span>setFieldGrowthPolicy<span class="op">(</span><span class="ex">QFormLayout::AllNonFixedFieldsGrow</span><span class="op">);</span></span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>    _line_paths_label <span class="op">=</span> createCountValueLabel<span class="op">(</span><span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>    _masks_label <span class="op">=</span> createCountValueLabel<span class="op">(</span><span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>    _mask_bounding_boxes_label <span class="op">=</span> createCountValueLabel<span class="op">(</span><span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>    _mask_outlines_label <span class="op">=</span> createCountValueLabel<span class="op">(</span><span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>    _points_label <span class="op">=</span> createCountValueLabel<span class="op">(</span><span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>    _intervals_label <span class="op">=</span> createCountValueLabel<span class="op">(</span><span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>    _tensors_label <span class="op">=</span> createCountValueLabel<span class="op">(</span><span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>    _text_items_label <span class="op">=</span> createCountValueLabel<span class="op">(</span><span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>    _total_scene_items_label <span class="op">=</span> createCountValueLabel<span class="op">(</span><span class="kw">this</span><span class="op">);</span></span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>    form_layout<span class="op">-&gt;</span>addRow<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Line Paths:"</span><span class="op">),</span> _line_paths_label<span class="op">);</span></span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a>    form_layout<span class="op">-&gt;</span>addRow<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Masks:"</span><span class="op">),</span> _masks_label<span class="op">);</span></span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a>    form_layout<span class="op">-&gt;</span>addRow<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Mask Bounding Boxes:"</span><span class="op">),</span> _mask_bounding_boxes_label<span class="op">);</span></span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>    form_layout<span class="op">-&gt;</span>addRow<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Mask Outlines:"</span><span class="op">),</span> _mask_outlines_label<span class="op">);</span></span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a>    form_layout<span class="op">-&gt;</span>addRow<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Points:"</span><span class="op">),</span> _points_label<span class="op">);</span></span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>    form_layout<span class="op">-&gt;</span>addRow<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Intervals:"</span><span class="op">),</span> _intervals_label<span class="op">);</span></span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a>    form_layout<span class="op">-&gt;</span>addRow<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Tensors:"</span><span class="op">),</span> _tensors_label<span class="op">);</span></span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a>    form_layout<span class="op">-&gt;</span>addRow<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Text Items:"</span><span class="op">),</span> _text_items_label<span class="op">);</span></span>
+<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a>    form_layout<span class="op">-&gt;</span>addRow<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"Total Scene Items:"</span><span class="op">),</span> _total_scene_items_label<span class="op">);</span></span>
+<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a>    _scene_elements_section<span class="op">-&gt;</span>setContentLayout<span class="op">(*</span>form_layout<span class="op">);</span></span>
+<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a>    root_layout<span class="op">-&gt;</span>addWidget<span class="op">(</span>_scene_elements_section<span class="op">);</span></span>
+<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Expand by default so counts are visible when developer mode is enabled.</span></span>
+<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a>    _scene_elements_section<span class="op">-&gt;</span>toggle<span class="op">(</span><span class="kw">true</span><span class="op">);</span></span>
+<span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaDebugPanel<span class="op">::</span>_connectSignals<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_media_window <span class="op">==</span> <span class="kw">nullptr</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a>    <span class="fu">connect</span><span class="op">(</span>_media_window<span class="op">,</span> <span class="op">&amp;</span>Media_Window<span class="op">::</span>canvasUpdated<span class="op">,</span> <span class="kw">this</span><span class="op">,</span> <span class="op">&amp;</span>MediaDebugPanel<span class="op">::</span>refresh<span class="op">);</span></span>
+<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> MediaDebugPanel<span class="op">::</span>_refreshSceneElements<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>_media_window <span class="op">==</span> <span class="kw">nullptr</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-98"><a href="#cb1-98" aria-hidden="true" tabindex="-1"></a>        _line_paths_label<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"0"</span><span class="op">));</span></span>
+<span id="cb1-99"><a href="#cb1-99" aria-hidden="true" tabindex="-1"></a>        _masks_label<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"0"</span><span class="op">));</span></span>
+<span id="cb1-100"><a href="#cb1-100" aria-hidden="true" tabindex="-1"></a>        _mask_bounding_boxes_label<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"0"</span><span class="op">));</span></span>
+<span id="cb1-101"><a href="#cb1-101" aria-hidden="true" tabindex="-1"></a>        _mask_outlines_label<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"0"</span><span class="op">));</span></span>
+<span id="cb1-102"><a href="#cb1-102" aria-hidden="true" tabindex="-1"></a>        _points_label<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"0"</span><span class="op">));</span></span>
+<span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a>        _intervals_label<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"0"</span><span class="op">));</span></span>
+<span id="cb1-104"><a href="#cb1-104" aria-hidden="true" tabindex="-1"></a>        _tensors_label<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"0"</span><span class="op">));</span></span>
+<span id="cb1-105"><a href="#cb1-105" aria-hidden="true" tabindex="-1"></a>        _text_items_label<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"0"</span><span class="op">));</span></span>
+<span id="cb1-106"><a href="#cb1-106" aria-hidden="true" tabindex="-1"></a>        _total_scene_items_label<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"0"</span><span class="op">));</span></span>
+<span id="cb1-107"><a href="#cb1-107" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span><span class="op">;</span></span>
+<span id="cb1-108"><a href="#cb1-108" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-109"><a href="#cb1-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> diagnostics <span class="op">=</span> _media_window<span class="op">-&gt;</span>getSceneDiagnostics<span class="op">();</span></span>
+<span id="cb1-111"><a href="#cb1-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a>    _line_paths_label<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QString::number</span><span class="op">(</span>diagnostics<span class="op">.</span>line_paths<span class="op">));</span></span>
+<span id="cb1-113"><a href="#cb1-113" aria-hidden="true" tabindex="-1"></a>    _masks_label<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QString::number</span><span class="op">(</span>diagnostics<span class="op">.</span>masks<span class="op">));</span></span>
+<span id="cb1-114"><a href="#cb1-114" aria-hidden="true" tabindex="-1"></a>    _mask_bounding_boxes_label<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QString::number</span><span class="op">(</span>diagnostics<span class="op">.</span>mask_bounding_boxes<span class="op">));</span></span>
+<span id="cb1-115"><a href="#cb1-115" aria-hidden="true" tabindex="-1"></a>    _mask_outlines_label<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QString::number</span><span class="op">(</span>diagnostics<span class="op">.</span>mask_outlines<span class="op">));</span></span>
+<span id="cb1-116"><a href="#cb1-116" aria-hidden="true" tabindex="-1"></a>    _points_label<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QString::number</span><span class="op">(</span>diagnostics<span class="op">.</span>points<span class="op">));</span></span>
+<span id="cb1-117"><a href="#cb1-117" aria-hidden="true" tabindex="-1"></a>    _intervals_label<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QString::number</span><span class="op">(</span>diagnostics<span class="op">.</span>intervals<span class="op">));</span></span>
+<span id="cb1-118"><a href="#cb1-118" aria-hidden="true" tabindex="-1"></a>    _tensors_label<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QString::number</span><span class="op">(</span>diagnostics<span class="op">.</span>tensors<span class="op">));</span></span>
+<span id="cb1-119"><a href="#cb1-119" aria-hidden="true" tabindex="-1"></a>    _text_items_label<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QString::number</span><span class="op">(</span>diagnostics<span class="op">.</span>text_items<span class="op">));</span></span>
+<span id="cb1-120"><a href="#cb1-120" aria-hidden="true" tabindex="-1"></a>    _total_scene_items_label<span class="op">-&gt;</span>setText<span class="op">(</span><span class="ex">QString::number</span><span class="op">(</span>diagnostics<span class="op">.</span>total_scene_items<span class="op">));</span></span>
+<span id="cb1-121"><a href="#cb1-121" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-22 at 20:01:37 +0000</p>
+<p>Updated on 2026-09-24 at 21:31:38 +0000</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->

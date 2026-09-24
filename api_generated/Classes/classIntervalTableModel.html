@@ -363,6 +363,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-data" id="toc-function-data" class="nav-link" data-scroll-target="#function-data">function data</a></li>
   <li><a href="#function-headerdata" id="toc-function-headerdata" class="nav-link" data-scroll-target="#function-headerdata">function headerData</a></li>
   <li><a href="#function-flags" id="toc-function-flags" class="nav-link" data-scroll-target="#function-flags">function flags</a></li>
+  <li><a href="#function-sort" id="toc-function-sort" class="nav-link" data-scroll-target="#function-sort">function sort</a></li>
   <li><a href="#function-getrowdata" id="toc-function-getrowdata" class="nav-link" data-scroll-target="#function-getrowdata">function getRowData</a></li>
   <li><a href="#function-getinterval" id="toc-function-getinterval" class="nav-link" data-scroll-target="#function-getinterval">function getInterval</a></li>
   </ul></li>
@@ -448,10 +449,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classIntervalTableModel.html#function-flags">flags</a></strong>(QModelIndex const &amp; index) const override</td>
 </tr>
 <tr class="odd">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classIntervalTableModel.html#function-sort">sort</a></strong>(int column, Qt::SortOrder order) override</td>
+</tr>
+<tr class="even">
 <td><a href="../../api_generated/Classes/structIntervalTableRow.html">IntervalTableRow</a></td>
 <td><strong><a href="../../api_generated/Classes/classIntervalTableModel.html#function-getrowdata">getRowData</a></strong>(int row) const<br>Get the row data at a specific row.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><a href="../../api_generated/Files/interval__data_8hpp.html#using-timeframeinterval">TimeFrameInterval</a></td>
 <td><strong><a href="../../api_generated/Classes/classIntervalTableModel.html#function-getinterval">getInterval</a></strong>(int row) const<br>Get the interval at a specific row (convenience)</td>
 </tr>
@@ -537,11 +542,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QModelIndex</span> <span class="at">const</span> <span class="op">&amp;</span> index</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
+<section id="function-sort" class="level3">
+<h3 class="anchored" data-anchor-id="function-sort">function sort</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> sort<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> column<span class="op">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Qt::SortOrder</span> order</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
 <section id="function-getrowdata" class="level3">
 <h3 class="anchored" data-anchor-id="function-getrowdata">function getRowData</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>IntervalTableRow getRowData<span class="op">(</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> row</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>IntervalTableRow getRowData<span class="op">(</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> row</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the row data at a specific row.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -551,9 +563,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-getinterval" class="level3">
 <h3 class="anchored" data-anchor-id="function-getinterval">function getInterval</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>TimeFrameInterval getInterval<span class="op">(</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> row</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>TimeFrameInterval getInterval<span class="op">(</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> row</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the interval at a specific row (convenience)</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -561,7 +573,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Return</strong>: Interval data</p>
 <hr>
-<p>Updated on 2026-09-22 at 20:01:36 +0000</p>
+<p>Updated on 2026-09-24 at 21:31:34 +0000</p>
 
 
 </section>

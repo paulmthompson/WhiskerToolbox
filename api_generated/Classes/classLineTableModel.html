@@ -362,6 +362,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-columncount" id="toc-function-columncount" class="nav-link" data-scroll-target="#function-columncount">function columnCount</a></li>
   <li><a href="#function-data" id="toc-function-data" class="nav-link" data-scroll-target="#function-data">function data</a></li>
   <li><a href="#function-headerdata" id="toc-function-headerdata" class="nav-link" data-scroll-target="#function-headerdata">function headerData</a></li>
+  <li><a href="#function-sort" id="toc-function-sort" class="nav-link" data-scroll-target="#function-sort">function sort</a></li>
   <li><a href="#function-getrowdata" id="toc-function-getrowdata" class="nav-link" data-scroll-target="#function-getrowdata">function getRowData</a></li>
   <li><a href="#function-findrowforframe" id="toc-function-findrowforframe" class="nav-link" data-scroll-target="#function-findrowforframe">function findRowForFrame</a></li>
   </ul></li>
@@ -443,10 +444,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classLineTableModel.html#function-headerdata">headerData</a></strong>(int section, Qt::Orientation orientation, int role) const override</td>
 </tr>
 <tr class="even">
+<td>void</td>
+<td><strong><a href="../../api_generated/Classes/classLineTableModel.html#function-sort">sort</a></strong>(int column, Qt::SortOrder order) override</td>
+</tr>
+<tr class="odd">
 <td><a href="../../api_generated/Classes/structLineTableRow.html">LineTableRow</a></td>
 <td><strong><a href="../../api_generated/Classes/classLineTableModel.html#function-getrowdata">getRowData</a></strong>(int row) const</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>int</td>
 <td><strong><a href="../../api_generated/Classes/classLineTableModel.html#function-findrowforframe">findRowForFrame</a></strong>(int64_t frame) const<br>Find the first row containing data for the specified frame.</td>
 </tr>
@@ -510,17 +515,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> role</span>
 <span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
+<section id="function-sort" class="level3">
+<h3 class="anchored" data-anchor-id="function-sort">function sort</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> sort<span class="op">(</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> column<span class="op">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">Qt::SortOrder</span> order</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="kw">override</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
 <section id="function-getrowdata" class="level3">
 <h3 class="anchored" data-anchor-id="function-getrowdata">function getRowData</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>LineTableRow getRowData<span class="op">(</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> row</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>LineTableRow getRowData<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> row</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="function-findrowforframe" class="level3">
 <h3 class="anchored" data-anchor-id="function-findrowforframe">function findRowForFrame</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> findRowForFrame<span class="op">(</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> frame</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> findRowForFrame<span class="op">(</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int64_t</span> frame</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Find the first row containing data for the specified frame.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -528,7 +540,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Return</strong>: The row index of the first line at the specified frame, or -1 if not found</p>
 <hr>
-<p>Updated on 2026-09-22 at 20:01:36 +0000</p>
+<p>Updated on 2026-09-24 at 21:31:34 +0000</p>
 
 
 </section>
