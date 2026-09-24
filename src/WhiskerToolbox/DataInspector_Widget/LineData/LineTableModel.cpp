@@ -1,8 +1,29 @@
 #include "LineTableModel.hpp"
+
 #include "Lines/Line_Data.hpp"
+#include "WhiskerToolbox/DataInspector_Widget/utils/InspectorTableSort.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
 #include <iostream>
+
+namespace {
+
+[[nodiscard]] bool lineRowLess(int column, LineTableRow const & lhs, LineTableRow const & rhs) {
+    switch (column) {
+        case 0:
+            return lhs.frame < rhs.frame;
+        case 1:
+            return lhs.lineIndex < rhs.lineIndex;
+        case 2:
+            return lhs.length < rhs.length;
+        case 3:
+            return QString::localeAwareCompare(lhs.group_name, rhs.group_name) < 0;
+        default:
+            return false;
+    }
+}
+
+}// namespace
 
 LineTableModel::LineTableModel(QObject * parent)
     : QAbstractTableModel(parent) {}
@@ -13,7 +34,7 @@ void LineTableModel::setLines(LineData const * lineData) {
     _all_data.clear();
     _line_data_source = lineData;
     if (lineData) {
-        TimeFrameIndex current_time = TimeFrameIndex(-1);
+        auto current_time = TimeFrameIndex(-1);
         int lineIndex = 0;
         for (auto [time, entity_id, line_ref]: lineData->flattened_data()) {
             // Track local index within time
@@ -22,10 +43,10 @@ void LineTableModel::setLines(LineData const * lineData) {
                 lineIndex = 0;
             }
             auto frame = time.getValue();
-            auto const & line = static_cast<Line2D const&>(line_ref);
+            auto const & line = static_cast<Line2D const &>(line_ref);
             QString group_name = "No Group";
             if (_group_manager) {
-                int group_id = _group_manager->getEntityGroup(entity_id);
+                int const group_id = _group_manager->getEntityGroup(entity_id);
                 if (group_id != -1) {
                     auto group = _group_manager->getGroup(group_id);
                     if (group.has_value()) {
@@ -34,7 +55,7 @@ void LineTableModel::setLines(LineData const * lineData) {
                 }
             }
 
-            LineTableRow row = {
+            LineTableRow const row = {
                     .frame = frame,
                     .lineIndex = lineIndex,
                     .length = static_cast<int>(line.size()),
@@ -131,6 +152,23 @@ void LineTableModel::clearGroupFilter() {
     setGroupFilter(-1);
 }
 
+void LineTableModel::sort(int column, Qt::SortOrder order) {
+    if (column < 0 || column >= columnCount(QModelIndex{})) {
+        return;
+    }
+
+    _sort_column = column;
+    _sort_order = order;
+
+    emit layoutAboutToBeChanged();
+    _sortDisplayData();
+    emit layoutChanged();
+}
+
+void LineTableModel::_sortDisplayData() {
+    stableSortDisplayRows(_display_data, _sort_column, _sort_order, lineRowLess);
+}
+
 void LineTableModel::_applyGroupFilter() {
     beginResetModel();
     _display_data.clear();
@@ -142,13 +180,14 @@ void LineTableModel::_applyGroupFilter() {
         // Filter by specific group
         for (auto const & row: _all_data) {
             if (_group_manager) {
-                int entity_group_id = _group_manager->getEntityGroup(row.entity_id);
+                int const entity_group_id = _group_manager->getEntityGroup(row.entity_id);
                 if (entity_group_id == _filtered_group_id) {
                     _display_data.push_back(row);
                 }
             }
         }
     }
+    _sortDisplayData();
     endResetModel();
 }
 

@@ -1,0 +1,46 @@
+---
+title: "Ragged Storage Append Semantics"
+---
+
+## Overview
+
+`OwningRaggedStorage` (LineData, MaskData, PointData) and `OwningRaggedAnalogStorage`
+store ragged entries in a contiguous Structure-of-Arrays (SoA) layout. Each
+`TimeFrameIndex` maps to **one contiguous index block** in the parallel `_times`
+array, enabling O(1) `getAtTime()` via `[start, end)` range lookup.
+
+Implementation: `src/DataObjects/RaggedTimeSeries/include/RaggedTimeSeries/RaggedStorage.hpp`
+
+## Append behavior
+
+| Case | Complexity | Behavior |
+|------|------------|----------|
+| New time at tail | O(1) | `push_back` |
+| Same time, consecutive tail | O(1) | Extend existing block |
+| Revisit time after interleaving | O(n) | Insert at block end, shift tail |
+
+Out-of-order append is **supported**. Callers always use `append` / `addAtTime`;
+storage inserts at the end of the existing per-frame block when revisiting a
+frame (e.g. label frame 50, then batch-write frames 1–100).
+
+## Invariants
+
+For every `(time, [start, end))` in `_time_ranges`:
+
+- `start < end`
+- `_times[i] == time` for all `i` in `[start, end)`
+
+Debug builds call `validateTimeRanges()` after mutations to catch implementation
+regressions.
+
+## Legacy corrupted state
+
+If in-memory data predating the insert-at-block-end fix has interleaved entries
+(e.g. frame 50 at indices 0 and 50 with frames 1–49 between), `_rebuildAccelerationStructures`
+detects invalid ranges and runs `_compactTimeBlocks()` (stable group-by-time)
+before rebuilding maps.
+
+## Tests
+
+- `tests/DataManager/ragged_out_of_order_append.test.cpp`
+- `tests/DataManager/ragged_analog_storage_test.cpp` (`[out_of_order]`)

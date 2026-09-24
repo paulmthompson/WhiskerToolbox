@@ -64,6 +64,8 @@ public:
     [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
     [[nodiscard]] Qt::ItemFlags flags(QModelIndex const & index) const override;
 
+    void sort(int column, Qt::SortOrder order) override;
+
     /**
      * @brief Get the row data at a specific row
      * @param row Row index
@@ -84,8 +86,11 @@ private:
     DigitalEventSeries const * _event_data_source{nullptr};
     GroupManager * _group_manager{nullptr};
     int _filtered_group_id{-1};
+    int _sort_column{0};
+    Qt::SortOrder _sort_order{Qt::AscendingOrder};
 
     void _applyGroupFilter();
+    void _sortDisplayData();
 };
 
 #endif// EVENTTABLEMODEL_HPP

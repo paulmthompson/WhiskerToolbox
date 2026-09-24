@@ -2,6 +2,7 @@
 
 #include "IntervalTableModel.hpp"
 
+#include "DataInspector_Widget/utils/InspectorTableSort.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
@@ -105,7 +106,7 @@ void DigitalIntervalSeriesDataView::_setupUi() {
     _table_view->setSelectionMode(QAbstractItemView::ExtendedSelection);
     _table_view->setEditTriggers(QAbstractItemView::NoEditTriggers);
     _table_view->setAlternatingRowColors(true);
-    _table_view->setSortingEnabled(true);
+    configureDefaultInspectorTableSort(_table_view);
     _table_view->setContextMenuPolicy(Qt::CustomContextMenu);
     _table_view->horizontalHeader()->setStretchLastSection(true);
 

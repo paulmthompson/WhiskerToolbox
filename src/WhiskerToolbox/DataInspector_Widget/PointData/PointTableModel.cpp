@@ -1,12 +1,36 @@
 #include "PointTableModel.hpp"
 
 #include "Points/Point_Data.hpp"
+#include "WhiskerToolbox/DataInspector_Widget/utils/InspectorTableSort.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
 #include <iostream>
 
+namespace {
+
+[[nodiscard]] bool pointRowLess(int column, PointTableRow const & lhs, PointTableRow const & rhs) {
+    switch (column) {
+        case 0:
+            return lhs.frame < rhs.frame;
+        case 1:
+            return lhs.pointIndex < rhs.pointIndex;
+        case 2:
+            return lhs.x < rhs.x;
+        case 3:
+            return lhs.y < rhs.y;
+        case 4:
+            return QString::localeAwareCompare(lhs.group_name, rhs.group_name) < 0;
+        default:
+            return false;
+    }
+}
+
+}// namespace
+
 PointTableModel::PointTableModel(QObject * parent)
-    : QAbstractTableModel(parent), _display_data{}, _all_data{} {}
+    : QAbstractTableModel(parent),
+      _display_data{},
+      _all_data{} {}
 
 void PointTableModel::setPoints(PointData const * pointData) {
     beginResetModel();
@@ -14,7 +38,7 @@ void PointTableModel::setPoints(PointData const * pointData) {
     _all_data.clear();
     _point_data_source = pointData;
     if (pointData) {
-        TimeFrameIndex current_time = TimeFrameIndex(-1);
+        auto current_time = TimeFrameIndex(-1);
         int pointIndex = 0;
         for (auto [time, entity_id, point_ref]: pointData->flattened_data()) {
             // Track local index within time
@@ -23,10 +47,10 @@ void PointTableModel::setPoints(PointData const * pointData) {
                 pointIndex = 0;
             }
             auto frame = time.getValue();
-            auto const & point = static_cast<Point2D<float> const&>(point_ref);
+            auto const & point = static_cast<Point2D<float> const &>(point_ref);
             QString group_name = "No Group";
             if (_group_manager) {
-                int group_id = _group_manager->getEntityGroup(entity_id);
+                int const group_id = _group_manager->getEntityGroup(entity_id);
                 if (group_id != -1) {
                     auto group = _group_manager->getGroup(group_id);
                     if (group.has_value()) {
@@ -34,15 +58,14 @@ void PointTableModel::setPoints(PointData const * pointData) {
                     }
                 }
             }
-            
-            PointTableRow row = {
-                .frame = frame, 
-                .pointIndex = pointIndex, 
-                .x = point.x,
-                .y = point.y,
-                .entity_id = entity_id,
-                .group_name = group_name
-            };
+
+            PointTableRow const row = {
+                    .frame = frame,
+                    .pointIndex = pointIndex,
+                    .x = point.x,
+                    .y = point.y,
+                    .entity_id = entity_id,
+                    .group_name = group_name};
             _all_data.push_back(row);
             pointIndex++;
         }
@@ -58,7 +81,7 @@ int PointTableModel::rowCount(QModelIndex const & parent) const {
 
 int PointTableModel::columnCount(QModelIndex const & parent) const {
     Q_UNUSED(parent);
-    return 5; // Frame, Point Index, X, Y, Group
+    return 5;// Frame, Point Index, X, Y, Group
 }
 
 QVariant PointTableModel::data(QModelIndex const & index, int role) const {
@@ -109,7 +132,7 @@ QVariant PointTableModel::headerData(int section, Qt::Orientation orientation, i
                 return QVariant{};
         }
     }
-    return QVariant{}; // No vertical header
+    return QVariant{};// No vertical header
 }
 
 PointTableRow PointTableModel::getRowData(int row) const {
@@ -138,23 +161,41 @@ void PointTableModel::clearGroupFilter() {
     setGroupFilter(-1);
 }
 
+void PointTableModel::sort(int column, Qt::SortOrder order) {
+    if (column < 0 || column >= columnCount(QModelIndex{})) {
+        return;
+    }
+
+    _sort_column = column;
+    _sort_order = order;
+
+    emit layoutAboutToBeChanged();
+    _sortDisplayData();
+    emit layoutChanged();
+}
+
+void PointTableModel::_sortDisplayData() {
+    stableSortDisplayRows(_display_data, _sort_column, _sort_order, pointRowLess);
+}
+
 void PointTableModel::_applyGroupFilter() {
     beginResetModel();
     _display_data.clear();
-    
+
     if (_filtered_group_id == -1) {
         // Show all groups
         _display_data = _all_data;
     } else {
         // Filter by specific group
-        for (auto const & row : _all_data) {
+        for (auto const & row: _all_data) {
             if (_group_manager) {
-                int entity_group_id = _group_manager->getEntityGroup(row.entity_id);
+                int const entity_group_id = _group_manager->getEntityGroup(row.entity_id);
                 if (entity_group_id == _filtered_group_id) {
                     _display_data.push_back(row);
                 }
             }
         }
     }
+    _sortDisplayData();
     endResetModel();
 }

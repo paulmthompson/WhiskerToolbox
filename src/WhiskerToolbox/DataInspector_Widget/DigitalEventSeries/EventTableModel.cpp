@@ -6,9 +6,25 @@
 #include "EventTableModel.hpp"
 
 #include "DigitalTimeSeries/Digital_Event_Series.hpp"
+#include "WhiskerToolbox/DataInspector_Widget/utils/InspectorTableSort.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
 #include <iostream>
+
+namespace {
+
+[[nodiscard]] bool eventRowLess(int column, EventTableRow const & lhs, EventTableRow const & rhs) {
+    switch (column) {
+        case 0:
+            return lhs.time.getValue() < rhs.time.getValue();
+        case 1:
+            return QString::localeAwareCompare(lhs.group_name, rhs.group_name) < 0;
+        default:
+            return false;
+    }
+}
+
+}// namespace
 
 EventTableModel::EventTableModel(QObject * parent)
     : QAbstractTableModel(parent) {}
@@ -136,6 +152,23 @@ TimeFrameIndex EventTableModel::getEvent(int row) const {
     return TimeFrameIndex(-1);
 }
 
+void EventTableModel::sort(int column, Qt::SortOrder order) {
+    if (column < 0 || column >= columnCount(QModelIndex{})) {
+        return;
+    }
+
+    _sort_column = column;
+    _sort_order = order;
+
+    emit layoutAboutToBeChanged();
+    _sortDisplayData();
+    emit layoutChanged();
+}
+
+void EventTableModel::_sortDisplayData() {
+    stableSortDisplayRows(_display_data, _sort_column, _sort_order, eventRowLess);
+}
+
 void EventTableModel::_applyGroupFilter() {
     beginResetModel();
     _display_data.clear();
@@ -145,7 +178,7 @@ void EventTableModel::_applyGroupFilter() {
     } else {
         for (auto const & row: _all_data) {
             if (_group_manager) {
-                int entity_group_id = _group_manager->getEntityGroup(row.entity_id);
+                int const entity_group_id = _group_manager->getEntityGroup(row.entity_id);
                 if (entity_group_id == _filtered_group_id) {
                     _display_data.push_back(row);
                 }
@@ -153,5 +186,6 @@ void EventTableModel::_applyGroupFilter() {
         }
     }
 
+    _sortDisplayData();
     endResetModel();
 }

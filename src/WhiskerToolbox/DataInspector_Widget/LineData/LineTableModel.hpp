@@ -38,6 +38,8 @@ public:
     [[nodiscard]] QVariant data(QModelIndex const & index, int role) const override;
     [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 
+    void sort(int column, Qt::SortOrder order) override;
+
     [[nodiscard]] LineTableRow getRowData(int row) const;
 
     /**
@@ -55,8 +57,11 @@ private:
     LineData const * _line_data_source{nullptr};
     GroupManager * _group_manager{nullptr};
     int _filtered_group_id{-1};// -1 means show all groups
+    int _sort_column{0};
+    Qt::SortOrder _sort_order{Qt::AscendingOrder};
 
     void _applyGroupFilter();
+    void _sortDisplayData();
 };
 
 #endif//NEURALYZER_V2_LINETABLEMODEL_HPP

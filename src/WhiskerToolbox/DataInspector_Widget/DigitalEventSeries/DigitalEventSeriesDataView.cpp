@@ -2,9 +2,10 @@
 
 #include "EventTableModel.hpp"
 
+#include "DataInspector_Widget/utils/InspectorTableSort.hpp"
 #include "DataManager/DataManager.hpp"
-#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
+#include "DigitalTimeSeries/Digital_Event_Series.hpp"
 #include "Entity/EntityTypes.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
@@ -105,7 +106,7 @@ void DigitalEventSeriesDataView::_setupUi() {
     _table_view->setSelectionMode(QAbstractItemView::ExtendedSelection);
     _table_view->setEditTriggers(QAbstractItemView::NoEditTriggers);
     _table_view->setAlternatingRowColors(true);
-    _table_view->setSortingEnabled(true);
+    configureDefaultInspectorTableSort(_table_view);
     _table_view->setContextMenuPolicy(Qt::CustomContextMenu);
     _table_view->horizontalHeader()->setStretchLastSection(true);
 

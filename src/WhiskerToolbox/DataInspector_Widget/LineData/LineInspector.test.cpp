@@ -134,7 +134,7 @@ TEST_CASE("LineInspector saves data from DataManager", "[LineInspector][save]") 
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create LineData with some lines
         auto line_data = std::make_shared<LineData>();
@@ -221,7 +221,7 @@ TEST_CASE("LineInspector saves data from DataManager", "[LineInspector][save]") 
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         auto line_data = std::make_shared<LineData>();
         line_data->setIdentityContext("test_lines", data_manager->getEntityRegistry());
@@ -416,7 +416,7 @@ TEST_CASE("LineTableView displays line data", "[LineTableView]") {
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create LineData with some lines
         auto line_data = std::make_shared<LineData>();
@@ -479,7 +479,7 @@ TEST_CASE("LineTableView group filtering", "[LineTableView][Groups]") {
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create LineData with lines
         auto line_data = std::make_shared<LineData>();
@@ -587,7 +587,7 @@ TEST_CASE("LineInspector and LineTableView integration with groups", "[LineInspe
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create LineData with lines
         auto line_data = std::make_shared<LineData>();
@@ -695,7 +695,7 @@ TEST_CASE("LineInspector and LineTableView integration with groups", "[LineInspe
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create LineData with lines
         auto line_data = std::make_shared<LineData>();
@@ -758,7 +758,7 @@ TEST_CASE("LineInspector and LineTableView integration with groups", "[LineInspe
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create LineData with lines
         auto line_data = std::make_shared<LineData>();
@@ -884,7 +884,7 @@ TEST_CASE("LineInspector and LineTableView integration with groups", "[LineInspe
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create LineData with lines
         auto line_data = std::make_shared<LineData>();
@@ -994,7 +994,7 @@ TEST_CASE("LineInspector and LineTableView move and copy operations", "[LineInsp
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create source LineData with lines
         auto source_line_data = std::make_shared<LineData>();
@@ -1208,7 +1208,7 @@ TEST_CASE("LineInspector and LineTableView group management context menu", "[Lin
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create LineData with lines
         auto line_data = std::make_shared<LineData>();
@@ -1325,7 +1325,7 @@ TEST_CASE("LineInspector and LineTableView group management context menu", "[Lin
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create LineData with lines
         auto line_data = std::make_shared<LineData>();
@@ -1429,7 +1429,7 @@ TEST_CASE("LineInspector and LineTableView group management context menu", "[Lin
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create LineData with lines
         auto line_data = std::make_shared<LineData>();
@@ -1525,7 +1525,7 @@ TEST_CASE("LineInspector and LineTableView delete lines", "[LineInspector][LineT
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create LineData with lines
         auto line_data = std::make_shared<LineData>();
@@ -1632,7 +1632,7 @@ TEST_CASE("LineInspector and LineTableView delete lines", "[LineInspector][LineT
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create LineData with lines
         auto line_data = std::make_shared<LineData>();

@@ -2,10 +2,11 @@
 
 #include "MaskTableModel.hpp"
 
+#include "DataInspector_Widget/utils/InspectorTableSort.hpp"
 #include "DataManager/DataManager.hpp"
-#include "Masks/Mask_Data.hpp"
 #include "DataManager_Widget/utils/DataManager_Widget_utils.hpp"
 #include "Entity/EntityTypes.hpp"
+#include "Masks/Mask_Data.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
 #include <QAction>
@@ -19,10 +20,10 @@
 #include <string>
 
 MaskTableView::MaskTableView(
-    std::shared_ptr<DataManager> data_manager,
-    QWidget * parent)
-    : BaseDataView(std::move(data_manager), parent)
-    , _table_model(new MaskTableModel(this)) {
+        std::shared_ptr<DataManager> data_manager,
+        QWidget * parent)
+    : BaseDataView(std::move(data_manager), parent),
+      _table_model(new MaskTableModel(this)) {
     _setupUi();
     _connectSignals();
 }
@@ -95,15 +96,15 @@ void MaskTableView::clearGroupFilter() {
 
 std::vector<int64_t> MaskTableView::getSelectedFrames() const {
     std::vector<int64_t> frames;
-    
+
     if (!_table_view || !_table_model) {
         return frames;
     }
 
     auto const selection = _table_view->selectionModel()->selectedRows();
     frames.reserve(static_cast<size_t>(selection.size()));
-    
-    for (auto const & index : selection) {
+
+    for (auto const & index: selection) {
         auto const row_data = _table_model->getRowData(index.row());
         if (row_data.frame != -1) {
             frames.push_back(row_data.frame);
@@ -115,15 +116,15 @@ std::vector<int64_t> MaskTableView::getSelectedFrames() const {
 
 std::vector<EntityId> MaskTableView::getSelectedEntityIds() const {
     std::vector<EntityId> entity_ids;
-    
+
     if (!_table_view || !_table_model) {
         return entity_ids;
     }
 
     auto const selection = _table_view->selectionModel()->selectedRows();
     entity_ids.reserve(static_cast<size_t>(selection.size()));
-    
-    for (auto const & index : selection) {
+
+    for (auto const & index: selection) {
         if (index.isValid()) {
             auto const row_data = _table_model->getRowData(index.row());
             if (row_data.entity_id != EntityId(0)) {
@@ -145,7 +146,7 @@ void MaskTableView::_setupUi() {
     _table_view->setSelectionBehavior(QAbstractItemView::SelectRows);
     _table_view->setEditTriggers(QAbstractItemView::NoEditTriggers);
     _table_view->setAlternatingRowColors(true);
-    _table_view->setSortingEnabled(true);
+    configureDefaultInspectorTableSort(_table_view);
     _table_view->setContextMenuPolicy(Qt::CustomContextMenu);
     _table_view->horizontalHeader()->setStretchLastSection(true);
 
@@ -236,7 +237,7 @@ void MaskTableView::_populateGroupSubmenu(QMenu * menu, bool for_moving) {
     std::set<int> current_groups;
     if (for_moving) {
         auto const selection = _table_view->selectionModel()->selectedRows();
-        for (auto const & index : selection) {
+        for (auto const & index: selection) {
             if (index.isValid()) {
                 auto const row_data = _table_model->getRowData(index.row());
                 if (row_data.entity_id != EntityId(0)) {

@@ -153,7 +153,7 @@ TEST_CASE("DigitalIntervalSeriesInspector data manipulation", "[DigitalIntervalS
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create interval series with some intervals
         auto interval_series = std::make_shared<DigitalIntervalSeries>();
@@ -292,7 +292,7 @@ TEST_CASE("DigitalIntervalSeriesInspector data manipulation", "[DigitalIntervalS
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create interval series with initial intervals
         auto interval_series = std::make_shared<DigitalIntervalSeries>();
@@ -334,7 +334,7 @@ TEST_CASE("DigitalIntervalSeriesInspector saves data from DataManager", "[Digita
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         auto interval_series = std::make_shared<DigitalIntervalSeries>();
         interval_series->addEvent(TimeFrameIndex(10), TimeFrameIndex(20));
@@ -404,7 +404,7 @@ TEST_CASE("DigitalIntervalSeriesInspector callbacks", "[DigitalIntervalSeriesIns
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create interval series
         auto interval_series = std::make_shared<DigitalIntervalSeries>();
@@ -429,7 +429,7 @@ TEST_CASE("DigitalIntervalSeriesInspector callbacks", "[DigitalIntervalSeriesIns
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create interval series
         auto interval_series = std::make_shared<DigitalIntervalSeries>();
@@ -1050,7 +1050,7 @@ TEST_CASE("DigitalIntervalSeriesInspector interval creation workflow", "[Digital
     std::vector<int> t(kNumTimes);
     std::iota(t.begin(), t.end(), 0);
     auto tf = std::make_shared<TimeFrame>(t);
-    data_manager->setTime(TimeKey("time"), tf);
+    data_manager->setTime(TimeKey("time"), tf, true);
 
     // Create empty interval series and set TimeFrame before adding to DataManager
     auto interval_series = std::make_shared<DigitalIntervalSeries>();

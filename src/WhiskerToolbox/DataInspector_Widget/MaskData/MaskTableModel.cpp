@@ -1,9 +1,29 @@
 #include "MaskTableModel.hpp"
 
 #include "Masks/Mask_Data.hpp"
+#include "WhiskerToolbox/DataInspector_Widget/utils/InspectorTableSort.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
 #include <iostream>// For debugging
+
+namespace {
+
+[[nodiscard]] bool maskRowLess(int column, MaskTableRow const & lhs, MaskTableRow const & rhs) {
+    switch (column) {
+        case 0:
+            return lhs.frame < rhs.frame;
+        case 1:
+            return lhs.maskIndex < rhs.maskIndex;
+        case 2:
+            return lhs.totalPointsInFrame < rhs.totalPointsInFrame;
+        case 3:
+            return QString::localeAwareCompare(lhs.group_name, rhs.group_name) < 0;
+        default:
+            return false;
+    }
+}
+
+}// namespace
 
 MaskTableModel::MaskTableModel(QObject * parent)
     : QAbstractTableModel(parent) {}
@@ -14,7 +34,7 @@ void MaskTableModel::setMasks(MaskData const * maskData) {
     _all_data.clear();
     _mask_data_source = maskData;
     if (maskData) {
-        TimeFrameIndex current_time = TimeFrameIndex(-1);
+        auto current_time = TimeFrameIndex(-1);
         int maskIndex = 0;
         for (auto [time, entity_id, mask_ref]: maskData->flattened_data()) {
             // Track local index within time
@@ -23,7 +43,7 @@ void MaskTableModel::setMasks(MaskData const * maskData) {
                 maskIndex = 0;
             }
             auto frame = time.getValue();
-            auto const & mask = static_cast<Mask2D const&>(mask_ref);
+            auto const & mask = static_cast<Mask2D const &>(mask_ref);
             QString group_name = "No Group";
             if (_group_manager) {
                 int const group_id = _group_manager->getEntityGroup(entity_id);
@@ -36,12 +56,11 @@ void MaskTableModel::setMasks(MaskData const * maskData) {
             }
 
             MaskTableRow const row = {
-                .frame = frame,
-                .maskIndex = maskIndex,
-                .totalPointsInFrame = static_cast<int>(mask.size()),
-                .entity_id = entity_id,
-                .group_name = group_name
-            };
+                    .frame = frame,
+                    .maskIndex = maskIndex,
+                    .totalPointsInFrame = static_cast<int>(mask.size()),
+                    .entity_id = entity_id,
+                    .group_name = group_name};
             _all_data.push_back(row);
             maskIndex++;
         }
@@ -140,23 +159,41 @@ void MaskTableModel::clearGroupFilter() {
     setGroupFilter(-1);
 }
 
+void MaskTableModel::sort(int column, Qt::SortOrder order) {
+    if (column < 0 || column >= columnCount(QModelIndex{})) {
+        return;
+    }
+
+    _sort_column = column;
+    _sort_order = order;
+
+    emit layoutAboutToBeChanged();
+    _sortDisplayData();
+    emit layoutChanged();
+}
+
+void MaskTableModel::_sortDisplayData() {
+    stableSortDisplayRows(_display_data, _sort_column, _sort_order, maskRowLess);
+}
+
 void MaskTableModel::_applyGroupFilter() {
     beginResetModel();
     _display_data.clear();
-    
+
     if (_filtered_group_id == -1) {
         // Show all groups
         _display_data = _all_data;
     } else {
         // Filter by specific group
-        for (auto const & row : _all_data) {
+        for (auto const & row: _all_data) {
             if (_group_manager) {
-                int entity_group_id = _group_manager->getEntityGroup(row.entity_id);
+                int const entity_group_id = _group_manager->getEntityGroup(row.entity_id);
                 if (entity_group_id == _filtered_group_id) {
                     _display_data.push_back(row);
                 }
             }
         }
     }
+    _sortDisplayData();
     endResetModel();
 }

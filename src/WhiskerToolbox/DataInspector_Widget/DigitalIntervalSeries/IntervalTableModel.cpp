@@ -1,6 +1,7 @@
 #include "IntervalTableModel.hpp"
 
 #include "DigitalTimeSeries/Digital_Interval_Series.hpp"
+#include "WhiskerToolbox/DataInspector_Widget/utils/InspectorTableSort.hpp"
 #include "WhiskerToolbox/GroupManagementWidget/GroupManager.hpp"
 
 #include <iostream>
@@ -14,6 +15,21 @@ namespace {
  */
 [[nodiscard]] int64_t inclusiveIntervalDuration(TimeFrameInterval const & interval) noexcept {
     return interval.end.getValue() - interval.start.getValue() + 1;
+}
+
+[[nodiscard]] bool intervalRowLess(int column, IntervalTableRow const & lhs, IntervalTableRow const & rhs) {
+    switch (column) {
+        case 0:
+            return lhs.interval.start.getValue() < rhs.interval.start.getValue();
+        case 1:
+            return lhs.interval.end.getValue() < rhs.interval.end.getValue();
+        case 2:
+            return inclusiveIntervalDuration(lhs.interval) < inclusiveIntervalDuration(rhs.interval);
+        case 3:
+            return QString::localeAwareCompare(lhs.group_name, rhs.group_name) < 0;
+        default:
+            return false;
+    }
 }
 
 }// namespace
@@ -152,6 +168,23 @@ TimeFrameInterval IntervalTableModel::getInterval(int row) const {
     return TimeFrameInterval{TimeFrameIndex{-1}, TimeFrameIndex{-1}};
 }
 
+void IntervalTableModel::sort(int column, Qt::SortOrder order) {
+    if (column < 0 || column >= columnCount(QModelIndex{})) {
+        return;
+    }
+
+    _sort_column = column;
+    _sort_order = order;
+
+    emit layoutAboutToBeChanged();
+    _sortDisplayData();
+    emit layoutChanged();
+}
+
+void IntervalTableModel::_sortDisplayData() {
+    stableSortDisplayRows(_display_data, _sort_column, _sort_order, intervalRowLess);
+}
+
 void IntervalTableModel::_applyGroupFilter() {
     beginResetModel();
     _display_data.clear();
@@ -169,5 +202,6 @@ void IntervalTableModel::_applyGroupFilter() {
         }
     }
 
+    _sortDisplayData();
     endResetModel();
 }

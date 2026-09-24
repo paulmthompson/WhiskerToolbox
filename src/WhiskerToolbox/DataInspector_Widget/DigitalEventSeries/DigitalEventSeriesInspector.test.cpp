@@ -168,7 +168,7 @@ TEST_CASE("DigitalEventSeriesInspector data manipulation", "[DigitalEventSeriesI
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create event series with some events
         std::vector<TimeFrameIndex> event_times = {
@@ -340,7 +340,7 @@ TEST_CASE("DigitalEventSeriesInspector data manipulation", "[DigitalEventSeriesI
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create event series with initial events
         std::vector<TimeFrameIndex> event_times = {TimeFrameIndex(10), TimeFrameIndex(20)};
@@ -382,7 +382,7 @@ TEST_CASE("DigitalEventSeriesInspector saves data from DataManager", "[DigitalEv
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         std::vector<TimeFrameIndex> event_times = {
             TimeFrameIndex(10), TimeFrameIndex(25), TimeFrameIndex(42)};
@@ -455,7 +455,7 @@ TEST_CASE("DigitalEventSeriesInspector callbacks", "[DigitalEventSeriesInspector
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create event series
         auto event_series = std::make_shared<DigitalEventSeries>();
@@ -480,7 +480,7 @@ TEST_CASE("DigitalEventSeriesInspector callbacks", "[DigitalEventSeriesInspector
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create event series
         auto event_series = std::make_shared<DigitalEventSeries>();

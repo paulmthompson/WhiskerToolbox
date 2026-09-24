@@ -14,10 +14,10 @@ class GroupManager;
 
 struct MaskTableRow {
     int64_t frame;
-    int maskIndex; // Index of the mask within that frame
-    int totalPointsInFrame; // Number of points in this mask
-    EntityId entity_id; // EntityId for group lookup
-    QString group_name; // Name of the group this mask belongs to
+    int maskIndex;         // Index of the mask within that frame
+    int totalPointsInFrame;// Number of points in this mask
+    EntityId entity_id;    // EntityId for group lookup
+    QString group_name;    // Name of the group this mask belongs to
 };
 
 class MaskTableModel : public QAbstractTableModel {
@@ -28,7 +28,7 @@ public:
 
     void setMasks(MaskData const * maskData);
     void setGroupManager(GroupManager * group_manager);
-    void setGroupFilter(int group_id); // -1 means show all groups
+    void setGroupFilter(int group_id);// -1 means show all groups
     void clearGroupFilter();
 
     [[nodiscard]] int rowCount(QModelIndex const & parent) const override;
@@ -37,17 +37,22 @@ public:
     [[nodiscard]] QVariant data(QModelIndex const & index, int role) const override;
     [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 
+    void sort(int column, Qt::SortOrder order) override;
+
     [[nodiscard]] int getFrameForRow(int row) const;
     [[nodiscard]] MaskTableRow getRowData(int row) const;
 
 private:
     std::vector<MaskTableRow> _display_data;
-    std::vector<MaskTableRow> _all_data; // Store all data for filtering
+    std::vector<MaskTableRow> _all_data;// Store all data for filtering
     MaskData const * _mask_data_source{nullptr};
     GroupManager * _group_manager{nullptr};
-    int _filtered_group_id{-1}; // -1 means show all groups
-    
+    int _filtered_group_id{-1};// -1 means show all groups
+    int _sort_column{0};
+    Qt::SortOrder _sort_order{Qt::AscendingOrder};
+
     void _applyGroupFilter();
+    void _sortDisplayData();
 };
 
 #endif//NEURALYZER_V2_MASKTABLEMODEL_HPP

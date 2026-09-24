@@ -1,9 +1,9 @@
 #ifndef NEURALYZER_V2_POINTTABLEMODEL_HPP
 #define NEURALYZER_V2_POINTTABLEMODEL_HPP
 
+#include "Entity/EntityTypes.hpp"
 #include "Points/Point_Data.hpp"
 #include "TimeFrame/TimeFrame.hpp"
-#include "Entity/EntityTypes.hpp"
 
 #include <QAbstractTableModel>
 
@@ -18,11 +18,11 @@ class GroupManager;
 
 struct PointTableRow {
     int64_t frame;
-    int pointIndex; // Index of the point within that frame
-    float x; // X coordinate of the point
-    float y; // Y coordinate of the point
-    EntityId entity_id; // EntityId for group lookup
-    QString group_name; // Name of the group this point belongs to
+    int pointIndex;    // Index of the point within that frame
+    float x;           // X coordinate of the point
+    float y;           // Y coordinate of the point
+    EntityId entity_id;// EntityId for group lookup
+    QString group_name;// Name of the group this point belongs to
 };
 
 class PointTableModel : public QAbstractTableModel {
@@ -33,7 +33,7 @@ public:
 
     void setPoints(PointData const * pointData);
     void setGroupManager(GroupManager * group_manager);
-    void setGroupFilter(int group_id); // -1 means show all groups
+    void setGroupFilter(int group_id);// -1 means show all groups
     void clearGroupFilter();
 
     [[nodiscard]] int rowCount(QModelIndex const & parent) const override;
@@ -43,16 +43,21 @@ public:
 
     [[nodiscard]] QVariant headerData(int section, Qt::Orientation orientation, int role) const override;
 
+    void sort(int column, Qt::SortOrder order) override;
+
     [[nodiscard]] PointTableRow getRowData(int row) const;
 
 private:
     std::vector<PointTableRow> _display_data;
-    std::vector<PointTableRow> _all_data; // Store all data for filtering
+    std::vector<PointTableRow> _all_data;// Store all data for filtering
     PointData const * _point_data_source{nullptr};
     GroupManager * _group_manager{nullptr};
-    int _filtered_group_id{-1}; // -1 means show all groups
-    
+    int _filtered_group_id{-1};// -1 means show all groups
+    int _sort_column{0};
+    Qt::SortOrder _sort_order{Qt::AscendingOrder};
+
     void _applyGroupFilter();
+    void _sortDisplayData();
 };
 
 

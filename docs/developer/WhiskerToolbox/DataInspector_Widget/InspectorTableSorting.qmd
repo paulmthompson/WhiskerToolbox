@@ -1,0 +1,77 @@
+---
+title: "Data Inspector Table Sorting"
+---
+
+## Overview
+
+Mask, Line, Point, Digital Event Series, and Digital Interval Series inspectors display tabular data through custom `QAbstractTableModel` subclasses. Each model materializes rows into a `_display_data` vector and sorts that vector in place when the user clicks a column header.
+
+Sorting is implemented via `sort()` overrides backed by the shared helper [`InspectorTableSort.hpp`](../../../../src/WhiskerToolbox/DataInspector_Widget/utils/InspectorTableSort.hpp).
+
+## Default sort
+
+On load and after data refresh or group filtering, models apply the current sort state. The default is ascending order on the primary time column:
+
+| Inspector | Default column |
+|-----------|----------------|
+| Mask, Line, Point | Frame |
+| Digital Event Series | Frame |
+| Digital Interval Series | Start |
+
+## Sortable columns
+
+### Mask (`MaskTableModel`)
+
+| Column | Sort key |
+|--------|----------|
+| Frame | `int64_t` frame index |
+| Mask Index | per-frame mask index |
+| Total Points | mask point count |
+| Group | group name (`QString`) |
+
+### Line (`LineTableModel`)
+
+| Column | Sort key |
+|--------|----------|
+| Frame | `int64_t` frame index |
+| Line Index | per-frame line index |
+| Length (points) | line point count |
+| Group | group name |
+
+### Point (`PointTableModel`)
+
+| Column | Sort key |
+|--------|----------|
+| Frame | `int64_t` frame index |
+| Point Index | per-frame point index |
+| X | point X coordinate |
+| Y | point Y coordinate |
+| Group | group name |
+
+### Digital Event Series (`EventTableModel`)
+
+| Column | Sort key |
+|--------|----------|
+| Frame | `TimeFrameIndex` value |
+| Group | group name |
+
+### Digital Interval Series (`IntervalTableModel`)
+
+| Column | Sort key |
+|--------|----------|
+| Start | interval start index |
+| End | interval end index |
+| Duration | inclusive `end - start + 1` |
+| Group | group name |
+
+## Implementation notes
+
+- Sorting reorders `_display_data` only; underlying `MaskData`, `LineData`, etc. storage order is unchanged.
+- `getRowData()`, selection, and context menus use model row indices and therefore reflect the sorted view.
+- Table views call `configureDefaultInspectorTableSort()` so the header sort indicator stays Frame/Start ascending across model resets (Qt otherwise re-sorts on `endResetModel()` using the header indicator).
+- Header clicks invoke `model->sort()`.
+- Sort uses `std::stable_sort` to preserve relative order among equal keys.
+
+## Out of scope
+
+Tensor Inspector uses a lazy virtual table model and is not covered by this sorting implementation.

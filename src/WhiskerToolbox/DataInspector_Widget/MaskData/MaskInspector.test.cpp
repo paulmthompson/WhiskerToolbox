@@ -222,7 +222,7 @@ TEST_CASE("MaskInspector saves data from DataManager", "[MaskInspector][save]") 
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create MaskData with image size and masks
         auto mask_data = std::make_shared<MaskData>();
@@ -331,7 +331,7 @@ TEST_CASE("MaskInspector image size display updates", "[MaskInspector]") {
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create MaskData with image size
         auto mask_data = std::make_shared<MaskData>();
@@ -380,7 +380,7 @@ TEST_CASE("MaskInspector image size display updates", "[MaskInspector]") {
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create MaskData without image size
         auto mask_data = std::make_shared<MaskData>();
@@ -549,7 +549,7 @@ TEST_CASE("MaskTableView displays mask data", "[MaskTableView]") {
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create MaskData with some masks
         auto mask_data = std::make_shared<MaskData>();
@@ -608,7 +608,7 @@ TEST_CASE("MaskTableView updates automatically when masks are added", "[MaskTabl
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create MaskData with initial masks
         auto mask_data = std::make_shared<MaskData>();
@@ -675,7 +675,7 @@ TEST_CASE("MaskTableView updates automatically when masks are added", "[MaskTabl
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create MaskData
         auto mask_data = std::make_shared<MaskData>();
@@ -736,7 +736,7 @@ TEST_CASE("MaskTableView group filtering", "[MaskTableView][Groups]") {
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create MaskData with masks
         auto mask_data = std::make_shared<MaskData>();
@@ -850,7 +850,7 @@ TEST_CASE("MaskInspector and MaskTableView move and copy operations", "[MaskInsp
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create source MaskData with masks
         auto source_mask_data = std::make_shared<MaskData>();
@@ -952,7 +952,7 @@ TEST_CASE("MaskInspector and MaskTableView move and copy operations", "[MaskInsp
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create source MaskData with masks
         auto source_mask_data = std::make_shared<MaskData>();
@@ -1056,7 +1056,7 @@ TEST_CASE("MaskInspector and MaskTableView group management context menu", "[Mas
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create MaskData with masks
         auto mask_data = std::make_shared<MaskData>();
@@ -1174,7 +1174,7 @@ TEST_CASE("MaskInspector and MaskTableView group management context menu", "[Mas
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create MaskData with masks
         auto mask_data = std::make_shared<MaskData>();
@@ -1279,7 +1279,7 @@ TEST_CASE("MaskInspector and MaskTableView group management context menu", "[Mas
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create MaskData with masks
         auto mask_data = std::make_shared<MaskData>();

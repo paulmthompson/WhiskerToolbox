@@ -123,7 +123,7 @@ TEST_CASE("PointInspector saves data from DataManager", "[PointInspector][save]"
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         auto point_data = std::make_shared<PointData>();
         point_data->setIdentityContext("test_points", data_manager->getEntityRegistry());
@@ -315,7 +315,7 @@ TEST_CASE("PointTableView displays point data", "[PointTableView]") {
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create PointData with some points
         auto point_data = std::make_shared<PointData>();
@@ -369,7 +369,7 @@ TEST_CASE("PointTableView group filtering", "[PointTableView][Groups]") {
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create PointData with points
         auto point_data = std::make_shared<PointData>();
@@ -469,7 +469,7 @@ TEST_CASE("PointInspector and PointTableView integration with groups", "[PointIn
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create PointData with points
         auto point_data = std::make_shared<PointData>();
@@ -569,7 +569,7 @@ TEST_CASE("PointInspector and PointTableView integration with groups", "[PointIn
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create PointData with points
         auto point_data = std::make_shared<PointData>();
@@ -625,7 +625,7 @@ TEST_CASE("PointInspector and PointTableView integration with groups", "[PointIn
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create PointData with points
         auto point_data = std::make_shared<PointData>();
@@ -743,7 +743,7 @@ TEST_CASE("PointInspector and PointTableView integration with groups", "[PointIn
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create PointData with points
         auto point_data = std::make_shared<PointData>();
@@ -845,7 +845,7 @@ TEST_CASE("PointInspector and PointTableView move and copy operations", "[PointI
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create source PointData with points
         auto source_point_data = std::make_shared<PointData>();
@@ -944,7 +944,7 @@ TEST_CASE("PointInspector and PointTableView move and copy operations", "[PointI
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create source PointData with points
         auto source_point_data = std::make_shared<PointData>();
@@ -1043,7 +1043,7 @@ TEST_CASE("PointInspector and PointTableView group management context menu", "[P
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create PointData with points
         auto point_data = std::make_shared<PointData>();
@@ -1152,7 +1152,7 @@ TEST_CASE("PointInspector and PointTableView group management context menu", "[P
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create PointData with points
         auto point_data = std::make_shared<PointData>();
@@ -1248,7 +1248,7 @@ TEST_CASE("PointInspector and PointTableView group management context menu", "[P
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create PointData with points
         auto point_data = std::make_shared<PointData>();
@@ -1336,7 +1336,7 @@ TEST_CASE("PointInspector and PointTableView delete points", "[PointInspector][P
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create PointData with points
         auto point_data = std::make_shared<PointData>();
@@ -1435,7 +1435,7 @@ TEST_CASE("PointInspector and PointTableView delete points", "[PointInspector][P
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create PointData with points
         auto point_data = std::make_shared<PointData>();
