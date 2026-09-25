@@ -215,7 +215,7 @@ TEST_CASE("MediaPropertiesWidget raises MediaMask_Widget when mask feature selec
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
         data_manager->removeTime(TimeKey("time"));
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
     }
 
     // Add a MaskData under key "test_mask"
@@ -434,7 +434,7 @@ TEST_CASE("MediaPropertiesWidget brush drag creates mask pixels (non-default mas
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
         data_manager->removeTime(TimeKey("time"));
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
     }
 
     // Use a non-default mask image size (e.g., 320x240)

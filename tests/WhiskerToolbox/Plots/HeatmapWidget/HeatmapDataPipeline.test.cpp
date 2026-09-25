@@ -93,8 +93,7 @@ struct SingleUnitFixture {
         dm = std::make_shared<DataManager>();
 
         auto tf = createTimeFrame(10000);
-        dm->removeTime(TimeKey("time"));
-        dm->setTime(TimeKey("time"), tf);
+        dm->setTime(TimeKey("time"), tf, true);
 
         // Spike data: several events around t=500
         auto spikes = createEventSeries({500, 510, 520, 530, 540});
@@ -130,8 +129,7 @@ struct MultiTrialFixture {
         dm = std::make_shared<DataManager>();
 
         auto tf = createTimeFrame(10000);
-        dm->removeTime(TimeKey("time"));
-        dm->setTime(TimeKey("time"), tf);
+        dm->setTime(TimeKey("time"), tf, true);
 
         // Spike data: events around t=500 and t=2000
         auto spikes = createEventSeries({500, 510, 520, 2000, 2010, 2020});
@@ -499,8 +497,7 @@ TEST_CASE("runHeatmapPipeline single unit no spikes in window",
     // Spikes exist but none fall within the alignment window
     auto dm = std::make_shared<DataManager>();
     auto tf = createTimeFrame(10000);
-    dm->removeTime(TimeKey("time"));
-    dm->setTime(TimeKey("time"), tf);
+    dm->setTime(TimeKey("time"), tf, true);
 
     // Spikes far from alignment
     auto spikes = createEventSeries({100, 110, 120});
@@ -560,8 +557,7 @@ struct SortingFixture {
         dm = std::make_shared<DataManager>();
 
         auto tf = createTimeFrame(10000);
-        dm->removeTime(TimeKey("time"));
-        dm->setTime(TimeKey("time"), tf);
+        dm->setTime(TimeKey("time"), tf, true);
 
         // Alignment at t=500
         auto alignment = createEventSeries({500});

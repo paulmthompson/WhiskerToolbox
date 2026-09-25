@@ -196,9 +196,8 @@ setupDataManagerWithEvents(std::shared_ptr<DataManager> const & dm)
         }                                                                                          \
         /* Widget is destroyed — observer must have been removed. */                               \
         /* Adding more data must NOT crash (no dangling callback). */                              \
-        dm->removeTime(TimeKey("time"));                                                           \
         auto tf2 = PlotWidgetTestHelpers::createTestTimeFrame();                                   \
-        dm->setTime(TimeKey("time"), tf2);                                                         \
+        dm->setTime(TimeKey("time"), tf2, true);                                                         \
         auto es = PlotWidgetTestHelpers::createTestEventSeries();                                  \
         es->setTimeFrame(tf2);                                                                     \
         dm->setData<DigitalEventSeries>("after_destroy", es, TimeKey("time"));                     \

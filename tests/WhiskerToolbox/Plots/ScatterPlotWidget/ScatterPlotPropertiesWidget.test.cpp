@@ -48,7 +48,7 @@ std::shared_ptr<TimeFrame> createTestTimeFrame() {
 std::shared_ptr<DataManager> createDataManager() {
     auto dm = std::make_shared<DataManager>();
     auto tf = createTestTimeFrame();
-    dm->setTime(TimeKey("time"), tf);
+    dm->setTime(TimeKey("time"), tf, true);
     return dm;
 }
 

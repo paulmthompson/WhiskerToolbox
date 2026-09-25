@@ -167,7 +167,7 @@ TEST_CASE("AnalogTimeSeriesInspector data display", "[AnalogTimeSeriesInspector]
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         std::vector<float> values = {1.5f, 2.3f, 3.7f, 4.1f, 5.9f};
         std::vector<TimeFrameIndex> times = {
@@ -201,7 +201,7 @@ TEST_CASE("AnalogTimeSeriesInspector saves data from DataManager", "[AnalogTimeS
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         std::vector<float> values = {1.5f, 2.3f, 3.7f, 4.1f, 5.9f};
         std::vector<TimeFrameIndex> times = {
@@ -283,7 +283,7 @@ TEST_CASE("AnalogTimeSeriesInspector callbacks", "[AnalogTimeSeriesInspector]")
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         auto analog_series = std::make_shared<AnalogTimeSeries>(std::vector<float>{1.0f}, std::vector<TimeFrameIndex>{TimeFrameIndex(0)});
         data_manager->setData<AnalogTimeSeries>("test_analog", analog_series, TimeKey("time"));
@@ -305,7 +305,7 @@ TEST_CASE("AnalogTimeSeriesInspector callbacks", "[AnalogTimeSeriesInspector]")
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         auto analog_series = std::make_shared<AnalogTimeSeries>(std::vector<float>{1.0f}, std::vector<TimeFrameIndex>{TimeFrameIndex(0)});
         data_manager->setData<AnalogTimeSeries>("test_analog", analog_series, TimeKey("time"));

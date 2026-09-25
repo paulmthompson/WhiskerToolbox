@@ -66,7 +66,7 @@ TEST_CASE("Media_Widget construction and basic setup", "[Media_Widget]") {
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Add a MaskData
         auto mask = std::make_shared<MaskData>();

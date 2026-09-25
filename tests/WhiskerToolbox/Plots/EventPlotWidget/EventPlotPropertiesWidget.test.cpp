@@ -94,9 +94,8 @@ TEST_CASE("EventPlotPropertiesWidget combo box population", "[EventPlotPropertie
         auto state = std::make_shared<EventPlotState>();
         
         // Create and set TimeFrame (remove existing if present)
-        data_manager->removeTime(TimeKey("time"));
         auto time_frame = createTestTimeFrame();
-        data_manager->setTime(TimeKey("time"), time_frame);
+        data_manager->setTime(TimeKey("time"), time_frame, true);
         
         // Add some event series
         auto event_series_1 = createTestEventSeries("events_1");
@@ -128,9 +127,8 @@ TEST_CASE("EventPlotPropertiesWidget combo box population", "[EventPlotPropertie
         auto state = std::make_shared<EventPlotState>();
         
         // Create and set TimeFrame (remove existing if present)
-        data_manager->removeTime(TimeKey("time"));
         auto time_frame = createTestTimeFrame();
-        data_manager->setTime(TimeKey("time"), time_frame);
+        data_manager->setTime(TimeKey("time"), time_frame, true);
         
         // Add some interval series
         auto interval_series_1 = createTestIntervalSeries("intervals_1");
@@ -169,9 +167,8 @@ TEST_CASE("EventPlotPropertiesWidget combo box population", "[EventPlotPropertie
         auto state = std::make_shared<EventPlotState>();
         
         // Create and set TimeFrame (remove existing if present)
-        data_manager->removeTime(TimeKey("time"));
         auto time_frame = createTestTimeFrame();
-        data_manager->setTime(TimeKey("time"), time_frame);
+        data_manager->setTime(TimeKey("time"), time_frame, true);
         
         // Add both types
         auto event_series = createTestEventSeries("events_1");
@@ -227,9 +224,8 @@ TEST_CASE("EventPlotPropertiesWidget observer callback", "[EventPlotPropertiesWi
         REQUIRE(combo->count() == 0);  // Empty when no data available
         
         // Create and set TimeFrame (remove existing if present)
-        data_manager->removeTime(TimeKey("time"));
         auto time_frame = createTestTimeFrame();
-        data_manager->setTime(TimeKey("time"), time_frame);
+        data_manager->setTime(TimeKey("time"), time_frame, true);
         
         // Add an event series
         auto event_series = createTestEventSeries("new_events");
@@ -262,9 +258,8 @@ TEST_CASE("EventPlotPropertiesWidget observer callback", "[EventPlotPropertiesWi
         REQUIRE(combo != nullptr);
         
         // Create and set TimeFrame (remove existing if present)
-        data_manager->removeTime(TimeKey("time"));
         auto time_frame = createTestTimeFrame();
-        data_manager->setTime(TimeKey("time"), time_frame);
+        data_manager->setTime(TimeKey("time"), time_frame, true);
         
         // Add multiple event series (add_event_combo only shows events, not intervals)
         auto event_series_1 = createTestEventSeries("events_1");
@@ -306,9 +301,8 @@ TEST_CASE("EventPlotPropertiesWidget cleanup", "[EventPlotPropertiesWidget]")
         
         {
             // Create and set TimeFrame (remove existing if present)
-            data_manager->removeTime(TimeKey("time"));
             auto time_frame = createTestTimeFrame();
-            data_manager->setTime(TimeKey("time"), time_frame);
+            data_manager->setTime(TimeKey("time"), time_frame, true);
             
             EventPlotPropertiesWidget widget(state, data_manager);
             
@@ -321,9 +315,8 @@ TEST_CASE("EventPlotPropertiesWidget cleanup", "[EventPlotPropertiesWidget]")
         
         // Widget is destroyed, observer should be removed
         // Add more data - should not crash (observer was properly removed)
-        data_manager->removeTime(TimeKey("time"));
         auto time_frame = createTestTimeFrame();
-        data_manager->setTime(TimeKey("time"), time_frame);
+        data_manager->setTime(TimeKey("time"), time_frame, true);
         auto event_series_2 = createTestEventSeries("test_events_2");
         event_series_2->setTimeFrame(time_frame);
         data_manager->setData<DigitalEventSeries>("test_events_2", event_series_2, TimeKey("time"));

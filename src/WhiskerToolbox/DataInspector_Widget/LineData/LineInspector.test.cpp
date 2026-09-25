@@ -1101,7 +1101,7 @@ TEST_CASE("LineInspector and LineTableView move and copy operations", "[LineInsp
         std::vector<int> t(kNumTimes);
         std::iota(t.begin(), t.end(), 0);
         auto tf = std::make_shared<TimeFrame>(t);
-        data_manager->setTime(TimeKey("time"), tf);
+        data_manager->setTime(TimeKey("time"), tf, true);
 
         // Create source LineData with lines
         auto source_line_data = std::make_shared<LineData>();

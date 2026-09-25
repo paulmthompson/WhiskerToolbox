@@ -99,9 +99,8 @@ TEST_CASE("HeatmapPropertiesWidget combo box population", "[HeatmapPropertiesWid
         auto state = std::make_shared<HeatmapState>();
         
         // Create and set TimeFrame (remove existing if present)
-        data_manager->removeTime(TimeKey("time"));
         auto time_frame = createTestTimeFrame();
-        data_manager->setTime(TimeKey("time"), time_frame);
+        data_manager->setTime(TimeKey("time"), time_frame, true);
         
         // Add some event series
         auto event_series_1 = createTestEventSeries("events_1");
@@ -144,9 +143,8 @@ TEST_CASE("HeatmapPropertiesWidget combo box population", "[HeatmapPropertiesWid
         auto state = std::make_shared<HeatmapState>();
         
         // Create and set TimeFrame (remove existing if present)
-        data_manager->removeTime(TimeKey("time"));
         auto time_frame = createTestTimeFrame();
-        data_manager->setTime(TimeKey("time"), time_frame);
+        data_manager->setTime(TimeKey("time"), time_frame, true);
         
         // Add some interval series
         auto interval_series_1 = createTestIntervalSeries("intervals_1");
@@ -189,9 +187,8 @@ TEST_CASE("HeatmapPropertiesWidget combo box population", "[HeatmapPropertiesWid
         auto state = std::make_shared<HeatmapState>();
         
         // Create and set TimeFrame (remove existing if present)
-        data_manager->removeTime(TimeKey("time"));
         auto time_frame = createTestTimeFrame();
-        data_manager->setTime(TimeKey("time"), time_frame);
+        data_manager->setTime(TimeKey("time"), time_frame, true);
         
         // Add both types
         auto event_series = createTestEventSeries("events_1");
@@ -255,9 +252,8 @@ TEST_CASE("HeatmapPropertiesWidget observer callback", "[HeatmapPropertiesWidget
         REQUIRE(combo->count() == 1);  // Only "(None)" when no data available
         
         // Create and set TimeFrame (remove existing if present)
-        data_manager->removeTime(TimeKey("time"));
         auto time_frame = createTestTimeFrame();
-        data_manager->setTime(TimeKey("time"), time_frame);
+        data_manager->setTime(TimeKey("time"), time_frame, true);
         
         // Add an event series
         auto event_series = createTestEventSeries("new_events");
@@ -294,9 +290,8 @@ TEST_CASE("HeatmapPropertiesWidget observer callback", "[HeatmapPropertiesWidget
         REQUIRE(combo != nullptr);
         
         // Create and set TimeFrame (remove existing if present)
-        data_manager->removeTime(TimeKey("time"));
         auto time_frame = createTestTimeFrame();
-        data_manager->setTime(TimeKey("time"), time_frame);
+        data_manager->setTime(TimeKey("time"), time_frame, true);
         
         // Add multiple event series
         auto event_series_1 = createTestEventSeries("events_1");
@@ -340,9 +335,8 @@ TEST_CASE("HeatmapPropertiesWidget observer callback", "[HeatmapPropertiesWidget
         REQUIRE(combo->count() == 1);
         
         // Create and set TimeFrame (remove existing if present)
-        data_manager->removeTime(TimeKey("time"));
         auto time_frame = createTestTimeFrame();
-        data_manager->setTime(TimeKey("time"), time_frame);
+        data_manager->setTime(TimeKey("time"), time_frame, true);
         
         // Add an interval series
         auto interval_series = createTestIntervalSeries("new_intervals");
@@ -370,9 +364,8 @@ TEST_CASE("HeatmapPropertiesWidget observer callback", "[HeatmapPropertiesWidget
         auto state = std::make_shared<HeatmapState>();
         
         // Create and set TimeFrame (remove existing if present)
-        data_manager->removeTime(TimeKey("time"));
         auto time_frame = createTestTimeFrame();
-        data_manager->setTime(TimeKey("time"), time_frame);
+        data_manager->setTime(TimeKey("time"), time_frame, true);
         
         // Add some event series
         auto event_series_1 = createTestEventSeries("events_1");
@@ -436,9 +429,8 @@ TEST_CASE("HeatmapPropertiesWidget cleanup", "[HeatmapPropertiesWidget]")
         
         {
             // Create and set TimeFrame (remove existing if present)
-            data_manager->removeTime(TimeKey("time"));
             auto time_frame = createTestTimeFrame();
-            data_manager->setTime(TimeKey("time"), time_frame);
+            data_manager->setTime(TimeKey("time"), time_frame, true);
             
             HeatmapPropertiesWidget widget(state, data_manager);
             
@@ -451,9 +443,8 @@ TEST_CASE("HeatmapPropertiesWidget cleanup", "[HeatmapPropertiesWidget]")
         
         // Widget is destroyed, observer should be removed
         // Add more data - should not crash (observer was properly removed)
-        data_manager->removeTime(TimeKey("time"));
         auto time_frame = createTestTimeFrame();
-        data_manager->setTime(TimeKey("time"), time_frame);
+        data_manager->setTime(TimeKey("time"), time_frame, true);
         auto event_series_2 = createTestEventSeries("test_events_2");
         event_series_2->setTimeFrame(time_frame);
         data_manager->setData<DigitalEventSeries>("test_events_2", event_series_2, TimeKey("time"));

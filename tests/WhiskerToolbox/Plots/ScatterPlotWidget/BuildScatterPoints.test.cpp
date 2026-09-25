@@ -55,7 +55,7 @@ std::shared_ptr<DataManager> makeDataManager()
 {
     auto dm = std::make_shared<DataManager>();
     auto tf = makeTimeFrame(1000);
-    dm->setTime(TimeKey("time"), tf);
+    dm->setTime(TimeKey("time"), tf, true);
     return dm;
 }
 

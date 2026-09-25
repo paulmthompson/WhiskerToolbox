@@ -166,7 +166,7 @@ private:
         auto time_key = TimeKey("time");
 
         m_data_manager->removeTime(TimeKey("time"));
-        m_data_manager->setTime(TimeKey("time"), new_timeframe);
+        m_data_manager->setTime(TimeKey("time"), new_timeframe, true);
         m_data_manager->setTime(TimeKey("master"), new_timeframe, true);
 
 
@@ -521,7 +521,7 @@ protected:
         m_time_key = TimeKey("time");
 
         m_data_manager->removeTime(TimeKey("time"));
-        m_data_manager->setTime(TimeKey("time"), new_timeframe);
+        m_data_manager->setTime(TimeKey("time"), new_timeframe, true);
         m_data_manager->setTime(TimeKey("master"), new_timeframe, true);
 
         // Populate with 5 analog time series
@@ -866,7 +866,7 @@ protected:
         auto new_timeframe = std::make_shared<TimeFrame>(t);
         m_time_key = TimeKey("time");
         m_data_manager->removeTime(TimeKey("time"));
-        m_data_manager->setTime(TimeKey("time"), new_timeframe);
+        m_data_manager->setTime(TimeKey("time"), new_timeframe, true);
         m_data_manager->setTime(TimeKey("master"), new_timeframe, true);
 
         populateDualVoltageGroups(4);
@@ -1334,7 +1334,7 @@ protected:
         auto new_timeframe = std::make_shared<TimeFrame>(t);
         m_time_key = TimeKey("time");
         m_data_manager->removeTime(TimeKey("time"));
-        m_data_manager->setTime(TimeKey("time"), new_timeframe);
+        m_data_manager->setTime(TimeKey("time"), new_timeframe, true);
         m_data_manager->setTime(TimeKey("master"), new_timeframe, true);
 
         // Populate with 5 digital event series
@@ -1452,7 +1452,7 @@ protected:
         auto tf = std::make_shared<TimeFrame>(t);
         m_time_key = TimeKey("time");
         m_data_manager->removeTime(TimeKey("time"));
-        m_data_manager->setTime(TimeKey("time"), tf);
+        m_data_manager->setTime(TimeKey("time"), tf, true);
         m_data_manager->setTime(TimeKey("master"), tf, true);
 
         // 3 analog series

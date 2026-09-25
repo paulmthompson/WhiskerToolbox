@@ -79,9 +79,8 @@ TEST_CASE("ACFPropertiesWidget combo box population", "[ACFPropertiesWidget]")
         auto state = std::make_shared<ACFState>();
         
         // Create and set TimeFrame (remove existing if present)
-        data_manager->removeTime(TimeKey("time"));
         auto time_frame = createTestTimeFrame();
-        data_manager->setTime(TimeKey("time"), time_frame);
+        data_manager->setTime(TimeKey("time"), time_frame, true);
         
         // Add some event series
         auto event_series_1 = createTestEventSeries("events_1");
@@ -130,9 +129,8 @@ TEST_CASE("ACFPropertiesWidget observer callback", "[ACFPropertiesWidget]")
         REQUIRE(combo->count() == 0);  // Empty when no data available
         
         // Create and set TimeFrame (remove existing if present)
-        data_manager->removeTime(TimeKey("time"));
         auto time_frame = createTestTimeFrame();
-        data_manager->setTime(TimeKey("time"), time_frame);
+        data_manager->setTime(TimeKey("time"), time_frame, true);
         
         // Add an event series
         auto event_series = createTestEventSeries("new_events");
@@ -165,9 +163,8 @@ TEST_CASE("ACFPropertiesWidget observer callback", "[ACFPropertiesWidget]")
         REQUIRE(combo != nullptr);
         
         // Create and set TimeFrame (remove existing if present)
-        data_manager->removeTime(TimeKey("time"));
         auto time_frame = createTestTimeFrame();
-        data_manager->setTime(TimeKey("time"), time_frame);
+        data_manager->setTime(TimeKey("time"), time_frame, true);
         
         // Add multiple event series
         auto event_series_1 = createTestEventSeries("events_1");
@@ -199,9 +196,8 @@ TEST_CASE("ACFPropertiesWidget observer callback", "[ACFPropertiesWidget]")
         auto state = std::make_shared<ACFState>();
         
         // Create and set TimeFrame (remove existing if present)
-        data_manager->removeTime(TimeKey("time"));
         auto time_frame = createTestTimeFrame();
-        data_manager->setTime(TimeKey("time"), time_frame);
+        data_manager->setTime(TimeKey("time"), time_frame, true);
         
         // Add some event series
         auto event_series_1 = createTestEventSeries("events_1");
@@ -236,9 +232,8 @@ TEST_CASE("ACFPropertiesWidget observer callback", "[ACFPropertiesWidget]")
         auto state = std::make_shared<ACFState>();
         
         // Create and set TimeFrame (remove existing if present)
-        data_manager->removeTime(TimeKey("time"));
         auto time_frame = createTestTimeFrame();
-        data_manager->setTime(TimeKey("time"), time_frame);
+        data_manager->setTime(TimeKey("time"), time_frame, true);
         
         // Add an event series
         auto event_series_1 = createTestEventSeries("events_1");
@@ -287,9 +282,8 @@ TEST_CASE("ACFPropertiesWidget cleanup", "[ACFPropertiesWidget]")
         
         {
             // Create and set TimeFrame (remove existing if present)
-            data_manager->removeTime(TimeKey("time"));
             auto time_frame = createTestTimeFrame();
-            data_manager->setTime(TimeKey("time"), time_frame);
+            data_manager->setTime(TimeKey("time"), time_frame, true);
             
             ACFPropertiesWidget widget(state, data_manager);
             
@@ -302,9 +296,8 @@ TEST_CASE("ACFPropertiesWidget cleanup", "[ACFPropertiesWidget]")
         
         // Widget is destroyed, observer should be removed
         // Add more data - should not crash (observer was properly removed)
-        data_manager->removeTime(TimeKey("time"));
         auto time_frame = createTestTimeFrame();
-        data_manager->setTime(TimeKey("time"), time_frame);
+        data_manager->setTime(TimeKey("time"), time_frame, true);
         auto event_series_2 = createTestEventSeries("test_events_2");
         event_series_2->setTimeFrame(time_frame);
         data_manager->setData<DigitalEventSeries>("test_events_2", event_series_2, TimeKey("time"));
