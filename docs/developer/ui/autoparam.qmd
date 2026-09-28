@@ -63,6 +63,11 @@ The `AutoParamWidget` is a generic Qt widget that takes a `ParameterSchema` and 
 - `rfl::TaggedUnion` → discriminator `QComboBox` + `QStackedWidget` sub-form per alternative
 - `std::optional<T>` → checkbox-gated widget
 
+Fields with `ParameterFieldDescriptor::is_hidden == true` (set at runtime on the
+schema, e.g. by `applyDynamicInputSlotSchemaConstraints`) are not added to the
+form layout but still have backing widgets so `toJson()` / `fromJson()` match
+reflect-cpp structs.
+
 ## Enum Class Fields
 
 `enum class` fields (including `std::optional<enum class>`) require no

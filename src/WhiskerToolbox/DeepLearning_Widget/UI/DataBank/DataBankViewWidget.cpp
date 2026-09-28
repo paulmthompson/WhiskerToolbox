@@ -10,8 +10,8 @@
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 
-#include "DeepLearning/storage/DataBank.hpp"
 #include "DeepLearning/bindings/DeepLearningBindingData.hpp"
+#include "DeepLearning/storage/DataBank.hpp"
 
 #include <QGroupBox>
 #include <QLabel>
@@ -124,9 +124,11 @@ void DataBankViewWidget::refresh() {
 
         int captured_frame = -1;
         std::string data_key;
+        std::string encoder_factory_name;
         if (auto const bank_entry = bank.get(key)) {
             captured_frame = bank_entry->metadata.captured_frame;
             data_key = bank_entry->metadata.data_key;
+            encoder_factory_name = bank_entry->metadata.encoder_factory_name;
         }
 
         if (data_key.empty() && _state) {
@@ -155,6 +157,22 @@ void DataBankViewWidget::refresh() {
                     tr("Captured at frame: %1").arg(captured_frame),
                     group));
         }
+
+        if (!encoder_factory_name.empty()) {
+            layout->addWidget(new QLabel(
+                    tr("Encoder: %1 (factory defaults at capture)")
+                            .arg(QString::fromStdString(encoder_factory_name)),
+                    group));
+        }
+
+        auto * encoding_note = new QLabel(
+                tr("Per-field encoder options (e.g. Normalize on encoder_image) "
+                   "are not stored in the DataBank; capture uses the slot dtype "
+                   "and default encoder parameters."),
+                group);
+        encoding_note->setWordWrap(true);
+        encoding_note->setStyleSheet(QStringLiteral("color: gray; font-size: 10px;"));
+        layout->addWidget(encoding_note);
 
         auto * status_label = new QLabel(
                 tr("\u2713 Cached and ready for inference"), group);

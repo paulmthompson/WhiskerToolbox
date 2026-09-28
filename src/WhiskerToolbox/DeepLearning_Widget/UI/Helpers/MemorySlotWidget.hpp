@@ -100,10 +100,10 @@ private:
     void _removeLastEntry();
     void _refreshDataKeyCombos();
     void _refreshOutputSlotCombos();
-    void _onEntryKindChanged(EntryRow & row);
+    static void _onEntryKindChanged(EntryRow & row);
 
     [[nodiscard]] MemoryFrameBinding _bindingFromRow(EntryRow const & row) const;
-    void _setRowFromBinding(EntryRow & row, MemoryFrameBinding const & binding);
+    static void _setRowFromBinding(EntryRow & row, MemoryFrameBinding const & binding);
 
     std::string _slot_name;
     std::string _recommended_encoder;

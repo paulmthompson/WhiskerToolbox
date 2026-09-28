@@ -33,7 +33,7 @@ namespace {
 constexpr int kStaticKindIndex = 0;
 constexpr int kRecurrentKindIndex = 1;
 
-} // namespace
+}// namespace
 
 MemorySlotWidget::MemorySlotWidget(
         dl::TensorSlotDescriptor const & slot,
@@ -65,10 +65,23 @@ MemorySlotWidget::MemorySlotWidget(
         group->setToolTip(QString::fromStdString(slot.description));
     }
 
-    auto * info = new QLabel(
+    QString info_text =
             tr("Static: re-encode from DataManager or reuse a DataBank entry.\n"
-               "Recurrent: feed back a model output from the previous frame."),
-            group);
+               "Recurrent: feed back a model output from the previous frame.");
+    if (slot.recommended_encoder == "ImageEncoder") {
+        info_text += QLatin1Char('\n');
+        if (slot.dtype == dl::TensorDType::Byte) {
+            info_text += tr(
+                    "Image memory is encoded with factory ImageEncoder settings "
+                    "into uint8 tensors (including DataBank capture). This does "
+                    "not use the encoder_image binding or its Normalize control.");
+        } else {
+            info_text += tr(
+                    "Image memory uses factory ImageEncoder defaults, not the "
+                    "encoder_image binding.");
+        }
+    }
+    auto * info = new QLabel(info_text, group);
     info->setWordWrap(true);
     info->setStyleSheet(QStringLiteral("color: gray; font-size: 10px;"));
     group_layout->addWidget(info);
@@ -78,7 +91,11 @@ MemorySlotWidget::MemorySlotWidget(
         if (i > 0) shape_str += QStringLiteral(" \u00D7 ");
         shape_str += QString::number(slot.shape[i]);
     }
-    group_layout->addWidget(new QLabel(tr("Shape: %1").arg(shape_str), group));
+    auto const dtype_label =
+            QString::fromStdString(dl::tensorDTypeDisplayName(slot.dtype));
+    group_layout->addWidget(new QLabel(
+            tr("Shape: %1  |  Dtype: %2").arg(shape_str, dtype_label),
+            group));
 
     if (slot.hasSequenceDim()) {
         group_layout->addWidget(new QLabel(
@@ -327,4 +344,4 @@ void MemorySlotWidget::_refreshOutputSlotCombos() {
     }
 }
 
-} // namespace dl::widget
+}// namespace dl::widget

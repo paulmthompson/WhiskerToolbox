@@ -52,13 +52,30 @@ DynamicInputSlotWidget::DynamicInputSlotWidget(
         if (i > 0) shape_str += QStringLiteral(" \u00D7 ");
         shape_str += QString::number(slot.shape[i]);
     }
-    auto * shape_label = new QLabel(tr("Shape: %1").arg(shape_str), group);
+    auto const dtype_label =
+            QString::fromStdString(dl::tensorDTypeDisplayName(slot.dtype));
+    auto * shape_label = new QLabel(
+            tr("Shape: %1  |  Dtype: %2").arg(shape_str, dtype_label),
+            group);
     group_layout->addWidget(shape_label);
+
+    if (slot.dtype == dl::TensorDType::Byte &&
+        slot.recommended_encoder == "ImageEncoder") {
+        auto * dtype_info = new QLabel(
+                tr("This slot expects uint8 image tensors. The model applies "
+                   "pixel scaling internally; the ImageEncoder Normalize "
+                   "option is not used for uint8 outputs."),
+                group);
+        dtype_info->setWordWrap(true);
+        dtype_info->setStyleSheet(QStringLiteral("color: gray; font-size: 10px;"));
+        group_layout->addWidget(dtype_info);
+    }
 
     _auto_param = new AutoParamWidget(group);
     group_layout->addWidget(_auto_param);
 
     auto schema = extractParameterSchema<DynamicInputBindingForm>();
+    dl::applyDynamicInputSlotSchemaConstraints(schema, slot);
     _auto_param->setSchema(schema);
 
     if (!_recommended_encoder.empty()) {
@@ -91,8 +108,8 @@ SlotBindingData DynamicInputSlotWidget::binding() const {
 }
 
 void DynamicInputSlotWidget::setBinding(SlotBindingData const & binding) {
-    _setForm(fromSlotBindingData(binding));
     _refreshSourceCombo();
+    _setForm(fromSlotBindingData(binding));
 }
 
 void DynamicInputSlotWidget::refreshDataSources() {

@@ -40,6 +40,7 @@ Describes a single field in a parameter struct at runtime:
 | `tooltip` | `std::string` | UI hint (from `ParameterUIHints`) |
 | `group` | `std::string` | Grouping label for the UI |
 | `is_advanced` | `bool` | Collapsed by default in the UI |
+| `is_hidden` | `bool` | Omit the form row in AutoParamWidget but still serialize the field (hidden widgets keep default state) |
 | `is_optional` | `bool` | True for `std::optional<T>` fields |
 | `is_bound` | `bool` | True if typically populated from a value store |
 | `dynamic_combo` | `bool` | If true, create QComboBox even with empty `allowed_values` |

@@ -103,6 +103,28 @@ enum class TensorDType : int {
 };
 
 /**
+ * @brief Human-readable label for a slot tensor dtype (UI / logs).
+ *
+ * Torch-free so Qt widgets can include this header without LibTorch.
+ */
+[[nodiscard]] inline std::string tensorDTypeDisplayName(TensorDType dtype) {
+    switch (dtype) {
+        case TensorDType::Float32:
+            return "float32";
+        case TensorDType::Float64:
+            return "float64";
+        case TensorDType::Byte:
+            return "uint8";
+        case TensorDType::Int32:
+            return "int32";
+        case TensorDType::Int64:
+            return "int64";
+        default:
+            return "float32";
+    }
+}
+
+/**
  * @brief Describes one named tensor input or output of a model.
  *
  * Each slot has a shape (excluding the leading batch dimension), a name,

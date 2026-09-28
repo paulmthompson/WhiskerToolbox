@@ -369,8 +369,8 @@ void AutoParamWidget::buildPathFieldRow(ParameterFieldDescriptor const & desc,
 
                 QString const fallback = resolveDialogFallback(dialog_id);
                 QString const filter = pick_directory
-                                             ? QString{}
-                                             : QStringLiteral("JSON Files (*.json);;All Files (*)");
+                                               ? QString{}
+                                               : QStringLiteral("JSON Files (*.json);;All Files (*)");
 
                 QString const selected = s_file_dialog_opener(
                         this,
@@ -662,10 +662,15 @@ void AutoParamWidget::buildVariantRow(ParameterFieldDescriptor const & desc,
             }
 
             if (value_widget) {
-                QString const label = QString::fromStdString(sub_desc.display_name);
-                page_layout->addRow(label, value_widget);
-                if (!sub_desc.tooltip.empty()) {
-                    value_widget->setToolTip(QString::fromStdString(sub_desc.tooltip));
+                if (!sub_desc.is_hidden) {
+                    QString const label = QString::fromStdString(sub_desc.display_name);
+                    page_layout->addRow(label, value_widget);
+                    if (!sub_desc.tooltip.empty()) {
+                        value_widget->setToolTip(QString::fromStdString(sub_desc.tooltip));
+                    }
+                } else {
+                    value_widget->setParent(page);
+                    value_widget->hide();
                 }
             }
 

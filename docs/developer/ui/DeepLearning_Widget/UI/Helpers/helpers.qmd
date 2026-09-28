@@ -71,6 +71,12 @@ struct DynamicInputBindingForm {
 with per-encoder sub-forms, and the time-offset spin box. The widget exposes
 full `SlotBindingData` via `binding()` / `setBinding()`.
 
+The panel shows **shape** and **dtype** (e.g. `uint8` vs `float32`). For image
+slots whose model descriptor uses `TensorDType::Byte`, `applyDynamicInputSlotSchemaConstraints()`
+marks ImageEncoder **Normalize** as `ParameterFieldDescriptor::is_hidden` so
+AutoParamWidget still emits it in JSON (rfl round-trip) but does not show the
+control; a short explanatory note is shown in the panel.
+
 ### Cross-field constraints
 
 When the encoder selection changes, the widget uses
@@ -194,6 +200,10 @@ widget.setBindings(state->memoryFrames());
 
 Sequence slots (`sequence_dim >= 0`) support multiple position rows with Add/Remove
 controls up to the model sequence length. Single-frame slots use one row.
+
+The group header shows **dtype** and gray help text for image memory slots:
+static/DataBank capture uses **factory** `ImageEncoder` parameters (not the
+`encoder_image` dynamic binding). For `uint8` slots this matches in-model scaling.
 
 ### Signals
 

@@ -6,12 +6,17 @@
 #include "DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.hpp"
 
 #include "DataManager/DataManager.hpp"
+#include "AutoParamWidget/AutoParamWidget.hpp"
 #include "DeepLearning/bindings/BindingParamSchemas.hpp"
 #include "Lines/Line_Data.hpp"
+#include "Media/Video_Data.hpp"
 #include "Points/Point_Data.hpp"
 #include "TimeFrame/StrongTimeTypes.hpp"
 
 #include "models_v2/TensorSlotDescriptor.hpp"
+#include "ParameterSchema/ParameterSchema.hpp"
+
+#include <rfl/json.hpp>
 
 #include <QSignalSpy>
 
@@ -153,6 +158,52 @@ TEST_CASE("binding extracts mode and sigma from Point2DEncoder",
             CHECK(enc.gaussian_sigma == 5.0f);
         }
     });
+}
+
+TEST_CASE("uint8 ImageEncoder AutoParam JSON round-trips data_key",
+          "[dl_widget][dynamic_input_widget]") {
+    dl::TensorSlotDescriptor slot;
+    slot.dtype = dl::TensorDType::Byte;
+    slot.recommended_encoder = "ImageEncoder";
+
+    AutoParamWidget auto_param;
+    auto schema = extractParameterSchema<dl::DynamicInputBindingForm>();
+    dl::applyDynamicInputSlotSchemaConstraints(schema, slot);
+    auto_param.setSchema(schema);
+    auto_param.updateAllowedValues("data_key", {"media"});
+
+    dl::DynamicInputBindingForm form;
+    form.data_key = "media";
+    form.encoder = dl::ImageEncoderParams{};
+    form.time_offset = 0;
+    auto_param.fromJson(rfl::json::write(form));
+
+    auto const parsed = rfl::json::read<dl::DynamicInputBindingForm>(auto_param.toJson());
+    REQUIRE(parsed);
+    CHECK(parsed.value().data_key == "media");
+}
+
+TEST_CASE("uint8 image slot preserves data_key through AutoParam",
+          "[dl_widget][dynamic_input_widget]") {
+    auto dm = std::make_shared<DataManager>();
+    dm->setData<VideoData>("media", TimeKey("time"));
+
+    auto slot = makeTestSlot("encoder_image", "ImageEncoder");
+    slot.dtype = dl::TensorDType::Byte;
+
+    dl::widget::DynamicInputSlotWidget widget(slot, dm);
+
+    SlotBindingData binding_in;
+    binding_in.slot_name = "encoder_image";
+    binding_in.data_key = "media";
+    binding_in.encoder = dl::ImageEncoderParams{.normalize = true};
+    binding_in.time_offset = 0;
+    widget.setBinding(binding_in);
+
+    auto binding = widget.binding();
+    INFO("Widget binding data_key after setBinding: '" << binding.data_key << "'");
+    CHECK(binding.data_key == "media");
+    CHECK(binding.slot_name == "encoder_image");
 }
 
 TEST_CASE("binding normalizes None sentinel for data_key",

@@ -11,6 +11,10 @@
 #include "ParameterSchema/ParameterSchema.hpp"
 
 #include <string>
+
+namespace dl {
+struct TensorSlotDescriptor;
+}
 #include <utility>
 #include <vector>
 
@@ -191,7 +195,17 @@ struct RecurrentFrameSourceForm {
             .active = true};
 }
 
-} // namespace dl
+/**
+ * @brief Adjust AutoParam schema for a dynamic input slot (dtype-aware encoder fields).
+ *
+ * For uint8 image slots, marks ImageEncoder @c normalize as schema-hidden (still
+ * serialized by AutoParamWidget; not shown in the UI).
+ */
+void applyDynamicInputSlotSchemaConstraints(
+        ParameterSchema & schema,
+        TensorSlotDescriptor const & slot);
+
+}// namespace dl
 
 template<>
 struct ParameterUIHints<dl::DynamicInputBindingForm> {
@@ -228,4 +242,4 @@ struct ParameterUIHints<dl::RecurrentFrameSourceForm> {
     static void annotate(ParameterSchema & schema);
 };
 
-#endif // DEEP_LEARNING_BINDING_PARAM_SCHEMAS_HPP
+#endif// DEEP_LEARNING_BINDING_PARAM_SCHEMAS_HPP

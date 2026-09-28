@@ -6,6 +6,7 @@
 #include "DeepLearning/bindings/BindingParamSchemas.hpp"
 #include "DeepLearning/bindings/EncoderDecoderBindingTypes.hpp"
 #include "DeepLearning/bindings/SlotBindingTypes.hpp"
+#include "DeepLearning/models_v2/TensorSlotDescriptor.hpp"
 
 #include "ParameterSchema/ParameterSchema.hpp"
 
@@ -111,6 +112,44 @@ TEST_CASE("EncoderVariant schema extraction",
     CHECK(f->variant_alternatives[1].tag == "Point2DEncoderParams");
     CHECK(f->variant_alternatives[2].tag == "Mask2DEncoderParams");
     CHECK(f->variant_alternatives[3].tag == "Line2DEncoderParams");
+}
+
+TEST_CASE("applyDynamicInputSlotSchemaConstraints hides normalize for uint8 images",
+          "[dl_bindings][param_schema][dynamic_input]") {
+    auto schema = extractParameterSchema<dl::DynamicInputBindingForm>();
+    REQUIRE(schema.field("encoder") != nullptr);
+
+    dl::TensorSlotDescriptor slot;
+    slot.name = "encoder_image";
+    slot.recommended_encoder = "ImageEncoder";
+    slot.dtype = dl::TensorDType::Byte;
+
+    dl::applyDynamicInputSlotSchemaConstraints(schema, slot);
+
+    auto const * encoder_field = schema.field("encoder");
+    REQUIRE(encoder_field != nullptr);
+    auto const & image_alt = encoder_field->variant_alternatives.front();
+    REQUIRE(image_alt.tag == "ImageEncoderParams");
+    REQUIRE(image_alt.schema != nullptr);
+    auto const * normalize_field = image_alt.schema->field("normalize");
+    REQUIRE(normalize_field != nullptr);
+    CHECK(normalize_field->is_hidden);
+}
+
+TEST_CASE("applyDynamicInputSlotSchemaConstraints keeps normalize for float32 images",
+          "[dl_bindings][param_schema][dynamic_input]") {
+    auto schema = extractParameterSchema<dl::DynamicInputBindingForm>();
+
+    dl::TensorSlotDescriptor slot;
+    slot.name = "encoder_image";
+    slot.recommended_encoder = "ImageEncoder";
+    slot.dtype = dl::TensorDType::Float32;
+
+    dl::applyDynamicInputSlotSchemaConstraints(schema, slot);
+
+    auto const * encoder_field = schema.field("encoder");
+    REQUIRE(encoder_field != nullptr);
+    CHECK(encoder_field->variant_alternatives.front().schema->field("normalize") != nullptr);
 }
 
 TEST_CASE("EncoderVariant JSON round-trip",
@@ -226,6 +265,7 @@ TEST_CASE("normalizeBindingDataKey strips None sentinel",
     CHECK(dl::normalizeBindingDataKey("(None)").empty());
     CHECK(dl::normalizeBindingDataKey("media/video") == "media/video");
 }
+
 
 TEST_CASE("toSlotBindingData maps form fields",
           "[dl_bindings][param_schema][form_helpers]") {

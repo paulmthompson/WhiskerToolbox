@@ -28,6 +28,9 @@ by `getEncoded()`):
 - Tensor shape and value range
 - DataManager source key (from `DataBank` metadata or static input binding)
 - Captured frame index
+- Encoder factory name used at capture (default parameters only; per-field options
+  such as ImageEncoder Normalize are not persisted in `DataBankEntryMetadata`)
+- Note that capture encoding does not follow the `encoder_image` dynamic binding
 - Ready-for-inference status indicator
 
 `DeepLearningPropertiesWidget::dataBankChanged` triggers

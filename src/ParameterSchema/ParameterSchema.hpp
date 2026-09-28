@@ -77,6 +77,9 @@ struct ParameterFieldDescriptor {
     std::string tooltip;
     std::string group;       ///< For grouping fields in the UI
     bool is_advanced = false;///< Collapsed by default in the UI
+    /// When true, AutoParamWidget omits the row but still serializes the field
+    /// (using default widget state) so rfl JSON round-trips stay valid.
+    bool is_hidden = false;
     int display_order = 0;
 
     bool is_optional = false;///< True for std::optional<T> fields

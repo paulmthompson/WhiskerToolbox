@@ -3,6 +3,39 @@
 
 #include "bindings/BindingParamSchemas.hpp"
 
+#include "models_v2/TensorSlotDescriptor.hpp"
+
+void dl::applyDynamicInputSlotSchemaConstraints(
+        ParameterSchema & schema,
+        TensorSlotDescriptor const & slot) {
+
+    if (slot.dtype != TensorDType::Byte) {
+        return;
+    }
+
+    auto * const encoder_field = schema.field("encoder");
+    if (encoder_field == nullptr || !encoder_field->is_variant) {
+        return;
+    }
+
+    for (auto & alternative: encoder_field->variant_alternatives) {
+        if (alternative.tag != "ImageEncoderParams" || !alternative.schema) {
+            continue;
+        }
+        if (auto * normalize_field = alternative.schema->field("normalize")) {
+            normalize_field->is_hidden = true;
+            normalize_field->tooltip =
+                    "Not used for uint8 image slots; scaling is performed inside "
+                    "the model.";
+        }
+    }
+
+    encoder_field->tooltip =
+            "Encoder type and configuration for this input. "
+            "This slot uses uint8 tensors; pixel scaling is performed inside "
+            "the model (Normalize is only available for float32 image slots).";
+}
+
 void ParameterUIHints<dl::DynamicInputBindingForm>::annotate(
         ParameterSchema & schema) {
     if (auto * f = schema.field("data_key")) {
