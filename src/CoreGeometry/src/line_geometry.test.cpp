@@ -1,7 +1,7 @@
 #include "CoreGeometry/line_geometry.hpp"
 
-#include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
+#include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include <cmath>
 
@@ -11,7 +11,7 @@
 
 TEST_CASE("CoreGeometry - Line2D - get_position_at_percentage - Basic functionality", "[get_position_at_percentage]") {
     SECTION("Empty line") {
-        Line2D empty_line;
+        Line2D const empty_line;
         auto result = get_position_at_percentage(empty_line, 0.5f);
         REQUIRE(result.x == 0.0f);
         REQUIRE(result.y == 0.0f);
@@ -27,8 +27,7 @@ TEST_CASE("CoreGeometry - Line2D - get_position_at_percentage - Basic functional
     SECTION("Two point line") {
         auto two_points = Line2D(std::vector<Point2D<float>>{
                 {0.0f, 0.0f},
-                {10.0f, 0.0f}
-        });
+                {10.0f, 0.0f}});
 
         // Test at 0% (start)
         auto result_start = get_position_at_percentage(two_points, 0.0f);
@@ -51,9 +50,9 @@ TEST_CASE("CoreGeometry - Line2D - get_position_at_percentage - Complex line", "
     // Create a right triangle: (0,0) -> (3,0) -> (3,4)
     // Total length = 3 + 4 = 7
     auto triangle = Line2D({
-            {0.0f, 0.0f},  // Start
-            {3.0f, 0.0f},  // Corner
-            {3.0f, 4.0f}   // End
+            {0.0f, 0.0f},// Start
+            {3.0f, 0.0f},// Corner
+            {3.0f, 4.0f} // End
     });
 
     SECTION("At 0% - should be at start") {
@@ -63,7 +62,7 @@ TEST_CASE("CoreGeometry - Line2D - get_position_at_percentage - Complex line", "
     }
 
     SECTION("At ~43% - should be at corner (3/7)") {
-        auto result = get_position_at_percentage(triangle, 3.0f/7.0f);
+        auto result = get_position_at_percentage(triangle, 3.0f / 7.0f);
         REQUIRE(result.x == 3.0f);
         REQUIRE(result.y == 0.0f);
     }
@@ -76,10 +75,8 @@ TEST_CASE("CoreGeometry - Line2D - get_position_at_percentage - Complex line", "
 }
 
 TEST_CASE("CoreGeometry - Line2D - get_position_at_percentage - Edge cases", "[get_position_at_percentage]") {
-    auto line = Line2D({
-            Point2D<float>{0.0f, 0.0f},
-            Point2D<float>{10.0f, 10.0f}
-    });
+    auto line = Line2D({Point2D<float>{0.0f, 0.0f},
+                        Point2D<float>{10.0f, 10.0f}});
 
     SECTION("Percentage below 0 should clamp to 0") {
         auto result = get_position_at_percentage(line, -0.5f);
@@ -116,7 +113,7 @@ TEST_CASE("CoreGeometry - Line2D -Line segment extraction functionality", "[line
     }
 
     SECTION("Full line segment (0% to 100%)") {
-        Line2D line = Line2D({{0.0f, 0.0f}, {10.0f, 10.0f}, {20.0f, 0.0f}});
+        Line2D const line = Line2D({{0.0f, 0.0f}, {10.0f, 10.0f}, {20.0f, 0.0f}});
 
         auto segment = get_segment_between_percentages(line, 0.0f, 1.0f);
 
@@ -153,7 +150,7 @@ TEST_CASE("CoreGeometry - Line2D -Line segment extraction functionality", "[line
 TEST_CASE("CoreGeometry - Line2D - Line segment extraction edge cases", "[lines][segment][edge-cases]") {
 
     SECTION("Empty line") {
-        Line2D empty_line;
+        Line2D const empty_line;
         auto segment = get_segment_between_percentages(empty_line, 0.25f, 0.75f);
         REQUIRE(segment.empty());
     }
@@ -210,13 +207,13 @@ TEST_CASE("CoreGeometry - Line2D - Line segment extraction edge cases", "[lines]
 
 TEST_CASE("CoreGeometry - Line2D - calculate_perpendicular_direction - Core functionality", "[calculate_perpendicular_direction]") {
     SECTION("Horizontal line - perpendicular should be vertical") {
-        Line2D horizontal_line = Line2D({{0.0f, 0.0f}, {10.0f, 0.0f}});
-        
+        Line2D const horizontal_line = Line2D({{0.0f, 0.0f}, {10.0f, 0.0f}});
+
         // First vertex (0) - should point up (0, 1)
         Point2D<float> perp_dir_first = calculate_perpendicular_direction(horizontal_line, 0);
         REQUIRE_THAT(perp_dir_first.x, Catch::Matchers::WithinAbs(0.0f, 0.001f));
         REQUIRE_THAT(perp_dir_first.y, Catch::Matchers::WithinAbs(1.0f, 0.001f));
-        
+
         // Last vertex (1) - should point up (0, 1)
         Point2D<float> perp_dir_last = calculate_perpendicular_direction(horizontal_line, 1);
         REQUIRE_THAT(perp_dir_last.x, Catch::Matchers::WithinAbs(0.0f, 0.001f));
@@ -224,13 +221,13 @@ TEST_CASE("CoreGeometry - Line2D - calculate_perpendicular_direction - Core func
     }
 
     SECTION("Vertical line - perpendicular should be horizontal") {
-        Line2D vertical_line = Line2D({{0.0f, 0.0f}, {0.0f, 10.0f}});
-        
+        Line2D const vertical_line = Line2D({{0.0f, 0.0f}, {0.0f, 10.0f}});
+
         // First vertex (0) - should point left (-1, 0)
         Point2D<float> perp_dir_first = calculate_perpendicular_direction(vertical_line, 0);
         REQUIRE_THAT(perp_dir_first.x, Catch::Matchers::WithinAbs(-1.0f, 0.001f));
         REQUIRE_THAT(perp_dir_first.y, Catch::Matchers::WithinAbs(0.0f, 0.001f));
-        
+
         // Last vertex (1) - should point left (-1, 0)
         Point2D<float> perp_dir_last = calculate_perpendicular_direction(vertical_line, 1);
         REQUIRE_THAT(perp_dir_last.x, Catch::Matchers::WithinAbs(-1.0f, 0.001f));
@@ -238,15 +235,15 @@ TEST_CASE("CoreGeometry - Line2D - calculate_perpendicular_direction - Core func
     }
 
     SECTION("Diagonal line - perpendicular should be perpendicular") {
-        Line2D diagonal_line = Line2D({{0.0f, 0.0f}, {10.0f, 10.0f}});
-        
+        Line2D const diagonal_line = Line2D({{0.0f, 0.0f}, {10.0f, 10.0f}});
+
         // First vertex (0) - should be perpendicular to diagonal
         Point2D<float> perp_dir_first = calculate_perpendicular_direction(diagonal_line, 0);
-        float expected_x = -1.0f / std::sqrt(2.0f); // -0.707
-        float expected_y = 1.0f / std::sqrt(2.0f);  // 0.707
+        float const expected_x = -1.0f / std::sqrt(2.0f);// -0.707
+        float const expected_y = 1.0f / std::sqrt(2.0f); // 0.707
         REQUIRE_THAT(perp_dir_first.x, Catch::Matchers::WithinAbs(expected_x, 0.001f));
         REQUIRE_THAT(perp_dir_first.y, Catch::Matchers::WithinAbs(expected_y, 0.001f));
-        
+
         // Last vertex (1) - should be perpendicular to diagonal
         Point2D<float> perp_dir_last = calculate_perpendicular_direction(diagonal_line, 1);
         REQUIRE_THAT(perp_dir_last.x, Catch::Matchers::WithinAbs(expected_x, 0.001f));
@@ -255,15 +252,15 @@ TEST_CASE("CoreGeometry - Line2D - calculate_perpendicular_direction - Core func
 
     SECTION("Multi-segment line - internal vertices average perpendiculars") {
         // L-shaped line: horizontal then vertical
-        Line2D multi_line = Line2D({{0.0f, 0.0f}, {10.0f, 0.0f}, {10.0f, 10.0f}});
-        
+        Line2D const multi_line = Line2D({{0.0f, 0.0f}, {10.0f, 0.0f}, {10.0f, 10.0f}});
+
         // Middle vertex (1) - should average perpendiculars from both segments
-        Point2D<float> perp_dir_middle = calculate_perpendicular_direction(multi_line, 1);
-        
+        Point2D<float> const perp_dir_middle = calculate_perpendicular_direction(multi_line, 1);
+
         // Should be normalized
         float length = std::sqrt(perp_dir_middle.x * perp_dir_middle.x + perp_dir_middle.y * perp_dir_middle.y);
         REQUIRE_THAT(length, Catch::Matchers::WithinAbs(1.0f, 0.001f));
-        
+
         // Should not be exactly vertical or horizontal (averaged)
         REQUIRE(std::abs(perp_dir_middle.x) > 0.001f);
         REQUIRE(std::abs(perp_dir_middle.y) > 0.001f);
@@ -272,29 +269,29 @@ TEST_CASE("CoreGeometry - Line2D - calculate_perpendicular_direction - Core func
 
 TEST_CASE("CoreGeometry - Line2D - calculate_perpendicular_direction - Edge cases and error handling", "[calculate_perpendicular_direction][edge]") {
     SECTION("Line with fewer than 2 points") {
-        Line2D short_line = Line2D({{5.0f, 5.0f}});
+        Line2D const short_line = Line2D({{5.0f, 5.0f}});
         Point2D<float> perp_dir = calculate_perpendicular_direction(short_line, 0);
         REQUIRE_THAT(perp_dir.x, Catch::Matchers::WithinAbs(0.0f, 0.001f));
         REQUIRE_THAT(perp_dir.y, Catch::Matchers::WithinAbs(0.0f, 0.001f));
     }
 
     SECTION("Empty line") {
-        Line2D empty_line;
+        Line2D const empty_line;
         Point2D<float> perp_dir = calculate_perpendicular_direction(empty_line, 0);
         REQUIRE_THAT(perp_dir.x, Catch::Matchers::WithinAbs(0.0f, 0.001f));
         REQUIRE_THAT(perp_dir.y, Catch::Matchers::WithinAbs(0.0f, 0.001f));
     }
 
     SECTION("Invalid vertex index") {
-        Line2D test_line = Line2D({{0.0f, 0.0f}, {10.0f, 0.0f}});
-        Point2D<float> perp_dir = calculate_perpendicular_direction(test_line, 5); // Invalid index
+        Line2D const test_line = Line2D({{0.0f, 0.0f}, {10.0f, 0.0f}});
+        Point2D<float> perp_dir = calculate_perpendicular_direction(test_line, 5);// Invalid index
         REQUIRE_THAT(perp_dir.x, Catch::Matchers::WithinAbs(0.0f, 0.001f));
         REQUIRE_THAT(perp_dir.y, Catch::Matchers::WithinAbs(0.0f, 0.001f));
     }
 
     SECTION("Zero-length segments") {
         // Line with zero-length segments
-        Line2D zero_line = Line2D({{5.0f, 5.0f}, {5.0f, 5.0f}});
+        Line2D const zero_line = Line2D({{5.0f, 5.0f}, {5.0f, 5.0f}});
         Point2D<float> perp_dir = calculate_perpendicular_direction(zero_line, 1);
         REQUIRE_THAT(perp_dir.x, Catch::Matchers::WithinAbs(0.0f, 0.001f));
         REQUIRE_THAT(perp_dir.y, Catch::Matchers::WithinAbs(0.0f, 0.001f));
@@ -302,21 +299,69 @@ TEST_CASE("CoreGeometry - Line2D - calculate_perpendicular_direction - Edge case
 
     SECTION("Complex multi-segment line") {
         // Line with multiple segments
-        Line2D test_line = Line2D({{0.0f, 0.0f}, {5.0f, 0.0f}, {5.0f, 5.0f}, {10.0f, 5.0f}});
-        
+        Line2D const test_line = Line2D({{0.0f, 0.0f}, {5.0f, 0.0f}, {5.0f, 5.0f}, {10.0f, 5.0f}});
+
         // First vertex
         Point2D<float> perp_dir_first = calculate_perpendicular_direction(test_line, 0);
         REQUIRE_THAT(perp_dir_first.x, Catch::Matchers::WithinAbs(0.0f, 0.001f));
         REQUIRE_THAT(perp_dir_first.y, Catch::Matchers::WithinAbs(1.0f, 0.001f));
-        
+
         // Middle vertex (should average perpendiculars)
-        Point2D<float> perp_dir_middle = calculate_perpendicular_direction(test_line, 1);
+        Point2D<float> const perp_dir_middle = calculate_perpendicular_direction(test_line, 1);
         float length = std::sqrt(perp_dir_middle.x * perp_dir_middle.x + perp_dir_middle.y * perp_dir_middle.y);
         REQUIRE_THAT(length, Catch::Matchers::WithinAbs(1.0f, 0.001f));
-        
+
         // Last vertex
         Point2D<float> perp_dir_last = calculate_perpendicular_direction(test_line, 3);
         REQUIRE_THAT(perp_dir_last.x, Catch::Matchers::WithinAbs(0.0f, 0.001f));
         REQUIRE_THAT(perp_dir_last.y, Catch::Matchers::WithinAbs(1.0f, 0.001f));
+    }
+}
+
+TEST_CASE("CoreGeometry - clip_line_at_intersection inserts clip vertex", "[clip_line_at_intersection]") {
+    Line2D const horizontal_line{{0.0f, 2.0f}, {1.0f, 2.0f}, {2.0f, 2.0f}, {3.0f, 2.0f}, {4.0f, 2.0f}};
+    Line2D const vertical_reference{{2.5f, 0.0f}, {2.5f, 5.0f}};
+
+    SECTION("KeepDistal places intersection as new base point") {
+        Line2D const clipped =
+                clip_line_at_intersection(horizontal_line, vertical_reference, ClipSide::KeepDistal);
+
+        REQUIRE(clipped.size() == 3);
+        REQUIRE_THAT(clipped.front().x, Catch::Matchers::WithinAbs(2.5f, 0.001f));
+        REQUIRE_THAT(clipped.front().y, Catch::Matchers::WithinAbs(2.0f, 0.001f));
+        REQUIRE_THAT(clipped[1].x, Catch::Matchers::WithinAbs(3.0f, 0.001f));
+        REQUIRE_THAT(clipped.back().x, Catch::Matchers::WithinAbs(4.0f, 0.001f));
+    }
+
+    SECTION("KeepBase places intersection as new distal point") {
+        Line2D const clipped =
+                clip_line_at_intersection(horizontal_line, vertical_reference, ClipSide::KeepBase);
+
+        REQUIRE(clipped.size() == 4);
+        REQUIRE_THAT(clipped.back().x, Catch::Matchers::WithinAbs(2.5f, 0.001f));
+        REQUIRE_THAT(clipped.back().y, Catch::Matchers::WithinAbs(2.0f, 0.001f));
+        REQUIRE_THAT(clipped.front().x, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+    }
+
+    SECTION("Two-point line clips at interior intersection") {
+        Line2D const short_line{{0.0f, 2.0f}, {4.0f, 2.0f}};
+        Line2D const clipped =
+                clip_line_at_intersection(short_line, vertical_reference, ClipSide::KeepDistal);
+
+        REQUIRE(clipped.size() == 2);
+        REQUIRE_THAT(clipped.front().x, Catch::Matchers::WithinAbs(2.5f, 0.001f));
+        REQUIRE_THAT(clipped.back().x, Catch::Matchers::WithinAbs(4.0f, 0.001f));
+    }
+
+    SECTION("Short reference segment that does not cross the line leaves it unchanged") {
+        Line2D const short_reference{{2.5f, 0.0f}, {2.5f, 1.0f}};
+        Line2D const clipped =
+                clip_line_at_intersection(horizontal_line, short_reference, ClipSide::KeepDistal);
+
+        REQUIRE(clipped.size() == horizontal_line.size());
+        for (size_t i = 0; i < horizontal_line.size(); ++i) {
+            REQUIRE_THAT(clipped[i].x, Catch::Matchers::WithinAbs(horizontal_line[i].x, 0.001f));
+            REQUIRE_THAT(clipped[i].y, Catch::Matchers::WithinAbs(horizontal_line[i].y, 0.001f));
+        }
     }
 }

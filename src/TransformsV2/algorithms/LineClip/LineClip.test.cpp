@@ -1,5 +1,6 @@
 #include "LineClip.hpp"
 
+#include "CoreGeometry/ImageSize.hpp"
 #include "DataManager.hpp"
 #include "Lines/Line_Data.hpp"
 #include "TransformsV2/core/ComputeContext.hpp"
@@ -11,6 +12,7 @@
 #include <catch2/catch_approx.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
+#include "fixtures/builders/constants.hpp"
 #include "fixtures/pipeline/pipeline_json_test_helpers.hpp"
 #include "fixtures/scenarios/line/clip_scenarios.hpp"
 
@@ -313,6 +315,10 @@ TEST_CASE("V2 DataManager Integration: LineClip via load_data_from_json_config_v
     // Create TimeFrame for DataManager
     auto time_frame = std::make_shared<TimeFrame>();
     dm.setTime(TimeKey("default"), time_frame);
+
+    ImageSize const clip_test_image_size{
+            static_cast<int>(test_fixture_constants::DEFAULT_IMAGE_WIDTH),
+            static_cast<int>(test_fixture_constants::DEFAULT_IMAGE_HEIGHT)};
     
     // For V2 binary transforms, both inputs must have data at matching time indices.
     // Create test data where line-to-clip and reference-line share the same time points.
@@ -327,6 +333,7 @@ TEST_CASE("V2 DataManager Integration: LineClip via load_data_from_json_config_v
     horizontal_line.push_back({3.0f, 2.0f});
     horizontal_line.push_back({4.0f, 2.0f});
     line_data->addAtTime(TimeFrameIndex(100), horizontal_line, NotifyObservers::No);
+    line_data->setImageSize(clip_test_image_size);
     dm.setData("line_to_clip", line_data, TimeKey("default"));
     
     // Create reference line at t=100: vertical line at x=2.5
@@ -336,6 +343,7 @@ TEST_CASE("V2 DataManager Integration: LineClip via load_data_from_json_config_v
     vertical_ref.push_back({2.5f, 0.0f});
     vertical_ref.push_back({2.5f, 5.0f});
     reference_data->addAtTime(TimeFrameIndex(100), vertical_ref, NotifyObservers::No);
+    reference_data->setImageSize(clip_test_image_size);
     dm.setData("reference_line", reference_data, TimeKey("default"));
     
     // Create diagonal line at t=200: from (0,0) to (4,4)
@@ -348,6 +356,7 @@ TEST_CASE("V2 DataManager Integration: LineClip via load_data_from_json_config_v
     diagonal_line.push_back({3.0f, 3.0f});
     diagonal_line.push_back({4.0f, 4.0f});
     diagonal_data->addAtTime(TimeFrameIndex(200), diagonal_line, NotifyObservers::No);
+    diagonal_data->setImageSize(clip_test_image_size);
     dm.setData("diagonal_line", diagonal_data, TimeKey("default"));
     
     // Create reference line at t=200: vertical line at x=2.0
@@ -357,6 +366,7 @@ TEST_CASE("V2 DataManager Integration: LineClip via load_data_from_json_config_v
     vertical_ref_2.push_back({2.0f, 0.0f});
     vertical_ref_2.push_back({2.0f, 5.0f});
     reference_2_data->addAtTime(TimeFrameIndex(200), vertical_ref_2, NotifyObservers::No);
+    reference_2_data->setImageSize(clip_test_image_size);
     dm.setData("reference_line_2", reference_2_data, TimeKey("default"));
     
     // Create line data for no-intersection test at t=300: horizontal line (0,2) to (3,2)
@@ -368,6 +378,7 @@ TEST_CASE("V2 DataManager Integration: LineClip via load_data_from_json_config_v
     short_horizontal.push_back({2.0f, 2.0f});
     short_horizontal.push_back({3.0f, 2.0f});
     no_intersect_line->addAtTime(TimeFrameIndex(300), short_horizontal, NotifyObservers::No);
+    no_intersect_line->setImageSize(clip_test_image_size);
     dm.setData("no_intersect_line", no_intersect_line, TimeKey("default"));
     
     // Create reference line at t=300: vertical line at x=5.0 (no intersection)
@@ -377,6 +388,7 @@ TEST_CASE("V2 DataManager Integration: LineClip via load_data_from_json_config_v
     far_vertical.push_back({5.0f, 0.0f});
     far_vertical.push_back({5.0f, 5.0f});
     no_intersect_ref->addAtTime(TimeFrameIndex(300), far_vertical, NotifyObservers::No);
+    no_intersect_ref->setImageSize(clip_test_image_size);
     dm.setData("no_intersect_ref", no_intersect_ref, TimeKey("default"));
     
     SECTION("KeepBase clipping via JSON pipeline") {

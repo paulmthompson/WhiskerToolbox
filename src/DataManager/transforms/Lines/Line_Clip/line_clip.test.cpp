@@ -2,6 +2,7 @@
 #include "catch2/matchers/catch_matchers_vector.hpp"
 #include "catch2/catch_approx.hpp"
 
+#include "CoreGeometry/ImageSize.hpp"
 #include "Lines/Line_Data.hpp"
 #include "transforms/Lines/Line_Clip/line_clip.hpp"
 #include "transforms/data_transforms.hpp" // For ProgressCallback
@@ -272,6 +273,35 @@ TEST_CASE("Data Transform: Clip Line by Reference Line - Error and Edge Cases", 
         auto const & clipped_line = clipped_lines[0];
         REQUIRE(clipped_line.size() == 4); // Same as original
     }
+
+    SECTION("Undefined input image size") {
+        line_data = line_clip_scenarios::horizontal_line_short();
+        line_data->setImageSize(ImageSize{});
+
+        reference_line_data = line_clip_scenarios::vertical_reference_at_2_5();
+
+        params.reference_line_data = reference_line_data;
+        params.reference_frame = 0;
+        params.clip_side = ClipSide::KeepBase;
+
+        result_lines = clip_lines(line_data.get(), &params);
+        REQUIRE(result_lines->getTimesWithData().empty());
+    }
+
+    SECTION("Mismatched image sizes") {
+        line_data = line_clip_scenarios::horizontal_line_short();
+        line_data->setImageSize(ImageSize{640, 480});
+
+        reference_line_data = line_clip_scenarios::vertical_reference_at_2_5();
+        reference_line_data->setImageSize(ImageSize{800, 600});
+
+        params.reference_line_data = reference_line_data;
+        params.reference_frame = 0;
+        params.clip_side = ClipSide::KeepBase;
+
+        result_lines = clip_lines(line_data.get(), &params);
+        REQUIRE(result_lines->getTimesWithData().empty());
+    }
 }
 
 #include "DataManager.hpp"
@@ -517,7 +547,7 @@ TEST_CASE("Data Transform: Clip Line by Reference Line - load_data_from_json_con
         "]";
     
     // Create multi-frame test data using builder
-    auto test_line_multi = LineDataBuilder()
+    auto test_line_multi = line_clip_scenarios::clipScenarioBuilder()
         .withCoords(100, {0.0f, 1.0f, 2.0f, 3.0f, 4.0f}, {2.0f, 2.0f, 2.0f, 2.0f, 2.0f})
         .withCoords(200, {0.0f, 1.0f, 2.0f, 3.0f}, {0.0f, 1.0f, 2.0f, 3.0f})
         .build();

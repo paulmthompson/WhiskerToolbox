@@ -13,6 +13,8 @@ This transformation is used to shorten or trim lines at the point where they cro
 
 If a line does not intersect the reference line, it remains unchanged in the output. This is useful for standardizing line data, for example, by trimming all lines to a common boundary.
 
+Both the input line data and the reference line data must have a defined image size (width and height), and those sizes must match. If either size is undefined or the sizes differ, the transform produces no output and logs an error.
+
 ![](images/clipboard-2648525334.png)
 
 ::: {.content-hidden when-format="html"}

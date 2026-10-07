@@ -2,7 +2,19 @@
 
 #include "CoreGeometry/point_geometry.hpp"
 
+#include <cmath>
 #include <optional>
+
+namespace {
+
+constexpr float k_line_geometry_epsilon = 1e-6f;
+
+bool points_nearly_equal(Point2D<float> const & a, Point2D<float> const & b) {
+    return std::abs(a.x - b.x) <= k_line_geometry_epsilon &&
+           std::abs(a.y - b.y) <= k_line_geometry_epsilon;
+}
+
+}// namespace
 
 float calc_length(Line2D const & line) {
     if (line.size() < 2) {
@@ -11,7 +23,7 @@ float calc_length(Line2D const & line) {
 
     float total_length = 0.0f;
     for (size_t i = 1; i < line.size(); ++i) {
-        total_length += calc_distance(line[i], line[i-1]);
+        total_length += calc_distance(line[i], line[i - 1]);
     }
 
     return total_length;
@@ -24,7 +36,7 @@ float calc_length2(Line2D const & line) {
 
     float total_length = 0.0f;
     for (size_t i = 1; i < line.size(); ++i) {
-        total_length += calc_distance2(line[i], line[i-1]);
+        total_length += calc_distance2(line[i], line[i - 1]);
     }
 
     return total_length;
@@ -37,10 +49,10 @@ std::vector<float> calc_cumulative_length_vector(Line2D const & line) {
     }
 
     distances.reserve(line.size());
-    distances.push_back(0.0f); // First point is at distance 0
+    distances.push_back(0.0f);// First point is at distance 0
 
     for (size_t i = 1; i < line.size(); ++i) {
-        float const segment_length = calc_distance(line[i], line[i-1]);
+        float const segment_length = calc_distance(line[i], line[i - 1]);
         distances.push_back(distances.back() + segment_length);
     }
 
@@ -248,12 +260,12 @@ Point2D<float> get_position_at_percentage(Line2D const & line, float percentage)
             float const segment_length = segment_end_distance - segment_start_distance;
 
             if (segment_length == 0.0f) {
-                return line[i-1];
+                return line[i - 1];
             }
 
             float const t = (target_distance - segment_start_distance) / segment_length;
 
-            return interpolate_point(line[i-1], line[i], t);
+            return interpolate_point(line[i - 1], line[i], t);
         }
     }
 
@@ -311,7 +323,7 @@ Line2D get_segment_between_percentages(Line2D const & line, float start_percenta
             } else {
                 // Interpolate start point
                 float const t = (start_distance - current_distance) / (next_distance - current_distance);
-                segment.push_back(interpolate_point(line[i], line[i+1], t));
+                segment.push_back(interpolate_point(line[i], line[i + 1], t));
             }
         }
 
@@ -325,14 +337,14 @@ Line2D get_segment_between_percentages(Line2D const & line, float start_percenta
             } else {
                 // Interpolate end point
                 float const t = (end_distance - current_distance) / (next_distance - current_distance);
-                segment.push_back(interpolate_point(line[i], line[i+1], t));
+                segment.push_back(interpolate_point(line[i], line[i + 1], t));
             }
-            break; // We've reached the end
+            break;// We've reached the end
         }
 
         // If we've started but haven't reached the end, add the next point
         if (started && next_distance < end_distance) {
-            segment.push_back(line[i+1]);
+            segment.push_back(line[i + 1]);
         }
     }
 
@@ -352,14 +364,14 @@ Point2D<float> calculate_perpendicular_direction(Line2D const & line, size_t ver
 
         // Calculate perpendicular: rotate 90 degrees counterclockwise
         Point2D<float> perp = {-segment.y, segment.x};
-        
+
         // Normalize
         float const length = std::sqrt(perp.x * perp.x + perp.y * perp.y);
         if (length > 0.0f) {
             perp.x /= length;
             perp.y /= length;
         }
-        
+
         return perp;
     } else if (vertex_index == line.size() - 1) {
         // Last vertex - use the segment from vertex n-2 to vertex n-1
@@ -369,18 +381,18 @@ Point2D<float> calculate_perpendicular_direction(Line2D const & line, size_t ver
 
         // Calculate perpendicular: rotate 90 degrees counterclockwise
         Point2D<float> perp = {-segment.y, segment.x};
-        
+
         // Normalize
         float const length = std::sqrt(perp.x * perp.x + perp.y * perp.y);
         if (length > 0.0f) {
             perp.x /= length;
             perp.y /= length;
         }
-        
+
         return perp;
     } else {
         // Internal vertex - average perpendiculars from both adjacent segments
-        
+
         // Segment from previous vertex to current vertex
         Point2D<float> const segment1 = {
                 line[vertex_index].x - line[vertex_index - 1].x,
@@ -394,7 +406,7 @@ Point2D<float> calculate_perpendicular_direction(Line2D const & line, size_t ver
         // Calculate perpendiculars
         Point2D<float> perp1 = {-segment1.y, segment1.x};
         Point2D<float> perp2 = {-segment2.y, segment2.x};
-        
+
         // Normalize both perpendiculars
         float const length1 = std::sqrt(perp1.x * perp1.x + perp1.y * perp1.y);
         float const length2 = std::sqrt(perp2.x * perp2.x + perp2.y * perp2.y);
@@ -403,25 +415,24 @@ Point2D<float> calculate_perpendicular_direction(Line2D const & line, size_t ver
             perp1.x /= length1;
             perp1.y /= length1;
         }
-        
+
         if (length2 > 0.0f) {
             perp2.x /= length2;
             perp2.y /= length2;
         }
-        
+
         // Average the perpendiculars
         Point2D<float> avg_perp = {
-            (perp1.x + perp2.x) / 2.0f,
-            (perp1.y + perp2.y) / 2.0f
-        };
-        
+                (perp1.x + perp2.x) / 2.0f,
+                (perp1.y + perp2.y) / 2.0f};
+
         // Normalize the average
         float const avg_length = std::sqrt(avg_perp.x * avg_perp.x + avg_perp.y * avg_perp.y);
         if (avg_length > 0.0f) {
             avg_perp.x /= avg_length;
             avg_perp.y /= avg_length;
         }
-        
+
         return avg_perp;
     }
 }
@@ -433,13 +444,13 @@ float point_to_line_segment_distance2(
 
     // If start and end are the same point, just return distance to that point
     if (line_start.x == line_end.x && line_start.y == line_end.y) {
-        float dx = point.x - line_start.x;
-        float dy = point.y - line_start.y;
+        float const dx = point.x - line_start.x;
+        float const dy = point.y - line_start.y;
         return dx * dx + dy * dy;
     }
 
     // Calculate the squared length of the line segment
-    float line_length_squared = (line_end.x - line_start.x) * (line_end.x - line_start.x) +
+    float const line_length_squared = (line_end.x - line_start.x) * (line_end.x - line_start.x) +
                                 (line_end.y - line_start.y) * (line_end.y - line_start.y);
 
     // Calculate the projection of point onto the line segment
@@ -451,90 +462,90 @@ float point_to_line_segment_distance2(
     t = std::max(0.0f, std::min(1.0f, t));
 
     // Calculate the closest point on the segment
-    float closest_x = line_start.x + t * (line_end.x - line_start.x);
-    float closest_y = line_start.y + t * (line_end.y - line_start.y);
+    float const closest_x = line_start.x + t * (line_end.x - line_start.x);
+    float const closest_y = line_start.y + t * (line_end.y - line_start.y);
 
     // Calculate the distance from original point to closest point
-    float dx = point.x - closest_x;
-    float dy = point.y - closest_y;
+    float const dx = point.x - closest_x;
+    float const dy = point.y - closest_y;
 
     return dx * dx + dy * dy;
 }
 
 std::optional<Point2D<float>> line_segment_intersection(
-    Point2D<float> const & p1, Point2D<float> const & p2,
-    Point2D<float> const & p3, Point2D<float> const & p4) {
-    
+        Point2D<float> const & p1, Point2D<float> const & p2,
+        Point2D<float> const & p3, Point2D<float> const & p4) {
+
     // Calculate direction vectors
-    float d1x = p2.x - p1.x;
-    float d1y = p2.y - p1.y;
-    float d2x = p4.x - p3.x;
-    float d2y = p4.y - p3.y;
-    
+    float const d1x = p2.x - p1.x;
+    float const d1y = p2.y - p1.y;
+    float const d2x = p4.x - p3.x;
+    float const d2y = p4.y - p3.y;
+
     // Calculate the denominator for the intersection calculation
-    float denominator = d1x * d2y - d1y * d2x;
-    
+    float const denominator = d1x * d2y - d1y * d2x;
+
     // Check if lines are parallel (denominator is zero)
     if (std::abs(denominator) < 1e-10f) {
         return std::nullopt;
     }
-    
+
     // Calculate parameters for intersection point
-    float dx = p3.x - p1.x;
-    float dy = p3.y - p1.y;
-    
-    float t1 = (dx * d2y - dy * d2x) / denominator;
-    float t2 = (dx * d1y - dy * d1x) / denominator;
-    
+    float const dx = p3.x - p1.x;
+    float const dy = p3.y - p1.y;
+
+    float const t1 = (dx * d2y - dy * d2x) / denominator;
+    float const t2 = (dx * d1y - dy * d1x) / denominator;
+
     // Check if intersection point lies within both line segments
     if (t1 >= 0.0f && t1 <= 1.0f && t2 >= 0.0f && t2 <= 1.0f) {
         // Calculate intersection point
         Point2D<float> intersection;
         intersection.x = p1.x + t1 * d1x;
         intersection.y = p1.y + t1 * d1y;
-        
+
         return intersection;
     }
-    
+
     return std::nullopt;
 }
 
 
 std::optional<std::pair<Point2D<float>, size_t>> find_line_intersection(
-    Line2D const & line, Line2D const & reference_line) {
-    
+        Line2D const & line, Line2D const & reference_line) {
+
     if (line.size() < 2 || reference_line.size() < 2) {
         return std::nullopt;
     }
-    
-    // Check each segment of the main line against each segment of the reference line
+
     for (size_t i = 0; i < line.size() - 1; ++i) {
         for (size_t j = 0; j < reference_line.size() - 1; ++j) {
             auto intersection = line_segment_intersection(
-                line[i], line[i + 1],
-                reference_line[j], reference_line[j + 1]
-            );
-            
+                    line[i],
+                    line[i + 1],
+                    reference_line[j],
+                    reference_line[j + 1]);
+
             if (intersection.has_value()) {
                 return std::make_pair(intersection.value(), i);
             }
         }
     }
-    
+
     return std::nullopt;
 }
 
 Line2D clip_line_at_intersection(
-    Line2D const & line, 
-    Line2D const & reference_line, 
-    ClipSide clip_side) {
-    
+        Line2D const & line,
+        Line2D const & reference_line,
+        ClipSide clip_side) {
+
     if (line.size() < 2) {
-        return line; // Return original line if too short
+        return line;// Return original line if too short
     }
-    
+
     auto intersection_result = find_line_intersection(line, reference_line);
-    
+
     if (!intersection_result.has_value()) {
         // No intersection found, return original line
         return line;
@@ -544,26 +555,25 @@ Line2D clip_line_at_intersection(
     size_t const segment_index = intersection_result->second;
 
     Line2D clipped_line;
-    
+
     if (clip_side == ClipSide::KeepBase) {
         // Keep from start to intersection
         for (size_t i = 0; i <= segment_index; ++i) {
             clipped_line.push_back(line[i]);
         }
-        // Add intersection point if it's not the same as the last point
-        if (clipped_line.empty() || 
-            (std::abs(clipped_line.back().x - intersection_point.x) > 1e-6f ||
-             std::abs(clipped_line.back().y - intersection_point.y) > 1e-6f)) {
+        if (clipped_line.empty() || !points_nearly_equal(clipped_line.back(), intersection_point)) {
             clipped_line.push_back(intersection_point);
         }
-    } else { // ClipSide::KeepDistal
-        // Keep from intersection to end
+    } else {// ClipSide::KeepDistal
         clipped_line.push_back(intersection_point);
         for (size_t i = segment_index + 1; i < line.size(); ++i) {
+            if (points_nearly_equal(line[i], intersection_point)) {
+                continue;
+            }
             clipped_line.push_back(line[i]);
         }
     }
-    
+
     return clipped_line;
 }
 
@@ -580,7 +590,7 @@ float point_to_line_min_distance2(Point2D<float> const & point, Line2D const & l
         Point2D<float> const & segment_start = line[i];
         Point2D<float> const & segment_end = line[i + 1];
 
-        float distance = point_to_line_segment_distance2(point, segment_start, segment_end);
+        float const distance = point_to_line_segment_distance2(point, segment_start, segment_end);
         min_distance = std::min(min_distance, distance);
     }
 

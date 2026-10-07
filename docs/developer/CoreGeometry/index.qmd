@@ -4,3 +4,7 @@ format: html
 ---
 
 - [Planar angles and line tangents](angle.qmd)
+
+## Line clipping
+
+`clip_line_at_intersection` (in `line_geometry.hpp`) clips a polyline at the first segment-segment crossing with a reference polyline. When the crossing lies between existing vertices, a new point is inserted at the intersection so `KeepDistal` uses that location as the new base and `KeepBase` uses it as the new distal end.

@@ -2,6 +2,8 @@
 #define CLIP_SCENARIOS_HPP
 
 #include "fixtures/builders/LineDataBuilder.hpp"
+#include "fixtures/builders/constants.hpp"
+
 #include <memory>
 
 /**
@@ -13,6 +15,12 @@
  */
 namespace line_clip_scenarios {
 
+inline LineDataBuilder clipScenarioBuilder() {
+    return LineDataBuilder().withImageSize(
+            test_fixture_constants::DEFAULT_IMAGE_WIDTH,
+            test_fixture_constants::DEFAULT_IMAGE_HEIGHT);
+}
+
 /**
  * @brief Horizontal line from (0,2) to (4,2)
  * 
@@ -21,7 +29,7 @@ namespace line_clip_scenarios {
  * Expected: Use with vertical reference line to test clipping
  */
 inline std::shared_ptr<LineData> horizontal_line() {
-    return LineDataBuilder()
+    return clipScenarioBuilder()
         .withCoords(100, {0.0f, 1.0f, 2.0f, 3.0f, 4.0f}, {2.0f, 2.0f, 2.0f, 2.0f, 2.0f})
         .build();
 }
@@ -34,7 +42,7 @@ inline std::shared_ptr<LineData> horizontal_line() {
  * Expected: Use as reference to clip horizontal lines at x=2.5
  */
 inline std::shared_ptr<LineData> vertical_reference_at_2_5() {
-    return LineDataBuilder()
+    return clipScenarioBuilder()
         .withCoords(0, {2.5f, 2.5f}, {0.0f, 5.0f})
         .build();
 }
@@ -47,7 +55,7 @@ inline std::shared_ptr<LineData> vertical_reference_at_2_5() {
  * Expected: Use as reference to clip lines at x=2.0
  */
 inline std::shared_ptr<LineData> vertical_reference_at_2_0() {
-    return LineDataBuilder()
+    return clipScenarioBuilder()
         .withCoords(0, {2.0f, 2.0f}, {0.0f, 5.0f})
         .build();
 }
@@ -60,7 +68,7 @@ inline std::shared_ptr<LineData> vertical_reference_at_2_0() {
  * Expected: No intersection with lines ending at x=3 or x=4
  */
 inline std::shared_ptr<LineData> vertical_reference_no_intersection() {
-    return LineDataBuilder()
+    return clipScenarioBuilder()
         .withCoords(0, {5.0f, 5.0f}, {0.0f, 5.0f})
         .build();
 }
@@ -73,7 +81,7 @@ inline std::shared_ptr<LineData> vertical_reference_no_intersection() {
  * Expected: Use as reference to clip lines at x=1.0
  */
 inline std::shared_ptr<LineData> vertical_reference_at_1_0() {
-    return LineDataBuilder()
+    return clipScenarioBuilder()
         .withCoords(0, {1.0f, 1.0f}, {0.0f, 5.0f})
         .build();
 }
@@ -87,7 +95,7 @@ inline std::shared_ptr<LineData> vertical_reference_at_1_0() {
  * Expected: Both frames should be clipped independently
  */
 inline std::shared_ptr<LineData> multiple_time_frames() {
-    return LineDataBuilder()
+    return clipScenarioBuilder()
         .withCoords(100, {0.0f, 1.0f, 2.0f, 3.0f}, {1.0f, 1.0f, 1.0f, 1.0f})
         .withCoords(200, {0.0f, 1.0f, 2.0f, 3.0f}, {0.0f, 1.0f, 2.0f, 3.0f})
         .build();
@@ -101,7 +109,7 @@ inline std::shared_ptr<LineData> multiple_time_frames() {
  * Expected: Use for no-intersection tests
  */
 inline std::shared_ptr<LineData> horizontal_line_short() {
-    return LineDataBuilder()
+    return clipScenarioBuilder()
         .withCoords(100, {0.0f, 1.0f, 2.0f, 3.0f}, {2.0f, 2.0f, 2.0f, 2.0f})
         .build();
 }
@@ -114,7 +122,7 @@ inline std::shared_ptr<LineData> horizontal_line_short() {
  * Expected: No intersection with lines at y=2 (parallel)
  */
 inline std::shared_ptr<LineData> horizontal_reference_parallel() {
-    return LineDataBuilder()
+    return clipScenarioBuilder()
         .withCoords(0, {0.0f, 1.0f, 2.0f, 3.0f}, {4.0f, 4.0f, 4.0f, 4.0f})
         .build();
 }
@@ -127,7 +135,7 @@ inline std::shared_ptr<LineData> horizontal_reference_parallel() {
  * Expected: Too short to clip, should be skipped
  */
 inline std::shared_ptr<LineData> single_point_line() {
-    return LineDataBuilder()
+    return clipScenarioBuilder()
         .withCoords(100, {1.0f}, {2.0f})
         .build();
 }
@@ -138,7 +146,7 @@ inline std::shared_ptr<LineData> single_point_line() {
  * Expected: No lines to process
  */
 inline std::shared_ptr<LineData> empty_line_data() {
-    return LineDataBuilder().build();
+    return clipScenarioBuilder().build();
 }
 
 /**
@@ -149,7 +157,7 @@ inline std::shared_ptr<LineData> empty_line_data() {
  * Expected: Intersects vertical references at various points
  */
 inline std::shared_ptr<LineData> diagonal_line() {
-    return LineDataBuilder()
+    return clipScenarioBuilder()
         .withCoords(200, {0.0f, 1.0f, 2.0f, 3.0f}, {0.0f, 1.0f, 2.0f, 3.0f})
         .build();
 }

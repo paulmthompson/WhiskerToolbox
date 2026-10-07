@@ -1,27 +1,37 @@
 #ifndef LINE_CLIP_HPP
 #define LINE_CLIP_HPP
 
-#include "transforms/data_transforms.hpp"
-#include "CoreGeometry/points.hpp"
-#include "CoreGeometry/lines.hpp"
+#include "CoreGeometry/ImageSize.hpp"
 #include "CoreGeometry/line_geometry.hpp"
+#include "CoreGeometry/lines.hpp"
+#include "CoreGeometry/points.hpp"
+#include "transforms/data_transforms.hpp"
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <typeindex>
-#include <optional>
 
 class LineData;
 
 
-
 struct LineClipParameters : public TransformParametersBase {
-    std::shared_ptr<LineData> reference_line_data;  // The line data to use for clipping
-    int reference_frame = 0;                        // Which frame from reference line to use
-    ClipSide clip_side = ClipSide::KeepBase;       // Which side of the intersection to keep
+    std::shared_ptr<LineData> reference_line_data;// The line data to use for clipping
+    int reference_frame = 0;                      // Which frame from reference line to use
+    ClipSide clip_side = ClipSide::KeepBase;      // Which side of the intersection to keep
 };
 
 ///////////////////////////////////////////////////////////////////////////////
+
+/**
+ * @brief Check that input and reference lines share a defined, matching image size.
+ * @param input_line_data Line data to clip (non-null)
+ * @param reference_line_data Reference line data (non-null)
+ * @return true if both sizes are defined and equal
+ */
+[[nodiscard]] bool validateLineClipImageSizes(
+        LineData const * input_line_data,
+        LineData const * reference_line_data);
 
 /**
  * @brief Clip line data using a reference line
@@ -30,8 +40,8 @@ struct LineClipParameters : public TransformParametersBase {
  * @return A new LineData containing the clipped lines
  */
 std::shared_ptr<LineData> clip_lines(
-    LineData const * line_data,
-    LineClipParameters const * params);
+        LineData const * line_data,
+        LineClipParameters const * params);
 
 /**
  * @brief Clip line data using a reference line with progress reporting
@@ -41,9 +51,9 @@ std::shared_ptr<LineData> clip_lines(
  * @return A new LineData containing the clipped lines
  */
 std::shared_ptr<LineData> clip_lines(
-    LineData const * line_data,
-    LineClipParameters const * params,
-    ProgressCallback progressCallback);
+        LineData const * line_data,
+        LineClipParameters const * params,
+        const ProgressCallback& progressCallback);
 
 class LineClipOperation final : public TransformOperation {
 public:
@@ -51,13 +61,13 @@ public:
     [[nodiscard]] std::type_index getTargetInputTypeIndex() const override;
     [[nodiscard]] bool canApply(DataTypeVariant const & dataVariant) const override;
     [[nodiscard]] std::unique_ptr<TransformParametersBase> getDefaultParameters() const override;
-    
+
     DataTypeVariant execute(DataTypeVariant const & dataVariant,
-                           TransformParametersBase const * transformParameters) override;
-                           
+                            TransformParametersBase const * transformParameters) override;
+
     DataTypeVariant execute(DataTypeVariant const & dataVariant,
-                           TransformParametersBase const * transformParameters,
-                           ProgressCallback progressCallback) override;
+                            TransformParametersBase const * transformParameters,
+                            ProgressCallback progressCallback) override;
 };
 
-#endif // LINE_CLIP_HPP 
+#endif// LINE_CLIP_HPP

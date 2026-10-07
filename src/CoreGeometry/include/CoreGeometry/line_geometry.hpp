@@ -136,10 +136,10 @@ std::optional<Point2D<float>> line_segment_intersection(
         Point2D<float> const & p3, Point2D<float> const & p4);
 
 /**
- * @brief Find the first intersection between a line and a reference line
- * @param line The line to check for intersections
- * @param reference_line The reference line to intersect with
- * @return Intersection point and segment index if found, nullopt otherwise
+ * @brief Find the first intersection between a polyline and a reference polyline
+ * @param line The line to check for intersections (tested segment by segment)
+ * @param reference_line Reference polyline; intersections require crossing a reference segment
+ * @return Intersection point on @p line and the segment index of @p line if found, nullopt otherwise
  */
 std::optional<std::pair<Point2D<float>, size_t>> find_line_intersection(
         Line2D const & line, Line2D const & reference_line);
@@ -149,7 +149,8 @@ std::optional<std::pair<Point2D<float>, size_t>> find_line_intersection(
  * @param line The line to clip
  * @param reference_line The reference line to clip against
  * @param clip_side Which side of the intersection to keep
- * @return Clipped line, or original line if no intersection found
+ * @return Clipped line including a vertex at the intersection when it falls between existing points,
+ *         or original line if no intersection found
  */
 Line2D clip_line_at_intersection(
         Line2D const & line,

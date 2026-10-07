@@ -25,11 +25,13 @@
 #include "Points/Point_Data.hpp"
 #include "Tensors/TensorData.hpp"
 #include "TimeFrame/TimeFrame.hpp"
+#include "transforms/Lines/Line_Clip/line_clip.hpp"
 
 #include <chrono>
 #include <filesystem>
 #include <iostream>
 #include <ranges>
+#include <type_traits>
 
 namespace Neuralyzer::Transforms::V2 {
 
@@ -580,6 +582,14 @@ auto executeBinaryTransformImpl(
     using Element2 = ElementForSafe_t<Container2>;
     using TupleType = std::tuple<Element1, Element2>;
 
+    if constexpr (std::is_same_v<Container1, LineData> && std::is_same_v<Container2, LineData>) {
+        if (transform_name == "ClipLineAtReference") {
+            if (!validateLineClipImageSizes(data1_ptr.get(), data2_ptr.get())) {
+                return std::nullopt;
+            }
+        }
+    }
+
     // Create zip view
     FlatZipView zip_view(data1_ptr->elements(), data2_ptr->elements());
 
@@ -663,6 +673,9 @@ auto executeBinaryTransformImpl(
             auto output = std::make_shared<LineData>();
             if (data1_ptr->getTimeFrame()) {
                 output->setTimeFrame(data1_ptr->getTimeFrame());
+            }
+            if constexpr (std::is_same_v<Container1, LineData>) {
+                output->setImageSize(data1_ptr->getImageSize());
             }
 
             for (auto const & [time, result_variant]: result_view) {
