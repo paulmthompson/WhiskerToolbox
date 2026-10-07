@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.18">
+<meta name="generator" content="quarto-1.10.19">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -76,9 +76,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
@@ -410,8 +410,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DeepLearning_Widget/Core/DeepLearningState.hpp"</span></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DeepLearning_Widget/Core/SlotAssembler.hpp"</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DeepLearning/storage/DataBank.hpp"</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DeepLearning/bindings/DeepLearningBindingData.hpp"</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DeepLearning/bindings/DeepLearningBindingData.hpp"</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DeepLearning/storage/DataBank.hpp"</span></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QGroupBox&gt;</span></span>
 <span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QLabel&gt;</span></span>
@@ -521,53 +521,71 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-117"><a href="#cb1-117" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-118"><a href="#cb1-118" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> captured_frame <span class="op">=</span> <span class="op">-</span><span class="dv">1</span><span class="op">;</span></span>
 <span id="cb1-119"><a href="#cb1-119" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string data_key<span class="op">;</span></span>
-<span id="cb1-120"><a href="#cb1-120" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> bank_entry <span class="op">=</span> bank<span class="op">.</span>get<span class="op">(</span>key<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb1-121"><a href="#cb1-121" aria-hidden="true" tabindex="-1"></a>            captured_frame <span class="op">=</span> bank_entry<span class="op">-&gt;</span>metadata<span class="op">.</span>captured_frame<span class="op">;</span></span>
-<span id="cb1-122"><a href="#cb1-122" aria-hidden="true" tabindex="-1"></a>            data_key <span class="op">=</span> bank_entry<span class="op">-&gt;</span>metadata<span class="op">.</span>data_key<span class="op">;</span></span>
-<span id="cb1-123"><a href="#cb1-123" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-124"><a href="#cb1-124" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-125"><a href="#cb1-125" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>data_key<span class="op">.</span>empty<span class="op">()</span> <span class="op">&amp;&amp;</span> _state<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-126"><a href="#cb1-126" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> frame<span class="op">:</span> _state<span class="op">-&gt;</span>memoryFrames<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-127"><a href="#cb1-127" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(!</span>dl<span class="op">::</span>isStaticFrame<span class="op">(</span>frame<span class="op">))</span> <span class="cf">continue</span><span class="op">;</span></span>
-<span id="cb1-128"><a href="#cb1-128" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">((!</span>dl<span class="op">::</span>staticBankEntryId<span class="op">(</span>frame<span class="op">).</span>empty<span class="op">()</span> <span class="op">&amp;&amp;</span></span>
-<span id="cb1-129"><a href="#cb1-129" aria-hidden="true" tabindex="-1"></a>                     dl<span class="op">::</span>staticBankEntryId<span class="op">(</span>frame<span class="op">)</span> <span class="op">==</span> key<span class="op">)</span> <span class="op">||</span></span>
-<span id="cb1-130"><a href="#cb1-130" aria-hidden="true" tabindex="-1"></a>                    dl<span class="op">::</span>resolvedBankEntryId<span class="op">(</span>frame<span class="op">)</span> <span class="op">==</span> key<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-131"><a href="#cb1-131" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>dl<span class="op">::</span>staticSourceType<span class="op">(</span>frame<span class="op">)</span> <span class="op">==</span> StaticInputSource<span class="op">::</span>DataManager<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-132"><a href="#cb1-132" aria-hidden="true" tabindex="-1"></a>                        data_key <span class="op">=</span> dl<span class="op">::</span>staticDataKey<span class="op">(</span>frame<span class="op">);</span></span>
-<span id="cb1-133"><a href="#cb1-133" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
-<span id="cb1-134"><a href="#cb1-134" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">break</span><span class="op">;</span></span>
-<span id="cb1-135"><a href="#cb1-135" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
-<span id="cb1-136"><a href="#cb1-136" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb1-137"><a href="#cb1-137" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-138"><a href="#cb1-138" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-139"><a href="#cb1-139" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>data_key<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb1-140"><a href="#cb1-140" aria-hidden="true" tabindex="-1"></a>            layout<span class="op">-&gt;</span>addWidget<span class="op">(</span><span class="kw">new</span> <span class="ex">QLabel</span><span class="op">(</span></span>
-<span id="cb1-141"><a href="#cb1-141" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">tr</span><span class="op">(</span><span class="st">"Source: %1"</span><span class="op">)</span></span>
-<span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a>                            <span class="op">.</span>arg<span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>data_key<span class="op">)),</span></span>
-<span id="cb1-143"><a href="#cb1-143" aria-hidden="true" tabindex="-1"></a>                    group<span class="op">));</span></span>
-<span id="cb1-144"><a href="#cb1-144" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-145"><a href="#cb1-145" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-146"><a href="#cb1-146" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>captured_frame <span class="op">&gt;=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb1-147"><a href="#cb1-147" aria-hidden="true" tabindex="-1"></a>            layout<span class="op">-&gt;</span>addWidget<span class="op">(</span><span class="kw">new</span> <span class="ex">QLabel</span><span class="op">(</span></span>
-<span id="cb1-148"><a href="#cb1-148" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">tr</span><span class="op">(</span><span class="st">"Captured at frame: %1"</span><span class="op">).</span>arg<span class="op">(</span>captured_frame<span class="op">),</span></span>
-<span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a>                    group<span class="op">));</span></span>
-<span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> status_label <span class="op">=</span> <span class="kw">new</span> <span class="ex">QLabel</span><span class="op">(</span></span>
-<span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a>                <span class="fu">tr</span><span class="op">(</span><span class="st">"</span><span class="sc">\u2713</span><span class="st"> Cached and ready for inference"</span><span class="op">),</span> group<span class="op">);</span></span>
-<span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a>        status_label<span class="op">-&gt;</span>setStyleSheet<span class="op">(</span></span>
-<span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a>                <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"color: green; font-weight: bold;"</span><span class="op">));</span></span>
-<span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a>        layout<span class="op">-&gt;</span>addWidget<span class="op">(</span>status_label<span class="op">);</span></span>
-<span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a>        _ui<span class="op">-&gt;</span>previewLayout<span class="op">-&gt;</span>addWidget<span class="op">(</span>group<span class="op">);</span></span>
-<span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-120"><a href="#cb1-120" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string encoder_factory_name<span class="op">;</span></span>
+<span id="cb1-121"><a href="#cb1-121" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> bank_entry <span class="op">=</span> bank<span class="op">.</span>get<span class="op">(</span>key<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb1-122"><a href="#cb1-122" aria-hidden="true" tabindex="-1"></a>            captured_frame <span class="op">=</span> bank_entry<span class="op">-&gt;</span>metadata<span class="op">.</span>captured_frame<span class="op">;</span></span>
+<span id="cb1-123"><a href="#cb1-123" aria-hidden="true" tabindex="-1"></a>            data_key <span class="op">=</span> bank_entry<span class="op">-&gt;</span>metadata<span class="op">.</span>data_key<span class="op">;</span></span>
+<span id="cb1-124"><a href="#cb1-124" aria-hidden="true" tabindex="-1"></a>            encoder_factory_name <span class="op">=</span> bank_entry<span class="op">-&gt;</span>metadata<span class="op">.</span>encoder_factory_name<span class="op">;</span></span>
+<span id="cb1-125"><a href="#cb1-125" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-126"><a href="#cb1-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-127"><a href="#cb1-127" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>data_key<span class="op">.</span>empty<span class="op">()</span> <span class="op">&amp;&amp;</span> _state<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-128"><a href="#cb1-128" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> frame<span class="op">:</span> _state<span class="op">-&gt;</span>memoryFrames<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-129"><a href="#cb1-129" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">(!</span>dl<span class="op">::</span>isStaticFrame<span class="op">(</span>frame<span class="op">))</span> <span class="cf">continue</span><span class="op">;</span></span>
+<span id="cb1-130"><a href="#cb1-130" aria-hidden="true" tabindex="-1"></a>                <span class="cf">if</span> <span class="op">((!</span>dl<span class="op">::</span>staticBankEntryId<span class="op">(</span>frame<span class="op">).</span>empty<span class="op">()</span> <span class="op">&amp;&amp;</span></span>
+<span id="cb1-131"><a href="#cb1-131" aria-hidden="true" tabindex="-1"></a>                     dl<span class="op">::</span>staticBankEntryId<span class="op">(</span>frame<span class="op">)</span> <span class="op">==</span> key<span class="op">)</span> <span class="op">||</span></span>
+<span id="cb1-132"><a href="#cb1-132" aria-hidden="true" tabindex="-1"></a>                    dl<span class="op">::</span>resolvedBankEntryId<span class="op">(</span>frame<span class="op">)</span> <span class="op">==</span> key<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-133"><a href="#cb1-133" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">if</span> <span class="op">(</span>dl<span class="op">::</span>staticSourceType<span class="op">(</span>frame<span class="op">)</span> <span class="op">==</span> StaticInputSource<span class="op">::</span>DataManager<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-134"><a href="#cb1-134" aria-hidden="true" tabindex="-1"></a>                        data_key <span class="op">=</span> dl<span class="op">::</span>staticDataKey<span class="op">(</span>frame<span class="op">);</span></span>
+<span id="cb1-135"><a href="#cb1-135" aria-hidden="true" tabindex="-1"></a>                    <span class="op">}</span></span>
+<span id="cb1-136"><a href="#cb1-136" aria-hidden="true" tabindex="-1"></a>                    <span class="cf">break</span><span class="op">;</span></span>
+<span id="cb1-137"><a href="#cb1-137" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span></span>
+<span id="cb1-138"><a href="#cb1-138" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb1-139"><a href="#cb1-139" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-140"><a href="#cb1-140" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-141"><a href="#cb1-141" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>data_key<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a>            layout<span class="op">-&gt;</span>addWidget<span class="op">(</span><span class="kw">new</span> <span class="ex">QLabel</span><span class="op">(</span></span>
+<span id="cb1-143"><a href="#cb1-143" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">tr</span><span class="op">(</span><span class="st">"Source: %1"</span><span class="op">)</span></span>
+<span id="cb1-144"><a href="#cb1-144" aria-hidden="true" tabindex="-1"></a>                            <span class="op">.</span>arg<span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>data_key<span class="op">)),</span></span>
+<span id="cb1-145"><a href="#cb1-145" aria-hidden="true" tabindex="-1"></a>                    group<span class="op">));</span></span>
+<span id="cb1-146"><a href="#cb1-146" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-147"><a href="#cb1-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-148"><a href="#cb1-148" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span>captured_frame <span class="op">&gt;=</span> <span class="dv">0</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a>            layout<span class="op">-&gt;</span>addWidget<span class="op">(</span><span class="kw">new</span> <span class="ex">QLabel</span><span class="op">(</span></span>
+<span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">tr</span><span class="op">(</span><span class="st">"Captured at frame: %1"</span><span class="op">).</span>arg<span class="op">(</span>captured_frame<span class="op">),</span></span>
+<span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a>                    group<span class="op">));</span></span>
+<span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>encoder_factory_name<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a>            layout<span class="op">-&gt;</span>addWidget<span class="op">(</span><span class="kw">new</span> <span class="ex">QLabel</span><span class="op">(</span></span>
+<span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a>                    <span class="fu">tr</span><span class="op">(</span><span class="st">"Encoder: %1 (factory defaults at capture)"</span><span class="op">)</span></span>
+<span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a>                            <span class="op">.</span>arg<span class="op">(</span><span class="ex">QString::fromStdString</span><span class="op">(</span>encoder_factory_name<span class="op">)),</span></span>
+<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a>                    group<span class="op">));</span></span>
+<span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
 <span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a>    _ui<span class="op">-&gt;</span>previewLayout<span class="op">-&gt;</span>addStretch<span class="op">();</span></span>
-<span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb1-163"><a href="#cb1-163" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-164"><a href="#cb1-164" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace dl::widget</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> encoding_note <span class="op">=</span> <span class="kw">new</span> <span class="ex">QLabel</span><span class="op">(</span></span>
+<span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a>                <span class="fu">tr</span><span class="op">(</span><span class="st">"Per-field encoder options (e.g. Normalize on encoder_image) "</span></span>
+<span id="cb1-163"><a href="#cb1-163" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"are not stored in the DataBank; capture uses the slot dtype "</span></span>
+<span id="cb1-164"><a href="#cb1-164" aria-hidden="true" tabindex="-1"></a>                   <span class="st">"and default encoder parameters."</span><span class="op">),</span></span>
+<span id="cb1-165"><a href="#cb1-165" aria-hidden="true" tabindex="-1"></a>                group<span class="op">);</span></span>
+<span id="cb1-166"><a href="#cb1-166" aria-hidden="true" tabindex="-1"></a>        encoding_note<span class="op">-&gt;</span>setWordWrap<span class="op">(</span><span class="kw">true</span><span class="op">);</span></span>
+<span id="cb1-167"><a href="#cb1-167" aria-hidden="true" tabindex="-1"></a>        encoding_note<span class="op">-&gt;</span>setStyleSheet<span class="op">(</span><span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"color: gray; font-size: 10px;"</span><span class="op">));</span></span>
+<span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a>        layout<span class="op">-&gt;</span>addWidget<span class="op">(</span>encoding_note<span class="op">);</span></span>
+<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">*</span> status_label <span class="op">=</span> <span class="kw">new</span> <span class="ex">QLabel</span><span class="op">(</span></span>
+<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a>                <span class="fu">tr</span><span class="op">(</span><span class="st">"</span><span class="sc">\u2713</span><span class="st"> Cached and ready for inference"</span><span class="op">),</span> group<span class="op">);</span></span>
+<span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a>        status_label<span class="op">-&gt;</span>setStyleSheet<span class="op">(</span></span>
+<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a>                <span class="ex">QStringLiteral</span><span class="op">(</span><span class="st">"color: green; font-weight: bold;"</span><span class="op">));</span></span>
+<span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a>        layout<span class="op">-&gt;</span>addWidget<span class="op">(</span>status_label<span class="op">);</span></span>
+<span id="cb1-175"><a href="#cb1-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-176"><a href="#cb1-176" aria-hidden="true" tabindex="-1"></a>        _ui<span class="op">-&gt;</span>previewLayout<span class="op">-&gt;</span>addWidget<span class="op">(</span>group<span class="op">);</span></span>
+<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb1-178"><a href="#cb1-178" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-179"><a href="#cb1-179" aria-hidden="true" tabindex="-1"></a>    _ui<span class="op">-&gt;</span>previewLayout<span class="op">-&gt;</span>addStretch<span class="op">();</span></span>
+<span id="cb1-180"><a href="#cb1-180" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb1-181"><a href="#cb1-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-182"><a href="#cb1-182" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace dl::widget</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-24 at 21:31:38 +0000</p>
+<p>Updated on 2026-10-07 at 20:11:10 +0000</p>
 
 
 </section>

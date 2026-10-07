@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.18">
+<meta name="generator" content="quarto-1.10.19">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -76,9 +76,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../../../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../../../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../../../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../../../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../../../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../../../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../../../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../../../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../../../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../../../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../../../../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
@@ -443,6 +443,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> time_offset <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><code>AutoParamWidget</code> generates the data-source combo, encoder tagged-union selector with per-encoder sub-forms, and the time-offset spin box. The widget exposes full <code>SlotBindingData</code> via <code>binding()</code> / <code>setBinding()</code>.</p>
+<p>The panel shows <strong>shape</strong> and <strong>dtype</strong> (e.g.&nbsp;<code>uint8</code> vs <code>float32</code>). For image slots whose model descriptor uses <code>TensorDType::Byte</code>, <code>applyDynamicInputSlotSchemaConstraints()</code> marks ImageEncoder <strong>Normalize</strong> as <code>ParameterFieldDescriptor::is_hidden</code> so AutoParamWidget still emits it in JSON (rfl round-trip) but does not show the control; a short explanatory note is shown in the panel.</p>
 </section>
 <section id="cross-field-constraints" class="level3">
 <h3 class="anchored" data-anchor-id="cross-field-constraints">Cross-field constraints</h3>
@@ -550,6 +551,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Restore from session state (filters by slot_name)</span></span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>widget<span class="op">.</span>setBindings<span class="op">(</span>state<span class="op">-&gt;</span>memoryFrames<span class="op">());</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Sequence slots (<code>sequence_dim &gt;= 0</code>) support multiple position rows with Add/Remove controls up to the model sequence length. Single-frame slots use one row.</p>
+<p>The group header shows <strong>dtype</strong> and gray help text for image memory slots: static/DataBank capture uses <strong>factory</strong> <code>ImageEncoder</code> parameters (not the <code>encoder_image</code> dynamic binding). For <code>uint8</code> slots this matches in-model scaling.</p>
 </section>
 <section id="signals-1" class="level3">
 <h3 class="anchored" data-anchor-id="signals-1">Signals</h3>

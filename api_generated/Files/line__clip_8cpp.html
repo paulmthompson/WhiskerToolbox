@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.18">
+<meta name="generator" content="quarto-1.10.19">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -76,9 +76,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
@@ -353,6 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#functions" id="toc-functions" class="nav-link" data-scroll-target="#functions">Functions</a></li>
   <li><a href="#functions-documentation" id="toc-functions-documentation" class="nav-link" data-scroll-target="#functions-documentation">Functions Documentation</a>
   <ul class="collapse">
+  <li><a href="#function-validatelineclipimagesizes" id="toc-function-validatelineclipimagesizes" class="nav-link" data-scroll-target="#function-validatelineclipimagesizes">function validateLineClipImageSizes</a></li>
   <li><a href="#function-clip_lines" id="toc-function-clip_lines" class="nav-link" data-scroll-target="#function-clip_lines">function clip_lines</a></li>
   <li><a href="#function-clip_lines-1" id="toc-function-clip_lines-1" class="nav-link" data-scroll-target="#function-clip_lines-1">function clip_lines</a></li>
   </ul></li>
@@ -397,24 +398,42 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classLineData.html">LineData</a> &gt;</td>
-<td><strong><a href="../../api_generated/Files/line__clip_8cpp.html#function-clip-lines">clip_lines</a></strong>(<a href="../../api_generated/Classes/classLineData.html">LineData</a> const * line_data, <a href="../../api_generated/Classes/structLineClipParameters.html">LineClipParameters</a> const * params)<br>Clip line data using a reference line.</td>
+<td>bool</td>
+<td><strong><a href="../../api_generated/Files/line__clip_8cpp.html#function-validatelineclipimagesizes">validateLineClipImageSizes</a></strong>(<a href="../../api_generated/Classes/classLineData.html">LineData</a> const * input_line_data, <a href="../../api_generated/Classes/classLineData.html">LineData</a> const * reference_line_data)<br>Check that input and reference lines share a defined, matching image size.</td>
 </tr>
 <tr class="even">
 <td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classLineData.html">LineData</a> &gt;</td>
-<td><strong><a href="../../api_generated/Files/line__clip_8cpp.html#function-clip-lines">clip_lines</a></strong>(<a href="../../api_generated/Classes/classLineData.html">LineData</a> const * line_data, <a href="../../api_generated/Classes/structLineClipParameters.html">LineClipParameters</a> const * params, <a href="../../api_generated/Files/data__transforms_8hpp.html#using-progresscallback">ProgressCallback</a> progressCallback)<br>Clip line data using a reference line with progress reporting.</td>
+<td><strong><a href="../../api_generated/Files/line__clip_8cpp.html#function-clip-lines">clip_lines</a></strong>(<a href="../../api_generated/Classes/classLineData.html">LineData</a> const * line_data, <a href="../../api_generated/Classes/structLineClipParameters.html">LineClipParameters</a> const * params)<br>Clip line data using a reference line.</td>
+</tr>
+<tr class="odd">
+<td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classLineData.html">LineData</a> &gt;</td>
+<td><strong><a href="../../api_generated/Files/line__clip_8cpp.html#function-clip-lines">clip_lines</a></strong>(<a href="../../api_generated/Classes/classLineData.html">LineData</a> const * line_data, <a href="../../api_generated/Classes/structLineClipParameters.html">LineClipParameters</a> const * params, const <a href="../../api_generated/Files/data__transforms_8hpp.html#using-progresscallback">ProgressCallback</a> &amp; progressCallback)<br>Clip line data using a reference line with progress reporting.</td>
 </tr>
 </tbody>
 </table>
 </section>
 <section id="functions-documentation" class="level2">
 <h2 class="anchored" data-anchor-id="functions-documentation">Functions Documentation</h2>
+<section id="function-validatelineclipimagesizes" class="level3">
+<h3 class="anchored" data-anchor-id="function-validatelineclipimagesizes">function validateLineClipImageSizes</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> validateLineClipImageSizes<span class="op">(</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    LineData <span class="at">const</span> <span class="op">*</span> input_line_data<span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    LineData <span class="at">const</span> <span class="op">*</span> reference_line_data</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Check that input and reference lines share a defined, matching image size.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>input_line_data</strong> <a href="../../api_generated/Classes/structLine.html">Line</a> data to clip (non-null)</li>
+<li><strong>reference_line_data</strong> Reference line data (non-null)</li>
+</ul>
+<p><strong>Return</strong>: true if both sizes are defined and equal</p>
+</section>
 <section id="function-clip_lines" class="level3">
 <h3 class="anchored" data-anchor-id="function-clip_lines">function clip_lines</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> LineData <span class="op">&gt;</span> clip_lines<span class="op">(</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    LineData <span class="at">const</span> <span class="op">*</span> line_data<span class="op">,</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    LineClipParameters <span class="at">const</span> <span class="op">*</span> params</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> LineData <span class="op">&gt;</span> clip_lines<span class="op">(</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    LineData <span class="at">const</span> <span class="op">*</span> line_data<span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    LineClipParameters <span class="at">const</span> <span class="op">*</span> params</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Clip line data using a reference line.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -425,11 +444,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-clip_lines-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-clip_lines-1">function clip_lines</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> LineData <span class="op">&gt;</span> clip_lines<span class="op">(</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    LineData <span class="at">const</span> <span class="op">*</span> line_data<span class="op">,</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    LineClipParameters <span class="at">const</span> <span class="op">*</span> params<span class="op">,</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    ProgressCallback progressCallback</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> LineData <span class="op">&gt;</span> clip_lines<span class="op">(</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    LineData <span class="at">const</span> <span class="op">*</span> line_data<span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    LineClipParameters <span class="at">const</span> <span class="op">*</span> params<span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">const</span> ProgressCallback <span class="op">&amp;</span> progressCallback</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Clip line data using a reference line with progress reporting.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -442,156 +461,189 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="source-code" class="level2">
 <h2 class="anchored" data-anchor-id="source-code">Source code</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"line_clip.hpp"</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Lines/Line_Data.hpp"</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"CoreGeometry/line_geometry.hpp"</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"transforms/utils/variant_type_check.hpp"</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cmath&gt;</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>LineData<span class="op">&gt;</span> clip_lines<span class="op">(</span></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    LineData <span class="at">const</span> <span class="op">*</span> line_data<span class="op">,</span></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    LineClipParameters <span class="at">const</span> <span class="op">*</span> params<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> clip_lines<span class="op">(</span>line_data<span class="op">,</span> params<span class="op">,</span> <span class="op">[](</span><span class="dt">int</span><span class="op">){});</span></span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>LineData<span class="op">&gt;</span> clip_lines<span class="op">(</span></span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    LineData <span class="at">const</span> <span class="op">*</span> line_data<span class="op">,</span></span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    LineClipParameters <span class="at">const</span> <span class="op">*</span> params<span class="op">,</span></span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    ProgressCallback progressCallback<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result_line_data <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>LineData<span class="op">&gt;();</span></span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>line_data <span class="op">||</span> <span class="op">!</span>params <span class="op">||</span> <span class="op">!</span>params<span class="op">-&gt;</span>reference_line_data<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"LineClip: Invalid input parameters."</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>        progressCallback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result_line_data<span class="op">;</span></span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Copy image size from input</span></span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    result_line_data<span class="op">-&gt;</span>setImageSize<span class="op">(</span>line_data<span class="op">-&gt;</span>getImageSize<span class="op">());</span></span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get reference line from the specified frame</span></span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> reference_lines <span class="op">=</span> params<span class="op">-&gt;</span>reference_line_data<span class="op">-&gt;</span>getAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span>params<span class="op">-&gt;</span>reference_frame<span class="op">));</span></span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>reference_lines<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"LineClip: No reference line found at frame "</span> <span class="op">&lt;&lt;</span> params<span class="op">-&gt;</span>reference_frame <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>        progressCallback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
-<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result_line_data<span class="op">;</span></span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Use the first line from the reference frame</span></span>
-<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> reference_line <span class="op">=</span> reference_lines<span class="op">[</span><span class="dv">0</span><span class="op">];</span></span>
-<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get all times with data for progress calculation</span></span>
-<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> times_with_data <span class="op">=</span> line_data<span class="op">-&gt;</span>getTimesWithData<span class="op">();</span></span>
-<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>times_with_data<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>        progressCallback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
-<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result_line_data<span class="op">;</span></span>
-<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>    progressCallback<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
-<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> processed_times <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> time <span class="op">:</span> times_with_data<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> lines_at_time <span class="op">=</span> line_data<span class="op">-&gt;</span>getAtTime<span class="op">(</span>time<span class="op">);</span></span>
-<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> line <span class="op">:</span> lines_at_time<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>line<span class="op">.</span>size<span class="op">()</span> <span class="op">&lt;</span> <span class="dv">2</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span><span class="op">;</span> <span class="co">// Skip lines that are too short</span></span>
-<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Clip the line using the reference line</span></span>
-<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>            Line2D clipped_line <span class="op">=</span> clip_line_at_intersection<span class="op">(</span>line<span class="op">,</span> reference_line<span class="op">,</span> params<span class="op">-&gt;</span>clip_side<span class="op">);</span></span>
-<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>            </span>
-<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Add clipped line to result (only if it has at least 2 points)</span></span>
-<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>clipped_line<span class="op">.</span>size<span class="op">()</span> <span class="op">&gt;=</span> <span class="dv">2</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>                result_line_data<span class="op">-&gt;</span>addAtTime<span class="op">(</span>time<span class="op">,</span> clipped_line<span class="op">,</span> NotifyObservers<span class="op">::</span>No<span class="op">);</span></span>
-<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>        processed_times<span class="op">++;</span></span>
-<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> progress <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span></span>
-<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>round<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>processed_times<span class="op">)</span> <span class="op">/</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>times_with_data<span class="op">.</span>size<span class="op">())</span> <span class="op">*</span> <span class="fl">100.0</span><span class="op">)</span></span>
-<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>        <span class="op">);</span></span>
-<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a>        progressCallback<span class="op">(</span>progress<span class="op">);</span></span>
-<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a>    progressCallback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
-<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result_line_data<span class="op">;</span></span>
-<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string LineClipOperation<span class="op">::</span>getName<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">"Clip Line by Reference Line"</span><span class="op">;</span></span>
-<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>type_index LineClipOperation<span class="op">::</span>getTargetInputTypeIndex<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">typeid</span><span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>LineData<span class="op">&gt;);</span></span>
-<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> LineClipOperation<span class="op">::</span>canApply<span class="op">(</span>DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> dataVariant<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> canApplyToType<span class="op">&lt;</span>LineData<span class="op">&gt;(</span>dataVariant<span class="op">);</span></span>
-<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>TransformParametersBase<span class="op">&gt;</span> LineClipOperation<span class="op">::</span>getDefaultParameters<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
-<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>LineClipParameters<span class="op">&gt;();</span></span>
-<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a>DataTypeVariant LineClipOperation<span class="op">::</span>execute<span class="op">(</span>DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> dataVariant<span class="op">,</span></span>
-<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a>                                          TransformParametersBase <span class="at">const</span> <span class="op">*</span> transformParameters<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> execute<span class="op">(</span>dataVariant<span class="op">,</span> transformParameters<span class="op">,</span> <span class="op">[](</span><span class="dt">int</span><span class="op">){});</span></span>
-<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a>DataTypeVariant LineClipOperation<span class="op">::</span>execute<span class="op">(</span>DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> dataVariant<span class="op">,</span></span>
-<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a>                                          TransformParametersBase <span class="at">const</span> <span class="op">*</span> transformParameters<span class="op">,</span></span>
-<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a>                                          ProgressCallback progressCallback<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">*</span> line_data_ptr <span class="op">=</span> <span class="bu">std::</span>get_if<span class="op">&lt;</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>LineData<span class="op">&gt;&gt;(&amp;</span>dataVariant<span class="op">);</span></span>
-<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>line_data_ptr <span class="op">||</span> <span class="op">!(*</span>line_data_ptr<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"LineClipOperation::execute called with incompatible variant type or null data."</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
-<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
-<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-118"><a href="#cb3-118" aria-hidden="true" tabindex="-1"></a>    LineData <span class="at">const</span> <span class="op">*</span> input_line_data <span class="op">=</span> <span class="op">(*</span>line_data_ptr<span class="op">).</span>get<span class="op">();</span></span>
-<span id="cb3-119"><a href="#cb3-119" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-120"><a href="#cb3-120" aria-hidden="true" tabindex="-1"></a>    LineClipParameters <span class="at">const</span> <span class="op">*</span> params <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
-<span id="cb3-121"><a href="#cb3-121" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>TransformParametersBase<span class="op">&gt;</span> default_params_owner<span class="op">;</span></span>
-<span id="cb3-122"><a href="#cb3-122" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-123"><a href="#cb3-123" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>transformParameters<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-124"><a href="#cb3-124" aria-hidden="true" tabindex="-1"></a>        params <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>LineClipParameters <span class="at">const</span> <span class="op">*&gt;(</span>transformParameters<span class="op">);</span></span>
-<span id="cb3-125"><a href="#cb3-125" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>params<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-126"><a href="#cb3-126" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"LineClipOperation::execute: Invalid parameter type. Using defaults."</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
-<span id="cb3-127"><a href="#cb3-127" aria-hidden="true" tabindex="-1"></a>            default_params_owner <span class="op">=</span> getDefaultParameters<span class="op">();</span></span>
-<span id="cb3-128"><a href="#cb3-128" aria-hidden="true" tabindex="-1"></a>            params <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span>LineClipParameters <span class="at">const</span> <span class="op">*&gt;(</span>default_params_owner<span class="op">.</span>get<span class="op">());</span></span>
-<span id="cb3-129"><a href="#cb3-129" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb3-130"><a href="#cb3-130" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
-<span id="cb3-131"><a href="#cb3-131" aria-hidden="true" tabindex="-1"></a>        default_params_owner <span class="op">=</span> getDefaultParameters<span class="op">();</span></span>
-<span id="cb3-132"><a href="#cb3-132" aria-hidden="true" tabindex="-1"></a>        params <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span>LineClipParameters <span class="at">const</span> <span class="op">*&gt;(</span>default_params_owner<span class="op">.</span>get<span class="op">());</span></span>
-<span id="cb3-133"><a href="#cb3-133" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-134"><a href="#cb3-134" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-135"><a href="#cb3-135" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>params<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-136"><a href="#cb3-136" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"LineClipOperation::execute: Failed to get parameters."</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
-<span id="cb3-137"><a href="#cb3-137" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
-<span id="cb3-138"><a href="#cb3-138" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-139"><a href="#cb3-139" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-140"><a href="#cb3-140" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>LineData<span class="op">&gt;</span> result <span class="op">=</span> clip_lines<span class="op">(</span>input_line_data<span class="op">,</span> params<span class="op">,</span> progressCallback<span class="op">);</span></span>
-<span id="cb3-141"><a href="#cb3-141" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>result<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"LineClipOperation::execute: 'clip_lines' failed to produce a result."</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
-<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
-<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-146"><a href="#cb3-146" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-147"><a href="#cb3-147" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">;</span></span>
-<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a><span class="op">}</span> </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"line_clip.hpp"</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"CoreGeometry/line_geometry.hpp"</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Lines/Line_Data.hpp"</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"transforms/utils/variant_type_check.hpp"</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cmath&gt;</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> validateLineClipImageSizes<span class="op">(</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        LineData <span class="at">const</span> <span class="op">*</span> input_line_data<span class="op">,</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        LineData <span class="at">const</span> <span class="op">*</span> reference_line_data<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>input_line_data <span class="op">||</span> <span class="op">!</span>reference_line_data<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    ImageSize <span class="at">const</span> input_size <span class="op">=</span> input_line_data<span class="op">-&gt;</span>getImageSize<span class="op">();</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    ImageSize <span class="at">const</span> reference_size <span class="op">=</span> reference_line_data<span class="op">-&gt;</span>getImageSize<span class="op">();</span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>input_size<span class="op">.</span>isDefined<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"LineClip: Input LineData image size is undefined."</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>reference_size<span class="op">.</span>isDefined<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"LineClip: Reference LineData image size is undefined."</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>input_size <span class="op">!=</span> reference_size<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"LineClip: Image size mismatch. Input is "</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>                  <span class="op">&lt;&lt;</span> input_size<span class="op">.</span>width <span class="op">&lt;&lt;</span> <span class="st">"x"</span> <span class="op">&lt;&lt;</span> input_size<span class="op">.</span>height <span class="op">&lt;&lt;</span> <span class="st">", reference is "</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>                  <span class="op">&lt;&lt;</span> reference_size<span class="op">.</span>width <span class="op">&lt;&lt;</span> <span class="st">"x"</span> <span class="op">&lt;&lt;</span> reference_size<span class="op">.</span>height <span class="op">&lt;&lt;</span> <span class="st">"."</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>LineData<span class="op">&gt;</span> clip_lines<span class="op">(</span></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>        LineData <span class="at">const</span> <span class="op">*</span> line_data<span class="op">,</span></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>        LineClipParameters <span class="at">const</span> <span class="op">*</span> params<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> clip_lines<span class="op">(</span>line_data<span class="op">,</span> params<span class="op">,</span> <span class="op">[](</span><span class="dt">int</span><span class="op">)</span> <span class="op">{});</span></span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>LineData<span class="op">&gt;</span> clip_lines<span class="op">(</span></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>        LineData <span class="at">const</span> <span class="op">*</span> line_data<span class="op">,</span></span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>        LineClipParameters <span class="at">const</span> <span class="op">*</span> params<span class="op">,</span></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>        <span class="at">const</span> ProgressCallback<span class="op">&amp;</span> progressCallback<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> result_line_data <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>LineData<span class="op">&gt;();</span></span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>line_data <span class="op">||</span> <span class="op">!</span>params <span class="op">||</span> <span class="op">!</span>params<span class="op">-&gt;</span>reference_line_data<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"LineClip: Invalid input parameters."</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>        progressCallback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result_line_data<span class="op">;</span></span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>validateLineClipImageSizes<span class="op">(</span>line_data<span class="op">,</span> params<span class="op">-&gt;</span>reference_line_data<span class="op">.</span>get<span class="op">()))</span> <span class="op">{</span></span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a>        progressCallback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result_line_data<span class="op">;</span></span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a>    result_line_data<span class="op">-&gt;</span>setImageSize<span class="op">(</span>line_data<span class="op">-&gt;</span>getImageSize<span class="op">());</span></span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get reference line from the specified frame</span></span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> reference_lines <span class="op">=</span> params<span class="op">-&gt;</span>reference_line_data<span class="op">-&gt;</span>getAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span>params<span class="op">-&gt;</span>reference_frame<span class="op">));</span></span>
+<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>reference_lines<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"LineClip: No reference line found at frame "</span> <span class="op">&lt;&lt;</span> params<span class="op">-&gt;</span>reference_frame <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a>        progressCallback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
+<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result_line_data<span class="op">;</span></span>
+<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Use the first line from the reference frame</span></span>
+<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a>    Line2D <span class="at">const</span> <span class="op">&amp;</span> reference_line <span class="op">=</span> reference_lines<span class="op">[</span><span class="dv">0</span><span class="op">];</span></span>
+<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Get all times with data for progress calculation</span></span>
+<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> times_with_data <span class="op">=</span> line_data<span class="op">-&gt;</span>getTimesWithData<span class="op">();</span></span>
+<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>times_with_data<span class="op">.</span>empty<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a>        progressCallback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
+<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> result_line_data<span class="op">;</span></span>
+<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a>    progressCallback<span class="op">(</span><span class="dv">0</span><span class="op">);</span></span>
+<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> processed_times <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> time<span class="op">:</span> times_with_data<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> lines_at_time <span class="op">=</span> line_data<span class="op">-&gt;</span>getAtTime<span class="op">(</span>time<span class="op">);</span></span>
+<span id="cb4-93"><a href="#cb4-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-94"><a href="#cb4-94" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">:</span> lines_at_time<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-95"><a href="#cb4-95" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>line<span class="op">.</span>size<span class="op">()</span> <span class="op">&lt;</span> <span class="dv">2</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-96"><a href="#cb4-96" aria-hidden="true" tabindex="-1"></a>                <span class="cf">continue</span><span class="op">;</span><span class="co">// Skip lines that are too short</span></span>
+<span id="cb4-97"><a href="#cb4-97" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb4-98"><a href="#cb4-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-99"><a href="#cb4-99" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Clip the line using the reference line</span></span>
+<span id="cb4-100"><a href="#cb4-100" aria-hidden="true" tabindex="-1"></a>            Line2D <span class="at">const</span> clipped_line <span class="op">=</span> clip_line_at_intersection<span class="op">(</span>line<span class="op">,</span> reference_line<span class="op">,</span> params<span class="op">-&gt;</span>clip_side<span class="op">);</span></span>
+<span id="cb4-101"><a href="#cb4-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-102"><a href="#cb4-102" aria-hidden="true" tabindex="-1"></a>            <span class="co">// Add clipped line to result (only if it has at least 2 points)</span></span>
+<span id="cb4-103"><a href="#cb4-103" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>clipped_line<span class="op">.</span>size<span class="op">()</span> <span class="op">&gt;=</span> <span class="dv">2</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-104"><a href="#cb4-104" aria-hidden="true" tabindex="-1"></a>                result_line_data<span class="op">-&gt;</span>addAtTime<span class="op">(</span>time<span class="op">,</span> clipped_line<span class="op">,</span> NotifyObservers<span class="op">::</span>No<span class="op">);</span></span>
+<span id="cb4-105"><a href="#cb4-105" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb4-106"><a href="#cb4-106" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-107"><a href="#cb4-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-108"><a href="#cb4-108" aria-hidden="true" tabindex="-1"></a>        processed_times<span class="op">++;</span></span>
+<span id="cb4-109"><a href="#cb4-109" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> <span class="at">const</span> progress <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int</span><span class="op">&gt;(</span></span>
+<span id="cb4-110"><a href="#cb4-110" aria-hidden="true" tabindex="-1"></a>                <span class="bu">std::</span>round<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>processed_times<span class="op">)</span> <span class="op">/</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;(</span>times_with_data<span class="op">.</span>size<span class="op">())</span> <span class="op">*</span> <span class="fl">100.0</span><span class="op">));</span></span>
+<span id="cb4-111"><a href="#cb4-111" aria-hidden="true" tabindex="-1"></a>        progressCallback<span class="op">(</span>progress<span class="op">);</span></span>
+<span id="cb4-112"><a href="#cb4-112" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-113"><a href="#cb4-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-114"><a href="#cb4-114" aria-hidden="true" tabindex="-1"></a>    progressCallback<span class="op">(</span><span class="dv">100</span><span class="op">);</span></span>
+<span id="cb4-115"><a href="#cb4-115" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result_line_data<span class="op">;</span></span>
+<span id="cb4-116"><a href="#cb4-116" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-117"><a href="#cb4-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-118"><a href="#cb4-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-119"><a href="#cb4-119" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string LineClipOperation<span class="op">::</span>getName<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb4-120"><a href="#cb4-120" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">"Clip Line by Reference Line"</span><span class="op">;</span></span>
+<span id="cb4-121"><a href="#cb4-121" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-122"><a href="#cb4-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-123"><a href="#cb4-123" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>type_index LineClipOperation<span class="op">::</span>getTargetInputTypeIndex<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb4-124"><a href="#cb4-124" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="kw">typeid</span><span class="op">(</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>LineData<span class="op">&gt;);</span></span>
+<span id="cb4-125"><a href="#cb4-125" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-126"><a href="#cb4-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-127"><a href="#cb4-127" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> LineClipOperation<span class="op">::</span>canApply<span class="op">(</span>DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> dataVariant<span class="op">)</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb4-128"><a href="#cb4-128" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> canApplyToType<span class="op">&lt;</span>LineData<span class="op">&gt;(</span>dataVariant<span class="op">);</span></span>
+<span id="cb4-129"><a href="#cb4-129" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-130"><a href="#cb4-130" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-131"><a href="#cb4-131" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>TransformParametersBase<span class="op">&gt;</span> LineClipOperation<span class="op">::</span>getDefaultParameters<span class="op">()</span> <span class="at">const</span> <span class="op">{</span></span>
+<span id="cb4-132"><a href="#cb4-132" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>make_unique<span class="op">&lt;</span>LineClipParameters<span class="op">&gt;();</span></span>
+<span id="cb4-133"><a href="#cb4-133" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-134"><a href="#cb4-134" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-135"><a href="#cb4-135" aria-hidden="true" tabindex="-1"></a>DataTypeVariant LineClipOperation<span class="op">::</span>execute<span class="op">(</span>DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> dataVariant<span class="op">,</span></span>
+<span id="cb4-136"><a href="#cb4-136" aria-hidden="true" tabindex="-1"></a>                                           TransformParametersBase <span class="at">const</span> <span class="op">*</span> transformParameters<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-137"><a href="#cb4-137" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> execute<span class="op">(</span>dataVariant<span class="op">,</span> transformParameters<span class="op">,</span> <span class="op">[](</span><span class="dt">int</span><span class="op">)</span> <span class="op">{});</span></span>
+<span id="cb4-138"><a href="#cb4-138" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb4-139"><a href="#cb4-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-140"><a href="#cb4-140" aria-hidden="true" tabindex="-1"></a>DataTypeVariant LineClipOperation<span class="op">::</span>execute<span class="op">(</span>DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> dataVariant<span class="op">,</span></span>
+<span id="cb4-141"><a href="#cb4-141" aria-hidden="true" tabindex="-1"></a>                                           TransformParametersBase <span class="at">const</span> <span class="op">*</span> transformParameters<span class="op">,</span></span>
+<span id="cb4-142"><a href="#cb4-142" aria-hidden="true" tabindex="-1"></a>                                           ProgressCallback progressCallback<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-143"><a href="#cb4-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-144"><a href="#cb4-144" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> <span class="op">*</span> line_data_ptr <span class="op">=</span> <span class="bu">std::</span>get_if<span class="op">&lt;</span><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>LineData<span class="op">&gt;&gt;(&amp;</span>dataVariant<span class="op">);</span></span>
+<span id="cb4-145"><a href="#cb4-145" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-146"><a href="#cb4-146" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>line_data_ptr <span class="op">||</span> <span class="op">!(*</span>line_data_ptr<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb4-147"><a href="#cb4-147" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"LineClipOperation::execute called with incompatible variant type or null data."</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb4-148"><a href="#cb4-148" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb4-149"><a href="#cb4-149" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-150"><a href="#cb4-150" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-151"><a href="#cb4-151" aria-hidden="true" tabindex="-1"></a>    LineData <span class="at">const</span> <span class="op">*</span> input_line_data <span class="op">=</span> <span class="op">(*</span>line_data_ptr<span class="op">).</span>get<span class="op">();</span></span>
+<span id="cb4-152"><a href="#cb4-152" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-153"><a href="#cb4-153" aria-hidden="true" tabindex="-1"></a>    LineClipParameters <span class="at">const</span> <span class="op">*</span> params <span class="op">=</span> <span class="kw">nullptr</span><span class="op">;</span></span>
+<span id="cb4-154"><a href="#cb4-154" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>TransformParametersBase<span class="op">&gt;</span> default_params_owner<span class="op">;</span></span>
+<span id="cb4-155"><a href="#cb4-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-156"><a href="#cb4-156" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>transformParameters<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-157"><a href="#cb4-157" aria-hidden="true" tabindex="-1"></a>        params <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>LineClipParameters <span class="at">const</span> <span class="op">*&gt;(</span>transformParameters<span class="op">);</span></span>
+<span id="cb4-158"><a href="#cb4-158" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(!</span>params<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-159"><a href="#cb4-159" aria-hidden="true" tabindex="-1"></a>            <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"LineClipOperation::execute: Invalid parameter type. Using defaults."</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb4-160"><a href="#cb4-160" aria-hidden="true" tabindex="-1"></a>            default_params_owner <span class="op">=</span> getDefaultParameters<span class="op">();</span></span>
+<span id="cb4-161"><a href="#cb4-161" aria-hidden="true" tabindex="-1"></a>            params <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>LineClipParameters <span class="at">const</span> <span class="op">*&gt;(</span>default_params_owner<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb4-162"><a href="#cb4-162" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb4-163"><a href="#cb4-163" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb4-164"><a href="#cb4-164" aria-hidden="true" tabindex="-1"></a>        default_params_owner <span class="op">=</span> getDefaultParameters<span class="op">();</span></span>
+<span id="cb4-165"><a href="#cb4-165" aria-hidden="true" tabindex="-1"></a>        params <span class="op">=</span> <span class="kw">dynamic_cast</span><span class="op">&lt;</span>LineClipParameters <span class="at">const</span> <span class="op">*&gt;(</span>default_params_owner<span class="op">.</span>get<span class="op">());</span></span>
+<span id="cb4-166"><a href="#cb4-166" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-167"><a href="#cb4-167" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-168"><a href="#cb4-168" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>params<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-169"><a href="#cb4-169" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"LineClipOperation::execute: Failed to get parameters."</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb4-170"><a href="#cb4-170" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb4-171"><a href="#cb4-171" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-172"><a href="#cb4-172" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-173"><a href="#cb4-173" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>LineData<span class="op">&gt;</span> result <span class="op">=</span> clip_lines<span class="op">(</span>input_line_data<span class="op">,</span> params<span class="op">,</span> progressCallback<span class="op">);</span></span>
+<span id="cb4-174"><a href="#cb4-174" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-175"><a href="#cb4-175" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(!</span>result<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb4-176"><a href="#cb4-176" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"LineClipOperation::execute: 'clip_lines' failed to produce a result."</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>endl<span class="op">;</span></span>
+<span id="cb4-177"><a href="#cb4-177" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="op">{};</span></span>
+<span id="cb4-178"><a href="#cb4-178" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb4-179"><a href="#cb4-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-180"><a href="#cb4-180" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result<span class="op">;</span></span>
+<span id="cb4-181"><a href="#cb4-181" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-09-24 at 21:31:36 +0000</p>
+<p>Updated on 2026-10-07 at 20:11:07 +0000</p>
 
 
 </section>

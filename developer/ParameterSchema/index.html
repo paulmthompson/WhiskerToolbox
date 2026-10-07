@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.18">
+<meta name="generator" content="quarto-1.10.19">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -76,9 +76,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
@@ -1672,56 +1672,61 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>Collapsed by default in the UI</td>
 </tr>
 <tr class="odd">
+<td><code>is_hidden</code></td>
+<td><code>bool</code></td>
+<td>Omit the form row in AutoParamWidget but still serialize the field (hidden widgets keep default state)</td>
+</tr>
+<tr class="even">
 <td><code>is_optional</code></td>
 <td><code>bool</code></td>
 <td>True for <code>std::optional&lt;T&gt;</code> fields</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>is_bound</code></td>
 <td><code>bool</code></td>
 <td>True if typically populated from a value store</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>dynamic_combo</code></td>
 <td><code>bool</code></td>
 <td>If true, create QComboBox even with empty <code>allowed_values</code></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>include_none_sentinel</code></td>
 <td><code>bool</code></td>
 <td>If true, prepend “(None)” sentinel to combo (maps to <code>""</code> in JSON)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>path_field_kind</code></td>
 <td><code>PathFieldKind</code></td>
 <td><code>None</code>, <code>FilePath</code>, or <code>DirectoryPath</code> for browse-enabled path fields</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>file_dialog_id</code></td>
 <td><code>std::string</code></td>
 <td>AppFileDialog session id when <code>path_field_kind != None</code></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>is_vector</code></td>
 <td><code>bool</code></td>
 <td>True for <code>std::vector&lt;T&gt;</code> fields</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>vector_element_type</code></td>
 <td><code>std::string</code></td>
 <td>Element type for vector fields (e.g.&nbsp;<code>"std::string"</code>, <code>"int"</code>, <code>"float"</code>, <code>"double"</code>)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>is_variant</code></td>
 <td><code>bool</code></td>
 <td>True for <code>rfl::TaggedUnion</code> fields</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>variant_discriminator</code></td>
 <td><code>std::string</code></td>
 <td>Tag field name (e.g.&nbsp;<code>"model"</code>)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>variant_alternatives</code></td>
 <td><code>std::vector&lt;VariantAlternative&gt;</code></td>
 <td>One entry per union alternative</td>

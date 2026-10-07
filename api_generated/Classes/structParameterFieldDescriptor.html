@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.18">
+<meta name="generator" content="quarto-1.10.19">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -76,9 +76,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b85bc7c33db8c58e0ec93c3465666fed.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
 <link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
@@ -366,6 +366,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#variable-tooltip" id="toc-variable-tooltip" class="nav-link" data-scroll-target="#variable-tooltip">variable tooltip</a></li>
   <li><a href="#variable-group" id="toc-variable-group" class="nav-link" data-scroll-target="#variable-group">variable group</a></li>
   <li><a href="#variable-is_advanced" id="toc-variable-is_advanced" class="nav-link" data-scroll-target="#variable-is_advanced">variable is_advanced</a></li>
+  <li><a href="#variable-is_hidden" id="toc-variable-is_hidden" class="nav-link" data-scroll-target="#variable-is_hidden">variable is_hidden</a></li>
   <li><a href="#variable-display_order" id="toc-variable-display_order" class="nav-link" data-scroll-target="#variable-display_order">variable display_order</a></li>
   <li><a href="#variable-is_optional" id="toc-variable-is_optional" class="nav-link" data-scroll-target="#variable-is_optional">variable is_optional</a></li>
   <li><a href="#variable-is_bound" id="toc-variable-is_bound" class="nav-link" data-scroll-target="#variable-is_bound">variable is_bound</a></li>
@@ -469,53 +470,57 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>bool</td>
-<td><strong><a href="../../api_generated/Classes/structParameterFieldDescriptor.html#variable-is-advanced">is_advanced</a></strong> <br>Collapsed by default in the UI.</td>
+<td><strong><a href="../../api_generated/Classes/structParameterFieldDescriptor.html#variable-is-advanced">is_advanced</a></strong></td>
 </tr>
 <tr class="even">
+<td>bool</td>
+<td><strong><a href="../../api_generated/Classes/structParameterFieldDescriptor.html#variable-is-hidden">is_hidden</a></strong></td>
+</tr>
+<tr class="odd">
 <td>int</td>
 <td><strong><a href="../../api_generated/Classes/structParameterFieldDescriptor.html#variable-display-order">display_order</a></strong></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>bool</td>
 <td><strong><a href="../../api_generated/Classes/structParameterFieldDescriptor.html#variable-is-optional">is_optional</a></strong> <br>True for std::optional<t> fields.</t></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>bool</td>
 <td><strong><a href="../../api_generated/Classes/structParameterFieldDescriptor.html#variable-is-bound">is_bound</a></strong> <br>True if typically populated from PipelineValueStore.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>bool</td>
 <td><strong><a href="../../api_generated/Classes/structParameterFieldDescriptor.html#variable-is-vector">is_vector</a></strong> <br>True for std::vector<t> fields.</t></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>std::string</td>
 <td><strong><a href="../../api_generated/Classes/structParameterFieldDescriptor.html#variable-vector-element-type">vector_element_type</a></strong> <br>Inner type: “float”, “int”, “std::string” (only valid when is_vector)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>bool</td>
 <td><strong><a href="../../api_generated/Classes/structParameterFieldDescriptor.html#variable-dynamic-combo">dynamic_combo</a></strong> <br>If true, create QComboBox even with empty allowed_values.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>bool</td>
 <td><strong><a href="../../api_generated/Classes/structParameterFieldDescriptor.html#variable-include-none-sentinel">include_none_sentinel</a></strong> <br>If true, prepend “(None)” sentinel to combo.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><a href="../../api_generated/Files/PathFieldKind_8hpp.html#enum-pathfieldkind">PathFieldKind</a></td>
 <td><strong><a href="../../api_generated/Classes/structParameterFieldDescriptor.html#variable-path-field-kind">path_field_kind</a></strong></td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>std::string</td>
 <td><strong><a href="../../api_generated/Classes/structParameterFieldDescriptor.html#variable-file-dialog-id">file_dialog_id</a></strong> <br><a href="">AppFileDialog</a> session id when path_field_kind != None.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>bool</td>
 <td><strong><a href="../../api_generated/Classes/structParameterFieldDescriptor.html#variable-is-variant">is_variant</a></strong> <br>True for rfl::TaggedUnion fields.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>std::string</td>
 <td><strong><a href="../../api_generated/Classes/structParameterFieldDescriptor.html#variable-variant-discriminator">variant_discriminator</a></strong> <br>Discriminator field name (e.g., “model”)</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>std::vector&lt; <a href="../../api_generated/Classes/structVariantAlternative.html">VariantAlternative</a> &gt;</td>
 <td><strong><a href="../../api_generated/Classes/structParameterFieldDescriptor.html#variable-variant-alternatives">variant_alternatives</a></strong> <br>One entry per union alternative.</td>
 </tr>
@@ -580,67 +585,72 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="variable-is_advanced" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_advanced">variable is_advanced</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> is_advanced <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Collapsed by default in the UI.</p>
+<p>Collapsed by default in the UI</p>
+</section>
+<section id="variable-is_hidden" class="level3">
+<h3 class="anchored" data-anchor-id="variable-is_hidden">variable is_hidden</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> is_hidden <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>When true, <a href="../../api_generated/Classes/classAutoParamWidget.html">AutoParamWidget</a> omits the row but still serializes the field (using default widget state) so rfl JSON round-trips stay valid.</p>
 </section>
 <section id="variable-display_order" class="level3">
 <h3 class="anchored" data-anchor-id="variable-display_order">variable display_order</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> display_order <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> display_order <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-is_optional" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_optional">variable is_optional</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> is_optional <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> is_optional <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>True for std::optional<t> fields.</t></p>
 </section>
 <section id="variable-is_bound" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_bound">variable is_bound</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> is_bound <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> is_bound <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>True if typically populated from PipelineValueStore.</p>
 </section>
 <section id="variable-is_vector" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_vector">variable is_vector</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> is_vector <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> is_vector <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>True for std::vector<t> fields.</t></p>
 </section>
 <section id="variable-vector_element_type" class="level3">
 <h3 class="anchored" data-anchor-id="variable-vector_element_type">variable vector_element_type</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string <span class="dt">vector_element_type</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string <span class="dt">vector_element_type</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Inner type: “float”, “int”, “std::string” (only valid when is_vector)</p>
 </section>
 <section id="variable-dynamic_combo" class="level3">
 <h3 class="anchored" data-anchor-id="variable-dynamic_combo">variable dynamic_combo</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> dynamic_combo <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> dynamic_combo <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>If true, create QComboBox even with empty allowed_values.</p>
 </section>
 <section id="variable-include_none_sentinel" class="level3">
 <h3 class="anchored" data-anchor-id="variable-include_none_sentinel">variable include_none_sentinel</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb20"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> include_none_sentinel <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> include_none_sentinel <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>If true, prepend “(None)” sentinel to combo.</p>
 </section>
 <section id="variable-path_field_kind" class="level3">
 <h3 class="anchored" data-anchor-id="variable-path_field_kind">variable path_field_kind</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>PathFieldKind path_field_kind <span class="op">=</span> PathFieldKind<span class="op">::</span>None<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>PathFieldKind path_field_kind <span class="op">=</span> PathFieldKind<span class="op">::</span>None<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-file_dialog_id" class="level3">
 <h3 class="anchored" data-anchor-id="variable-file_dialog_id">variable file_dialog_id</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string file_dialog_id<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string file_dialog_id<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><a href="">AppFileDialog</a> session id when path_field_kind != None.</p>
 </section>
 <section id="variable-is_variant" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_variant">variable is_variant</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> is_variant <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> is_variant <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>True for rfl::TaggedUnion fields.</p>
 </section>
 <section id="variable-variant_discriminator" class="level3">
 <h3 class="anchored" data-anchor-id="variable-variant_discriminator">variable variant_discriminator</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb24"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string variant_discriminator<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string variant_discriminator<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Discriminator field name (e.g., “model”)</p>
 </section>
 <section id="variable-variant_alternatives" class="level3">
 <h3 class="anchored" data-anchor-id="variable-variant_alternatives">variable variant_alternatives</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> VariantAlternative <span class="op">&gt;</span> variant_alternatives<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> VariantAlternative <span class="op">&gt;</span> variant_alternatives<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>One entry per union alternative.</p>
 <hr>
-<p>Updated on 2026-09-24 at 21:31:33 +0000</p>
+<p>Updated on 2026-10-07 at 20:11:03 +0000</p>
 
 
 </section>
