@@ -66,6 +66,8 @@ private:
     std::set<std::string> _enabled_features;      // Track which features are enabled/checked
     std::string _selected_feature_for_restoration;// Track which feature should be selected after rebuild
 
+    int _data_manager_observer_id = -1;///< DataManager observer callback ID for cleanup
+
     void _addFeatureName(std::string const & key, int row, int col);
     void _addFeatureType(std::string const & key, int row, int col);
     void _addFeatureClock(std::string const & key, int row, int col);

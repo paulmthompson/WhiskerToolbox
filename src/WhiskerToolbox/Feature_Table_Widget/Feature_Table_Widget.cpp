@@ -96,23 +96,31 @@ Feature_Table_Widget::Feature_Table_Widget(QWidget * parent)
 }
 
 Feature_Table_Widget::~Feature_Table_Widget() {
+    if (_data_manager && _data_manager_observer_id >= 0) {
+        _data_manager->removeObserver(_data_manager_observer_id);
+        _data_manager_observer_id = -1;
+    }
     delete ui;
 }
 
 void Feature_Table_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
+    if (_data_manager && _data_manager_observer_id >= 0) {
+        _data_manager->removeObserver(_data_manager_observer_id);
+        _data_manager_observer_id = -1;
+    }
 
     if (!data_manager) {
         std::cout << "Feature_Table_Widget::setDataManager - Data manager is null" << std::endl;
+        _data_manager.reset();
         return;
     }
 
     _data_manager = std::move(data_manager);
-    // I want to add a callback to the data manager to be called when the data manager is updated
 
-    _data_manager->addObserver([this]() {
+    _data_manager_observer_id = _data_manager->addObserver([this]() {
         _refreshFeatures();
     },
-                               "Feature_Table_Widget");
+                                                           "Feature_Table_Widget");
 }
 
 void Feature_Table_Widget::_addFeatureName(std::string const & key, int row, int col) {

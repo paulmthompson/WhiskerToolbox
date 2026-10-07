@@ -389,3 +389,28 @@ TEST_CASE_METHOD(FeatureTableWidgetTestFixture, "Feature_Table_Widget - No emiss
     // One of add/remove should have incremented
     REQUIRE((addFeatureCount > prevAdd || removeFeatureCount > prevRemove));
 }
+
+TEST_CASE("Feature_Table_Widget - unregisters observer on destroy", "[Feature_Table_Widget][Observer]") {
+    if (!QApplication::instance()) {
+        static int argc = 1;
+        static char * argv[] = {const_cast<char *>("test")};
+        static std::unique_ptr<QApplication> app = std::make_unique<QApplication>(argc, argv);
+    }
+
+    auto dm = std::make_shared<DataManager>();
+    std::vector<float> const values = {1.0f, 2.0f, 3.0f};
+    auto analog = std::make_shared<AnalogTimeSeries>(values, values.size());
+    TimeKey const time_key("time");
+    dm->setData<AnalogTimeSeries>("observer_lifetime_probe", analog, time_key);
+
+    {
+        auto widget = std::make_unique<Feature_Table_Widget>();
+        widget->setColumns({"Feature", "Type"});
+        widget->setDataManager(dm);
+        widget->populateTable();
+    }
+
+    auto analog2 = std::make_shared<AnalogTimeSeries>(values, values.size());
+    dm->setData<AnalogTimeSeries>("observer_lifetime_probe_2", analog2, time_key);
+    QApplication::processEvents();
+}
