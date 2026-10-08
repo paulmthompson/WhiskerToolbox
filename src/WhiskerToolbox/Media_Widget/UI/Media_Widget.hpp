@@ -86,6 +86,7 @@ protected:
 private:
     Ui::Media_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
+    int _data_manager_observer_id{-1}; ///< DataManager observer callback ID for cleanup
     EditorRegistry * _editor_registry{nullptr};
     std::unique_ptr<Media_Window> _scene;
     std::map<std::string, std::vector<int>> _callback_ids;

@@ -83,3 +83,45 @@ TEST_CASE("Media_Widget construction and basic setup", "[Media_Widget]") {
         app->processEvents();
     }
 }
+
+TEST_CASE("Media_Widget - unregisters observer on destroy and rebind", "[Media_Widget][Observer]") {
+    if (!QApplication::instance()) {
+        static int argc = 1;
+        static char app_name[] = "test";
+        static std::array<char *, 1> argv = {app_name};
+        new QApplication(argc, argv.data());
+    }
+
+    auto * app = QApplication::instance();
+    REQUIRE(app != nullptr);
+
+    EditorRegistry editor_registry(nullptr);
+    auto data_manager = std::make_shared<DataManager>();
+
+    {
+        auto widget = std::make_unique<Media_Widget>(&editor_registry, nullptr);
+        widget->setDataManager(data_manager);
+        app->processEvents();
+    }
+
+    // Mutate DataManager to ensure destroyed widget callback is not invoked
+    REQUIRE_NOTHROW(data_manager->setData<MaskData>("probe_mask", std::make_shared<MaskData>(), TimeKey("time")));
+    app->processEvents();
+
+    // Test rebind with new data manager and nullptr
+    {
+        Media_Widget widget(&editor_registry, nullptr);
+        auto dm1 = std::make_shared<DataManager>();
+        auto dm2 = std::make_shared<DataManager>();
+
+        widget.setDataManager(dm1);
+        widget.setDataManager(dm2);
+        // Mutating dm1 should not invoke callbacks on widget
+        REQUIRE_NOTHROW(dm1->setData<MaskData>("dm1_mask", std::make_shared<MaskData>(), TimeKey("time")));
+
+        widget.setDataManager(nullptr);
+        // Mutating dm2 should not invoke callbacks on widget
+        REQUIRE_NOTHROW(dm2->setData<MaskData>("dm2_mask", std::make_shared<MaskData>(), TimeKey("time")));
+    }
+}
+

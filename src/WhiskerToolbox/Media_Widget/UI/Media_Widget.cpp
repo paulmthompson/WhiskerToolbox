@@ -95,6 +95,19 @@ Media_Widget::~Media_Widget() {
         _editor_registry->unregisterState(EditorInstanceId(_state->getInstanceId()));
     }
 
+    if (_data_manager) {
+        for (auto const & [key, ids] : _callback_ids) {
+            for (auto id : ids) {
+                _data_manager->removeCallbackFromData(key, id);
+            }
+        }
+        _callback_ids.clear();
+        if (_data_manager_observer_id >= 0) {
+            _data_manager->removeObserver(_data_manager_observer_id);
+            _data_manager_observer_id = -1;
+        }
+    }
+
     // Ensure hover circle is cleared before scene destruction
     if (_scene) {
         _scene->setShowHoverCircle(false);
@@ -112,17 +125,36 @@ void Media_Widget::updateMedia() {
 }
 
 void Media_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
+    if (_data_manager) {
+        for (auto const & [key, ids] : _callback_ids) {
+            for (auto id : ids) {
+                _data_manager->removeCallbackFromData(key, id);
+            }
+        }
+        _callback_ids.clear();
+        if (_data_manager_observer_id >= 0) {
+            _data_manager->removeObserver(_data_manager_observer_id);
+            _data_manager_observer_id = -1;
+        }
+    }
+
+    if (!data_manager) {
+        std::cout << "Media_Widget::setDataManager - Data manager is null" << std::endl;
+        _data_manager.reset();
+        return;
+    }
+
     _data_manager = std::move(data_manager);
 
     // Create the Media_Window now that we have a DataManager
     _createMediaWindow();
     _createOptions();
 
-    _data_manager->addObserver([this]() {
+    _data_manager_observer_id = _data_manager->addObserver([this]() {
         _pruneRemovedFeatures();
         _createOptions();
     },
-                               "Media_Widget");
+                                                           "Media_Widget");
 
     // Wire up the scene to the graphics view immediately so that
     // data overlays render without requiring a separate media load.
