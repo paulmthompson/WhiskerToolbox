@@ -69,10 +69,12 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject * 
         spdlog::debug("[HoverCirclePerf] enabled via WHISKER_HOVER_CIRCLE_PERF");
     }
 
-    _data_manager->addObserver([this]() {
-        _addRemoveData();
-    },
-                               "Media_Window");
+    if (_data_manager) {
+        _data_manager_observer_id = _data_manager->addObserver([this]() {
+            _addRemoveData();
+        },
+                                                               "Media_Window");
+    }
 
     _canvasImage = QImage(_canvasWidth, _canvasHeight, QImage::Format_ARGB32);
     _canvasPixmap = addPixmap(QPixmap::fromImage(_canvasImage));
@@ -81,6 +83,11 @@ Media_Window::Media_Window(std::shared_ptr<DataManager> data_manager, QObject * 
 }
 
 Media_Window::~Media_Window() {
+    if (_data_manager && _data_manager_observer_id >= 0) {
+        _data_manager->removeObserver(_data_manager_observer_id);
+        _data_manager_observer_id = -1;
+    }
+
     // Clean up context menu
     if (_context_menu) {
         delete _context_menu;

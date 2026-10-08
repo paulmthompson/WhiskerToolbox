@@ -101,3 +101,17 @@ TEST_CASE("Media_Window getSceneDiagnostics reports plotted element counts", "[M
     REQUIRE(diagnostics.points >= 1);
     REQUIRE(diagnostics.total_scene_items >= diagnostics.line_paths + diagnostics.points);
 }
+
+TEST_CASE("Media_Window - unregisters observer on destroy", "[Media_Window][Observer]") {
+    ensureQtApplication();
+
+    auto data_manager = createDataManager();
+
+    {
+        Media_Window window(data_manager);
+    }
+
+    // Mutate DataManager to trigger notifications; destroyed Media_Window must not be notified
+    REQUIRE_NOTHROW(data_manager->setData<PointData>("points_test", TimeKey("time")));
+}
+

@@ -309,6 +309,7 @@ protected:
 
 private:
     std::shared_ptr<DataManager> _data_manager;
+    int _data_manager_observer_id{-1}; ///< DataManager observer callback ID for cleanup
     QWidget * _parent_widget = nullptr;
     GroupManager * _group_manager = nullptr;
     MediaWidgetState * _media_widget_state = nullptr;// Non-owning pointer for state sync
