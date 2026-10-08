@@ -252,6 +252,35 @@ TEST_CASE_METHOD(DataViewerWidgetCleanupTestFixture, "DataViewer_Widget - Lifecy
     REQUIRE(true);
 }
 
+TEST_CASE("DataViewer_Widget - unregisters observer on destroy", "[DataViewer_Widget][Observer]") {
+    if (!QApplication::instance()) {
+        static int argc = 1;
+        static char * argv[] = {const_cast<char *>("test")};
+        static QApplication app(argc, argv);
+    }
+
+    auto data_manager = std::make_shared<DataManager>();
+    auto timeframe = std::make_shared<TimeFrame>();
+    data_manager->setTime(TimeKey("time"), timeframe, true);
+    data_manager->setTime(TimeKey("master"), timeframe, true);
+
+    {
+        DataViewer_Widget widget(data_manager, nullptr);
+        widget.openWidget();
+        QCoreApplication::processEvents();
+    }
+
+    // Mutating DataManager after DataViewer_Widget destruction must not trigger callbacks on destroyed widget
+    auto new_timeframe = std::make_shared<TimeFrame>();
+    REQUIRE_NOTHROW(data_manager->setTime(TimeKey("probe_time"), new_timeframe, true));
+    std::vector<float> const values = {1.0f, 2.0f, 3.0f};
+    REQUIRE_NOTHROW(data_manager->setData<AnalogTimeSeries>("probe_analog",
+            std::make_shared<AnalogTimeSeries>(values, values.size()), TimeKey("time")));
+    REQUIRE_NOTHROW(data_manager->deleteData("probe_analog"));
+
+    QCoreApplication::processEvents();
+}
+
 // -----------------------------------------------------------------------------
 // Existing comprehensive tests follow
 // -----------------------------------------------------------------------------

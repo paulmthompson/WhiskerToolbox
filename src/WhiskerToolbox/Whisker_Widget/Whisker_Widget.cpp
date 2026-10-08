@@ -219,6 +219,19 @@ Whisker_Widget::Whisker_Widget(std::shared_ptr<DataManager> data_manager,
 };
 
 Whisker_Widget::~Whisker_Widget() {
+    if (_data_manager && _data_manager_observer_id >= 0) {
+        _data_manager->removeObserver(_data_manager_observer_id);
+        _data_manager_observer_id = -1;
+    }
+
+    if (_data_manager && _whisker_pad_callback_id >= 0 && !_current_whisker_pad_key.empty()) {
+        auto point_data = _data_manager->getData<PointData>(_current_whisker_pad_key);
+        if (point_data) {
+            point_data->removeObserver(_whisker_pad_callback_id);
+        }
+        _whisker_pad_callback_id = -1;
+    }
+
     delete ui;
     delete _janelia_config_widget;
 }
@@ -229,11 +242,18 @@ void Whisker_Widget::openWidget() {
 
     // Populate the whisker pad combo box with available PointData
 
-    _data_manager->addObserver([this]() {
-        _populateWhiskerPadCombo();
-        _populateMaskCombo();
-    },
-                               "Whisker_Widget");
+    if (_data_manager && _data_manager_observer_id >= 0) {
+        _data_manager->removeObserver(_data_manager_observer_id);
+        _data_manager_observer_id = -1;
+    }
+
+    if (_data_manager) {
+        _data_manager_observer_id = _data_manager->addObserver([this]() {
+            _populateWhiskerPadCombo();
+            _populateMaskCombo();
+        },
+                                                               "Whisker_Widget");
+    }
 
     _createNewWhiskerPad();
 
@@ -735,7 +755,13 @@ void Whisker_Widget::_updateWhiskerPadFromSelection() {
     }
 
     if (_whisker_pad_callback_id != -1) {
-        _data_manager->getData<PointData>(_current_whisker_pad_key)->removeObserver(_whisker_pad_callback_id);
+        if (_data_manager) {
+            auto prev_point_data = _data_manager->getData<PointData>(_current_whisker_pad_key);
+            if (prev_point_data) {
+                prev_point_data->removeObserver(_whisker_pad_callback_id);
+            }
+        }
+        _whisker_pad_callback_id = -1;
     }
 
     _current_whisker_pad_key = selected_text.toStdString();

@@ -280,6 +280,7 @@ public slots:
 
 private:
     std::shared_ptr<DataManager> _data_manager;
+    int _data_manager_observer_id{-1};
     Ui::DataViewer_Widget * ui;
 
     /// Serializable state shared with OpenGLWidget

@@ -331,15 +331,22 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
                 }
             });
 
-    // Set up observer to automatically clean up data when it's deleted from DataManager
-    // Queue the cleanup to the Qt event loop to avoid running during mid-update mutations
-    _data_manager->addObserver([this]() {
-        QPointer<DataViewer_Widget> const self = this;
-        QMetaObject::invokeMethod(self, [self]() {
-            if (!self) return;
-            self->cleanupDeletedData(); }, Qt::QueuedConnection);
-    },
-                               "DataViewer_Widget");
+    if (_data_manager) {
+        QPointer<DataViewer_Widget> const self(this);
+        _data_manager_observer_id = _data_manager->addObserver(
+                [self]() {
+                    if (!self) {
+                        return;
+                    }
+                    QMetaObject::invokeMethod(self, [self]() {
+                        if (!self) {
+                            return;
+                        }
+                        self->cleanupDeletedData();
+                    }, Qt::QueuedConnection);
+                },
+                "DataViewer_Widget");
+    }
 
     // We should always get the master clock because we plot
     // Check for master clock
@@ -361,6 +368,10 @@ DataViewer_Widget::DataViewer_Widget(std::shared_ptr<DataManager> data_manager,
 }
 
 DataViewer_Widget::~DataViewer_Widget() {
+    if (_data_manager && _data_manager_observer_id >= 0) {
+        _data_manager->removeObserver(_data_manager_observer_id);
+        _data_manager_observer_id = -1;
+    }
     delete ui;
 }
 

@@ -18,7 +18,7 @@ class DataManagerParameter_Widget : public TransformParameter_Widget {
     Q_OBJECT
 public:
     using TransformParameter_Widget::TransformParameter_Widget;
-    ~DataManagerParameter_Widget() override = default;
+    ~DataManagerParameter_Widget() override;
 
     // Opt-in: only widgets deriving from this class can accept a DataManager
     virtual void setDataManager(std::shared_ptr<DataManager> dm);
@@ -32,6 +32,7 @@ protected:
 
 private:
     std::shared_ptr<DataManager> _data_manager;
+    int _data_manager_observer_id{-1}; ///< DataManager observer callback ID for cleanup
     DataManager * _connected_dm{nullptr};
 };
 

@@ -4,9 +4,21 @@
 
 #include <QMetaObject>
 
+DataManagerParameter_Widget::~DataManagerParameter_Widget() {
+    if (_data_manager && _data_manager_observer_id >= 0) {
+        _data_manager->removeObserver(_data_manager_observer_id);
+        _data_manager_observer_id = -1;
+    }
+}
+
 void DataManagerParameter_Widget::setDataManager(std::shared_ptr<DataManager> dm) {
     if (_data_manager == dm) {
         return;
+    }
+
+    if (_data_manager && _data_manager_observer_id >= 0) {
+        _data_manager->removeObserver(_data_manager_observer_id);
+        _data_manager_observer_id = -1;
     }
 
     _data_manager = std::move(dm);
@@ -17,9 +29,9 @@ void DataManagerParameter_Widget::setDataManager(std::shared_ptr<DataManager> dm
 
         QPointer<DataManagerParameter_Widget> self(this);
         DataManager * expected_dm = _connected_dm;
-        (void)expected_dm; // silence static analyzer about capture-only usage
+        (void) expected_dm;// silence static analyzer about capture-only usage
 
-        _data_manager->addObserver([self, expected_dm]() {
+        _data_manager_observer_id = _data_manager->addObserver([self, expected_dm]() {
             if (!self) return; // widget deleted
             // Drop callbacks that belong to a previous DataManager after a switch
             if (self->_connected_dm != expected_dm) return;

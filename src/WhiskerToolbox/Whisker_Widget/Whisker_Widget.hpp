@@ -83,6 +83,7 @@ protected:
 private:
     std::shared_ptr<whisker::WhiskerTracker> _wt;
     std::shared_ptr<DataManager> _data_manager;
+    int _data_manager_observer_id{-1}; ///< DataManager observer callback ID for cleanup
     std::shared_ptr<WhiskerWidgetState> _state;// EditorState for serialization
 
     int _selected_whisker{0};
