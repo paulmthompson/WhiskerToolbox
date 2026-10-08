@@ -53,6 +53,7 @@ private slots:
 private:
     Ui::TimeFrame_Table_Widget * ui;
     std::shared_ptr<DataManager> _data_manager;
+    int _data_manager_observer_id{-1}; ///< DataManager observer callback ID for cleanup
     bool _is_resizing{false};
 
     void _setAdaptiveColumnWidths();

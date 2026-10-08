@@ -60,20 +60,29 @@ TimeFrame_Table_Widget::TimeFrame_Table_Widget(QWidget * parent)
 }
 
 TimeFrame_Table_Widget::~TimeFrame_Table_Widget() {
+    if (_data_manager && _data_manager_observer_id >= 0) {
+        _data_manager->removeObserver(_data_manager_observer_id);
+        _data_manager_observer_id = -1;
+    }
     delete ui;
 }
 
 void TimeFrame_Table_Widget::setDataManager(std::shared_ptr<DataManager> data_manager) {
+    if (_data_manager && _data_manager_observer_id >= 0) {
+        _data_manager->removeObserver(_data_manager_observer_id);
+        _data_manager_observer_id = -1;
+    }
 
     if (!data_manager) {
         std::cout << "TimeFrame_Table_Widget::setDataManager - Data manager is null" << std::endl;
+        _data_manager.reset();
         return;
     }
 
     _data_manager = std::move(data_manager);
 
     // Subscribe to DataManager-level observer so we refresh whenever data changes
-    _data_manager->addObserver([this]() {
+    _data_manager_observer_id = _data_manager->addObserver([this]() {
         _refreshTable();
     }, "TimeFrame_Table_Widget");
 }
