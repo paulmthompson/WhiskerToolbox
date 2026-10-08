@@ -1739,3 +1739,19 @@ TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - Row sele
         REQUIRE_FALSE(has_event_source);
     }
 }
+
+TEST_CASE_METHOD(TableDesignerWidgetTestFixture, "TableDesignerWidget - unregisters observers on destroy", "[TableDesignerWidget][Observer]") {
+    auto dm = getDataManagerPtr();
+
+    {
+        TableDesignerWidget widget(dm);
+    }
+
+    // Mutating DataManager or table registry must not notify destroyed widget
+    REQUIRE_NOTHROW(dm->setTime(TimeKey("probe_time"), std::make_shared<TimeFrame>(std::vector<int>{1, 2, 3}), true));
+    if (auto * reg = dm->getTableRegistry()) {
+        REQUIRE_NOTHROW(reg->createTable("probe_table", "Probe Table", "Test description"));
+        REQUIRE_NOTHROW(reg->removeTable("probe_table"));
+    }
+}
+

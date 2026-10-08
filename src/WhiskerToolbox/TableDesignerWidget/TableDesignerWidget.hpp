@@ -168,6 +168,8 @@ private slots:
 private:
     Ui::TableDesignerWidget * ui;
     std::shared_ptr<DataManager> _data_manager;
+    int _data_manager_observer_id{-1}; ///< DataManager observer callback ID for cleanup
+    int _table_observer_id{-1};        ///< DataManager table observer callback ID for cleanup
     std::shared_ptr<TableDesignerState> _state;    // Shared state for serialization and inter-widget communication
 
     QString _current_table_id;

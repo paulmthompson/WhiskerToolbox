@@ -148,16 +148,26 @@ TableDesignerWidget::TableDesignerWidget(std::shared_ptr<DataManager> data_manag
 
     // Add observer to automatically refresh dropdowns when DataManager changes
     if (_data_manager) {
-        _data_manager->addObserver([this]() {
+        _data_manager_observer_id = _data_manager->addObserver([this]() {
             refreshAllDataSources();
         },
-                                   "TableDesignerWidget");
+                                                               "TableDesignerWidget");
     }
 
     qDebug() << "TableDesignerWidget initialized with TableViewerWidget for efficient pagination";
 }
 
 TableDesignerWidget::~TableDesignerWidget() {
+    if (_data_manager) {
+        if (_data_manager_observer_id >= 0) {
+            _data_manager->removeObserver(_data_manager_observer_id);
+            _data_manager_observer_id = -1;
+        }
+        if (_table_observer_id >= 0) {
+            _data_manager->removeTableObserver(_table_observer_id);
+            _table_observer_id = -1;
+        }
+    }
     delete ui;
 }
 
@@ -394,7 +404,7 @@ void TableDesignerWidget::connectSignals() {
 
     // Subscribe to DataManager table observer
     if (_data_manager) {
-        auto token = _data_manager->addTableObserver([this](TableEvent const & ev) {
+        _table_observer_id = _data_manager->addTableObserver([this](TableEvent const & ev) {
             switch (ev.type) {
                 case TableEventType::Created:
                     this->onTableManagerTableCreated(QString::fromStdString(ev.tableId));
@@ -410,7 +420,6 @@ void TableDesignerWidget::connectSignals() {
                     break;
             }
         });
-        (void) token;// Optionally store and remove on dtor
     }
 }
 
