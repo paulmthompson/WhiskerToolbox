@@ -48,6 +48,7 @@ add_executable(test_TransformsV2
         ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/LineAngle/LineAngle.test.cpp
         ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/LineBaseFlip/LineBaseFlip.test.cpp
         ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/LineClip/LineClip.test.cpp
+        ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/LineExtend/LineExtend.test.cpp
         ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/LineCurvature/LineCurvature.test.cpp
       #  ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/LineMinPointDist/LineMinPointDist.test.cpp
         ${CMAKE_SOURCE_DIR}/src/TransformsV2/algorithms/LinePointExtraction/LinePointExtraction.test.cpp

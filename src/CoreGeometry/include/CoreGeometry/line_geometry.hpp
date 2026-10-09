@@ -11,6 +11,11 @@ enum class ClipSide {
     KeepDistal// Keep the portion from intersection to line end
 };
 
+enum class ExtendEndpoint {
+    Base, ///< Extend from the first point of the polyline
+    Distal///< Extend from the last point of the polyline
+};
+
 /**
  * @brief Calculate the total calc_length of a line using Euclidean distance
  * @param line The line to calculate calc_length for
@@ -156,6 +161,47 @@ Line2D clip_line_at_intersection(
         Line2D const & line,
         Line2D const & reference_line,
         ClipSide clip_side);
+
+/**
+ * @brief Find the intersection of a ray with a line segment
+ * @param origin Ray origin
+ * @param direction Ray direction (need not be unit length)
+ * @param seg_a First endpoint of the segment
+ * @param seg_b Second endpoint of the segment
+ * @return Intersection point if the ray hits the segment at positive parameter along @p direction
+ */
+std::optional<Point2D<float>> ray_segment_intersection(
+        Point2D<float> const & origin,
+        Point2D<float> const & direction,
+        Point2D<float> const & seg_a,
+        Point2D<float> const & seg_b);
+
+/**
+ * @brief Outward unit tangent at a polyline endpoint for extension
+ * @param line Input polyline
+ * @param extend_end Which endpoint to compute the direction at
+ * @param tangent_distance_pixels Arc length from the endpoint into the line used to define the tangent
+ *        (interpolated along the polyline). Values larger than the line length use the full polyline.
+ * @return Normalized outward direction, or (0,0) if the line is too short or the lookback distance is invalid
+ */
+Point2D<float> calculate_endpoint_extension_direction(
+        Line2D const & line,
+        ExtendEndpoint extend_end,
+        float tangent_distance_pixels);
+
+/**
+ * @brief Extend a polyline from base or distal along a smoothed tangent until a reference polyline is hit
+ * @param line Line to extend
+ * @param reference_line Reference polyline to intersect
+ * @param extend_end Endpoint from which to extend
+ * @param tangent_distance_pixels Arc length from the endpoint used to define the extension direction (pixels)
+ * @return Extended line with an added vertex at the intersection, or @p line if no valid hit
+ */
+Line2D extend_line_at_reference(
+        Line2D const & line,
+        Line2D const & reference_line,
+        ExtendEndpoint extend_end,
+        float tangent_distance_pixels);
 
 float point_to_line_min_distance2(Point2D<float> const & point, Line2D const & line);
 

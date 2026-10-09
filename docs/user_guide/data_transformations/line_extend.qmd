@@ -1,0 +1,21 @@
+---
+title: "Line Extend by Reference Line"
+format: html
+---
+
+## Overview
+
+This transform lengthens each line in a `LineData` object by extending from either the **base** (first point) or **distal** (last point) along a direction that follows the local shape of the line near that end. Extension stops when the ray hits a user-selected **reference line** polyline.
+
+### Parameters
+
+- **Reference line data**: `LineData` object whose first line at the reference frame defines the target boundary.
+- **Reference frame**: Time index into the reference line data (same convention as Line Clip).
+- **Extend at**: `Base` or `Distal` — which end grows toward the reference.
+- **Tangent distance (px)**: How far along the line (in pixels, interpolated on the polyline) from the chosen end to sample a second point that defines the extension direction. If this exceeds the line length, the full line is used. Default is 20 px.
+
+### Behavior
+
+If the extension ray does not intersect the reference polyline in the forward direction, the line is left unchanged. Input and reference data must have matching, defined image sizes.
+
+See also: [Line Clip by Reference Line](line_clip.qmd).

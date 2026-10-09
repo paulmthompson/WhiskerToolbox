@@ -1,0 +1,33 @@
+---
+title: "LineExtend (TransformsV2)"
+---
+
+## Overview
+
+`ExtendLineAtReference` extends each input `Line2D` from its base or distal end along a smoothed endpoint tangent until the extension ray intersects a reference polyline.
+
+| Property | Value |
+|----------|-------|
+| Registry name | `ExtendLineAtReference` |
+| Element signature | `std::tuple<Line2D, Line2D> → Line2D` |
+| Category | Geometry |
+| Core geometry | `extend_line_at_reference` in `CoreGeometry/line_geometry.hpp` |
+
+Source files:
+
+| File | Role |
+|------|------|
+| `src/TransformsV2/algorithms/LineExtend/LineExtend.hpp` | Params + API |
+| `src/TransformsV2/algorithms/LineExtend/LineExtend.cpp` | V2 wrapper |
+| `src/DataManager/transforms/Lines/Line_Extend/line_extend.hpp` | V1 `LineExtendOperation` |
+
+## Parameters
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `extend_end` | `Base` \| `Distal` | `Distal` | Which endpoint to extend from |
+| `tangent_distance_pixels` | `float` | `20` | Arc length in pixels from the endpoint into the line; an interpolated point at this distance defines the tangent (clamped to total line length) |
+
+## Behavior
+
+If the forward ray does not intersect any segment of the reference polyline, the input line is returned unchanged. Input and reference `LineData` must share the same defined image size (enforced in V2 DataManager integration for binary `LineData` pipelines).

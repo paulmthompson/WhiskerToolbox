@@ -83,6 +83,9 @@ set(DATA_TRANSFORM_WIDGET_SOURCES
         Lines/LineClip_Widget/LineClip_Widget.cpp
         Lines/LineClip_Widget/LineClip_Widget.hpp
         Lines/LineClip_Widget/LineClip_Widget.ui
+        Lines/LineExtend_Widget/LineExtend_Widget.cpp
+        Lines/LineExtend_Widget/LineExtend_Widget.hpp
+        Lines/LineExtend_Widget/LineExtend_Widget.ui
         Lines/Line_Proximity_Grouping/LineProximityGrouping_Widget.cpp
         Lines/Line_Proximity_Grouping/LineProximityGrouping_Widget.hpp
         Lines/Line_Proximity_Grouping/LineProximityGrouping_Widget.ui

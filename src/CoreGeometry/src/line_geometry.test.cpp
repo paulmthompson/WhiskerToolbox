@@ -365,3 +365,83 @@ TEST_CASE("CoreGeometry - clip_line_at_intersection inserts clip vertex", "[clip
         }
     }
 }
+
+TEST_CASE("CoreGeometry - extend_line_at_reference", "[extend_line_at_reference]") {
+    Line2D const horizontal_line{{0.0f, 2.0f}, {1.0f, 2.0f}, {2.0f, 2.0f}, {3.0f, 2.0f}, {4.0f, 2.0f}};
+    Line2D const vertical_reference_at_5{{5.0f, 0.0f}, {5.0f, 5.0f}};
+    SECTION("Distal extension reaches reference beyond line end") {
+        Line2D const extended =
+                extend_line_at_reference(horizontal_line, vertical_reference_at_5, ExtendEndpoint::Distal, 20.0f);
+
+        REQUIRE(extended.size() == horizontal_line.size() + 1);
+        REQUIRE_THAT(extended.back().x, Catch::Matchers::WithinAbs(5.0f, 0.001f));
+        REQUIRE_THAT(extended.back().y, Catch::Matchers::WithinAbs(2.0f, 0.001f));
+        REQUIRE_THAT(extended[extended.size() - 2].x, Catch::Matchers::WithinAbs(4.0f, 0.001f));
+    }
+
+    SECTION("No forward intersection leaves line unchanged") {
+        Line2D const short_line{{0.0f, 2.0f}, {4.0f, 2.0f}};
+        Line2D const vertical_reference_behind{{2.5f, 0.0f}, {2.5f, 5.0f}};
+        Line2D const extended =
+                extend_line_at_reference(short_line, vertical_reference_behind, ExtendEndpoint::Distal, 20.0f);
+
+        REQUIRE(extended.size() == short_line.size());
+        REQUIRE_THAT(extended.back().x, Catch::Matchers::WithinAbs(4.0f, 0.001f));
+    }
+
+    SECTION("Base extension reaches reference to the left of line start") {
+        Line2D const vertical_reference_at_0{{0.0f, 0.0f}, {0.0f, 5.0f}};
+        Line2D const line_starting_at_1{{1.0f, 2.0f}, {2.0f, 2.0f}, {3.0f, 2.0f}};
+        Line2D const extended =
+                extend_line_at_reference(line_starting_at_1, vertical_reference_at_0, ExtendEndpoint::Base, 20.0f);
+
+        REQUIRE(extended.size() == line_starting_at_1.size() + 1);
+        REQUIRE_THAT(extended.front().x, Catch::Matchers::WithinAbs(0.0f, 0.001f));
+        REQUIRE_THAT(extended.front().y, Catch::Matchers::WithinAbs(2.0f, 0.001f));
+        REQUIRE_THAT(extended[1].x, Catch::Matchers::WithinAbs(1.0f, 0.001f));
+    }
+
+    SECTION("Tangent distance in pixels uses arc length along polyline") {
+        Line2D const coarse_line{{0.0f, 0.0f}, {20.0f, 0.0f}};
+        Line2D const fine_line{{0.0f, 0.0f}, {1.0f, 0.0f}, {2.0f, 0.0f}, {3.0f, 0.0f}, {4.0f, 0.0f},
+                               {5.0f, 0.0f},  {6.0f, 0.0f}, {7.0f, 0.0f}, {8.0f, 0.0f}, {9.0f, 0.0f},
+                               {10.0f, 0.0f}, {11.0f, 0.0f}, {12.0f, 0.0f}, {13.0f, 0.0f}, {14.0f, 0.0f},
+                               {15.0f, 0.0f}, {16.0f, 0.0f}, {17.0f, 0.0f}, {18.0f, 0.0f}, {19.0f, 0.0f},
+                               {20.0f, 0.0f}};
+        Line2D const vertical_reference{{25.0f, -5.0f}, {25.0f, 5.0f}};
+
+        Line2D const extended_coarse =
+                extend_line_at_reference(coarse_line, vertical_reference, ExtendEndpoint::Distal, 20.0f);
+        Line2D const extended_fine =
+                extend_line_at_reference(fine_line, vertical_reference, ExtendEndpoint::Distal, 20.0f);
+
+        REQUIRE(extended_coarse.back().x == Catch::Approx(extended_fine.back().x).margin(0.01f));
+        REQUIRE(extended_coarse.back().y == Catch::Approx(extended_fine.back().y).margin(0.01f));
+    }
+
+    SECTION("Tangent distance longer than line uses full polyline direction") {
+        Line2D const short_line{{0.0f, 2.0f}, {5.0f, 2.0f}};
+        Line2D const vertical_reference{{10.0f, 0.0f}, {10.0f, 5.0f}};
+
+        Line2D const extended =
+                extend_line_at_reference(short_line, vertical_reference, ExtendEndpoint::Distal, 100.0f);
+
+        REQUIRE_THAT(extended.back().x, Catch::Matchers::WithinAbs(10.0f, 0.001f));
+        REQUIRE_THAT(extended.back().y, Catch::Matchers::WithinAbs(2.0f, 0.001f));
+    }
+
+    SECTION("Parallel reference leaves line unchanged") {
+        Line2D const horizontal_reference{{0.0f, 5.0f}, {6.0f, 5.0f}};
+        Line2D const extended =
+                extend_line_at_reference(horizontal_line, horizontal_reference, ExtendEndpoint::Distal, 20.0f);
+
+        REQUIRE(extended.size() == horizontal_line.size());
+    }
+
+    SECTION("Degenerate line is unchanged") {
+        Line2D const point_line{{1.0f, 2.0f}};
+        Line2D const extended =
+                extend_line_at_reference(point_line, vertical_reference_at_5, ExtendEndpoint::Distal, 20.0f);
+        REQUIRE(extended.size() == 1);
+    }
+}

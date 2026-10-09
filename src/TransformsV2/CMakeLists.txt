@@ -78,6 +78,8 @@ set(TRANSFORM_V2_SOURCES
         algorithms/LineBaseFlip/LineBaseFlip.cpp
         algorithms/LineClip/LineClip.hpp
         algorithms/LineClip/LineClip.cpp
+        algorithms/LineExtend/LineExtend.hpp
+        algorithms/LineExtend/LineExtend.cpp
         algorithms/LineCurvature/LineCurvature.hpp
         algorithms/LineCurvature/LineCurvature.cpp
         algorithms/LineLength/LineLength.hpp

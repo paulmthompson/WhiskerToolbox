@@ -13,6 +13,7 @@
 #include "algorithms/LineBaseFlip/LineBaseFlip.hpp"
 #include "algorithms/LineClip/LineClip.hpp"
 #include "algorithms/LineCurvature/LineCurvature.hpp"
+#include "algorithms/LineExtend/LineExtend.hpp"
 #include "algorithms/LineLength/LineLength.hpp"
 #include "algorithms/LineMinPointDist/LineMinPointDist.hpp"
 #include "algorithms/LinePointExtraction/LinePointExtraction.hpp"
@@ -28,8 +29,8 @@
 #include "algorithms/PruneOverlappingIntervals/PruneOverlappingIntervals.hpp"
 #include "algorithms/RemoveLineOutliers/RemoveLineOutliers.hpp"
 #include "algorithms/SincInterpolation/SincInterpolation.hpp"
-#include "algorithms/SumReduction/SumReduction.hpp"
 #include "algorithms/SpikeWaveformExtraction/SpikeWaveformExtraction.hpp"
+#include "algorithms/SumReduction/SumReduction.hpp"
 #include "algorithms/SwindaleEventDetection/SwindaleEventDetection.hpp"
 #include "algorithms/Temporal/NormalizeTime.hpp"
 #include "algorithms/TensorCAR/TensorCAR.hpp"
@@ -82,6 +83,7 @@ bool const init_pipeline_factories = []() {
     registerPipelineStepFactoryFor<LineAngleParams>();
     registerPipelineStepFactoryFor<LineBaseFlipParams>();
     registerPipelineStepFactoryFor<LineClipParams>();
+    registerPipelineStepFactoryFor<LineExtendParams>();
     registerPipelineStepFactoryFor<LineCurvatureParams>();
     registerPipelineStepFactoryFor<LineLengthParams>();
     registerPipelineStepFactoryFor<LineMinPointDistParams>();
@@ -441,6 +443,32 @@ auto const register_line_clip = RegisterBinaryTransform<
                 .input_type_name = "std::tuple<Line2D, Line2D>",
                 .output_type_name = "Line2D",
                 .params_type_name = "LineClipParams",
+                .is_expensive = false,
+                .is_deterministic = true,
+                .supports_cancellation = false,
+        });
+
+// Register LineExtendTransform (Binary - takes two Line2D inputs)
+auto const register_line_extend = RegisterBinaryTransform<
+        Line2D,
+        Line2D,
+        Line2D,
+        LineExtendParams>(
+        "ExtendLineAtReference",
+        extendLineAtReference,
+        TransformMetadata{
+                .name = "ExtendLineAtReference",
+                .description = "Extend a line along a smoothed tangent until it intersects a reference line",
+                .category = "Geometry",
+                .input_type = typeid(std::tuple<Line2D, Line2D>),
+                .output_type = typeid(Line2D),
+                .params_type = typeid(LineExtendParams),
+                .is_multi_input = true,
+                .input_arity = 2,
+                .lineage_type = TransformLineageType::OneToOneByTime,
+                .input_type_name = "std::tuple<Line2D, Line2D>",
+                .output_type_name = "Line2D",
+                .params_type_name = "LineExtendParams",
                 .is_expensive = false,
                 .is_deterministic = true,
                 .supports_cancellation = false,

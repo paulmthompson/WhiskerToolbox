@@ -2,7 +2,9 @@
 
 #include "CoreGeometry/point_geometry.hpp"
 
+#include <algorithm>
 #include <cmath>
+#include <limits>
 #include <optional>
 
 namespace {
@@ -451,7 +453,7 @@ float point_to_line_segment_distance2(
 
     // Calculate the squared length of the line segment
     float const line_length_squared = (line_end.x - line_start.x) * (line_end.x - line_start.x) +
-                                (line_end.y - line_start.y) * (line_end.y - line_start.y);
+                                      (line_end.y - line_start.y) * (line_end.y - line_start.y);
 
     // Calculate the projection of point onto the line segment
     float t = ((point.x - line_start.x) * (line_end.x - line_start.x) +
@@ -575,6 +577,156 @@ Line2D clip_line_at_intersection(
     }
 
     return clipped_line;
+}
+
+std::optional<Point2D<float>> ray_segment_intersection(
+        Point2D<float> const & origin,
+        Point2D<float> const & direction,
+        Point2D<float> const & seg_a,
+        Point2D<float> const & seg_b) {
+
+    float const d1x = direction.x;
+    float const d1y = direction.y;
+    float const d2x = seg_b.x - seg_a.x;
+    float const d2y = seg_b.y - seg_a.y;
+
+    float const denominator = d1x * d2y - d1y * d2x;
+    if (std::abs(denominator) < 1e-10f) {
+        return std::nullopt;
+    }
+
+    float const dx = seg_a.x - origin.x;
+    float const dy = seg_a.y - origin.y;
+
+    float const ray_t = (dx * d2y - dy * d2x) / denominator;
+    float const segment_u = (dx * d1y - dy * d1x) / denominator;
+
+    if (ray_t <= k_line_geometry_epsilon || segment_u < 0.0f || segment_u > 1.0f) {
+        return std::nullopt;
+    }
+
+    Point2D<float> intersection;
+    intersection.x = origin.x + ray_t * d1x;
+    intersection.y = origin.y + ray_t * d1y;
+    return intersection;
+}
+
+Point2D<float> calculate_endpoint_extension_direction(
+        Line2D const & line,
+        ExtendEndpoint extend_end,
+        float tangent_distance_pixels) {
+
+    if (line.size() < 2 || tangent_distance_pixels <= 0.0f) {
+        return Point2D<float>{0.0f, 0.0f};
+    }
+
+    float const total_length = calc_length(line);
+    if (total_length <= k_line_geometry_epsilon) {
+        return Point2D<float>{0.0f, 0.0f};
+    }
+
+    float const lookback_distance = std::min(tangent_distance_pixels, total_length);
+
+    std::optional<Point2D<float>> inner_point;
+    if (extend_end == ExtendEndpoint::Base) {
+        inner_point = point_at_distance(line, lookback_distance, true);
+    } else {
+        inner_point = point_at_distance(line, total_length - lookback_distance, true);
+    }
+
+    if (!inner_point.has_value()) {
+        return Point2D<float>{0.0f, 0.0f};
+    }
+
+    Point2D<float> const origin = extend_end == ExtendEndpoint::Base ? line.front() : line.back();
+    Point2D<float> const delta{
+            origin.x - inner_point->x,
+            origin.y - inner_point->y};
+
+    float const delta_length = std::sqrt(delta.x * delta.x + delta.y * delta.y);
+    if (delta_length <= k_line_geometry_epsilon) {
+        return Point2D<float>{0.0f, 0.0f};
+    }
+
+    return Point2D<float>{delta.x / delta_length, delta.y / delta_length};
+}
+
+Line2D extend_line_at_reference(
+        Line2D const & line,
+        Line2D const & reference_line,
+        ExtendEndpoint extend_end,
+        float tangent_distance_pixels) {
+
+    if (line.size() < 2 || reference_line.size() < 2) {
+        return line;
+    }
+
+    Point2D<float> const direction =
+            calculate_endpoint_extension_direction(line, extend_end, tangent_distance_pixels);
+    if (direction.x == 0.0f && direction.y == 0.0f) {
+        return line;
+    }
+
+    size_t const endpoint_index = extend_end == ExtendEndpoint::Base ? 0 : line.size() - 1;
+    Point2D<float> const origin = line[endpoint_index];
+
+    float best_ray_t = std::numeric_limits<float>::max();
+    std::optional<Point2D<float>> best_intersection;
+
+    for (size_t j = 0; j < reference_line.size() - 1; ++j) {
+        float const d1x = direction.x;
+        float const d1y = direction.y;
+        float const d2x = reference_line[j + 1].x - reference_line[j].x;
+        float const d2y = reference_line[j + 1].y - reference_line[j].y;
+
+        float const denominator = d1x * d2y - d1y * d2x;
+        if (std::abs(denominator) < 1e-10f) {
+            continue;
+        }
+
+        float const dx = reference_line[j].x - origin.x;
+        float const dy = reference_line[j].y - origin.y;
+
+        float const ray_t = (dx * d2y - dy * d2x) / denominator;
+        float const segment_u = (dx * d1y - dy * d1x) / denominator;
+
+        if (ray_t <= k_line_geometry_epsilon || segment_u < 0.0f || segment_u > 1.0f) {
+            continue;
+        }
+
+        if (ray_t < best_ray_t) {
+            best_ray_t = ray_t;
+            best_intersection = Point2D<float>{
+                    origin.x + ray_t * d1x,
+                    origin.y + ray_t * d1y};
+        }
+    }
+
+    if (!best_intersection.has_value() || points_nearly_equal(best_intersection.value(), origin)) {
+        return line;
+    }
+
+    Point2D<float> const intersection_point = best_intersection.value();
+
+    if (extend_end == ExtendEndpoint::Base) {
+        Line2D extended_line;
+        if (!points_nearly_equal(line.front(), intersection_point)) {
+            extended_line.push_back(intersection_point);
+        }
+        for (auto i: line) {
+            extended_line.push_back(i);
+        }
+        return extended_line;
+    }
+
+    Line2D extended_line;
+    for (auto i: line) {
+        extended_line.push_back(i);
+    }
+    if (!points_nearly_equal(extended_line.back(), intersection_point)) {
+        extended_line.push_back(intersection_point);
+    }
+    return extended_line;
 }
 
 float point_to_line_min_distance2(Point2D<float> const & point, Line2D const & line) {

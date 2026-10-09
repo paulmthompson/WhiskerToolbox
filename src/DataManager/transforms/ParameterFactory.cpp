@@ -6,12 +6,13 @@
 #include "AnalogTimeSeries/Analog_Interval_Peak/analog_interval_peak.hpp"
 #include "AnalogTimeSeries/Analog_Interval_Threshold/analog_interval_threshold.hpp"
 #include "AnalogTimeSeries/Analog_Scaling/analog_scaling.hpp"
-#include "DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
 #include "DigitalIntervalSeries/Digital_Interval_Boolean/digital_interval_boolean.hpp"
+#include "DigitalIntervalSeries/Digital_Interval_Group/digital_interval_group.hpp"
 #include "Lines/Line_Alignment/line_alignment.hpp"
 #include "Lines/Line_Angle/line_angle.hpp"
 #include "Lines/Line_Clip/line_clip.hpp"
 #include "Lines/Line_Curvature/line_curvature.hpp"
+#include "Lines/Line_Extend/line_extend.hpp"
 #include "Lines/Line_Kalman_Grouping/line_kalman_grouping.hpp"
 #include "Lines/Line_Min_Point_Dist/line_min_point_dist.hpp"
 #include "Lines/Line_Point_Extraction/line_point_extraction.hpp"
@@ -65,22 +66,22 @@ void ParameterFactory::initializeDefaultSetters() {
     // ==================================================
 
     // =============== Filter ===============
-    
+
     // Register filter_specification as a special nested JSON object
     registerParameterSetter("Filter", "filter_specification",
-        [](TransformParametersBase * param_obj, nlohmann::json const & json_value, DataManager *) -> bool {
-            auto * filterParams = static_cast<AnalogFilterParams *>(param_obj);
-            
-            try {
-                // Parse the filter specification from JSON
-                auto spec = FilterSpecification::fromJson(json_value);
-                filterParams->filter_specification = std::move(spec);
-                return true;
-            } catch (std::exception const& e) {
-                std::cerr << "Failed to parse filter specification: " << e.what() << std::endl;
-                return false;
-            }
-        });
+                            [](TransformParametersBase * param_obj, nlohmann::json const & json_value, DataManager *) -> bool {
+                                auto * filterParams = static_cast<AnalogFilterParams *>(param_obj);
+
+                                try {
+                                    // Parse the filter specification from JSON
+                                    auto spec = FilterSpecification::fromJson(json_value);
+                                    filterParams->filter_specification = std::move(spec);
+                                    return true;
+                                } catch (std::exception const & e) {
+                                    std::cerr << "Failed to parse filter specification: " << e.what() << std::endl;
+                                    return false;
+                                }
+                            });
 
     // =============== Threshold Event Detection ===============
 
@@ -201,8 +202,8 @@ void ParameterFactory::initializeDefaultSetters() {
             "Interval Peak Detection", "search_mode", &IntervalPeakParams::search_mode, search_mode_map);
 
     // Register interval_series as a special nested object
-   registerDataParameter<IntervalPeakParams, DigitalIntervalSeries>(
-           "Interval Peak Detection", "interval_series", &IntervalPeakParams::interval_series);
+    registerDataParameter<IntervalPeakParams, DigitalIntervalSeries>(
+            "Interval Peak Detection", "interval_series", &IntervalPeakParams::interval_series);
 
 
     // ====================================================
@@ -306,6 +307,23 @@ void ParameterFactory::initializeDefaultSetters() {
     registerBasicParameter<LineClipParameters, int>(
             "Clip Line by Reference Line", "reference_frame", &LineClipParameters::reference_frame);
 
+    // ==================== Line Extend ===============
+
+    std::unordered_map<std::string, ExtendEndpoint> extend_endpoint_map = {
+            {"Base", ExtendEndpoint::Base},
+            {"Distal", ExtendEndpoint::Distal},
+    };
+    registerEnumParameter<LineExtendParameters, ExtendEndpoint>(
+            "Extend Line by Reference Line", "extend_end", &LineExtendParameters::extend_end, extend_endpoint_map);
+
+    registerDataParameter<LineExtendParameters, LineData>(
+            "Extend Line by Reference Line", "reference_line_data", &LineExtendParameters::reference_line_data);
+
+    registerBasicParameter<LineExtendParameters, int>(
+            "Extend Line by Reference Line", "reference_frame", &LineExtendParameters::reference_frame);
+
+    registerBasicParameter<LineExtendParameters, float>(
+            "Extend Line by Reference Line", "tangent_distance_pixels", &LineExtendParameters::tangent_distance_pixels);
 
     // ==================== Line Curvature ===============
 

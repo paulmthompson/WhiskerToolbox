@@ -583,7 +583,7 @@ auto executeBinaryTransformImpl(
     using TupleType = std::tuple<Element1, Element2>;
 
     if constexpr (std::is_same_v<Container1, LineData> && std::is_same_v<Container2, LineData>) {
-        if (transform_name == "ClipLineAtReference") {
+        if (transform_name == "ClipLineAtReference" || transform_name == "ExtendLineAtReference") {
             if (!validateLineClipImageSizes(data1_ptr.get(), data2_ptr.get())) {
                 return std::nullopt;
             }

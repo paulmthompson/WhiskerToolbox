@@ -25,6 +25,7 @@
 #include "DataTransform_Widget/Lines/LineBaseFlip_Widget/LineBaseFlip_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineClip_Widget/LineClip_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineCurvature_Widget/LineCurvature_Widget.hpp"
+#include "DataTransform_Widget/Lines/LineExtend_Widget/LineExtend_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineGroupToIntervals_Widget/LineGroupToIntervals_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineIndexGrouping_Widget/LineIndexGrouping_Widget.hpp"
 #include "DataTransform_Widget/Lines/LineMinDist_Widget/LineMinDist_Widget.hpp"
@@ -244,6 +245,12 @@ void DataTransform_Widget::_initializeParameterWidgetFactories() {
 
     _parameterWidgetFactories["Clip Line by Reference Line"] = [this](QWidget * parent) -> TransformParameter_Widget * {
         auto widget = new LineClip_Widget(parent);
+        widget->setDataManager(_data_manager);
+        return widget;
+    };
+
+    _parameterWidgetFactories["Extend Line by Reference Line"] = [this](QWidget * parent) -> TransformParameter_Widget * {
+        auto widget = new LineExtend_Widget(parent);
         widget->setDataManager(_data_manager);
         return widget;
     };
