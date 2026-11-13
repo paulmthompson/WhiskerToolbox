@@ -16,6 +16,8 @@
 #include <QObject>
 #include <QString>
 
+#include "DeepLearning_Widget/Core/MediaProcessingOptionsLookup.hpp"
+
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -52,6 +54,13 @@ public:
      * @brief Whether a batch inference is currently running.
      */
     [[nodiscard]] bool isRunning() const;
+
+    /**
+     * @brief Supply Media processing options for batch inference clones.
+     *
+     * Typically resolves @c MediaDisplayOptions from @c MediaWidgetState.
+     */
+    void setMediaProcessingOptionsLookup(MediaProcessingOptionsLookup lookup);
 
 public slots:
     /**

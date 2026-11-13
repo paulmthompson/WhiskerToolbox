@@ -12,17 +12,20 @@
 #include "DeepLearning_Widget/Inference/MultiIntervalBatchWorker.hpp"
 #include "DeepLearning_Widget/Inference/ResultProcessor.hpp"
 #include "DeepLearning_Widget/Inference/WriteReservation.hpp"
+#include "DeepLearning_Widget/Core/MediaInferenceOverrides.hpp"
 
 #include "DataManager/DataManager.hpp"
 #include "DeepLearning/channel_encoding/EncoderDispatch.hpp"// isImageEncoder
 #include "Media/Media_Data.hpp"
-#include "Media/Video_Data.hpp"
 
 #include <QThread>
+
+#include <spdlog/spdlog.h>
 
 #include <atomic>
 #include <memory>
 #include <utility>
+#include <vector>
 
 // ════════════════════════════════════════════════════════════════════════════
 // InferenceController::Impl
@@ -41,6 +44,8 @@ struct InferenceController::Impl {
      */
     std::shared_ptr<std::atomic<bool>> _cancel_flag =
             std::make_shared<std::atomic<bool>>(false);
+
+    MediaProcessingOptionsLookup _media_options_lookup;
 };
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -71,6 +76,11 @@ InferenceController::~InferenceController() {
 
 bool InferenceController::isRunning() const {
     return _impl->_batch_worker != nullptr;
+}
+
+void InferenceController::setMediaProcessingOptionsLookup(
+        MediaProcessingOptionsLookup lookup) {
+    _impl->_media_options_lookup = std::move(lookup);
 }
 
 void InferenceController::runSingleFrame(int frame) {
@@ -130,37 +140,15 @@ void InferenceController::runBatch(int start, int end, int batch_size) {
         }
     }
 
-    MediaOverrides media_overrides;
-    for (auto const & binding: _impl->_state->inputBindings()) {
-        if (!dl::isImageEncoder(binding.encoder) || binding.data_key.empty())
-            continue;
-        auto media = _impl->_dm->getData<MediaData>(binding.data_key);
-        if (!media) continue;
-        if (media->getMediaType() == MediaData::MediaType::Video) {
-            auto clone = std::make_shared<VideoData>();
-            clone->LoadMedia(media->getFilename());
-            media_overrides[binding.data_key] = std::move(clone);
-        } else {
-            media_overrides[binding.data_key] = media;
-        }
-    }
-
-    // Also clone VideoData for static (memory) inputs so the worker
-    // thread does not race with the main thread's ffmpeg decoder.
-    for (auto const & frame: _impl->_state->memoryFrames()) {
-        if (!dl::isStaticFrame(frame)) continue;
-        auto const data_key = dl::staticDataKey(frame);
-        if (data_key.empty()) continue;
-        if (media_overrides.contains(data_key)) continue;
-        auto media = _impl->_dm->getData<MediaData>(data_key);
-        if (!media) continue;
-        if (media->getMediaType() == MediaData::MediaType::Video) {
-            auto clone = std::make_shared<VideoData>();
-            clone->LoadMedia(media->getFilename());
-            media_overrides[data_key] = std::move(clone);
-        } else {
-            media_overrides[data_key] = media;
-        }
+    std::vector<std::string> override_warnings;
+    auto media_overrides = buildMediaInferenceOverrides(
+            *_impl->_dm,
+            _impl->_state->inputBindings(),
+            _impl->_state->memoryFrames(),
+            _impl->_media_options_lookup,
+            &override_warnings);
+    for (auto const & warning: override_warnings) {
+        spdlog::warn("{}", warning);
     }
 
     auto reservation = std::make_shared<WriteReservation>();
@@ -238,37 +226,15 @@ void InferenceController::runBatchIntervals(
         }
     }
 
-    MediaOverrides media_overrides;
-    for (auto const & binding: _impl->_state->inputBindings()) {
-        if (!dl::isImageEncoder(binding.encoder) || binding.data_key.empty())
-            continue;
-        auto media = _impl->_dm->getData<MediaData>(binding.data_key);
-        if (!media) continue;
-        if (media->getMediaType() == MediaData::MediaType::Video) {
-            auto clone = std::make_shared<VideoData>();
-            clone->LoadMedia(media->getFilename());
-            media_overrides[binding.data_key] = std::move(clone);
-        } else {
-            media_overrides[binding.data_key] = media;
-        }
-    }
-
-    // Also clone VideoData for static (memory) inputs so the worker
-    // thread does not race with the main thread's ffmpeg decoder.
-    for (auto const & frame: _impl->_state->memoryFrames()) {
-        if (!dl::isStaticFrame(frame)) continue;
-        auto const data_key = dl::staticDataKey(frame);
-        if (data_key.empty()) continue;
-        if (media_overrides.contains(data_key)) continue;
-        auto media = _impl->_dm->getData<MediaData>(data_key);
-        if (!media) continue;
-        if (media->getMediaType() == MediaData::MediaType::Video) {
-            auto clone = std::make_shared<VideoData>();
-            clone->LoadMedia(media->getFilename());
-            media_overrides[data_key] = std::move(clone);
-        } else {
-            media_overrides[data_key] = media;
-        }
+    std::vector<std::string> override_warnings;
+    auto media_overrides = buildMediaInferenceOverrides(
+            *_impl->_dm,
+            _impl->_state->inputBindings(),
+            _impl->_state->memoryFrames(),
+            _impl->_media_options_lookup,
+            &override_warnings);
+    for (auto const & warning: override_warnings) {
+        spdlog::warn("{}", warning);
     }
 
     auto reservation = std::make_shared<WriteReservation>();

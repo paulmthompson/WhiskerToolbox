@@ -74,11 +74,14 @@ MemorySlotWidget::MemorySlotWidget(
             info_text += tr(
                     "Image memory is encoded with factory ImageEncoder settings "
                     "into uint8 tensors (including DataBank capture). This does "
-                    "not use the encoder_image binding or its Normalize control.");
+                    "not use the encoder_image binding or its Normalize control. "
+                    "By default the Media processing chain is applied when "
+                    "re-encoding from DataManager.");
         } else {
             info_text += tr(
                     "Image memory uses factory ImageEncoder defaults, not the "
-                    "encoder_image binding.");
+                    "encoder_image binding. By default the Media processing "
+                    "chain is applied when re-encoding from DataManager.");
         }
     }
     auto * info = new QLabel(info_text, group);

@@ -4,8 +4,13 @@ set(DEEP_LEARNING_WIDGET_SOURCES
     DeepLearningWidgetRegistration.hpp
     DeepLearningWidgetRegistration.cpp
 
+    Core/CloneMediaForInference.hpp
+    Core/CloneMediaForInference.cpp
+    Core/MediaProcessingOptionsLookup.hpp
     Core/DeepLearningState.hpp
     Core/DeepLearningState.cpp
+    Core/MediaInferenceOverrides.hpp
+    Core/MediaInferenceOverrides.cpp
     Core/SlotAssembler.hpp
     Core/SlotAssembler.cpp
 
@@ -60,6 +65,8 @@ target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::PointData)
 target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::LineData)
 target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::MaskData)
 target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::MediaData)
+target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::MediaProcessingPipeline)
+target_link_libraries(DeepLearning_Widget PRIVATE Media_Widget)
 target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::AnalogTimeSeries)
 target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::DigitalTimeSeries)
 target_link_libraries(DeepLearning_Widget PRIVATE WhiskerToolbox::TensorData)

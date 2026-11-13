@@ -105,6 +105,7 @@ void registerTypes(EditorRegistry * registry,
                                 // Create the properties widget with the shared state
                                 auto * props = new DeepLearningPropertiesWidget(state, dm);
                                 props->setKeymapManager(km);
+                                props->setEditorRegistry(reg);
                                 view->setAssembler(props->assembler());
 
                                 // Connect EditorRegistry time changes to properties widget

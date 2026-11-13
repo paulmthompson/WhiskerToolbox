@@ -38,6 +38,7 @@ class QVBoxLayout;
 
 class DataManager;
 class DeepLearningState;
+class EditorRegistry;
 class InferenceController;
 class SlotAssembler;
 
@@ -78,6 +79,13 @@ public:
      * @param manager Non-owning pointer to KeymapManager (must outlive this widget).
      */
     void setKeymapManager(KeymapSystem::KeymapManager * manager);
+
+    /**
+     * @brief Connect to the editor registry for Media processing option lookup.
+     *
+     * @param registry Non-owning; used to read MediaWidgetState display options.
+     */
+    void setEditorRegistry(EditorRegistry * registry);
 
 public slots:
     /**

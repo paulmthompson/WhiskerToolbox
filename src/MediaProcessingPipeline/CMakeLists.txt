@@ -1,6 +1,8 @@
 find_package(reflectcpp CONFIG REQUIRED)
 
 add_library(MediaProcessingPipeline STATIC
+    MediaProcessingChainApply.hpp
+    MediaProcessingChainApply.cpp
     ProcessingOptionsSchema.hpp
     ProcessingStep.hpp
     ProcessingStepRegistry.hpp
@@ -16,6 +18,7 @@ target_include_directories(MediaProcessingPipeline PUBLIC
 
 target_link_libraries(MediaProcessingPipeline PUBLIC
     WhiskerToolbox::ParameterSchema
+    WhiskerToolbox::MediaData
     ImageProcessing
     reflectcpp::reflectcpp
 )

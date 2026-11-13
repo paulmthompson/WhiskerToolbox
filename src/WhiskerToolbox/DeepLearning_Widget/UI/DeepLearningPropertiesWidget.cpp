@@ -4,6 +4,11 @@
 #include "DeepLearning_Widget/Core/DeepLearningState.hpp"
 #include "DeepLearning_Widget/Core/SlotAssembler.hpp"
 #include "DeepLearning_Widget/Inference/InferenceController.hpp"
+
+#include "EditorState/EditorRegistry.hpp"
+#include "Media_Widget/Core/MediaWidgetState.hpp"
+#include "Media_Widget/DisplayOptions/DisplayOptions.hpp"
+#include "Media_Widget/DisplayOptions/MediaDisplayProcessingOptions.hpp"
 #include "DeepLearning_Widget/UI/DataBank/DataBankPropertiesWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/DynamicInputSlotWidget.hpp"
 #include "DeepLearning_Widget/UI/Helpers/EncoderShapeWidget.hpp"
@@ -122,6 +127,30 @@ DeepLearningPropertiesWidget::~DeepLearningPropertiesWidget() {
 
 SlotAssembler * DeepLearningPropertiesWidget::assembler() const {
     return _assembler.get();
+}
+
+void DeepLearningPropertiesWidget::setEditorRegistry(EditorRegistry * registry) {
+    _inference_controller->setMediaProcessingOptionsLookup(
+            [registry](std::string const & data_key)
+                    -> std::optional<Neuralyzer::MediaProcessing::MediaImageProcessingOptions> {
+                if (registry == nullptr) {
+                    return std::nullopt;
+                }
+                for (auto const & state: registry->allStates()) {
+                    auto media_state =
+                            std::dynamic_pointer_cast<MediaWidgetState>(state);
+                    if (!media_state) {
+                        continue;
+                    }
+                    auto const * display_opts =
+                            media_state->displayOptions().get<MediaDisplayOptions>(
+                                    QString::fromStdString(data_key));
+                    if (display_opts != nullptr) {
+                        return mediaImageProcessingOptionsFromDisplay(*display_opts);
+                    }
+                }
+                return std::nullopt;
+            });
 }
 
 void DeepLearningPropertiesWidget::setKeymapManager(KeymapSystem::KeymapManager * manager) {

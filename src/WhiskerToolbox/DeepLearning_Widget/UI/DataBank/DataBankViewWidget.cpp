@@ -125,10 +125,16 @@ void DataBankViewWidget::refresh() {
         int captured_frame = -1;
         std::string data_key;
         std::string encoder_factory_name;
+        bool use_media_processing_chain = true;
+        int processing_step_count = -1;
         if (auto const bank_entry = bank.get(key)) {
             captured_frame = bank_entry->metadata.captured_frame;
             data_key = bank_entry->metadata.data_key;
             encoder_factory_name = bank_entry->metadata.encoder_factory_name;
+            use_media_processing_chain =
+                    bank_entry->metadata.use_media_processing_chain;
+            processing_step_count =
+                    bank_entry->metadata.processing_step_count_at_capture;
         }
 
         if (data_key.empty() && _state) {
@@ -164,6 +170,15 @@ void DataBankViewWidget::refresh() {
                             .arg(QString::fromStdString(encoder_factory_name)),
                     group));
         }
+
+        QString pixel_source = use_media_processing_chain
+                                       ? tr("Pixels at capture: Media processing chain")
+                                       : tr("Pixels at capture: Raw file decode");
+        if (processing_step_count >= 0) {
+            pixel_source += tr(" (%1 step(s) on source media)")
+                                    .arg(processing_step_count);
+        }
+        layout->addWidget(new QLabel(pixel_source, group));
 
         auto * encoding_note = new QLabel(
                 tr("Per-field encoder options (e.g. Normalize on encoder_image) "

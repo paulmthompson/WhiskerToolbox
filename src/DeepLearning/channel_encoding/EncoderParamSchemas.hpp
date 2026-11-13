@@ -14,6 +14,13 @@ struct ParameterUIHints<dl::ImageEncoderParams> {
         if (auto * f = schema.field("normalize")) {
             f->tooltip = "Normalize pixel values to [0, 1]";
         }
+        if (auto * f = schema.field("use_media_processing_chain")) {
+            f->display_name = "Apply Media processing chain";
+            f->tooltip =
+                    "When enabled, pixels come from the Media processing chain for "
+                    "this data key (same as the Media preview). When disabled, uses "
+                    "raw decoded file pixels.";
+        }
     }
 };
 

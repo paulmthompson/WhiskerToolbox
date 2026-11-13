@@ -35,7 +35,8 @@ struct EncoderContext {
  * @brief User-configurable params for ImageEncoder.
  */
 struct ImageEncoderParams {
-    bool normalize = true;///< Normalize output to [0, 1]
+    bool normalize = true;              ///< Normalize output to [0, 1]
+    bool use_media_processing_chain = true;///< Use MediaData processed pixels (preview chain)
 };
 
 /**

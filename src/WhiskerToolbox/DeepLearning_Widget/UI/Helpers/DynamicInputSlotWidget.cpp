@@ -9,7 +9,9 @@
 #include "AutoParamWidget/AutoParamWidget.hpp"
 #include "DataManager/DataManager.hpp"
 #include "DataManager/utils/DataManagerKeys.hpp"
+#include "DeepLearning/channel_encoding/ChannelEncoder.hpp"
 #include "DeepLearning/channel_encoding/EncoderDispatch.hpp"
+#include "Media/Media_Data.hpp"
 #include "DeepLearning/channel_encoding/EncoderParamSchemas.hpp"
 #include "DeepLearning/models_v2/TensorSlotDescriptor.hpp"
 #include "ParameterSchema/ParameterSchema.hpp"
@@ -21,6 +23,7 @@
 #include <rfl/json.hpp>
 
 #include <cassert>
+#include <type_traits>
 
 namespace dl::widget {
 
@@ -71,6 +74,11 @@ DynamicInputSlotWidget::DynamicInputSlotWidget(
         group_layout->addWidget(dtype_info);
     }
 
+    _pixel_source_hint = new QLabel(group);
+    _pixel_source_hint->setWordWrap(true);
+    _pixel_source_hint->setStyleSheet(QStringLiteral("color: gray; font-size: 10px;"));
+    group_layout->addWidget(_pixel_source_hint);
+
     _auto_param = new AutoParamWidget(group);
     group_layout->addWidget(_auto_param);
 
@@ -97,8 +105,11 @@ DynamicInputSlotWidget::DynamicInputSlotWidget(
                     auto const keys = getKeysForTypes(*_dm, types);
                     _auto_param->updateAllowedValues("data_key", keys);
                 }
+                _updatePixelSourceHint();
                 emit bindingChanged();
             });
+
+    _updatePixelSourceHint();
 }
 
 DynamicInputSlotWidget::~DynamicInputSlotWidget() = default;
@@ -110,10 +121,12 @@ SlotBindingData DynamicInputSlotWidget::binding() const {
 void DynamicInputSlotWidget::setBinding(SlotBindingData const & binding) {
     _refreshSourceCombo();
     _setForm(fromSlotBindingData(binding));
+    _updatePixelSourceHint();
 }
 
 void DynamicInputSlotWidget::refreshDataSources() {
     _refreshSourceCombo();
+    _updatePixelSourceHint();
 }
 
 std::string const & DynamicInputSlotWidget::slotName() const {
@@ -143,6 +156,51 @@ void DynamicInputSlotWidget::_refreshSourceCombo() {
             DM_DataType::Line};
     auto const keys = getKeysForTypes(*_dm, all_types);
     _auto_param->updateAllowedValues("data_key", keys);
+}
+
+void DynamicInputSlotWidget::_updatePixelSourceHint() {
+    if (_pixel_source_hint == nullptr) {
+        return;
+    }
+
+    auto const form = _form();
+    if (!dl::isImageEncoder(form.encoder)) {
+        _pixel_source_hint->hide();
+        return;
+    }
+
+    bool use_chain = true;
+    form.encoder.visit([&](auto const & params) {
+        using ParamsT = std::decay_t<decltype(params)>;
+        if constexpr (std::is_same_v<ParamsT, dl::ImageEncoderParams>) {
+            use_chain = params.use_media_processing_chain;
+        }
+    });
+
+    std::size_t step_count = 0;
+    if (!form.data_key.empty() && _dm) {
+        if (auto media = _dm->getData<MediaData>(form.data_key)) {
+            step_count = media->getProcessingStepCount();
+        }
+    }
+
+    if (use_chain) {
+        if (step_count > 0) {
+            _pixel_source_hint->setText(
+                    tr("%1 Media processing step(s) will be applied (same chain as "
+                       "the Media preview for this key).")
+                            .arg(static_cast<qulonglong>(step_count)));
+        } else {
+            _pixel_source_hint->setText(
+                    tr("Media processing chain enabled; no steps are active on this "
+                       "key (pixels match raw decode)."));
+        }
+    } else {
+        _pixel_source_hint->setText(
+                tr("Using raw decoded pixels. The Media preview may differ if a "
+                   "processing chain is active."));
+    }
+    _pixel_source_hint->show();
 }
 
 }// namespace dl::widget

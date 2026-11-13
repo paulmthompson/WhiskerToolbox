@@ -57,6 +57,7 @@ private:
 
     void _setupRegistrySections();
     void _applyRegistryStep(ProcessingSection const & ps);
+    void _syncProcessingChainOnMedia();
     void _onRegistryParamsChanged(ProcessingSection const & ps);
     void _onRegistryActiveChanged(ProcessingSection const & ps, bool active);
 

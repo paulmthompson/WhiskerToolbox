@@ -35,6 +35,10 @@ struct DataBankEntryMetadata {
     ImageSize source_image_size{};
     /** Encoder factory name used for encoding (e.g. "Mask2DEncoder"). */
     std::string encoder_factory_name;
+    /** Whether capture used MediaData processed pixels vs raw decode. */
+    bool use_media_processing_chain = true;
+    /** Processing step count on canonical media at capture (-1 if unknown). */
+    int processing_step_count_at_capture = -1;
 };
 
 /**

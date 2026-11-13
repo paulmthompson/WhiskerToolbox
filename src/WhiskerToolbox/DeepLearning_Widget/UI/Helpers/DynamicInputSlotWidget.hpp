@@ -106,10 +106,16 @@ private:
      */
     void _refreshSourceCombo();
 
+    /**
+     * @brief Update gray help text for raw vs processed pixel source.
+     */
+    void _updatePixelSourceHint();
+
     std::string _slot_name;
     std::shared_ptr<DataManager> _dm;
 
     AutoParamWidget * _auto_param = nullptr;
+    QLabel * _pixel_source_hint = nullptr;
 
     std::string _recommended_encoder;
 };

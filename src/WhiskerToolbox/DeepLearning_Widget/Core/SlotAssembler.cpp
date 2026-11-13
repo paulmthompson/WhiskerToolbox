@@ -190,7 +190,15 @@ dl::EncoderContext makeDynamicSlotEncoderContext(
                     dl::ImageEncodingSource source;
                     source.size = media->getImageSize();
                     source.channels = channels;
-                    if (media->is8Bit()) {
+                    if (params.use_media_processing_chain) {
+                        if (media->is8Bit()) {
+                            source.is_8bit = true;
+                            source.data_u8 = media->getProcessedData8(frame);
+                        } else {
+                            source.is_8bit = false;
+                            source.data_f32 = media->getProcessedData32(frame);
+                        }
+                    } else if (media->is8Bit()) {
                         source.is_8bit = true;
                         source.data_u8 = media->getRawData8(frame);
                     } else {
@@ -1093,6 +1101,17 @@ bool SlotAssembler::captureToBank(
     metadata.captured_frame = frame;
     metadata.source_image_size = source_image_size;
     metadata.encoder_factory_name = slot->recommended_encoder;
+    metadata.use_media_processing_chain = temp_binding.encoder.visit([](auto const & enc_params) {
+        using ParamsT = std::decay_t<decltype(enc_params)>;
+        if constexpr (std::is_same_v<ParamsT, dl::ImageEncoderParams>) {
+            return enc_params.use_media_processing_chain;
+        }
+        return true;
+    });
+    if (auto const media = dm.getData<MediaData>(metadata.data_key)) {
+        metadata.processing_step_count_at_capture =
+                static_cast<int>(media->getProcessingStepCount());
+    }
 
     if (!_impl->data_bank->putSource(bank_entry_id, *source, metadata)) {
         return false;

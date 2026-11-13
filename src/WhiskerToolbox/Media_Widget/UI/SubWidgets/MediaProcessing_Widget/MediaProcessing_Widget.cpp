@@ -16,7 +16,9 @@
 #include "ImageProcessing/OpenCVUtility.hpp"
 #include "Media/Media_Data.hpp"
 #include "MediaProcessingPipeline/ProcessingOptionsSchema.hpp"
+#include "MediaProcessingPipeline/MediaProcessingChainApply.hpp"
 #include "MediaProcessingPipeline/ProcessingStepRegistry.hpp"
+#include "Media_Widget/DisplayOptions/MediaDisplayProcessingOptions.hpp"
 
 #include <rfl/json.hpp>
 
@@ -246,25 +248,28 @@ void MediaProcessing_Widget::_onRegistryActiveChanged(ProcessingSection const & 
 }
 
 void MediaProcessing_Widget::_applyRegistryStep(ProcessingSection const & ps) {
-    if (_active_key.empty()) return;
+    static_cast<void>(ps);
+    _syncProcessingChainOnMedia();
+}
+
+void MediaProcessing_Widget::_syncProcessingChainOnMedia() {
+    if (_active_key.empty() || !_state) {
+        return;
+    }
 
     auto media_data = _data_manager->getData<MediaData>(_active_key);
-    if (!media_data) return;
-
-    auto const * step = ProcessingStepRegistry::instance().findByKey(ps.chain_key);
-    if (!step) return;
-
-    if (ps.active_checkbox->isChecked()) {
-        auto params_json = nlohmann::json::parse(ps.param_widget->toJson(), nullptr, false);
-        if (params_json.is_discarded()) return;
-
-        media_data->addProcessingStep(ps.chain_key, [apply = step->apply, params_json](void * input) {
-            auto * mat = static_cast<cv::Mat *>(input);
-            apply(*mat, params_json);
-        });
-    } else {
-        media_data->removeProcessingStep(ps.chain_key);
+    if (!media_data) {
+        return;
     }
+
+    auto const key = QString::fromStdString(_active_key);
+    auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key);
+    if (!media_opts) {
+        return;
+    }
+
+    auto const chain_options = mediaImageProcessingOptionsFromDisplay(*media_opts);
+    Neuralyzer::MediaProcessing::applyMediaProcessingChain(*media_data, chain_options);
 
     if (_scene) {
         _scene->UpdateCanvas();
@@ -364,30 +369,8 @@ void MediaProcessing_Widget::_onMagicEraserActiveChanged(bool active) {
 }
 
 void MediaProcessing_Widget::_applyMagicEraser(bool active) {
-    if (_active_key.empty()) return;
-
-    auto media_data = _data_manager->getData<MediaData>(_active_key);
-    if (!media_data) return;
-
-    auto const key = QString::fromStdString(_active_key);
-    auto const * media_opts = _state->displayOptions().get<MediaDisplayOptions>(key);
-    if (!media_opts) return;
-
-    auto combined = MagicEraserOptions::fromParamsAndState(
-            media_opts->magic_eraser_params, media_opts->magic_eraser_state);
-
-    if (active && !combined.mask.empty()) {
-        media_data->addProcessingStep("7__magic_eraser", [combined](void * input) {
-            auto * mat = static_cast<cv::Mat *>(input);
-            ImageProcessing::apply_magic_eraser(*mat, combined);
-        });
-    } else {
-        media_data->removeProcessingStep("7__magic_eraser");
-    }
-
-    if (_scene) {
-        _scene->UpdateCanvas();
-    }
+    static_cast<void>(active);
+    _syncProcessingChainOnMedia();
 }
 
 void MediaProcessing_Widget::_onMagicEraserDrawingModeChanged(bool enabled) {

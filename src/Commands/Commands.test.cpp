@@ -19,6 +19,9 @@
 
 #include <rfl/json.hpp>
 
+#include <numeric>
+#include <vector>
+
 using namespace commands;
 
 // =============================================================================
@@ -302,7 +305,7 @@ TEST_CASE("CopyByTimeRange with DigitalIntervalSeries",
     auto dm = std::make_shared<DataManager>();
 
     auto time = std::vector<int>(100);
-    std::ranges::iota(time.begin(), time.end(), 0);
+    std::iota(time.begin(), time.end(), 0);
     auto time_frame = std::make_shared<TimeFrame>(time);
     dm->setTime(TimeKey("time"), time_frame, true);
 
