@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -72,18 +72,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-0c66bec081e5215138e9fd61e9c23ef8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -116,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -139,6 +140,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -168,13 +170,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -268,6 +276,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -282,15 +291,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -334,8 +342,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
+            <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -344,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
@@ -359,6 +368,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-test_case-2" id="toc-function-test_case-2" class="nav-link" data-scroll-target="#function-test_case-2">function TEST_CASE</a></li>
   <li><a href="#function-test_case-3" id="toc-function-test_case-3" class="nav-link" data-scroll-target="#function-test_case-3">function TEST_CASE</a></li>
   <li><a href="#function-test_case-4" id="toc-function-test_case-4" class="nav-link" data-scroll-target="#function-test_case-4">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-5" id="toc-function-test_case-5" class="nav-link" data-scroll-target="#function-test_case-5">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-6" id="toc-function-test_case-6" class="nav-link" data-scroll-target="#function-test_case-6">function TEST_CASE</a></li>
+  <li><a href="#function-test_case-7" id="toc-function-test_case-7" class="nav-link" data-scroll-target="#function-test_case-7">function TEST_CASE</a></li>
   </ul></li>
   <li><a href="#source-code" id="toc-source-code" class="nav-link" data-scroll-target="#source-code">Source code</a></li>
   </ul></li>
@@ -366,7 +378,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -406,15 +418,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td></td>
-<td><strong><a href="../../api_generated/Files/LineResample_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“V2 Element Transform: LineResample - <a href="../../api_generated/Files/line__resample_8hpp.html#enumvalue-fixedspacing">FixedSpacing</a> Algorithm” , “” [transforms][v2][element][line_resample])</td>
+<td><strong><a href="../../api_generated/Files/LineResample_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“V2 Element Transform: LineResample - FixedSpacing Algorithm” , “” [transforms][v2][element][line_resample])</td>
 </tr>
 <tr class="odd">
 <td></td>
-<td><strong><a href="../../api_generated/Files/LineResample_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“V2 Element Transform: LineResample - <a href="../../api_generated/Files/line__resample_8hpp.html#enumvalue-douglaspeucker">DouglasPeucker</a> Algorithm” , “” [transforms][v2][element][line_resample])</td>
+<td><strong><a href="../../api_generated/Files/LineResample_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“V2 Element Transform: LineResample - DouglasPeucker Algorithm” , “” [transforms][v2][element][line_resample])</td>
 </tr>
 <tr class="even">
 <td></td>
-<td><strong><a href="../../api_generated/Files/LineResample_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“V2 Element Transform: LineResample - <a href="../../api_generated/Files/line__resample_8hpp.html#enumvalue-polynomialsmooth">PolynomialSmooth</a> Algorithm” , “” [transforms][v2][element][line_resample])</td>
+<td><strong><a href="../../api_generated/Files/LineResample_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“V2 Element Transform: LineResample - PolynomialSmooth Algorithm” , “” [transforms][v2][element][line_resample])</td>
 </tr>
 <tr class="odd">
 <td></td>
@@ -422,7 +434,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td></td>
-<td><strong><a href="../../api_generated/Files/LineResample_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“V2 <a href="../../api_generated/Classes/structNeuralyzer_1_1Transforms_1_1V2_1_1Examples_1_1LineResampleParams.html">LineResampleParams</a> - <a href="../../api_generated/Files/IOFormats_8hpp.html#enumvalue-json">JSON</a> Rejection” , “” [transforms][v2][params][json][line_resample])</td>
+<td><strong><a href="../../api_generated/Files/LineResample_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“V2 <a href="../../api_generated/Classes/structNeuralyzer_1_1Transforms_1_1V2_1_1Examples_1_1LineResampleParams.html">LineResampleParams</a> - JSON Rejection” , “” [transforms][v2][params][json][line_resample])</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/LineResample_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“V2 Element Transform: LineResample Registry Integration” , “” [transforms][v2][registry][element][line_resample])</td>
+</tr>
+<tr class="even">
+<td></td>
+<td><strong><a href="../../api_generated/Files/LineResample_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“V2 <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> Integration: LineResample via load_data_from_json_config_v2” , “” [transforms][v2][datamanager][line_resample])</td>
+</tr>
+<tr class="odd">
+<td></td>
+<td><strong><a href="../../api_generated/Files/LineResample_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“V2 Element Transform: LineResample - Context-Aware” , “” [transforms][v2][element][line_resample][context])</td>
 </tr>
 </tbody>
 </table>
@@ -471,397 +495,418 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>transforms<span class="op">][</span>v2<span class="op">][</span>params<span class="op">][</span>json<span class="op">][</span>line_resample<span class="op">]</span></span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
+<section id="function-test_case-5" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-5">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"V2 Element Transform: LineResample Registry Integration"</span> <span class="op">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>transforms<span class="op">][</span>v2<span class="op">][</span>registry<span class="op">][</span>element<span class="op">][</span>line_resample<span class="op">]</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-6" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-6">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"V2 DataManager Integration: LineResample via load_data_from_json_config_v2"</span> <span class="op">,</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>transforms<span class="op">][</span>v2<span class="op">][</span>datamanager<span class="op">][</span>line_resample<span class="op">]</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="function-test_case-7" class="level3">
+<h3 class="anchored" data-anchor-id="function-test_case-7">function TEST_CASE</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"V2 Element Transform: LineResample - Context-Aware"</span> <span class="op">,</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">""</span> <span class="op">[</span>transforms<span class="op">][</span>v2<span class="op">][</span>element<span class="op">][</span>line_resample<span class="op">][</span>context<span class="op">]</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
 </section>
 <section id="source-code" class="level2">
 <h2 class="anchored" data-anchor-id="source-code">Source code</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"LineResample.hpp"</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager.hpp"</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Lines/Line_Data.hpp"</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/core/ComputeContext.hpp"</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/core/DataManagerIntegration.hpp"</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/core/ElementRegistry.hpp"</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/io/ParameterIO.hpp"</span></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/catch_test_macros.hpp&gt;</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/matchers/catch_matchers_floating_point.hpp&gt;</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"fixtures/pipeline/pipeline_json_test_helpers.hpp"</span></span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"fixtures/scenarios/line/resample_scenarios.hpp"</span></span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cmath&gt;</span></span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">;</span></span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>Examples<span class="op">;</span></span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> pipeline_json_test<span class="op">;</span></span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">;</span></span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="co">// Helper Functions</span></span>
-<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="co">// Helper to extract Line2D from LineData at a given time</span></span>
-<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> Line2D getLineAt<span class="op">(</span>LineData <span class="at">const</span> <span class="op">*</span> line_data<span class="op">,</span> TimeFrameIndex time<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> lines_at_time <span class="op">=</span> line_data<span class="op">-&gt;</span>getAtTime<span class="op">(</span>time<span class="op">);</span></span>
-<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">:</span> lines_at_time<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> line<span class="op">;</span><span class="co">// Return the first line at this time</span></span>
-<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Line2D<span class="op">{};</span></span>
-<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a><span class="co">// Tests: Algorithm Correctness (using scenarios)</span></span>
-<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"V2 Element Transform: LineResample - FixedSpacing Algorithm"</span><span class="op">,</span></span>
-<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][element][line_resample]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>    LineResampleParams params<span class="op">;</span></span>
-<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>method <span class="op">=</span> LineResampleMethod<span class="op">::</span>FixedSpacing<span class="op">;</span></span>
-<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Two diagonal lines"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_data <span class="op">=</span> resample_scenarios<span class="op">::</span>two_diagonal_lines<span class="op">();</span></span>
-<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>target_spacing <span class="op">=</span> <span class="fl">15.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test first line at t=100</span></span>
-<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_t100 <span class="op">=</span> getLineAt<span class="op">(</span>line_data<span class="op">.</span>get<span class="op">(),</span> TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
-<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(!</span>line_t100<span class="op">.</span>empty<span class="op">());</span></span>
-<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> resampled <span class="op">=</span> resampleLine<span class="op">(</span>line_t100<span class="op">,</span> params<span class="op">);</span></span>
-<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(!</span>resampled<span class="op">.</span>empty<span class="op">());</span></span>
-<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a>        <span class="co">// The resampled line should be valid (size &gt;= 2 since we preserve endpoints)</span></span>
-<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>resampled<span class="op">.</span>size<span class="op">()</span> <span class="op">&gt;=</span> <span class="dv">2</span><span class="op">);</span></span>
-<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test second line at t=200</span></span>
-<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_t200 <span class="op">=</span> getLineAt<span class="op">(</span>line_data<span class="op">.</span>get<span class="op">(),</span> TimeFrameIndex<span class="op">(</span><span class="dv">200</span><span class="op">));</span></span>
-<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(!</span>line_t200<span class="op">.</span>empty<span class="op">());</span></span>
-<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> resampled_200 <span class="op">=</span> resampleLine<span class="op">(</span>line_t200<span class="op">,</span> params<span class="op">);</span></span>
-<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(!</span>resampled_200<span class="op">.</span>empty<span class="op">());</span></span>
-<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>resampled_200<span class="op">.</span>size<span class="op">()</span> <span class="op">&gt;=</span> <span class="dv">2</span><span class="op">);</span></span>
-<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Simple diagonal line"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_data <span class="op">=</span> resample_scenarios<span class="op">::</span>simple_diagonal<span class="op">();</span></span>
-<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line <span class="op">=</span> getLineAt<span class="op">(</span>line_data<span class="op">.</span>get<span class="op">(),</span> TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
-<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-74"><a href="#cb7-74" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>target_spacing <span class="op">=</span> <span class="fl">10.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb7-75"><a href="#cb7-75" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-76"><a href="#cb7-76" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> resampled <span class="op">=</span> resampleLine<span class="op">(</span>line<span class="op">,</span> params<span class="op">);</span></span>
-<span id="cb7-77"><a href="#cb7-77" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(!</span>resampled<span class="op">.</span>empty<span class="op">());</span></span>
-<span id="cb7-78"><a href="#cb7-78" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-79"><a href="#cb7-79" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb7-80"><a href="#cb7-80" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-81"><a href="#cb7-81" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"V2 Element Transform: LineResample - DouglasPeucker Algorithm"</span><span class="op">,</span></span>
-<span id="cb7-82"><a href="#cb7-82" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][element][line_resample]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-83"><a href="#cb7-83" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-84"><a href="#cb7-84" aria-hidden="true" tabindex="-1"></a>    LineResampleParams params<span class="op">;</span></span>
-<span id="cb7-85"><a href="#cb7-85" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>method <span class="op">=</span> LineResampleMethod<span class="op">::</span>DouglasPeucker<span class="op">;</span></span>
-<span id="cb7-86"><a href="#cb7-86" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-87"><a href="#cb7-87" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Dense nearly-straight line simplification"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-88"><a href="#cb7-88" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_data <span class="op">=</span> resample_scenarios<span class="op">::</span>dense_nearly_straight_line<span class="op">();</span></span>
-<span id="cb7-89"><a href="#cb7-89" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line <span class="op">=</span> getLineAt<span class="op">(</span>line_data<span class="op">.</span>get<span class="op">(),</span> TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
-<span id="cb7-90"><a href="#cb7-90" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-91"><a href="#cb7-91" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>line<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">11</span><span class="op">);</span><span class="co">// Original has 11 points</span></span>
-<span id="cb7-92"><a href="#cb7-92" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-93"><a href="#cb7-93" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>epsilon <span class="op">=</span> <span class="fl">0.5</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb7-94"><a href="#cb7-94" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-95"><a href="#cb7-95" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> simplified <span class="op">=</span> resampleLine<span class="op">(</span>line<span class="op">,</span> params<span class="op">);</span></span>
-<span id="cb7-96"><a href="#cb7-96" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-97"><a href="#cb7-97" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Douglas-Peucker should significantly reduce point count for nearly straight line</span></span>
-<span id="cb7-98"><a href="#cb7-98" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>simplified<span class="op">.</span>size<span class="op">()</span> <span class="op">&lt;</span> line<span class="op">.</span>size<span class="op">());</span></span>
-<span id="cb7-99"><a href="#cb7-99" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>simplified<span class="op">.</span>size<span class="op">()</span> <span class="op">&gt;=</span> <span class="dv">2</span><span class="op">);</span><span class="co">// At least start and end points preserved</span></span>
-<span id="cb7-100"><a href="#cb7-100" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-101"><a href="#cb7-101" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-102"><a href="#cb7-102" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Simple diagonal remains compact"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-103"><a href="#cb7-103" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_data <span class="op">=</span> resample_scenarios<span class="op">::</span>simple_diagonal<span class="op">();</span></span>
-<span id="cb7-104"><a href="#cb7-104" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line <span class="op">=</span> getLineAt<span class="op">(</span>line_data<span class="op">.</span>get<span class="op">(),</span> TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
-<span id="cb7-105"><a href="#cb7-105" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-106"><a href="#cb7-106" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>epsilon <span class="op">=</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb7-107"><a href="#cb7-107" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-108"><a href="#cb7-108" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> simplified <span class="op">=</span> resampleLine<span class="op">(</span>line<span class="op">,</span> params<span class="op">);</span></span>
-<span id="cb7-109"><a href="#cb7-109" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-110"><a href="#cb7-110" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Simple diagonal (3 points) should simplify to 2 points (endpoints)</span></span>
-<span id="cb7-111"><a href="#cb7-111" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>simplified<span class="op">.</span>size<span class="op">()</span> <span class="op">&lt;=</span> line<span class="op">.</span>size<span class="op">());</span></span>
-<span id="cb7-112"><a href="#cb7-112" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-113"><a href="#cb7-113" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb7-114"><a href="#cb7-114" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-115"><a href="#cb7-115" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"V2 Element Transform: LineResample - PolynomialSmooth Algorithm"</span><span class="op">,</span></span>
-<span id="cb7-116"><a href="#cb7-116" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][element][line_resample]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-117"><a href="#cb7-117" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-118"><a href="#cb7-118" aria-hidden="true" tabindex="-1"></a>    LineResampleParams params<span class="op">;</span></span>
-<span id="cb7-119"><a href="#cb7-119" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>method <span class="op">=</span> LineResampleMethod<span class="op">::</span>PolynomialSmooth<span class="op">;</span></span>
-<span id="cb7-120"><a href="#cb7-120" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>polynomial_order <span class="op">=</span> <span class="dv">3</span><span class="op">;</span></span>
-<span id="cb7-121"><a href="#cb7-121" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>target_spacing <span class="op">=</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb7-122"><a href="#cb7-122" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-123"><a href="#cb7-123" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Noisy polyline is smoothed and resampled"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-124"><a href="#cb7-124" aria-hidden="true" tabindex="-1"></a>        Line2D noisy<span class="op">;</span></span>
-<span id="cb7-125"><a href="#cb7-125" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;=</span> <span class="dv">20</span><span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-126"><a href="#cb7-126" aria-hidden="true" tabindex="-1"></a>            <span class="dt">float</span> <span class="at">const</span> t <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>i<span class="op">)</span> <span class="op">/</span> <span class="fl">20.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb7-127"><a href="#cb7-127" aria-hidden="true" tabindex="-1"></a>            <span class="dt">float</span> <span class="at">const</span> x <span class="op">=</span> t <span class="op">*</span> <span class="fl">100.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb7-128"><a href="#cb7-128" aria-hidden="true" tabindex="-1"></a>            <span class="dt">float</span> <span class="at">const</span> y <span class="op">=</span> t <span class="op">*</span> <span class="fl">50.0</span><span class="bu">f</span> <span class="op">+</span> <span class="op">((</span>i <span class="op">%</span> <span class="dv">2</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">?</span> <span class="fl">5.0</span><span class="bu">f</span> <span class="op">:</span> <span class="op">-</span><span class="fl">5.0</span><span class="bu">f</span><span class="op">);</span></span>
-<span id="cb7-129"><a href="#cb7-129" aria-hidden="true" tabindex="-1"></a>            noisy<span class="op">.</span>push_back<span class="op">(</span>Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;{</span>x<span class="op">,</span> y<span class="op">});</span></span>
-<span id="cb7-130"><a href="#cb7-130" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb7-131"><a href="#cb7-131" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-132"><a href="#cb7-132" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> smoothed <span class="op">=</span> resampleLine<span class="op">(</span>noisy<span class="op">,</span> params<span class="op">);</span></span>
-<span id="cb7-133"><a href="#cb7-133" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>smoothed<span class="op">.</span>size<span class="op">()</span> <span class="op">&gt;=</span> <span class="dv">2</span><span class="op">);</span></span>
-<span id="cb7-134"><a href="#cb7-134" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>smoothed<span class="op">.</span>size<span class="op">()</span> <span class="op">&lt;</span> noisy<span class="op">.</span>size<span class="op">());</span></span>
-<span id="cb7-135"><a href="#cb7-135" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-136"><a href="#cb7-136" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-137"><a href="#cb7-137" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Too few points for order returns unchanged"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-138"><a href="#cb7-138" aria-hidden="true" tabindex="-1"></a>        Line2D short_line<span class="op">;</span></span>
-<span id="cb7-139"><a href="#cb7-139" aria-hidden="true" tabindex="-1"></a>        short_line<span class="op">.</span>push_back<span class="op">(</span>Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;{</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">});</span></span>
-<span id="cb7-140"><a href="#cb7-140" aria-hidden="true" tabindex="-1"></a>        short_line<span class="op">.</span>push_back<span class="op">(</span>Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;{</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">10.0</span><span class="bu">f</span><span class="op">});</span></span>
-<span id="cb7-141"><a href="#cb7-141" aria-hidden="true" tabindex="-1"></a>        short_line<span class="op">.</span>push_back<span class="op">(</span>Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;{</span><span class="fl">20.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">});</span></span>
-<span id="cb7-142"><a href="#cb7-142" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-143"><a href="#cb7-143" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>polynomial_order <span class="op">=</span> <span class="dv">3</span><span class="op">;</span></span>
-<span id="cb7-144"><a href="#cb7-144" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> resampleLine<span class="op">(</span>short_line<span class="op">,</span> params<span class="op">);</span></span>
-<span id="cb7-145"><a href="#cb7-145" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> short_line<span class="op">.</span>size<span class="op">());</span></span>
-<span id="cb7-146"><a href="#cb7-146" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-147"><a href="#cb7-147" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb7-148"><a href="#cb7-148" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-149"><a href="#cb7-149" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"V2 Element Transform: LineResample - Edge Cases"</span><span class="op">,</span></span>
-<span id="cb7-150"><a href="#cb7-150" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][element][line_resample][edge]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-151"><a href="#cb7-151" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-152"><a href="#cb7-152" aria-hidden="true" tabindex="-1"></a>    LineResampleParams params<span class="op">;</span></span>
-<span id="cb7-153"><a href="#cb7-153" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-154"><a href="#cb7-154" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Empty line returns empty"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-155"><a href="#cb7-155" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_data <span class="op">=</span> resample_scenarios<span class="op">::</span>empty<span class="op">();</span></span>
-<span id="cb7-156"><a href="#cb7-156" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-157"><a href="#cb7-157" aria-hidden="true" tabindex="-1"></a>        <span class="co">// No lines exist, so create an empty line</span></span>
-<span id="cb7-158"><a href="#cb7-158" aria-hidden="true" tabindex="-1"></a>        Line2D <span class="at">const</span> empty_line<span class="op">;</span></span>
-<span id="cb7-159"><a href="#cb7-159" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-160"><a href="#cb7-160" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> resampleLine<span class="op">(</span>empty_line<span class="op">,</span> params<span class="op">);</span></span>
-<span id="cb7-161"><a href="#cb7-161" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result<span class="op">.</span>empty<span class="op">());</span></span>
-<span id="cb7-162"><a href="#cb7-162" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-163"><a href="#cb7-163" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-164"><a href="#cb7-164" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Single point line returned unchanged"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-165"><a href="#cb7-165" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_data <span class="op">=</span> resample_scenarios<span class="op">::</span>single_point<span class="op">();</span></span>
-<span id="cb7-166"><a href="#cb7-166" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line <span class="op">=</span> getLineAt<span class="op">(</span>line_data<span class="op">.</span>get<span class="op">(),</span> TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
-<span id="cb7-167"><a href="#cb7-167" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-168"><a href="#cb7-168" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>line<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb7-169"><a href="#cb7-169" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-170"><a href="#cb7-170" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>method <span class="op">=</span> LineResampleMethod<span class="op">::</span>FixedSpacing<span class="op">;</span></span>
-<span id="cb7-171"><a href="#cb7-171" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>target_spacing <span class="op">=</span> <span class="fl">10.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb7-172"><a href="#cb7-172" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-173"><a href="#cb7-173" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> resampleLine<span class="op">(</span>line<span class="op">,</span> params<span class="op">);</span></span>
-<span id="cb7-174"><a href="#cb7-174" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb7-175"><a href="#cb7-175" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-176"><a href="#cb7-176" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-177"><a href="#cb7-177" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Two point line returned unchanged"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-178"><a href="#cb7-178" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Two-point lines are minimal representation</span></span>
-<span id="cb7-179"><a href="#cb7-179" aria-hidden="true" tabindex="-1"></a>        Line2D two_point_line<span class="op">;</span></span>
-<span id="cb7-180"><a href="#cb7-180" aria-hidden="true" tabindex="-1"></a>        two_point_line<span class="op">.</span>push_back<span class="op">(</span>Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;{</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">});</span></span>
-<span id="cb7-181"><a href="#cb7-181" aria-hidden="true" tabindex="-1"></a>        two_point_line<span class="op">.</span>push_back<span class="op">(</span>Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;{</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">10.0</span><span class="bu">f</span><span class="op">});</span></span>
-<span id="cb7-182"><a href="#cb7-182" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-183"><a href="#cb7-183" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>method <span class="op">=</span> LineResampleMethod<span class="op">::</span>FixedSpacing<span class="op">;</span></span>
-<span id="cb7-184"><a href="#cb7-184" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>target_spacing <span class="op">=</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb7-185"><a href="#cb7-185" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-186"><a href="#cb7-186" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> resampleLine<span class="op">(</span>two_point_line<span class="op">,</span> params<span class="op">);</span></span>
-<span id="cb7-187"><a href="#cb7-187" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
-<span id="cb7-188"><a href="#cb7-188" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-189"><a href="#cb7-189" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-190"><a href="#cb7-190" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Diagonal with empty line - only empty processed correctly"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-191"><a href="#cb7-191" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_data <span class="op">=</span> resample_scenarios<span class="op">::</span>diagonal_with_empty<span class="op">();</span></span>
-<span id="cb7-192"><a href="#cb7-192" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-193"><a href="#cb7-193" aria-hidden="true" tabindex="-1"></a>        <span class="co">// t=200 has an empty line</span></span>
-<span id="cb7-194"><a href="#cb7-194" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_t200 <span class="op">=</span> getLineAt<span class="op">(</span>line_data<span class="op">.</span>get<span class="op">(),</span> TimeFrameIndex<span class="op">(</span><span class="dv">200</span><span class="op">));</span></span>
-<span id="cb7-195"><a href="#cb7-195" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-196"><a href="#cb7-196" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> resampleLine<span class="op">(</span>line_t200<span class="op">,</span> params<span class="op">);</span></span>
-<span id="cb7-197"><a href="#cb7-197" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result<span class="op">.</span>empty<span class="op">());</span></span>
-<span id="cb7-198"><a href="#cb7-198" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-199"><a href="#cb7-199" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb7-200"><a href="#cb7-200" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-201"><a href="#cb7-201" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb7-202"><a href="#cb7-202" aria-hidden="true" tabindex="-1"></a><span class="co">// Tests: Parameter Validation</span></span>
-<span id="cb7-203"><a href="#cb7-203" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb7-204"><a href="#cb7-204" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-205"><a href="#cb7-205" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"V2 LineResampleParams - JSON Rejection"</span><span class="op">,</span></span>
-<span id="cb7-206"><a href="#cb7-206" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][params][json][line_resample]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-207"><a href="#cb7-207" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-208"><a href="#cb7-208" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Reject malformed JSON"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-209"><a href="#cb7-209" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{</span></span>
-<span id="cb7-210"><a href="#cb7-210" aria-hidden="true" tabindex="-1"></a><span class="vs">            "method": "FixedSpacing",</span></span>
-<span id="cb7-211"><a href="#cb7-211" aria-hidden="true" tabindex="-1"></a><span class="vs">            "invalid</span></span>
-<span id="cb7-212"><a href="#cb7-212" aria-hidden="true" tabindex="-1"></a><span class="vs">        }</span><span class="st">)"</span><span class="op">;</span></span>
-<span id="cb7-213"><a href="#cb7-213" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>loadParametersFromJson<span class="op">&lt;</span>LineResampleParams<span class="op">&gt;(</span>json<span class="op">));</span></span>
-<span id="cb7-214"><a href="#cb7-214" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-215"><a href="#cb7-215" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-216"><a href="#cb7-216" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Reject unknown method"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-217"><a href="#cb7-217" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"method": "invalid"}</span><span class="st">)"</span><span class="op">;</span></span>
-<span id="cb7-218"><a href="#cb7-218" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>loadParametersFromJson<span class="op">&lt;</span>LineResampleParams<span class="op">&gt;(</span>json<span class="op">));</span></span>
-<span id="cb7-219"><a href="#cb7-219" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-220"><a href="#cb7-220" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-221"><a href="#cb7-221" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Reject wrong casing for method"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-222"><a href="#cb7-222" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"method": "fixedspacing"}</span><span class="st">)"</span><span class="op">;</span></span>
-<span id="cb7-223"><a href="#cb7-223" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>loadParametersFromJson<span class="op">&lt;</span>LineResampleParams<span class="op">&gt;(</span>json<span class="op">));</span></span>
-<span id="cb7-224"><a href="#cb7-224" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-225"><a href="#cb7-225" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-226"><a href="#cb7-226" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Reject non-string method"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-227"><a href="#cb7-227" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"method": 1}</span><span class="st">)"</span><span class="op">;</span></span>
-<span id="cb7-228"><a href="#cb7-228" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>loadParametersFromJson<span class="op">&lt;</span>LineResampleParams<span class="op">&gt;(</span>json<span class="op">));</span></span>
-<span id="cb7-229"><a href="#cb7-229" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-230"><a href="#cb7-230" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-231"><a href="#cb7-231" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Reject non-numeric target_spacing"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-232"><a href="#cb7-232" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"target_spacing": "wide"}</span><span class="st">)"</span><span class="op">;</span></span>
-<span id="cb7-233"><a href="#cb7-233" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>loadParametersFromJson<span class="op">&lt;</span>LineResampleParams<span class="op">&gt;(</span>json<span class="op">));</span></span>
-<span id="cb7-234"><a href="#cb7-234" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-235"><a href="#cb7-235" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-236"><a href="#cb7-236" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Reject negative target_spacing"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-237"><a href="#cb7-237" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"target_spacing": -5.0}</span><span class="st">)"</span><span class="op">;</span></span>
-<span id="cb7-238"><a href="#cb7-238" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>loadParametersFromJson<span class="op">&lt;</span>LineResampleParams<span class="op">&gt;(</span>json<span class="op">));</span></span>
-<span id="cb7-239"><a href="#cb7-239" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-240"><a href="#cb7-240" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-241"><a href="#cb7-241" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Reject zero target_spacing"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-242"><a href="#cb7-242" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"target_spacing": 0.0}</span><span class="st">)"</span><span class="op">;</span></span>
-<span id="cb7-243"><a href="#cb7-243" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>loadParametersFromJson<span class="op">&lt;</span>LineResampleParams<span class="op">&gt;(</span>json<span class="op">));</span></span>
-<span id="cb7-244"><a href="#cb7-244" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-245"><a href="#cb7-245" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-246"><a href="#cb7-246" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Reject non-numeric epsilon"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-247"><a href="#cb7-247" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"epsilon": "tight"}</span><span class="st">)"</span><span class="op">;</span></span>
-<span id="cb7-248"><a href="#cb7-248" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>loadParametersFromJson<span class="op">&lt;</span>LineResampleParams<span class="op">&gt;(</span>json<span class="op">));</span></span>
-<span id="cb7-249"><a href="#cb7-249" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-250"><a href="#cb7-250" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-251"><a href="#cb7-251" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Reject negative epsilon"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-252"><a href="#cb7-252" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"epsilon": -1.0}</span><span class="st">)"</span><span class="op">;</span></span>
-<span id="cb7-253"><a href="#cb7-253" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>loadParametersFromJson<span class="op">&lt;</span>LineResampleParams<span class="op">&gt;(</span>json<span class="op">));</span></span>
-<span id="cb7-254"><a href="#cb7-254" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-255"><a href="#cb7-255" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-256"><a href="#cb7-256" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Reject non-integer polynomial_order"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-257"><a href="#cb7-257" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"polynomial_order": "three"}</span><span class="st">)"</span><span class="op">;</span></span>
-<span id="cb7-258"><a href="#cb7-258" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>loadParametersFromJson<span class="op">&lt;</span>LineResampleParams<span class="op">&gt;(</span>json<span class="op">));</span></span>
-<span id="cb7-259"><a href="#cb7-259" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-260"><a href="#cb7-260" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb7-261"><a href="#cb7-261" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-262"><a href="#cb7-262" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb7-263"><a href="#cb7-263" aria-hidden="true" tabindex="-1"></a><span class="co">// Tests: Registry Integration</span></span>
-<span id="cb7-264"><a href="#cb7-264" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb7-265"><a href="#cb7-265" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-266"><a href="#cb7-266" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"V2 Element Transform: LineResample Registry Integration"</span><span class="op">,</span></span>
-<span id="cb7-267"><a href="#cb7-267" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][registry][element][line_resample]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-268"><a href="#cb7-268" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-269"><a href="#cb7-269" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">&amp;</span> registry <span class="op">=</span> ElementRegistry<span class="op">::</span>instance<span class="op">();</span></span>
-<span id="cb7-270"><a href="#cb7-270" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-271"><a href="#cb7-271" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Transform is registered"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-272"><a href="#cb7-272" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>registry<span class="op">.</span>hasElementTransform<span class="op">(</span><span class="st">"ResampleLine"</span><span class="op">));</span></span>
-<span id="cb7-273"><a href="#cb7-273" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-274"><a href="#cb7-274" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-275"><a href="#cb7-275" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Can retrieve metadata"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-276"><a href="#cb7-276" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> <span class="op">*</span> metadata <span class="op">=</span> registry<span class="op">.</span>getMetadata<span class="op">(</span><span class="st">"ResampleLine"</span><span class="op">);</span></span>
-<span id="cb7-277"><a href="#cb7-277" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>metadata <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb7-278"><a href="#cb7-278" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>metadata<span class="op">-&gt;</span>name <span class="op">==</span> <span class="st">"ResampleLine"</span><span class="op">);</span></span>
-<span id="cb7-279"><a href="#cb7-279" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>metadata<span class="op">-&gt;</span>category <span class="op">==</span> <span class="st">"Geometry"</span><span class="op">);</span></span>
-<span id="cb7-280"><a href="#cb7-280" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>metadata<span class="op">-&gt;</span>is_multi_input <span class="op">==</span> <span class="kw">false</span><span class="op">);</span></span>
-<span id="cb7-281"><a href="#cb7-281" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-282"><a href="#cb7-282" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb7-283"><a href="#cb7-283" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-284"><a href="#cb7-284" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb7-285"><a href="#cb7-285" aria-hidden="true" tabindex="-1"></a><span class="co">// Tests: DataManager Integration via load_data_from_json_config_v2</span></span>
-<span id="cb7-286"><a href="#cb7-286" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb7-287"><a href="#cb7-287" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-288"><a href="#cb7-288" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"V2 DataManager Integration: LineResample via load_data_from_json_config_v2"</span><span class="op">,</span></span>
-<span id="cb7-289"><a href="#cb7-289" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][datamanager][line_resample]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-290"><a href="#cb7-290" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-291"><a href="#cb7-291" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create DataManager and populate with test data</span></span>
-<span id="cb7-292"><a href="#cb7-292" aria-hidden="true" tabindex="-1"></a>    DataManager dm<span class="op">;</span></span>
-<span id="cb7-293"><a href="#cb7-293" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> time_frame <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TimeFrame<span class="op">&gt;();</span></span>
-<span id="cb7-294"><a href="#cb7-294" aria-hidden="true" tabindex="-1"></a>    dm<span class="op">.</span>setTime<span class="op">(</span>TimeKey<span class="op">(</span><span class="st">"default"</span><span class="op">),</span> time_frame<span class="op">);</span></span>
-<span id="cb7-295"><a href="#cb7-295" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-296"><a href="#cb7-296" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Populate with scenario data</span></span>
-<span id="cb7-297"><a href="#cb7-297" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> two_diagonal <span class="op">=</span> resample_scenarios<span class="op">::</span>two_diagonal_lines<span class="op">();</span></span>
-<span id="cb7-298"><a href="#cb7-298" aria-hidden="true" tabindex="-1"></a>    two_diagonal<span class="op">-&gt;</span>setTimeFrame<span class="op">(</span>time_frame<span class="op">);</span></span>
-<span id="cb7-299"><a href="#cb7-299" aria-hidden="true" tabindex="-1"></a>    dm<span class="op">.</span>setData<span class="op">(</span><span class="st">"two_diagonal_lines"</span><span class="op">,</span> two_diagonal<span class="op">,</span> TimeKey<span class="op">(</span><span class="st">"default"</span><span class="op">));</span></span>
-<span id="cb7-300"><a href="#cb7-300" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-301"><a href="#cb7-301" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> dense_line <span class="op">=</span> resample_scenarios<span class="op">::</span>dense_nearly_straight_line<span class="op">();</span></span>
-<span id="cb7-302"><a href="#cb7-302" aria-hidden="true" tabindex="-1"></a>    dense_line<span class="op">-&gt;</span>setTimeFrame<span class="op">(</span>time_frame<span class="op">);</span></span>
-<span id="cb7-303"><a href="#cb7-303" aria-hidden="true" tabindex="-1"></a>    dm<span class="op">.</span>setData<span class="op">(</span><span class="st">"dense_nearly_straight_line"</span><span class="op">,</span> dense_line<span class="op">,</span> TimeKey<span class="op">(</span><span class="st">"default"</span><span class="op">));</span></span>
-<span id="cb7-304"><a href="#cb7-304" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-305"><a href="#cb7-305" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"FixedSpacing pipeline"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-306"><a href="#cb7-306" aria-hidden="true" tabindex="-1"></a>        LineResampleParams params<span class="op">;</span></span>
-<span id="cb7-307"><a href="#cb7-307" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>method <span class="op">=</span> LineResampleMethod<span class="op">::</span>FixedSpacing<span class="op">;</span></span>
-<span id="cb7-308"><a href="#cb7-308" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>target_spacing <span class="op">=</span> <span class="fl">15.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb7-309"><a href="#cb7-309" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-310"><a href="#cb7-310" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> pipeline <span class="op">=</span> makeSingleStepPipeline<span class="op">(</span></span>
-<span id="cb7-311"><a href="#cb7-311" aria-hidden="true" tabindex="-1"></a>                <span class="st">"ResampleLine"</span><span class="op">,</span></span>
-<span id="cb7-312"><a href="#cb7-312" aria-hidden="true" tabindex="-1"></a>                <span class="st">"two_diagonal_lines"</span><span class="op">,</span></span>
-<span id="cb7-313"><a href="#cb7-313" aria-hidden="true" tabindex="-1"></a>                <span class="st">"v2_resampled_lines"</span><span class="op">,</span></span>
-<span id="cb7-314"><a href="#cb7-314" aria-hidden="true" tabindex="-1"></a>                params<span class="op">);</span></span>
-<span id="cb7-315"><a href="#cb7-315" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-316"><a href="#cb7-316" aria-hidden="true" tabindex="-1"></a>        executeViaLoadDataFromJsonConfigV2<span class="op">(</span>dm<span class="op">,</span> pipeline<span class="op">);</span></span>
-<span id="cb7-317"><a href="#cb7-317" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-318"><a href="#cb7-318" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result_lines <span class="op">=</span> dm<span class="op">.</span>getData<span class="op">&lt;</span>LineData<span class="op">&gt;(</span><span class="st">"v2_resampled_lines"</span><span class="op">);</span></span>
-<span id="cb7-319"><a href="#cb7-319" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result_lines <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb7-320"><a href="#cb7-320" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-321"><a href="#cb7-321" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> times <span class="op">=</span> result_lines<span class="op">-&gt;</span>getTimesWithData<span class="op">();</span></span>
-<span id="cb7-322"><a href="#cb7-322" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>times<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
-<span id="cb7-323"><a href="#cb7-323" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-324"><a href="#cb7-324" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-325"><a href="#cb7-325" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"DouglasPeucker pipeline"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-326"><a href="#cb7-326" aria-hidden="true" tabindex="-1"></a>        LineResampleParams params<span class="op">;</span></span>
-<span id="cb7-327"><a href="#cb7-327" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>method <span class="op">=</span> LineResampleMethod<span class="op">::</span>DouglasPeucker<span class="op">;</span></span>
-<span id="cb7-328"><a href="#cb7-328" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>epsilon <span class="op">=</span> <span class="fl">0.5</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb7-329"><a href="#cb7-329" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-330"><a href="#cb7-330" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> pipeline <span class="op">=</span> makeSingleStepPipeline<span class="op">(</span></span>
-<span id="cb7-331"><a href="#cb7-331" aria-hidden="true" tabindex="-1"></a>                <span class="st">"ResampleLine"</span><span class="op">,</span></span>
-<span id="cb7-332"><a href="#cb7-332" aria-hidden="true" tabindex="-1"></a>                <span class="st">"dense_nearly_straight_line"</span><span class="op">,</span></span>
-<span id="cb7-333"><a href="#cb7-333" aria-hidden="true" tabindex="-1"></a>                <span class="st">"v2_simplified_lines"</span><span class="op">,</span></span>
-<span id="cb7-334"><a href="#cb7-334" aria-hidden="true" tabindex="-1"></a>                params<span class="op">);</span></span>
-<span id="cb7-335"><a href="#cb7-335" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-336"><a href="#cb7-336" aria-hidden="true" tabindex="-1"></a>        executeViaLoadDataFromJsonConfigV2<span class="op">(</span>dm<span class="op">,</span> pipeline<span class="op">);</span></span>
-<span id="cb7-337"><a href="#cb7-337" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-338"><a href="#cb7-338" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result_lines <span class="op">=</span> dm<span class="op">.</span>getData<span class="op">&lt;</span>LineData<span class="op">&gt;(</span><span class="st">"v2_simplified_lines"</span><span class="op">);</span></span>
-<span id="cb7-339"><a href="#cb7-339" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result_lines <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb7-340"><a href="#cb7-340" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-341"><a href="#cb7-341" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> simplified <span class="op">=</span> result_lines<span class="op">-&gt;</span>getAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
-<span id="cb7-342"><a href="#cb7-342" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(!</span>simplified<span class="op">.</span>empty<span class="op">());</span></span>
-<span id="cb7-343"><a href="#cb7-343" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-344"><a href="#cb7-344" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> original <span class="op">=</span> dense_line<span class="op">-&gt;</span>getAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
-<span id="cb7-345"><a href="#cb7-345" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(!</span>original<span class="op">.</span>empty<span class="op">());</span></span>
-<span id="cb7-346"><a href="#cb7-346" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>simplified<span class="op">[</span><span class="dv">0</span><span class="op">].</span>size<span class="op">()</span> <span class="op">&lt;</span> original<span class="op">[</span><span class="dv">0</span><span class="op">].</span>size<span class="op">());</span></span>
-<span id="cb7-347"><a href="#cb7-347" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-348"><a href="#cb7-348" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb7-349"><a href="#cb7-349" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-350"><a href="#cb7-350" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb7-351"><a href="#cb7-351" aria-hidden="true" tabindex="-1"></a><span class="co">// Tests: Context-Aware Execution</span></span>
-<span id="cb7-352"><a href="#cb7-352" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb7-353"><a href="#cb7-353" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-354"><a href="#cb7-354" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"V2 Element Transform: LineResample - Context-Aware"</span><span class="op">,</span></span>
-<span id="cb7-355"><a href="#cb7-355" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][element][line_resample][context]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-356"><a href="#cb7-356" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-357"><a href="#cb7-357" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> line_data <span class="op">=</span> resample_scenarios<span class="op">::</span>two_diagonal_lines<span class="op">();</span></span>
-<span id="cb7-358"><a href="#cb7-358" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> line <span class="op">=</span> getLineAt<span class="op">(</span>line_data<span class="op">.</span>get<span class="op">(),</span> TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
-<span id="cb7-359"><a href="#cb7-359" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-360"><a href="#cb7-360" aria-hidden="true" tabindex="-1"></a>    LineResampleParams params<span class="op">;</span></span>
-<span id="cb7-361"><a href="#cb7-361" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>method <span class="op">=</span> LineResampleMethod<span class="op">::</span>FixedSpacing<span class="op">;</span></span>
-<span id="cb7-362"><a href="#cb7-362" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>target_spacing <span class="op">=</span> <span class="fl">10.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb7-363"><a href="#cb7-363" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-364"><a href="#cb7-364" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"With cancellation check"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-365"><a href="#cb7-365" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> was_cancelled <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
-<span id="cb7-366"><a href="#cb7-366" aria-hidden="true" tabindex="-1"></a>        ComputeContext ctx<span class="op">;</span></span>
-<span id="cb7-367"><a href="#cb7-367" aria-hidden="true" tabindex="-1"></a>        ctx<span class="op">.</span>is_cancelled <span class="op">=</span> <span class="op">[&amp;</span>was_cancelled<span class="op">]()</span> <span class="op">{</span> <span class="cf">return</span> was_cancelled<span class="op">;</span> <span class="op">};</span></span>
-<span id="cb7-368"><a href="#cb7-368" aria-hidden="true" tabindex="-1"></a>        ctx<span class="op">.</span>progress <span class="op">=</span> <span class="op">[](</span><span class="dt">int</span><span class="op">)</span> <span class="op">{};</span></span>
-<span id="cb7-369"><a href="#cb7-369" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-370"><a href="#cb7-370" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> resampleLineWithContext<span class="op">(</span>line<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
-<span id="cb7-371"><a href="#cb7-371" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-372"><a href="#cb7-372" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Normal execution should produce valid result</span></span>
-<span id="cb7-373"><a href="#cb7-373" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(!</span>result<span class="op">.</span>empty<span class="op">());</span></span>
-<span id="cb7-374"><a href="#cb7-374" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-375"><a href="#cb7-375" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-376"><a href="#cb7-376" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Cancellation returns original line"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb7-377"><a href="#cb7-377" aria-hidden="true" tabindex="-1"></a>        ComputeContext ctx<span class="op">;</span></span>
-<span id="cb7-378"><a href="#cb7-378" aria-hidden="true" tabindex="-1"></a>        ctx<span class="op">.</span>is_cancelled <span class="op">=</span> <span class="op">[]()</span> <span class="op">{</span> <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span> <span class="op">};</span><span class="co">// Always cancelled</span></span>
-<span id="cb7-379"><a href="#cb7-379" aria-hidden="true" tabindex="-1"></a>        ctx<span class="op">.</span>progress <span class="op">=</span> <span class="op">[](</span><span class="dt">int</span><span class="op">)</span> <span class="op">{};</span></span>
-<span id="cb7-380"><a href="#cb7-380" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-381"><a href="#cb7-381" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> resampleLineWithContext<span class="op">(</span>line<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
-<span id="cb7-382"><a href="#cb7-382" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-383"><a href="#cb7-383" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Cancelled execution returns original line</span></span>
-<span id="cb7-384"><a href="#cb7-384" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> line<span class="op">.</span>size<span class="op">());</span></span>
-<span id="cb7-385"><a href="#cb7-385" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb7-386"><a href="#cb7-386" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"LineResample.hpp"</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"AnalogTimeSeries/RaggedAnalogTimeSeries.hpp"</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager.hpp"</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"Lines/Line_Data.hpp"</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/core/ComputeContext.hpp"</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/core/DataManagerIntegration.hpp"</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/core/ElementRegistry.hpp"</span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/io/ParameterIO.hpp"</span></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/catch_test_macros.hpp&gt;</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/matchers/catch_matchers_floating_point.hpp&gt;</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"fixtures/pipeline/pipeline_json_test_helpers.hpp"</span></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"fixtures/scenarios/line/resample_scenarios.hpp"</span></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cmath&gt;</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">;</span></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>Examples<span class="op">;</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> pipeline_json_test<span class="op">;</span></span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">;</span></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a><span class="co">// Helper Functions</span></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a><span class="co">// Helper to extract Line2D from LineData at a given time</span></span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> Line2D getLineAt<span class="op">(</span>LineData <span class="at">const</span> <span class="op">*</span> line_data<span class="op">,</span> TimeFrameIndex time<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> lines_at_time <span class="op">=</span> line_data<span class="op">-&gt;</span>getAtTime<span class="op">(</span>time<span class="op">);</span></span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> line<span class="op">:</span> lines_at_time<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> line<span class="op">;</span><span class="co">// Return the first line at this time</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> Line2D<span class="op">{};</span></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a><span class="co">// Tests: Algorithm Correctness (using scenarios)</span></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"V2 Element Transform: LineResample - FixedSpacing Algorithm"</span><span class="op">,</span></span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][element][line_resample]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>    LineResampleParams params<span class="op">;</span></span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>method <span class="op">=</span> LineResampleMethod<span class="op">::</span>FixedSpacing<span class="op">;</span></span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Two diagonal lines"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_data <span class="op">=</span> resample_scenarios<span class="op">::</span>two_diagonal_lines<span class="op">();</span></span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>target_spacing <span class="op">=</span> <span class="fl">15.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test first line at t=100</span></span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_t100 <span class="op">=</span> getLineAt<span class="op">(</span>line_data<span class="op">.</span>get<span class="op">(),</span> TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(!</span>line_t100<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> resampled <span class="op">=</span> resampleLine<span class="op">(</span>line_t100<span class="op">,</span> params<span class="op">);</span></span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(!</span>resampled<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>        <span class="co">// The resampled line should be valid (size &gt;= 2 since we preserve endpoints)</span></span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>resampled<span class="op">.</span>size<span class="op">()</span> <span class="op">&gt;=</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Test second line at t=200</span></span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_t200 <span class="op">=</span> getLineAt<span class="op">(</span>line_data<span class="op">.</span>get<span class="op">(),</span> TimeFrameIndex<span class="op">(</span><span class="dv">200</span><span class="op">));</span></span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(!</span>line_t200<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> resampled_200 <span class="op">=</span> resampleLine<span class="op">(</span>line_t200<span class="op">,</span> params<span class="op">);</span></span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(!</span>resampled_200<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>resampled_200<span class="op">.</span>size<span class="op">()</span> <span class="op">&gt;=</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Simple diagonal line"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_data <span class="op">=</span> resample_scenarios<span class="op">::</span>simple_diagonal<span class="op">();</span></span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line <span class="op">=</span> getLineAt<span class="op">(</span>line_data<span class="op">.</span>get<span class="op">(),</span> TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>target_spacing <span class="op">=</span> <span class="fl">10.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> resampled <span class="op">=</span> resampleLine<span class="op">(</span>line<span class="op">,</span> params<span class="op">);</span></span>
+<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(!</span>resampled<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb10-78"><a href="#cb10-78" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-79"><a href="#cb10-79" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-80"><a href="#cb10-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-81"><a href="#cb10-81" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"V2 Element Transform: LineResample - DouglasPeucker Algorithm"</span><span class="op">,</span></span>
+<span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][element][line_resample]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-83"><a href="#cb10-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-84"><a href="#cb10-84" aria-hidden="true" tabindex="-1"></a>    LineResampleParams params<span class="op">;</span></span>
+<span id="cb10-85"><a href="#cb10-85" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>method <span class="op">=</span> LineResampleMethod<span class="op">::</span>DouglasPeucker<span class="op">;</span></span>
+<span id="cb10-86"><a href="#cb10-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-87"><a href="#cb10-87" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Dense nearly-straight line simplification"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-88"><a href="#cb10-88" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_data <span class="op">=</span> resample_scenarios<span class="op">::</span>dense_nearly_straight_line<span class="op">();</span></span>
+<span id="cb10-89"><a href="#cb10-89" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line <span class="op">=</span> getLineAt<span class="op">(</span>line_data<span class="op">.</span>get<span class="op">(),</span> TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
+<span id="cb10-90"><a href="#cb10-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-91"><a href="#cb10-91" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>line<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">11</span><span class="op">);</span><span class="co">// Original has 11 points</span></span>
+<span id="cb10-92"><a href="#cb10-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-93"><a href="#cb10-93" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>epsilon <span class="op">=</span> <span class="fl">0.5</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb10-94"><a href="#cb10-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-95"><a href="#cb10-95" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> simplified <span class="op">=</span> resampleLine<span class="op">(</span>line<span class="op">,</span> params<span class="op">);</span></span>
+<span id="cb10-96"><a href="#cb10-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-97"><a href="#cb10-97" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Douglas-Peucker should significantly reduce point count for nearly straight line</span></span>
+<span id="cb10-98"><a href="#cb10-98" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>simplified<span class="op">.</span>size<span class="op">()</span> <span class="op">&lt;</span> line<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb10-99"><a href="#cb10-99" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>simplified<span class="op">.</span>size<span class="op">()</span> <span class="op">&gt;=</span> <span class="dv">2</span><span class="op">);</span><span class="co">// At least start and end points preserved</span></span>
+<span id="cb10-100"><a href="#cb10-100" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-101"><a href="#cb10-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-102"><a href="#cb10-102" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Simple diagonal remains compact"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-103"><a href="#cb10-103" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_data <span class="op">=</span> resample_scenarios<span class="op">::</span>simple_diagonal<span class="op">();</span></span>
+<span id="cb10-104"><a href="#cb10-104" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line <span class="op">=</span> getLineAt<span class="op">(</span>line_data<span class="op">.</span>get<span class="op">(),</span> TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
+<span id="cb10-105"><a href="#cb10-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-106"><a href="#cb10-106" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>epsilon <span class="op">=</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb10-107"><a href="#cb10-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-108"><a href="#cb10-108" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> simplified <span class="op">=</span> resampleLine<span class="op">(</span>line<span class="op">,</span> params<span class="op">);</span></span>
+<span id="cb10-109"><a href="#cb10-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-110"><a href="#cb10-110" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Simple diagonal (3 points) should simplify to 2 points (endpoints)</span></span>
+<span id="cb10-111"><a href="#cb10-111" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>simplified<span class="op">.</span>size<span class="op">()</span> <span class="op">&lt;=</span> line<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb10-112"><a href="#cb10-112" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-113"><a href="#cb10-113" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-114"><a href="#cb10-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-115"><a href="#cb10-115" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"V2 Element Transform: LineResample - PolynomialSmooth Algorithm"</span><span class="op">,</span></span>
+<span id="cb10-116"><a href="#cb10-116" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][element][line_resample]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-117"><a href="#cb10-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-118"><a href="#cb10-118" aria-hidden="true" tabindex="-1"></a>    LineResampleParams params<span class="op">;</span></span>
+<span id="cb10-119"><a href="#cb10-119" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>method <span class="op">=</span> LineResampleMethod<span class="op">::</span>PolynomialSmooth<span class="op">;</span></span>
+<span id="cb10-120"><a href="#cb10-120" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>polynomial_order <span class="op">=</span> <span class="dv">3</span><span class="op">;</span></span>
+<span id="cb10-121"><a href="#cb10-121" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>target_spacing <span class="op">=</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb10-122"><a href="#cb10-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-123"><a href="#cb10-123" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Noisy polyline is smoothed and resampled"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-124"><a href="#cb10-124" aria-hidden="true" tabindex="-1"></a>        Line2D noisy<span class="op">;</span></span>
+<span id="cb10-125"><a href="#cb10-125" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;=</span> <span class="dv">20</span><span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-126"><a href="#cb10-126" aria-hidden="true" tabindex="-1"></a>            <span class="dt">float</span> <span class="at">const</span> t <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>i<span class="op">)</span> <span class="op">/</span> <span class="fl">20.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb10-127"><a href="#cb10-127" aria-hidden="true" tabindex="-1"></a>            <span class="dt">float</span> <span class="at">const</span> x <span class="op">=</span> t <span class="op">*</span> <span class="fl">100.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb10-128"><a href="#cb10-128" aria-hidden="true" tabindex="-1"></a>            <span class="dt">float</span> <span class="at">const</span> y <span class="op">=</span> t <span class="op">*</span> <span class="fl">50.0</span><span class="bu">f</span> <span class="op">+</span> <span class="op">((</span>i <span class="op">%</span> <span class="dv">2</span> <span class="op">==</span> <span class="dv">0</span><span class="op">)</span> <span class="op">?</span> <span class="fl">5.0</span><span class="bu">f</span> <span class="op">:</span> <span class="op">-</span><span class="fl">5.0</span><span class="bu">f</span><span class="op">);</span></span>
+<span id="cb10-129"><a href="#cb10-129" aria-hidden="true" tabindex="-1"></a>            noisy<span class="op">.</span>push_back<span class="op">(</span>Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;{</span>x<span class="op">,</span> y<span class="op">});</span></span>
+<span id="cb10-130"><a href="#cb10-130" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb10-131"><a href="#cb10-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-132"><a href="#cb10-132" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> smoothed <span class="op">=</span> resampleLine<span class="op">(</span>noisy<span class="op">,</span> params<span class="op">);</span></span>
+<span id="cb10-133"><a href="#cb10-133" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>smoothed<span class="op">.</span>size<span class="op">()</span> <span class="op">&gt;=</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb10-134"><a href="#cb10-134" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>smoothed<span class="op">.</span>size<span class="op">()</span> <span class="op">&lt;</span> noisy<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb10-135"><a href="#cb10-135" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-136"><a href="#cb10-136" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-137"><a href="#cb10-137" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Too few points for order returns unchanged"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-138"><a href="#cb10-138" aria-hidden="true" tabindex="-1"></a>        Line2D short_line<span class="op">;</span></span>
+<span id="cb10-139"><a href="#cb10-139" aria-hidden="true" tabindex="-1"></a>        short_line<span class="op">.</span>push_back<span class="op">(</span>Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;{</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb10-140"><a href="#cb10-140" aria-hidden="true" tabindex="-1"></a>        short_line<span class="op">.</span>push_back<span class="op">(</span>Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;{</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">10.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb10-141"><a href="#cb10-141" aria-hidden="true" tabindex="-1"></a>        short_line<span class="op">.</span>push_back<span class="op">(</span>Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;{</span><span class="fl">20.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb10-142"><a href="#cb10-142" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-143"><a href="#cb10-143" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>polynomial_order <span class="op">=</span> <span class="dv">3</span><span class="op">;</span></span>
+<span id="cb10-144"><a href="#cb10-144" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> resampleLine<span class="op">(</span>short_line<span class="op">,</span> params<span class="op">);</span></span>
+<span id="cb10-145"><a href="#cb10-145" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> short_line<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb10-146"><a href="#cb10-146" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-147"><a href="#cb10-147" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-148"><a href="#cb10-148" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-149"><a href="#cb10-149" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"V2 Element Transform: LineResample - Edge Cases"</span><span class="op">,</span></span>
+<span id="cb10-150"><a href="#cb10-150" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][element][line_resample][edge]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-151"><a href="#cb10-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-152"><a href="#cb10-152" aria-hidden="true" tabindex="-1"></a>    LineResampleParams params<span class="op">;</span></span>
+<span id="cb10-153"><a href="#cb10-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-154"><a href="#cb10-154" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Empty line returns empty"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-155"><a href="#cb10-155" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_data <span class="op">=</span> resample_scenarios<span class="op">::</span>empty<span class="op">();</span></span>
+<span id="cb10-156"><a href="#cb10-156" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-157"><a href="#cb10-157" aria-hidden="true" tabindex="-1"></a>        <span class="co">// No lines exist, so create an empty line</span></span>
+<span id="cb10-158"><a href="#cb10-158" aria-hidden="true" tabindex="-1"></a>        Line2D <span class="at">const</span> empty_line<span class="op">;</span></span>
+<span id="cb10-159"><a href="#cb10-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-160"><a href="#cb10-160" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> resampleLine<span class="op">(</span>empty_line<span class="op">,</span> params<span class="op">);</span></span>
+<span id="cb10-161"><a href="#cb10-161" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb10-162"><a href="#cb10-162" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-163"><a href="#cb10-163" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-164"><a href="#cb10-164" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Single point line returned unchanged"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-165"><a href="#cb10-165" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_data <span class="op">=</span> resample_scenarios<span class="op">::</span>single_point<span class="op">();</span></span>
+<span id="cb10-166"><a href="#cb10-166" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line <span class="op">=</span> getLineAt<span class="op">(</span>line_data<span class="op">.</span>get<span class="op">(),</span> TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
+<span id="cb10-167"><a href="#cb10-167" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-168"><a href="#cb10-168" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>line<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb10-169"><a href="#cb10-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-170"><a href="#cb10-170" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>method <span class="op">=</span> LineResampleMethod<span class="op">::</span>FixedSpacing<span class="op">;</span></span>
+<span id="cb10-171"><a href="#cb10-171" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>target_spacing <span class="op">=</span> <span class="fl">10.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb10-172"><a href="#cb10-172" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-173"><a href="#cb10-173" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> resampleLine<span class="op">(</span>line<span class="op">,</span> params<span class="op">);</span></span>
+<span id="cb10-174"><a href="#cb10-174" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb10-175"><a href="#cb10-175" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-176"><a href="#cb10-176" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-177"><a href="#cb10-177" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Two point line returned unchanged"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-178"><a href="#cb10-178" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Two-point lines are minimal representation</span></span>
+<span id="cb10-179"><a href="#cb10-179" aria-hidden="true" tabindex="-1"></a>        Line2D two_point_line<span class="op">;</span></span>
+<span id="cb10-180"><a href="#cb10-180" aria-hidden="true" tabindex="-1"></a>        two_point_line<span class="op">.</span>push_back<span class="op">(</span>Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;{</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb10-181"><a href="#cb10-181" aria-hidden="true" tabindex="-1"></a>        two_point_line<span class="op">.</span>push_back<span class="op">(</span>Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;{</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">10.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb10-182"><a href="#cb10-182" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-183"><a href="#cb10-183" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>method <span class="op">=</span> LineResampleMethod<span class="op">::</span>FixedSpacing<span class="op">;</span></span>
+<span id="cb10-184"><a href="#cb10-184" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>target_spacing <span class="op">=</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb10-185"><a href="#cb10-185" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-186"><a href="#cb10-186" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> resampleLine<span class="op">(</span>two_point_line<span class="op">,</span> params<span class="op">);</span></span>
+<span id="cb10-187"><a href="#cb10-187" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb10-188"><a href="#cb10-188" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-189"><a href="#cb10-189" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-190"><a href="#cb10-190" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Diagonal with empty line - only empty processed correctly"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-191"><a href="#cb10-191" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_data <span class="op">=</span> resample_scenarios<span class="op">::</span>diagonal_with_empty<span class="op">();</span></span>
+<span id="cb10-192"><a href="#cb10-192" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-193"><a href="#cb10-193" aria-hidden="true" tabindex="-1"></a>        <span class="co">// t=200 has an empty line</span></span>
+<span id="cb10-194"><a href="#cb10-194" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> line_t200 <span class="op">=</span> getLineAt<span class="op">(</span>line_data<span class="op">.</span>get<span class="op">(),</span> TimeFrameIndex<span class="op">(</span><span class="dv">200</span><span class="op">));</span></span>
+<span id="cb10-195"><a href="#cb10-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-196"><a href="#cb10-196" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> resampleLine<span class="op">(</span>line_t200<span class="op">,</span> params<span class="op">);</span></span>
+<span id="cb10-197"><a href="#cb10-197" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb10-198"><a href="#cb10-198" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-199"><a href="#cb10-199" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-200"><a href="#cb10-200" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-201"><a href="#cb10-201" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb10-202"><a href="#cb10-202" aria-hidden="true" tabindex="-1"></a><span class="co">// Tests: Parameter Validation</span></span>
+<span id="cb10-203"><a href="#cb10-203" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb10-204"><a href="#cb10-204" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-205"><a href="#cb10-205" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"V2 LineResampleParams - JSON Rejection"</span><span class="op">,</span></span>
+<span id="cb10-206"><a href="#cb10-206" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][params][json][line_resample]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-207"><a href="#cb10-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-208"><a href="#cb10-208" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Reject malformed JSON"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-209"><a href="#cb10-209" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{</span></span>
+<span id="cb10-210"><a href="#cb10-210" aria-hidden="true" tabindex="-1"></a><span class="vs">            "method": "FixedSpacing",</span></span>
+<span id="cb10-211"><a href="#cb10-211" aria-hidden="true" tabindex="-1"></a><span class="vs">            "invalid</span></span>
+<span id="cb10-212"><a href="#cb10-212" aria-hidden="true" tabindex="-1"></a><span class="vs">        }</span><span class="st">)"</span><span class="op">;</span></span>
+<span id="cb10-213"><a href="#cb10-213" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>loadParametersFromJson<span class="op">&lt;</span>LineResampleParams<span class="op">&gt;(</span>json<span class="op">));</span></span>
+<span id="cb10-214"><a href="#cb10-214" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-215"><a href="#cb10-215" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-216"><a href="#cb10-216" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Reject unknown method"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-217"><a href="#cb10-217" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"method": "invalid"}</span><span class="st">)"</span><span class="op">;</span></span>
+<span id="cb10-218"><a href="#cb10-218" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>loadParametersFromJson<span class="op">&lt;</span>LineResampleParams<span class="op">&gt;(</span>json<span class="op">));</span></span>
+<span id="cb10-219"><a href="#cb10-219" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-220"><a href="#cb10-220" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-221"><a href="#cb10-221" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Reject wrong casing for method"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-222"><a href="#cb10-222" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"method": "fixedspacing"}</span><span class="st">)"</span><span class="op">;</span></span>
+<span id="cb10-223"><a href="#cb10-223" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>loadParametersFromJson<span class="op">&lt;</span>LineResampleParams<span class="op">&gt;(</span>json<span class="op">));</span></span>
+<span id="cb10-224"><a href="#cb10-224" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-225"><a href="#cb10-225" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-226"><a href="#cb10-226" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Reject non-string method"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-227"><a href="#cb10-227" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"method": 1}</span><span class="st">)"</span><span class="op">;</span></span>
+<span id="cb10-228"><a href="#cb10-228" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>loadParametersFromJson<span class="op">&lt;</span>LineResampleParams<span class="op">&gt;(</span>json<span class="op">));</span></span>
+<span id="cb10-229"><a href="#cb10-229" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-230"><a href="#cb10-230" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-231"><a href="#cb10-231" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Reject non-numeric target_spacing"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-232"><a href="#cb10-232" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"target_spacing": "wide"}</span><span class="st">)"</span><span class="op">;</span></span>
+<span id="cb10-233"><a href="#cb10-233" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>loadParametersFromJson<span class="op">&lt;</span>LineResampleParams<span class="op">&gt;(</span>json<span class="op">));</span></span>
+<span id="cb10-234"><a href="#cb10-234" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-235"><a href="#cb10-235" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-236"><a href="#cb10-236" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Reject negative target_spacing"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-237"><a href="#cb10-237" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"target_spacing": -5.0}</span><span class="st">)"</span><span class="op">;</span></span>
+<span id="cb10-238"><a href="#cb10-238" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>loadParametersFromJson<span class="op">&lt;</span>LineResampleParams<span class="op">&gt;(</span>json<span class="op">));</span></span>
+<span id="cb10-239"><a href="#cb10-239" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-240"><a href="#cb10-240" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-241"><a href="#cb10-241" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Reject zero target_spacing"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-242"><a href="#cb10-242" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"target_spacing": 0.0}</span><span class="st">)"</span><span class="op">;</span></span>
+<span id="cb10-243"><a href="#cb10-243" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>loadParametersFromJson<span class="op">&lt;</span>LineResampleParams<span class="op">&gt;(</span>json<span class="op">));</span></span>
+<span id="cb10-244"><a href="#cb10-244" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-245"><a href="#cb10-245" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-246"><a href="#cb10-246" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Reject non-numeric epsilon"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-247"><a href="#cb10-247" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"epsilon": "tight"}</span><span class="st">)"</span><span class="op">;</span></span>
+<span id="cb10-248"><a href="#cb10-248" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>loadParametersFromJson<span class="op">&lt;</span>LineResampleParams<span class="op">&gt;(</span>json<span class="op">));</span></span>
+<span id="cb10-249"><a href="#cb10-249" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-250"><a href="#cb10-250" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-251"><a href="#cb10-251" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Reject negative epsilon"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-252"><a href="#cb10-252" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"epsilon": -1.0}</span><span class="st">)"</span><span class="op">;</span></span>
+<span id="cb10-253"><a href="#cb10-253" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>loadParametersFromJson<span class="op">&lt;</span>LineResampleParams<span class="op">&gt;(</span>json<span class="op">));</span></span>
+<span id="cb10-254"><a href="#cb10-254" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-255"><a href="#cb10-255" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-256"><a href="#cb10-256" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Reject non-integer polynomial_order"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-257"><a href="#cb10-257" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"polynomial_order": "three"}</span><span class="st">)"</span><span class="op">;</span></span>
+<span id="cb10-258"><a href="#cb10-258" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>loadParametersFromJson<span class="op">&lt;</span>LineResampleParams<span class="op">&gt;(</span>json<span class="op">));</span></span>
+<span id="cb10-259"><a href="#cb10-259" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-260"><a href="#cb10-260" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-261"><a href="#cb10-261" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-262"><a href="#cb10-262" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb10-263"><a href="#cb10-263" aria-hidden="true" tabindex="-1"></a><span class="co">// Tests: Registry Integration</span></span>
+<span id="cb10-264"><a href="#cb10-264" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb10-265"><a href="#cb10-265" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-266"><a href="#cb10-266" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"V2 Element Transform: LineResample Registry Integration"</span><span class="op">,</span></span>
+<span id="cb10-267"><a href="#cb10-267" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][registry][element][line_resample]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-268"><a href="#cb10-268" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-269"><a href="#cb10-269" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">&amp;</span> registry <span class="op">=</span> ElementRegistry<span class="op">::</span>instance<span class="op">();</span></span>
+<span id="cb10-270"><a href="#cb10-270" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-271"><a href="#cb10-271" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Transform is registered"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-272"><a href="#cb10-272" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>registry<span class="op">.</span>hasElementTransform<span class="op">(</span><span class="st">"ResampleLine"</span><span class="op">));</span></span>
+<span id="cb10-273"><a href="#cb10-273" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-274"><a href="#cb10-274" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-275"><a href="#cb10-275" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Can retrieve metadata"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-276"><a href="#cb10-276" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> <span class="op">*</span> metadata <span class="op">=</span> registry<span class="op">.</span>getMetadata<span class="op">(</span><span class="st">"ResampleLine"</span><span class="op">);</span></span>
+<span id="cb10-277"><a href="#cb10-277" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>metadata <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb10-278"><a href="#cb10-278" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>metadata<span class="op">-&gt;</span>name <span class="op">==</span> <span class="st">"ResampleLine"</span><span class="op">);</span></span>
+<span id="cb10-279"><a href="#cb10-279" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>metadata<span class="op">-&gt;</span>category <span class="op">==</span> <span class="st">"Geometry"</span><span class="op">);</span></span>
+<span id="cb10-280"><a href="#cb10-280" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>metadata<span class="op">-&gt;</span>is_multi_input <span class="op">==</span> <span class="kw">false</span><span class="op">);</span></span>
+<span id="cb10-281"><a href="#cb10-281" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-282"><a href="#cb10-282" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-283"><a href="#cb10-283" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-284"><a href="#cb10-284" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb10-285"><a href="#cb10-285" aria-hidden="true" tabindex="-1"></a><span class="co">// Tests: DataManager Integration via load_data_from_json_config_v2</span></span>
+<span id="cb10-286"><a href="#cb10-286" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb10-287"><a href="#cb10-287" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-288"><a href="#cb10-288" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"V2 DataManager Integration: LineResample via load_data_from_json_config_v2"</span><span class="op">,</span></span>
+<span id="cb10-289"><a href="#cb10-289" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][datamanager][line_resample]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-290"><a href="#cb10-290" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-291"><a href="#cb10-291" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create DataManager and populate with test data</span></span>
+<span id="cb10-292"><a href="#cb10-292" aria-hidden="true" tabindex="-1"></a>    DataManager dm<span class="op">;</span></span>
+<span id="cb10-293"><a href="#cb10-293" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> time_frame <span class="op">=</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>TimeFrame<span class="op">&gt;();</span></span>
+<span id="cb10-294"><a href="#cb10-294" aria-hidden="true" tabindex="-1"></a>    dm<span class="op">.</span>setTime<span class="op">(</span>TimeKey<span class="op">(</span><span class="st">"default"</span><span class="op">),</span> time_frame<span class="op">);</span></span>
+<span id="cb10-295"><a href="#cb10-295" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-296"><a href="#cb10-296" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Populate with scenario data</span></span>
+<span id="cb10-297"><a href="#cb10-297" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> two_diagonal <span class="op">=</span> resample_scenarios<span class="op">::</span>two_diagonal_lines<span class="op">();</span></span>
+<span id="cb10-298"><a href="#cb10-298" aria-hidden="true" tabindex="-1"></a>    two_diagonal<span class="op">-&gt;</span>setTimeFrame<span class="op">(</span>time_frame<span class="op">);</span></span>
+<span id="cb10-299"><a href="#cb10-299" aria-hidden="true" tabindex="-1"></a>    dm<span class="op">.</span>setData<span class="op">(</span><span class="st">"two_diagonal_lines"</span><span class="op">,</span> two_diagonal<span class="op">,</span> TimeKey<span class="op">(</span><span class="st">"default"</span><span class="op">));</span></span>
+<span id="cb10-300"><a href="#cb10-300" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-301"><a href="#cb10-301" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> dense_line <span class="op">=</span> resample_scenarios<span class="op">::</span>dense_nearly_straight_line<span class="op">();</span></span>
+<span id="cb10-302"><a href="#cb10-302" aria-hidden="true" tabindex="-1"></a>    dense_line<span class="op">-&gt;</span>setTimeFrame<span class="op">(</span>time_frame<span class="op">);</span></span>
+<span id="cb10-303"><a href="#cb10-303" aria-hidden="true" tabindex="-1"></a>    dm<span class="op">.</span>setData<span class="op">(</span><span class="st">"dense_nearly_straight_line"</span><span class="op">,</span> dense_line<span class="op">,</span> TimeKey<span class="op">(</span><span class="st">"default"</span><span class="op">));</span></span>
+<span id="cb10-304"><a href="#cb10-304" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-305"><a href="#cb10-305" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"FixedSpacing pipeline"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-306"><a href="#cb10-306" aria-hidden="true" tabindex="-1"></a>        LineResampleParams params<span class="op">;</span></span>
+<span id="cb10-307"><a href="#cb10-307" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>method <span class="op">=</span> LineResampleMethod<span class="op">::</span>FixedSpacing<span class="op">;</span></span>
+<span id="cb10-308"><a href="#cb10-308" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>target_spacing <span class="op">=</span> <span class="fl">15.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb10-309"><a href="#cb10-309" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-310"><a href="#cb10-310" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> pipeline <span class="op">=</span> makeSingleStepPipeline<span class="op">(</span></span>
+<span id="cb10-311"><a href="#cb10-311" aria-hidden="true" tabindex="-1"></a>                <span class="st">"ResampleLine"</span><span class="op">,</span></span>
+<span id="cb10-312"><a href="#cb10-312" aria-hidden="true" tabindex="-1"></a>                <span class="st">"two_diagonal_lines"</span><span class="op">,</span></span>
+<span id="cb10-313"><a href="#cb10-313" aria-hidden="true" tabindex="-1"></a>                <span class="st">"v2_resampled_lines"</span><span class="op">,</span></span>
+<span id="cb10-314"><a href="#cb10-314" aria-hidden="true" tabindex="-1"></a>                params<span class="op">);</span></span>
+<span id="cb10-315"><a href="#cb10-315" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-316"><a href="#cb10-316" aria-hidden="true" tabindex="-1"></a>        executeViaLoadDataFromJsonConfigV2<span class="op">(</span>dm<span class="op">,</span> pipeline<span class="op">);</span></span>
+<span id="cb10-317"><a href="#cb10-317" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-318"><a href="#cb10-318" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result_lines <span class="op">=</span> dm<span class="op">.</span>getData<span class="op">&lt;</span>LineData<span class="op">&gt;(</span><span class="st">"v2_resampled_lines"</span><span class="op">);</span></span>
+<span id="cb10-319"><a href="#cb10-319" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result_lines <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb10-320"><a href="#cb10-320" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-321"><a href="#cb10-321" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> times <span class="op">=</span> result_lines<span class="op">-&gt;</span>getTimesWithData<span class="op">();</span></span>
+<span id="cb10-322"><a href="#cb10-322" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>times<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb10-323"><a href="#cb10-323" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-324"><a href="#cb10-324" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-325"><a href="#cb10-325" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"DouglasPeucker pipeline"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-326"><a href="#cb10-326" aria-hidden="true" tabindex="-1"></a>        LineResampleParams params<span class="op">;</span></span>
+<span id="cb10-327"><a href="#cb10-327" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>method <span class="op">=</span> LineResampleMethod<span class="op">::</span>DouglasPeucker<span class="op">;</span></span>
+<span id="cb10-328"><a href="#cb10-328" aria-hidden="true" tabindex="-1"></a>        params<span class="op">.</span>epsilon <span class="op">=</span> <span class="fl">0.5</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb10-329"><a href="#cb10-329" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-330"><a href="#cb10-330" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> pipeline <span class="op">=</span> makeSingleStepPipeline<span class="op">(</span></span>
+<span id="cb10-331"><a href="#cb10-331" aria-hidden="true" tabindex="-1"></a>                <span class="st">"ResampleLine"</span><span class="op">,</span></span>
+<span id="cb10-332"><a href="#cb10-332" aria-hidden="true" tabindex="-1"></a>                <span class="st">"dense_nearly_straight_line"</span><span class="op">,</span></span>
+<span id="cb10-333"><a href="#cb10-333" aria-hidden="true" tabindex="-1"></a>                <span class="st">"v2_simplified_lines"</span><span class="op">,</span></span>
+<span id="cb10-334"><a href="#cb10-334" aria-hidden="true" tabindex="-1"></a>                params<span class="op">);</span></span>
+<span id="cb10-335"><a href="#cb10-335" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-336"><a href="#cb10-336" aria-hidden="true" tabindex="-1"></a>        executeViaLoadDataFromJsonConfigV2<span class="op">(</span>dm<span class="op">,</span> pipeline<span class="op">);</span></span>
+<span id="cb10-337"><a href="#cb10-337" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-338"><a href="#cb10-338" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result_lines <span class="op">=</span> dm<span class="op">.</span>getData<span class="op">&lt;</span>LineData<span class="op">&gt;(</span><span class="st">"v2_simplified_lines"</span><span class="op">);</span></span>
+<span id="cb10-339"><a href="#cb10-339" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result_lines <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb10-340"><a href="#cb10-340" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-341"><a href="#cb10-341" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> simplified <span class="op">=</span> result_lines<span class="op">-&gt;</span>getAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
+<span id="cb10-342"><a href="#cb10-342" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(!</span>simplified<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb10-343"><a href="#cb10-343" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-344"><a href="#cb10-344" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> original <span class="op">=</span> dense_line<span class="op">-&gt;</span>getAtTime<span class="op">(</span>TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
+<span id="cb10-345"><a href="#cb10-345" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(!</span>original<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb10-346"><a href="#cb10-346" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>simplified<span class="op">[</span><span class="dv">0</span><span class="op">].</span>size<span class="op">()</span> <span class="op">&lt;</span> original<span class="op">[</span><span class="dv">0</span><span class="op">].</span>size<span class="op">());</span></span>
+<span id="cb10-347"><a href="#cb10-347" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-348"><a href="#cb10-348" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb10-349"><a href="#cb10-349" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-350"><a href="#cb10-350" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb10-351"><a href="#cb10-351" aria-hidden="true" tabindex="-1"></a><span class="co">// Tests: Context-Aware Execution</span></span>
+<span id="cb10-352"><a href="#cb10-352" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb10-353"><a href="#cb10-353" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-354"><a href="#cb10-354" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"V2 Element Transform: LineResample - Context-Aware"</span><span class="op">,</span></span>
+<span id="cb10-355"><a href="#cb10-355" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][element][line_resample][context]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-356"><a href="#cb10-356" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-357"><a href="#cb10-357" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> line_data <span class="op">=</span> resample_scenarios<span class="op">::</span>two_diagonal_lines<span class="op">();</span></span>
+<span id="cb10-358"><a href="#cb10-358" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> line <span class="op">=</span> getLineAt<span class="op">(</span>line_data<span class="op">.</span>get<span class="op">(),</span> TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">));</span></span>
+<span id="cb10-359"><a href="#cb10-359" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-360"><a href="#cb10-360" aria-hidden="true" tabindex="-1"></a>    LineResampleParams params<span class="op">;</span></span>
+<span id="cb10-361"><a href="#cb10-361" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>method <span class="op">=</span> LineResampleMethod<span class="op">::</span>FixedSpacing<span class="op">;</span></span>
+<span id="cb10-362"><a href="#cb10-362" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>target_spacing <span class="op">=</span> <span class="fl">10.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb10-363"><a href="#cb10-363" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-364"><a href="#cb10-364" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"With cancellation check"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-365"><a href="#cb10-365" aria-hidden="true" tabindex="-1"></a>        <span class="dt">bool</span> was_cancelled <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb10-366"><a href="#cb10-366" aria-hidden="true" tabindex="-1"></a>        ComputeContext ctx<span class="op">;</span></span>
+<span id="cb10-367"><a href="#cb10-367" aria-hidden="true" tabindex="-1"></a>        ctx<span class="op">.</span>is_cancelled <span class="op">=</span> <span class="op">[&amp;</span>was_cancelled<span class="op">]()</span> <span class="op">{</span> <span class="cf">return</span> was_cancelled<span class="op">;</span> <span class="op">};</span></span>
+<span id="cb10-368"><a href="#cb10-368" aria-hidden="true" tabindex="-1"></a>        ctx<span class="op">.</span>progress <span class="op">=</span> <span class="op">[](</span><span class="dt">int</span><span class="op">)</span> <span class="op">{};</span></span>
+<span id="cb10-369"><a href="#cb10-369" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-370"><a href="#cb10-370" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> resampleLineWithContext<span class="op">(</span>line<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb10-371"><a href="#cb10-371" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-372"><a href="#cb10-372" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Normal execution should produce valid result</span></span>
+<span id="cb10-373"><a href="#cb10-373" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(!</span>result<span class="op">.</span>empty<span class="op">());</span></span>
+<span id="cb10-374"><a href="#cb10-374" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-375"><a href="#cb10-375" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-376"><a href="#cb10-376" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Cancellation returns original line"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb10-377"><a href="#cb10-377" aria-hidden="true" tabindex="-1"></a>        ComputeContext ctx<span class="op">;</span></span>
+<span id="cb10-378"><a href="#cb10-378" aria-hidden="true" tabindex="-1"></a>        ctx<span class="op">.</span>is_cancelled <span class="op">=</span> <span class="op">[]()</span> <span class="op">{</span> <span class="cf">return</span> <span class="kw">true</span><span class="op">;</span> <span class="op">};</span><span class="co">// Always cancelled</span></span>
+<span id="cb10-379"><a href="#cb10-379" aria-hidden="true" tabindex="-1"></a>        ctx<span class="op">.</span>progress <span class="op">=</span> <span class="op">[](</span><span class="dt">int</span><span class="op">)</span> <span class="op">{};</span></span>
+<span id="cb10-380"><a href="#cb10-380" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-381"><a href="#cb10-381" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> resampleLineWithContext<span class="op">(</span>line<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb10-382"><a href="#cb10-382" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-383"><a href="#cb10-383" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Cancelled execution returns original line</span></span>
+<span id="cb10-384"><a href="#cb10-384" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> line<span class="op">.</span>size<span class="op">());</span></span>
+<span id="cb10-385"><a href="#cb10-385" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb10-386"><a href="#cb10-386" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-10-09 at 13:36:36 +0000</p>
+<p>Updated on 2026-11-13 at 20:25:44 +0000</p>
 
 
 </section>
@@ -872,15 +917,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -959,7 +1039,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -968,8 +1049,69 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -983,6 +1125,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -1145,44 +1288,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -1280,6 +1433,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       }
     }
   });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
 

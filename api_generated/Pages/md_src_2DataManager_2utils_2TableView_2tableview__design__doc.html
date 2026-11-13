@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -37,18 +37,19 @@ ul.task-list li input[type="checkbox"] {
 <meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-0c66bec081e5215138e9fd61e9c23ef8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -81,7 +82,7 @@ ul.task-list li input[type="checkbox"] {
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -104,6 +105,7 @@ ul.task-list li input[type="checkbox"] {
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -133,13 +135,19 @@ ul.task-list li input[type="checkbox"] {
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -233,6 +241,7 @@ ul.task-list li input[type="checkbox"] {
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -247,15 +256,14 @@ ul.task-list li input[type="checkbox"] {
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -299,8 +307,9 @@ ul.task-list li input[type="checkbox"] {
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
+            <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -309,7 +318,7 @@ ul.task-list li input[type="checkbox"] {
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
@@ -318,7 +327,7 @@ ul.task-list li input[type="checkbox"] {
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -365,7 +374,7 @@ ul.task-list li input[type="checkbox"] {
 <p>3.1. <a href="../../api_generated/Classes/classIAnalogSource.html">IAnalogSource</a> (The Unified Data Interface) This abstract base class is the cornerstone of the system’s flexibility. It provides a common interface for any data that can be treated as a simple array of doubles.</p>
 <p>// Interface for any data source that can be viewed as an analog signal. class <a href="../../api_generated/Classes/classIAnalogSource.html">IAnalogSource</a> { public: virtual ~IAnalogSource() = default;</p>
 <p>// Gets the ID of the <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> the data belongs to. virtual int getTimeFrameId() const = 0;</p>
-<p>// Gets the total number of samples in the source. virtual size_t <a href="../../api_generated/Files/MaskMedianFilter_8cpp.html#variable-size">size() const</a>= 0;</p>
+<p>// Gets the total number of samples in the source. virtual size_t size() const = 0;</p>
 <p>// Provides a view over the data. // This may trigger a one-time lazy materialization for non-contiguous sources. virtual std::span<const double=""> getDataSpan() = 0; };</const></p>
 <p>Implementations: AnalogData (physical), PointComponentAdapter (virtual), TensorSliceAdapter (virtual), etc.</p>
 <p>3.2. <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> (The Source Factory) The <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> acts as a facade and a factory. It manages the lifecycle of raw data objects and is responsible for creating and caching <a href="../../api_generated/Classes/classIAnalogSource.html">IAnalogSource</a> adapters.</p>
@@ -427,20 +436,20 @@ ul.task-list li input[type="checkbox"] {
 </ol>
 <p>class <a href="../../api_generated/Classes/classIColumn.html">IColumn</a> { public: virtual ~IColumn() = default; virtual const std::string&amp; getName() const = 0; virtual const std::type_info&amp; getType() const = 0; // A method to trigger computation without exposing the type. virtual void materialize(TableView* table) = 0; };</p>
 <ol type="1">
-<li>Column<t> (Templated Class): The original <a href="../../api_generated/Classes/classColumn.html">Column</a> class will be converted to a template and will inherit from <a href="../../api_generated/Classes/classIColumn.html">IColumn</a>.</t></li>
+<li><a href="../../api_generated/Classes/classColumn.html">Column<t></t></a> (Templated Class): The original <a href="../../api_generated/Classes/classColumn.html">Column</a> class will be converted to a template and will inherit from <a href="../../api_generated/Classes/classIColumn.html">IColumn</a>.</li>
 </ol>
 <p>template<typename t=""> class <a href="../../api_generated/Classes/classColumn.html">Column</a> : public <a href="../../api_generated/Classes/classIColumn.html">IColumn</a> { public: // Returns a span for contiguous types, or a direct reference for complex types. const std::vector<t>&amp; getValues(TableView* table);</t></typename></p>
 <p>// <a href="../../api_generated/Classes/classIColumn.html">IColumn</a> overrides const std::string&amp; getName() const override { return m_name; } const std::type_info&amp; getType() const override { return typeid(T); } void materialize(TableView* table) override;</p>
 <p>private: std::string m_name; std::unique_ptr&lt;IColumnComputer<t>&gt; m_computer; std::variant&lt;std::monostate, std::vector<t>&gt; m_cache; };</t></t></p>
 <ol type="1">
-<li>IColumnComputer<t> (Templated Interface): The computer interface must also be templated to return vectors of the correct type.</t></li>
+<li><a href="../../api_generated/Classes/classIColumnComputer.html">IColumnComputer<t></t></a> (Templated Interface): The computer interface must also be templated to return vectors of the correct type.</li>
 </ol>
 <p>template<typename t=""> class <a href="../../api_generated/Classes/classIColumnComputer.html">IColumnComputer</a> { public: virtual ~IColumnComputer() = default; virtual std::vector<t> compute(const ExecutionPlan&amp; plan) const = 0; // … other methods remain the same };</t></typename></p>
 <ol type="1">
 <li><a href="../../api_generated/Classes/classTableView.html">TableView</a> Modifications: The <a href="../../api_generated/Classes/classTableView.html">TableView</a> will now hold std::vector&lt;std::shared_ptr<icolumn>&gt;. The getColumnSpan method will be replaced with a templated getColumnValues method that performs a dynamic_cast to retrieve the correctly typed column.</icolumn></li>
 </ol>
 <p>class <a href="../../api_generated/Classes/classTableView.html">TableView</a> { public: template<typename t=""> const std::vector<t>&amp; getColumnValues(const std::string&amp; name); private: std::vector&lt;std::shared_ptr<icolumn>&gt; m_columns; // … rest of <a href="../../api_generated/Classes/classTableView.html">TableView</a> };</icolumn></t></typename></p>
-<p>template<typename t=""> const std::vector<t>&amp; <a href="../../api_generated/Classes/classTableView.html#function-getcolumnvalues">TableView::getColumnValues(const std::string&amp; name)</a> { // 1. Find the <a href="../../api_generated/Classes/classIColumn.html">IColumn</a> pointer by name. // 2. dynamic_cast the IColumn* to a Column<t>*. // 3. If cast succeeds, call getValues() on the typed column. // 4. If cast fails, throw an exception for type mismatch. }</t></t></typename></p>
+<p>template<typename t=""> const std::vector<t>&amp; TableView::getColumnValues(const std::string&amp; name) { // 1. Find the <a href="../../api_generated/Classes/classIColumn.html">IColumn</a> pointer by name. // 2. dynamic_cast the IColumn* to a <a href="../../api_generated/Classes/classColumn.html">Column<t></t></a>*. // 3. If cast succeeds, call getValues() on the typed column. // 4. If cast fails, throw an exception for type mismatch. }</t></typename></p>
 <p>A2.2. Event-Based Data Source and Computer To handle <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>, we introduce a new data source interface and a corresponding computer.</p>
 <ol type="1">
 <li>IEventSource (New Data Source Interface): An interface for data that consists of a sorted list of timestamps or indices.</li>
@@ -449,14 +458,14 @@ ul.task-list li input[type="checkbox"] {
 <ol type="1">
 <li><a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> (New Data Type): A concrete class holding event data and implementing the IEventSource interface.</li>
 <li><a href="../../api_generated/Classes/classDataManager.html">DataManager</a> Extension: The <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> will be extended with a getEventSource(const std::string&amp; name) method.</li>
-<li>EventInIntervalComputer<t> (New <a href="../../api_generated/Classes/classColumn.html">Column</a> Computer): A new, versatile computer that works with an IEventSource. It can be configured to perform different operations.</t></li>
+<li><a href="../../api_generated/Classes/classEventInIntervalComputer.html">EventInIntervalComputer<t></t></a> (New <a href="../../api_generated/Classes/classColumn.html">Column</a> Computer): A new, versatile computer that works with an IEventSource. It can be configured to perform different operations.</li>
 </ol>
-<p>enum class EventOperation { Presence, Count, Gather };</p>
-<p>template<typename t=""> class <a href="../../api_generated/Classes/classEventInIntervalComputer.html">EventInIntervalComputer</a> : public IColumnComputer<t> { public: <a href="../../api_generated/Classes/classEventInIntervalComputer.html">EventInIntervalComputer(std::shared_ptr<ieventsource> source, EventOperation op)</ieventsource></a>;</t></typename></p>
+<p>enum class <a href="../../api_generated/Files/EventInIntervalComputer_8h.html#enum-eventoperation">EventOperation</a> { Presence, Count, Gather };</p>
+<p>template<typename t=""> class <a href="../../api_generated/Classes/classEventInIntervalComputer.html">EventInIntervalComputer</a> : public <a href="../../api_generated/Classes/classIColumnComputer.html">IColumnComputer<t></t></a> { public: <a href="../../api_generated/Classes/classEventInIntervalComputer.html">EventInIntervalComputer(std::shared_ptr<ieventsource> source, EventOperation op)</ieventsource></a>;</typename></p>
 <p>std::vector<t> compute(const ExecutionPlan&amp; plan) const override { // Get event list from the IEventSource auto all_events = m_source-&gt;getEvents(); // Get interval index pairs from the <a href="../../api_generated/Classes/classExecutionPlan.html">ExecutionPlan</a> auto intervals = plan.getIndexPairs();</t></p>
 <p>std::vector<t> results; // For each interval, perform an efficient search (e.g., binary search) // on the event list to find events within the interval’s bounds. // Based on m_operation, push back a bool, int, or vector<timeframeindex> // into the results vector. This requires template specialization for the logic.</timeframeindex></t></p>
-<p>return results; } private: std::shared_ptr<ieventsource> m_source; EventOperation m_operation; };</ieventsource></p>
-<p>The implementation of compute will use if constexpr or template specialization to handle the different return types (bool, int, std::vector<timeframeindex>) required by the EventOperation.</timeframeindex></p>
+<p>return results; } private: std::shared_ptr<ieventsource> m_source; <a href="../../api_generated/Files/EventInIntervalComputer_8h.html#enum-eventoperation">EventOperation</a> m_operation; };</ieventsource></p>
+<p>The implementation of compute will use if constexpr or template specialization to handle the different return types (bool, int, std::vector<timeframeindex>) required by the <a href="../../api_generated/Files/EventInIntervalComputer_8h.html#enum-eventoperation">EventOperation</a>.</timeframeindex></p>
 <p>A3. Updated Usage Example void new_usage_example(DataManager&amp; dataManager, const std::vector<interval>&amp; intervals) { <a href="../../api_generated/Classes/classTableViewBuilder.html">TableViewBuilder</a> builder; builder.setRowSource(std::make_unique<intervalselector>(intervals));</intervalselector></interval></p>
 <p>auto event_source = dataManager.getEventSource(“MyEvents”);</p>
 <p>// Add columns with different types and computers. builder.addColumn<bool>(“EventPresence”, std::make_unique&lt;EventInIntervalComputer<bool>&gt;(event_source, EventOperation::Presence));</bool></bool></p>
@@ -468,12 +477,12 @@ ul.task-list li input[type="checkbox"] {
 <p>This addendum makes the <a href="../../api_generated/Classes/classTableView.html">TableView</a> system significantly more powerful, allowing it to truly manage heterogeneous data while maintaining its core principles of lazy evaluation and efficiency.</p>
 <p>Addendum 2: Support for Gathering Analog Data Slices Date: July 15, 2025</p>
 <p>This addendum addresses the requirement to create columns where each cell contains a window of an analog time series, corresponding to a row’s interval.</p>
-<p>A4. Problem Statement A common analysis task is to collect snippets of a continuous signal (e.g., LFP or EEG) around specific events or within defined intervals. The desired output is a column where each cell is a std::vector<float> or std::vector<double>. The existing architecture, as modified by Addendum 1, supports the storage of such a column (Column&lt;std::vector<double>&gt;). What is missing is the specific “computer” strategy to perform this gathering operation.</double></double></float></p>
+<p>A4. Problem Statement A common analysis task is to collect snippets of a continuous signal (e.g., LFP or EEG) around specific events or within defined intervals. The desired output is a column where each cell is a std::vector<float> or std::vector<double>. The existing architecture, as modified by Addendum 1, supports the storage of such a column (<a href="../../api_generated/Classes/classColumn.html">Column&lt;std::vector<double>&gt;</double></a>). What is missing is the specific “computer” strategy to perform this gathering operation.</double></float></p>
 <p>A5. Proposed Design Changes No changes are needed for the core architecture (<a href="../../api_generated/Classes/classIColumn.html">IColumn</a>, <a href="../../api_generated/Classes/classTableView.html">TableView</a>, etc.). We only need to define a new, specialized <a href="../../api_generated/Classes/classIColumnComputer.html">IColumnComputer</a>.</p>
 <ol type="1">
 <li><a href="../../api_generated/Classes/classAnalogSliceGathererComputer.html">AnalogSliceGathererComputer</a> (New <a href="../../api_generated/Classes/classColumn.html">Column</a> Computer): This new computer strategy is responsible for iterating through an <a href="../../api_generated/Classes/classExecutionPlan.html">ExecutionPlan</a> of interval index pairs and, for each pair, copying the corresponding slice of data from an <a href="../../api_generated/Classes/classIAnalogSource.html">IAnalogSource</a> into a new vector.</li>
 </ol>
-<p>// This computer’s output type is a vector of vectors. // The inner vector can be float or double. template<typename t="double">&gt; class <a href="../../api_generated/Classes/classAnalogSliceGathererComputer.html">AnalogSliceGathererComputer</a> : public IColumnComputer&lt;std::vector<t>&gt; { public: <a href="../../api_generated/Classes/classAnalogSliceGathererComputer.html">AnalogSliceGathererComputer(std::shared_ptr<ianalogsource> source)</ianalogsource></a> : m_source(std::move(source)) {}</t></typename></p>
+<p>// This computer’s output type is a vector of vectors. // The inner vector can be float or double. template<typename t="double">&gt; class <a href="../../api_generated/Classes/classAnalogSliceGathererComputer.html">AnalogSliceGathererComputer</a> : public <a href="../../api_generated/Classes/classIColumnComputer.html">IColumnComputer&lt;std::vector<t>&gt;</t></a> { public: <a href="../../api_generated/Classes/classAnalogSliceGathererComputer.html">AnalogSliceGathererComputer(std::shared_ptr<ianalogsource> source)</ianalogsource></a> : m_source(std::move(source)) {}</typename></p>
 <p>// The core computation method. std::vector&lt;std::vector<t>&gt; compute(const ComputeContext&amp; context) const override { // Get a view over the entire raw data source once. std::span<const double=""> raw_data = m_source-&gt;getDataSpan();</const></t></p>
 <p>// Get the list of [start, end] index pairs from the shared plan. const auto&amp; index_pairs = context.getPlan().getIndexPairs();</p>
 <p>// This is our final result: a vector of vectors. std::vector&lt;std::vector<t>&gt; results; results.reserve(index_pairs.size());</t></p>
@@ -488,7 +497,7 @@ ul.task-list li input[type="checkbox"] {
 <p>// Add a column to gather the LFP data within each interval. // The column’s type will be std::vector<double>. builder.addColumn&lt;std::vector<double>&gt;(“LFP_Snippets”, std::make_unique&lt;AnalogSliceGathererComputer<double>&gt;(lfp_source));</double></double></double></p>
 <p><a href="../../api_generated/Classes/classTableView.html">TableView</a> table = builder.build();</p>
 <p>// Retrieve the materialized column data. // <code>lfp_waveforms</code> is a const reference to a std::vector&lt;std::vector<double>&gt;. const auto&amp; lfp_waveforms = table.getColumnValues&lt;std::vector<double>&gt;(“LFP_Snippets”);</double></double></p>
-<p>// We can now work with the gathered data. if (!lfp_waveforms.empty()) { std::cout &lt;&lt; “First LFP snippet has” &lt;&lt; lfp_waveforms[0].<a href="../../api_generated/Files/MaskMedianFilter_8cpp.html#variable-size">size()</a> &lt;&lt; ” samples.” &lt;&lt; std::endl; } }</p>
+<p>// We can now work with the gathered data. if (!lfp_waveforms.empty()) { std::cout &lt;&lt; “First LFP snippet has” &lt;&lt; lfp_waveforms[0].size() &lt;&lt; ” samples.” &lt;&lt; std::endl; } }</p>
 <p>Addendum 3: Support for Statistical Standardization Date: July 15, 2025</p>
 <p>This addendum addresses the requirement to create a column by standardizing another numerical column (Z-scoring).</p>
 <p>A7. Problem Statement A frequent need in statistical analysis is to normalize data by centering it on its mean and scaling it by its standard deviation. This operation requires a full-column transformation: the statistics (mean, stddev) must be computed for the entire source column before the element-wise transformation can be applied.</p>
@@ -521,7 +530,7 @@ ul.task-list li input[type="checkbox"] {
 <ol type="1">
 <li><a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a> (New Type Definition): A std::variant that can hold any of the possible source types that can define a row. This makes it easily extensible.</li>
 </ol>
-<p>// Assuming Interval and <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> are defined elsewhere using <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a> = std::variant&lt; std::monostate, // For cases where there’s no descriptor size_t, // For <a href="../../api_generated/Classes/classIndexSelector.html">IndexSelector</a> double, // For <a href="../../api_generated/Classes/classTimestampSelector.html">TimestampSelector</a> Interval // For <a href="../../api_generated/Classes/classIntervalSelector.html">IntervalSelector</a> &gt;;</p>
+<p>// Assuming <a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> and <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> are defined elsewhere using <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a> = std::variant&lt; std::monostate, // For cases where there’s no descriptor size_t, // For <a href="../../api_generated/Classes/classIndexSelector.html">IndexSelector</a> double, // For <a href="../../api_generated/Classes/classTimestampSelector.html">TimestampSelector</a><a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> // For <a href="../../api_generated/Classes/classIntervalSelector.html">IntervalSelector</a> &gt;;</p>
 <ol type="1">
 <li><a href="../../api_generated/Classes/classIRowSelector.html">IRowSelector</a> Extension: The <a href="../../api_generated/Classes/classIRowSelector.html">IRowSelector</a> interface will be extended with a virtual method to retrieve a descriptor for a specific row.</li>
 </ol>
@@ -532,13 +541,13 @@ ul.task-list li input[type="checkbox"] {
 </ol>
 <p>class <a href="../../api_generated/Classes/classTableView.html">TableView</a> { public: // … existing methods …</p>
 <p>// Gets a descriptor containing the source information for a given row index. <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a> getRowDescriptor(size_t row_index) const; };</p>
-<p>// Implementation: <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a><a href="../../api_generated/Classes/classTableView.html#function-getrowdescriptor">TableView::getRowDescriptor(size_t row_index) const</a>{ if (m_rowSelector) { return m_rowSelector-&gt;getDescriptor(row_index); } return std::monostate{}; }</p>
+<p>// Implementation: <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a> TableView::getRowDescriptor(size_t row_index) const { if (m_rowSelector) { return m_rowSelector-&gt;getDescriptor(row_index); } return std::monostate{}; }</p>
 <p>A12. Updated Usage Example (Tooltip Scenario) This example shows how a plotting library would use the new API to create a tooltip.</p>
 <p>// This function would be called by the plotting library on mouse hover. void <a href="../../api_generated/Files/ReverseLookupExample_8cpp.html#function-on-plot-hover">on_plot_hover(const TableView&amp; table, size_t hovered_row_index)</a> { // 1. Get the generic descriptor for the hovered row. <a href="../../api_generated/Classes/classRowDescriptor.html">RowDescriptor</a> desc = table.getRowDescriptor(hovered_row_index);</p>
 <p>// 2. Use std::visit with a lambda to process the descriptor type-safely. std::string tooltip_text = std::visit(<a href="auto&amp;&amp; arg"></a> -&gt; std::string { using T = std::decay_t&lt;decltype(arg)&gt;; if constexpr (std::is_same_v&lt;T, size_t&gt;) { return “Source Index:” + std::to_string(arg); } else if constexpr (std::is_same_v&lt;T, double&gt;) { return “Source Timestamp:” + std::to_string(arg); } else if constexpr (std::is_same_v&lt;T, Interval&gt;) { return “Source Interval: [” + std::to_string(arg.start) + ”, ” + std::to_string(arg.end) + ”]”; } else { return “Source: N/A”; } }, desc);</p>
 <p>// 3. Display the generated tooltip text to the user. show_tooltip(tooltip_text); }</p>
 <hr>
-<p>Updated on 2026-10-09 at 13:36:38 +0000</p>
+<p>Updated on 2026-11-13 at 20:25:46 +0000</p>
 
 
 </section>
@@ -548,15 +557,50 @@ ul.task-list li input[type="checkbox"] {
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -635,7 +679,8 @@ ul.task-list li input[type="checkbox"] {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -644,8 +689,69 @@ ul.task-list li input[type="checkbox"] {
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -659,6 +765,7 @@ ul.task-list li input[type="checkbox"] {
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -821,44 +928,54 @@ ul.task-list li input[type="checkbox"] {
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -956,6 +1073,9 @@ ul.task-list li input[type="checkbox"] {
       }
     }
   });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
 

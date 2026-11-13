@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -72,18 +72,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-0c66bec081e5215138e9fd61e9c23ef8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -116,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -139,6 +140,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -168,13 +170,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -268,6 +276,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -282,15 +291,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -334,8 +342,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
+            <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -344,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
@@ -475,7 +484,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -531,276 +540,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1AOTInductorBackend.html">dl::AOTInductorBackend</a></strong> <br>AOT Inductor inference backend — loads <code>.pt2</code> packages via <code>torch::inductor::AOTIModelPackageLoader</code>.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1BatchModeSpec.html">dl::BatchModeSpec</a></strong> <br>JSON-serializable batch mode specification.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1ChannelDecoder.html">dl::ChannelDecoder</a></strong> <br>Registry-facing interface for tensor-to-DataManager channel decoders.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1ChannelEncoder.html">dl::ChannelEncoder</a></strong> <br>Abstract base class for encoding geometry/image data into a tensor channel.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1DataBank.html">dl::DataBank</a></strong> <br>Named library for geometry sources and channel-encoded tensors.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1DataBankEntry.html">dl::DataBankEntry</a></strong> <br>A single named entry in a <a href="../../api_generated/Classes/classdl_1_1DataBank.html">DataBank</a>.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1DataBankEntryMetadata.html">dl::DataBankEntryMetadata</a></strong> <br>Provenance and encoding metadata for a <a href="../../api_generated/Classes/classdl_1_1DataBank.html">DataBank</a> entry.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1DataBankStaticSource.html">dl::DataBankStaticSource</a></strong> <br>Reuse a pre-encoded tensor from a named <a href="../../api_generated/Classes/classdl_1_1DataBank.html">DataBank</a> entry.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1DataManagerStaticSource.html">dl::DataManagerStaticSource</a></strong> <br>Re-encode from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> at (current_frame + time_offset) each run.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1DecoderContext.html">dl::DecoderContext</a></strong> <br>Fields set by <a href="../../api_generated/Classes/classSlotAssembler.html">SlotAssembler</a> from model metadata and runtime state.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1DecoderFactory.html">dl::DecoderFactory</a></strong> <br>Factory for creating <a href="../../api_generated/Classes/classdl_1_1ChannelDecoder.html">ChannelDecoder</a> instances by string key.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1DeviceManager.html">dl::DeviceManager</a></strong> <br>Centralized, lazily-initialized device context for all deep-learning model wrappers and inference code.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1DynamicBatch.html">dl::DynamicBatch</a></strong> <br>Dynamic batch size where the model accepts a range of batch sizes. min_size=1, max_size=0 means unlimited upper bound.</td>
-</tr>
-<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structdl_1_1DynamicInputBindingForm.html">dl::DynamicInputBindingForm</a></strong> <br>User-editable fields for a dynamic input slot.</td>
 </tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1EfficientSAM.html">dl::EfficientSAM</a></strong></td>
-</tr>
 <tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1EncoderContext.html">dl::EncoderContext</a></strong> <br>Fields set by <a href="../../api_generated/Classes/classSlotAssembler.html">SlotAssembler</a> from model metadata and runtime state.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1EncoderFactory.html">dl::EncoderFactory</a></strong> <br>Factory for creating <a href="../../api_generated/Classes/classdl_1_1ChannelEncoder.html">ChannelEncoder</a> instances by string key.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1ExecuTorchBackend.html">dl::ExecuTorchBackend</a></strong> <br>ExecuTorch inference backend — loads <code>.pte</code> programs.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1FeatureVectorDecoderParams.html">dl::FeatureVectorDecoderParams</a></strong> <br><a href="">TensorToFeatureVector</a> has no user-configurable params.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1FirstOutputInit.html">dl::FirstOutputInit</a></strong> <br>Initialize recurrent state from the first output of the model.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1FixedBatch.html">dl::FixedBatch</a></strong> <br>Fixed batch size where the model is compiled for exactly N samples per call.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1GeneralEncoderModel.html">dl::GeneralEncoderModel</a></strong> <br>General-purpose encoder model for extracting spatial feature tensors from images.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1GeneralEncoderModelParams.html">dl::GeneralEncoderModelParams</a></strong> <br>User-configurable parameters for <code>[GeneralEncoderModel](/api_generated/Classes/classdl_1_1GeneralEncoderModel.md)</code>.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1GlobalAvgPoolModule.html">dl::GlobalAvgPoolModule</a></strong> <br>Reduces a spatial feature map <code>[B, C, H, W]</code> to a global descriptor <code>[B, C]</code> by averaging over all spatial positions.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1GlobalAvgPoolModuleParams.html">dl::GlobalAvgPoolModuleParams</a></strong></td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1ImageEncoder.html">dl::ImageEncoder</a></strong> <br>Encodes image pixel data (grayscale or RGB) into one or more tensor channels.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1ImageEncoderParams.html">dl::ImageEncoderParams</a></strong> <br>User-configurable params for <a href="../../api_generated/Classes/classdl_1_1ImageEncoder.html">ImageEncoder</a>.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1ImageEncodingSource.html">dl::ImageEncodingSource</a></strong> <br>Pixel data for <a href="../../api_generated/Classes/classdl_1_1ImageEncoder.html#function-encode">ImageEncoder::encode</a> (uint8 or float32).</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1InferenceBackend.html">dl::InferenceBackend</a></strong> <br>Abstract interface for model inference backends.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1Line2DEncoder.html">dl::Line2DEncoder</a></strong> <br>Encodes a <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> (ordered polyline) into a tensor channel.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1Line2DEncoderParams.html">dl::Line2DEncoderParams</a></strong> <br>User-configurable params for <a href="../../api_generated/Classes/classdl_1_1Line2DEncoder.html">Line2DEncoder</a>.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1LineDecoderParams.html">dl::LineDecoderParams</a></strong> <br>User-configurable params for <a href="">TensorToLine2D</a>.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1Mask2DEncoder.html">dl::Mask2DEncoder</a></strong> <br>Encodes a <a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> (set of pixel coordinates) into a tensor channel.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1Mask2DEncoderParams.html">dl::Mask2DEncoderParams</a></strong> <br>User-configurable params for <a href="../../api_generated/Classes/classdl_1_1Mask2DEncoder.html">Mask2DEncoder</a>.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1MaskDecoderParams.html">dl::MaskDecoderParams</a></strong> <br>User-configurable params for <a href="">TensorToMask2D</a>.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1memory__encoder__tensors.html">dl::memory_encoder_tensors</a></strong></td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1memory__frame__pair.html">dl::memory_frame_pair</a></strong></td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1MemoryFrameBinding.html">dl::MemoryFrameBinding</a></strong> <br>Binding for one position along a memory (static) input slot.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelBase.html">dl::ModelBase</a></strong> <br>Abstract base class for all v2 deep-learning model wrappers.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1ModelConfigurationEntry.html">dl::ModelConfigurationEntry</a></strong> <br>Optional per-model configuration hooks registered at static init.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelExecution.html">dl::ModelExecution</a></strong> <br>Multi-backend model execution layer.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1ModelInfo.html">dl::ModelInfo</a></strong> <br>Aggregated metadata for a registered or loaded model.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelRegistry.html">dl::ModelRegistry</a></strong> <br>A lightweight compile-time registry of available <a href="../../api_generated/Classes/classdl_1_1ModelBase.html">ModelBase</a> subclasses, queryable by model ID and enumerable by the UI.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1NeuroSAMModel.html">dl::NeuroSAMModel</a></strong> <br>Concrete <a href="../../api_generated/Classes/classdl_1_1ModelBase.html">ModelBase</a> subclass wrapping the NeuroSAM ExecuTorch model.</td>
-</tr>
-<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structdl_1_1OutputBindingForm.html">dl::OutputBindingForm</a></strong> <br>User-editable fields for an output slot.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1Point2DEncoder.html">dl::Point2DEncoder</a></strong> <br>Encodes <a href="../../api_generated/Classes/structPoint2D.html">Point2D<float></float></a> data into a tensor channel.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1Point2DEncoderParams.html">dl::Point2DEncoderParams</a></strong> <br>User-configurable params for <a href="../../api_generated/Classes/classdl_1_1Point2DEncoder.html">Point2DEncoder</a>.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1PointDecoderParams.html">dl::PointDecoderParams</a></strong> <br>User-configurable params for <a href="">TensorToPoint2D</a>.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1PostEncoderModule.html">dl::PostEncoderModule</a></strong> <br>Abstract base class for tensor-to-tensor post-encoder processing.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1PostEncoderModuleEntry.html">dl::PostEncoderModuleEntry</a></strong> <br>A registered post-encoder module with schema and factory.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1PostEncoderModuleMetadata.html">dl::PostEncoderModuleMetadata</a></strong> <br>Display and constraint metadata for a registered post-encoder module.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1PostEncoderModuleRegistry.html">dl::PostEncoderModuleRegistry</a></strong> <br>Singleton registry mapping module keys to post-encoder descriptors.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1PostEncoderPipeline.html">dl::PostEncoderPipeline</a></strong> <br>A composable, ordered sequence of <code>[PostEncoderModule](/api_generated/Classes/classdl_1_1PostEncoderModule.md)</code> operations.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1PostEncoderStepDescriptor.html">dl::PostEncoderStepDescriptor</a></strong> <br>Descriptor for one post-encoder pipeline step.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1PostEncoderStepSpec.html">dl::PostEncoderStepSpec</a></strong> <br>JSON-serializable specification for a single post-encoder module step.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1RecurrentFrameSource.html">dl::RecurrentFrameSource</a></strong> <br>Recurrent memory frame is the raw model output from the previous step.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1RecurrentFrameSourceForm.html">dl::RecurrentFrameSourceForm</a></strong> <br><a href="../../api_generated/Classes/classAutoParamWidget.html">AutoParamWidget</a> form for a recurrent memory frame source.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1RecurrentOnlyBatch.html">dl::RecurrentOnlyBatch</a></strong> <br>Recurrent-only mode where the batch size is locked to 1 because the model uses output→input feedback that requires sequential processing.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1RegisterModelConfiguration.html">dl::RegisterModelConfiguration</a></strong> <br>RAII helper for compile-time model configuration registration.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1RegisterPostEncoderModule.html">dl::RegisterPostEncoderModule</a></strong> <br>RAII helper for compile-time post-encoder module registration.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html">dl::RuntimeModel</a></strong> <br>A <a href="../../api_generated/Classes/classdl_1_1ModelBase.html">ModelBase</a> implementation driven entirely by a <a href="">RuntimeModelSpec</a> (JSON).</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html">dl::RuntimeModelSpec</a></strong> <br>JSON-serializable specification for a runtime-defined model.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1SCM.html">dl::SCM</a></strong></td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1SlotSpec.html">dl::SlotSpec</a></strong> <br>JSON-serializable description of one tensor slot (input or output).</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html">dl::SpatialPointExtractModule</a></strong> <br>Extracts the feature vector at a 2D point location within the feature map.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1SpatialPointModuleParams.html">dl::SpatialPointModuleParams</a></strong> <br>User-configurable params for <a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html">SpatialPointExtractModule</a>.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1StaticCaptureInit.html">dl::StaticCaptureInit</a></strong> <br>Initialize recurrent state by capturing a static data source.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1StaticFrameSource.html">dl::StaticFrameSource</a></strong> <br>Static memory frame is input already exists in <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> or <a href="../../api_generated/Classes/classdl_1_1DataBank.html">DataBank</a>.</td>
 </tr>
 <tr class="odd">
 <td>struct</td>
@@ -808,7 +553,71 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1TensorSlotDescriptor.html">dl::TensorSlotDescriptor</a></strong> <br>Describes one named tensor input or output of a model.</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1RecurrentFrameSourceForm.html">dl::RecurrentFrameSourceForm</a></strong> <br><a href="../../api_generated/Classes/classAutoParamWidget.html">AutoParamWidget</a> form for a recurrent memory frame source.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1DataManagerStaticSource.html">dl::DataManagerStaticSource</a></strong> <br>Re-encode from <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> at (current_frame + time_offset) each run.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1DataBankStaticSource.html">dl::DataBankStaticSource</a></strong> <br>Reuse a pre-encoded tensor from a named <a href="">DataBank</a> entry.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1StaticFrameSource.html">dl::StaticFrameSource</a></strong> <br>Static memory frame is input already exists in <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> or <a href="">DataBank</a>.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1ZerosInit.html">dl::ZerosInit</a></strong> <br>Initialize recurrent state with zeros at t=0.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1StaticCaptureInit.html">dl::StaticCaptureInit</a></strong> <br>Initialize recurrent state by capturing a static data source.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1FirstOutputInit.html">dl::FirstOutputInit</a></strong> <br>Initialize recurrent state from the first output of the model.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1RecurrentFrameSource.html">dl::RecurrentFrameSource</a></strong> <br>Recurrent memory frame is the raw model output from the previous step.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1MemoryFrameBinding.html">dl::MemoryFrameBinding</a></strong> <br>Binding for one position along a memory (static) input slot.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1PostEncoderStepDescriptor.html">dl::PostEncoderStepDescriptor</a></strong> <br>Descriptor for one post-encoder pipeline step.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1DecoderContext.html">dl::DecoderContext</a></strong> <br>Fields set by <a href="../../api_generated/Classes/classSlotAssembler.html">SlotAssembler</a> from model metadata and runtime state.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1MaskDecoderParams.html">dl::MaskDecoderParams</a></strong> <br>User-configurable params for <a href="">TensorToMask2D</a>.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1PointDecoderParams.html">dl::PointDecoderParams</a></strong> <br>User-configurable params for <a href="">TensorToPoint2D</a>.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1LineDecoderParams.html">dl::LineDecoderParams</a></strong> <br>User-configurable params for <a href="">TensorToLine2D</a>.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1FeatureVectorDecoderParams.html">dl::FeatureVectorDecoderParams</a></strong> <br><a href="">TensorToFeatureVector</a> has no user-configurable params.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1ChannelDecoder.html">dl::ChannelDecoder</a></strong> <br>Registry-facing interface for tensor-to-DataManager channel decoders.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1DecoderFactory.html">dl::DecoderFactory</a></strong> <br>Factory for creating <a href="../../api_generated/Classes/classdl_1_1ChannelDecoder.html">ChannelDecoder</a> instances by string key.</td>
 </tr>
 <tr class="odd">
 <td>class</td>
@@ -827,8 +636,192 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classdl_1_1TensorToPoint2D.html">dl::TensorToPoint2D</a></strong> <br>Decodes a tensor channel into <a href="../../api_generated/Classes/structPoint2D.html">Point2D<float></float></a> by finding peak activations.</td>
 </tr>
 <tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1EncoderContext.html">dl::EncoderContext</a></strong> <br>Fields set by <a href="../../api_generated/Classes/classSlotAssembler.html">SlotAssembler</a> from model metadata and runtime state.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1ImageEncoderParams.html">dl::ImageEncoderParams</a></strong> <br>User-configurable params for <a href="">ImageEncoder</a>.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1Point2DEncoderParams.html">dl::Point2DEncoderParams</a></strong> <br>User-configurable params for <a href="">Point2DEncoder</a>.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1Mask2DEncoderParams.html">dl::Mask2DEncoderParams</a></strong> <br>User-configurable params for <a href="">Mask2DEncoder</a>.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1Line2DEncoderParams.html">dl::Line2DEncoderParams</a></strong> <br>User-configurable params for <a href="">Line2DEncoder</a>.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1ChannelEncoder.html">dl::ChannelEncoder</a></strong> <br>Abstract base class for encoding geometry/image data into a tensor channel.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1ImageEncodingSource.html">dl::ImageEncodingSource</a></strong> <br>Pixel data for <a href="">ImageEncoder::encode</a> (uint8 or float32).</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1EncoderFactory.html">dl::EncoderFactory</a></strong> <br>Factory for creating <a href="../../api_generated/Classes/classdl_1_1ChannelEncoder.html">ChannelEncoder</a> instances by string key.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1ImageEncoder.html">dl::ImageEncoder</a></strong> <br>Encodes image pixel data (grayscale or RGB) into one or more tensor channels.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1Line2DEncoder.html">dl::Line2DEncoder</a></strong> <br>Encodes a <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> (ordered polyline) into a tensor channel.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1Mask2DEncoder.html">dl::Mask2DEncoder</a></strong> <br>Encodes a <a href="../../api_generated/Classes/classMask2D.html">Mask2D</a> (set of pixel coordinates) into a tensor channel.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1Point2DEncoder.html">dl::Point2DEncoder</a></strong> <br>Encodes <a href="../../api_generated/Classes/structPoint2D.html">Point2D<float></float></a> data into a tensor channel.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1DeviceManager.html">dl::DeviceManager</a></strong> <br>Centralized, lazily-initialized device context for all deep-learning model wrappers and inference code.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1EfficientSAM.html">dl::EfficientSAM</a></strong></td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1memory__encoder__tensors.html">dl::memory_encoder_tensors</a></strong></td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1memory__frame__pair.html">dl::memory_frame_pair</a></strong></td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1SCM.html">dl::SCM</a></strong></td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1AOTInductorBackend.html">dl::AOTInductorBackend</a></strong> <br>AOT Inductor inference backend — loads <code>.pt2</code> packages via <code>torch::inductor::AOTIModelPackageLoader</code>.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1ExecuTorchBackend.html">dl::ExecuTorchBackend</a></strong> <br>ExecuTorch inference backend — loads <code>.pte</code> programs.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1InferenceBackend.html">dl::InferenceBackend</a></strong> <br>Abstract interface for model inference backends.</td>
+</tr>
+<tr class="odd">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classdl_1_1TorchScriptBackend.html">dl::TorchScriptBackend</a></strong> <br>TorchScript inference backend — loads <code>.pt</code> files via <code>torch::jit::load()</code>.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1GeneralEncoderModel.html">dl::GeneralEncoderModel</a></strong> <br>General-purpose encoder model for extracting spatial feature tensors from images.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1GeneralEncoderModelParams.html">dl::GeneralEncoderModelParams</a></strong> <br>User-configurable parameters for <code>[GeneralEncoderModel](/api_generated/Classes/classdl_1_1GeneralEncoderModel.md)</code>.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelBase.html">dl::ModelBase</a></strong> <br>Abstract base class for all v2 deep-learning model wrappers.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelExecution.html">dl::ModelExecution</a></strong> <br>Multi-backend model execution layer.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1ModelInfo.html">dl::ModelInfo</a></strong> <br>Aggregated metadata for a registered or loaded model.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1NeuroSAMModel.html">dl::NeuroSAMModel</a></strong> <br>Concrete <a href="../../api_generated/Classes/classdl_1_1ModelBase.html">ModelBase</a> subclass wrapping the NeuroSAM ExecuTorch model.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1FixedBatch.html">dl::FixedBatch</a></strong> <br>Fixed batch size where the model is compiled for exactly N samples per call.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1DynamicBatch.html">dl::DynamicBatch</a></strong> <br>Dynamic batch size where the model accepts a range of batch sizes. min_size=1, max_size=0 means unlimited upper bound.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1RecurrentOnlyBatch.html">dl::RecurrentOnlyBatch</a></strong> <br>Recurrent-only mode where the batch size is locked to 1 because the model uses output→input feedback that requires sequential processing.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1TensorSlotDescriptor.html">dl::TensorSlotDescriptor</a></strong> <br>Describes one named tensor input or output of a model.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1GlobalAvgPoolModule.html">dl::GlobalAvgPoolModule</a></strong> <br>Reduces a spatial feature map <code>[B, C, H, W]</code> to a global descriptor <code>[B, C]</code> by averaging over all spatial positions.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1PostEncoderModule.html">dl::PostEncoderModule</a></strong> <br>Abstract base class for tensor-to-tensor post-encoder processing.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1GlobalAvgPoolModuleParams.html">dl::GlobalAvgPoolModuleParams</a></strong></td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1SpatialPointModuleParams.html">dl::SpatialPointModuleParams</a></strong> <br>User-configurable params for <a href="">SpatialPointExtractModule</a>.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1PostEncoderModuleMetadata.html">dl::PostEncoderModuleMetadata</a></strong> <br>Display and constraint metadata for a registered post-encoder module.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1PostEncoderModuleEntry.html">dl::PostEncoderModuleEntry</a></strong> <br>A registered post-encoder module with schema and factory.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1PostEncoderModuleRegistry.html">dl::PostEncoderModuleRegistry</a></strong> <br>Singleton registry mapping module keys to post-encoder descriptors.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1PostEncoderPipeline.html">dl::PostEncoderPipeline</a></strong> <br>A composable, ordered sequence of <code>[PostEncoderModule](/api_generated/Classes/classdl_1_1PostEncoderModule.md)</code> operations.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1RegisterPostEncoderModule.html">dl::RegisterPostEncoderModule</a></strong> <br>RAII helper for compile-time post-encoder module registration.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1SpatialPointExtractModule.html">dl::SpatialPointExtractModule</a></strong> <br>Extracts the feature vector at a 2D point location within the feature map.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1ModelConfigurationEntry.html">dl::ModelConfigurationEntry</a></strong> <br>Optional per-model configuration hooks registered at static init.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1ModelRegistry.html">dl::ModelRegistry</a></strong> <br>A lightweight compile-time registry of available <a href="../../api_generated/Classes/classdl_1_1ModelBase.html">ModelBase</a> subclasses, queryable by model ID and enumerable by the UI.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1RegisterModelConfiguration.html">dl::RegisterModelConfiguration</a></strong> <br>RAII helper for compile-time model configuration registration.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1RuntimeModel.html">dl::RuntimeModel</a></strong> <br>A <a href="../../api_generated/Classes/classdl_1_1ModelBase.html">ModelBase</a> implementation driven entirely by a <a href="">RuntimeModelSpec</a> (JSON).</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1SlotSpec.html">dl::SlotSpec</a></strong> <br>JSON-serializable description of one tensor slot (input or output).</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1BatchModeSpec.html">dl::BatchModeSpec</a></strong> <br>JSON-serializable batch mode specification.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
@@ -836,7 +829,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structdl_1_1ZerosInit.html">dl::ZerosInit</a></strong> <br>Initialize recurrent state with zeros at t=0.</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1PostEncoderStepSpec.html">dl::PostEncoderStepSpec</a></strong> <br>JSON-serializable specification for a single post-encoder module step.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1RuntimeModelSpec.html">dl::RuntimeModelSpec</a></strong> <br>JSON-serializable specification for a runtime-defined model.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classdl_1_1DataBank.html">dl::DataBank</a></strong> <br>Named library for geometry sources and channel-encoded tensors.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1DataBankEntryMetadata.html">dl::DataBankEntryMetadata</a></strong> <br>Provenance and encoding metadata for a <a href="../../api_generated/Classes/classdl_1_1DataBank.html">DataBank</a> entry.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structdl_1_1DataBankEntry.html">dl::DataBankEntry</a></strong> <br>A single named entry in a <a href="../../api_generated/Classes/classdl_1_1DataBank.html">DataBank</a>.</td>
 </tr>
 </tbody>
 </table>
@@ -1101,7 +1110,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespacedl.html#function-decodetogeometry">decodeToGeometry</a></strong>(at::Tensor const &amp; tensor, <a href="../../api_generated/Classes/structdl_1_1DecoderContext.html">DecoderContext</a> const &amp; ctx, <a href="../../api_generated/Namespaces/namespacedl.html#using-decodervariant">DecoderVariant</a> const &amp; params)<br>Decode a model output tensor using a decoder params variant.</td>
 </tr>
 <tr class="odd">
-<td>template &lt;typename DecoderParams &gt; <br>constexpr bool</td>
+<td>template &lt;typename DecoderParams &gt; <br>bool</td>
 <td><strong><a href="../../api_generated/Namespaces/namespacedl.html#function-isspatialdecoderparams">isSpatialDecoderParams</a></strong>()<br>Whether decoder params require a 4D [B,C,H,W] input tensor.</td>
 </tr>
 <tr class="even">
@@ -1189,7 +1198,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespacedl.html#function-encodetotensor">encodeToTensor</a></strong>(<a href="../../api_generated/Namespaces/namespacedl.html#using-encodingsourcevariant">EncodingSourceVariant</a> const &amp; source, at::Tensor &amp; tensor, <a href="../../api_generated/Classes/structdl_1_1EncoderContext.html">EncoderContext</a> const &amp; ctx, <a href="../../api_generated/Classes/structImageSize.html">ImageSize</a> source_image_size, <a href="../../api_generated/Namespaces/namespacedl.html#using-encodervariant">EncoderVariant</a> const &amp; params)<br>Encode pre-fetched source data using an encoder params variant.</td>
 </tr>
 <tr class="odd">
-<td>template &lt;typename EncoderParams &gt; <br>constexpr bool</td>
+<td>template &lt;typename EncoderParams &gt; <br>bool</td>
 <td><strong><a href="../../api_generated/Namespaces/namespacedl.html#function-isimageencoderparams">isImageEncoderParams</a></strong>()<br>Whether encoder params target <a href="../../api_generated/Classes/classMediaData.html">MediaData</a> (image) input.</td>
 </tr>
 <tr class="even">
@@ -1198,11 +1207,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>std::string</td>
-<td><strong><a href="../../api_generated/Namespaces/namespacedl.html#function-backendtypetostring">backendTypeToString</a></strong>(<a href="../../api_generated/Namespaces/namespacedl.html#enum-backendtype">BackendType</a> type)<br>Convert a BackendType to a human-readable string.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacedl.html#function-backendtypetostring">backendTypeToString</a></strong>(<a href="../../api_generated/Namespaces/namespacedl.html#enum-backendtype">BackendType</a> type)<br>Convert a <a href="../../api_generated/Namespaces/namespacedl.html#enum-backendtype">BackendType</a> to a human-readable string.</td>
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Namespaces/namespacedl.html#enum-backendtype">BackendType</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespacedl.html#function-backendtypefromstring">backendTypeFromString</a></strong>(std::string const &amp; str)<br>Parse a BackendType from a string (case-insensitive).</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacedl.html#function-backendtypefromstring">backendTypeFromString</a></strong>(std::string const &amp; str)<br>Parse a <a href="../../api_generated/Namespaces/namespacedl.html#enum-backendtype">BackendType</a> from a string (case-insensitive).</td>
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Namespaces/namespacedl.html#enum-backendtype">BackendType</a></td>
@@ -1234,23 +1243,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>torch::ScalarType</td>
-<td><strong><a href="../../api_generated/Namespaces/namespacedl.html#function-totorchdtype">toTorchDType</a></strong>(<a href="../../api_generated/Namespaces/namespacedl.html#enum-tensordtype">TensorDType</a> dtype)<br>Convert TensorDType enum to torch::ScalarType.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacedl.html#function-totorchdtype">toTorchDType</a></strong>(<a href="../../api_generated/Namespaces/namespacedl.html#enum-tensordtype">TensorDType</a> dtype)<br>Convert <a href="../../api_generated/Namespaces/namespacedl.html#enum-tensordtype">TensorDType</a> enum to torch::ScalarType.</td>
 </tr>
 <tr class="odd">
 <td>bool</td>
-<td><strong><a href="../../api_generated/Namespaces/namespacedl.html#function-isbatchlocked">isBatchLocked</a></strong>(<a href="../../api_generated/Namespaces/namespacedl.html#using-batchmode">BatchMode</a> const &amp; mode)<br>Check if a BatchMode forces batch_size = 1.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacedl.html#function-isbatchlocked">isBatchLocked</a></strong>(<a href="../../api_generated/Namespaces/namespacedl.html#using-batchmode">BatchMode</a> const &amp; mode)<br>Check if a <a href="../../api_generated/Namespaces/namespacedl.html#using-batchmode">BatchMode</a> forces batch_size = 1.</td>
 </tr>
 <tr class="even">
 <td>int</td>
-<td><strong><a href="../../api_generated/Namespaces/namespacedl.html#function-maxbatchsizefrommode">maxBatchSizeFromMode</a></strong>(<a href="../../api_generated/Namespaces/namespacedl.html#using-batchmode">BatchMode</a> const &amp; mode)<br>Get the maximum batch size allowed by a BatchMode.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacedl.html#function-maxbatchsizefrommode">maxBatchSizeFromMode</a></strong>(<a href="../../api_generated/Namespaces/namespacedl.html#using-batchmode">BatchMode</a> const &amp; mode)<br>Get the maximum batch size allowed by a <a href="../../api_generated/Namespaces/namespacedl.html#using-batchmode">BatchMode</a>.</td>
 </tr>
 <tr class="odd">
 <td>int</td>
-<td><strong><a href="../../api_generated/Namespaces/namespacedl.html#function-minbatchsizefrommode">minBatchSizeFromMode</a></strong>(<a href="../../api_generated/Namespaces/namespacedl.html#using-batchmode">BatchMode</a> const &amp; mode)<br>Get the minimum batch size required by a BatchMode.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacedl.html#function-minbatchsizefrommode">minBatchSizeFromMode</a></strong>(<a href="../../api_generated/Namespaces/namespacedl.html#using-batchmode">BatchMode</a> const &amp; mode)<br>Get the minimum batch size required by a <a href="../../api_generated/Namespaces/namespacedl.html#using-batchmode">BatchMode</a>.</td>
 </tr>
 <tr class="even">
 <td>std::string</td>
-<td><strong><a href="../../api_generated/Namespaces/namespacedl.html#function-batchmodedescription">batchModeDescription</a></strong>(<a href="../../api_generated/Namespaces/namespacedl.html#using-batchmode">BatchMode</a> const &amp; mode)<br>Get a human-readable description of a BatchMode.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacedl.html#function-batchmodedescription">batchModeDescription</a></strong>(<a href="../../api_generated/Namespaces/namespacedl.html#using-batchmode">BatchMode</a> const &amp; mode)<br>Get a human-readable description of a <a href="../../api_generated/Namespaces/namespacedl.html#using-batchmode">BatchMode</a>.</td>
 </tr>
 <tr class="odd">
 <td>std::string</td>
@@ -1328,7 +1337,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>Heatmap</td>
 <td></td>
-<td>Gaussian blob (requires sigma parameter)</td>
+<td>Gaussian blob (requires sigma parameter).</td>
 </tr>
 <tr class="odd">
 <td>Distance</td>
@@ -1338,7 +1347,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>Raw</td>
 <td></td>
-<td>Direct pixel copy (images)</td>
+<td>Direct pixel copy (images).</td>
 </tr>
 </tbody>
 </table>
@@ -1482,46 +1491,74 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="using-staticinputsourcevariant" class="level3">
 <h3 class="anchored" data-anchor-id="using-staticinputsourcevariant">using StaticInputSourceVariant</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>StaticInputSourceVariant <span class="op">=</span> <span class="kw">typedef</span> rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span> <span class="st">"static_source"</span><span class="op">,</span> DataManagerStaticSource<span class="op">,</span> DataBankStaticSource<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>StaticInputSourceVariant <span class="op">=</span>  rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>        <span class="st">"static_source"</span><span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        DataManagerStaticSource<span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        DataBankStaticSource<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Tagged union discriminated by <code>static_source</code>.</p>
 </section>
 <section id="using-recurrentinitvariant" class="level3">
 <h3 class="anchored" data-anchor-id="using-recurrentinitvariant">using RecurrentInitVariant</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>RecurrentInitVariant <span class="op">=</span> <span class="kw">typedef</span> rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span> <span class="st">"init_mode"</span><span class="op">,</span> ZerosInit<span class="op">,</span> StaticCaptureInit<span class="op">,</span> FirstOutputInit<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>RecurrentInitVariant <span class="op">=</span>  rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>        <span class="st">"init_mode"</span><span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        ZerosInit<span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        StaticCaptureInit<span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        FirstOutputInit<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Tagged union discriminated by <code>init_mode</code>.</p>
 </section>
 <section id="using-memoryframesourcevariant" class="level3">
 <h3 class="anchored" data-anchor-id="using-memoryframesourcevariant">using MemoryFrameSourceVariant</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>MemoryFrameSourceVariant <span class="op">=</span> <span class="kw">typedef</span> rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span> <span class="st">"frame_kind"</span><span class="op">,</span> StaticFrameSource<span class="op">,</span> RecurrentFrameSource<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>MemoryFrameSourceVariant <span class="op">=</span>  rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>        <span class="st">"frame_kind"</span><span class="op">,</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        StaticFrameSource<span class="op">,</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>        RecurrentFrameSource<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Tagged union discriminated by <code>frame_kind</code>.</p>
 </section>
 <section id="using-encodervariant" class="level3">
 <h3 class="anchored" data-anchor-id="using-encodervariant">using EncoderVariant</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>EncoderVariant <span class="op">=</span> <span class="kw">typedef</span> rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span> <span class="st">"encoder"</span><span class="op">,</span> ImageEncoderParams<span class="op">,</span> Point2DEncoderParams<span class="op">,</span> Mask2DEncoderParams<span class="op">,</span> Line2DEncoderParams<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>EncoderVariant <span class="op">=</span>  rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>        <span class="st">"encoder"</span><span class="op">,</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        ImageEncoderParams<span class="op">,</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        Point2DEncoderParams<span class="op">,</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        Mask2DEncoderParams<span class="op">,</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>        Line2DEncoderParams<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Tagged union discriminated by “encoder”.</p>
 <p>User-configurable encoder parameters for all registered channel encoders.</p>
 </section>
 <section id="using-decodervariant" class="level3">
 <h3 class="anchored" data-anchor-id="using-decodervariant">using DecoderVariant</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>DecoderVariant <span class="op">=</span> <span class="kw">typedef</span> rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span> <span class="st">"decoder"</span><span class="op">,</span> MaskDecoderParams<span class="op">,</span> PointDecoderParams<span class="op">,</span> LineDecoderParams<span class="op">,</span> FeatureVectorDecoderParams<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>DecoderVariant <span class="op">=</span>  rfl<span class="op">::</span>TaggedUnion<span class="op">&lt;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>        <span class="st">"decoder"</span><span class="op">,</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        MaskDecoderParams<span class="op">,</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        PointDecoderParams<span class="op">,</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        LineDecoderParams<span class="op">,</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        FeatureVectorDecoderParams<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Tagged union discriminated by “decoder”.</p>
 <p>User-configurable decoder parameters for all registered channel decoders.</p>
 </section>
 <section id="using-decodedgeometryvariant" class="level3">
 <h3 class="anchored" data-anchor-id="using-decodedgeometryvariant">using DecodedGeometryVariant</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>DecodedGeometryVariant <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>variant<span class="op">&lt;</span> Mask2D<span class="op">,</span> Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;,</span> Line2D<span class="op">,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;</span> <span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>DecodedGeometryVariant <span class="op">=</span>  <span class="bu">std::</span>variant<span class="op">&lt;</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>        Mask2D<span class="op">,</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>        Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;,</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>        Line2D<span class="op">,</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Geometry or feature-vector output from a channel decoder.</p>
 </section>
 <section id="using-encodingsourcevariant" class="level3">
 <h3 class="anchored" data-anchor-id="using-encodingsourcevariant">using EncodingSourceVariant</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>EncodingSourceVariant <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>variant<span class="op">&lt;</span> ImageEncodingSource<span class="op">,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;</span> <span class="op">&gt;,</span> Mask2D<span class="op">,</span> Line2D<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>EncodingSourceVariant <span class="op">=</span>  <span class="bu">std::</span>variant<span class="op">&lt;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>        ImageEncodingSource<span class="op">,</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>Point2D<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;&gt;,</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>        Mask2D<span class="op">,</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        Line2D<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Geometry or image source data paired with encoder params at encode time.</p>
 </section>
 <section id="using-batchmode" class="level3">
 <h3 class="anchored" data-anchor-id="using-batchmode">using BatchMode</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>BatchMode <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>variant<span class="op">&lt;</span>FixedBatch<span class="op">,</span> DynamicBatch<span class="op">,</span> RecurrentOnlyBatch<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> dl<span class="op">::</span>BatchMode <span class="op">=</span>  <span class="bu">std::</span>variant<span class="op">&lt;</span>FixedBatch<span class="op">,</span> DynamicBatch<span class="op">,</span> RecurrentOnlyBatch<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Discriminated union describing batch-size constraints for a model.</p>
-<p>Models report their <code>BatchMode</code> via <code>[ModelBase::batchMode()](/api_generated/Classes/classdl_1_1ModelBase.md#function-batchmode)</code>. The widget uses this to configure the batch-size spinbox and select the correct weights variant.</p>
+<p>Models report their <code>[BatchMode](/api_generated/Namespaces/namespacedl.md#using-batchmode)</code> via <code>[ModelBase::batchMode()](/api_generated/Classes/classdl_1_1ModelBase.md#function-batchmode)</code>. The widget uses this to configure the batch-size spinbox and select the correct weights variant.</p>
 </section>
 </section>
 <section id="functions-documentation" class="level2">
@@ -1864,7 +1901,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-isspatialdecoderparams" class="level3">
 <h3 class="anchored" data-anchor-id="function-isspatialdecoderparams">function isSpatialDecoderParams</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> DecoderParams <span class="op">&gt;</span></span>
-<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> isSpatialDecoderParams<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isSpatialDecoderParams<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Whether decoder params require a 4D [B,C,H,W] input tensor.</p>
 </section>
 <section id="function-isimageencoder" class="level3">
@@ -2020,7 +2057,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-isimageencoderparams" class="level3">
 <h3 class="anchored" data-anchor-id="function-isimageencoderparams">function isImageEncoderParams</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb77"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> EncoderParams <span class="op">&gt;</span></span>
-<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> isImageEncoderParams<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isImageEncoderParams<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Whether encoder params target <a href="../../api_generated/Classes/classMediaData.html">MediaData</a> (image) input.</p>
 </section>
 <section id="function-convert_image_vec_to_tensor" class="level3">
@@ -2037,14 +2074,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb79"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>string backendTypeToString<span class="op">(</span></span>
 <span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>    BackendType type</span>
 <span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Convert a BackendType to a human-readable string.</p>
+<p>Convert a <a href="../../api_generated/Namespaces/namespacedl.html#enum-backendtype">BackendType</a> to a human-readable string.</p>
 </section>
 <section id="function-backendtypefromstring" class="level3">
 <h3 class="anchored" data-anchor-id="function-backendtypefromstring">function backendTypeFromString</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb80"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> BackendType backendTypeFromString<span class="op">(</span></span>
 <span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> str</span>
 <span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Parse a BackendType from a string (case-insensitive).</p>
+<p>Parse a <a href="../../api_generated/Namespaces/namespacedl.html#enum-backendtype">BackendType</a> from a string (case-insensitive).</p>
 <p><strong>Return</strong>: <a href="../../api_generated/Namespaces/namespacedl.html#enumvalue-auto">BackendType::Auto</a> if the string is not recognized.</p>
 </section>
 <section id="function-backendtypefromextension" class="level3">
@@ -2053,7 +2090,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>filesystem::path <span class="at">const</span> <span class="op">&amp;</span> path</span>
 <span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Detect backend type from a file extension.</p>
-<p><strong>Return</strong>: The detected BackendType, or <a href="../../api_generated/Namespaces/namespacedl.html#enumvalue-auto">BackendType::Auto</a> if extension is not recognized (caller should treat as an error or fall back).</p>
+<p><strong>Return</strong>: The detected <a href="../../api_generated/Namespaces/namespacedl.html#enum-backendtype">BackendType</a>, or <a href="../../api_generated/Namespaces/namespacedl.html#enumvalue-auto">BackendType::Auto</a> if extension is not recognized (caller should treat as an error or fall back).</p>
 </section>
 <section id="function-parsegeneralencoderoutputshape" class="level3">
 <h3 class="anchored" data-anchor-id="function-parsegeneralencoderoutputshape">function parseGeneralEncoderOutputShape</h3>
@@ -2107,21 +2144,21 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb88"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> torch<span class="op">::</span>ScalarType toTorchDType<span class="op">(</span></span>
 <span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a>    TensorDType dtype</span>
 <span id="cb88-3"><a href="#cb88-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Convert TensorDType enum to torch::ScalarType.</p>
+<p>Convert <a href="../../api_generated/Namespaces/namespacedl.html#enum-tensordtype">TensorDType</a> enum to torch::ScalarType.</p>
 </section>
 <section id="function-isbatchlocked" class="level3">
 <h3 class="anchored" data-anchor-id="function-isbatchlocked">function isBatchLocked</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb89"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">bool</span> isBatchLocked<span class="op">(</span></span>
 <span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>    BatchMode <span class="at">const</span> <span class="op">&amp;</span> mode</span>
 <span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Check if a BatchMode forces batch_size = 1.</p>
+<p>Check if a <a href="../../api_generated/Namespaces/namespacedl.html#using-batchmode">BatchMode</a> forces batch_size = 1.</p>
 </section>
 <section id="function-maxbatchsizefrommode" class="level3">
 <h3 class="anchored" data-anchor-id="function-maxbatchsizefrommode">function maxBatchSizeFromMode</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb90"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">int</span> maxBatchSizeFromMode<span class="op">(</span></span>
 <span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a>    BatchMode <span class="at">const</span> <span class="op">&amp;</span> mode</span>
 <span id="cb90-3"><a href="#cb90-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Get the maximum batch size allowed by a BatchMode.</p>
+<p>Get the maximum batch size allowed by a <a href="../../api_generated/Namespaces/namespacedl.html#using-batchmode">BatchMode</a>.</p>
 <p><strong>Return</strong>: Maximum batch size, or 0 for unlimited.</p>
 </section>
 <section id="function-minbatchsizefrommode" class="level3">
@@ -2129,7 +2166,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb91"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="dt">int</span> minBatchSizeFromMode<span class="op">(</span></span>
 <span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a>    BatchMode <span class="at">const</span> <span class="op">&amp;</span> mode</span>
 <span id="cb91-3"><a href="#cb91-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Get the minimum batch size required by a BatchMode.</p>
+<p>Get the minimum batch size required by a <a href="../../api_generated/Namespaces/namespacedl.html#using-batchmode">BatchMode</a>.</p>
 <p><strong>Return</strong>: Minimum batch size, or 1 for <a href="../../api_generated/Classes/structdl_1_1RecurrentOnlyBatch.html">RecurrentOnlyBatch</a>.</p>
 </section>
 <section id="function-batchmodedescription" class="level3">
@@ -2137,7 +2174,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb92"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>string batchModeDescription<span class="op">(</span></span>
 <span id="cb92-2"><a href="#cb92-2" aria-hidden="true" tabindex="-1"></a>    BatchMode <span class="at">const</span> <span class="op">&amp;</span> mode</span>
 <span id="cb92-3"><a href="#cb92-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Get a human-readable description of a BatchMode.</p>
+<p>Get a human-readable description of a <a href="../../api_generated/Namespaces/namespacedl.html#using-batchmode">BatchMode</a>.</p>
 <p><strong>Return</strong>: Description string.</p>
 </section>
 <section id="function-tensordtypedisplayname" class="level3">
@@ -2257,7 +2294,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb105-3"><a href="#cb105-3" aria-hidden="true" tabindex="-1"></a>    ImageSize <span class="at">const</span> image_size</span>
 <span id="cb105-4"><a href="#cb105-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-10-09 at 13:36:33 +0000</p>
+<p>Updated on 2026-11-13 at 20:25:42 +0000</p>
 
 
 </section>
@@ -2269,15 +2306,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -2356,7 +2428,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -2365,8 +2438,69 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -2380,6 +2514,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -2542,44 +2677,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -2677,6 +2822,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       }
     }
   });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
 

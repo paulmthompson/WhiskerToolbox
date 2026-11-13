@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -72,18 +72,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-0c66bec081e5215138e9fd61e9c23ef8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -116,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -139,6 +140,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -168,13 +170,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -268,6 +276,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -282,15 +291,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -334,8 +342,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
+            <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -344,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
@@ -366,7 +375,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -411,7 +420,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>void</td>
-<td><strong><a href="../../api_generated/Files/mask__particle__filter__example_8cpp.html#function-example-correlated-tracking">example_correlated_tracking</a></strong>()<br>Example 2 - Track multiple correlated points (whisker simulation)</td>
+<td><strong><a href="../../api_generated/Files/mask__particle__filter__example_8cpp.html#function-example-correlated-tracking">example_correlated_tracking</a></strong>()<br>Example 2 - Track multiple correlated points (whisker simulation).</td>
 </tr>
 <tr class="even">
 <td>void</td>
@@ -452,7 +461,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-example_correlated_tracking" class="level3">
 <h3 class="anchored" data-anchor-id="function-example_correlated_tracking">function example_correlated_tracking</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> example_correlated_tracking<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Example 2 - Track multiple correlated points (whisker simulation)</p>
+<p>Example 2 - Track multiple correlated points (whisker simulation).</p>
 </section>
 <section id="function-example_ambiguous_tracking" class="level3">
 <h3 class="anchored" data-anchor-id="function-example_ambiguous_tracking">function example_ambiguous_tracking</h3>
@@ -467,271 +476,272 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="source-code" class="level2">
 <h2 class="anchored" data-anchor-id="source-code">Source code</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"StateEstimation/MaskParticleFilter.hpp"</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"CoreGeometry/masks.hpp"</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cmath&gt;</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> StateEstimation<span class="op">;</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>Mask2D generateCircleMask<span class="op">(</span>Point2D<span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;</span> center<span class="op">,</span> <span class="dt">float</span> radius<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    Mask2D mask<span class="op">;</span></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint32_t</span> r_sq <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span>radius <span class="op">*</span> radius<span class="op">);</span></span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int32_t</span> dx <span class="op">=</span> <span class="op">-</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int32_t</span><span class="op">&gt;(</span>radius<span class="op">);</span> dx <span class="op">&lt;=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int32_t</span><span class="op">&gt;(</span>radius<span class="op">);</span> <span class="op">++</span>dx<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int32_t</span> dy <span class="op">=</span> <span class="op">-</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int32_t</span><span class="op">&gt;(</span>radius<span class="op">);</span> dy <span class="op">&lt;=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int32_t</span><span class="op">&gt;(</span>radius<span class="op">);</span> <span class="op">++</span>dy<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>dx <span class="op">*</span> dx <span class="op">+</span> dy <span class="op">*</span> dy <span class="op">&lt;=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int32_t</span><span class="op">&gt;(</span>r_sq<span class="op">))</span> <span class="op">{</span></span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>                <span class="dt">uint32_t</span> x <span class="op">=</span> center<span class="op">.</span>x <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span>dx<span class="op">);</span></span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>                <span class="dt">uint32_t</span> y <span class="op">=</span> center<span class="op">.</span>y <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span>dy<span class="op">);</span></span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>                mask<span class="op">.</span>push_back<span class="op">({</span>x<span class="op">,</span> y<span class="op">});</span></span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> mask<span class="op">;</span></span>
-<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> example_single_point_tracking<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">=== Example 1: Single Point Tracking ===</span><span class="sc">\n\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create a moving circle trajectory (100 frames)</span></span>
-<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> num_frames <span class="op">=</span> <span class="dv">100</span><span class="op">;</span></span>
-<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Mask2D<span class="op">&gt;</span> masks<span class="op">;</span></span>
-<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Generating synthetic data: circle moving from (100,100) to (300,100)</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> num_frames<span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Linear motion in x direction</span></span>
-<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> t <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>i<span class="op">)</span> <span class="op">/</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>num_frames <span class="op">-</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> x <span class="op">=</span> <span class="dv">100</span> <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span><span class="dv">200</span> <span class="op">*</span> t<span class="op">);</span></span>
-<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> y <span class="op">=</span> <span class="dv">100</span><span class="op">;</span></span>
-<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>        masks<span class="op">.</span>push_back<span class="op">(</span>generateCircleMask<span class="op">({</span>x<span class="op">,</span> y<span class="op">},</span> <span class="fl">25.0</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Ground truth labels (start and end)</span></span>
-<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>    Point2D<span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;</span> start_label<span class="op">{</span><span class="dv">100</span><span class="op">,</span> <span class="dv">100</span><span class="op">};</span></span>
-<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>    Point2D<span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;</span> end_label<span class="op">{</span><span class="dv">300</span><span class="op">,</span> <span class="dv">100</span><span class="op">};</span></span>
-<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Start label: ("</span> <span class="op">&lt;&lt;</span> start_label<span class="op">.</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> <span class="op">&lt;&lt;</span> start_label<span class="op">.</span>y <span class="op">&lt;&lt;</span> <span class="st">")</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"End label: ("</span> <span class="op">&lt;&lt;</span> end_label<span class="op">.</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> <span class="op">&lt;&lt;</span> end_label<span class="op">.</span>y <span class="op">&lt;&lt;</span> <span class="st">")</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create tracker</span></span>
-<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>    MaskPointTracker tracker<span class="op">(</span></span>
-<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>        <span class="dv">1000</span><span class="op">,</span>    <span class="co">// num_particles</span></span>
-<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>        <span class="fl">15.0</span><span class="bu">f</span><span class="op">,</span>   <span class="co">// transition_radius: allow up to 15 pixels movement per frame</span></span>
-<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>        <span class="fl">0.05</span><span class="bu">f</span>    <span class="co">// random_walk_prob: 5% chance of random exploration</span></span>
-<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>    <span class="op">);</span></span>
-<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">Tracking...</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> tracked_points <span class="op">=</span> tracker<span class="op">.</span>track<span class="op">(</span>start_label<span class="op">,</span> end_label<span class="op">,</span> masks<span class="op">);</span></span>
-<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Tracked "</span> <span class="op">&lt;&lt;</span> tracked_points<span class="op">.</span>size<span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">" frames</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Print some results</span></span>
-<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">Sample tracked positions:</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> num_frames<span class="op">;</span> i <span class="op">+=</span> <span class="dv">20</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Frame "</span> <span class="op">&lt;&lt;</span> i <span class="op">&lt;&lt;</span> <span class="st">": ("</span> </span>
-<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a>                  <span class="op">&lt;&lt;</span> tracked_points<span class="op">[</span>i<span class="op">].</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> </span>
-<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a>                  <span class="op">&lt;&lt;</span> tracked_points<span class="op">[</span>i<span class="op">].</span>y <span class="op">&lt;&lt;</span> <span class="st">")</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Compute tracking error</span></span>
-<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> total_error <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> num_frames<span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> t <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>i<span class="op">)</span> <span class="op">/</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>num_frames <span class="op">-</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> true_x <span class="op">=</span> <span class="dv">100</span> <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span><span class="dv">200</span> <span class="op">*</span> t<span class="op">);</span></span>
-<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> true_y <span class="op">=</span> <span class="dv">100</span><span class="op">;</span></span>
-<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> error <span class="op">=</span> pointDistance<span class="op">(</span>tracked_points<span class="op">[</span>i<span class="op">],</span> <span class="op">{</span>true_x<span class="op">,</span> true_y<span class="op">});</span></span>
-<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a>        total_error <span class="op">+=</span> error<span class="op">;</span></span>
-<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> avg_error <span class="op">=</span> total_error <span class="op">/</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>num_frames<span class="op">);</span></span>
-<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">Average tracking error: "</span> <span class="op">&lt;&lt;</span> avg_error <span class="op">&lt;&lt;</span> <span class="st">" pixels</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> example_correlated_tracking<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb6-90"><a href="#cb6-90" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">=== Example 2: Correlated Multi-Point Tracking ===</span><span class="sc">\n\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-91"><a href="#cb6-91" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-92"><a href="#cb6-92" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Simulate a whisker with 3 tracked points: base, middle, tip</span></span>
-<span id="cb6-93"><a href="#cb6-93" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> num_frames <span class="op">=</span> <span class="dv">50</span><span class="op">;</span></span>
-<span id="cb6-94"><a href="#cb6-94" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Mask2D<span class="op">&gt;</span> masks<span class="op">;</span></span>
-<span id="cb6-95"><a href="#cb6-95" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-96"><a href="#cb6-96" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Generating synthetic data: 3 points moving together</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-97"><a href="#cb6-97" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-98"><a href="#cb6-98" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> num_frames<span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-99"><a href="#cb6-99" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> t <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>i<span class="op">)</span> <span class="op">/</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>num_frames <span class="op">-</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb6-100"><a href="#cb6-100" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb6-101"><a href="#cb6-101" aria-hidden="true" tabindex="-1"></a>        <span class="co">// All three points move vertically</span></span>
-<span id="cb6-102"><a href="#cb6-102" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> base_x <span class="op">=</span> <span class="dv">100</span><span class="op">;</span></span>
-<span id="cb6-103"><a href="#cb6-103" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> base_y <span class="op">=</span> <span class="dv">100</span> <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span><span class="dv">100</span> <span class="op">*</span> t<span class="op">);</span></span>
-<span id="cb6-104"><a href="#cb6-104" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb6-105"><a href="#cb6-105" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> mid_x <span class="op">=</span> <span class="dv">150</span><span class="op">;</span></span>
-<span id="cb6-106"><a href="#cb6-106" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> mid_y <span class="op">=</span> <span class="dv">120</span> <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span><span class="dv">100</span> <span class="op">*</span> t<span class="op">);</span></span>
-<span id="cb6-107"><a href="#cb6-107" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb6-108"><a href="#cb6-108" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> tip_x <span class="op">=</span> <span class="dv">200</span><span class="op">;</span></span>
-<span id="cb6-109"><a href="#cb6-109" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> tip_y <span class="op">=</span> <span class="dv">140</span> <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span><span class="dv">100</span> <span class="op">*</span> t<span class="op">);</span></span>
-<span id="cb6-110"><a href="#cb6-110" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb6-111"><a href="#cb6-111" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create mask containing all three points</span></span>
-<span id="cb6-112"><a href="#cb6-112" aria-hidden="true" tabindex="-1"></a>        Mask2D mask <span class="op">=</span> generateCircleMask<span class="op">({</span>base_x<span class="op">,</span> base_y<span class="op">},</span> <span class="fl">20.0</span><span class="bu">f</span><span class="op">);</span></span>
-<span id="cb6-113"><a href="#cb6-113" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> mask_mid <span class="op">=</span> generateCircleMask<span class="op">({</span>mid_x<span class="op">,</span> mid_y<span class="op">},</span> <span class="fl">20.0</span><span class="bu">f</span><span class="op">);</span></span>
-<span id="cb6-114"><a href="#cb6-114" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> mask_tip <span class="op">=</span> generateCircleMask<span class="op">({</span>tip_x<span class="op">,</span> tip_y<span class="op">},</span> <span class="fl">20.0</span><span class="bu">f</span><span class="op">);</span></span>
-<span id="cb6-115"><a href="#cb6-115" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb6-116"><a href="#cb6-116" aria-hidden="true" tabindex="-1"></a>        mask<span class="op">.</span>insert<span class="op">(</span>mask<span class="op">.</span>end<span class="op">(),</span> mask_mid<span class="op">.</span>begin<span class="op">(),</span> mask_mid<span class="op">.</span>end<span class="op">());</span></span>
-<span id="cb6-117"><a href="#cb6-117" aria-hidden="true" tabindex="-1"></a>        mask<span class="op">.</span>insert<span class="op">(</span>mask<span class="op">.</span>end<span class="op">(),</span> mask_tip<span class="op">.</span>begin<span class="op">(),</span> mask_tip<span class="op">.</span>end<span class="op">());</span></span>
-<span id="cb6-118"><a href="#cb6-118" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb6-119"><a href="#cb6-119" aria-hidden="true" tabindex="-1"></a>        masks<span class="op">.</span>push_back<span class="op">(</span>mask<span class="op">);</span></span>
-<span id="cb6-120"><a href="#cb6-120" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb6-121"><a href="#cb6-121" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-122"><a href="#cb6-122" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Ground truth labels for all three points</span></span>
-<span id="cb6-123"><a href="#cb6-123" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Point2D<span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;&gt;</span> start_labels <span class="op">=</span> <span class="op">{</span></span>
-<span id="cb6-124"><a href="#cb6-124" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="dv">100</span><span class="op">,</span> <span class="dv">100</span><span class="op">},</span>  <span class="co">// Base</span></span>
-<span id="cb6-125"><a href="#cb6-125" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="dv">150</span><span class="op">,</span> <span class="dv">120</span><span class="op">},</span>  <span class="co">// Middle</span></span>
-<span id="cb6-126"><a href="#cb6-126" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="dv">200</span><span class="op">,</span> <span class="dv">140</span><span class="op">}</span>   <span class="co">// Tip</span></span>
-<span id="cb6-127"><a href="#cb6-127" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
-<span id="cb6-128"><a href="#cb6-128" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-129"><a href="#cb6-129" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Point2D<span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;&gt;</span> end_labels <span class="op">=</span> <span class="op">{</span></span>
-<span id="cb6-130"><a href="#cb6-130" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="dv">100</span><span class="op">,</span> <span class="dv">200</span><span class="op">},</span>  <span class="co">// Base</span></span>
-<span id="cb6-131"><a href="#cb6-131" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="dv">150</span><span class="op">,</span> <span class="dv">220</span><span class="op">},</span>  <span class="co">// Middle</span></span>
-<span id="cb6-132"><a href="#cb6-132" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="dv">200</span><span class="op">,</span> <span class="dv">240</span><span class="op">}</span>   <span class="co">// Tip</span></span>
-<span id="cb6-133"><a href="#cb6-133" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
-<span id="cb6-134"><a href="#cb6-134" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-135"><a href="#cb6-135" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Tracking 3 points:</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-136"><a href="#cb6-136" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Point 0 (base): ("</span> <span class="op">&lt;&lt;</span> start_labels<span class="op">[</span><span class="dv">0</span><span class="op">].</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> <span class="op">&lt;&lt;</span> start_labels<span class="op">[</span><span class="dv">0</span><span class="op">].</span>y </span>
-<span id="cb6-137"><a href="#cb6-137" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;&lt;</span> <span class="st">") -&gt; ("</span> <span class="op">&lt;&lt;</span> end_labels<span class="op">[</span><span class="dv">0</span><span class="op">].</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> <span class="op">&lt;&lt;</span> end_labels<span class="op">[</span><span class="dv">0</span><span class="op">].</span>y <span class="op">&lt;&lt;</span> <span class="st">")</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-138"><a href="#cb6-138" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Point 1 (mid):  ("</span> <span class="op">&lt;&lt;</span> start_labels<span class="op">[</span><span class="dv">1</span><span class="op">].</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> <span class="op">&lt;&lt;</span> start_labels<span class="op">[</span><span class="dv">1</span><span class="op">].</span>y </span>
-<span id="cb6-139"><a href="#cb6-139" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;&lt;</span> <span class="st">") -&gt; ("</span> <span class="op">&lt;&lt;</span> end_labels<span class="op">[</span><span class="dv">1</span><span class="op">].</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> <span class="op">&lt;&lt;</span> end_labels<span class="op">[</span><span class="dv">1</span><span class="op">].</span>y <span class="op">&lt;&lt;</span> <span class="st">")</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-140"><a href="#cb6-140" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Point 2 (tip):  ("</span> <span class="op">&lt;&lt;</span> start_labels<span class="op">[</span><span class="dv">2</span><span class="op">].</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> <span class="op">&lt;&lt;</span> start_labels<span class="op">[</span><span class="dv">2</span><span class="op">].</span>y </span>
-<span id="cb6-141"><a href="#cb6-141" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;&lt;</span> <span class="st">") -&gt; ("</span> <span class="op">&lt;&lt;</span> end_labels<span class="op">[</span><span class="dv">2</span><span class="op">].</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> <span class="op">&lt;&lt;</span> end_labels<span class="op">[</span><span class="dv">2</span><span class="op">].</span>y <span class="op">&lt;&lt;</span> <span class="st">")</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-142"><a href="#cb6-142" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-143"><a href="#cb6-143" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create correlated tracker</span></span>
-<span id="cb6-144"><a href="#cb6-144" aria-hidden="true" tabindex="-1"></a>    CorrelatedMaskPointTracker tracker<span class="op">(</span></span>
-<span id="cb6-145"><a href="#cb6-145" aria-hidden="true" tabindex="-1"></a>        <span class="dv">1000</span><span class="op">,</span>   <span class="co">// num_particles</span></span>
-<span id="cb6-146"><a href="#cb6-146" aria-hidden="true" tabindex="-1"></a>        <span class="fl">15.0</span><span class="bu">f</span><span class="op">,</span>  <span class="co">// transition_radius</span></span>
-<span id="cb6-147"><a href="#cb6-147" aria-hidden="true" tabindex="-1"></a>        <span class="fl">0.8</span><span class="bu">f</span>    <span class="co">// correlation_strength: high correlation (points move together)</span></span>
-<span id="cb6-148"><a href="#cb6-148" aria-hidden="true" tabindex="-1"></a>    <span class="op">);</span></span>
-<span id="cb6-149"><a href="#cb6-149" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-150"><a href="#cb6-150" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">Tracking with correlation constraint...</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-151"><a href="#cb6-151" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-152"><a href="#cb6-152" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> tracked_states <span class="op">=</span> tracker<span class="op">.</span>track<span class="op">(</span>start_labels<span class="op">,</span> end_labels<span class="op">,</span> masks<span class="op">);</span></span>
-<span id="cb6-153"><a href="#cb6-153" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-154"><a href="#cb6-154" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Tracked "</span> <span class="op">&lt;&lt;</span> tracked_states<span class="op">.</span>size<span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">" frames</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-155"><a href="#cb6-155" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-156"><a href="#cb6-156" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check spacing consistency</span></span>
-<span id="cb6-157"><a href="#cb6-157" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> initial_spacing_01 <span class="op">=</span> pointDistance<span class="op">(</span>start_labels<span class="op">[</span><span class="dv">0</span><span class="op">],</span> start_labels<span class="op">[</span><span class="dv">1</span><span class="op">]);</span></span>
-<span id="cb6-158"><a href="#cb6-158" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> initial_spacing_12 <span class="op">=</span> pointDistance<span class="op">(</span>start_labels<span class="op">[</span><span class="dv">1</span><span class="op">],</span> start_labels<span class="op">[</span><span class="dv">2</span><span class="op">]);</span></span>
-<span id="cb6-159"><a href="#cb6-159" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-160"><a href="#cb6-160" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">Initial spacing:</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-161"><a href="#cb6-161" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Points 0-1: "</span> <span class="op">&lt;&lt;</span> initial_spacing_01 <span class="op">&lt;&lt;</span> <span class="st">" pixels</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-162"><a href="#cb6-162" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Points 1-2: "</span> <span class="op">&lt;&lt;</span> initial_spacing_12 <span class="op">&lt;&lt;</span> <span class="st">" pixels</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-163"><a href="#cb6-163" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-164"><a href="#cb6-164" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> avg_spacing_01 <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb6-165"><a href="#cb6-165" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> avg_spacing_12 <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb6-166"><a href="#cb6-166" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-167"><a href="#cb6-167" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> state <span class="op">:</span> tracked_states<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-168"><a href="#cb6-168" aria-hidden="true" tabindex="-1"></a>        avg_spacing_01 <span class="op">+=</span> pointDistance<span class="op">(</span>state<span class="op">.</span>points<span class="op">[</span><span class="dv">0</span><span class="op">],</span> state<span class="op">.</span>points<span class="op">[</span><span class="dv">1</span><span class="op">]);</span></span>
-<span id="cb6-169"><a href="#cb6-169" aria-hidden="true" tabindex="-1"></a>        avg_spacing_12 <span class="op">+=</span> pointDistance<span class="op">(</span>state<span class="op">.</span>points<span class="op">[</span><span class="dv">1</span><span class="op">],</span> state<span class="op">.</span>points<span class="op">[</span><span class="dv">2</span><span class="op">]);</span></span>
-<span id="cb6-170"><a href="#cb6-170" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb6-171"><a href="#cb6-171" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-172"><a href="#cb6-172" aria-hidden="true" tabindex="-1"></a>    avg_spacing_01 <span class="op">/=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>num_frames<span class="op">);</span></span>
-<span id="cb6-173"><a href="#cb6-173" aria-hidden="true" tabindex="-1"></a>    avg_spacing_12 <span class="op">/=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>num_frames<span class="op">);</span></span>
-<span id="cb6-174"><a href="#cb6-174" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-175"><a href="#cb6-175" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">Average tracked spacing:</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-176"><a href="#cb6-176" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Points 0-1: "</span> <span class="op">&lt;&lt;</span> avg_spacing_01 <span class="op">&lt;&lt;</span> <span class="st">" pixels</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-177"><a href="#cb6-177" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Points 1-2: "</span> <span class="op">&lt;&lt;</span> avg_spacing_12 <span class="op">&lt;&lt;</span> <span class="st">" pixels</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-178"><a href="#cb6-178" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-179"><a href="#cb6-179" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">Spacing consistency (should be close to initial):</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-180"><a href="#cb6-180" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Deviation 0-1: "</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>abs<span class="op">(</span>avg_spacing_01 <span class="op">-</span> initial_spacing_01<span class="op">)</span> <span class="op">&lt;&lt;</span> <span class="st">" pixels</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-181"><a href="#cb6-181" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Deviation 1-2: "</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>abs<span class="op">(</span>avg_spacing_12 <span class="op">-</span> initial_spacing_12<span class="op">)</span> <span class="op">&lt;&lt;</span> <span class="st">" pixels</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-182"><a href="#cb6-182" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb6-183"><a href="#cb6-183" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-184"><a href="#cb6-184" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> example_ambiguous_tracking<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb6-185"><a href="#cb6-185" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">=== Example 3: Ambiguous Case (Large Mask) ===</span><span class="sc">\n\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-186"><a href="#cb6-186" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-187"><a href="#cb6-187" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create a scenario with a large mask containing many possible paths</span></span>
-<span id="cb6-188"><a href="#cb6-188" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> num_frames <span class="op">=</span> <span class="dv">30</span><span class="op">;</span></span>
-<span id="cb6-189"><a href="#cb6-189" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Mask2D<span class="op">&gt;</span> masks<span class="op">;</span></span>
-<span id="cb6-190"><a href="#cb6-190" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-191"><a href="#cb6-191" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Generating ambiguous data: large overlapping circles</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-192"><a href="#cb6-192" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-193"><a href="#cb6-193" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> num_frames<span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-194"><a href="#cb6-194" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> t <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>i<span class="op">)</span> <span class="op">/</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>num_frames <span class="op">-</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb6-195"><a href="#cb6-195" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb6-196"><a href="#cb6-196" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Two possible paths</span></span>
-<span id="cb6-197"><a href="#cb6-197" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> path1_x <span class="op">=</span> <span class="dv">100</span> <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span><span class="dv">100</span> <span class="op">*</span> t<span class="op">);</span></span>
-<span id="cb6-198"><a href="#cb6-198" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> path1_y <span class="op">=</span> <span class="dv">100</span><span class="op">;</span></span>
-<span id="cb6-199"><a href="#cb6-199" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb6-200"><a href="#cb6-200" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> path2_x <span class="op">=</span> <span class="dv">100</span> <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span><span class="dv">100</span> <span class="op">*</span> t<span class="op">);</span></span>
-<span id="cb6-201"><a href="#cb6-201" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> path2_y <span class="op">=</span> <span class="dv">150</span><span class="op">;</span></span>
-<span id="cb6-202"><a href="#cb6-202" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb6-203"><a href="#cb6-203" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create large mask containing both paths</span></span>
-<span id="cb6-204"><a href="#cb6-204" aria-hidden="true" tabindex="-1"></a>        Mask2D mask <span class="op">=</span> generateCircleMask<span class="op">({</span>path1_x<span class="op">,</span> path1_y<span class="op">},</span> <span class="fl">40.0</span><span class="bu">f</span><span class="op">);</span></span>
-<span id="cb6-205"><a href="#cb6-205" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> mask2 <span class="op">=</span> generateCircleMask<span class="op">({</span>path2_x<span class="op">,</span> path2_y<span class="op">},</span> <span class="fl">40.0</span><span class="bu">f</span><span class="op">);</span></span>
-<span id="cb6-206"><a href="#cb6-206" aria-hidden="true" tabindex="-1"></a>        mask<span class="op">.</span>insert<span class="op">(</span>mask<span class="op">.</span>end<span class="op">(),</span> mask2<span class="op">.</span>begin<span class="op">(),</span> mask2<span class="op">.</span>end<span class="op">());</span></span>
-<span id="cb6-207"><a href="#cb6-207" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb6-208"><a href="#cb6-208" aria-hidden="true" tabindex="-1"></a>        masks<span class="op">.</span>push_back<span class="op">(</span>mask<span class="op">);</span></span>
-<span id="cb6-209"><a href="#cb6-209" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb6-210"><a href="#cb6-210" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-211"><a href="#cb6-211" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Ground truth on upper path</span></span>
-<span id="cb6-212"><a href="#cb6-212" aria-hidden="true" tabindex="-1"></a>    Point2D<span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;</span> start_label<span class="op">{</span><span class="dv">100</span><span class="op">,</span> <span class="dv">100</span><span class="op">};</span></span>
-<span id="cb6-213"><a href="#cb6-213" aria-hidden="true" tabindex="-1"></a>    Point2D<span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;</span> end_label<span class="op">{</span><span class="dv">200</span><span class="op">,</span> <span class="dv">100</span><span class="op">};</span></span>
-<span id="cb6-214"><a href="#cb6-214" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-215"><a href="#cb6-215" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Start label: ("</span> <span class="op">&lt;&lt;</span> start_label<span class="op">.</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> <span class="op">&lt;&lt;</span> start_label<span class="op">.</span>y <span class="op">&lt;&lt;</span> <span class="st">")</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-216"><a href="#cb6-216" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"End label: ("</span> <span class="op">&lt;&lt;</span> end_label<span class="op">.</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> <span class="op">&lt;&lt;</span> end_label<span class="op">.</span>y <span class="op">&lt;&lt;</span> <span class="st">")</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-217"><a href="#cb6-217" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Alternative path at y=150 also present in masks</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-218"><a href="#cb6-218" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-219"><a href="#cb6-219" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create tracker with more particles for ambiguous case</span></span>
-<span id="cb6-220"><a href="#cb6-220" aria-hidden="true" tabindex="-1"></a>    MaskPointTracker tracker<span class="op">(</span></span>
-<span id="cb6-221"><a href="#cb6-221" aria-hidden="true" tabindex="-1"></a>        <span class="dv">2000</span><span class="op">,</span>    <span class="co">// More particles for ambiguous cases</span></span>
-<span id="cb6-222"><a href="#cb6-222" aria-hidden="true" tabindex="-1"></a>        <span class="fl">20.0</span><span class="bu">f</span><span class="op">,</span>   <span class="co">// Larger radius to handle uncertainty</span></span>
-<span id="cb6-223"><a href="#cb6-223" aria-hidden="true" tabindex="-1"></a>        <span class="fl">0.1</span><span class="bu">f</span>     <span class="co">// Higher random walk for exploration</span></span>
-<span id="cb6-224"><a href="#cb6-224" aria-hidden="true" tabindex="-1"></a>    <span class="op">);</span></span>
-<span id="cb6-225"><a href="#cb6-225" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-226"><a href="#cb6-226" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">Tracking with increased particles...</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-227"><a href="#cb6-227" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-228"><a href="#cb6-228" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> tracked_points <span class="op">=</span> tracker<span class="op">.</span>track<span class="op">(</span>start_label<span class="op">,</span> end_label<span class="op">,</span> masks<span class="op">);</span></span>
-<span id="cb6-229"><a href="#cb6-229" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-230"><a href="#cb6-230" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if it stayed on the correct path</span></span>
-<span id="cb6-231"><a href="#cb6-231" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> correct_path_count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb6-232"><a href="#cb6-232" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> pt <span class="op">:</span> tracked_points<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-233"><a href="#cb6-233" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="bu">std::</span>abs<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int32_t</span><span class="op">&gt;(</span>pt<span class="op">.</span>y<span class="op">)</span> <span class="op">-</span> <span class="dv">100</span><span class="op">)</span> <span class="op">&lt;</span> <span class="dv">30</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-234"><a href="#cb6-234" aria-hidden="true" tabindex="-1"></a>            correct_path_count<span class="op">++;</span></span>
-<span id="cb6-235"><a href="#cb6-235" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb6-236"><a href="#cb6-236" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb6-237"><a href="#cb6-237" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-238"><a href="#cb6-238" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> accuracy <span class="op">=</span> <span class="fl">100.0</span><span class="bu">f</span> <span class="op">*</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>correct_path_count<span class="op">)</span> <span class="op">/</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>num_frames<span class="op">);</span></span>
-<span id="cb6-239"><a href="#cb6-239" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-240"><a href="#cb6-240" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Stayed on correct path: "</span> <span class="op">&lt;&lt;</span> correct_path_count <span class="op">&lt;&lt;</span> <span class="st">"/"</span> <span class="op">&lt;&lt;</span> num_frames </span>
-<span id="cb6-241"><a href="#cb6-241" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;&lt;</span> <span class="st">" frames ("</span> <span class="op">&lt;&lt;</span> accuracy <span class="op">&lt;&lt;</span> <span class="st">"%)</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-242"><a href="#cb6-242" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb6-243"><a href="#cb6-243" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-244"><a href="#cb6-244" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb6-245"><a href="#cb6-245" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"======================================</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-246"><a href="#cb6-246" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Mask Particle Filter Examples</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-247"><a href="#cb6-247" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"======================================</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-248"><a href="#cb6-248" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-249"><a href="#cb6-249" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span> <span class="op">{</span></span>
-<span id="cb6-250"><a href="#cb6-250" aria-hidden="true" tabindex="-1"></a>        example_single_point_tracking<span class="op">();</span></span>
-<span id="cb6-251"><a href="#cb6-251" aria-hidden="true" tabindex="-1"></a>        example_correlated_tracking<span class="op">();</span></span>
-<span id="cb6-252"><a href="#cb6-252" aria-hidden="true" tabindex="-1"></a>        example_ambiguous_tracking<span class="op">();</span></span>
-<span id="cb6-253"><a href="#cb6-253" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb6-254"><a href="#cb6-254" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">======================================</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-255"><a href="#cb6-255" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  All examples completed successfully!</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-256"><a href="#cb6-256" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"======================================</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-257"><a href="#cb6-257" aria-hidden="true" tabindex="-1"></a>        </span>
-<span id="cb6-258"><a href="#cb6-258" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">catch</span> <span class="op">(</span><span class="bu">std::</span>exception <span class="at">const</span><span class="op">&amp;</span> e<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb6-259"><a href="#cb6-259" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"Error: "</span> <span class="op">&lt;&lt;</span> e<span class="op">.</span>what<span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
-<span id="cb6-260"><a href="#cb6-260" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
-<span id="cb6-261"><a href="#cb6-261" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb6-262"><a href="#cb6-262" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb6-263"><a href="#cb6-263" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb6-264"><a href="#cb6-264" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"StateEstimation/MaskParticleFilter.hpp"</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"CoreGeometry/masks.hpp"</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;iostream&gt;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cmath&gt;</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> StateEstimation<span class="op">;</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>Mask2D generateCircleMask<span class="op">(</span>Point2D<span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;</span> center<span class="op">,</span> <span class="dt">float</span> radius<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>    Mask2D mask<span class="op">;</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="dt">uint32_t</span> r_sq <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span>radius <span class="op">*</span> radius<span class="op">);</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int32_t</span> dx <span class="op">=</span> <span class="op">-</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int32_t</span><span class="op">&gt;(</span>radius<span class="op">);</span> dx <span class="op">&lt;=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int32_t</span><span class="op">&gt;(</span>radius<span class="op">);</span> <span class="op">++</span>dx<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> <span class="op">(</span><span class="dt">int32_t</span> dy <span class="op">=</span> <span class="op">-</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int32_t</span><span class="op">&gt;(</span>radius<span class="op">);</span> dy <span class="op">&lt;=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int32_t</span><span class="op">&gt;(</span>radius<span class="op">);</span> <span class="op">++</span>dy<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="op">(</span>dx <span class="op">*</span> dx <span class="op">+</span> dy <span class="op">*</span> dy <span class="op">&lt;=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int32_t</span><span class="op">&gt;(</span>r_sq<span class="op">))</span> <span class="op">{</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>                <span class="dt">uint32_t</span> x <span class="op">=</span> center<span class="op">.</span>x <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span>dx<span class="op">);</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>                <span class="dt">uint32_t</span> y <span class="op">=</span> center<span class="op">.</span>y <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span>dy<span class="op">);</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>                mask<span class="op">.</span>push_back<span class="op">({</span>x<span class="op">,</span> y<span class="op">});</span></span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> mask<span class="op">;</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> example_single_point_tracking<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">=== Example 1: Single Point Tracking ===</span><span class="sc">\n\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create a moving circle trajectory (100 frames)</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> num_frames <span class="op">=</span> <span class="dv">100</span><span class="op">;</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Mask2D<span class="op">&gt;</span> masks<span class="op">;</span></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Generating synthetic data: circle moving from (100,100) to (300,100)</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> num_frames<span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Linear motion in x direction</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> t <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>i<span class="op">)</span> <span class="op">/</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>num_frames <span class="op">-</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> x <span class="op">=</span> <span class="dv">100</span> <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span><span class="dv">200</span> <span class="op">*</span> t<span class="op">);</span></span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> y <span class="op">=</span> <span class="dv">100</span><span class="op">;</span></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>        masks<span class="op">.</span>push_back<span class="op">(</span>generateCircleMask<span class="op">({</span>x<span class="op">,</span> y<span class="op">},</span> <span class="fl">25.0</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Ground truth labels (start and end)</span></span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>    Point2D<span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;</span> start_label<span class="op">{</span><span class="dv">100</span><span class="op">,</span> <span class="dv">100</span><span class="op">};</span></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>    Point2D<span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;</span> end_label<span class="op">{</span><span class="dv">300</span><span class="op">,</span> <span class="dv">100</span><span class="op">};</span></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Start label: ("</span> <span class="op">&lt;&lt;</span> start_label<span class="op">.</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> <span class="op">&lt;&lt;</span> start_label<span class="op">.</span>y <span class="op">&lt;&lt;</span> <span class="st">")</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"End label: ("</span> <span class="op">&lt;&lt;</span> end_label<span class="op">.</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> <span class="op">&lt;&lt;</span> end_label<span class="op">.</span>y <span class="op">&lt;&lt;</span> <span class="st">")</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create tracker</span></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>    MaskPointTracker tracker<span class="op">(</span></span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>        <span class="dv">1000</span><span class="op">,</span>    <span class="co">// num_particles</span></span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>        <span class="fl">15.0</span><span class="bu">f</span><span class="op">,</span>   <span class="co">// transition_radius: allow up to 15 pixels movement per frame</span></span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a>        <span class="fl">0.05</span><span class="bu">f</span>    <span class="co">// random_walk_prob: 5% chance of random exploration</span></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>    <span class="op">);</span></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">Tracking...</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> tracked_points <span class="op">=</span> tracker<span class="op">.</span>track<span class="op">(</span>start_label<span class="op">,</span> end_label<span class="op">,</span> masks<span class="op">);</span></span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Tracked "</span> <span class="op">&lt;&lt;</span> tracked_points<span class="op">.</span>size<span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">" frames</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Print some results</span></span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">Sample tracked positions:</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> num_frames<span class="op">;</span> i <span class="op">+=</span> <span class="dv">20</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Frame "</span> <span class="op">&lt;&lt;</span> i <span class="op">&lt;&lt;</span> <span class="st">": ("</span> </span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a>                  <span class="op">&lt;&lt;</span> tracked_points<span class="op">[</span>i<span class="op">].</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> </span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a>                  <span class="op">&lt;&lt;</span> tracked_points<span class="op">[</span>i<span class="op">].</span>y <span class="op">&lt;&lt;</span> <span class="st">")</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Compute tracking error</span></span>
+<span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> total_error <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> num_frames<span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> t <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>i<span class="op">)</span> <span class="op">/</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>num_frames <span class="op">-</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> true_x <span class="op">=</span> <span class="dv">100</span> <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span><span class="dv">200</span> <span class="op">*</span> t<span class="op">);</span></span>
+<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> true_y <span class="op">=</span> <span class="dv">100</span><span class="op">;</span></span>
+<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> error <span class="op">=</span> pointDistance<span class="op">(</span>tracked_points<span class="op">[</span>i<span class="op">],</span> <span class="op">{</span>true_x<span class="op">,</span> true_y<span class="op">});</span></span>
+<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a>        total_error <span class="op">+=</span> error<span class="op">;</span></span>
+<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> avg_error <span class="op">=</span> total_error <span class="op">/</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>num_frames<span class="op">);</span></span>
+<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">Average tracking error: "</span> <span class="op">&lt;&lt;</span> avg_error <span class="op">&lt;&lt;</span> <span class="st">" pixels</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-90"><a href="#cb6-90" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> example_correlated_tracking<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb6-91"><a href="#cb6-91" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">=== Example 2: Correlated Multi-Point Tracking ===</span><span class="sc">\n\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-92"><a href="#cb6-92" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-93"><a href="#cb6-93" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Simulate a whisker with 3 tracked points: base, middle, tip</span></span>
+<span id="cb6-94"><a href="#cb6-94" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> num_frames <span class="op">=</span> <span class="dv">50</span><span class="op">;</span></span>
+<span id="cb6-95"><a href="#cb6-95" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Mask2D<span class="op">&gt;</span> masks<span class="op">;</span></span>
+<span id="cb6-96"><a href="#cb6-96" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-97"><a href="#cb6-97" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Generating synthetic data: 3 points moving together</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-98"><a href="#cb6-98" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-99"><a href="#cb6-99" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> num_frames<span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-100"><a href="#cb6-100" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> t <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>i<span class="op">)</span> <span class="op">/</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>num_frames <span class="op">-</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb6-101"><a href="#cb6-101" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb6-102"><a href="#cb6-102" aria-hidden="true" tabindex="-1"></a>        <span class="co">// All three points move vertically</span></span>
+<span id="cb6-103"><a href="#cb6-103" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> base_x <span class="op">=</span> <span class="dv">100</span><span class="op">;</span></span>
+<span id="cb6-104"><a href="#cb6-104" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> base_y <span class="op">=</span> <span class="dv">100</span> <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span><span class="dv">100</span> <span class="op">*</span> t<span class="op">);</span></span>
+<span id="cb6-105"><a href="#cb6-105" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb6-106"><a href="#cb6-106" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> mid_x <span class="op">=</span> <span class="dv">150</span><span class="op">;</span></span>
+<span id="cb6-107"><a href="#cb6-107" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> mid_y <span class="op">=</span> <span class="dv">120</span> <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span><span class="dv">100</span> <span class="op">*</span> t<span class="op">);</span></span>
+<span id="cb6-108"><a href="#cb6-108" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb6-109"><a href="#cb6-109" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> tip_x <span class="op">=</span> <span class="dv">200</span><span class="op">;</span></span>
+<span id="cb6-110"><a href="#cb6-110" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> tip_y <span class="op">=</span> <span class="dv">140</span> <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span><span class="dv">100</span> <span class="op">*</span> t<span class="op">);</span></span>
+<span id="cb6-111"><a href="#cb6-111" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb6-112"><a href="#cb6-112" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create mask containing all three points</span></span>
+<span id="cb6-113"><a href="#cb6-113" aria-hidden="true" tabindex="-1"></a>        Mask2D mask <span class="op">=</span> generateCircleMask<span class="op">({</span>base_x<span class="op">,</span> base_y<span class="op">},</span> <span class="fl">20.0</span><span class="bu">f</span><span class="op">);</span></span>
+<span id="cb6-114"><a href="#cb6-114" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> mask_mid <span class="op">=</span> generateCircleMask<span class="op">({</span>mid_x<span class="op">,</span> mid_y<span class="op">},</span> <span class="fl">20.0</span><span class="bu">f</span><span class="op">);</span></span>
+<span id="cb6-115"><a href="#cb6-115" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> mask_tip <span class="op">=</span> generateCircleMask<span class="op">({</span>tip_x<span class="op">,</span> tip_y<span class="op">},</span> <span class="fl">20.0</span><span class="bu">f</span><span class="op">);</span></span>
+<span id="cb6-116"><a href="#cb6-116" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb6-117"><a href="#cb6-117" aria-hidden="true" tabindex="-1"></a>        mask<span class="op">.</span>insert<span class="op">(</span>mask<span class="op">.</span>end<span class="op">(),</span> mask_mid<span class="op">.</span>begin<span class="op">(),</span> mask_mid<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb6-118"><a href="#cb6-118" aria-hidden="true" tabindex="-1"></a>        mask<span class="op">.</span>insert<span class="op">(</span>mask<span class="op">.</span>end<span class="op">(),</span> mask_tip<span class="op">.</span>begin<span class="op">(),</span> mask_tip<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb6-119"><a href="#cb6-119" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb6-120"><a href="#cb6-120" aria-hidden="true" tabindex="-1"></a>        masks<span class="op">.</span>push_back<span class="op">(</span>mask<span class="op">);</span></span>
+<span id="cb6-121"><a href="#cb6-121" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-122"><a href="#cb6-122" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-123"><a href="#cb6-123" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Ground truth labels for all three points</span></span>
+<span id="cb6-124"><a href="#cb6-124" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Point2D<span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;&gt;</span> start_labels <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb6-125"><a href="#cb6-125" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="dv">100</span><span class="op">,</span> <span class="dv">100</span><span class="op">},</span>  <span class="co">// Base</span></span>
+<span id="cb6-126"><a href="#cb6-126" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="dv">150</span><span class="op">,</span> <span class="dv">120</span><span class="op">},</span>  <span class="co">// Middle</span></span>
+<span id="cb6-127"><a href="#cb6-127" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="dv">200</span><span class="op">,</span> <span class="dv">140</span><span class="op">}</span>   <span class="co">// Tip</span></span>
+<span id="cb6-128"><a href="#cb6-128" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb6-129"><a href="#cb6-129" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-130"><a href="#cb6-130" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Point2D<span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;&gt;</span> end_labels <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb6-131"><a href="#cb6-131" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="dv">100</span><span class="op">,</span> <span class="dv">200</span><span class="op">},</span>  <span class="co">// Base</span></span>
+<span id="cb6-132"><a href="#cb6-132" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="dv">150</span><span class="op">,</span> <span class="dv">220</span><span class="op">},</span>  <span class="co">// Middle</span></span>
+<span id="cb6-133"><a href="#cb6-133" aria-hidden="true" tabindex="-1"></a>        <span class="op">{</span><span class="dv">200</span><span class="op">,</span> <span class="dv">240</span><span class="op">}</span>   <span class="co">// Tip</span></span>
+<span id="cb6-134"><a href="#cb6-134" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb6-135"><a href="#cb6-135" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-136"><a href="#cb6-136" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Tracking 3 points:</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-137"><a href="#cb6-137" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Point 0 (base): ("</span> <span class="op">&lt;&lt;</span> start_labels<span class="op">[</span><span class="dv">0</span><span class="op">].</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> <span class="op">&lt;&lt;</span> start_labels<span class="op">[</span><span class="dv">0</span><span class="op">].</span>y </span>
+<span id="cb6-138"><a href="#cb6-138" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;&lt;</span> <span class="st">") -&gt; ("</span> <span class="op">&lt;&lt;</span> end_labels<span class="op">[</span><span class="dv">0</span><span class="op">].</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> <span class="op">&lt;&lt;</span> end_labels<span class="op">[</span><span class="dv">0</span><span class="op">].</span>y <span class="op">&lt;&lt;</span> <span class="st">")</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-139"><a href="#cb6-139" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Point 1 (mid):  ("</span> <span class="op">&lt;&lt;</span> start_labels<span class="op">[</span><span class="dv">1</span><span class="op">].</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> <span class="op">&lt;&lt;</span> start_labels<span class="op">[</span><span class="dv">1</span><span class="op">].</span>y </span>
+<span id="cb6-140"><a href="#cb6-140" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;&lt;</span> <span class="st">") -&gt; ("</span> <span class="op">&lt;&lt;</span> end_labels<span class="op">[</span><span class="dv">1</span><span class="op">].</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> <span class="op">&lt;&lt;</span> end_labels<span class="op">[</span><span class="dv">1</span><span class="op">].</span>y <span class="op">&lt;&lt;</span> <span class="st">")</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-141"><a href="#cb6-141" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Point 2 (tip):  ("</span> <span class="op">&lt;&lt;</span> start_labels<span class="op">[</span><span class="dv">2</span><span class="op">].</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> <span class="op">&lt;&lt;</span> start_labels<span class="op">[</span><span class="dv">2</span><span class="op">].</span>y </span>
+<span id="cb6-142"><a href="#cb6-142" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;&lt;</span> <span class="st">") -&gt; ("</span> <span class="op">&lt;&lt;</span> end_labels<span class="op">[</span><span class="dv">2</span><span class="op">].</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> <span class="op">&lt;&lt;</span> end_labels<span class="op">[</span><span class="dv">2</span><span class="op">].</span>y <span class="op">&lt;&lt;</span> <span class="st">")</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-143"><a href="#cb6-143" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-144"><a href="#cb6-144" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create correlated tracker</span></span>
+<span id="cb6-145"><a href="#cb6-145" aria-hidden="true" tabindex="-1"></a>    CorrelatedMaskPointTracker tracker<span class="op">(</span></span>
+<span id="cb6-146"><a href="#cb6-146" aria-hidden="true" tabindex="-1"></a>        <span class="dv">1000</span><span class="op">,</span>   <span class="co">// num_particles</span></span>
+<span id="cb6-147"><a href="#cb6-147" aria-hidden="true" tabindex="-1"></a>        <span class="fl">15.0</span><span class="bu">f</span><span class="op">,</span>  <span class="co">// transition_radius</span></span>
+<span id="cb6-148"><a href="#cb6-148" aria-hidden="true" tabindex="-1"></a>        <span class="fl">0.8</span><span class="bu">f</span>    <span class="co">// correlation_strength: high correlation (points move together)</span></span>
+<span id="cb6-149"><a href="#cb6-149" aria-hidden="true" tabindex="-1"></a>    <span class="op">);</span></span>
+<span id="cb6-150"><a href="#cb6-150" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-151"><a href="#cb6-151" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">Tracking with correlation constraint...</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-152"><a href="#cb6-152" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-153"><a href="#cb6-153" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> tracked_states <span class="op">=</span> tracker<span class="op">.</span>track<span class="op">(</span>start_labels<span class="op">,</span> end_labels<span class="op">,</span> masks<span class="op">);</span></span>
+<span id="cb6-154"><a href="#cb6-154" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-155"><a href="#cb6-155" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Tracked "</span> <span class="op">&lt;&lt;</span> tracked_states<span class="op">.</span>size<span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">" frames</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-156"><a href="#cb6-156" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-157"><a href="#cb6-157" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check spacing consistency</span></span>
+<span id="cb6-158"><a href="#cb6-158" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> initial_spacing_01 <span class="op">=</span> pointDistance<span class="op">(</span>start_labels<span class="op">[</span><span class="dv">0</span><span class="op">],</span> start_labels<span class="op">[</span><span class="dv">1</span><span class="op">]);</span></span>
+<span id="cb6-159"><a href="#cb6-159" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> initial_spacing_12 <span class="op">=</span> pointDistance<span class="op">(</span>start_labels<span class="op">[</span><span class="dv">1</span><span class="op">],</span> start_labels<span class="op">[</span><span class="dv">2</span><span class="op">]);</span></span>
+<span id="cb6-160"><a href="#cb6-160" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-161"><a href="#cb6-161" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">Initial spacing:</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-162"><a href="#cb6-162" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Points 0-1: "</span> <span class="op">&lt;&lt;</span> initial_spacing_01 <span class="op">&lt;&lt;</span> <span class="st">" pixels</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-163"><a href="#cb6-163" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Points 1-2: "</span> <span class="op">&lt;&lt;</span> initial_spacing_12 <span class="op">&lt;&lt;</span> <span class="st">" pixels</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-164"><a href="#cb6-164" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-165"><a href="#cb6-165" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> avg_spacing_01 <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb6-166"><a href="#cb6-166" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> avg_spacing_12 <span class="op">=</span> <span class="fl">0.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb6-167"><a href="#cb6-167" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-168"><a href="#cb6-168" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> state <span class="op">:</span> tracked_states<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-169"><a href="#cb6-169" aria-hidden="true" tabindex="-1"></a>        avg_spacing_01 <span class="op">+=</span> pointDistance<span class="op">(</span>state<span class="op">.</span>points<span class="op">[</span><span class="dv">0</span><span class="op">],</span> state<span class="op">.</span>points<span class="op">[</span><span class="dv">1</span><span class="op">]);</span></span>
+<span id="cb6-170"><a href="#cb6-170" aria-hidden="true" tabindex="-1"></a>        avg_spacing_12 <span class="op">+=</span> pointDistance<span class="op">(</span>state<span class="op">.</span>points<span class="op">[</span><span class="dv">1</span><span class="op">],</span> state<span class="op">.</span>points<span class="op">[</span><span class="dv">2</span><span class="op">]);</span></span>
+<span id="cb6-171"><a href="#cb6-171" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-172"><a href="#cb6-172" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-173"><a href="#cb6-173" aria-hidden="true" tabindex="-1"></a>    avg_spacing_01 <span class="op">/=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>num_frames<span class="op">);</span></span>
+<span id="cb6-174"><a href="#cb6-174" aria-hidden="true" tabindex="-1"></a>    avg_spacing_12 <span class="op">/=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>num_frames<span class="op">);</span></span>
+<span id="cb6-175"><a href="#cb6-175" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-176"><a href="#cb6-176" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">Average tracked spacing:</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-177"><a href="#cb6-177" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Points 0-1: "</span> <span class="op">&lt;&lt;</span> avg_spacing_01 <span class="op">&lt;&lt;</span> <span class="st">" pixels</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-178"><a href="#cb6-178" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Points 1-2: "</span> <span class="op">&lt;&lt;</span> avg_spacing_12 <span class="op">&lt;&lt;</span> <span class="st">" pixels</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-179"><a href="#cb6-179" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-180"><a href="#cb6-180" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">Spacing consistency (should be close to initial):</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-181"><a href="#cb6-181" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Deviation 0-1: "</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>abs<span class="op">(</span>avg_spacing_01 <span class="op">-</span> initial_spacing_01<span class="op">)</span> <span class="op">&lt;&lt;</span> <span class="st">" pixels</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-182"><a href="#cb6-182" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Deviation 1-2: "</span> <span class="op">&lt;&lt;</span> <span class="bu">std::</span>abs<span class="op">(</span>avg_spacing_12 <span class="op">-</span> initial_spacing_12<span class="op">)</span> <span class="op">&lt;&lt;</span> <span class="st">" pixels</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-183"><a href="#cb6-183" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-184"><a href="#cb6-184" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-185"><a href="#cb6-185" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> example_ambiguous_tracking<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb6-186"><a href="#cb6-186" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">=== Example 3: Ambiguous Case (Large Mask) ===</span><span class="sc">\n\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-187"><a href="#cb6-187" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-188"><a href="#cb6-188" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create a scenario with a large mask containing many possible paths</span></span>
+<span id="cb6-189"><a href="#cb6-189" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> num_frames <span class="op">=</span> <span class="dv">30</span><span class="op">;</span></span>
+<span id="cb6-190"><a href="#cb6-190" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>Mask2D<span class="op">&gt;</span> masks<span class="op">;</span></span>
+<span id="cb6-191"><a href="#cb6-191" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-192"><a href="#cb6-192" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Generating ambiguous data: large overlapping circles</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-193"><a href="#cb6-193" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-194"><a href="#cb6-194" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">size_t</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> num_frames<span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-195"><a href="#cb6-195" aria-hidden="true" tabindex="-1"></a>        <span class="dt">float</span> t <span class="op">=</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>i<span class="op">)</span> <span class="op">/</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>num_frames <span class="op">-</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb6-196"><a href="#cb6-196" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb6-197"><a href="#cb6-197" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Two possible paths</span></span>
+<span id="cb6-198"><a href="#cb6-198" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> path1_x <span class="op">=</span> <span class="dv">100</span> <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span><span class="dv">100</span> <span class="op">*</span> t<span class="op">);</span></span>
+<span id="cb6-199"><a href="#cb6-199" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> path1_y <span class="op">=</span> <span class="dv">100</span><span class="op">;</span></span>
+<span id="cb6-200"><a href="#cb6-200" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb6-201"><a href="#cb6-201" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> path2_x <span class="op">=</span> <span class="dv">100</span> <span class="op">+</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;(</span><span class="dv">100</span> <span class="op">*</span> t<span class="op">);</span></span>
+<span id="cb6-202"><a href="#cb6-202" aria-hidden="true" tabindex="-1"></a>        <span class="dt">uint32_t</span> path2_y <span class="op">=</span> <span class="dv">150</span><span class="op">;</span></span>
+<span id="cb6-203"><a href="#cb6-203" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb6-204"><a href="#cb6-204" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Create large mask containing both paths</span></span>
+<span id="cb6-205"><a href="#cb6-205" aria-hidden="true" tabindex="-1"></a>        Mask2D mask <span class="op">=</span> generateCircleMask<span class="op">({</span>path1_x<span class="op">,</span> path1_y<span class="op">},</span> <span class="fl">40.0</span><span class="bu">f</span><span class="op">);</span></span>
+<span id="cb6-206"><a href="#cb6-206" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> mask2 <span class="op">=</span> generateCircleMask<span class="op">({</span>path2_x<span class="op">,</span> path2_y<span class="op">},</span> <span class="fl">40.0</span><span class="bu">f</span><span class="op">);</span></span>
+<span id="cb6-207"><a href="#cb6-207" aria-hidden="true" tabindex="-1"></a>        mask<span class="op">.</span>insert<span class="op">(</span>mask<span class="op">.</span>end<span class="op">(),</span> mask2<span class="op">.</span>begin<span class="op">(),</span> mask2<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb6-208"><a href="#cb6-208" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb6-209"><a href="#cb6-209" aria-hidden="true" tabindex="-1"></a>        masks<span class="op">.</span>push_back<span class="op">(</span>mask<span class="op">);</span></span>
+<span id="cb6-210"><a href="#cb6-210" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-211"><a href="#cb6-211" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-212"><a href="#cb6-212" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Ground truth on upper path</span></span>
+<span id="cb6-213"><a href="#cb6-213" aria-hidden="true" tabindex="-1"></a>    Point2D<span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;</span> start_label<span class="op">{</span><span class="dv">100</span><span class="op">,</span> <span class="dv">100</span><span class="op">};</span></span>
+<span id="cb6-214"><a href="#cb6-214" aria-hidden="true" tabindex="-1"></a>    Point2D<span class="op">&lt;</span><span class="dt">uint32_t</span><span class="op">&gt;</span> end_label<span class="op">{</span><span class="dv">200</span><span class="op">,</span> <span class="dv">100</span><span class="op">};</span></span>
+<span id="cb6-215"><a href="#cb6-215" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-216"><a href="#cb6-216" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Start label: ("</span> <span class="op">&lt;&lt;</span> start_label<span class="op">.</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> <span class="op">&lt;&lt;</span> start_label<span class="op">.</span>y <span class="op">&lt;&lt;</span> <span class="st">")</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-217"><a href="#cb6-217" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"End label: ("</span> <span class="op">&lt;&lt;</span> end_label<span class="op">.</span>x <span class="op">&lt;&lt;</span> <span class="st">", "</span> <span class="op">&lt;&lt;</span> end_label<span class="op">.</span>y <span class="op">&lt;&lt;</span> <span class="st">")</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-218"><a href="#cb6-218" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Alternative path at y=150 also present in masks</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-219"><a href="#cb6-219" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-220"><a href="#cb6-220" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create tracker with more particles for ambiguous case</span></span>
+<span id="cb6-221"><a href="#cb6-221" aria-hidden="true" tabindex="-1"></a>    MaskPointTracker tracker<span class="op">(</span></span>
+<span id="cb6-222"><a href="#cb6-222" aria-hidden="true" tabindex="-1"></a>        <span class="dv">2000</span><span class="op">,</span>    <span class="co">// More particles for ambiguous cases</span></span>
+<span id="cb6-223"><a href="#cb6-223" aria-hidden="true" tabindex="-1"></a>        <span class="fl">20.0</span><span class="bu">f</span><span class="op">,</span>   <span class="co">// Larger radius to handle uncertainty</span></span>
+<span id="cb6-224"><a href="#cb6-224" aria-hidden="true" tabindex="-1"></a>        <span class="fl">0.1</span><span class="bu">f</span>     <span class="co">// Higher random walk for exploration</span></span>
+<span id="cb6-225"><a href="#cb6-225" aria-hidden="true" tabindex="-1"></a>    <span class="op">);</span></span>
+<span id="cb6-226"><a href="#cb6-226" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-227"><a href="#cb6-227" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">Tracking with increased particles...</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-228"><a href="#cb6-228" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-229"><a href="#cb6-229" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> tracked_points <span class="op">=</span> tracker<span class="op">.</span>track<span class="op">(</span>start_label<span class="op">,</span> end_label<span class="op">,</span> masks<span class="op">);</span></span>
+<span id="cb6-230"><a href="#cb6-230" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-231"><a href="#cb6-231" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Check if it stayed on the correct path</span></span>
+<span id="cb6-232"><a href="#cb6-232" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> correct_path_count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb6-233"><a href="#cb6-233" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="kw">auto</span> <span class="at">const</span><span class="op">&amp;</span> pt <span class="op">:</span> tracked_points<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-234"><a href="#cb6-234" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="op">(</span><span class="bu">std::</span>abs<span class="op">(</span><span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">int32_t</span><span class="op">&gt;(</span>pt<span class="op">.</span>y<span class="op">)</span> <span class="op">-</span> <span class="dv">100</span><span class="op">)</span> <span class="op">&lt;</span> <span class="dv">30</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-235"><a href="#cb6-235" aria-hidden="true" tabindex="-1"></a>            correct_path_count<span class="op">++;</span></span>
+<span id="cb6-236"><a href="#cb6-236" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb6-237"><a href="#cb6-237" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-238"><a href="#cb6-238" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-239"><a href="#cb6-239" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> accuracy <span class="op">=</span> <span class="fl">100.0</span><span class="bu">f</span> <span class="op">*</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>correct_path_count<span class="op">)</span> <span class="op">/</span> <span class="kw">static_cast</span><span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;(</span>num_frames<span class="op">);</span></span>
+<span id="cb6-240"><a href="#cb6-240" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-241"><a href="#cb6-241" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"Stayed on correct path: "</span> <span class="op">&lt;&lt;</span> correct_path_count <span class="op">&lt;&lt;</span> <span class="st">"/"</span> <span class="op">&lt;&lt;</span> num_frames </span>
+<span id="cb6-242"><a href="#cb6-242" aria-hidden="true" tabindex="-1"></a>              <span class="op">&lt;&lt;</span> <span class="st">" frames ("</span> <span class="op">&lt;&lt;</span> accuracy <span class="op">&lt;&lt;</span> <span class="st">"%)</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-243"><a href="#cb6-243" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb6-244"><a href="#cb6-244" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-245"><a href="#cb6-245" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> main<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb6-246"><a href="#cb6-246" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"======================================</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-247"><a href="#cb6-247" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  Mask Particle Filter Examples</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-248"><a href="#cb6-248" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"======================================</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-249"><a href="#cb6-249" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-250"><a href="#cb6-250" aria-hidden="true" tabindex="-1"></a>    <span class="cf">try</span> <span class="op">{</span></span>
+<span id="cb6-251"><a href="#cb6-251" aria-hidden="true" tabindex="-1"></a>        example_single_point_tracking<span class="op">();</span></span>
+<span id="cb6-252"><a href="#cb6-252" aria-hidden="true" tabindex="-1"></a>        example_correlated_tracking<span class="op">();</span></span>
+<span id="cb6-253"><a href="#cb6-253" aria-hidden="true" tabindex="-1"></a>        example_ambiguous_tracking<span class="op">();</span></span>
+<span id="cb6-254"><a href="#cb6-254" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb6-255"><a href="#cb6-255" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">======================================</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-256"><a href="#cb6-256" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"  All examples completed successfully!</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-257"><a href="#cb6-257" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cout <span class="op">&lt;&lt;</span> <span class="st">"======================================</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-258"><a href="#cb6-258" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb6-259"><a href="#cb6-259" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">catch</span> <span class="op">(</span><span class="bu">std::</span>exception <span class="at">const</span><span class="op">&amp;</span> e<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb6-260"><a href="#cb6-260" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>cerr <span class="op">&lt;&lt;</span> <span class="st">"Error: "</span> <span class="op">&lt;&lt;</span> e<span class="op">.</span>what<span class="op">()</span> <span class="op">&lt;&lt;</span> <span class="st">"</span><span class="sc">\n</span><span class="st">"</span><span class="op">;</span></span>
+<span id="cb6-261"><a href="#cb6-261" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="dv">1</span><span class="op">;</span></span>
+<span id="cb6-262"><a href="#cb6-262" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb6-263"><a href="#cb6-263" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb6-264"><a href="#cb6-264" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb6-265"><a href="#cb6-265" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-10-09 at 13:36:36 +0000</p>
+<p>Updated on 2026-11-13 at 20:25:44 +0000</p>
 
 
 </section>
@@ -742,15 +752,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -829,7 +874,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -838,8 +884,69 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -853,6 +960,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -1015,44 +1123,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -1150,6 +1268,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       }
     }
   });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
 

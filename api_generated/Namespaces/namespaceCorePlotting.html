@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -72,18 +72,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-0c66bec081e5215138e9fd61e9c23ef8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -116,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -139,6 +140,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -168,13 +170,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -268,6 +276,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -282,15 +291,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -334,8 +342,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
+            <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -344,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
@@ -449,7 +458,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -492,22 +501,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1Interaction.html">CorePlotting::Interaction</a></strong></td>
 </tr>
 <tr class="even">
-<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1MaskContourMapper.html">CorePlotting::MaskContourMapper</a></strong></td>
-</tr>
-<tr class="odd">
 <td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1NormalizationHelpers.html">CorePlotting::NormalizationHelpers</a></strong></td>
 </tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1MaskContourMapper.html">CorePlotting::MaskContourMapper</a></strong></td>
+</tr>
 <tr class="even">
-<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1RasterMapper.html">CorePlotting::RasterMapper</a></strong> <br>Mapper for raster plots (PSTH/spike raster style visualization)</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1RasterMapper.html">CorePlotting::RasterMapper</a></strong> <br>Mapper for raster plots (PSTH/spike raster style visualization).</td>
+</tr>
+<tr class="odd">
+<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1SpatialMapper.html">CorePlotting::SpatialMapper</a></strong> <br>Mapper for spatial data (SpatialOverlay-style visualization).</td>
+</tr>
+<tr class="even">
+<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1TimeSeriesMapper.html">CorePlotting::TimeSeriesMapper</a></strong> <br>Mapper for time-series data (DataViewer-style visualization).</td>
 </tr>
 <tr class="odd">
 <td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1Selection.html">CorePlotting::Selection</a></strong></td>
-</tr>
-<tr class="even">
-<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1SpatialMapper.html">CorePlotting::SpatialMapper</a></strong> <br>Mapper for spatial data (SpatialOverlay-style visualization)</td>
-</tr>
-<tr class="odd">
-<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1TimeSeriesMapper.html">CorePlotting::TimeSeriesMapper</a></strong> <br>Mapper for time-series data (DataViewer-style visualization)</td>
 </tr>
 </tbody>
 </table>
@@ -531,24 +540,144 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1CanvasToDataResult.html">CorePlotting::CanvasToDataResult</a></strong> <br>Result of canvas to data coordinate conversion.</td>
 </tr>
 <tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1SeriesQueryResult.html">CorePlotting::SeriesQueryResult</a></strong> <br>Result of querying which series contains a given world Y coordinate.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1ViewProjectionParams.html">CorePlotting::ViewProjectionParams</a></strong> <br>Helper struct for shared view/projection parameters.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1TimeAxisParams.html">CorePlotting::TimeAxisParams</a></strong> <br>Parameters for time axis coordinate conversions.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1YAxisParams.html">CorePlotting::YAxisParams</a></strong> <br>Parameters for Y-axis coordinate conversions.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1ViewState.html">CorePlotting::ViewState</a></strong> <br>Full runtime 2D camera / viewport state.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1ViewStateData.html">CorePlotting::ViewStateData</a></strong> <br>Serializable 2D camera state.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1EffectiveYViewport.html">CorePlotting::EffectiveYViewport</a></strong> <br>Effective Y viewport bounds after applying zoom and pan.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1GlyphStyleData.html">CorePlotting::GlyphStyleData</a></strong> <br>Serializable glyph style configuration.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1HistogramData.html">CorePlotting::HistogramData</a></strong> <br>Uniform-bin histogram ready for visualization.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1LineStyleData.html">CorePlotting::LineStyleData</a></strong> <br>Serializable line style configuration.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1SeriesDataCache.html">CorePlotting::SeriesDataCache</a></strong> <br>Cached statistical data for a series.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1SeriesStyle.html">CorePlotting::SeriesStyle</a></strong> <br>Pure configuration for series rendering style.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1HitTestResult.html">CorePlotting::HitTestResult</a></strong> <br>Result of a hit test query.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1HitTestConfig.html">CorePlotting::HitTestConfig</a></strong> <br>Configuration for hit testing behavior.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1SceneHitTester.html">CorePlotting::SceneHitTester</a></strong> <br>Multi-strategy hit tester for <a href="">RenderableScene</a>.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1SeriesInfo.html">CorePlotting::SeriesInfo</a></strong> <br>Metadata for a series to be laid out.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1LayoutRequest.html">CorePlotting::LayoutRequest</a></strong> <br>Request for layout computation.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1LayoutResponse.html">CorePlotting::LayoutResponse</a></strong> <br>Response from layout computation.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1ILayoutStrategy.html">CorePlotting::ILayoutStrategy</a></strong> <br>Strategy interface for layout algorithms.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1LayoutEngine.html">CorePlotting::LayoutEngine</a></strong> <br>Main layout engine coordinator.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1LayoutTransform.html">CorePlotting::LayoutTransform</a></strong> <br>Pure geometric transform that is output = input * gain + offset.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1RowLayoutStrategy.html">CorePlotting::RowLayoutStrategy</a></strong> <br>Horizontal row layout strategy (Raster plot style).</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1SeriesLayout.html">CorePlotting::SeriesLayout</a></strong> <br>Complete layout specification for a single series.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1SpatialTransform.html">CorePlotting::SpatialTransform</a></strong> <br>Layout result for spatial data with coordinate transforms.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1SpatialSeriesLayout.html">CorePlotting::SpatialSeriesLayout</a></strong> <br>Extended layout for spatial data.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1SpatialLayoutResponse.html">CorePlotting::SpatialLayoutResponse</a></strong> <br>Response from spatial layout computation.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1SpatialLayoutStrategy.html">CorePlotting::SpatialLayoutStrategy</a></strong> <br>Spatial layout strategy (SpatialOverlay style).</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1StackedLayoutStrategy.html">CorePlotting::StackedLayoutStrategy</a></strong> <br>Vertical stacking layout strategy (<a href="../../api_generated/Namespaces/namespaceDataViewer.html">DataViewer</a> style).</td>
+</tr>
+<tr class="odd">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1CpuLineBatchIntersector.html">CorePlotting::CpuLineBatchIntersector</a></strong></td>
 </tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1EffectiveYViewport.html">CorePlotting::EffectiveYViewport</a></strong> <br>Effective Y viewport bounds after applying zoom and pan.</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1LineIntersectionQuery.html">CorePlotting::LineIntersectionQuery</a></strong> <br>Parameters for a line-vs-batch intersection query.</td>
 </tr>
 <tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1LineIntersectionResult.html">CorePlotting::LineIntersectionResult</a></strong> <br>Result of a line-vs-batch intersection query.</td>
+</tr>
+<tr class="even">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1GapDetector.html">CorePlotting::GapDetector</a></strong> <br>Detects gaps in analog time series and produces segmented poly-line batches.</td>
+<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1ILineBatchIntersector.html">CorePlotting::ILineBatchIntersector</a></strong> <br>Abstract intersection query interface.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1LineBatchData.html">CorePlotting::LineBatchData</a></strong> <br>Flat, API-agnostic representation of a batch of polylines as segments.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1GlyphStyle.html">CorePlotting::GlyphStyle</a></strong> <br>Glyph styling options for discrete elements.</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1MinMaxDecimationParams.html">CorePlotting::MinMaxDecimationParams</a></strong> <br>Parameters for min–max polyline decimation.</td>
 </tr>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1GlyphStyleData.html">CorePlotting::GlyphStyleData</a></strong> <br>Serializable glyph style configuration.</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1HeatmapRowData.html">CorePlotting::HeatmapRowData</a></strong> <br>One row of scalar values for the heatmap grid.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
@@ -560,179 +689,43 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1HeatmapRowData.html">CorePlotting::HeatmapRowData</a></strong> <br>One row of scalar values for the heatmap grid.</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1HistogramStyle.html">CorePlotting::HistogramStyle</a></strong> <br>Style options for histogram rendering.</td>
 </tr>
 <tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1HistogramData.html">CorePlotting::HistogramData</a></strong> <br>Uniform-bin histogram ready for visualization.</td>
-</tr>
-<tr class="even">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1HistogramMapper.html">CorePlotting::HistogramMapper</a></strong> <br>Converts <a href="../../api_generated/Classes/structCorePlotting_1_1HistogramData.html">HistogramData</a> into renderable primitives.</td>
 </tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1HistogramStyle.html">CorePlotting::HistogramStyle</a></strong> <br>Style options for histogram rendering.</td>
-</tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1HitTestConfig.html">CorePlotting::HitTestConfig</a></strong> <br>Configuration for hit testing behavior.</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1MappedElement.html">CorePlotting::MappedElement</a></strong> <br>Common element type for discrete entities (events, points).</td>
 </tr>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1HitTestResult.html">CorePlotting::HitTestResult</a></strong> <br>Result of a hit test query.</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1MappedRectElement.html">CorePlotting::MappedRectElement</a></strong> <br>Element type for rectangles (intervals).</td>
 </tr>
 <tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1ILayoutStrategy.html">CorePlotting::ILayoutStrategy</a></strong> <br>Strategy interface for layout algorithms.</td>
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1MappedVertex.html">CorePlotting::MappedVertex</a></strong> <br>Single vertex in a polyline (analog series, line data).</td>
 </tr>
 <tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1ILineBatchIntersector.html">CorePlotting::ILineBatchIntersector</a></strong> <br>Abstract intersection query interface.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1LayoutEngine.html">CorePlotting::LayoutEngine</a></strong> <br>Main layout engine coordinator.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1LayoutRequest.html">CorePlotting::LayoutRequest</a></strong> <br>Request for layout computation.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1LayoutResponse.html">CorePlotting::LayoutResponse</a></strong> <br>Response from layout computation.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1LayoutTransform.html">CorePlotting::LayoutTransform</a></strong> <br>Pure geometric transform that is output = input * gain + offset.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1LineBatchData.html">CorePlotting::LineBatchData</a></strong> <br>Flat, API-agnostic representation of a batch of polylines as segments.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1LineIntersectionQuery.html">CorePlotting::LineIntersectionQuery</a></strong> <br>Parameters for a line-vs-batch intersection query.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1LineIntersectionResult.html">CorePlotting::LineIntersectionResult</a></strong> <br>Result of a line-vs-batch intersection query.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1LineStyleData.html">CorePlotting::LineStyleData</a></strong> <br>Serializable line style configuration.</td>
-</tr>
-<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1MappedAnalogVertex.html">CorePlotting::MappedAnalogVertex</a></strong> <br>Analog vertex with time frame index for gap detection.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1MappedElement.html">CorePlotting::MappedElement</a></strong> <br>Common element type for discrete entities (events, points)</td>
 </tr>
 <tr class="even">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1MappedLineView.html">CorePlotting::MappedLineView</a></strong> <br>Lazy view over a mapped polyline.</td>
 </tr>
 <tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1MappedRectElement.html">CorePlotting::MappedRectElement</a></strong> <br>Element type for rectangles (intervals)</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1MappedVertex.html">CorePlotting::MappedVertex</a></strong> <br>Single vertex in a polyline (analog series, line data)</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1MinMaxDecimationParams.html">CorePlotting::MinMaxDecimationParams</a></strong> <br>Parameters for min–max polyline decimation.</td>
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1SpanLineView.html">CorePlotting::SpanLineView</a></strong> <br>Non-owning view over a contiguous array of <a href="../../api_generated/Classes/structCorePlotting_1_1MappedVertex.html">MappedVertex</a>.</td>
 </tr>
 <tr class="even">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1OwningLineView.html">CorePlotting::OwningLineView</a></strong> <br><a href="../../api_generated/Classes/structLine.html">Line</a> view that owns its vertex data.</td>
 </tr>
 <tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1PolyLineStyle.html">CorePlotting::PolyLineStyle</a></strong> <br>PolyLine styling options.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1RectangleStyle.html">CorePlotting::RectangleStyle</a></strong> <br>Rectangle styling options for interval elements.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1RenderableGlyphBatch.html">CorePlotting::RenderableGlyphBatch</a></strong> <br>A batch of glyphs (e.g., Events in a Raster Plot, Points)</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1RenderablePolyLineBatch.html">CorePlotting::RenderablePolyLineBatch</a></strong> <br>A batch of lines (e.g., <a href="../../api_generated/Classes/classLineData.html">LineData</a>, Epochs, or segmented AnalogSeries)</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1RenderableRectangleBatch.html">CorePlotting::RenderableRectangleBatch</a></strong> <br>A batch of rectangles (e.g., <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>)</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1RenderableScene.html">CorePlotting::RenderableScene</a></strong> <br>The complete description of a scene to be rendered.</td>
-</tr>
-<tr class="odd">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1RowLayoutStrategy.html">CorePlotting::RowLayoutStrategy</a></strong> <br>Horizontal row layout strategy (Raster plot style)</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1SceneBuilder.html">CorePlotting::SceneBuilder</a></strong> <br>Helper class for constructing <a href="../../api_generated/Classes/structCorePlotting_1_1RenderableScene.html">RenderableScene</a> objects.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1SceneHitTester.html">CorePlotting::SceneHitTester</a></strong> <br>Multi-strategy hit tester for <a href="../../api_generated/Classes/structCorePlotting_1_1RenderableScene.html">RenderableScene</a>.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1SeriesDataCache.html">CorePlotting::SeriesDataCache</a></strong> <br>Cached statistical data for a series.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1SeriesInfo.html">CorePlotting::SeriesInfo</a></strong> <br>Metadata for a series to be laid out.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1SeriesLayout.html">CorePlotting::SeriesLayout</a></strong> <br>Complete layout specification for a single series.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1SeriesQueryResult.html">CorePlotting::SeriesQueryResult</a></strong> <br>Result of querying which series contains a given world Y coordinate.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1SeriesStyle.html">CorePlotting::SeriesStyle</a></strong> <br>Pure configuration for series rendering style.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1SpanLineView.html">CorePlotting::SpanLineView</a></strong> <br>Non-owning view over a contiguous array of <a href="../../api_generated/Classes/structCorePlotting_1_1MappedVertex.html">MappedVertex</a>.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1SpatialLayoutResponse.html">CorePlotting::SpatialLayoutResponse</a></strong> <br>Response from spatial layout computation.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1SpatialLayoutStrategy.html">CorePlotting::SpatialLayoutStrategy</a></strong> <br>Spatial layout strategy (SpatialOverlay style)</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1SpatialSeriesLayout.html">CorePlotting::SpatialSeriesLayout</a></strong> <br>Extended layout for spatial data.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1SpatialTransform.html">CorePlotting::SpatialTransform</a></strong> <br>Layout result for spatial data with coordinate transforms.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1StackedLayoutStrategy.html">CorePlotting::StackedLayoutStrategy</a></strong> <br>Vertical stacking layout strategy (<a href="../../api_generated/Namespaces/namespaceDataViewer.html">DataViewer</a> style)</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1TimeAxisParams.html">CorePlotting::TimeAxisParams</a></strong> <br>Parameters for time axis coordinate conversions.</td>
+<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1TransformingLineView.html">CorePlotting::TransformingLineView</a></strong> <br><a href="../../api_generated/Classes/structLine.html">Line</a> view that applies a transformation function lazily.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
@@ -743,24 +736,40 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1TimedOwningLineView.html">CorePlotting::TimedOwningLineView</a></strong> <br><a href="../../api_generated/Classes/classCorePlotting_1_1OwningLineView.html">OwningLineView</a> with temporal distance from the center of a window.</td>
 </tr>
 <tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1RenderablePolyLineBatch.html">CorePlotting::RenderablePolyLineBatch</a></strong> <br>A batch of lines (e.g., <a href="../../api_generated/Classes/classLineData.html">LineData</a>, Epochs, or segmented AnalogSeries).</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1RenderableGlyphBatch.html">CorePlotting::RenderableGlyphBatch</a></strong> <br>A batch of glyphs (e.g., Events in a Raster Plot, Points).</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1RenderableRectangleBatch.html">CorePlotting::RenderableRectangleBatch</a></strong> <br>A batch of rectangles (e.g., <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>).</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1RenderableScene.html">CorePlotting::RenderableScene</a></strong> <br>The complete description of a scene to be rendered.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1GlyphStyle.html">CorePlotting::GlyphStyle</a></strong> <br>Glyph styling options for discrete elements.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1RectangleStyle.html">CorePlotting::RectangleStyle</a></strong> <br>Rectangle styling options for interval elements.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1PolyLineStyle.html">CorePlotting::PolyLineStyle</a></strong> <br>PolyLine styling options.</td>
+</tr>
+<tr class="odd">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1TransformingLineView.html">CorePlotting::TransformingLineView</a></strong> <br><a href="../../api_generated/Classes/structLine.html">Line</a> view that applies a transformation function lazily.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1ViewProjectionParams.html">CorePlotting::ViewProjectionParams</a></strong> <br>Helper struct for shared view/projection parameters.</td>
+<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1SceneBuilder.html">CorePlotting::SceneBuilder</a></strong> <br>Helper class for constructing <a href="../../api_generated/Classes/structCorePlotting_1_1RenderableScene.html">RenderableScene</a> objects.</td>
 </tr>
 <tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1ViewState.html">CorePlotting::ViewState</a></strong> <br>Full runtime 2D camera / viewport state.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1ViewStateData.html">CorePlotting::ViewStateData</a></strong> <br>Serializable 2D camera state.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structCorePlotting_1_1YAxisParams.html">CorePlotting::YAxisParams</a></strong> <br>Parameters for Y-axis coordinate conversions.</td>
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classCorePlotting_1_1GapDetector.html">CorePlotting::GapDetector</a></strong> <br>Detects gaps in analog time series and produces segmented poly-line batches.</td>
 </tr>
 </tbody>
 </table>
@@ -958,7 +967,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>float</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-timetondc">timeToNDC</a></strong>(float time, <a href="../../api_generated/Classes/structCorePlotting_1_1TimeAxisParams.html">TimeAxisParams</a> const &amp; params)<br>Convert time coordinate to Normalized Device Coordinate (NDC)</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-timetondc">timeToNDC</a></strong>(float time, <a href="../../api_generated/Classes/structCorePlotting_1_1TimeAxisParams.html">TimeAxisParams</a> const &amp; params)<br>Convert time coordinate to Normalized Device Coordinate (NDC).</td>
 </tr>
 <tr class="even">
 <td>float</td>
@@ -982,7 +991,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>float</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-worldytondc">worldYToNDC</a></strong>(float world_y, <a href="../../api_generated/Classes/structCorePlotting_1_1YAxisParams.html">YAxisParams</a> const &amp; params)<br>Convert world Y to Normalized Device Coordinate (NDC)</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-worldytondc">worldYToNDC</a></strong>(float world_y, <a href="../../api_generated/Classes/structCorePlotting_1_1YAxisParams.html">YAxisParams</a> const &amp; params)<br>Convert world Y to Normalized Device Coordinate (NDC).</td>
 </tr>
 <tr class="even">
 <td>float</td>
@@ -1026,11 +1035,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>std::string</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-alphacurvetostring">alphaCurveToString</a></strong>(<a href="../../api_generated/Namespaces/namespaceCorePlotting.html#enum-alphacurve">AlphaCurve</a> curve)<br>Convert AlphaCurve enum to string for serialization.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-alphacurvetostring">alphaCurveToString</a></strong>(<a href="../../api_generated/Namespaces/namespaceCorePlotting.html#enum-alphacurve">AlphaCurve</a> curve)<br>Convert <a href="../../api_generated/Namespaces/namespaceCorePlotting.html#enum-alphacurve">AlphaCurve</a> enum to string for serialization.</td>
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#enum-alphacurve">AlphaCurve</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-alphacurvefromstring">alphaCurveFromString</a></strong>(std::string const &amp; str)<br>Parse AlphaCurve from string for deserialization.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-alphacurvefromstring">alphaCurveFromString</a></strong>(std::string const &amp; str)<br>Parse <a href="../../api_generated/Namespaces/namespaceCorePlotting.html#enum-alphacurve">AlphaCurve</a> from string for deserialization.</td>
 </tr>
 <tr class="even">
 <td>float</td>
@@ -1038,11 +1047,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>float</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-computetemporalalpha">computeTemporalAlpha</a></strong>(float distance, float half_width, <a href="../../api_generated/Namespaces/namespaceCorePlotting.html#enum-alphacurve">AlphaCurve</a> curve =<a href="../../api_generated/Namespaces/namespaceCorePlotting.html#enumvalue-linear">AlphaCurve::Linear</a>, float min_alpha =0.1f, float max_alpha =1.0f)<br>Convenience overload using float distance (for non-integer time bases)</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-computetemporalalpha">computeTemporalAlpha</a></strong>(float distance, float half_width, <a href="../../api_generated/Namespaces/namespaceCorePlotting.html#enum-alphacurve">AlphaCurve</a> curve =<a href="../../api_generated/Namespaces/namespaceCorePlotting.html#enumvalue-linear">AlphaCurve::Linear</a>, float min_alpha =0.1f, float max_alpha =1.0f)<br>Convenience overload using float distance (for non-integer time bases).</td>
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Classes/structCorePlotting_1_1RenderableGlyphBatch.html#enum-glyphtype">RenderableGlyphBatch::GlyphType</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-torenderableglyphtype">toRenderableGlyphType</a></strong>(<a href="../../api_generated/Namespaces/namespaceCorePlotting.html#enum-glyphtype">GlyphType</a> type)<br>Convert a user-facing GlyphType to the rendering-level GlyphType.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-torenderableglyphtype">toRenderableGlyphType</a></strong>(<a href="../../api_generated/Namespaces/namespaceCorePlotting.html#enum-glyphtype">GlyphType</a> type)<br>Convert a user-facing <a href="../../api_generated/Namespaces/namespaceCorePlotting.html#enum-glyphtype">GlyphType</a> to the rendering-level <a href="../../api_generated/Namespaces/namespaceCorePlotting.html#enum-glyphtype">GlyphType</a>.</td>
 </tr>
 <tr class="odd">
 <td>glm::vec4</td>
@@ -1062,11 +1071,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structCorePlotting_1_1LineBatchData.html">LineBatchData</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-buildlinebatchfromgatherresult">buildLineBatchFromGatherResult</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> &gt; const &amp; gathered)<br>Build a <a href="">LineBatchData</a> from GatherResult<analogtimeseries> (<a href="../../api_generated/Classes/classLinePlotWidget.html">LinePlotWidget</a> use case).</analogtimeseries></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-buildlinebatchfromgatherresult">buildLineBatchFromGatherResult</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> &gt; const &amp; gathered)<br>Build a <a href="">LineBatchData</a> from <a href="../../api_generated/Classes/classGatherResult.html">GatherResult<analogtimeseries></analogtimeseries></a> (<a href="../../api_generated/Classes/classLinePlotWidget.html">LinePlotWidget</a> use case).</td>
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Classes/structCorePlotting_1_1LineBatchData.html">LineBatchData</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-buildlinebatchfromgatherresult">buildLineBatchFromGatherResult</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> &gt; const &amp; gathered, std::vector&lt; <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> &gt; const &amp; alignment_times)<br>Build a <a href="">LineBatchData</a> from GatherResult<analogtimeseries> with explicit alignment overrides.</analogtimeseries></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#function-buildlinebatchfromgatherresult">buildLineBatchFromGatherResult</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; <a href="../../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> &gt; const &amp; gathered, std::vector&lt; <a href="../../api_generated/Classes/classClockTicks.html">ClockTicks</a> &gt; const &amp; alignment_times)<br>Build a <a href="">LineBatchData</a> from <a href="../../api_generated/Classes/classGatherResult.html">GatherResult<analogtimeseries></analogtimeseries></a> with explicit alignment overrides.</td>
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structCorePlotting_1_1RenderablePolyLineBatch.html">RenderablePolyLineBatch</a></td>
@@ -1094,31 +1103,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>constexpr bool</td>
+<td>bool</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#variable-is-mapped-element-v">is_mapped_element_v</a></strong> <br>Check if a type is a valid mapper output type.</td>
 </tr>
 <tr class="even">
-<td>constexpr bool</td>
+<td>bool</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#variable-is-mapped-rect-v">is_mapped_rect_v</a></strong></td>
 </tr>
 <tr class="odd">
-<td>constexpr bool</td>
+<td>bool</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#variable-is-mapped-vertex-v">is_mapped_vertex_v</a></strong></td>
 </tr>
 <tr class="even">
-<td>constexpr bool</td>
+<td>bool</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#variable-is-element-range-v">is_element_range_v</a></strong> <br>Check if a range yields mappable elements.</td>
 </tr>
 <tr class="odd">
-<td>constexpr bool</td>
+<td>bool</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#variable-is-rect-range-v">is_rect_range_v</a></strong></td>
 </tr>
 <tr class="even">
-<td>constexpr bool</td>
+<td>bool</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#variable-is-vertex-range-v">is_vertex_range_v</a></strong></td>
 </tr>
 <tr class="odd">
-<td>constexpr bool</td>
+<td>bool</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting.html#variable-is-line-range-v">is_line_range_v</a></strong></td>
 </tr>
 </tbody>
@@ -1145,7 +1154,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>Linear</td>
 <td></td>
-<td>Linear falloff: alpha = max - (max-min) * (d / half_width)</td>
+<td>Linear falloff: alpha = max - (max-min) * (d / half_width).</td>
 </tr>
 <tr class="even">
 <td>Exponential</td>
@@ -1186,7 +1195,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>Tick</td>
 <td></td>
-<td>Vertical line (for event raster plots)</td>
+<td>Vertical line (for event raster plots).</td>
 </tr>
 <tr class="even">
 <td>Cross</td>
@@ -1223,7 +1232,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>Bar</td>
 <td></td>
-<td>Filled rectangles (one per bin)</td>
+<td>Filled rectangles (one per bin).</td>
 </tr>
 <tr class="even">
 <td>Line</td>
@@ -1253,37 +1262,37 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>DigitalEvent</td>
 <td></td>
-<td>Hit a discrete event marker (has <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>)</td>
+<td>Hit a discrete event marker (has <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>).</td>
 </tr>
 <tr class="odd">
 <td>IntervalBody</td>
 <td></td>
-<td>Hit inside an interval (has <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>)</td>
+<td>Hit inside an interval (has <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>).</td>
 </tr>
 <tr class="even">
 <td>IntervalEdgeLeft</td>
 <td></td>
-<td>Hit the left edge of an interval (for dragging)</td>
+<td>Hit the left edge of an interval (for dragging).</td>
 </tr>
 <tr class="odd">
 <td>IntervalEdgeRight</td>
 <td></td>
-<td>Hit the right edge of an interval (for dragging)</td>
+<td>Hit the right edge of an interval (for dragging).</td>
 </tr>
 <tr class="even">
 <td>AnalogSeries</td>
 <td></td>
-<td>Hit within an analog series region (no <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>)</td>
+<td>Hit within an analog series region (no <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>).</td>
 </tr>
 <tr class="odd">
 <td>Point</td>
 <td></td>
-<td>Hit a point marker (has <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>)</td>
+<td>Hit a point marker (has <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>).</td>
 </tr>
 <tr class="even">
 <td>PolyLine</td>
 <td></td>
-<td>Hit a polyline segment (may have <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>)</td>
+<td>Hit a polyline segment (may have <a href="../../api_generated/Classes/structEntityId.html">EntityId</a>).</td>
 </tr>
 <tr class="odd">
 <td>SeriesRegion</td>
@@ -1309,17 +1318,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>Analog</td>
 <td></td>
-<td>Analog time series (continuous signals)</td>
+<td>Analog time series (continuous signals).</td>
 </tr>
 <tr class="even">
 <td>DigitalEvent</td>
 <td></td>
-<td>Digital event series (discrete time points)</td>
+<td>Digital event series (discrete time points).</td>
 </tr>
 <tr class="odd">
 <td>DigitalInterval</td>
 <td></td>
-<td>Digital interval series (time ranges)</td>
+<td>Digital interval series (time ranges).</td>
 </tr>
 </tbody>
 </table>
@@ -1327,7 +1336,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="using-linebatchindex" class="level3">
 <h3 class="anchored" data-anchor-id="using-linebatchindex">using LineBatchIndex</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> CorePlotting<span class="op">::</span>LineBatchIndex <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>uint32_t<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> CorePlotting<span class="op">::</span>LineBatchIndex <span class="op">=</span>  <span class="bu">std::</span>uint32_t<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>0-based index into <a href="">LineBatchData::lines</a></p>
 </section>
 </section>
@@ -1933,7 +1942,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> time<span class="op">,</span></span>
 <span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    TimeAxisParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
 <span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Convert time coordinate to Normalized Device Coordinate (NDC)</p>
+<p>Convert time coordinate to Normalized Device Coordinate (NDC).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>time</strong> Time coordinate</li>
@@ -2033,7 +2042,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> world_y<span class="op">,</span></span>
 <span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>    YAxisParams <span class="at">const</span> <span class="op">&amp;</span> params</span>
 <span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Convert world Y to Normalized Device Coordinate (NDC)</p>
+<p>Convert world Y to Normalized Device Coordinate (NDC).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>world_y</strong> World Y coordinate</li>
@@ -2202,19 +2211,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb63"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>string alphaCurveToString<span class="op">(</span></span>
 <span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>    AlphaCurve curve</span>
 <span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Convert AlphaCurve enum to string for serialization.</p>
+<p>Convert <a href="../../api_generated/Namespaces/namespaceCorePlotting.html#enum-alphacurve">AlphaCurve</a> enum to string for serialization.</p>
 </section>
 <section id="function-alphacurvefromstring" class="level3">
 <h3 class="anchored" data-anchor-id="function-alphacurvefromstring">function alphaCurveFromString</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb64"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> AlphaCurve alphaCurveFromString<span class="op">(</span></span>
 <span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> str</span>
 <span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Parse AlphaCurve from string for deserialization.</p>
+<p>Parse <a href="../../api_generated/Namespaces/namespaceCorePlotting.html#enum-alphacurve">AlphaCurve</a> from string for deserialization.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>str</strong> String representation (“linear”, “exponential”, “gaussian”)</li>
 </ul>
-<p><strong>Return</strong>: Corresponding AlphaCurve enum value (defaults to Linear for unknown strings)</p>
+<p><strong>Return</strong>: Corresponding <a href="../../api_generated/Namespaces/namespaceCorePlotting.html#enum-alphacurve">AlphaCurve</a> enum value (defaults to Linear for unknown strings)</p>
 </section>
 <section id="function-computetemporalalpha" class="level3">
 <h3 class="anchored" data-anchor-id="function-computetemporalalpha">function computeTemporalAlpha</h3>
@@ -2251,14 +2260,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> min_alpha <span class="op">=</span><span class="fl">0.1</span><span class="bu">f</span><span class="op">,</span></span>
 <span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> max_alpha <span class="op">=</span><span class="fl">1.0</span><span class="bu">f</span></span>
 <span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Convenience overload using float distance (for non-integer time bases)</p>
+<p>Convenience overload using float distance (for non-integer time bases).</p>
 </section>
 <section id="function-torenderableglyphtype" class="level3">
 <h3 class="anchored" data-anchor-id="function-torenderableglyphtype">function toRenderableGlyphType</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb67"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> RenderableGlyphBatch<span class="op">::</span>GlyphType toRenderableGlyphType<span class="op">(</span></span>
 <span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a>    GlyphType type</span>
 <span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Convert a user-facing GlyphType to the rendering-level GlyphType.</p>
+<p>Convert a user-facing <a href="../../api_generated/Namespaces/namespaceCorePlotting.html#enum-glyphtype">GlyphType</a> to the rendering-level <a href="../../api_generated/Namespaces/namespaceCorePlotting.html#enum-glyphtype">GlyphType</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>type</strong> User-facing glyph type</li>
@@ -2318,7 +2327,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb72"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>LineBatchData buildLineBatchFromGatherResult<span class="op">(</span></span>
 <span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>    GatherResult<span class="op">&lt;</span> AnalogTimeSeries <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> gathered</span>
 <span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Build a <a href="">LineBatchData</a> from GatherResult<analogtimeseries> (<a href="../../api_generated/Classes/classLinePlotWidget.html">LinePlotWidget</a> use case).</analogtimeseries></p>
+<p>Build a <a href="">LineBatchData</a> from <a href="../../api_generated/Classes/classGatherResult.html">GatherResult<analogtimeseries></analogtimeseries></a> (<a href="../../api_generated/Classes/classLinePlotWidget.html">LinePlotWidget</a> use case).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>gathered</strong> The gathered analog time series (one per trial).</li>
@@ -2335,7 +2344,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>    GatherResult<span class="op">&lt;</span> AnalogTimeSeries <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> gathered<span class="op">,</span></span>
 <span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> ClockTicks <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> alignment_times</span>
 <span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Build a <a href="">LineBatchData</a> from GatherResult<analogtimeseries> with explicit alignment overrides.</analogtimeseries></p>
+<p>Build a <a href="">LineBatchData</a> from <a href="../../api_generated/Classes/classGatherResult.html">GatherResult<analogtimeseries></analogtimeseries></a> with explicit alignment overrides.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>gathered</strong> The gathered analog time series (one per trial).</li>
@@ -2409,35 +2418,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="attributes-documentation">Attributes Documentation</h2>
 <section id="variable-is_mapped_element_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_mapped_element_v">variable is_mapped_element_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb77"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_mapped_element_v <span class="op">=</span> MappedElementLike<span class="op">&lt;</span>T<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb77"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> is_mapped_element_v <span class="op">=</span> MappedElementLike<span class="op">&lt;</span>T<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Check if a type is a valid mapper output type.</p>
 </section>
 <section id="variable-is_mapped_rect_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_mapped_rect_v">variable is_mapped_rect_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb78"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_mapped_rect_v <span class="op">=</span> MappedRectLike<span class="op">&lt;</span>T<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb78"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> is_mapped_rect_v <span class="op">=</span> MappedRectLike<span class="op">&lt;</span>T<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-is_mapped_vertex_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_mapped_vertex_v">variable is_mapped_vertex_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb79"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_mapped_vertex_v <span class="op">=</span> MappedVertexLike<span class="op">&lt;</span>T<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb79"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> is_mapped_vertex_v <span class="op">=</span> MappedVertexLike<span class="op">&lt;</span>T<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-is_element_range_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_element_range_v">variable is_element_range_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb80"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_element_range_v <span class="op">=</span> MappedElementRange<span class="op">&lt;</span>R<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb80"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> is_element_range_v <span class="op">=</span> MappedElementRange<span class="op">&lt;</span>R<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Check if a range yields mappable elements.</p>
 </section>
 <section id="variable-is_rect_range_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_rect_range_v">variable is_rect_range_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb81"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_rect_range_v <span class="op">=</span> MappedRectRange<span class="op">&lt;</span>R<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb81"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> is_rect_range_v <span class="op">=</span> MappedRectRange<span class="op">&lt;</span>R<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-is_vertex_range_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_vertex_range_v">variable is_vertex_range_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb82"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_vertex_range_v <span class="op">=</span> MappedVertexRange<span class="op">&lt;</span>R<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb82"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> is_vertex_range_v <span class="op">=</span> MappedVertexRange<span class="op">&lt;</span>R<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="variable-is_line_range_v" class="level3">
 <h3 class="anchored" data-anchor-id="variable-is_line_range_v">variable is_line_range_v</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb83"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> is_line_range_v <span class="op">=</span> MappedLineRange<span class="op">&lt;</span>R<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb83"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> is_line_range_v <span class="op">=</span> MappedLineRange<span class="op">&lt;</span>R<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-10-09 at 13:36:33 +0000</p>
+<p>Updated on 2026-11-13 at 20:25:42 +0000</p>
 
 
 </section>
@@ -2449,15 +2458,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -2536,7 +2580,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -2545,8 +2590,69 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -2560,6 +2666,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -2722,44 +2829,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -2857,6 +2974,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       }
     }
   });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
 

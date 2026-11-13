@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -72,18 +72,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-0c66bec081e5215138e9fd61e9c23ef8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -116,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -139,6 +140,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -168,13 +170,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -268,6 +276,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -282,15 +291,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -334,8 +342,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
+            <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -344,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
@@ -373,7 +382,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -414,7 +423,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td></td>
-<td><strong><a href="../../api_generated/Files/AnalogDifference_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“AnalogDifference <a href="../../api_generated/Files/Point__Data__CSV_8hpp.html#enumvalue-skip">Skip</a> edge policy omits boundary samples” , “” [transforms][v2][analog_difference][edge])</td>
+<td><strong><a href="../../api_generated/Files/AnalogDifference_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“AnalogDifference Skip edge policy omits boundary samples” , “” [transforms][v2][analog_difference][edge])</td>
 </tr>
 <tr class="odd">
 <td></td>
@@ -438,7 +447,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td></td>
-<td><strong><a href="../../api_generated/Files/AnalogDifference_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“AnalogDifference <a href="../../api_generated/Files/Point__Data__CSV_8hpp.html#enumvalue-skip">Skip</a> with insufficient samples returns nullptr” , “” [transforms][v2][analog_difference][edge_case])</td>
+<td><strong><a href="../../api_generated/Files/AnalogDifference_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“AnalogDifference Skip with insufficient samples returns nullptr” , “” [transforms][v2][analog_difference][edge_case])</td>
 </tr>
 <tr class="odd">
 <td></td>
@@ -446,7 +455,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td></td>
-<td><strong><a href="../../api_generated/Files/AnalogDifference_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“AnalogDifference <a href="../../api_generated/Files/IOFormats_8hpp.html#enumvalue-json">JSON</a> parameter round-trip” , “” [transforms][v2][analog_difference][json])</td>
+<td><strong><a href="../../api_generated/Files/AnalogDifference_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“AnalogDifference JSON parameter round-trip” , “” [transforms][v2][analog_difference][json])</td>
 </tr>
 <tr class="odd">
 <td></td>
@@ -551,385 +560,386 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="source-code" class="level2">
 <h2 class="anchored" data-anchor-id="source-code">Source code</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/algorithms/AnalogDifference/AnalogDifference.hpp"</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"AnalogTimeSeries/Analog_Time_Series.hpp"</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager.hpp"</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/core/ComputeContext.hpp"</span></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/core/ElementRegistry.hpp"</span></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/io/ParameterIO.hpp"</span></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/io/PipelineLoader.hpp"</span></span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/catch_test_macros.hpp&gt;</span></span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/matchers/catch_matchers_floating_point.hpp&gt;</span></span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;algorithm&gt;</span></span>
-<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cmath&gt;</span></span>
-<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cstddef&gt;</span></span>
-<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;limits&gt;</span></span>
-<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;memory&gt;</span></span>
-<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;string&gt;</span></span>
-<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
-<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">;</span></span>
-<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>Examples<span class="op">;</span></span>
-<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="op">{</span></span>
-<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>ComputeContext makeCtx<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ComputeContext<span class="op">{};</span></span>
-<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;</span> makeATS<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;</span> data<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> n <span class="op">=</span> data<span class="op">.</span>size<span class="op">();</span></span>
-<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;(</span><span class="bu">std::</span>move<span class="op">(</span>data<span class="op">),</span> n<span class="op">);</span></span>
-<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;</span> makeATSWithTimes<span class="op">(</span></span>
-<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;</span> data<span class="op">,</span></span>
-<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameIndex<span class="op">&gt;</span> times<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;(</span><span class="bu">std::</span>move<span class="op">(</span>data<span class="op">),</span> <span class="bu">std::</span>move<span class="op">(</span>times<span class="op">));</span></span>
-<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>AnalogDifferenceParams makeParams<span class="op">(</span></span>
-<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>        DifferenceMethod method<span class="op">,</span></span>
-<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> window<span class="op">,</span></span>
-<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>        DifferenceEdgePolicy edge_policy<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>    AnalogDifferenceParams params<span class="op">;</span></span>
-<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>method <span class="op">=</span> method<span class="op">;</span></span>
-<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>window <span class="op">=</span> window<span class="op">;</span></span>
-<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>edge_policy <span class="op">=</span> edge_policy<span class="op">;</span></span>
-<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> params<span class="op">;</span></span>
-<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isNaN<span class="op">(</span><span class="dt">float</span> value<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>isnan<span class="op">(</span>value<span class="op">);</span></span>
-<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb13-56"><a href="#cb13-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-57"><a href="#cb13-57" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// anonymous namespace</span></span>
-<span id="cb13-58"><a href="#cb13-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-59"><a href="#cb13-59" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb13-60"><a href="#cb13-60" aria-hidden="true" tabindex="-1"></a><span class="co">// Math Tests</span></span>
-<span id="cb13-61"><a href="#cb13-61" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb13-62"><a href="#cb13-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-63"><a href="#cb13-63" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference backward difference window=1"</span><span class="op">,</span></span>
-<span id="cb13-64"><a href="#cb13-64" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][math]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-65"><a href="#cb13-65" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">2.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">3.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">4.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">});</span></span>
-<span id="cb13-66"><a href="#cb13-66" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Backward<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Skip<span class="op">);</span></span>
-<span id="cb13-67"><a href="#cb13-67" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
-<span id="cb13-68"><a href="#cb13-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-69"><a href="#cb13-69" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
-<span id="cb13-70"><a href="#cb13-70" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb13-71"><a href="#cb13-71" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">5</span><span class="op">);</span></span>
-<span id="cb13-72"><a href="#cb13-72" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-73"><a href="#cb13-73" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> out <span class="op">=</span> result<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">();</span></span>
-<span id="cb13-74"><a href="#cb13-74" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">0</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb13-75"><a href="#cb13-75" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">1</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb13-76"><a href="#cb13-76" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">4</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb13-77"><a href="#cb13-77" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb13-78"><a href="#cb13-78" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-79"><a href="#cb13-79" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference forward difference window=1"</span><span class="op">,</span></span>
-<span id="cb13-80"><a href="#cb13-80" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][math]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-81"><a href="#cb13-81" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">2.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">3.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">4.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">});</span></span>
-<span id="cb13-82"><a href="#cb13-82" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Forward<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Skip<span class="op">);</span></span>
-<span id="cb13-83"><a href="#cb13-83" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
-<span id="cb13-84"><a href="#cb13-84" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-85"><a href="#cb13-85" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
-<span id="cb13-86"><a href="#cb13-86" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb13-87"><a href="#cb13-87" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">5</span><span class="op">);</span></span>
-<span id="cb13-88"><a href="#cb13-88" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-89"><a href="#cb13-89" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> out <span class="op">=</span> result<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">();</span></span>
-<span id="cb13-90"><a href="#cb13-90" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">0</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb13-91"><a href="#cb13-91" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">4</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb13-92"><a href="#cb13-92" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb13-93"><a href="#cb13-93" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-94"><a href="#cb13-94" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference central difference window=1"</span><span class="op">,</span></span>
-<span id="cb13-95"><a href="#cb13-95" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][math]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-96"><a href="#cb13-96" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">2.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">3.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">4.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">});</span></span>
-<span id="cb13-97"><a href="#cb13-97" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Central<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Skip<span class="op">);</span></span>
-<span id="cb13-98"><a href="#cb13-98" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
-<span id="cb13-99"><a href="#cb13-99" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-100"><a href="#cb13-100" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
-<span id="cb13-101"><a href="#cb13-101" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb13-102"><a href="#cb13-102" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">4</span><span class="op">);</span></span>
-<span id="cb13-103"><a href="#cb13-103" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-104"><a href="#cb13-104" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> out <span class="op">=</span> result<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">();</span></span>
-<span id="cb13-105"><a href="#cb13-105" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">0</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb13-106"><a href="#cb13-106" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">3</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb13-107"><a href="#cb13-107" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb13-108"><a href="#cb13-108" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-109"><a href="#cb13-109" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference backward difference window=2"</span><span class="op">,</span></span>
-<span id="cb13-110"><a href="#cb13-110" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][math]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-111"><a href="#cb13-111" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">2.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">3.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">4.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">});</span></span>
-<span id="cb13-112"><a href="#cb13-112" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Backward<span class="op">,</span> <span class="dv">2</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Skip<span class="op">);</span></span>
-<span id="cb13-113"><a href="#cb13-113" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
-<span id="cb13-114"><a href="#cb13-114" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-115"><a href="#cb13-115" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
-<span id="cb13-116"><a href="#cb13-116" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb13-117"><a href="#cb13-117" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">4</span><span class="op">);</span></span>
-<span id="cb13-118"><a href="#cb13-118" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-119"><a href="#cb13-119" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> out <span class="op">=</span> result<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">();</span></span>
-<span id="cb13-120"><a href="#cb13-120" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">0</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">2.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb13-121"><a href="#cb13-121" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">3</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">2.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb13-122"><a href="#cb13-122" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb13-123"><a href="#cb13-123" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-124"><a href="#cb13-124" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference central difference window=2"</span><span class="op">,</span></span>
-<span id="cb13-125"><a href="#cb13-125" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][math]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-126"><a href="#cb13-126" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">2.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">3.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">4.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">});</span></span>
-<span id="cb13-127"><a href="#cb13-127" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Central<span class="op">,</span> <span class="dv">2</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Skip<span class="op">);</span></span>
-<span id="cb13-128"><a href="#cb13-128" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
-<span id="cb13-129"><a href="#cb13-129" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-130"><a href="#cb13-130" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
-<span id="cb13-131"><a href="#cb13-131" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb13-132"><a href="#cb13-132" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
-<span id="cb13-133"><a href="#cb13-133" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-134"><a href="#cb13-134" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> out <span class="op">=</span> result<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">();</span></span>
-<span id="cb13-135"><a href="#cb13-135" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">0</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb13-136"><a href="#cb13-136" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">1</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb13-137"><a href="#cb13-137" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb13-138"><a href="#cb13-138" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-139"><a href="#cb13-139" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb13-140"><a href="#cb13-140" aria-hidden="true" tabindex="-1"></a><span class="co">// Edge Policy Tests</span></span>
-<span id="cb13-141"><a href="#cb13-141" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb13-142"><a href="#cb13-142" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-143"><a href="#cb13-143" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference Skip edge policy omits boundary samples"</span><span class="op">,</span></span>
-<span id="cb13-144"><a href="#cb13-144" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][edge]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-145"><a href="#cb13-145" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">20.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">30.0</span><span class="bu">f</span><span class="op">});</span></span>
-<span id="cb13-146"><a href="#cb13-146" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Central<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Skip<span class="op">);</span></span>
-<span id="cb13-147"><a href="#cb13-147" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
-<span id="cb13-148"><a href="#cb13-148" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-149"><a href="#cb13-149" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
-<span id="cb13-150"><a href="#cb13-150" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb13-151"><a href="#cb13-151" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb13-152"><a href="#cb13-152" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>result<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">()[</span><span class="dv">0</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb13-153"><a href="#cb13-153" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb13-154"><a href="#cb13-154" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-155"><a href="#cb13-155" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference NaN edge policy fills incomplete windows"</span><span class="op">,</span></span>
-<span id="cb13-156"><a href="#cb13-156" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][edge]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-157"><a href="#cb13-157" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">20.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">30.0</span><span class="bu">f</span><span class="op">});</span></span>
-<span id="cb13-158"><a href="#cb13-158" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Backward<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>NaN<span class="op">);</span></span>
-<span id="cb13-159"><a href="#cb13-159" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
-<span id="cb13-160"><a href="#cb13-160" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-161"><a href="#cb13-161" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
-<span id="cb13-162"><a href="#cb13-162" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb13-163"><a href="#cb13-163" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
-<span id="cb13-164"><a href="#cb13-164" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-165"><a href="#cb13-165" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> out <span class="op">=</span> result<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">();</span></span>
-<span id="cb13-166"><a href="#cb13-166" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>isNaN<span class="op">(</span>out<span class="op">[</span><span class="dv">0</span><span class="op">]));</span></span>
-<span id="cb13-167"><a href="#cb13-167" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">1</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb13-168"><a href="#cb13-168" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">2</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb13-169"><a href="#cb13-169" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb13-170"><a href="#cb13-170" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-171"><a href="#cb13-171" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference Zero edge policy fills incomplete windows"</span><span class="op">,</span></span>
-<span id="cb13-172"><a href="#cb13-172" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][edge]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-173"><a href="#cb13-173" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">20.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">30.0</span><span class="bu">f</span><span class="op">});</span></span>
-<span id="cb13-174"><a href="#cb13-174" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Forward<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Zero<span class="op">);</span></span>
-<span id="cb13-175"><a href="#cb13-175" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
-<span id="cb13-176"><a href="#cb13-176" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-177"><a href="#cb13-177" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
-<span id="cb13-178"><a href="#cb13-178" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb13-179"><a href="#cb13-179" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
-<span id="cb13-180"><a href="#cb13-180" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-181"><a href="#cb13-181" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> out <span class="op">=</span> result<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">();</span></span>
-<span id="cb13-182"><a href="#cb13-182" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">0</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb13-183"><a href="#cb13-183" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">1</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb13-184"><a href="#cb13-184" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">2</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb13-185"><a href="#cb13-185" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb13-186"><a href="#cb13-186" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-187"><a href="#cb13-187" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference Clamp edge policy uses boundary samples"</span><span class="op">,</span></span>
-<span id="cb13-188"><a href="#cb13-188" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][edge]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-189"><a href="#cb13-189" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">20.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">30.0</span><span class="bu">f</span><span class="op">});</span></span>
-<span id="cb13-190"><a href="#cb13-190" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Backward<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Clamp<span class="op">);</span></span>
-<span id="cb13-191"><a href="#cb13-191" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
-<span id="cb13-192"><a href="#cb13-192" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-193"><a href="#cb13-193" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
-<span id="cb13-194"><a href="#cb13-194" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb13-195"><a href="#cb13-195" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
-<span id="cb13-196"><a href="#cb13-196" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-197"><a href="#cb13-197" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> out <span class="op">=</span> result<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">();</span></span>
-<span id="cb13-198"><a href="#cb13-198" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">0</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb13-199"><a href="#cb13-199" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">1</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb13-200"><a href="#cb13-200" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">2</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
-<span id="cb13-201"><a href="#cb13-201" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb13-202"><a href="#cb13-202" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-203"><a href="#cb13-203" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb13-204"><a href="#cb13-204" aria-hidden="true" tabindex="-1"></a><span class="co">// Irregular Time Indices</span></span>
-<span id="cb13-205"><a href="#cb13-205" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb13-206"><a href="#cb13-206" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-207"><a href="#cb13-207" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference preserves irregular TimeFrameIndex values"</span><span class="op">,</span></span>
-<span id="cb13-208"><a href="#cb13-208" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][time]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-209"><a href="#cb13-209" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;</span> data <span class="op">=</span> <span class="op">{</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">15.0</span><span class="bu">f</span><span class="op">};</span></span>
-<span id="cb13-210"><a href="#cb13-210" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameIndex<span class="op">&gt;</span> times <span class="op">=</span> <span class="op">{</span></span>
-<span id="cb13-211"><a href="#cb13-211" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex<span class="op">(</span><span class="dv">0</span><span class="op">),</span></span>
-<span id="cb13-212"><a href="#cb13-212" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex<span class="op">(</span><span class="dv">10</span><span class="op">),</span></span>
-<span id="cb13-213"><a href="#cb13-213" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex<span class="op">(</span><span class="dv">25</span><span class="op">),</span></span>
-<span id="cb13-214"><a href="#cb13-214" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">)};</span></span>
-<span id="cb13-215"><a href="#cb13-215" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-216"><a href="#cb13-216" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATSWithTimes<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>data<span class="op">),</span> <span class="bu">std::</span>move<span class="op">(</span>times<span class="op">));</span></span>
-<span id="cb13-217"><a href="#cb13-217" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Backward<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Skip<span class="op">);</span></span>
-<span id="cb13-218"><a href="#cb13-218" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
-<span id="cb13-219"><a href="#cb13-219" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-220"><a href="#cb13-220" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
-<span id="cb13-221"><a href="#cb13-221" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb13-222"><a href="#cb13-222" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
-<span id="cb13-223"><a href="#cb13-223" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-224"><a href="#cb13-224" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> out_times <span class="op">=</span> result<span class="op">-&gt;</span>getTimeSeries<span class="op">();</span></span>
-<span id="cb13-225"><a href="#cb13-225" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>out_times<span class="op">[</span><span class="dv">0</span><span class="op">].</span>getValue<span class="op">()</span> <span class="op">==</span> <span class="dv">10</span><span class="op">);</span></span>
-<span id="cb13-226"><a href="#cb13-226" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>out_times<span class="op">[</span><span class="dv">1</span><span class="op">].</span>getValue<span class="op">()</span> <span class="op">==</span> <span class="dv">25</span><span class="op">);</span></span>
-<span id="cb13-227"><a href="#cb13-227" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>out_times<span class="op">[</span><span class="dv">2</span><span class="op">].</span>getValue<span class="op">()</span> <span class="op">==</span> <span class="dv">100</span><span class="op">);</span></span>
-<span id="cb13-228"><a href="#cb13-228" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb13-229"><a href="#cb13-229" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-230"><a href="#cb13-230" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb13-231"><a href="#cb13-231" aria-hidden="true" tabindex="-1"></a><span class="co">// Edge Cases</span></span>
-<span id="cb13-232"><a href="#cb13-232" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb13-233"><a href="#cb13-233" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-234"><a href="#cb13-234" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference empty input returns nullptr"</span><span class="op">,</span></span>
-<span id="cb13-235"><a href="#cb13-235" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][edge_case]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-236"><a href="#cb13-236" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({});</span></span>
-<span id="cb13-237"><a href="#cb13-237" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Backward<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Skip<span class="op">);</span></span>
-<span id="cb13-238"><a href="#cb13-238" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
-<span id="cb13-239"><a href="#cb13-239" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-240"><a href="#cb13-240" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">)</span> <span class="op">==</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb13-241"><a href="#cb13-241" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb13-242"><a href="#cb13-242" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-243"><a href="#cb13-243" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference Skip with insufficient samples returns nullptr"</span><span class="op">,</span></span>
-<span id="cb13-244"><a href="#cb13-244" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][edge_case]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-245"><a href="#cb13-245" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">42.0</span><span class="bu">f</span><span class="op">});</span></span>
-<span id="cb13-246"><a href="#cb13-246" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Backward<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Skip<span class="op">);</span></span>
-<span id="cb13-247"><a href="#cb13-247" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
-<span id="cb13-248"><a href="#cb13-248" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-249"><a href="#cb13-249" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">)</span> <span class="op">==</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb13-250"><a href="#cb13-250" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb13-251"><a href="#cb13-251" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-252"><a href="#cb13-252" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference NaN with single sample returns one output"</span><span class="op">,</span></span>
-<span id="cb13-253"><a href="#cb13-253" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][edge_case]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-254"><a href="#cb13-254" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">42.0</span><span class="bu">f</span><span class="op">});</span></span>
-<span id="cb13-255"><a href="#cb13-255" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Backward<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>NaN<span class="op">);</span></span>
-<span id="cb13-256"><a href="#cb13-256" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
-<span id="cb13-257"><a href="#cb13-257" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-258"><a href="#cb13-258" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
-<span id="cb13-259"><a href="#cb13-259" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb13-260"><a href="#cb13-260" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb13-261"><a href="#cb13-261" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>isNaN<span class="op">(</span>result<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">()[</span><span class="dv">0</span><span class="op">]));</span></span>
-<span id="cb13-262"><a href="#cb13-262" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb13-263"><a href="#cb13-263" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-264"><a href="#cb13-264" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb13-265"><a href="#cb13-265" aria-hidden="true" tabindex="-1"></a><span class="co">// JSON Parameter Tests</span></span>
-<span id="cb13-266"><a href="#cb13-266" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb13-267"><a href="#cb13-267" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-268"><a href="#cb13-268" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference JSON parameter round-trip"</span><span class="op">,</span></span>
-<span id="cb13-269"><a href="#cb13-269" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][json]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-270"><a href="#cb13-270" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Serialize and deserialize"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-271"><a href="#cb13-271" aria-hidden="true" tabindex="-1"></a>        AnalogDifferenceParams original<span class="op">;</span></span>
-<span id="cb13-272"><a href="#cb13-272" aria-hidden="true" tabindex="-1"></a>        original<span class="op">.</span>method <span class="op">=</span> DifferenceMethod<span class="op">::</span>Central<span class="op">;</span></span>
-<span id="cb13-273"><a href="#cb13-273" aria-hidden="true" tabindex="-1"></a>        original<span class="op">.</span>window <span class="op">=</span> <span class="dv">2</span><span class="op">;</span></span>
-<span id="cb13-274"><a href="#cb13-274" aria-hidden="true" tabindex="-1"></a>        original<span class="op">.</span>edge_policy <span class="op">=</span> DifferenceEdgePolicy<span class="op">::</span>Clamp<span class="op">;</span></span>
-<span id="cb13-275"><a href="#cb13-275" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-276"><a href="#cb13-276" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> saveParametersToJson<span class="op">(</span>original<span class="op">);</span></span>
-<span id="cb13-277"><a href="#cb13-277" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> loadParametersFromJson<span class="op">&lt;</span>AnalogDifferenceParams<span class="op">&gt;(</span>json<span class="op">);</span></span>
-<span id="cb13-278"><a href="#cb13-278" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result<span class="op">);</span></span>
-<span id="cb13-279"><a href="#cb13-279" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-280"><a href="#cb13-280" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> recovered <span class="op">=</span> result<span class="op">.</span>value<span class="op">();</span></span>
-<span id="cb13-281"><a href="#cb13-281" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>recovered<span class="op">.</span>method <span class="op">==</span> DifferenceMethod<span class="op">::</span>Central<span class="op">);</span></span>
-<span id="cb13-282"><a href="#cb13-282" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>recovered<span class="op">.</span>window<span class="op">.</span>value<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
-<span id="cb13-283"><a href="#cb13-283" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>recovered<span class="op">.</span>edge_policy <span class="op">==</span> DifferenceEdgePolicy<span class="op">::</span>Clamp<span class="op">);</span></span>
-<span id="cb13-284"><a href="#cb13-284" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb13-285"><a href="#cb13-285" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-286"><a href="#cb13-286" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Registry-based loadParametersForTransform works"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-287"><a href="#cb13-287" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"method": "Forward", "window": 3, "edge_policy": "NaN"}</span><span class="st">)"</span><span class="op">;</span></span>
-<span id="cb13-288"><a href="#cb13-288" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> params_any <span class="op">=</span> loadParametersForTransform<span class="op">(</span><span class="st">"AnalogDifference"</span><span class="op">,</span> json<span class="op">);</span></span>
-<span id="cb13-289"><a href="#cb13-289" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>params_any<span class="op">.</span>has_value<span class="op">());</span></span>
-<span id="cb13-290"><a href="#cb13-290" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-291"><a href="#cb13-291" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> <span class="bu">std::</span>any_cast<span class="op">&lt;</span>AnalogDifferenceParams<span class="op">&gt;(</span>params_any<span class="op">);</span></span>
-<span id="cb13-292"><a href="#cb13-292" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>params<span class="op">.</span>method <span class="op">==</span> DifferenceMethod<span class="op">::</span>Forward<span class="op">);</span></span>
-<span id="cb13-293"><a href="#cb13-293" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>params<span class="op">.</span>window<span class="op">.</span>value<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
-<span id="cb13-294"><a href="#cb13-294" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>params<span class="op">.</span>edge_policy <span class="op">==</span> DifferenceEdgePolicy<span class="op">::</span>NaN<span class="op">);</span></span>
-<span id="cb13-295"><a href="#cb13-295" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb13-296"><a href="#cb13-296" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-297"><a href="#cb13-297" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Empty JSON uses defaults"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-298"><a href="#cb13-298" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> params_any <span class="op">=</span> loadParametersForTransform<span class="op">(</span><span class="st">"AnalogDifference"</span><span class="op">,</span> <span class="st">"</span><span class="sc">{}</span><span class="st">"</span><span class="op">);</span></span>
-<span id="cb13-299"><a href="#cb13-299" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>params_any<span class="op">.</span>has_value<span class="op">());</span></span>
-<span id="cb13-300"><a href="#cb13-300" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-301"><a href="#cb13-301" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> <span class="bu">std::</span>any_cast<span class="op">&lt;</span>AnalogDifferenceParams<span class="op">&gt;(</span>params_any<span class="op">);</span></span>
-<span id="cb13-302"><a href="#cb13-302" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>params<span class="op">.</span>method <span class="op">==</span> DifferenceMethod<span class="op">::</span>Backward<span class="op">);</span></span>
-<span id="cb13-303"><a href="#cb13-303" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>params<span class="op">.</span>window<span class="op">.</span>value<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb13-304"><a href="#cb13-304" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>params<span class="op">.</span>edge_policy <span class="op">==</span> DifferenceEdgePolicy<span class="op">::</span>Skip<span class="op">);</span></span>
-<span id="cb13-305"><a href="#cb13-305" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb13-306"><a href="#cb13-306" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb13-307"><a href="#cb13-307" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-308"><a href="#cb13-308" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb13-309"><a href="#cb13-309" aria-hidden="true" tabindex="-1"></a><span class="co">// Registry Integration Tests</span></span>
-<span id="cb13-310"><a href="#cb13-310" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb13-311"><a href="#cb13-311" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-312"><a href="#cb13-312" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference registry integration"</span><span class="op">,</span></span>
-<span id="cb13-313"><a href="#cb13-313" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][registry][container]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-314"><a href="#cb13-314" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">&amp;</span> registry <span class="op">=</span> ElementRegistry<span class="op">::</span>instance<span class="op">();</span></span>
-<span id="cb13-315"><a href="#cb13-315" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-316"><a href="#cb13-316" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Transform is registered as container transform"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-317"><a href="#cb13-317" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>registry<span class="op">.</span>isContainerTransform<span class="op">(</span><span class="st">"AnalogDifference"</span><span class="op">));</span></span>
-<span id="cb13-318"><a href="#cb13-318" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>registry<span class="op">.</span>hasElementTransform<span class="op">(</span><span class="st">"AnalogDifference"</span><span class="op">));</span></span>
-<span id="cb13-319"><a href="#cb13-319" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb13-320"><a href="#cb13-320" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-321"><a href="#cb13-321" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Can retrieve container metadata"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-322"><a href="#cb13-322" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> <span class="op">*</span> metadata <span class="op">=</span> registry<span class="op">.</span>getContainerMetadata<span class="op">(</span><span class="st">"AnalogDifference"</span><span class="op">);</span></span>
-<span id="cb13-323"><a href="#cb13-323" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>metadata <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb13-324"><a href="#cb13-324" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>metadata<span class="op">-&gt;</span>name <span class="op">==</span> <span class="st">"AnalogDifference"</span><span class="op">);</span></span>
-<span id="cb13-325"><a href="#cb13-325" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>metadata<span class="op">-&gt;</span>category <span class="op">==</span> <span class="st">"Signal Processing"</span><span class="op">);</span></span>
-<span id="cb13-326"><a href="#cb13-326" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>metadata<span class="op">-&gt;</span>is_deterministic <span class="op">==</span> <span class="kw">true</span><span class="op">);</span></span>
-<span id="cb13-327"><a href="#cb13-327" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>metadata<span class="op">-&gt;</span>supports_cancellation <span class="op">==</span> <span class="kw">true</span><span class="op">);</span></span>
-<span id="cb13-328"><a href="#cb13-328" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb13-329"><a href="#cb13-329" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-330"><a href="#cb13-330" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Can find transform by input type"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-331"><a href="#cb13-331" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> transforms <span class="op">=</span> registry<span class="op">.</span>getContainerTransformsForInputType<span class="op">(</span><span class="kw">typeid</span><span class="op">(</span>AnalogTimeSeries<span class="op">));</span></span>
-<span id="cb13-332"><a href="#cb13-332" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span><span class="bu">std::</span>find<span class="op">(</span>transforms<span class="op">.</span>begin<span class="op">(),</span> transforms<span class="op">.</span>end<span class="op">(),</span> <span class="st">"AnalogDifference"</span><span class="op">)</span> <span class="op">!=</span> transforms<span class="op">.</span>end<span class="op">());</span></span>
-<span id="cb13-333"><a href="#cb13-333" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb13-334"><a href="#cb13-334" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-335"><a href="#cb13-335" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Parameter schema contains expected fields"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-336"><a href="#cb13-336" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> <span class="op">*</span> schema <span class="op">=</span> registry<span class="op">.</span>getParameterSchema<span class="op">(</span><span class="st">"AnalogDifference"</span><span class="op">);</span></span>
-<span id="cb13-337"><a href="#cb13-337" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>schema <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb13-338"><a href="#cb13-338" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>schema<span class="op">-&gt;</span>field<span class="op">(</span><span class="st">"method"</span><span class="op">)</span> <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb13-339"><a href="#cb13-339" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>schema<span class="op">-&gt;</span>field<span class="op">(</span><span class="st">"window"</span><span class="op">)</span> <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb13-340"><a href="#cb13-340" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>schema<span class="op">-&gt;</span>field<span class="op">(</span><span class="st">"edge_policy"</span><span class="op">)</span> <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb13-341"><a href="#cb13-341" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb13-342"><a href="#cb13-342" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-343"><a href="#cb13-343" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Can execute via registry"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-344"><a href="#cb13-344" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">2.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">3.0</span><span class="bu">f</span><span class="op">});</span></span>
-<span id="cb13-345"><a href="#cb13-345" aria-hidden="true" tabindex="-1"></a>        AnalogDifferenceParams params<span class="op">;</span></span>
-<span id="cb13-346"><a href="#cb13-346" aria-hidden="true" tabindex="-1"></a>        ComputeContext <span class="at">const</span> ctx<span class="op">;</span></span>
-<span id="cb13-347"><a href="#cb13-347" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-348"><a href="#cb13-348" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> registry<span class="op">.</span>executeContainerTransform<span class="op">&lt;</span></span>
-<span id="cb13-349"><a href="#cb13-349" aria-hidden="true" tabindex="-1"></a>                AnalogTimeSeries<span class="op">,</span> AnalogTimeSeries<span class="op">,</span> AnalogDifferenceParams<span class="op">&gt;(</span></span>
-<span id="cb13-350"><a href="#cb13-350" aria-hidden="true" tabindex="-1"></a>                <span class="st">"AnalogDifference"</span><span class="op">,</span> <span class="op">*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
-<span id="cb13-351"><a href="#cb13-351" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-352"><a href="#cb13-352" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb13-353"><a href="#cb13-353" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
-<span id="cb13-354"><a href="#cb13-354" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb13-355"><a href="#cb13-355" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb13-356"><a href="#cb13-356" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-357"><a href="#cb13-357" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb13-358"><a href="#cb13-358" aria-hidden="true" tabindex="-1"></a><span class="co">// Pipeline Loader Tests</span></span>
-<span id="cb13-359"><a href="#cb13-359" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb13-360"><a href="#cb13-360" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-361"><a href="#cb13-361" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference loadPipelineFromJson"</span><span class="op">,</span></span>
-<span id="cb13-362"><a href="#cb13-362" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][pipeline_loader]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb13-363"><a href="#cb13-363" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{</span></span>
-<span id="cb13-364"><a href="#cb13-364" aria-hidden="true" tabindex="-1"></a><span class="vs">        "steps": [{</span></span>
-<span id="cb13-365"><a href="#cb13-365" aria-hidden="true" tabindex="-1"></a><span class="vs">            "step_id": "step_1",</span></span>
-<span id="cb13-366"><a href="#cb13-366" aria-hidden="true" tabindex="-1"></a><span class="vs">            "transform_name": "AnalogDifference",</span></span>
-<span id="cb13-367"><a href="#cb13-367" aria-hidden="true" tabindex="-1"></a><span class="vs">            "parameters": {</span></span>
-<span id="cb13-368"><a href="#cb13-368" aria-hidden="true" tabindex="-1"></a><span class="vs">                "method": "Central",</span></span>
-<span id="cb13-369"><a href="#cb13-369" aria-hidden="true" tabindex="-1"></a><span class="vs">                "window": 1,</span></span>
-<span id="cb13-370"><a href="#cb13-370" aria-hidden="true" tabindex="-1"></a><span class="vs">                "edge_policy": "Skip"</span></span>
-<span id="cb13-371"><a href="#cb13-371" aria-hidden="true" tabindex="-1"></a><span class="vs">            }</span></span>
-<span id="cb13-372"><a href="#cb13-372" aria-hidden="true" tabindex="-1"></a><span class="vs">        }]</span></span>
-<span id="cb13-373"><a href="#cb13-373" aria-hidden="true" tabindex="-1"></a><span class="vs">    }</span><span class="st">)"</span><span class="op">;</span></span>
-<span id="cb13-374"><a href="#cb13-374" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-375"><a href="#cb13-375" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> pipeline_result <span class="op">=</span> loadPipelineFromJson<span class="op">(</span>json<span class="op">);</span></span>
-<span id="cb13-376"><a href="#cb13-376" aria-hidden="true" tabindex="-1"></a>    INFO<span class="op">(</span><span class="st">"Error: "</span> <span class="op">&lt;&lt;</span> <span class="op">(</span>pipeline_result <span class="op">?</span> <span class="st">""</span> <span class="op">:</span> pipeline_result<span class="op">.</span>error<span class="op">()-&gt;</span>what<span class="op">()));</span></span>
-<span id="cb13-377"><a href="#cb13-377" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>pipeline_result<span class="op">);</span></span>
-<span id="cb13-378"><a href="#cb13-378" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/algorithms/AnalogDifference/AnalogDifference.hpp"</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"AnalogTimeSeries/Analog_Time_Series.hpp"</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"DataManager.hpp"</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/core/ComputeContext.hpp"</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/core/ElementRegistry.hpp"</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/io/ParameterIO.hpp"</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TransformsV2/io/PipelineLoader.hpp"</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/catch_test_macros.hpp&gt;</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/matchers/catch_matchers_floating_point.hpp&gt;</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;algorithm&gt;</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cmath&gt;</span></span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;cstddef&gt;</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;limits&gt;</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;memory&gt;</span></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;string&gt;</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">;</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> Neuralyzer<span class="op">::</span>Transforms<span class="op">::</span>V2<span class="op">::</span>Examples<span class="op">;</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> <span class="op">{</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>ComputeContext makeCtx<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ComputeContext<span class="op">{};</span></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;</span> makeATS<span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;</span> data<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> n <span class="op">=</span> data<span class="op">.</span>size<span class="op">();</span></span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;(</span><span class="bu">std::</span>move<span class="op">(</span>data<span class="op">),</span> n<span class="op">);</span></span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>shared_ptr<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;</span> makeATSWithTimes<span class="op">(</span></span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;</span> data<span class="op">,</span></span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameIndex<span class="op">&gt;</span> times<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>make_shared<span class="op">&lt;</span>AnalogTimeSeries<span class="op">&gt;(</span><span class="bu">std::</span>move<span class="op">(</span>data<span class="op">),</span> <span class="bu">std::</span>move<span class="op">(</span>times<span class="op">));</span></span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>AnalogDifferenceParams makeParams<span class="op">(</span></span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>        DifferenceMethod method<span class="op">,</span></span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>        <span class="dt">int</span> window<span class="op">,</span></span>
+<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>        DifferenceEdgePolicy edge_policy<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>    AnalogDifferenceParams params<span class="op">;</span></span>
+<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>method <span class="op">=</span> method<span class="op">;</span></span>
+<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>window <span class="op">=</span> window<span class="op">;</span></span>
+<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a>    params<span class="op">.</span>edge_policy <span class="op">=</span> edge_policy<span class="op">;</span></span>
+<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> params<span class="op">;</span></span>
+<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> isNaN<span class="op">(</span><span class="dt">float</span> value<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">std::</span>isnan<span class="op">(</span>value<span class="op">);</span></span>
+<span id="cb13-56"><a href="#cb13-56" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-57"><a href="#cb13-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-58"><a href="#cb13-58" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// anonymous namespace</span></span>
+<span id="cb13-59"><a href="#cb13-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-60"><a href="#cb13-60" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb13-61"><a href="#cb13-61" aria-hidden="true" tabindex="-1"></a><span class="co">// Math Tests</span></span>
+<span id="cb13-62"><a href="#cb13-62" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb13-63"><a href="#cb13-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-64"><a href="#cb13-64" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference backward difference window=1"</span><span class="op">,</span></span>
+<span id="cb13-65"><a href="#cb13-65" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][math]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-66"><a href="#cb13-66" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">2.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">3.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">4.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb13-67"><a href="#cb13-67" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Backward<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Skip<span class="op">);</span></span>
+<span id="cb13-68"><a href="#cb13-68" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
+<span id="cb13-69"><a href="#cb13-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-70"><a href="#cb13-70" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb13-71"><a href="#cb13-71" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb13-72"><a href="#cb13-72" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">5</span><span class="op">);</span></span>
+<span id="cb13-73"><a href="#cb13-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-74"><a href="#cb13-74" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> out <span class="op">=</span> result<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">();</span></span>
+<span id="cb13-75"><a href="#cb13-75" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">0</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb13-76"><a href="#cb13-76" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">1</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb13-77"><a href="#cb13-77" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">4</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb13-78"><a href="#cb13-78" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-79"><a href="#cb13-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-80"><a href="#cb13-80" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference forward difference window=1"</span><span class="op">,</span></span>
+<span id="cb13-81"><a href="#cb13-81" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][math]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-82"><a href="#cb13-82" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">2.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">3.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">4.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb13-83"><a href="#cb13-83" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Forward<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Skip<span class="op">);</span></span>
+<span id="cb13-84"><a href="#cb13-84" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
+<span id="cb13-85"><a href="#cb13-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-86"><a href="#cb13-86" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb13-87"><a href="#cb13-87" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb13-88"><a href="#cb13-88" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">5</span><span class="op">);</span></span>
+<span id="cb13-89"><a href="#cb13-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-90"><a href="#cb13-90" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> out <span class="op">=</span> result<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">();</span></span>
+<span id="cb13-91"><a href="#cb13-91" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">0</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb13-92"><a href="#cb13-92" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">4</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb13-93"><a href="#cb13-93" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-94"><a href="#cb13-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-95"><a href="#cb13-95" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference central difference window=1"</span><span class="op">,</span></span>
+<span id="cb13-96"><a href="#cb13-96" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][math]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-97"><a href="#cb13-97" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">2.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">3.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">4.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb13-98"><a href="#cb13-98" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Central<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Skip<span class="op">);</span></span>
+<span id="cb13-99"><a href="#cb13-99" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
+<span id="cb13-100"><a href="#cb13-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-101"><a href="#cb13-101" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb13-102"><a href="#cb13-102" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb13-103"><a href="#cb13-103" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">4</span><span class="op">);</span></span>
+<span id="cb13-104"><a href="#cb13-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-105"><a href="#cb13-105" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> out <span class="op">=</span> result<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">();</span></span>
+<span id="cb13-106"><a href="#cb13-106" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">0</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb13-107"><a href="#cb13-107" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">3</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb13-108"><a href="#cb13-108" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-109"><a href="#cb13-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-110"><a href="#cb13-110" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference backward difference window=2"</span><span class="op">,</span></span>
+<span id="cb13-111"><a href="#cb13-111" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][math]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-112"><a href="#cb13-112" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">2.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">3.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">4.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb13-113"><a href="#cb13-113" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Backward<span class="op">,</span> <span class="dv">2</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Skip<span class="op">);</span></span>
+<span id="cb13-114"><a href="#cb13-114" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
+<span id="cb13-115"><a href="#cb13-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-116"><a href="#cb13-116" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb13-117"><a href="#cb13-117" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb13-118"><a href="#cb13-118" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">4</span><span class="op">);</span></span>
+<span id="cb13-119"><a href="#cb13-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-120"><a href="#cb13-120" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> out <span class="op">=</span> result<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">();</span></span>
+<span id="cb13-121"><a href="#cb13-121" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">0</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">2.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb13-122"><a href="#cb13-122" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">3</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">2.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb13-123"><a href="#cb13-123" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-124"><a href="#cb13-124" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-125"><a href="#cb13-125" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference central difference window=2"</span><span class="op">,</span></span>
+<span id="cb13-126"><a href="#cb13-126" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][math]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-127"><a href="#cb13-127" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">2.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">3.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">4.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb13-128"><a href="#cb13-128" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Central<span class="op">,</span> <span class="dv">2</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Skip<span class="op">);</span></span>
+<span id="cb13-129"><a href="#cb13-129" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
+<span id="cb13-130"><a href="#cb13-130" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-131"><a href="#cb13-131" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb13-132"><a href="#cb13-132" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb13-133"><a href="#cb13-133" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb13-134"><a href="#cb13-134" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-135"><a href="#cb13-135" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> out <span class="op">=</span> result<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">();</span></span>
+<span id="cb13-136"><a href="#cb13-136" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">0</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb13-137"><a href="#cb13-137" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">1</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb13-138"><a href="#cb13-138" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-139"><a href="#cb13-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-140"><a href="#cb13-140" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb13-141"><a href="#cb13-141" aria-hidden="true" tabindex="-1"></a><span class="co">// Edge Policy Tests</span></span>
+<span id="cb13-142"><a href="#cb13-142" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb13-143"><a href="#cb13-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-144"><a href="#cb13-144" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference Skip edge policy omits boundary samples"</span><span class="op">,</span></span>
+<span id="cb13-145"><a href="#cb13-145" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][edge]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-146"><a href="#cb13-146" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">20.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">30.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb13-147"><a href="#cb13-147" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Central<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Skip<span class="op">);</span></span>
+<span id="cb13-148"><a href="#cb13-148" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
+<span id="cb13-149"><a href="#cb13-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-150"><a href="#cb13-150" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb13-151"><a href="#cb13-151" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb13-152"><a href="#cb13-152" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb13-153"><a href="#cb13-153" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>result<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">()[</span><span class="dv">0</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb13-154"><a href="#cb13-154" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-155"><a href="#cb13-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-156"><a href="#cb13-156" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference NaN edge policy fills incomplete windows"</span><span class="op">,</span></span>
+<span id="cb13-157"><a href="#cb13-157" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][edge]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-158"><a href="#cb13-158" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">20.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">30.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb13-159"><a href="#cb13-159" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Backward<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>NaN<span class="op">);</span></span>
+<span id="cb13-160"><a href="#cb13-160" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
+<span id="cb13-161"><a href="#cb13-161" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-162"><a href="#cb13-162" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb13-163"><a href="#cb13-163" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb13-164"><a href="#cb13-164" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb13-165"><a href="#cb13-165" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-166"><a href="#cb13-166" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> out <span class="op">=</span> result<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">();</span></span>
+<span id="cb13-167"><a href="#cb13-167" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>isNaN<span class="op">(</span>out<span class="op">[</span><span class="dv">0</span><span class="op">]));</span></span>
+<span id="cb13-168"><a href="#cb13-168" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">1</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb13-169"><a href="#cb13-169" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">2</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb13-170"><a href="#cb13-170" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-171"><a href="#cb13-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-172"><a href="#cb13-172" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference Zero edge policy fills incomplete windows"</span><span class="op">,</span></span>
+<span id="cb13-173"><a href="#cb13-173" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][edge]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-174"><a href="#cb13-174" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">20.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">30.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb13-175"><a href="#cb13-175" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Forward<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Zero<span class="op">);</span></span>
+<span id="cb13-176"><a href="#cb13-176" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
+<span id="cb13-177"><a href="#cb13-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-178"><a href="#cb13-178" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb13-179"><a href="#cb13-179" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb13-180"><a href="#cb13-180" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb13-181"><a href="#cb13-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-182"><a href="#cb13-182" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> out <span class="op">=</span> result<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">();</span></span>
+<span id="cb13-183"><a href="#cb13-183" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">0</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb13-184"><a href="#cb13-184" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">1</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb13-185"><a href="#cb13-185" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">2</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb13-186"><a href="#cb13-186" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-187"><a href="#cb13-187" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-188"><a href="#cb13-188" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference Clamp edge policy uses boundary samples"</span><span class="op">,</span></span>
+<span id="cb13-189"><a href="#cb13-189" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][edge]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-190"><a href="#cb13-190" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">20.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">30.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb13-191"><a href="#cb13-191" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Backward<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Clamp<span class="op">);</span></span>
+<span id="cb13-192"><a href="#cb13-192" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
+<span id="cb13-193"><a href="#cb13-193" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-194"><a href="#cb13-194" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb13-195"><a href="#cb13-195" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb13-196"><a href="#cb13-196" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb13-197"><a href="#cb13-197" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-198"><a href="#cb13-198" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> out <span class="op">=</span> result<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">();</span></span>
+<span id="cb13-199"><a href="#cb13-199" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">0</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb13-200"><a href="#cb13-200" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">1</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb13-201"><a href="#cb13-201" aria-hidden="true" tabindex="-1"></a>    REQUIRE_THAT<span class="op">(</span>out<span class="op">[</span><span class="dv">2</span><span class="op">],</span> Catch<span class="op">::</span>Matchers<span class="op">::</span>WithinAbs<span class="op">(</span><span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1e-5</span><span class="bu">f</span><span class="op">));</span></span>
+<span id="cb13-202"><a href="#cb13-202" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-203"><a href="#cb13-203" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-204"><a href="#cb13-204" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb13-205"><a href="#cb13-205" aria-hidden="true" tabindex="-1"></a><span class="co">// Irregular Time Indices</span></span>
+<span id="cb13-206"><a href="#cb13-206" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb13-207"><a href="#cb13-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-208"><a href="#cb13-208" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference preserves irregular TimeFrameIndex values"</span><span class="op">,</span></span>
+<span id="cb13-209"><a href="#cb13-209" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][time]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-210"><a href="#cb13-210" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">float</span><span class="op">&gt;</span> data <span class="op">=</span> <span class="op">{</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">5.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">10.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">15.0</span><span class="bu">f</span><span class="op">};</span></span>
+<span id="cb13-211"><a href="#cb13-211" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span>TimeFrameIndex<span class="op">&gt;</span> times <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb13-212"><a href="#cb13-212" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex<span class="op">(</span><span class="dv">0</span><span class="op">),</span></span>
+<span id="cb13-213"><a href="#cb13-213" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex<span class="op">(</span><span class="dv">10</span><span class="op">),</span></span>
+<span id="cb13-214"><a href="#cb13-214" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex<span class="op">(</span><span class="dv">25</span><span class="op">),</span></span>
+<span id="cb13-215"><a href="#cb13-215" aria-hidden="true" tabindex="-1"></a>            TimeFrameIndex<span class="op">(</span><span class="dv">100</span><span class="op">)};</span></span>
+<span id="cb13-216"><a href="#cb13-216" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-217"><a href="#cb13-217" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATSWithTimes<span class="op">(</span><span class="bu">std::</span>move<span class="op">(</span>data<span class="op">),</span> <span class="bu">std::</span>move<span class="op">(</span>times<span class="op">));</span></span>
+<span id="cb13-218"><a href="#cb13-218" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Backward<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Skip<span class="op">);</span></span>
+<span id="cb13-219"><a href="#cb13-219" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
+<span id="cb13-220"><a href="#cb13-220" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-221"><a href="#cb13-221" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb13-222"><a href="#cb13-222" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb13-223"><a href="#cb13-223" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb13-224"><a href="#cb13-224" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-225"><a href="#cb13-225" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> out_times <span class="op">=</span> result<span class="op">-&gt;</span>getTimeSeries<span class="op">();</span></span>
+<span id="cb13-226"><a href="#cb13-226" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>out_times<span class="op">[</span><span class="dv">0</span><span class="op">].</span>getValue<span class="op">()</span> <span class="op">==</span> <span class="dv">10</span><span class="op">);</span></span>
+<span id="cb13-227"><a href="#cb13-227" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>out_times<span class="op">[</span><span class="dv">1</span><span class="op">].</span>getValue<span class="op">()</span> <span class="op">==</span> <span class="dv">25</span><span class="op">);</span></span>
+<span id="cb13-228"><a href="#cb13-228" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>out_times<span class="op">[</span><span class="dv">2</span><span class="op">].</span>getValue<span class="op">()</span> <span class="op">==</span> <span class="dv">100</span><span class="op">);</span></span>
+<span id="cb13-229"><a href="#cb13-229" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-230"><a href="#cb13-230" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-231"><a href="#cb13-231" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb13-232"><a href="#cb13-232" aria-hidden="true" tabindex="-1"></a><span class="co">// Edge Cases</span></span>
+<span id="cb13-233"><a href="#cb13-233" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb13-234"><a href="#cb13-234" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-235"><a href="#cb13-235" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference empty input returns nullptr"</span><span class="op">,</span></span>
+<span id="cb13-236"><a href="#cb13-236" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][edge_case]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-237"><a href="#cb13-237" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({});</span></span>
+<span id="cb13-238"><a href="#cb13-238" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Backward<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Skip<span class="op">);</span></span>
+<span id="cb13-239"><a href="#cb13-239" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
+<span id="cb13-240"><a href="#cb13-240" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-241"><a href="#cb13-241" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">)</span> <span class="op">==</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb13-242"><a href="#cb13-242" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-243"><a href="#cb13-243" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-244"><a href="#cb13-244" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference Skip with insufficient samples returns nullptr"</span><span class="op">,</span></span>
+<span id="cb13-245"><a href="#cb13-245" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][edge_case]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-246"><a href="#cb13-246" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">42.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb13-247"><a href="#cb13-247" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Backward<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>Skip<span class="op">);</span></span>
+<span id="cb13-248"><a href="#cb13-248" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
+<span id="cb13-249"><a href="#cb13-249" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-250"><a href="#cb13-250" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">)</span> <span class="op">==</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb13-251"><a href="#cb13-251" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-252"><a href="#cb13-252" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-253"><a href="#cb13-253" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference NaN with single sample returns one output"</span><span class="op">,</span></span>
+<span id="cb13-254"><a href="#cb13-254" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][edge_case]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-255"><a href="#cb13-255" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">42.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb13-256"><a href="#cb13-256" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> makeParams<span class="op">(</span>DifferenceMethod<span class="op">::</span>Backward<span class="op">,</span> <span class="dv">1</span><span class="op">,</span> DifferenceEdgePolicy<span class="op">::</span>NaN<span class="op">);</span></span>
+<span id="cb13-257"><a href="#cb13-257" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> ctx <span class="op">=</span> makeCtx<span class="op">();</span></span>
+<span id="cb13-258"><a href="#cb13-258" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-259"><a href="#cb13-259" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> result <span class="op">=</span> analogDifference<span class="op">(*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb13-260"><a href="#cb13-260" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb13-261"><a href="#cb13-261" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb13-262"><a href="#cb13-262" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>isNaN<span class="op">(</span>result<span class="op">-&gt;</span>getAnalogTimeSeries<span class="op">()[</span><span class="dv">0</span><span class="op">]));</span></span>
+<span id="cb13-263"><a href="#cb13-263" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-264"><a href="#cb13-264" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-265"><a href="#cb13-265" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb13-266"><a href="#cb13-266" aria-hidden="true" tabindex="-1"></a><span class="co">// JSON Parameter Tests</span></span>
+<span id="cb13-267"><a href="#cb13-267" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb13-268"><a href="#cb13-268" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-269"><a href="#cb13-269" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference JSON parameter round-trip"</span><span class="op">,</span></span>
+<span id="cb13-270"><a href="#cb13-270" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][json]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-271"><a href="#cb13-271" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Serialize and deserialize"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-272"><a href="#cb13-272" aria-hidden="true" tabindex="-1"></a>        AnalogDifferenceParams original<span class="op">;</span></span>
+<span id="cb13-273"><a href="#cb13-273" aria-hidden="true" tabindex="-1"></a>        original<span class="op">.</span>method <span class="op">=</span> DifferenceMethod<span class="op">::</span>Central<span class="op">;</span></span>
+<span id="cb13-274"><a href="#cb13-274" aria-hidden="true" tabindex="-1"></a>        original<span class="op">.</span>window <span class="op">=</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb13-275"><a href="#cb13-275" aria-hidden="true" tabindex="-1"></a>        original<span class="op">.</span>edge_policy <span class="op">=</span> DifferenceEdgePolicy<span class="op">::</span>Clamp<span class="op">;</span></span>
+<span id="cb13-276"><a href="#cb13-276" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-277"><a href="#cb13-277" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> saveParametersToJson<span class="op">(</span>original<span class="op">);</span></span>
+<span id="cb13-278"><a href="#cb13-278" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> loadParametersFromJson<span class="op">&lt;</span>AnalogDifferenceParams<span class="op">&gt;(</span>json<span class="op">);</span></span>
+<span id="cb13-279"><a href="#cb13-279" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result<span class="op">);</span></span>
+<span id="cb13-280"><a href="#cb13-280" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-281"><a href="#cb13-281" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> recovered <span class="op">=</span> result<span class="op">.</span>value<span class="op">();</span></span>
+<span id="cb13-282"><a href="#cb13-282" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>recovered<span class="op">.</span>method <span class="op">==</span> DifferenceMethod<span class="op">::</span>Central<span class="op">);</span></span>
+<span id="cb13-283"><a href="#cb13-283" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>recovered<span class="op">.</span>window<span class="op">.</span>value<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb13-284"><a href="#cb13-284" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>recovered<span class="op">.</span>edge_policy <span class="op">==</span> DifferenceEdgePolicy<span class="op">::</span>Clamp<span class="op">);</span></span>
+<span id="cb13-285"><a href="#cb13-285" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-286"><a href="#cb13-286" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-287"><a href="#cb13-287" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Registry-based loadParametersForTransform works"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-288"><a href="#cb13-288" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{"method": "Forward", "window": 3, "edge_policy": "NaN"}</span><span class="st">)"</span><span class="op">;</span></span>
+<span id="cb13-289"><a href="#cb13-289" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> params_any <span class="op">=</span> loadParametersForTransform<span class="op">(</span><span class="st">"AnalogDifference"</span><span class="op">,</span> json<span class="op">);</span></span>
+<span id="cb13-290"><a href="#cb13-290" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>params_any<span class="op">.</span>has_value<span class="op">());</span></span>
+<span id="cb13-291"><a href="#cb13-291" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-292"><a href="#cb13-292" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> <span class="bu">std::</span>any_cast<span class="op">&lt;</span>AnalogDifferenceParams<span class="op">&gt;(</span>params_any<span class="op">);</span></span>
+<span id="cb13-293"><a href="#cb13-293" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>params<span class="op">.</span>method <span class="op">==</span> DifferenceMethod<span class="op">::</span>Forward<span class="op">);</span></span>
+<span id="cb13-294"><a href="#cb13-294" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>params<span class="op">.</span>window<span class="op">.</span>value<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb13-295"><a href="#cb13-295" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>params<span class="op">.</span>edge_policy <span class="op">==</span> DifferenceEdgePolicy<span class="op">::</span>NaN<span class="op">);</span></span>
+<span id="cb13-296"><a href="#cb13-296" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-297"><a href="#cb13-297" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-298"><a href="#cb13-298" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Empty JSON uses defaults"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-299"><a href="#cb13-299" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> params_any <span class="op">=</span> loadParametersForTransform<span class="op">(</span><span class="st">"AnalogDifference"</span><span class="op">,</span> <span class="st">"</span><span class="sc">{}</span><span class="st">"</span><span class="op">);</span></span>
+<span id="cb13-300"><a href="#cb13-300" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>params_any<span class="op">.</span>has_value<span class="op">());</span></span>
+<span id="cb13-301"><a href="#cb13-301" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-302"><a href="#cb13-302" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> params <span class="op">=</span> <span class="bu">std::</span>any_cast<span class="op">&lt;</span>AnalogDifferenceParams<span class="op">&gt;(</span>params_any<span class="op">);</span></span>
+<span id="cb13-303"><a href="#cb13-303" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>params<span class="op">.</span>method <span class="op">==</span> DifferenceMethod<span class="op">::</span>Backward<span class="op">);</span></span>
+<span id="cb13-304"><a href="#cb13-304" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>params<span class="op">.</span>window<span class="op">.</span>value<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb13-305"><a href="#cb13-305" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>params<span class="op">.</span>edge_policy <span class="op">==</span> DifferenceEdgePolicy<span class="op">::</span>Skip<span class="op">);</span></span>
+<span id="cb13-306"><a href="#cb13-306" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-307"><a href="#cb13-307" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-308"><a href="#cb13-308" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-309"><a href="#cb13-309" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb13-310"><a href="#cb13-310" aria-hidden="true" tabindex="-1"></a><span class="co">// Registry Integration Tests</span></span>
+<span id="cb13-311"><a href="#cb13-311" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb13-312"><a href="#cb13-312" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-313"><a href="#cb13-313" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference registry integration"</span><span class="op">,</span></span>
+<span id="cb13-314"><a href="#cb13-314" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][registry][container]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-315"><a href="#cb13-315" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="op">&amp;</span> registry <span class="op">=</span> ElementRegistry<span class="op">::</span>instance<span class="op">();</span></span>
+<span id="cb13-316"><a href="#cb13-316" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-317"><a href="#cb13-317" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Transform is registered as container transform"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-318"><a href="#cb13-318" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>registry<span class="op">.</span>isContainerTransform<span class="op">(</span><span class="st">"AnalogDifference"</span><span class="op">));</span></span>
+<span id="cb13-319"><a href="#cb13-319" aria-hidden="true" tabindex="-1"></a>        REQUIRE_FALSE<span class="op">(</span>registry<span class="op">.</span>hasElementTransform<span class="op">(</span><span class="st">"AnalogDifference"</span><span class="op">));</span></span>
+<span id="cb13-320"><a href="#cb13-320" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-321"><a href="#cb13-321" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-322"><a href="#cb13-322" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Can retrieve container metadata"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-323"><a href="#cb13-323" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> <span class="op">*</span> metadata <span class="op">=</span> registry<span class="op">.</span>getContainerMetadata<span class="op">(</span><span class="st">"AnalogDifference"</span><span class="op">);</span></span>
+<span id="cb13-324"><a href="#cb13-324" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>metadata <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb13-325"><a href="#cb13-325" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>metadata<span class="op">-&gt;</span>name <span class="op">==</span> <span class="st">"AnalogDifference"</span><span class="op">);</span></span>
+<span id="cb13-326"><a href="#cb13-326" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>metadata<span class="op">-&gt;</span>category <span class="op">==</span> <span class="st">"Signal Processing"</span><span class="op">);</span></span>
+<span id="cb13-327"><a href="#cb13-327" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>metadata<span class="op">-&gt;</span>is_deterministic <span class="op">==</span> <span class="kw">true</span><span class="op">);</span></span>
+<span id="cb13-328"><a href="#cb13-328" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>metadata<span class="op">-&gt;</span>supports_cancellation <span class="op">==</span> <span class="kw">true</span><span class="op">);</span></span>
+<span id="cb13-329"><a href="#cb13-329" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-330"><a href="#cb13-330" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-331"><a href="#cb13-331" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Can find transform by input type"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-332"><a href="#cb13-332" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> transforms <span class="op">=</span> registry<span class="op">.</span>getContainerTransformsForInputType<span class="op">(</span><span class="kw">typeid</span><span class="op">(</span>AnalogTimeSeries<span class="op">));</span></span>
+<span id="cb13-333"><a href="#cb13-333" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span><span class="bu">std::</span>find<span class="op">(</span>transforms<span class="op">.</span>begin<span class="op">(),</span> transforms<span class="op">.</span>end<span class="op">(),</span> <span class="st">"AnalogDifference"</span><span class="op">)</span> <span class="op">!=</span> transforms<span class="op">.</span>end<span class="op">());</span></span>
+<span id="cb13-334"><a href="#cb13-334" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-335"><a href="#cb13-335" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-336"><a href="#cb13-336" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Parameter schema contains expected fields"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-337"><a href="#cb13-337" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> <span class="op">*</span> schema <span class="op">=</span> registry<span class="op">.</span>getParameterSchema<span class="op">(</span><span class="st">"AnalogDifference"</span><span class="op">);</span></span>
+<span id="cb13-338"><a href="#cb13-338" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>schema <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb13-339"><a href="#cb13-339" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>schema<span class="op">-&gt;</span>field<span class="op">(</span><span class="st">"method"</span><span class="op">)</span> <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb13-340"><a href="#cb13-340" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>schema<span class="op">-&gt;</span>field<span class="op">(</span><span class="st">"window"</span><span class="op">)</span> <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb13-341"><a href="#cb13-341" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>schema<span class="op">-&gt;</span>field<span class="op">(</span><span class="st">"edge_policy"</span><span class="op">)</span> <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb13-342"><a href="#cb13-342" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-343"><a href="#cb13-343" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-344"><a href="#cb13-344" aria-hidden="true" tabindex="-1"></a>    SECTION<span class="op">(</span><span class="st">"Can execute via registry"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-345"><a href="#cb13-345" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> input <span class="op">=</span> makeATS<span class="op">({</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">2.0</span><span class="bu">f</span><span class="op">,</span> <span class="fl">3.0</span><span class="bu">f</span><span class="op">});</span></span>
+<span id="cb13-346"><a href="#cb13-346" aria-hidden="true" tabindex="-1"></a>        AnalogDifferenceParams params<span class="op">;</span></span>
+<span id="cb13-347"><a href="#cb13-347" aria-hidden="true" tabindex="-1"></a>        ComputeContext <span class="at">const</span> ctx<span class="op">;</span></span>
+<span id="cb13-348"><a href="#cb13-348" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-349"><a href="#cb13-349" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> result <span class="op">=</span> registry<span class="op">.</span>executeContainerTransform<span class="op">&lt;</span></span>
+<span id="cb13-350"><a href="#cb13-350" aria-hidden="true" tabindex="-1"></a>                AnalogTimeSeries<span class="op">,</span> AnalogTimeSeries<span class="op">,</span> AnalogDifferenceParams<span class="op">&gt;(</span></span>
+<span id="cb13-351"><a href="#cb13-351" aria-hidden="true" tabindex="-1"></a>                <span class="st">"AnalogDifference"</span><span class="op">,</span> <span class="op">*</span>input<span class="op">,</span> params<span class="op">,</span> ctx<span class="op">);</span></span>
+<span id="cb13-352"><a href="#cb13-352" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-353"><a href="#cb13-353" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb13-354"><a href="#cb13-354" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>result<span class="op">-&gt;</span>getNumSamples<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb13-355"><a href="#cb13-355" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb13-356"><a href="#cb13-356" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb13-357"><a href="#cb13-357" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-358"><a href="#cb13-358" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb13-359"><a href="#cb13-359" aria-hidden="true" tabindex="-1"></a><span class="co">// Pipeline Loader Tests</span></span>
+<span id="cb13-360"><a href="#cb13-360" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb13-361"><a href="#cb13-361" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-362"><a href="#cb13-362" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AnalogDifference loadPipelineFromJson"</span><span class="op">,</span></span>
+<span id="cb13-363"><a href="#cb13-363" aria-hidden="true" tabindex="-1"></a>          <span class="st">"[transforms][v2][analog_difference][pipeline_loader]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb13-364"><a href="#cb13-364" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> json <span class="op">=</span> <span class="st">R"(</span><span class="vs">{</span></span>
+<span id="cb13-365"><a href="#cb13-365" aria-hidden="true" tabindex="-1"></a><span class="vs">        "steps": [{</span></span>
+<span id="cb13-366"><a href="#cb13-366" aria-hidden="true" tabindex="-1"></a><span class="vs">            "step_id": "step_1",</span></span>
+<span id="cb13-367"><a href="#cb13-367" aria-hidden="true" tabindex="-1"></a><span class="vs">            "transform_name": "AnalogDifference",</span></span>
+<span id="cb13-368"><a href="#cb13-368" aria-hidden="true" tabindex="-1"></a><span class="vs">            "parameters": {</span></span>
+<span id="cb13-369"><a href="#cb13-369" aria-hidden="true" tabindex="-1"></a><span class="vs">                "method": "Central",</span></span>
+<span id="cb13-370"><a href="#cb13-370" aria-hidden="true" tabindex="-1"></a><span class="vs">                "window": 1,</span></span>
+<span id="cb13-371"><a href="#cb13-371" aria-hidden="true" tabindex="-1"></a><span class="vs">                "edge_policy": "Skip"</span></span>
+<span id="cb13-372"><a href="#cb13-372" aria-hidden="true" tabindex="-1"></a><span class="vs">            }</span></span>
+<span id="cb13-373"><a href="#cb13-373" aria-hidden="true" tabindex="-1"></a><span class="vs">        }]</span></span>
+<span id="cb13-374"><a href="#cb13-374" aria-hidden="true" tabindex="-1"></a><span class="vs">    }</span><span class="st">)"</span><span class="op">;</span></span>
+<span id="cb13-375"><a href="#cb13-375" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-376"><a href="#cb13-376" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> pipeline_result <span class="op">=</span> loadPipelineFromJson<span class="op">(</span>json<span class="op">);</span></span>
+<span id="cb13-377"><a href="#cb13-377" aria-hidden="true" tabindex="-1"></a>    INFO<span class="op">(</span><span class="st">"Error: "</span> <span class="op">&lt;&lt;</span> <span class="op">(</span>pipeline_result <span class="op">?</span> <span class="st">""</span> <span class="op">:</span> pipeline_result<span class="op">.</span>error<span class="op">()-&gt;</span>what<span class="op">()));</span></span>
+<span id="cb13-378"><a href="#cb13-378" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>pipeline_result<span class="op">);</span></span>
+<span id="cb13-379"><a href="#cb13-379" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-10-09 at 13:36:36 +0000</p>
+<p>Updated on 2026-11-13 at 20:25:44 +0000</p>
 
 
 </section>
@@ -940,15 +950,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -1027,7 +1072,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -1036,8 +1082,69 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -1051,6 +1158,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -1213,44 +1321,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -1348,6 +1466,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       }
     }
   });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
 

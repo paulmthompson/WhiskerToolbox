@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -37,18 +37,19 @@ ul.task-list li input[type="checkbox"] {
 <meta name="quarto:offset" content="../">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../site_libs/quarto-html/popper.min.js"></script>
 <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../site_libs/bootstrap/bootstrap-dark-0c66bec081e5215138e9fd61e9c23ef8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -81,7 +82,7 @@ ul.task-list li input[type="checkbox"] {
 <link rel="stylesheet" href="../styles.css">
 </head>
 
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -104,6 +105,7 @@ ul.task-list li input[type="checkbox"] {
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -133,13 +135,19 @@ ul.task-list li input[type="checkbox"] {
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -233,6 +241,7 @@ ul.task-list li input[type="checkbox"] {
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -247,15 +256,14 @@ ul.task-list li input[type="checkbox"] {
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -299,8 +307,9 @@ ul.task-list li input[type="checkbox"] {
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
+            <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -309,7 +318,7 @@ ul.task-list li input[type="checkbox"] {
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
@@ -318,7 +327,7 @@ ul.task-list li input[type="checkbox"] {
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -360,9 +369,9 @@ ul.task-list li input[type="checkbox"] {
 <ul>
 <li><strong>file <a href="../api_generated/Files/AdvanceFrame_8cpp.html#file-advanceframe.cpp">cpp</a></strong> <br>Implementation of AdvanceFrame command.</li>
 <li><strong>file <a href="../api_generated/Files/AdvanceFrame_8hpp.html#file-advanceframe.hpp">hpp</a></strong> <br>Command to shift the current visualization frame by a signed delta.</li>
-<li><strong>file <a href="../api_generated/Files/AdvanceFrame_8test_8cpp.html#file-advanceframe.test.cpp">cpp</a></strong> <br>Tests for AdvanceFrame command and sequence execution with <a href="../api_generated/Classes/classTimeController.html">TimeController</a>.</li>
+<li><strong>file <a href="../api_generated/Files/AdvanceFrame_8test_8cpp.html#file-advanceframe.test.cpp">cpp</a></strong> <br>Tests for <a href="../api_generated/Classes/classcommands_1_1AdvanceFrame.html">AdvanceFrame</a> command and sequence execution with <a href="../api_generated/Classes/classTimeController.html">TimeController</a>.</li>
 <li><strong>file <a href="../api_generated/Files/CommandUIHints_8hpp.html#file-commanduihints.hpp">hpp</a></strong> <br><a href="../api_generated/Classes/structParameterUIHints.html">ParameterUIHints</a> specializations for all command parameter structs.</li>
-<li><strong>file <a href="../api_generated/Files/Commands_8test_8cpp.html#file-commands.test.cpp">cpp</a></strong> <br>Unit tests for MoveByTimeRange, CopyByTimeRange, AddInterval, and ForEachKey commands.</li>
+<li><strong>file <a href="../api_generated/Files/Commands_8test_8cpp.html#file-commands.test.cpp">cpp</a></strong> <br>Unit tests for <a href="../api_generated/Classes/classcommands_1_1MoveByTimeRange.html">MoveByTimeRange</a>, <a href="../api_generated/Classes/classcommands_1_1CopyByTimeRange.html">CopyByTimeRange</a>, <a href="../api_generated/Classes/classcommands_1_1AddInterval.html">AddInterval</a>, and <a href="../api_generated/Classes/classcommands_1_1ForEachKey.html">ForEachKey</a> commands.</li>
 <li><strong>file <a href="../api_generated/Files/CopyByTimeRange_8cpp.html#file-copybytimerange.cpp">cpp</a></strong> <br>Implementation of the CopyByTimeRange command.</li>
 <li><strong>file <a href="../api_generated/Files/CopyByTimeRange_8hpp.html#file-copybytimerange.hpp">hpp</a></strong> <br>Command to copy entities in a time range between data objects.</li>
 <li><strong>file <a href="../api_generated/Files/ForEachKey_8cpp.html#file-foreachkey.cpp">cpp</a></strong> <br>Implementation of the ForEachKey meta-command.</li>
@@ -374,9 +383,9 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/MoveByTimeRange_8hpp.html#file-movebytimerange.hpp">hpp</a></strong> <br>Command to move entities in a time range between same-type data objects.</li>
 <li><strong>file <a href="../api_generated/Files/UpsampleTimeFrame_8cpp.html#file-upsampletimeframe.cpp">cpp</a></strong> <br>Implementation of UpsampleTimeFrame command.</li>
 <li><strong>file <a href="../api_generated/Files/UpsampleTimeFrame_8hpp.html#file-upsampletimeframe.hpp">hpp</a></strong> <br>Command to create an upsampled <a href="../api_generated/Classes/classTimeFrame.html">TimeFrame</a> by linear clock interpolation.</li>
-<li><strong>file <a href="../api_generated/Files/UpsampleTimeFrame_8test_8cpp.html#file-upsampletimeframe.test.cpp">cpp</a></strong> <br>Tests for UpsampleTimeFrame command.</li>
+<li><strong>file <a href="../api_generated/Files/UpsampleTimeFrame_8test_8cpp.html#file-upsampletimeframe.test.cpp">cpp</a></strong> <br>Tests for <a href="../api_generated/Classes/classcommands_1_1UpsampleTimeFrame.html">UpsampleTimeFrame</a> command.</li>
 <li><strong>file <a href="../api_generated/Files/register__core__commands_8cpp.html#file-register-core-commands.cpp">cpp</a></strong> <br>Registers all built-in commands with the CommandRegistry singleton.</li>
-<li><strong>file <a href="../api_generated/Files/register__core__commands_8hpp.html#file-register-core-commands.hpp">hpp</a></strong> <br>Registration function for all built-in commands (MoveByTimeRange, CopyByTimeRange, etc.)</li>
+<li><strong>file <a href="../api_generated/Files/register__core__commands_8hpp.html#file-register-core-commands.hpp">hpp</a></strong> <br>Registration function for all built-in commands (MoveByTimeRange, CopyByTimeRange, etc.).</li>
 <li><strong>dir <a href="../api_generated/Files/dir_5acfd4abb02b7c754a4d040da82ead14.html#dir-src/commands/core">src/Commands/Core</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/CommandContext_8hpp.html#file-commandcontext.hpp">hpp</a></strong> <br>Runtime context provided to commands during execution.</li>
@@ -385,13 +394,13 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/CommandFactory_8hpp.html#file-commandfactory.hpp">hpp</a></strong> <br>Factory functions mapping command name strings to concrete ICommand instances, plus introspection query functions for command metadata.</li>
 <li><strong>file <a href="../api_generated/Files/CommandFactory_8test_8cpp.html#file-commandfactory.test.cpp">cpp</a></strong> <br>Unit tests for the command factory and core types.</li>
 <li><strong>file <a href="../api_generated/Files/CommandInfo_8hpp.html#file-commandinfo.hpp">hpp</a></strong> <br>Static metadata for a registered command, including its <a href="../api_generated/Classes/structParameterSchema.html">ParameterSchema</a>.</li>
-<li><strong>file <a href="../api_generated/Files/CommandInfo_8test_8cpp.html#file-commandinfo.test.cpp">cpp</a></strong> <br>Unit tests for CommandInfo and factory query functions.</li>
+<li><strong>file <a href="../api_generated/Files/CommandInfo_8test_8cpp.html#file-commandinfo.test.cpp">cpp</a></strong> <br>Unit tests for <a href="../api_generated/Classes/structcommands_1_1CommandInfo.html">CommandInfo</a> and factory query functions.</li>
 <li><strong>file <a href="../api_generated/Files/CommandRecorder_8cpp.html#file-commandrecorder.cpp">cpp</a></strong> <br>Implementation of CommandRecorder for capturing command execution traces.</li>
 <li><strong>file <a href="../api_generated/Files/CommandRecorder_8hpp.html#file-commandrecorder.hpp">hpp</a></strong> <br>Lightweight recorder that captures executed CommandDescriptors for replay and testing.</li>
-<li><strong>file <a href="../api_generated/Files/CommandRecorder_8test_8cpp.html#file-commandrecorder.test.cpp">cpp</a></strong> <br>Unit tests for CommandRecorder and MutationGuard.</li>
+<li><strong>file <a href="../api_generated/Files/CommandRecorder_8test_8cpp.html#file-commandrecorder.test.cpp">cpp</a></strong> <br>Unit tests for <a href="../api_generated/Classes/classcommands_1_1CommandRecorder.html">CommandRecorder</a> and MutationGuard.</li>
 <li><strong>file <a href="../api_generated/Files/CommandRegistry_8cpp.html#file-commandregistry.cpp">cpp</a></strong> <br>Implementation of the CommandRegistry singleton.</li>
 <li><strong>file <a href="../api_generated/Files/CommandRegistry_8hpp.html#file-commandregistry.hpp">hpp</a></strong> <br>Singleton registry mapping command names to creator functions and metadata, plus a convenience helper for registering typed commands with automatic JSON deserialization and schema extraction.</li>
-<li><strong>file <a href="../api_generated/Files/CommandRegistry_8test_8cpp.html#file-commandregistry.test.cpp">cpp</a></strong> <br>Unit tests for CommandRegistry singleton and registerTypedCommand helper.</li>
+<li><strong>file <a href="../api_generated/Files/CommandRegistry_8test_8cpp.html#file-commandregistry.test.cpp">cpp</a></strong> <br>Unit tests for <a href="../api_generated/Classes/classcommands_1_1CommandRegistry.html">CommandRegistry</a> singleton and registerTypedCommand helper.</li>
 <li><strong>file <a href="../api_generated/Files/CommandResult_8hpp.html#file-commandresult.hpp">hpp</a></strong> <br>Result type returned by command execution.</li>
 <li><strong>file <a href="../api_generated/Files/ICommand_8hpp.html#file-icommand.hpp">hpp</a></strong> <br>Abstract base class for all commands operating on <a href="../api_generated/Classes/classDataManager.html">DataManager</a>.</li>
 <li><strong>file <a href="../api_generated/Files/SequenceExecution_8cpp.html#file-sequenceexecution.cpp">cpp</a></strong> <br>Implementation of command sequence execution with variable substitution.</li>
@@ -413,26 +422,26 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/FlipEventAtTime_8hpp.html#file-flipeventattime.hpp">hpp</a></strong> <br>Command to toggle <a href="../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> coverage at a single time index.</li>
 <li><strong>file <a href="../api_generated/Files/SetEventAtTime_8cpp.html#file-seteventattime.cpp">cpp</a></strong> <br>Implementation of SetEventAtTime command.</li>
 <li><strong>file <a href="../api_generated/Files/SetEventAtTime_8hpp.html#file-seteventattime.hpp">hpp</a></strong> <br>Command to set or clear a <a href="../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> sample at a single time index.</li>
-<li><strong>file <a href="../api_generated/Files/SetEventAtTime_8test_8cpp.html#file-seteventattime.test.cpp">cpp</a></strong> <br>Tests for SetEventAtTime, FlipEventAtTime, and triage-style command sequences.</li>
+<li><strong>file <a href="../api_generated/Files/SetEventAtTime_8test_8cpp.html#file-seteventattime.test.cpp">cpp</a></strong> <br>Tests for <a href="../api_generated/Classes/classcommands_1_1SetEventAtTime.html">SetEventAtTime</a>, <a href="../api_generated/Classes/classcommands_1_1FlipEventAtTime.html">FlipEventAtTime</a>, and triage-style command sequences.</li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_4dc7853547d71f9cf374c2cf1133fee8.html#dir-src/commands/dataobjects/lines">src/Commands/DataObjects/Lines</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/ClearLineDataAtTime_8cpp.html#file-clearlinedataattime.cpp">cpp</a></strong> <br>Implementation of ClearLineDataAtTime command.</li>
 <li><strong>file <a href="../api_generated/Files/ClearLineDataAtTime_8hpp.html#file-clearlinedataattime.hpp">hpp</a></strong> <br>Command to remove all <a href="../api_generated/Classes/classLineData.html">LineData</a> entries at a single time index.</li>
-<li><strong>file <a href="../api_generated/Files/ClearLineDataAtTime_8test_8cpp.html#file-clearlinedataattime.test.cpp">cpp</a></strong> <br>Tests for ClearLineDataAtTime command.</li>
+<li><strong>file <a href="../api_generated/Files/ClearLineDataAtTime_8test_8cpp.html#file-clearlinedataattime.test.cpp">cpp</a></strong> <br>Tests for <a href="../api_generated/Classes/classcommands_1_1ClearLineDataAtTime.html">ClearLineDataAtTime</a> command.</li>
 </ul></li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_69edfa31e4a73e746f366b3a83fb864a.html#dir-src/commands/io">src/Commands/IO</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/LoadData_8cpp.html#file-loaddata.cpp">cpp</a></strong> <br>Implementation of the LoadData command.</li>
 <li><strong>file <a href="../api_generated/Files/LoadData_8hpp.html#file-loaddata.hpp">hpp</a></strong> <br>Command to load data from disk into <a href="../api_generated/Classes/classDataManager.html">DataManager</a> via the <a href="../api_generated/Classes/classLoaderRegistry.html">LoaderRegistry</a>.</li>
-<li><strong>file <a href="../api_generated/Files/LoadData_8test_8cpp.html#file-loaddata.test.cpp">cpp</a></strong> <br>Unit tests for the LoadData command.</li>
+<li><strong>file <a href="../api_generated/Files/LoadData_8test_8cpp.html#file-loaddata.test.cpp">cpp</a></strong> <br>Unit tests for the <a href="../api_generated/Classes/classcommands_1_1LoadData.html">LoadData</a> command.</li>
 <li><strong>file <a href="../api_generated/Files/SaveData_8cpp.html#file-savedata.cpp">cpp</a></strong> <br>Implementation of the SaveData command.</li>
 <li><strong>file <a href="../api_generated/Files/SaveData_8hpp.html#file-savedata.hpp">hpp</a></strong> <br>Command to save a data object from <a href="../api_generated/Classes/classDataManager.html">DataManager</a> to disk via the <a href="../api_generated/Classes/classLoaderRegistry.html">LoaderRegistry</a>.</li>
-<li><strong>file <a href="../api_generated/Files/SaveData_8test_8cpp.html#file-savedata.test.cpp">cpp</a></strong> <br>Unit tests for the SaveData command.</li>
-<li><strong>file <a href="../api_generated/Files/SaveDataAnalog_8test_8cpp.html#file-savedataanalog.test.cpp">cpp</a></strong> <br>Unit tests for SaveData command with <a href="../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> CSV format.</li>
-<li><strong>file <a href="../api_generated/Files/SaveDataDigitalEvent_8test_8cpp.html#file-savedatadigitalevent.test.cpp">cpp</a></strong> <br>Unit tests for SaveData command with <a href="../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> CSV format.</li>
-<li><strong>file <a href="../api_generated/Files/SaveDataDigitalInterval_8test_8cpp.html#file-savedatadigitalinterval.test.cpp">cpp</a></strong> <br>Unit tests for SaveData command with <a href="../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> CSV format.</li>
+<li><strong>file <a href="../api_generated/Files/SaveData_8test_8cpp.html#file-savedata.test.cpp">cpp</a></strong> <br>Unit tests for the <a href="../api_generated/Classes/classcommands_1_1SaveData.html">SaveData</a> command.</li>
+<li><strong>file <a href="../api_generated/Files/SaveDataAnalog_8test_8cpp.html#file-savedataanalog.test.cpp">cpp</a></strong> <br>Unit tests for <a href="../api_generated/Classes/classcommands_1_1SaveData.html">SaveData</a> command with <a href="../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a> CSV format.</li>
+<li><strong>file <a href="../api_generated/Files/SaveDataDigitalEvent_8test_8cpp.html#file-savedatadigitalevent.test.cpp">cpp</a></strong> <br>Unit tests for <a href="../api_generated/Classes/classcommands_1_1SaveData.html">SaveData</a> command with <a href="../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> CSV format.</li>
+<li><strong>file <a href="../api_generated/Files/SaveDataDigitalInterval_8test_8cpp.html#file-savedatadigitalinterval.test.cpp">cpp</a></strong> <br>Unit tests for <a href="../api_generated/Classes/classcommands_1_1SaveData.html">SaveData</a> command with <a href="../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> CSV format.</li>
 <li><strong>file <a href="../api_generated/Files/SavePathResolver_8cpp.html#file-savepathresolver.cpp">cpp</a></strong> <br>Implementation of provenance-aware save path resolution helpers.</li>
 <li><strong>file <a href="../api_generated/Files/SavePathResolver_8hpp.html#file-savepathresolver.hpp">hpp</a></strong> <br>Helpers for resolving provenance-aware default save paths.</li>
 </ul></li>
@@ -931,15 +940,15 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/ContainerTypeIndex_8cpp.html#file-containertypeindex.cpp">cpp</a></strong> <br>Runtime type_index mapping for <a href="../api_generated/Classes/classDataManager.html">DataManager</a> container types.</li>
 <li><strong>file <a href="../api_generated/Files/ContainerTypeIndex_8hpp.html#file-containertypeindex.hpp">hpp</a></strong> <br>Runtime std::type_index and string mapping for <a href="../api_generated/Classes/classDataManager.html">DataManager</a> container types.</li>
 <li><strong>file <a href="../api_generated/Files/DataManagerKeys_8cpp.html#file-datamanagerkeys.cpp">cpp</a></strong> <br>Implementation of <a href="../api_generated/Classes/classDataManager.html">DataManager</a> key-query utilities.</li>
-<li><strong>file <a href="../api_generated/Files/DataManagerKeys_8hpp.html#file-datamanagerkeys.hpp">hpp</a></strong> <br>Free-function utilities for querying <a href="../api_generated/Classes/classDataManager.html">DataManager</a> keys by DM_DataType.</li>
+<li><strong>file <a href="../api_generated/Files/DataManagerKeys_8hpp.html#file-datamanagerkeys.hpp">hpp</a></strong> <br>Free-function utilities for querying <a href="../api_generated/Classes/classDataManager.html">DataManager</a> keys by <a href="">DM_DataType</a>.</li>
 <li><strong>file <a href="../api_generated/Files/DataManagerMerge_8cpp.html#file-datamanagermerge.cpp">cpp</a></strong> <br>Implementation of type-erased overwrite-merge utilities.</li>
 <li><strong>file <a href="../api_generated/Files/DataManagerMerge_8hpp.html#file-datamanagermerge.hpp">hpp</a></strong> <br>Type-erased overwrite-merge utilities for <a href="../api_generated/Classes/classDataManager.html">DataManager</a> data objects.</li>
 <li><strong>file <a href="../api_generated/Files/DataManagerMerge_8test_8cpp.html#file-datamanagermerge.test.cpp">cpp</a></strong> <br>Unit tests for <a href="../api_generated/Files/DataManagerMerge_8cpp.html#function-mergeoverwritedata">mergeOverwriteData()</a> utility.</li>
 <li><strong>file <a href="../api_generated/Files/DataManagerTemporalSubset_8cpp.html#file-datamanagertemporalsubset.cpp">cpp</a></strong> <br>Implementation of type-erased temporal subset utilities.</li>
 <li><strong>file <a href="../api_generated/Files/DataManagerTemporalSubset_8hpp.html#file-datamanagertemporalsubset.hpp">hpp</a></strong> <br>Type-erased temporal subset utilities for <a href="../api_generated/Classes/classDataManager.html">DataManager</a> data objects.</li>
 <li><strong>file <a href="../api_generated/Files/DataManagerTemporalSubset_8test_8cpp.html#file-datamanagertemporalsubset.test.cpp">cpp</a></strong> <br>Unit tests for <a href="../api_generated/Files/DataManagerTemporalSubset_8cpp.html#function-createtemporalsubset">createTemporalSubset()</a> utility.</li>
-<li><strong>file <a href="../api_generated/Files/DataTypeIndexBridge_8cpp.html#file-datatypeindexbridge.cpp">cpp</a></strong> <br>Bridge DM_DataType enum values to container std::type_index.</li>
-<li><strong>file <a href="../api_generated/Files/DataTypeIndexBridge_8hpp.html#file-datatypeindexbridge.hpp">hpp</a></strong> <br>Bridge DM_DataType enum values to container std::type_index.</li>
+<li><strong>file <a href="../api_generated/Files/DataTypeIndexBridge_8cpp.html#file-datatypeindexbridge.cpp">cpp</a></strong> <br>Bridge <a href="">DM_DataType</a> enum values to container std::type_index.</li>
+<li><strong>file <a href="../api_generated/Files/DataTypeIndexBridge_8hpp.html#file-datatypeindexbridge.hpp">hpp</a></strong> <br>Bridge <a href="">DM_DataType</a> enum values to container std::type_index.</li>
 <li><strong>file <a href="../api_generated/Files/DerivedTimeFrame_8cpp.html#file-derivedtimeframe.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/DerivedTimeFrame_8hpp.html#file-derivedtimeframe.hpp">hpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/JsonDataLoadExpansion_8cpp.html#file-jsondataloadexpansion.cpp">cpp</a></strong> <br>Implementation of JSON load-config loop expansion.</li>
@@ -1264,22 +1273,22 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>dir <a href="../api_generated/Files/dir_c0529cfca4421328320c913508e2b892.html#dir-src/dataobjects/tensors/storage">src/DataObjects/Tensors/storage</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/ArmadilloTensorStorage_8cpp.html#file-armadillotensorstorage.cpp">cpp</a></strong> <br>Implementation of the Armadillo tensor storage backend.</li>
-<li><strong>file <a href="../api_generated/Files/ArmadilloTensorStorage_8hpp.html#file-armadillotensorstorage.hpp">hpp</a></strong> <br>Default tensor storage backend using Armadillo (≤3D)</li>
+<li><strong>file <a href="../api_generated/Files/ArmadilloTensorStorage_8hpp.html#file-armadillotensorstorage.hpp">hpp</a></strong> <br>Default tensor storage backend using Armadillo (≤3D).</li>
 <li><strong>file <a href="../api_generated/Files/ArmadilloTensorStorage_8test_8cpp.html#file-armadillotensorstorage.test.cpp">cpp</a></strong> <br>Unit tests for <a href="../api_generated/Classes/classTensorStorageBase.html">TensorStorageBase</a> CRTP and <a href="../api_generated/Classes/classArmadilloTensorStorage.html">ArmadilloTensorStorage</a>.</li>
 <li><strong>file <a href="../api_generated/Files/DenseTensorStorage_8cpp.html#file-densetensorstorage.cpp">cpp</a></strong> <br>Implementation of the Dense N-dimensional tensor storage backend.</li>
-<li><strong>file <a href="../api_generated/Files/DenseTensorStorage_8hpp.html#file-densetensorstorage.hpp">hpp</a></strong> <br>Fallback N-dimensional tensor storage using a flat std::vector<float></float></li>
-<li><strong>file <a href="../api_generated/Files/DenseTensorStorage_8test_8cpp.html#file-densetensorstorage.test.cpp">cpp</a></strong> <br>Unit tests for <a href="../api_generated/Classes/classDenseTensorStorage.html">DenseTensorStorage</a> (flat std::vector<float> + shape)</float></li>
+<li><strong>file <a href="../api_generated/Files/DenseTensorStorage_8hpp.html#file-densetensorstorage.hpp">hpp</a></strong> <br>Fallback N-dimensional tensor storage using a flat std::vector<float>.</float></li>
+<li><strong>file <a href="../api_generated/Files/DenseTensorStorage_8test_8cpp.html#file-densetensorstorage.test.cpp">cpp</a></strong> <br>Unit tests for <a href="../api_generated/Classes/classDenseTensorStorage.html">DenseTensorStorage</a> (flat std::vector<float> + shape).</float></li>
 <li><strong>file <a href="../api_generated/Files/LazyColumnTensorStorage_8cpp.html#file-lazycolumntensorstorage.cpp">cpp</a></strong> <br>Implementation of the lazy column-based tensor storage backend.</li>
 <li><strong>file <a href="../api_generated/Files/LazyColumnTensorStorage_8hpp.html#file-lazycolumntensorstorage.hpp">hpp</a></strong> <br>Lazy column-based tensor storage with type-erased column providers.</li>
 <li><strong>file <a href="../api_generated/Files/LazyColumnTensorStorage_8test_8cpp.html#file-lazycolumntensorstorage.test.cpp">cpp</a></strong> <br>Unit tests for <a href="../api_generated/Classes/classLazyColumnTensorStorage.html">LazyColumnTensorStorage</a>.</li>
 <li><strong>file <a href="../api_generated/Files/LibTorchTensorStorage_8cpp.html#file-libtorchtensorstorage.cpp">cpp</a></strong> <br>Implementation of the LibTorch tensor storage backend.</li>
 <li><strong>file <a href="../api_generated/Files/LibTorchTensorStorage_8hpp.html#file-libtorchtensorstorage.hpp">hpp</a></strong></li>
-<li><strong>file <a href="../api_generated/Files/LibTorchTensorStorage_8test_8cpp.html#file-libtorchtensorstorage.test.cpp">cpp</a></strong> <br>Unit tests for LibTorchTensorStorage (at::Tensor wrapper)</li>
+<li><strong>file <a href="../api_generated/Files/LibTorchTensorStorage_8test_8cpp.html#file-libtorchtensorstorage.test.cpp">cpp</a></strong> <br>Unit tests for LibTorchTensorStorage (at::Tensor wrapper).</li>
 <li><strong>file <a href="../api_generated/Files/MmapTensorStorage_8hpp.html#file-mmaptensorstorage.hpp">hpp</a></strong> <br><a href="../api_generated/Classes/classTensorData.html">TensorData</a> storage backend backed by a <a href="../api_generated/Classes/classSharedMmapBlockCache.html">SharedMmapBlockCache</a>.</li>
 <li><strong>file <a href="../api_generated/Files/TensorStorageBase_8hpp.html#file-tensorstoragebase.hpp">hpp</a></strong> <br>CRTP base class and cache structure for tensor storage backends.</li>
 <li><strong>file <a href="../api_generated/Files/TensorStorageWrapper_8cpp.html#file-tensorstoragewrapper.cpp">cpp</a></strong> <br>Implementation of the Sean Parent type-erasure wrapper for tensor storage.</li>
 <li><strong>file <a href="../api_generated/Files/TensorStorageWrapper_8hpp.html#file-tensorstoragewrapper.hpp">hpp</a></strong></li>
-<li><strong>file <a href="../api_generated/Files/TensorStorageWrapper_8test_8cpp.html#file-tensorstoragewrapper.test.cpp">cpp</a></strong> <br>Unit tests for <a href="../api_generated/Classes/classTensorStorageWrapper.html">TensorStorageWrapper</a> (Sean Parent type-erasure layer)</li>
+<li><strong>file <a href="../api_generated/Files/TensorStorageWrapper_8test_8cpp.html#file-tensorstoragewrapper.test.cpp">cpp</a></strong> <br>Unit tests for <a href="../api_generated/Classes/classTensorStorageWrapper.html">TensorStorageWrapper</a> (Sean Parent type-erasure layer).</li>
 </ul></li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_6d1fc5bb5f199f4c5b1ce4ad4466603d.html#dir-src/dataobjects/typetraits">src/DataObjects/TypeTraits</a></strong>
@@ -1602,7 +1611,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>dir <a href="../api_generated/Files/dir_4e32ad2cc5a4c626397ea7f7d31552af.html#dir-src/io/formats/csv/mask">src/IO/formats/CSV/mask</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/Mask__Data__CSV_8cpp.html#file-mask-data-csv.cpp">cpp</a></strong> <br>Implementation of CSV RLE loader/saver for <a href="../api_generated/Classes/classMaskData.html">MaskData</a>.</li>
-<li><strong>file <a href="../api_generated/Files/Mask__Data__CSV_8hpp.html#file-mask-data-csv.hpp">hpp</a></strong> <br>CSV loader/saver for <a href="../api_generated/Classes/classMaskData.html">MaskData</a> using Run-Length Encoding (RLE)</li>
+<li><strong>file <a href="../api_generated/Files/Mask__Data__CSV_8hpp.html#file-mask-data-csv.hpp">hpp</a></strong> <br>CSV loader/saver for <a href="../api_generated/Classes/classMaskData.html">MaskData</a> using Run-Length Encoding (RLE).</li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_5bf0892f47bb713ea24a84cbc503c3f5.html#dir-src/io/formats/csv/points">src/IO/formats/CSV/points</a></strong>
 <ul>
@@ -1727,8 +1736,8 @@ ul.task-list li input[type="checkbox"] {
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_04bbb388e168cbc5001569374ed1eb60.html#dir-src/mlcore/models">src/MLCore/models</a></strong>
 <ul>
-<li><strong>file <a href="../api_generated/Files/MLDimReductionOperation_8hpp.html#file-mldimreductionoperation.hpp">hpp</a></strong> <br>Abstract interface for dimensionality reduction operations (PCA, t-SNE, etc.)</li>
-<li><strong>file <a href="../api_generated/Files/MLModelOperation_8hpp.html#file-mlmodeloperation.hpp">hpp</a></strong> <br>Abstract interface for all ML model operations (supervised &amp; unsupervised)</li>
+<li><strong>file <a href="../api_generated/Files/MLDimReductionOperation_8hpp.html#file-mldimreductionoperation.hpp">hpp</a></strong> <br>Abstract interface for dimensionality reduction operations (PCA, t-SNE, etc.).</li>
+<li><strong>file <a href="../api_generated/Files/MLModelOperation_8hpp.html#file-mlmodeloperation.hpp">hpp</a></strong> <br>Abstract interface for all ML model operations (supervised &amp; unsupervised).</li>
 <li><strong>file <a href="../api_generated/Files/MLModelParameters_8hpp.html#file-mlmodelparameters.hpp">hpp</a></strong> <br>Base class and concrete parameter types for ML model operations.</li>
 <li><strong>file <a href="../api_generated/Files/MLModelRegistry_8cpp.html#file-mlmodelregistry.cpp">cpp</a></strong> <br>Implementation of MLModelRegistry with built-in model registration.</li>
 <li><strong>file <a href="../api_generated/Files/MLModelRegistry_8hpp.html#file-mlmodelregistry.hpp">hpp</a></strong> <br>Factory registry for ML model operations.</li>
@@ -1739,17 +1748,17 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/HiddenMarkovModelOperation_8cpp.html#file-hiddenmarkovmodeloperation.cpp">cpp</a></strong> <br>Implementation of Gaussian HMM sequence classification via mlpack.</li>
 <li><strong>file <a href="../api_generated/Files/HiddenMarkovModelOperation_8hpp.html#file-hiddenmarkovmodeloperation.hpp">hpp</a></strong> <br>2-state Gaussian HMM for temporal sequence classification</li>
 <li><strong>file <a href="../api_generated/Files/LARSProjectionOperation_8cpp.html#file-larsprojectionoperation.cpp">cpp</a></strong> <br>Implementation of LARS-based supervised feature selection.</li>
-<li><strong>file <a href="../api_generated/Files/LARSProjectionOperation_8hpp.html#file-larsprojectionoperation.hpp">hpp</a></strong> <br>LARS-based supervised feature selection (LASSO / Ridge / Elastic Net)</li>
+<li><strong>file <a href="../api_generated/Files/LARSProjectionOperation_8hpp.html#file-larsprojectionoperation.hpp">hpp</a></strong> <br>LARS-based supervised feature selection (LASSO / Ridge / Elastic Net).</li>
 <li><strong>file <a href="../api_generated/Files/LogisticRegressionOperation_8cpp.html#file-logisticregressionoperation.cpp">cpp</a></strong> <br>Implementation of binary logistic regression via mlpack.</li>
-<li><strong>file <a href="../api_generated/Files/LogisticRegressionOperation_8hpp.html#file-logisticregressionoperation.hpp">hpp</a></strong> <br>MLCore-native Logistic Regression classifier (wraps mlpack::LogisticRegression)</li>
+<li><strong>file <a href="../api_generated/Files/LogisticRegressionOperation_8hpp.html#file-logisticregressionoperation.hpp">hpp</a></strong> <br>MLCore-native Logistic Regression classifier (wraps mlpack::LogisticRegression).</li>
 <li><strong>file <a href="../api_generated/Files/LogitProjectionOperation_8cpp.html#file-logitprojectionoperation.cpp">cpp</a></strong> <br>Supervised dimensionality reduction via softmax logit extraction.</li>
 <li><strong>file <a href="../api_generated/Files/LogitProjectionOperation_8hpp.html#file-logitprojectionoperation.hpp">hpp</a></strong> <br>Supervised dimensionality reduction via logit (pre-activation) projection.</li>
 <li><strong>file <a href="../api_generated/Files/NaiveBayesOperation_8cpp.html#file-naivebayesoperation.cpp">cpp</a></strong> <br>Implementation of Naive Bayes classification via mlpack.</li>
-<li><strong>file <a href="../api_generated/Files/NaiveBayesOperation_8hpp.html#file-naivebayesoperation.hpp">hpp</a></strong> <br>MLCore-native Naive Bayes classifier (wraps mlpack::NaiveBayesClassifier)</li>
+<li><strong>file <a href="../api_generated/Files/NaiveBayesOperation_8hpp.html#file-naivebayesoperation.hpp">hpp</a></strong> <br>MLCore-native Naive Bayes classifier (wraps mlpack::NaiveBayesClassifier).</li>
 <li><strong>file <a href="../api_generated/Files/RandomForestOperation_8cpp.html#file-randomforestoperation.cpp">cpp</a></strong> <br>Implementation of Random Forest classification via mlpack.</li>
-<li><strong>file <a href="../api_generated/Files/RandomForestOperation_8hpp.html#file-randomforestoperation.hpp">hpp</a></strong> <br>MLCore-native Random Forest classifier (wraps mlpack::RandomForest)</li>
+<li><strong>file <a href="../api_generated/Files/RandomForestOperation_8hpp.html#file-randomforestoperation.hpp">hpp</a></strong> <br>MLCore-native Random Forest classifier (wraps mlpack::RandomForest).</li>
 <li><strong>file <a href="../api_generated/Files/SoftmaxRegressionOperation_8cpp.html#file-softmaxregressionoperation.cpp">cpp</a></strong> <br>Implementation of multi-class softmax regression via mlpack.</li>
-<li><strong>file <a href="../api_generated/Files/SoftmaxRegressionOperation_8hpp.html#file-softmaxregressionoperation.hpp">hpp</a></strong> <br>MLCore-native Softmax Regression classifier (wraps mlpack::SoftmaxRegression)</li>
+<li><strong>file <a href="../api_generated/Files/SoftmaxRegressionOperation_8hpp.html#file-softmaxregressionoperation.hpp">hpp</a></strong> <br>MLCore-native Softmax Regression classifier (wraps mlpack::SoftmaxRegression).</li>
 <li><strong>file <a href="../api_generated/Files/SupervisedPCAOperation_8cpp.html#file-supervisedpcaoperation.cpp">cpp</a></strong> <br>Implementation of Supervised PCA dimensionality reduction.</li>
 <li><strong>file <a href="../api_generated/Files/SupervisedPCAOperation_8hpp.html#file-supervisedpcaoperation.hpp">hpp</a></strong> <br>Supervised PCA fits PCA on labeled subset, projects all data.</li>
 <li><strong>file <a href="../api_generated/Files/SupervisedRobustPCAOperation_8cpp.html#file-supervisedrobustpcaoperation.cpp">cpp</a></strong> <br>Implementation of Supervised Robust PCA dimensionality reduction.</li>
@@ -1758,19 +1767,19 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>dir <a href="../api_generated/Files/dir_4932b4b16890af055f9e613ab0c42b69.html#dir-src/mlcore/models/unsupervised">src/MLCore/models/unsupervised</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/DBSCANOperation_8cpp.html#file-dbscanoperation.cpp">cpp</a></strong> <br>Implementation of DBSCAN density-based clustering via mlpack.</li>
-<li><strong>file <a href="../api_generated/Files/DBSCANOperation_8hpp.html#file-dbscanoperation.hpp">hpp</a></strong> <br>MLCore-native DBSCAN clustering (wraps mlpack::DBSCAN)</li>
+<li><strong>file <a href="../api_generated/Files/DBSCANOperation_8hpp.html#file-dbscanoperation.hpp">hpp</a></strong> <br>MLCore-native DBSCAN clustering (wraps mlpack::DBSCAN).</li>
 <li><strong>file <a href="../api_generated/Files/GaussianMixtureOperation_8cpp.html#file-gaussianmixtureoperation.cpp">cpp</a></strong> <br>Implementation of Gaussian Mixture Model clustering via mlpack.</li>
-<li><strong>file <a href="../api_generated/Files/GaussianMixtureOperation_8hpp.html#file-gaussianmixtureoperation.hpp">hpp</a></strong> <br>MLCore-native Gaussian Mixture Model clustering (wraps mlpack::GMM)</li>
+<li><strong>file <a href="../api_generated/Files/GaussianMixtureOperation_8hpp.html#file-gaussianmixtureoperation.hpp">hpp</a></strong> <br>MLCore-native Gaussian Mixture Model clustering (wraps mlpack::GMM).</li>
 <li><strong>file <a href="../api_generated/Files/ICAOperation_8cpp.html#file-icaoperation.cpp">cpp</a></strong> <br>Implementation of ICA via mlpack’s RADICAL algorithm.</li>
-<li><strong>file <a href="../api_generated/Files/ICAOperation_8hpp.html#file-icaoperation.hpp">hpp</a></strong> <br>MLCore-native ICA dimensionality reduction (wraps mlpack::Radical)</li>
+<li><strong>file <a href="../api_generated/Files/ICAOperation_8hpp.html#file-icaoperation.hpp">hpp</a></strong> <br>MLCore-native ICA dimensionality reduction (wraps mlpack::Radical).</li>
 <li><strong>file <a href="../api_generated/Files/KMeansOperation_8cpp.html#file-kmeansoperation.cpp">cpp</a></strong> <br>Implementation of K-Means clustering via mlpack.</li>
-<li><strong>file <a href="../api_generated/Files/KMeansOperation_8hpp.html#file-kmeansoperation.hpp">hpp</a></strong> <br>MLCore-native K-Means clustering (wraps mlpack::KMeans)</li>
+<li><strong>file <a href="../api_generated/Files/KMeansOperation_8hpp.html#file-kmeansoperation.hpp">hpp</a></strong> <br>MLCore-native K-Means clustering (wraps mlpack::KMeans).</li>
 <li><strong>file <a href="../api_generated/Files/PCAOperation_8cpp.html#file-pcaoperation.cpp">cpp</a></strong> <br>Implementation of PCA dimensionality reduction via mlpack.</li>
-<li><strong>file <a href="../api_generated/Files/PCAOperation_8hpp.html#file-pcaoperation.hpp">hpp</a></strong> <br>MLCore-native PCA dimensionality reduction (wraps mlpack::PCA)</li>
+<li><strong>file <a href="../api_generated/Files/PCAOperation_8hpp.html#file-pcaoperation.hpp">hpp</a></strong> <br>MLCore-native PCA dimensionality reduction (wraps mlpack::PCA).</li>
 <li><strong>file <a href="../api_generated/Files/RobustPCAOperation_8cpp.html#file-robustpcaoperation.cpp">cpp</a></strong> <br>Implementation of Robust PCA dimensionality reduction via ROSL.</li>
 <li><strong>file <a href="../api_generated/Files/RobustPCAOperation_8hpp.html#file-robustpcaoperation.hpp">hpp</a></strong> <br><a href="../api_generated/Namespaces/namespaceMLCore.html">MLCore</a> Robust PCA dimensionality reduction via ROSL.</li>
 <li><strong>file <a href="../api_generated/Files/TSNEOperation_8cpp.html#file-tsneoperation.cpp">cpp</a></strong> <br>Implementation of t-SNE dimensionality reduction via tapkee.</li>
-<li><strong>file <a href="../api_generated/Files/TSNEOperation_8hpp.html#file-tsneoperation.hpp">hpp</a></strong> <br>MLCore-native t-SNE dimensionality reduction (wraps tapkee)</li>
+<li><strong>file <a href="../api_generated/Files/TSNEOperation_8hpp.html#file-tsneoperation.hpp">hpp</a></strong> <br>MLCore-native t-SNE dimensionality reduction (wraps tapkee).</li>
 <li><strong>file <a href="../api_generated/Files/rosl_8hpp.html#file-rosl.hpp">hpp</a></strong></li>
 </ul></li>
 </ul></li>
@@ -1796,12 +1805,14 @@ ul.task-list li input[type="checkbox"] {
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_7f1a09ae4c7aba29e038c8409ff9d473.html#dir-src/mlcore/preprocessing">src/MLCore/preprocessing</a></strong>
 <ul>
-<li><strong>file <a href="../api_generated/Files/ClassBalancing_8cpp.html#file-classbalancing.cpp">cpp</a></strong> <br>Implementation of class balancing strategies (subsample, oversample)</li>
+<li><strong>file <a href="../api_generated/Files/ClassBalancing_8cpp.html#file-classbalancing.cpp">cpp</a></strong> <br>Implementation of class balancing strategies (subsample, oversample).</li>
 <li><strong>file <a href="../api_generated/Files/ClassBalancing_8hpp.html#file-classbalancing.hpp">hpp</a></strong> <br>Class balancing utilities for imbalanced training data.</li>
 </ul></li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_d78a68713ba08a80ddd81a18c3c27fb2.html#dir-src/mediaprocessingpipeline">src/MediaProcessingPipeline</a></strong>
 <ul>
+<li><strong>file <a href="../api_generated/Files/MediaProcessingChainApply_8cpp.html#file-mediaprocessingchainapply.cpp">cpp</a></strong> <br>Implementation of <a href="../api_generated/Classes/classMediaData.html">MediaData</a> processing chain application.</li>
+<li><strong>file <a href="../api_generated/Files/MediaProcessingChainApply_8hpp.html#file-mediaprocessingchainapply.hpp">hpp</a></strong> <br>Apply registry-driven image processing steps to <a href="../api_generated/Classes/classMediaData.html">MediaData</a> (Qt-free).</li>
 <li><strong>file <a href="../api_generated/Files/ProcessingOptionsSchema_8hpp.html#file-processingoptionsschema.hpp">hpp</a></strong> <br><a href="../api_generated/Classes/structParameterUIHints.html">ParameterUIHints</a> specializations for <a href="../api_generated/Namespaces/namespaceImageProcessing.html">ImageProcessing</a> option structs.</li>
 <li><strong>file <a href="../api_generated/Files/ProcessingStep_8hpp.html#file-processingstep.hpp">hpp</a></strong> <br>Descriptor for a named image processing step in the pipeline.</li>
 <li><strong>file <a href="../api_generated/Files/ProcessingStepRegistry_8cpp.html#file-processingstepregistry.cpp">cpp</a></strong> <br>Implementation of ProcessingStepRegistry and static step registrations.</li>
@@ -1837,11 +1848,11 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/BatchLineRenderer_8cpp.html#file-batchlinerenderer.cpp">cpp</a></strong> <br>Batch line rendering from BatchLineStore — ported from LineDataVisualization.</li>
 <li><strong>file <a href="../api_generated/Files/BatchLineRenderer_8hpp.html#file-batchlinerenderer.hpp">hpp</a></strong> <br>Renders large batches of lines from BatchLineStore via geometry shaders.</li>
 <li><strong>file <a href="../api_generated/Files/BatchLineStore_8cpp.html#file-batchlinestore.cpp">cpp</a></strong> <br>Implementation of GPU buffer management for batch line data.</li>
-<li><strong>file <a href="../api_generated/Files/BatchLineStore_8hpp.html#file-batchlinestore.hpp">hpp</a></strong> <br>GPU buffer owner for batch line segment data (SSBOs + CPU mirror)</li>
+<li><strong>file <a href="../api_generated/Files/BatchLineStore_8hpp.html#file-batchlinestore.hpp">hpp</a></strong> <br>GPU buffer owner for batch line segment data (SSBOs + CPU mirror).</li>
 <li><strong>file <a href="../api_generated/Files/ComputeShaderIntersector_8cpp.html#file-computeshaderintersector.cpp">cpp</a></strong> <br>OpenGL 4.3 compute shader intersection — ported from LineDataVisualization.</li>
 <li><strong>file <a href="../api_generated/Files/ComputeShaderIntersector_8hpp.html#file-computeshaderintersector.hpp">hpp</a></strong> <br>OpenGL 4.3 compute shader implementation of ILineBatchIntersector.</li>
 <li><strong>file <a href="../api_generated/Files/GLSSBOBuffer_8cpp.html#file-glssbobuffer.cpp">cpp</a></strong> <br>Implementation of the GLSSBOBuffer RAII wrapper.</li>
-<li><strong>file <a href="../api_generated/Files/GLSSBOBuffer_8hpp.html#file-glssbobuffer.hpp">hpp</a></strong> <br>RAII wrapper for OpenGL Shader Storage Buffer Objects (SSBOs)</li>
+<li><strong>file <a href="../api_generated/Files/GLSSBOBuffer_8hpp.html#file-glssbobuffer.hpp">hpp</a></strong> <br>RAII wrapper for OpenGL Shader Storage Buffer Objects (SSBOs).</li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_1ed524e33814ccd612b31cc1db3c2136.html#dir-src/plottingopengl/renderers">src/PlottingOpenGL/Renderers</a></strong>
 <ul>
@@ -2226,11 +2237,11 @@ ul.task-list li input[type="checkbox"] {
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_c7ff3b59bdedba99140a4489f6324cc1.html#dir-src/transformsv2/algorithms/rangereductions">src/TransformsV2/algorithms/RangeReductions</a></strong>
 <ul>
-<li><strong>file <a href="../api_generated/Files/EventRangeReductions_8hpp.html#file-eventrangereductions.hpp">hpp</a></strong> <br>Range reductions for event-based time series (<a href="../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>)</li>
-<li><strong>file <a href="../api_generated/Files/IntervalRangeReductions_8hpp.html#file-intervalrangereductions.hpp">hpp</a></strong> <br>Range reductions for interval-based time series (<a href="../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>)</li>
+<li><strong>file <a href="../api_generated/Files/EventRangeReductions_8hpp.html#file-eventrangereductions.hpp">hpp</a></strong> <br>Range reductions for event-based time series (<a href="../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>).</li>
+<li><strong>file <a href="../api_generated/Files/IntervalRangeReductions_8hpp.html#file-intervalrangereductions.hpp">hpp</a></strong> <br>Range reductions for interval-based time series (<a href="../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>).</li>
 <li><strong>file <a href="../api_generated/Files/RegisteredRangeReductions_8cpp.html#file-registeredrangereductions.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/RegisteredRangeReductions_8hpp.html#file-registeredrangereductions.hpp">hpp</a></strong> <br>Central registration for all range reduction operations.</li>
-<li><strong>file <a href="../api_generated/Files/ValueRangeReductions_8hpp.html#file-valuerangereductions.hpp">hpp</a></strong> <br>Range reductions for value-based time series (<a href="../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a>)</li>
+<li><strong>file <a href="../api_generated/Files/ValueRangeReductions_8hpp.html#file-valuerangereductions.hpp">hpp</a></strong> <br>Range reductions for value-based time series (<a href="../api_generated/Classes/classAnalogTimeSeries.html">AnalogTimeSeries</a>).</li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_153fa5e206c97eaf3a2728141bb171a0.html#dir-src/transformsv2/algorithms/removelineoutliers">src/TransformsV2/algorithms/RemoveLineOutliers</a></strong>
 <ul>
@@ -2283,7 +2294,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>dir <a href="../api_generated/Files/dir_f8e26c443cf0bffb01acfa4d58d0f140.html#dir-src/transformsv2/algorithms/tensorica">src/TransformsV2/algorithms/TensorICA</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/TensorICA_8cpp.html#file-tensorica.cpp">cpp</a></strong> <br>Implementation of ICA (RADICAL) container transform wrapper.</li>
-<li><strong>file <a href="../api_generated/Files/TensorICA_8hpp.html#file-tensorica.hpp">hpp</a></strong> <br>TransformsV2 container transform wrapper for ICA (RADICAL algorithm)</li>
+<li><strong>file <a href="../api_generated/Files/TensorICA_8hpp.html#file-tensorica.hpp">hpp</a></strong> <br>TransformsV2 container transform wrapper for ICA (RADICAL algorithm).</li>
 <li><strong>file <a href="../api_generated/Files/TensorICA_8test_8cpp.html#file-tensorica.test.cpp">cpp</a></strong> <br>Catch2 tests for the TensorICA container transform.</li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_1ac4f2730ad6b2820fa454bd7d3c4b7a.html#dir-src/transformsv2/algorithms/tensorpca">src/TransformsV2/algorithms/TensorPCA</a></strong>
@@ -2324,7 +2335,7 @@ ul.task-list li input[type="checkbox"] {
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_d224880dc8c0127db995528537461cde.html#dir-src/transformsv2/algorithms/zscorenormalization">src/TransformsV2/algorithms/ZScoreNormalization</a></strong>
 <ul>
-<li><strong>file <a href="../api_generated/Files/ZScoreNormalizationV2_8hpp.html#file-zscorenormalizationv2.hpp">hpp</a></strong> <br>Z-Score normalization using value store bindings (no preprocessing)</li>
+<li><strong>file <a href="../api_generated/Files/ZScoreNormalizationV2_8hpp.html#file-zscorenormalizationv2.hpp">hpp</a></strong> <br>Z-Score normalization using value store bindings (no preprocessing).</li>
 <li><strong>file <a href="../api_generated/Files/ZScoreNormalizationV2_8test_8cpp.html#file-zscorenormalizationv2.test.cpp">cpp</a></strong></li>
 </ul></li>
 </ul></li>
@@ -2340,7 +2351,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/RegisteredTransforms_8cpp.html#file-registeredtransforms.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/RegisteredTransforms_8hpp.html#file-registeredtransforms.hpp">hpp</a></strong> <br>Central header for all registered V2 transforms.</li>
 <li><strong>file <a href="../api_generated/Files/TensorColumnBuilders_8cpp.html#file-tensorcolumnbuilders.cpp">cpp</a></strong></li>
-<li><strong>file <a href="../api_generated/Files/TensorColumnBuilders_8hpp.html#file-tensorcolumnbuilders.hpp">hpp</a></strong> <br>Builder layer that connects <a href="../api_generated/Classes/classDataManager.html">DataManager</a> sources, <a href="../api_generated/Classes/classTransformPipeline.html">TransformPipeline</a> execution, and <a href="../api_generated/Classes/classGatherResult.html">GatherResult</a> gather+reduce patterns into ColumnProviderFn closures for <a href="../api_generated/Classes/classLazyColumnTensorStorage.html">LazyColumnTensorStorage</a>.</li>
+<li><strong>file <a href="../api_generated/Files/TensorColumnBuilders_8hpp.html#file-tensorcolumnbuilders.hpp">hpp</a></strong> <br>Builder layer that connects <a href="../api_generated/Classes/classDataManager.html">DataManager</a> sources, <a href="../api_generated/Classes/classTransformPipeline.html">TransformPipeline</a> execution, and <a href="../api_generated/Classes/classGatherResult.html">GatherResult</a> gather+reduce patterns into <a href="../api_generated/Files/LazyColumnTensorStorage_8hpp.html#using-columnproviderfn">ColumnProviderFn</a> closures for <a href="../api_generated/Classes/classLazyColumnTensorStorage.html">LazyColumnTensorStorage</a>.</li>
 <li><strong>file <a href="../api_generated/Files/TransformsV2_2core_2TransformPipeline_8cpp.html#file-transformpipeline.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/TransformsV2_2core_2TransformPipeline_8hpp.html#file-transformpipeline.hpp">hpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/TypeChainResolver_8cpp.html#file-typechainresolver.cpp">cpp</a></strong> <br>Implementation of data-free type-chain resolution.</li>
@@ -2397,7 +2408,7 @@ ul.task-list li input[type="checkbox"] {
 <ul>
 <li><strong>file <a href="../api_generated/Files/TriageSession_8cpp.html#file-triagesession.cpp">cpp</a></strong> <br>Implementation of the Mark/Commit/Recall triage state machine.</li>
 <li><strong>file <a href="../api_generated/Files/TriageSession_8hpp.html#file-triagesession.hpp">hpp</a></strong> <br>Mark/Commit/Recall state machine for triage workflows.</li>
-<li><strong>file <a href="../api_generated/Files/TriageSession_8test_8cpp.html#file-triagesession.test.cpp">cpp</a></strong> <br>Unit tests for TriageSession state machine.</li>
+<li><strong>file <a href="../api_generated/Files/TriageSession_8test_8cpp.html#file-triagesession.test.cpp">cpp</a></strong> <br>Unit tests for <a href="../api_generated/Classes/classtriage_1_1TriageSession.html">TriageSession</a> state machine.</li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_0f13909b0ee37c8fdcfbe11948d50a57.html#dir-src/whiskertoolbox">src/WhiskerToolbox</a></strong>
 <ul>
@@ -2488,7 +2499,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>dir <a href="../api_generated/Files/dir_3a05eeb7896e3dc4e29bb26a93821227.html#dir-src/whiskertoolbox/dataexport-widget/masks/csv">src/WhiskerToolbox/DataExport_Widget/Masks/CSV</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/CSVMaskSaver__Widget_8cpp.html#file-csvmasksaver-widget.cpp">cpp</a></strong> <br>Implementation of <a href="../api_generated/Classes/classCSVMaskSaver__Widget.html">CSVMaskSaver_Widget</a> for saving <a href="../api_generated/Classes/classMaskData.html">MaskData</a> as CSV RLE.</li>
-<li><strong>file <a href="../api_generated/Files/CSVMaskSaver__Widget_8hpp.html#file-csvmasksaver-widget.hpp">hpp</a></strong> <br>Widget for saving <a href="../api_generated/Classes/classMaskData.html">MaskData</a> to CSV files using Run-Length Encoding (RLE)</li>
+<li><strong>file <a href="../api_generated/Files/CSVMaskSaver__Widget_8hpp.html#file-csvmasksaver-widget.hpp">hpp</a></strong> <br>Widget for saving <a href="../api_generated/Classes/classMaskData.html">MaskData</a> to CSV files using Run-Length Encoding (RLE).</li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_6ecad4225d867d370a51191a35b36f33.html#dir-src/whiskertoolbox/dataexport-widget/masks/hdf5">src/WhiskerToolbox/DataExport_Widget/Masks/HDF5</a></strong>
 <ul>
@@ -2627,13 +2638,13 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>dir <a href="../api_generated/Files/dir_0fc5841a7c7aa24e8e265a422eb1c4d6.html#dir-src/whiskertoolbox/datainspector-widget">src/WhiskerToolbox/DataInspector_Widget</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/DataInspectorPropertiesWidget_8cpp.html#file-datainspectorpropertieswidget.cpp">cpp</a></strong></li>
-<li><strong>file <a href="../api_generated/Files/DataInspectorPropertiesWidget_8hpp.html#file-datainspectorpropertieswidget.hpp">hpp</a></strong> <br>Properties panel for data inspection (Right zone)</li>
+<li><strong>file <a href="../api_generated/Files/DataInspectorPropertiesWidget_8hpp.html#file-datainspectorpropertieswidget.hpp">hpp</a></strong> <br>Properties panel for data inspection (Right zone).</li>
 <li><strong>file <a href="../api_generated/Files/DataInspectorPropertiesWidget_8test_8cpp.html#file-datainspectorpropertieswidget.test.cpp">cpp</a></strong> <br>Tests for <a href="../api_generated/Classes/classDataInspectorPropertiesWidget.html">DataInspectorPropertiesWidget</a>, focusing on data deletion handling.</li>
 <li><strong>file <a href="../api_generated/Files/DataInspectorState_8cpp.html#file-datainspectorstate.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/DataInspectorState_8hpp.html#file-datainspectorstate.hpp">hpp</a></strong> <br>State class for DataInspector_Widget.</li>
 <li><strong>file <a href="../api_generated/Files/DataInspectorStateData_8hpp.html#file-datainspectorstatedata.hpp">hpp</a></strong> <br>Serializable state data structure for DataInspector_Widget.</li>
 <li><strong>file <a href="../api_generated/Files/DataInspectorViewWidget_8cpp.html#file-datainspectorviewwidget.cpp">cpp</a></strong></li>
-<li><strong>file <a href="../api_generated/Files/DataInspectorViewWidget_8hpp.html#file-datainspectorviewwidget.hpp">hpp</a></strong> <br>View panel for data inspection (Center zone)</li>
+<li><strong>file <a href="../api_generated/Files/DataInspectorViewWidget_8hpp.html#file-datainspectorviewwidget.hpp">hpp</a></strong> <br>View panel for data inspection (Center zone).</li>
 <li><strong>file <a href="../api_generated/Files/DataInspectorWidgetRegistration_8cpp.html#file-datainspectorwidgetregistration.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/DataInspectorWidgetRegistration_8hpp.html#file-datainspectorwidgetregistration.hpp">hpp</a></strong> <br>Registration function for Data Inspector editor types.</li>
 <li><strong>dir <a href="../api_generated/Files/dir_d19d3caadad5edb7a8f19df4df5a56be.html#dir-src/whiskertoolbox/datainspector-widget/analogtimeseries">src/WhiskerToolbox/DataInspector_Widget/AnalogTimeSeries</a></strong>
@@ -2667,9 +2678,9 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>dir <a href="../api_generated/Files/dir_b8050cdb75d38619ff45d83c04eb6309.html#dir-src/whiskertoolbox/datainspector-widget/imagedata">src/WhiskerToolbox/DataInspector_Widget/ImageData</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/ImageDataView_8cpp.html#file-imagedataview.cpp">cpp</a></strong></li>
-<li><strong>file <a href="../api_generated/Files/ImageDataView_8hpp.html#file-imagedataview.hpp">hpp</a></strong> <br>Table view widget for <a href="../api_generated/Classes/classImageData.html">ImageData</a> (Images/Video)</li>
+<li><strong>file <a href="../api_generated/Files/ImageDataView_8hpp.html#file-imagedataview.hpp">hpp</a></strong> <br>Table view widget for <a href="../api_generated/Classes/classImageData.html">ImageData</a> (Images/Video).</li>
 <li><strong>file <a href="../api_generated/Files/ImageInspector_8cpp.html#file-imageinspector.cpp">cpp</a></strong></li>
-<li><strong>file <a href="../api_generated/Files/ImageInspector_8hpp.html#file-imageinspector.hpp">hpp</a></strong> <br>Inspector widget for <a href="../api_generated/Classes/classMediaData.html">MediaData</a> (images/video)</li>
+<li><strong>file <a href="../api_generated/Files/ImageInspector_8hpp.html#file-imageinspector.hpp">hpp</a></strong> <br>Inspector widget for <a href="../api_generated/Classes/classMediaData.html">MediaData</a> (images/video).</li>
 <li><strong>file <a href="../api_generated/Files/ImageTableModel_8cpp.html#file-imagetablemodel.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/ImageTableModel_8hpp.html#file-imagetablemodel.hpp">hpp</a></strong></li>
 </ul></li>
@@ -3058,7 +3069,7 @@ ul.task-list li input[type="checkbox"] {
 <ul>
 <li><strong>file <a href="../api_generated/Files/AnalogVertexCache_8cpp.html#file-analogvertexcache.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/AnalogVertexCache_8hpp.html#file-analogvertexcache.hpp">hpp</a></strong> <br>Ring buffer-based vertex caching for efficient scrolling of analog time series.</li>
-<li><strong>file <a href="../api_generated/Files/AnalogVertexCache_8test_8cpp.html#file-analogvertexcache.test.cpp">cpp</a></strong> <br>Unit tests for the AnalogVertexCache class.</li>
+<li><strong>file <a href="../api_generated/Files/AnalogVertexCache_8test_8cpp.html#file-analogvertexcache.test.cpp">cpp</a></strong> <br>Unit tests for the <a href="../api_generated/Classes/classDataViewer_1_1AnalogVertexCache.html">AnalogVertexCache</a> class.</li>
 <li><strong>file <a href="../api_generated/Files/DataViewerViewWindow_8hpp.html#file-dataviewerviewwindow.hpp">hpp</a></strong> <br>View-window time coordinate helpers for <a href="../api_generated/Namespaces/namespaceDataViewer.html">DataViewer</a> rendering and hit testing.</li>
 <li><strong>file <a href="../api_generated/Files/OpenGLWidget_8cpp.html#file-openglwidget.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/OpenGLWidget_8hpp.html#file-openglwidget.hpp">hpp</a></strong> <br>OpenGL-based time-series data visualization widget.</li>
@@ -3122,9 +3133,14 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/DeepLearningWidgetRegistration_8hpp.html#file-deeplearningwidgetregistration.hpp">hpp</a></strong> <br>Registration function for DeepLearning widget editor types.</li>
 <li><strong>dir <a href="../api_generated/Files/dir_71676e37563b5ee26e73fb7552e69b5c.html#dir-src/whiskertoolbox/deeplearning-widget/core">src/WhiskerToolbox/DeepLearning_Widget/Core</a></strong>
 <ul>
+<li><strong>file <a href="../api_generated/Files/CloneMediaForInference_8cpp.html#file-clonemediaforinference.cpp">cpp</a></strong> <br>Implementation of inference <a href="../api_generated/Classes/classMediaData.html">MediaData</a> cloning.</li>
+<li><strong>file <a href="../api_generated/Files/CloneMediaForInference_8hpp.html#file-clonemediaforinference.hpp">hpp</a></strong> <br>Create inference-dedicated <a href="../api_generated/Classes/classMediaData.html">MediaData</a> clones (separate decoder/state).</li>
 <li><strong>file <a href="../api_generated/Files/DeepLearningState_8cpp.html#file-deeplearningstate.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/DeepLearningState_8hpp.html#file-deeplearningstate.hpp">hpp</a></strong> <br>State class for the DeepLearning widget.</li>
+<li><strong>file <a href="../api_generated/Files/MediaInferenceOverrides_8cpp.html#file-mediainferenceoverrides.cpp">cpp</a></strong> <br>Implementation of batch inference <a href="">MediaOverrides</a> construction.</li>
+<li><strong>file <a href="../api_generated/Files/MediaInferenceOverrides_8hpp.html#file-mediainferenceoverrides.hpp">hpp</a></strong> <br>Build thread-safe <a href="../api_generated/Classes/classMediaData.html">MediaData</a> clones for batch deep learning inference.</li>
 <li><strong>file <a href="../api_generated/Files/MediaOverrides_8hpp.html#file-mediaoverrides.hpp">hpp</a></strong> <br>Type alias for a map of media data overrides.</li>
+<li><strong>file <a href="../api_generated/Files/MediaProcessingOptionsLookup_8hpp.html#file-mediaprocessingoptionslookup.hpp">hpp</a></strong> <br>Callback type for resolving Media processing options during batch inference.</li>
 <li><strong>file <a href="../api_generated/Files/SlotAssembler_8cpp.html#file-slotassembler.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/SlotAssembler_8hpp.html#file-slotassembler.hpp">hpp</a></strong> <br>Bridge between UI/DataManager and the DeepLearning library.</li>
 </ul></li>
@@ -3188,7 +3204,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/SelectionContext_8cpp.html#file-selectioncontext.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/SelectionContext_8hpp.html#file-selectioncontext.hpp">hpp</a></strong> <br>Centralized selection and focus management for inter-widget communication.</li>
 <li><strong>file <a href="../api_generated/Files/StrongTypes_8hpp.html#file-strongtypes.hpp">hpp</a></strong> <br>Strong type wrappers for <a href="../api_generated/Classes/classEditorState.html">EditorState</a> identifiers.</li>
-<li><strong>file <a href="../api_generated/Files/ZoneTypes_8hpp.html#file-zonetypes.hpp">hpp</a></strong> <br>Shared Zone enum for UI widget placement.</li>
+<li><strong>file <a href="../api_generated/Files/ZoneTypes_8hpp.html#file-zonetypes.hpp">hpp</a></strong> <br>Shared <a href="">Zone</a> enum for UI widget placement.</li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_ade0a7a60bb92ac532e5d2f9daffdb9e.html#dir-src/whiskertoolbox/export-widgets">src/WhiskerToolbox/Export_Widgets</a></strong>
 <ul>
@@ -3299,7 +3315,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/KeyActionAdapter_8hpp.html#file-keyactionadapter.hpp">hpp</a></strong> <br>Composition-based component for receiving keymap dispatches.</li>
 <li><strong>file <a href="../api_generated/Files/Keymap_8hpp.html#file-keymap.hpp">hpp</a></strong> <br>Keymap binding types including resolved entries and serializable user overrides.</li>
 <li><strong>file <a href="../api_generated/Files/KeymapCommandBridge_8cpp.html#file-keymapcommandbridge.cpp">cpp</a></strong> <br>Bridges <a href="../api_generated/Namespaces/namespaceKeymapSystem.html">KeymapSystem</a> hotkeys to Commands::executeSequence via <a href="../api_generated/Classes/classEditorRegistry.html">EditorRegistry</a>.</li>
-<li><strong>file <a href="../api_generated/Files/KeymapCommandBridge_8hpp.html#file-keymapcommandbridge.hpp">hpp</a></strong> <br>Builds CommandContext from <a href="../api_generated/Classes/classEditorRegistry.html">EditorRegistry</a> and runs executeSequence()</li>
+<li><strong>file <a href="../api_generated/Files/KeymapCommandBridge_8hpp.html#file-keymapcommandbridge.hpp">hpp</a></strong> <br>Builds CommandContext from <a href="../api_generated/Classes/classEditorRegistry.html">EditorRegistry</a> and runs executeSequence().</li>
 <li><strong>file <a href="../api_generated/Files/KeymapManager_8cpp.html#file-keymapmanager.cpp">cpp</a></strong> <br>Implementation of the central keymap manager.</li>
 <li><strong>file <a href="../api_generated/Files/KeymapManager_8hpp.html#file-keymapmanager.hpp">hpp</a></strong> <br>Central manager for keyboard action registration, dispatch, and override management.</li>
 </ul></li>
@@ -3415,6 +3431,7 @@ ul.task-list li input[type="checkbox"] {
 <ul>
 <li><strong>file <a href="../api_generated/Files/CoordinateTypes_8hpp.html#file-coordinatetypes.hpp">hpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/DisplayOptions_8hpp.html#file-displayoptions.hpp">hpp</a></strong> <br>Display option structs for <a href="../api_generated/Classes/classMedia__Widget.html">Media_Widget</a> visualization.</li>
+<li><strong>file <a href="../api_generated/Files/MediaDisplayProcessingOptions_8hpp.html#file-mediadisplayprocessingoptions.hpp">hpp</a></strong> <br>Convert <a href="../api_generated/Classes/structMediaDisplayOptions.html">MediaDisplayOptions</a> to MediaProcessingPipeline chain settings.</li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_8c616e5636633017d5eed79c026a0a79.html#dir-src/whiskertoolbox/media-widget/rendering">src/WhiskerToolbox/Media_Widget/Rendering</a></strong>
 <ul>
@@ -3504,7 +3521,7 @@ ul.task-list li input[type="checkbox"] {
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_003f8e1db590d01df7c4a82ea4d28f30.html#dir-src/whiskertoolbox/media-widget/ui/subwidgets/mediaprocessing-widget">src/WhiskerToolbox/Media_Widget/UI/SubWidgets/MediaProcessing_Widget</a></strong>
 <ul>
-<li><strong>file <a href="../api_generated/Files/MediaProcessing__Widget_8cpp.html#file-mediaprocessing-widget.cpp">cpp</a></strong> <br>Generic media processing widget using ProcessingStepRegistry and <a href="../api_generated/Classes/classAutoParamWidget.html">AutoParamWidget</a>.</li>
+<li><strong>file <a href="../api_generated/Files/MediaProcessing__Widget_8cpp.html#file-mediaprocessing-widget.cpp">cpp</a></strong> <br>Generic media processing widget using <a href="../api_generated/Classes/classNeuralyzer_1_1MediaProcessing_1_1ProcessingStepRegistry.html">ProcessingStepRegistry</a> and <a href="../api_generated/Classes/classAutoParamWidget.html">AutoParamWidget</a>.</li>
 <li><strong>file <a href="../api_generated/Files/MediaProcessing__Widget_8hpp.html#file-mediaprocessing-widget.hpp">hpp</a></strong> <br>Generic media processing widget driven by ProcessingStepRegistry and <a href="../api_generated/Classes/classAutoParamWidget.html">AutoParamWidget</a>.</li>
 <li><strong>dir <a href="../api_generated/Files/dir_ceeec827a22c930f2ec8224323f83c36.html#dir-src/whiskertoolbox/media-widget/ui/subwidgets/mediaprocessing-widget/processingoptions">src/WhiskerToolbox/Media_Widget/UI/SubWidgets/MediaProcessing_Widget/ProcessingOptions</a></strong>
 <ul>
@@ -3628,7 +3645,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>dir <a href="../api_generated/Files/dir_cda5c30e4513919d9504f0431f2968ac.html#dir-src/whiskertoolbox/plots/common/glyphstylewidget">src/WhiskerToolbox/Plots/Common/GlyphStyleWidget</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/GlyphStyleControls_8cpp.html#file-glyphstylecontrols.cpp">cpp</a></strong></li>
-<li><strong>file <a href="../api_generated/Files/GlyphStyleControls_8hpp.html#file-glyphstylecontrols.hpp">hpp</a></strong> <br>Widget for editing glyph style properties (shape, size, color, alpha)</li>
+<li><strong>file <a href="../api_generated/Files/GlyphStyleControls_8hpp.html#file-glyphstylecontrols.hpp">hpp</a></strong> <br>Widget for editing glyph style properties (shape, size, color, alpha).</li>
 <li><strong>dir <a href="../api_generated/Files/dir_2d9ecba17a78324ac5e9ac82eea03811.html#dir-src/whiskertoolbox/plots/common/glyphstylewidget/core">src/WhiskerToolbox/Plots/Common/GlyphStyleWidget/Core</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/GlyphStyleState_8cpp.html#file-glyphstylestate.cpp">cpp</a></strong></li>
@@ -3651,7 +3668,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>dir <a href="../api_generated/Files/dir_8858501874fddffb0b3e33e0822b479b.html#dir-src/whiskertoolbox/plots/common/linestylecontrols">src/WhiskerToolbox/Plots/Common/LineStyleControls</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/LineStyleControls_8cpp.html#file-linestylecontrols.cpp">cpp</a></strong></li>
-<li><strong>file <a href="../api_generated/Files/LineStyleControls_8hpp.html#file-linestylecontrols.hpp">hpp</a></strong> <br>Widget for editing line style properties (color, thickness, alpha)</li>
+<li><strong>file <a href="../api_generated/Files/LineStyleControls_8hpp.html#file-linestylecontrols.hpp">hpp</a></strong> <br>Widget for editing line style properties (color, thickness, alpha).</li>
 <li><strong>dir <a href="../api_generated/Files/dir_96cf4309e1940523d5fa0634f886b9b7.html#dir-src/whiskertoolbox/plots/common/linestylecontrols/core">src/WhiskerToolbox/Plots/Common/LineStyleControls/Core</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/LineStyleState_8cpp.html#file-linestylestate.cpp">cpp</a></strong></li>
@@ -3698,7 +3715,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>dir <a href="../api_generated/Files/dir_2cb33edeb1ffb745b982d564adf974b3.html#dir-src/whiskertoolbox/plots/common/relativetimeaxiswidget">src/WhiskerToolbox/Plots/Common/RelativeTimeAxisWidget</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/RelativeTimeAxisWidget_8cpp.html#file-relativetimeaxiswidget.cpp">cpp</a></strong></li>
-<li><strong>file <a href="../api_generated/Files/RelativeTimeAxisWidget_8hpp.html#file-relativetimeaxiswidget.hpp">hpp</a></strong> <br>Widget for rendering a relative time axis (centered at zero)</li>
+<li><strong>file <a href="../api_generated/Files/RelativeTimeAxisWidget_8hpp.html#file-relativetimeaxiswidget.hpp">hpp</a></strong> <br>Widget for rendering a relative time axis (centered at zero).</li>
 <li><strong>file <a href="../api_generated/Files/RelativeTimeAxisWithRangeControls_8cpp.html#file-relativetimeaxiswithrangecontrols.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/RelativeTimeAxisWithRangeControls_8hpp.html#file-relativetimeaxiswithrangecontrols.hpp">hpp</a></strong> <br>Combined widget factory for <a href="../api_generated/Classes/classRelativeTimeAxisWidget.html">RelativeTimeAxisWidget</a> with editable range controls.</li>
 <li><strong>dir <a href="../api_generated/Files/dir_8270f2cc5a2896003397fc042b704299.html#dir-src/whiskertoolbox/plots/common/relativetimeaxiswidget/core">src/WhiskerToolbox/Plots/Common/RelativeTimeAxisWidget/Core</a></strong>
@@ -3853,7 +3870,7 @@ ul.task-list li input[type="checkbox"] {
 <ul>
 <li><strong>file <a href="../api_generated/Files/BuildScatterPoints_8cpp.html#file-buildscatterpoints.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/BuildScatterPoints_8hpp.html#file-buildscatterpoints.hpp">hpp</a></strong> <br>Factory function for building scatter point data from two axis sources.</li>
-<li><strong>file <a href="../api_generated/Files/ScatterAxisSource_8hpp.html#file-scatteraxissource.hpp">hpp</a></strong> <br>Data source descriptor for a single scatter plot axis (X or Y)</li>
+<li><strong>file <a href="../api_generated/Files/ScatterAxisSource_8hpp.html#file-scatteraxissource.hpp">hpp</a></strong> <br>Data source descriptor for a single scatter plot axis (X or Y).</li>
 <li><strong>file <a href="../api_generated/Files/ScatterColorConfig_8hpp.html#file-scattercolorconfig.hpp">hpp</a></strong> <br>Serializable configuration for external feature-based point coloring.</li>
 <li><strong>file <a href="../api_generated/Files/ScatterPlotState_8cpp.html#file-scatterplotstate.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/ScatterPlotState_8hpp.html#file-scatterplotstate.hpp">hpp</a></strong> <br>State class for <a href="../api_generated/Classes/classScatterPlotWidget.html">ScatterPlotWidget</a>.</li>
@@ -3950,22 +3967,22 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/AppPreferences_8cpp.html#file-apppreferences.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/AppPreferences_8hpp.html#file-apppreferences.hpp">hpp</a></strong> <br>Qt wrapper for application-level preferences with auto-save.</li>
 <li><strong>file <a href="../api_generated/Files/AppPreferencesData_8hpp.html#file-apppreferencesdata.hpp">hpp</a></strong> <br>Serializable data structure for application-level preferences.</li>
-<li><strong>file <a href="../api_generated/Files/AppPreferencesData_8test_8cpp.html#file-apppreferencesdata.test.cpp">cpp</a></strong> <br>Unit tests for AppPreferencesData (reflect-cpp serialization)</li>
+<li><strong>file <a href="../api_generated/Files/AppPreferencesData_8test_8cpp.html#file-apppreferencesdata.test.cpp">cpp</a></strong> <br>Unit tests for <a href="../api_generated/Classes/structStateManagement_1_1AppPreferencesData.html">AppPreferencesData</a> (reflect-cpp serialization).</li>
 <li><strong>file <a href="../api_generated/Files/PathResolver_8hpp.html#file-pathresolver.hpp">hpp</a></strong> <br>Utility for converting between absolute and workspace-relative paths.</li>
-<li><strong>file <a href="../api_generated/Files/PathResolver_8test_8cpp.html#file-pathresolver.test.cpp">cpp</a></strong> <br>Unit tests for PathResolver utility.</li>
+<li><strong>file <a href="../api_generated/Files/PathResolver_8test_8cpp.html#file-pathresolver.test.cpp">cpp</a></strong> <br>Unit tests for <a href="../api_generated/Classes/structStateManagement_1_1PathResolver.html">PathResolver</a> utility.</li>
 <li><strong>file <a href="../api_generated/Files/SessionData_8hpp.html#file-sessiondata.hpp">hpp</a></strong> <br>Serializable data structure for session memory.</li>
-<li><strong>file <a href="../api_generated/Files/SessionData_8test_8cpp.html#file-sessiondata.test.cpp">cpp</a></strong> <br>Unit tests for SessionData (reflect-cpp serialization)</li>
+<li><strong>file <a href="../api_generated/Files/SessionData_8test_8cpp.html#file-sessiondata.test.cpp">cpp</a></strong> <br>Unit tests for <a href="../api_generated/Classes/structStateManagement_1_1SessionData.html">SessionData</a> (reflect-cpp serialization).</li>
 <li><strong>file <a href="../api_generated/Files/SessionStore_8cpp.html#file-sessionstore.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/SessionStore_8hpp.html#file-sessionstore.hpp">hpp</a></strong> <br>Qt wrapper for session memory with auto-save.</li>
 <li><strong>file <a href="../api_generated/Files/StartupTrace_8cpp.html#file-startuptrace.cpp">cpp</a></strong> <br>Implementation of startup-phase tracing helpers.</li>
 <li><strong>file <a href="../api_generated/Files/StartupTrace_8hpp.html#file-startuptrace.hpp">hpp</a></strong> <br>Monotonic startup-phase tracing for crash-recovery diagnostics.</li>
-<li><strong>file <a href="../api_generated/Files/StateManagement_8test_8cpp.html#file-statemanagement.test.cpp">cpp</a></strong> <br>Integration tests for AppPreferences, SessionStore, and StateManager.</li>
+<li><strong>file <a href="../api_generated/Files/StateManagement_8test_8cpp.html#file-statemanagement.test.cpp">cpp</a></strong> <br>Integration tests for <a href="../api_generated/Classes/classStateManagement_1_1AppPreferences.html">AppPreferences</a>, <a href="../api_generated/Classes/classStateManagement_1_1SessionStore.html">SessionStore</a>, and <a href="../api_generated/Classes/classStateManagement_1_1StateManager.html">StateManager</a>.</li>
 <li><strong>file <a href="../api_generated/Files/StateManager_8cpp.html#file-statemanager.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/StateManager_8hpp.html#file-statemanager.hpp">hpp</a></strong> <br>Central coordinator for application state persistence.</li>
 <li><strong>file <a href="../api_generated/Files/WorkspaceData_8hpp.html#file-workspacedata.hpp">hpp</a></strong> <br>Serializable data structures for workspace save/restore.</li>
 <li><strong>file <a href="../api_generated/Files/WorkspaceManager_8cpp.html#file-workspacemanager.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/WorkspaceManager_8hpp.html#file-workspacemanager.hpp">hpp</a></strong> <br>Workspace save/restore and crash recovery.</li>
-<li><strong>file <a href="../api_generated/Files/WorkspaceManager_8test_8cpp.html#file-workspacemanager.test.cpp">cpp</a></strong> <br>Integration tests for WorkspaceManager.</li>
+<li><strong>file <a href="../api_generated/Files/WorkspaceManager_8test_8cpp.html#file-workspacemanager.test.cpp">cpp</a></strong> <br>Integration tests for <a href="../api_generated/Classes/classStateManagement_1_1WorkspaceManager.html">WorkspaceManager</a>.</li>
 </ul></li>
 <li><strong>dir <a href="../api_generated/Files/dir_ae392e19eaaa98b941aad25e0c3fc872.html#dir-src/whiskertoolbox/tabledesignerwidget">src/WhiskerToolbox/TableDesignerWidget</a></strong>
 <ul>
@@ -4011,14 +4028,14 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>dir <a href="../api_generated/Files/dir_33fcc24a46b0fe7282333ccc963d8afb.html#dir-src/whiskertoolbox/test-widget">src/WhiskerToolbox/Test_Widget</a></strong>
 <ul>
 <li><strong>file <a href="../api_generated/Files/TestWidgetProperties_8cpp.html#file-testwidgetproperties.cpp">cpp</a></strong></li>
-<li><strong>file <a href="../api_generated/Files/TestWidgetProperties_8hpp.html#file-testwidgetproperties.hpp">hpp</a></strong> <br>Properties/controls component for TestWidget (View/Properties split proof-of-concept)</li>
+<li><strong>file <a href="../api_generated/Files/TestWidgetProperties_8hpp.html#file-testwidgetproperties.hpp">hpp</a></strong> <br>Properties/controls component for TestWidget (View/Properties split proof-of-concept).</li>
 <li><strong>file <a href="../api_generated/Files/TestWidgetRegistration_8cpp.html#file-testwidgetregistration.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/TestWidgetRegistration_8hpp.html#file-testwidgetregistration.hpp">hpp</a></strong> <br>Registration function for TestWidget editor type.</li>
 <li><strong>file <a href="../api_generated/Files/TestWidgetState_8cpp.html#file-testwidgetstate.cpp">cpp</a></strong></li>
-<li><strong>file <a href="../api_generated/Files/TestWidgetState_8hpp.html#file-testwidgetstate.hpp">hpp</a></strong> <br>State class for TestWidget (View/Properties split proof-of-concept)</li>
+<li><strong>file <a href="../api_generated/Files/TestWidgetState_8hpp.html#file-testwidgetstate.hpp">hpp</a></strong> <br>State class for TestWidget (View/Properties split proof-of-concept).</li>
 <li><strong>file <a href="../api_generated/Files/TestWidgetStateData_8hpp.html#file-testwidgetstatedata.hpp">hpp</a></strong> <br>Serializable state data structure for TestWidget.</li>
 <li><strong>file <a href="../api_generated/Files/TestWidgetView_8cpp.html#file-testwidgetview.cpp">cpp</a></strong></li>
-<li><strong>file <a href="../api_generated/Files/TestWidgetView_8hpp.html#file-testwidgetview.hpp">hpp</a></strong> <br>View component for TestWidget (View/Properties split proof-of-concept)</li>
+<li><strong>file <a href="../api_generated/Files/TestWidgetView_8hpp.html#file-testwidgetview.hpp">hpp</a></strong> <br>View component for TestWidget (View/Properties split proof-of-concept).</li>
 <li><strong>file <a href="../api_generated/Files/Test__Widget_8cpp.html#file-test-widget.cpp">cpp</a></strong></li>
 <li><strong>file <a href="../api_generated/Files/Test__Widget_8hpp.html#file-test-widget.hpp">hpp</a></strong></li>
 </ul></li>
@@ -4169,7 +4186,7 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>file <a href="../api_generated/Files/tableview__design__doc_8md.html#file-tableview-design-doc.md">tableview_design_doc.md</a></strong></li>
 </ul>
 <hr>
-<p>Updated on 2026-10-09 at 13:36:38 +0000</p>
+<p>Updated on 2026-11-13 at 20:25:46 +0000</p>
 
 
 </section>
@@ -4179,15 +4196,50 @@ ul.task-list li input[type="checkbox"] {
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -4266,7 +4318,8 @@ ul.task-list li input[type="checkbox"] {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -4275,8 +4328,69 @@ ul.task-list li input[type="checkbox"] {
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -4290,6 +4404,7 @@ ul.task-list li input[type="checkbox"] {
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -4452,44 +4567,54 @@ ul.task-list li input[type="checkbox"] {
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -4587,6 +4712,9 @@ ul.task-list li input[type="checkbox"] {
       }
     }
   });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
 

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -72,18 +72,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-0c66bec081e5215138e9fd61e9c23ef8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -116,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -139,6 +140,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -168,13 +170,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -268,6 +276,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -282,15 +291,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -334,8 +342,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
+            <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -344,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
@@ -366,7 +375,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -442,24 +451,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-getname" class="level3">
 <h3 class="anchored" data-anchor-id="function-getname">function getName</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>string getName<span class="op">()</span> <span class="at">const</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classEventThresholdOperation.html#function-getname">EventThresholdOperation::getName</a>, <a href="../../api_generated/Classes/classAnalogIntervalPeakOperation.html#function-getname">AnalogIntervalPeakOperation::getName</a>, <a href="../../api_generated/Classes/classIntervalThresholdOperation.html#function-getname">IntervalThresholdOperation::getName</a>, <a href="../../api_generated/Classes/classAnalogScalingOperation.html#function-getname">AnalogScalingOperation::getName</a>, <a href="../../api_generated/Classes/classAnalogFilterOperation.html#function-getname">AnalogFilterOperation::getName</a>, <a href="../../api_generated/Classes/classHilbertPhaseOperation.html#function-getname">HilbertPhaseOperation::getName</a>, <a href="../../api_generated/Classes/classBooleanOperation.html#function-getname">BooleanOperation::getName</a>, <a href="../../api_generated/Classes/classGroupOperation.html#function-getname">GroupOperation::getName</a>, <a href="../../api_generated/Classes/classLineAlignmentOperation.html#function-getname">LineAlignmentOperation::getName</a>, <a href="../../api_generated/Classes/classLineAngleOperation.html#function-getname">LineAngleOperation::getName</a>, <a href="../../api_generated/Classes/classLineBaseFlipTransform.html#function-getname">LineBaseFlipTransform::getName</a>, <a href="../../api_generated/Classes/classLineClipOperation.html#function-getname">LineClipOperation::getName</a>, <a href="../../api_generated/Classes/classLineCurvatureOperation.html#function-getname">LineCurvatureOperation::getName</a>, <a href="../../api_generated/Classes/classLineExtendOperation.html#function-getname">LineExtendOperation::getName</a>, <a href="../../api_generated/Classes/classLineGroupToIntervalsOperation.html#function-getname">LineGroupToIntervalsOperation::getName</a>, <a href="../../api_generated/Classes/classLineIndexGroupingOperation.html#function-getname">LineIndexGroupingOperation::getName</a>, <a href="../../api_generated/Classes/classLineKalmanGroupingOperation.html#function-getname">LineKalmanGroupingOperation::getName</a>, <a href="../../api_generated/Classes/classLineMinPointDistOperation.html#function-getname">LineMinPointDistOperation::getName</a>, <a href="../../api_generated/Classes/classLineOutlierDetectionOperation.html#function-getname">LineOutlierDetectionOperation::getName</a>, <a href="../../api_generated/Classes/classLinePointExtractionOperation.html#function-getname">LinePointExtractionOperation::getName</a>, <a href="../../api_generated/Classes/classLineProximityGroupingOperation.html#function-getname">LineProximityGroupingOperation::getName</a>, <a href="../../api_generated/Classes/classLineResampleOperation.html#function-getname">LineResampleOperation::getName</a>, <a href="../../api_generated/Classes/classLineSubsegmentOperation.html#function-getname">LineSubsegmentOperation::getName</a>, <a href="../../api_generated/Classes/classMaskAreaOperation.html#function-getname">MaskAreaOperation::getName</a>, <a href="../../api_generated/Classes/classMaskCentroidOperation.html#function-getname">MaskCentroidOperation::getName</a>, <a href="../../api_generated/Classes/classMaskConnectedComponentOperation.html#function-getname">MaskConnectedComponentOperation::getName</a>, <a href="../../api_generated/Classes/classMaskHoleFillingOperation.html#function-getname">MaskHoleFillingOperation::getName</a>, <a href="../../api_generated/Classes/classMaskMedianFilterOperation.html#function-getname">MaskMedianFilterOperation::getName</a>, <a href="../../api_generated/Classes/classMaskPrincipalAxisOperation.html#function-getname">MaskPrincipalAxisOperation::getName</a>, <a href="../../api_generated/Classes/classMaskSkeletonizeOperation.html#function-getname">MaskSkeletonizeOperation::getName</a>, <a href="../../api_generated/Classes/classMaskToLineOperation.html#function-getname">MaskToLineOperation::getName</a>, <a href="../../api_generated/Classes/classWhiskerTracingOperation.html#function-getname">WhiskerTracingOperation::getName</a>, <a href="../../api_generated/Classes/classPointParticleFilterOperation.html#function-getname">PointParticleFilterOperation::getName</a></p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classAnalogFilterOperation.html#function-getname">AnalogFilterOperation::getName</a>, <a href="../../api_generated/Classes/classAnalogIntervalPeakOperation.html#function-getname">AnalogIntervalPeakOperation::getName</a>, <a href="../../api_generated/Classes/classAnalogScalingOperation.html#function-getname">AnalogScalingOperation::getName</a>, <a href="../../api_generated/Classes/classBooleanOperation.html#function-getname">BooleanOperation::getName</a>, <a href="../../api_generated/Classes/classEventThresholdOperation.html#function-getname">EventThresholdOperation::getName</a>, <a href="../../api_generated/Classes/classGroupOperation.html#function-getname">GroupOperation::getName</a>, <a href="../../api_generated/Classes/classHilbertPhaseOperation.html#function-getname">HilbertPhaseOperation::getName</a>, <a href="../../api_generated/Classes/classIntervalThresholdOperation.html#function-getname">IntervalThresholdOperation::getName</a>, <a href="../../api_generated/Classes/classLineAlignmentOperation.html#function-getname">LineAlignmentOperation::getName</a>, <a href="../../api_generated/Classes/classLineAngleOperation.html#function-getname">LineAngleOperation::getName</a>, <a href="../../api_generated/Classes/classLineBaseFlipTransform.html#function-getname">LineBaseFlipTransform::getName</a>, <a href="../../api_generated/Classes/classLineClipOperation.html#function-getname">LineClipOperation::getName</a>, <a href="../../api_generated/Classes/classLineCurvatureOperation.html#function-getname">LineCurvatureOperation::getName</a>, <a href="../../api_generated/Classes/classLineExtendOperation.html#function-getname">LineExtendOperation::getName</a>, <a href="../../api_generated/Classes/classLineGroupToIntervalsOperation.html#function-getname">LineGroupToIntervalsOperation::getName</a>, <a href="../../api_generated/Classes/classLineIndexGroupingOperation.html#function-getname">LineIndexGroupingOperation::getName</a>, <a href="../../api_generated/Classes/classLineKalmanGroupingOperation.html#function-getname">LineKalmanGroupingOperation::getName</a>, <a href="../../api_generated/Classes/classLineMinPointDistOperation.html#function-getname">LineMinPointDistOperation::getName</a>, <a href="../../api_generated/Classes/classLineOutlierDetectionOperation.html#function-getname">LineOutlierDetectionOperation::getName</a>, <a href="../../api_generated/Classes/classLinePointExtractionOperation.html#function-getname">LinePointExtractionOperation::getName</a>, <a href="../../api_generated/Classes/classLineProximityGroupingOperation.html#function-getname">LineProximityGroupingOperation::getName</a>, <a href="../../api_generated/Classes/classLineResampleOperation.html#function-getname">LineResampleOperation::getName</a>, <a href="../../api_generated/Classes/classLineSubsegmentOperation.html#function-getname">LineSubsegmentOperation::getName</a>, <a href="../../api_generated/Classes/classMaskAreaOperation.html#function-getname">MaskAreaOperation::getName</a>, <a href="../../api_generated/Classes/classMaskCentroidOperation.html#function-getname">MaskCentroidOperation::getName</a>, <a href="../../api_generated/Classes/classMaskConnectedComponentOperation.html#function-getname">MaskConnectedComponentOperation::getName</a>, <a href="../../api_generated/Classes/classMaskHoleFillingOperation.html#function-getname">MaskHoleFillingOperation::getName</a>, <a href="../../api_generated/Classes/classMaskMedianFilterOperation.html#function-getname">MaskMedianFilterOperation::getName</a>, <a href="../../api_generated/Classes/classMaskPrincipalAxisOperation.html#function-getname">MaskPrincipalAxisOperation::getName</a>, <a href="../../api_generated/Classes/classMaskSkeletonizeOperation.html#function-getname">MaskSkeletonizeOperation::getName</a>, <a href="../../api_generated/Classes/classMaskToLineOperation.html#function-getname">MaskToLineOperation::getName</a>, <a href="../../api_generated/Classes/classPointParticleFilterOperation.html#function-getname">PointParticleFilterOperation::getName</a>, <a href="../../api_generated/Classes/classWhiskerTracingOperation.html#function-getname">WhiskerTracingOperation::getName</a></p>
 </section>
 <section id="function-gettargetinputtypeindex" class="level3">
 <h3 class="anchored" data-anchor-id="function-gettargetinputtypeindex">function getTargetInputTypeIndex</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>type_index getTargetInputTypeIndex<span class="op">()</span> <span class="at">const</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classEventThresholdOperation.html#function-gettargetinputtypeindex">EventThresholdOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classAnalogIntervalPeakOperation.html#function-gettargetinputtypeindex">AnalogIntervalPeakOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classIntervalThresholdOperation.html#function-gettargetinputtypeindex">IntervalThresholdOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classAnalogScalingOperation.html#function-gettargetinputtypeindex">AnalogScalingOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classAnalogFilterOperation.html#function-gettargetinputtypeindex">AnalogFilterOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classHilbertPhaseOperation.html#function-gettargetinputtypeindex">HilbertPhaseOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classBooleanOperation.html#function-gettargetinputtypeindex">BooleanOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classGroupOperation.html#function-gettargetinputtypeindex">GroupOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineAlignmentOperation.html#function-gettargetinputtypeindex">LineAlignmentOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineAngleOperation.html#function-gettargetinputtypeindex">LineAngleOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineBaseFlipTransform.html#function-gettargetinputtypeindex">LineBaseFlipTransform::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineClipOperation.html#function-gettargetinputtypeindex">LineClipOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineCurvatureOperation.html#function-gettargetinputtypeindex">LineCurvatureOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineExtendOperation.html#function-gettargetinputtypeindex">LineExtendOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineGroupToIntervalsOperation.html#function-gettargetinputtypeindex">LineGroupToIntervalsOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineIndexGroupingOperation.html#function-gettargetinputtypeindex">LineIndexGroupingOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineKalmanGroupingOperation.html#function-gettargetinputtypeindex">LineKalmanGroupingOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineMinPointDistOperation.html#function-gettargetinputtypeindex">LineMinPointDistOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineOutlierDetectionOperation.html#function-gettargetinputtypeindex">LineOutlierDetectionOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLinePointExtractionOperation.html#function-gettargetinputtypeindex">LinePointExtractionOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineProximityGroupingOperation.html#function-gettargetinputtypeindex">LineProximityGroupingOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineResampleOperation.html#function-gettargetinputtypeindex">LineResampleOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineSubsegmentOperation.html#function-gettargetinputtypeindex">LineSubsegmentOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classMaskAreaOperation.html#function-gettargetinputtypeindex">MaskAreaOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classMaskCentroidOperation.html#function-gettargetinputtypeindex">MaskCentroidOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classMaskConnectedComponentOperation.html#function-gettargetinputtypeindex">MaskConnectedComponentOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classMaskHoleFillingOperation.html#function-gettargetinputtypeindex">MaskHoleFillingOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classMaskMedianFilterOperation.html#function-gettargetinputtypeindex">MaskMedianFilterOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classMaskPrincipalAxisOperation.html#function-gettargetinputtypeindex">MaskPrincipalAxisOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classMaskSkeletonizeOperation.html#function-gettargetinputtypeindex">MaskSkeletonizeOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classMaskToLineOperation.html#function-gettargetinputtypeindex">MaskToLineOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classWhiskerTracingOperation.html#function-gettargetinputtypeindex">WhiskerTracingOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classPointParticleFilterOperation.html#function-gettargetinputtypeindex">PointParticleFilterOperation::getTargetInputTypeIndex</a></p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classAnalogFilterOperation.html#function-gettargetinputtypeindex">AnalogFilterOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classAnalogIntervalPeakOperation.html#function-gettargetinputtypeindex">AnalogIntervalPeakOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classAnalogScalingOperation.html#function-gettargetinputtypeindex">AnalogScalingOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classBooleanOperation.html#function-gettargetinputtypeindex">BooleanOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classEventThresholdOperation.html#function-gettargetinputtypeindex">EventThresholdOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classGroupOperation.html#function-gettargetinputtypeindex">GroupOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classHilbertPhaseOperation.html#function-gettargetinputtypeindex">HilbertPhaseOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classIntervalThresholdOperation.html#function-gettargetinputtypeindex">IntervalThresholdOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineAlignmentOperation.html#function-gettargetinputtypeindex">LineAlignmentOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineAngleOperation.html#function-gettargetinputtypeindex">LineAngleOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineBaseFlipTransform.html#function-gettargetinputtypeindex">LineBaseFlipTransform::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineClipOperation.html#function-gettargetinputtypeindex">LineClipOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineCurvatureOperation.html#function-gettargetinputtypeindex">LineCurvatureOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineExtendOperation.html#function-gettargetinputtypeindex">LineExtendOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineGroupToIntervalsOperation.html#function-gettargetinputtypeindex">LineGroupToIntervalsOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineIndexGroupingOperation.html#function-gettargetinputtypeindex">LineIndexGroupingOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineKalmanGroupingOperation.html#function-gettargetinputtypeindex">LineKalmanGroupingOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineMinPointDistOperation.html#function-gettargetinputtypeindex">LineMinPointDistOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineOutlierDetectionOperation.html#function-gettargetinputtypeindex">LineOutlierDetectionOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLinePointExtractionOperation.html#function-gettargetinputtypeindex">LinePointExtractionOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineProximityGroupingOperation.html#function-gettargetinputtypeindex">LineProximityGroupingOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineResampleOperation.html#function-gettargetinputtypeindex">LineResampleOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classLineSubsegmentOperation.html#function-gettargetinputtypeindex">LineSubsegmentOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classMaskAreaOperation.html#function-gettargetinputtypeindex">MaskAreaOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classMaskCentroidOperation.html#function-gettargetinputtypeindex">MaskCentroidOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classMaskConnectedComponentOperation.html#function-gettargetinputtypeindex">MaskConnectedComponentOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classMaskHoleFillingOperation.html#function-gettargetinputtypeindex">MaskHoleFillingOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classMaskMedianFilterOperation.html#function-gettargetinputtypeindex">MaskMedianFilterOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classMaskPrincipalAxisOperation.html#function-gettargetinputtypeindex">MaskPrincipalAxisOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classMaskSkeletonizeOperation.html#function-gettargetinputtypeindex">MaskSkeletonizeOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classMaskToLineOperation.html#function-gettargetinputtypeindex">MaskToLineOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classPointParticleFilterOperation.html#function-gettargetinputtypeindex">PointParticleFilterOperation::getTargetInputTypeIndex</a>, <a href="../../api_generated/Classes/classWhiskerTracingOperation.html#function-gettargetinputtypeindex">WhiskerTracingOperation::getTargetInputTypeIndex</a></p>
 </section>
 <section id="function-canapply" class="level3">
 <h3 class="anchored" data-anchor-id="function-canapply">function canApply</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">bool</span> canApply<span class="op">(</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> dataVariant</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="at">const</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classEventThresholdOperation.html#function-canapply">EventThresholdOperation::canApply</a>, <a href="../../api_generated/Classes/classAnalogIntervalPeakOperation.html#function-canapply">AnalogIntervalPeakOperation::canApply</a>, <a href="../../api_generated/Classes/classIntervalThresholdOperation.html#function-canapply">IntervalThresholdOperation::canApply</a>, <a href="../../api_generated/Classes/classAnalogScalingOperation.html#function-canapply">AnalogScalingOperation::canApply</a>, <a href="../../api_generated/Classes/classAnalogFilterOperation.html#function-canapply">AnalogFilterOperation::canApply</a>, <a href="../../api_generated/Classes/classHilbertPhaseOperation.html#function-canapply">HilbertPhaseOperation::canApply</a>, <a href="../../api_generated/Classes/classBooleanOperation.html#function-canapply">BooleanOperation::canApply</a>, <a href="../../api_generated/Classes/classGroupOperation.html#function-canapply">GroupOperation::canApply</a>, <a href="../../api_generated/Classes/classLineAlignmentOperation.html#function-canapply">LineAlignmentOperation::canApply</a>, <a href="../../api_generated/Classes/classLineAngleOperation.html#function-canapply">LineAngleOperation::canApply</a>, <a href="../../api_generated/Classes/classLineBaseFlipTransform.html#function-canapply">LineBaseFlipTransform::canApply</a>, <a href="../../api_generated/Classes/classLineClipOperation.html#function-canapply">LineClipOperation::canApply</a>, <a href="../../api_generated/Classes/classLineCurvatureOperation.html#function-canapply">LineCurvatureOperation::canApply</a>, <a href="../../api_generated/Classes/classLineExtendOperation.html#function-canapply">LineExtendOperation::canApply</a>, <a href="../../api_generated/Classes/classLineGroupToIntervalsOperation.html#function-canapply">LineGroupToIntervalsOperation::canApply</a>, <a href="../../api_generated/Classes/classLineIndexGroupingOperation.html#function-canapply">LineIndexGroupingOperation::canApply</a>, <a href="../../api_generated/Classes/classLineKalmanGroupingOperation.html#function-canapply">LineKalmanGroupingOperation::canApply</a>, <a href="../../api_generated/Classes/classLineMinPointDistOperation.html#function-canapply">LineMinPointDistOperation::canApply</a>, <a href="../../api_generated/Classes/classLineOutlierDetectionOperation.html#function-canapply">LineOutlierDetectionOperation::canApply</a>, <a href="../../api_generated/Classes/classLinePointExtractionOperation.html#function-canapply">LinePointExtractionOperation::canApply</a>, <a href="../../api_generated/Classes/classLineProximityGroupingOperation.html#function-canapply">LineProximityGroupingOperation::canApply</a>, <a href="../../api_generated/Classes/classLineResampleOperation.html#function-canapply">LineResampleOperation::canApply</a>, <a href="../../api_generated/Classes/classLineSubsegmentOperation.html#function-canapply">LineSubsegmentOperation::canApply</a>, <a href="../../api_generated/Classes/classMaskAreaOperation.html#function-canapply">MaskAreaOperation::canApply</a>, <a href="../../api_generated/Classes/classMaskCentroidOperation.html#function-canapply">MaskCentroidOperation::canApply</a>, <a href="../../api_generated/Classes/classMaskConnectedComponentOperation.html#function-canapply">MaskConnectedComponentOperation::canApply</a>, <a href="../../api_generated/Classes/classMaskHoleFillingOperation.html#function-canapply">MaskHoleFillingOperation::canApply</a>, <a href="../../api_generated/Classes/classMaskMedianFilterOperation.html#function-canapply">MaskMedianFilterOperation::canApply</a>, <a href="../../api_generated/Classes/classMaskPrincipalAxisOperation.html#function-canapply">MaskPrincipalAxisOperation::canApply</a>, <a href="../../api_generated/Classes/classMaskSkeletonizeOperation.html#function-canapply">MaskSkeletonizeOperation::canApply</a>, <a href="../../api_generated/Classes/classMaskToLineOperation.html#function-canapply">MaskToLineOperation::canApply</a>, <a href="../../api_generated/Classes/classWhiskerTracingOperation.html#function-canapply">WhiskerTracingOperation::canApply</a>, <a href="../../api_generated/Classes/classPointParticleFilterOperation.html#function-canapply">PointParticleFilterOperation::canApply</a></p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classAnalogFilterOperation.html#function-canapply">AnalogFilterOperation::canApply</a>, <a href="../../api_generated/Classes/classAnalogIntervalPeakOperation.html#function-canapply">AnalogIntervalPeakOperation::canApply</a>, <a href="../../api_generated/Classes/classAnalogScalingOperation.html#function-canapply">AnalogScalingOperation::canApply</a>, <a href="../../api_generated/Classes/classBooleanOperation.html#function-canapply">BooleanOperation::canApply</a>, <a href="../../api_generated/Classes/classEventThresholdOperation.html#function-canapply">EventThresholdOperation::canApply</a>, <a href="../../api_generated/Classes/classGroupOperation.html#function-canapply">GroupOperation::canApply</a>, <a href="../../api_generated/Classes/classHilbertPhaseOperation.html#function-canapply">HilbertPhaseOperation::canApply</a>, <a href="../../api_generated/Classes/classIntervalThresholdOperation.html#function-canapply">IntervalThresholdOperation::canApply</a>, <a href="../../api_generated/Classes/classLineAlignmentOperation.html#function-canapply">LineAlignmentOperation::canApply</a>, <a href="../../api_generated/Classes/classLineAngleOperation.html#function-canapply">LineAngleOperation::canApply</a>, <a href="../../api_generated/Classes/classLineBaseFlipTransform.html#function-canapply">LineBaseFlipTransform::canApply</a>, <a href="../../api_generated/Classes/classLineClipOperation.html#function-canapply">LineClipOperation::canApply</a>, <a href="../../api_generated/Classes/classLineCurvatureOperation.html#function-canapply">LineCurvatureOperation::canApply</a>, <a href="../../api_generated/Classes/classLineExtendOperation.html#function-canapply">LineExtendOperation::canApply</a>, <a href="../../api_generated/Classes/classLineGroupToIntervalsOperation.html#function-canapply">LineGroupToIntervalsOperation::canApply</a>, <a href="../../api_generated/Classes/classLineIndexGroupingOperation.html#function-canapply">LineIndexGroupingOperation::canApply</a>, <a href="../../api_generated/Classes/classLineKalmanGroupingOperation.html#function-canapply">LineKalmanGroupingOperation::canApply</a>, <a href="../../api_generated/Classes/classLineMinPointDistOperation.html#function-canapply">LineMinPointDistOperation::canApply</a>, <a href="../../api_generated/Classes/classLineOutlierDetectionOperation.html#function-canapply">LineOutlierDetectionOperation::canApply</a>, <a href="../../api_generated/Classes/classLinePointExtractionOperation.html#function-canapply">LinePointExtractionOperation::canApply</a>, <a href="../../api_generated/Classes/classLineProximityGroupingOperation.html#function-canapply">LineProximityGroupingOperation::canApply</a>, <a href="../../api_generated/Classes/classLineResampleOperation.html#function-canapply">LineResampleOperation::canApply</a>, <a href="../../api_generated/Classes/classLineSubsegmentOperation.html#function-canapply">LineSubsegmentOperation::canApply</a>, <a href="../../api_generated/Classes/classMaskAreaOperation.html#function-canapply">MaskAreaOperation::canApply</a>, <a href="../../api_generated/Classes/classMaskCentroidOperation.html#function-canapply">MaskCentroidOperation::canApply</a>, <a href="../../api_generated/Classes/classMaskConnectedComponentOperation.html#function-canapply">MaskConnectedComponentOperation::canApply</a>, <a href="../../api_generated/Classes/classMaskHoleFillingOperation.html#function-canapply">MaskHoleFillingOperation::canApply</a>, <a href="../../api_generated/Classes/classMaskMedianFilterOperation.html#function-canapply">MaskMedianFilterOperation::canApply</a>, <a href="../../api_generated/Classes/classMaskPrincipalAxisOperation.html#function-canapply">MaskPrincipalAxisOperation::canApply</a>, <a href="../../api_generated/Classes/classMaskSkeletonizeOperation.html#function-canapply">MaskSkeletonizeOperation::canApply</a>, <a href="../../api_generated/Classes/classMaskToLineOperation.html#function-canapply">MaskToLineOperation::canApply</a>, <a href="../../api_generated/Classes/classPointParticleFilterOperation.html#function-canapply">PointParticleFilterOperation::canApply</a>, <a href="../../api_generated/Classes/classWhiskerTracingOperation.html#function-canapply">WhiskerTracingOperation::canApply</a></p>
 </section>
 <section id="function-getdefaultparameters" class="level3">
 <h3 class="anchored" data-anchor-id="function-getdefaultparameters">function getDefaultParameters</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">virtual</span> <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span> TransformParametersBase <span class="op">&gt;</span> getDefaultParameters<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classEventThresholdOperation.html#function-getdefaultparameters">EventThresholdOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classAnalogIntervalPeakOperation.html#function-getdefaultparameters">AnalogIntervalPeakOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classIntervalThresholdOperation.html#function-getdefaultparameters">IntervalThresholdOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classAnalogScalingOperation.html#function-getdefaultparameters">AnalogScalingOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classAnalogFilterOperation.html#function-getdefaultparameters">AnalogFilterOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classHilbertPhaseOperation.html#function-getdefaultparameters">HilbertPhaseOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classBooleanOperation.html#function-getdefaultparameters">BooleanOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classGroupOperation.html#function-getdefaultparameters">GroupOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineAlignmentOperation.html#function-getdefaultparameters">LineAlignmentOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineAngleOperation.html#function-getdefaultparameters">LineAngleOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineBaseFlipTransform.html#function-getdefaultparameters">LineBaseFlipTransform::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineClipOperation.html#function-getdefaultparameters">LineClipOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineCurvatureOperation.html#function-getdefaultparameters">LineCurvatureOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineExtendOperation.html#function-getdefaultparameters">LineExtendOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineGroupToIntervalsOperation.html#function-getdefaultparameters">LineGroupToIntervalsOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineIndexGroupingOperation.html#function-getdefaultparameters">LineIndexGroupingOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineKalmanGroupingOperation.html#function-getdefaultparameters">LineKalmanGroupingOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineMinPointDistOperation.html#function-getdefaultparameters">LineMinPointDistOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineOutlierDetectionOperation.html#function-getdefaultparameters">LineOutlierDetectionOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLinePointExtractionOperation.html#function-getdefaultparameters">LinePointExtractionOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineProximityGroupingOperation.html#function-getdefaultparameters">LineProximityGroupingOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineResampleOperation.html#function-getdefaultparameters">LineResampleOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineSubsegmentOperation.html#function-getdefaultparameters">LineSubsegmentOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMaskAreaOperation.html#function-getdefaultparameters">MaskAreaOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMaskCentroidOperation.html#function-getdefaultparameters">MaskCentroidOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMaskConnectedComponentOperation.html#function-getdefaultparameters">MaskConnectedComponentOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMaskHoleFillingOperation.html#function-getdefaultparameters">MaskHoleFillingOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMaskMedianFilterOperation.html#function-getdefaultparameters">MaskMedianFilterOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMaskPrincipalAxisOperation.html#function-getdefaultparameters">MaskPrincipalAxisOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMaskSkeletonizeOperation.html#function-getdefaultparameters">MaskSkeletonizeOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMaskToLineOperation.html#function-getdefaultparameters">MaskToLineOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classWhiskerTracingOperation.html#function-getdefaultparameters">WhiskerTracingOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classPointParticleFilterOperation.html#function-getdefaultparameters">PointParticleFilterOperation::getDefaultParameters</a></p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classAnalogFilterOperation.html#function-getdefaultparameters">AnalogFilterOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classAnalogIntervalPeakOperation.html#function-getdefaultparameters">AnalogIntervalPeakOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classAnalogScalingOperation.html#function-getdefaultparameters">AnalogScalingOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classBooleanOperation.html#function-getdefaultparameters">BooleanOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classEventThresholdOperation.html#function-getdefaultparameters">EventThresholdOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classGroupOperation.html#function-getdefaultparameters">GroupOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classHilbertPhaseOperation.html#function-getdefaultparameters">HilbertPhaseOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classIntervalThresholdOperation.html#function-getdefaultparameters">IntervalThresholdOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineAlignmentOperation.html#function-getdefaultparameters">LineAlignmentOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineAngleOperation.html#function-getdefaultparameters">LineAngleOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineBaseFlipTransform.html#function-getdefaultparameters">LineBaseFlipTransform::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineClipOperation.html#function-getdefaultparameters">LineClipOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineCurvatureOperation.html#function-getdefaultparameters">LineCurvatureOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineExtendOperation.html#function-getdefaultparameters">LineExtendOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineGroupToIntervalsOperation.html#function-getdefaultparameters">LineGroupToIntervalsOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineIndexGroupingOperation.html#function-getdefaultparameters">LineIndexGroupingOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineKalmanGroupingOperation.html#function-getdefaultparameters">LineKalmanGroupingOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineMinPointDistOperation.html#function-getdefaultparameters">LineMinPointDistOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineOutlierDetectionOperation.html#function-getdefaultparameters">LineOutlierDetectionOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLinePointExtractionOperation.html#function-getdefaultparameters">LinePointExtractionOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineProximityGroupingOperation.html#function-getdefaultparameters">LineProximityGroupingOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineResampleOperation.html#function-getdefaultparameters">LineResampleOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classLineSubsegmentOperation.html#function-getdefaultparameters">LineSubsegmentOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMaskAreaOperation.html#function-getdefaultparameters">MaskAreaOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMaskCentroidOperation.html#function-getdefaultparameters">MaskCentroidOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMaskConnectedComponentOperation.html#function-getdefaultparameters">MaskConnectedComponentOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMaskHoleFillingOperation.html#function-getdefaultparameters">MaskHoleFillingOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMaskMedianFilterOperation.html#function-getdefaultparameters">MaskMedianFilterOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMaskPrincipalAxisOperation.html#function-getdefaultparameters">MaskPrincipalAxisOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMaskSkeletonizeOperation.html#function-getdefaultparameters">MaskSkeletonizeOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMaskToLineOperation.html#function-getdefaultparameters">MaskToLineOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classPointParticleFilterOperation.html#function-getdefaultparameters">PointParticleFilterOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classWhiskerTracingOperation.html#function-getdefaultparameters">WhiskerTracingOperation::getDefaultParameters</a></p>
 </section>
 <section id="function-execute" class="level3">
 <h3 class="anchored" data-anchor-id="function-execute">function execute</h3>
@@ -467,7 +476,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    DataTypeVariant <span class="at">const</span> <span class="op">&amp;</span> dataVariant<span class="op">,</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    TransformParametersBase <span class="at">const</span> <span class="op">*</span> transformParameters</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classAnalogFilterOperation.html#function-execute">AnalogFilterOperation::execute</a>, <a href="../../api_generated/Classes/classEventThresholdOperation.html#function-execute">EventThresholdOperation::execute</a>, <a href="../../api_generated/Classes/classAnalogIntervalPeakOperation.html#function-execute">AnalogIntervalPeakOperation::execute</a>, <a href="../../api_generated/Classes/classIntervalThresholdOperation.html#function-execute">IntervalThresholdOperation::execute</a>, <a href="../../api_generated/Classes/classAnalogScalingOperation.html#function-execute">AnalogScalingOperation::execute</a>, <a href="../../api_generated/Classes/classHilbertPhaseOperation.html#function-execute">HilbertPhaseOperation::execute</a>, <a href="../../api_generated/Classes/classBooleanOperation.html#function-execute">BooleanOperation::execute</a>, <a href="../../api_generated/Classes/classGroupOperation.html#function-execute">GroupOperation::execute</a>, <a href="../../api_generated/Classes/classLineAlignmentOperation.html#function-execute">LineAlignmentOperation::execute</a>, <a href="../../api_generated/Classes/classLineAngleOperation.html#function-execute">LineAngleOperation::execute</a>, <a href="../../api_generated/Classes/classLineBaseFlipTransform.html#function-execute">LineBaseFlipTransform::execute</a>, <a href="../../api_generated/Classes/classLineClipOperation.html#function-execute">LineClipOperation::execute</a>, <a href="../../api_generated/Classes/classLineCurvatureOperation.html#function-execute">LineCurvatureOperation::execute</a>, <a href="../../api_generated/Classes/classLineExtendOperation.html#function-execute">LineExtendOperation::execute</a>, <a href="../../api_generated/Classes/classLineGroupToIntervalsOperation.html#function-execute">LineGroupToIntervalsOperation::execute</a>, <a href="../../api_generated/Classes/classLineIndexGroupingOperation.html#function-execute">LineIndexGroupingOperation::execute</a>, <a href="../../api_generated/Classes/classLineKalmanGroupingOperation.html#function-execute">LineKalmanGroupingOperation::execute</a>, <a href="../../api_generated/Classes/classLineMinPointDistOperation.html#function-execute">LineMinPointDistOperation::execute</a>, <a href="../../api_generated/Classes/classLineOutlierDetectionOperation.html#function-execute">LineOutlierDetectionOperation::execute</a>, <a href="../../api_generated/Classes/classLinePointExtractionOperation.html#function-execute">LinePointExtractionOperation::execute</a>, <a href="../../api_generated/Classes/classLineProximityGroupingOperation.html#function-execute">LineProximityGroupingOperation::execute</a>, <a href="../../api_generated/Classes/classLineResampleOperation.html#function-execute">LineResampleOperation::execute</a>, <a href="../../api_generated/Classes/classLineSubsegmentOperation.html#function-execute">LineSubsegmentOperation::execute</a>, <a href="../../api_generated/Classes/classMaskAreaOperation.html#function-execute">MaskAreaOperation::execute</a>, <a href="../../api_generated/Classes/classMaskCentroidOperation.html#function-execute">MaskCentroidOperation::execute</a>, <a href="../../api_generated/Classes/classMaskConnectedComponentOperation.html#function-execute">MaskConnectedComponentOperation::execute</a>, <a href="../../api_generated/Classes/classMaskHoleFillingOperation.html#function-execute">MaskHoleFillingOperation::execute</a>, <a href="../../api_generated/Classes/classMaskMedianFilterOperation.html#function-execute">MaskMedianFilterOperation::execute</a>, <a href="../../api_generated/Classes/classMaskPrincipalAxisOperation.html#function-execute">MaskPrincipalAxisOperation::execute</a>, <a href="../../api_generated/Classes/classMaskSkeletonizeOperation.html#function-execute">MaskSkeletonizeOperation::execute</a>, <a href="../../api_generated/Classes/classMaskToLineOperation.html#function-execute">MaskToLineOperation::execute</a>, <a href="../../api_generated/Classes/classWhiskerTracingOperation.html#function-execute">WhiskerTracingOperation::execute</a>, <a href="../../api_generated/Classes/classPointParticleFilterOperation.html#function-execute">PointParticleFilterOperation::execute</a></p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classAnalogFilterOperation.html#function-execute">AnalogFilterOperation::execute</a>, <a href="../../api_generated/Classes/classAnalogIntervalPeakOperation.html#function-execute">AnalogIntervalPeakOperation::execute</a>, <a href="../../api_generated/Classes/classAnalogScalingOperation.html#function-execute">AnalogScalingOperation::execute</a>, <a href="../../api_generated/Classes/classBooleanOperation.html#function-execute">BooleanOperation::execute</a>, <a href="../../api_generated/Classes/classEventThresholdOperation.html#function-execute">EventThresholdOperation::execute</a>, <a href="../../api_generated/Classes/classGroupOperation.html#function-execute">GroupOperation::execute</a>, <a href="../../api_generated/Classes/classHilbertPhaseOperation.html#function-execute">HilbertPhaseOperation::execute</a>, <a href="../../api_generated/Classes/classIntervalThresholdOperation.html#function-execute">IntervalThresholdOperation::execute</a>, <a href="../../api_generated/Classes/classLineAlignmentOperation.html#function-execute">LineAlignmentOperation::execute</a>, <a href="../../api_generated/Classes/classLineAngleOperation.html#function-execute">LineAngleOperation::execute</a>, <a href="../../api_generated/Classes/classLineBaseFlipTransform.html#function-execute">LineBaseFlipTransform::execute</a>, <a href="../../api_generated/Classes/classLineClipOperation.html#function-execute">LineClipOperation::execute</a>, <a href="../../api_generated/Classes/classLineCurvatureOperation.html#function-execute">LineCurvatureOperation::execute</a>, <a href="../../api_generated/Classes/classLineExtendOperation.html#function-execute">LineExtendOperation::execute</a>, <a href="../../api_generated/Classes/classLineGroupToIntervalsOperation.html#function-execute">LineGroupToIntervalsOperation::execute</a>, <a href="../../api_generated/Classes/classLineIndexGroupingOperation.html#function-execute">LineIndexGroupingOperation::execute</a>, <a href="../../api_generated/Classes/classLineKalmanGroupingOperation.html#function-execute">LineKalmanGroupingOperation::execute</a>, <a href="../../api_generated/Classes/classLineMinPointDistOperation.html#function-execute">LineMinPointDistOperation::execute</a>, <a href="../../api_generated/Classes/classLineOutlierDetectionOperation.html#function-execute">LineOutlierDetectionOperation::execute</a>, <a href="../../api_generated/Classes/classLinePointExtractionOperation.html#function-execute">LinePointExtractionOperation::execute</a>, <a href="../../api_generated/Classes/classLineProximityGroupingOperation.html#function-execute">LineProximityGroupingOperation::execute</a>, <a href="../../api_generated/Classes/classLineResampleOperation.html#function-execute">LineResampleOperation::execute</a>, <a href="../../api_generated/Classes/classLineSubsegmentOperation.html#function-execute">LineSubsegmentOperation::execute</a>, <a href="../../api_generated/Classes/classMaskAreaOperation.html#function-execute">MaskAreaOperation::execute</a>, <a href="../../api_generated/Classes/classMaskCentroidOperation.html#function-execute">MaskCentroidOperation::execute</a>, <a href="../../api_generated/Classes/classMaskConnectedComponentOperation.html#function-execute">MaskConnectedComponentOperation::execute</a>, <a href="../../api_generated/Classes/classMaskHoleFillingOperation.html#function-execute">MaskHoleFillingOperation::execute</a>, <a href="../../api_generated/Classes/classMaskMedianFilterOperation.html#function-execute">MaskMedianFilterOperation::execute</a>, <a href="../../api_generated/Classes/classMaskPrincipalAxisOperation.html#function-execute">MaskPrincipalAxisOperation::execute</a>, <a href="../../api_generated/Classes/classMaskSkeletonizeOperation.html#function-execute">MaskSkeletonizeOperation::execute</a>, <a href="../../api_generated/Classes/classMaskToLineOperation.html#function-execute">MaskToLineOperation::execute</a>, <a href="../../api_generated/Classes/classPointParticleFilterOperation.html#function-execute">PointParticleFilterOperation::execute</a>, <a href="../../api_generated/Classes/classWhiskerTracingOperation.html#function-execute">WhiskerTracingOperation::execute</a></p>
 </section>
 <section id="function-execute-1" class="level3">
 <h3 class="anchored" data-anchor-id="function-execute-1">function execute</h3>
@@ -476,9 +485,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    TransformParametersBase <span class="at">const</span> <span class="op">*</span> transformParameters<span class="op">,</span></span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    ProgressCallback progressCallback</span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classAnalogFilterOperation.html#function-execute">AnalogFilterOperation::execute</a>, <a href="../../api_generated/Classes/classEventThresholdOperation.html#function-execute">EventThresholdOperation::execute</a>, <a href="../../api_generated/Classes/classAnalogIntervalPeakOperation.html#function-execute">AnalogIntervalPeakOperation::execute</a>, <a href="../../api_generated/Classes/classIntervalThresholdOperation.html#function-execute">IntervalThresholdOperation::execute</a>, <a href="../../api_generated/Classes/classAnalogScalingOperation.html#function-execute">AnalogScalingOperation::execute</a>, <a href="../../api_generated/Classes/classHilbertPhaseOperation.html#function-execute">HilbertPhaseOperation::execute</a>, <a href="../../api_generated/Classes/classBooleanOperation.html#function-execute">BooleanOperation::execute</a>, <a href="../../api_generated/Classes/classGroupOperation.html#function-execute">GroupOperation::execute</a>, <a href="../../api_generated/Classes/classLineAlignmentOperation.html#function-execute">LineAlignmentOperation::execute</a>, <a href="../../api_generated/Classes/classLineAngleOperation.html#function-execute">LineAngleOperation::execute</a>, <a href="../../api_generated/Classes/classLineBaseFlipTransform.html#function-execute">LineBaseFlipTransform::execute</a>, <a href="../../api_generated/Classes/classLineClipOperation.html#function-execute">LineClipOperation::execute</a>, <a href="../../api_generated/Classes/classLineCurvatureOperation.html#function-execute">LineCurvatureOperation::execute</a>, <a href="../../api_generated/Classes/classLineExtendOperation.html#function-execute">LineExtendOperation::execute</a>, <a href="../../api_generated/Classes/classLineGroupToIntervalsOperation.html#function-execute">LineGroupToIntervalsOperation::execute</a>, <a href="../../api_generated/Classes/classLineIndexGroupingOperation.html#function-execute">LineIndexGroupingOperation::execute</a>, <a href="../../api_generated/Classes/classLineKalmanGroupingOperation.html#function-execute">LineKalmanGroupingOperation::execute</a>, <a href="../../api_generated/Classes/classLineMinPointDistOperation.html#function-execute">LineMinPointDistOperation::execute</a>, <a href="../../api_generated/Classes/classLineOutlierDetectionOperation.html#function-execute">LineOutlierDetectionOperation::execute</a>, <a href="../../api_generated/Classes/classLinePointExtractionOperation.html#function-execute">LinePointExtractionOperation::execute</a>, <a href="../../api_generated/Classes/classLineProximityGroupingOperation.html#function-execute">LineProximityGroupingOperation::execute</a>, <a href="../../api_generated/Classes/classLineResampleOperation.html#function-execute">LineResampleOperation::execute</a>, <a href="../../api_generated/Classes/classLineSubsegmentOperation.html#function-execute">LineSubsegmentOperation::execute</a>, <a href="../../api_generated/Classes/classMaskAreaOperation.html#function-execute">MaskAreaOperation::execute</a>, <a href="../../api_generated/Classes/classMaskCentroidOperation.html#function-execute">MaskCentroidOperation::execute</a>, <a href="../../api_generated/Classes/classMaskConnectedComponentOperation.html#function-execute">MaskConnectedComponentOperation::execute</a>, <a href="../../api_generated/Classes/classMaskHoleFillingOperation.html#function-execute">MaskHoleFillingOperation::execute</a>, <a href="../../api_generated/Classes/classMaskMedianFilterOperation.html#function-execute">MaskMedianFilterOperation::execute</a>, <a href="../../api_generated/Classes/classMaskPrincipalAxisOperation.html#function-execute">MaskPrincipalAxisOperation::execute</a>, <a href="../../api_generated/Classes/classMaskSkeletonizeOperation.html#function-execute">MaskSkeletonizeOperation::execute</a>, <a href="../../api_generated/Classes/classMaskToLineOperation.html#function-execute">MaskToLineOperation::execute</a>, <a href="../../api_generated/Classes/classWhiskerTracingOperation.html#function-execute">WhiskerTracingOperation::execute</a>, <a href="../../api_generated/Classes/classPointParticleFilterOperation.html#function-execute">PointParticleFilterOperation::execute</a></p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classAnalogFilterOperation.html#function-execute">AnalogFilterOperation::execute</a>, <a href="../../api_generated/Classes/classAnalogIntervalPeakOperation.html#function-execute">AnalogIntervalPeakOperation::execute</a>, <a href="../../api_generated/Classes/classAnalogScalingOperation.html#function-execute">AnalogScalingOperation::execute</a>, <a href="../../api_generated/Classes/classBooleanOperation.html#function-execute">BooleanOperation::execute</a>, <a href="../../api_generated/Classes/classEventThresholdOperation.html#function-execute">EventThresholdOperation::execute</a>, <a href="../../api_generated/Classes/classGroupOperation.html#function-execute">GroupOperation::execute</a>, <a href="../../api_generated/Classes/classHilbertPhaseOperation.html#function-execute">HilbertPhaseOperation::execute</a>, <a href="../../api_generated/Classes/classIntervalThresholdOperation.html#function-execute">IntervalThresholdOperation::execute</a>, <a href="../../api_generated/Classes/classLineAlignmentOperation.html#function-execute">LineAlignmentOperation::execute</a>, <a href="../../api_generated/Classes/classLineAngleOperation.html#function-execute">LineAngleOperation::execute</a>, <a href="../../api_generated/Classes/classLineBaseFlipTransform.html#function-execute">LineBaseFlipTransform::execute</a>, <a href="../../api_generated/Classes/classLineClipOperation.html#function-execute">LineClipOperation::execute</a>, <a href="../../api_generated/Classes/classLineCurvatureOperation.html#function-execute">LineCurvatureOperation::execute</a>, <a href="../../api_generated/Classes/classLineExtendOperation.html#function-execute">LineExtendOperation::execute</a>, <a href="../../api_generated/Classes/classLineGroupToIntervalsOperation.html#function-execute">LineGroupToIntervalsOperation::execute</a>, <a href="../../api_generated/Classes/classLineIndexGroupingOperation.html#function-execute">LineIndexGroupingOperation::execute</a>, <a href="../../api_generated/Classes/classLineKalmanGroupingOperation.html#function-execute">LineKalmanGroupingOperation::execute</a>, <a href="../../api_generated/Classes/classLineMinPointDistOperation.html#function-execute">LineMinPointDistOperation::execute</a>, <a href="../../api_generated/Classes/classLineOutlierDetectionOperation.html#function-execute">LineOutlierDetectionOperation::execute</a>, <a href="../../api_generated/Classes/classLinePointExtractionOperation.html#function-execute">LinePointExtractionOperation::execute</a>, <a href="../../api_generated/Classes/classLineProximityGroupingOperation.html#function-execute">LineProximityGroupingOperation::execute</a>, <a href="../../api_generated/Classes/classLineResampleOperation.html#function-execute">LineResampleOperation::execute</a>, <a href="../../api_generated/Classes/classLineSubsegmentOperation.html#function-execute">LineSubsegmentOperation::execute</a>, <a href="../../api_generated/Classes/classMaskAreaOperation.html#function-execute">MaskAreaOperation::execute</a>, <a href="../../api_generated/Classes/classMaskCentroidOperation.html#function-execute">MaskCentroidOperation::execute</a>, <a href="../../api_generated/Classes/classMaskConnectedComponentOperation.html#function-execute">MaskConnectedComponentOperation::execute</a>, <a href="../../api_generated/Classes/classMaskHoleFillingOperation.html#function-execute">MaskHoleFillingOperation::execute</a>, <a href="../../api_generated/Classes/classMaskMedianFilterOperation.html#function-execute">MaskMedianFilterOperation::execute</a>, <a href="../../api_generated/Classes/classMaskPrincipalAxisOperation.html#function-execute">MaskPrincipalAxisOperation::execute</a>, <a href="../../api_generated/Classes/classMaskSkeletonizeOperation.html#function-execute">MaskSkeletonizeOperation::execute</a>, <a href="../../api_generated/Classes/classMaskToLineOperation.html#function-execute">MaskToLineOperation::execute</a>, <a href="../../api_generated/Classes/classPointParticleFilterOperation.html#function-execute">PointParticleFilterOperation::execute</a>, <a href="../../api_generated/Classes/classWhiskerTracingOperation.html#function-execute">WhiskerTracingOperation::execute</a></p>
 <hr>
-<p>Updated on 2026-10-09 at 13:36:30 +0000</p>
+<p>Updated on 2026-11-13 at 20:25:39 +0000</p>
 
 
 </section>
@@ -490,15 +499,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -577,7 +621,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -586,8 +631,69 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -601,6 +707,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -763,44 +870,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -898,6 +1015,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       }
     }
   });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
 

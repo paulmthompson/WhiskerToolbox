@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -72,18 +72,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-0c66bec081e5215138e9fd61e9c23ef8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -116,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -139,6 +140,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -168,13 +170,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -268,6 +276,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -282,15 +291,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -334,8 +342,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
+            <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -344,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
@@ -415,7 +424,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -543,7 +552,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-setbitdepth">setBitDepth</a></strong>(<a href="../../api_generated/Namespaces/namespaceMediaStorage.html#enum-bitdepth">BitDepth</a> depth)<br>Set the bit depth (can be used to override auto-detected depth)</td>
+<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-setbitdepth">setBitDepth</a></strong>(<a href="../../api_generated/Namespaces/namespaceMediaStorage.html#enum-bitdepth">BitDepth</a> depth)<br>Set the bit depth (can be used to override auto-detected depth).</td>
 </tr>
 <tr class="odd">
 <td>bool</td>
@@ -571,35 +580,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>std::vector&lt; uint8_t &gt; const &amp;</td>
-<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-getrawdata8">getRawData8</a></strong>(int frame_number)<br>Get raw data as uint8_t (for 8-bit data or converted from 32-bit)</td>
+<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-getrawdata8">getRawData8</a></strong>(int frame_number)<br>Get raw data as uint8_t (for 8-bit data or converted from 32-bit).</td>
 </tr>
 <tr class="even">
 <td>std::vector&lt; float &gt; const &amp;</td>
-<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-getrawdata32">getRawData32</a></strong>(int frame_number)<br>Get raw data as float (for 32-bit data or converted from 8-bit)</td>
+<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-getrawdata32">getRawData32</a></strong>(int frame_number)<br>Get raw data as float (for 32-bit data or converted from 8-bit).</td>
 </tr>
 <tr class="odd">
 <td>std::vector&lt; uint8_t &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-getprocesseddata8">getProcessedData8</a></strong>(int frame_number)<br>Get processed data as uint8_t (for 8-bit data or converted from 32-bit)</td>
+<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-getprocesseddata8">getProcessedData8</a></strong>(int frame_number)<br>Get processed data as uint8_t (for 8-bit data or converted from 32-bit).</td>
 </tr>
 <tr class="even">
 <td>std::vector&lt; float &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-getprocesseddata32">getProcessedData32</a></strong>(int frame_number)<br>Get processed data as float (for 32-bit data or converted from 8-bit)</td>
+<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-getprocesseddata32">getProcessedData32</a></strong>(int frame_number)<br>Get processed data as float (for 32-bit data or converted from 8-bit).</td>
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/classMediaData.html#using-datastorage">DataStorage</a> const &amp;</td>
-<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-getrawdatavariant">getRawDataVariant</a></strong>(int frame_number)<br>Get raw data as variant (native format)</td>
+<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-getrawdatavariant">getRawDataVariant</a></strong>(int frame_number)<br>Get raw data as variant (native format).</td>
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Classes/classMediaData.html#using-datastorage">DataStorage</a></td>
-<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-getprocesseddatavariant">getProcessedDataVariant</a></strong>(int frame_number)<br>Get processed data as variant (native format)</td>
+<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-getprocesseddatavariant">getProcessedDataVariant</a></strong>(int frame_number)<br>Get processed data as variant (native format).</td>
 </tr>
 <tr class="odd">
 <td>std::vector&lt; uint8_t &gt; const &amp;</td>
-<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-getrawdata">getRawData</a></strong>(int frame_number)<br>Legacy method - get raw data (defaults to 8-bit behavior for compatibility)</td>
+<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-getrawdata">getRawData</a></strong>(int frame_number)<br>Legacy method - get raw data (defaults to 8-bit behavior for compatibility).</td>
 </tr>
 <tr class="even">
 <td>std::vector&lt; uint8_t &gt;</td>
-<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-getprocesseddata">getProcessedData</a></strong>(int frame_number)<br>Legacy method - get processed data (defaults to 8-bit behavior for compatibility)</td>
+<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-getprocesseddata">getProcessedData</a></strong>(int frame_number)<br>Legacy method - get processed data (defaults to 8-bit behavior for compatibility).</td>
 </tr>
 <tr class="odd">
 <td>void</td>
@@ -607,11 +616,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>void</td>
-<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-setrawdata">setRawData</a></strong>(<a href="../../api_generated/Namespaces/namespaceMediaStorage.html#using-imagedata32">MediaStorage::ImageData32</a> data)<br>Set raw data from float vector (normalized to 0-255 range)</td>
+<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-setrawdata">setRawData</a></strong>(<a href="../../api_generated/Namespaces/namespaceMediaStorage.html#using-imagedata32">MediaStorage::ImageData32</a> data)<br>Set raw data from float vector (normalized to 0-255 range).</td>
 </tr>
 <tr class="odd">
 <td>bool</td>
-<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-setimageprocessor">setImageProcessor</a></strong>(std::string const &amp; processor_name)<br>Set the image processor backend (e.g., “opencv”, “simd”, etc.)</td>
+<td><strong><a href="../../api_generated/Classes/classMediaData.html#function-setimageprocessor">setImageProcessor</a></strong>(std::string const &amp; processor_name)<br>Set the image processor backend (e.g., “opencv”, “simd”, etc.).</td>
 </tr>
 <tr class="even">
 <td>std::string</td>
@@ -811,8 +820,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="function-getmediatype">function getMediaType</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> MediaType getMediaType<span class="op">()</span> <span class="at">const</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the media type of this instance.</p>
-<p><strong>Return</strong>: The MediaType enum value</p>
-<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classHDF5Data.html#function-getmediatype">HDF5Data::getMediaType</a>, <a href="../../api_generated/Classes/classImageData.html#function-getmediatype">ImageData::getMediaType</a>, <a href="../../api_generated/Classes/classEmptyMediaData.html#function-getmediatype">EmptyMediaData::getMediaType</a>, <a href="../../api_generated/Classes/classVideoData.html#function-getmediatype">VideoData::getMediaType</a></p>
+<p><strong>Return</strong>: The <a href="../../api_generated/Classes/classMediaData.html#enum-mediatype">MediaType</a> enum value</p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classEmptyMediaData.html#function-getmediatype">EmptyMediaData::getMediaType</a>, <a href="../../api_generated/Classes/classHDF5Data.html#function-getmediatype">HDF5Data::getMediaType</a>, <a href="../../api_generated/Classes/classImageData.html#function-getmediatype">ImageData::getMediaType</a>, <a href="../../api_generated/Classes/classVideoData.html#function-getmediatype">VideoData::getMediaType</a></p>
 </section>
 <section id="function-getfilename" class="level3">
 <h3 class="anchored" data-anchor-id="function-getfilename">function getFilename</h3>
@@ -872,14 +881,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h3 class="anchored" data-anchor-id="function-getbitdepth">function getBitDepth</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> BitDepth getBitDepth<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Get the current bit depth of the media data.</p>
-<p><strong>Return</strong>: Current BitDepth enum value</p>
+<p><strong>Return</strong>: Current <a href="../../api_generated/Classes/classMediaData.html#using-bitdepth">BitDepth</a> enum value</p>
 </section>
 <section id="function-setbitdepth" class="level3">
 <h3 class="anchored" data-anchor-id="function-setbitdepth">function setBitDepth</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setBitDepth<span class="op">(</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    BitDepth depth</span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Set the bit depth (can be used to override auto-detected depth)</p>
+<p>Set the bit depth (can be used to override auto-detected depth).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>depth</strong> The desired bit depth</li>
@@ -939,7 +948,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">uint8_t</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> getRawData8<span class="op">(</span></span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame_number</span>
 <span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Get raw data as uint8_t (for 8-bit data or converted from 32-bit)</p>
+<p>Get raw data as uint8_t (for 8-bit data or converted from 32-bit).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>frame_number</strong> Frame number to load</li>
@@ -951,7 +960,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb26"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> getRawData32<span class="op">(</span></span>
 <span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame_number</span>
 <span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Get raw data as float (for 32-bit data or converted from 8-bit)</p>
+<p>Get raw data as float (for 32-bit data or converted from 8-bit).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>frame_number</strong> Frame number to load</li>
@@ -963,7 +972,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">uint8_t</span> <span class="op">&gt;</span> getProcessedData8<span class="op">(</span></span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame_number</span>
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Get processed data as uint8_t (for 8-bit data or converted from 32-bit)</p>
+<p>Get processed data as uint8_t (for 8-bit data or converted from 32-bit).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>frame_number</strong> Frame number to load</li>
@@ -975,7 +984,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">float</span> <span class="op">&gt;</span> getProcessedData32<span class="op">(</span></span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame_number</span>
 <span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Get processed data as float (for 32-bit data or converted from 8-bit)</p>
+<p>Get processed data as float (for 32-bit data or converted from 8-bit).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>frame_number</strong> Frame number to load</li>
@@ -987,31 +996,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>DataStorage <span class="at">const</span> <span class="op">&amp;</span> getRawDataVariant<span class="op">(</span></span>
 <span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame_number</span>
 <span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Get raw data as variant (native format)</p>
+<p>Get raw data as variant (native format).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>frame_number</strong> Frame number to load</li>
 </ul>
-<p><strong>Return</strong>: DataStorage variant containing the raw data</p>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/classMediaData.html#using-datastorage">DataStorage</a> variant containing the raw data</p>
 </section>
 <section id="function-getprocesseddatavariant" class="level3">
 <h3 class="anchored" data-anchor-id="function-getprocesseddatavariant">function getProcessedDataVariant</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb30"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>DataStorage getProcessedDataVariant<span class="op">(</span></span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame_number</span>
 <span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Get processed data as variant (native format)</p>
+<p>Get processed data as variant (native format).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>frame_number</strong> Frame number to load</li>
 </ul>
-<p><strong>Return</strong>: DataStorage variant containing the processed data</p>
+<p><strong>Return</strong>: <a href="../../api_generated/Classes/classMediaData.html#using-datastorage">DataStorage</a> variant containing the processed data</p>
 </section>
 <section id="function-getrawdata" class="level3">
 <h3 class="anchored" data-anchor-id="function-getrawdata">function getRawData</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">uint8_t</span> <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> getRawData<span class="op">(</span></span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame_number</span>
 <span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Legacy method - get raw data (defaults to 8-bit behavior for compatibility)</p>
+<p>Legacy method - get raw data (defaults to 8-bit behavior for compatibility).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>frame_number</strong> Frame number to load</li>
@@ -1023,7 +1032,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb32"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="dt">uint8_t</span> <span class="op">&gt;</span> getProcessedData<span class="op">(</span></span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame_number</span>
 <span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Legacy method - get processed data (defaults to 8-bit behavior for compatibility)</p>
+<p>Legacy method - get processed data (defaults to 8-bit behavior for compatibility).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>frame_number</strong> Frame number to load</li>
@@ -1046,7 +1055,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb34"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> setRawData<span class="op">(</span></span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    MediaStorage<span class="op">::</span>ImageData32 data</span>
 <span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Set raw data from float vector (normalized to 0-255 range)</p>
+<p>Set raw data from float vector (normalized to 0-255 range).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>data</strong> The 32-bit float data to set</li>
@@ -1057,7 +1066,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> setImageProcessor<span class="op">(</span></span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> processor_name</span>
 <span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Set the image processor backend (e.g., “opencv”, “simd”, etc.)</p>
+<p>Set the image processor backend (e.g., “opencv”, “simd”, etc.).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>processor_name</strong> Name of the registered processor</li>
@@ -1140,16 +1149,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb44"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">virtual</span> <span class="dt">void</span> doLoadMedia<span class="op">(</span></span>
 <span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> name</span>
 <span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classHDF5Data.html#function-doloadmedia">HDF5Data::doLoadMedia</a>, <a href="../../api_generated/Classes/classImageData.html#function-doloadmedia">ImageData::doLoadMedia</a>, <a href="../../api_generated/Classes/classEmptyMediaData.html#function-doloadmedia">EmptyMediaData::doLoadMedia</a>, <a href="../../api_generated/Classes/classVideoData.html#function-doloadmedia">VideoData::doLoadMedia</a></p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classEmptyMediaData.html#function-doloadmedia">EmptyMediaData::doLoadMedia</a>, <a href="../../api_generated/Classes/classHDF5Data.html#function-doloadmedia">HDF5Data::doLoadMedia</a>, <a href="../../api_generated/Classes/classImageData.html#function-doloadmedia">ImageData::doLoadMedia</a>, <a href="../../api_generated/Classes/classVideoData.html#function-doloadmedia">VideoData::doLoadMedia</a></p>
 </section>
 <section id="function-doloadframe" class="level3">
 <h3 class="anchored" data-anchor-id="function-doloadframe">function doLoadFrame</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">virtual</span> <span class="dt">void</span> doLoadFrame<span class="op">(</span></span>
 <span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame_id</span>
 <span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classHDF5Data.html#function-doloadframe">HDF5Data::doLoadFrame</a>, <a href="../../api_generated/Classes/classImageData.html#function-doloadframe">ImageData::doLoadFrame</a>, <a href="../../api_generated/Classes/classEmptyMediaData.html#function-doloadframe">EmptyMediaData::doLoadFrame</a>, <a href="../../api_generated/Classes/classVideoData.html#function-doloadframe">VideoData::doLoadFrame</a></p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classEmptyMediaData.html#function-doloadframe">EmptyMediaData::doLoadFrame</a>, <a href="../../api_generated/Classes/classHDF5Data.html#function-doloadframe">HDF5Data::doLoadFrame</a>, <a href="../../api_generated/Classes/classImageData.html#function-doloadframe">ImageData::doLoadFrame</a>, <a href="../../api_generated/Classes/classVideoData.html#function-doloadframe">VideoData::doLoadFrame</a></p>
 <hr>
-<p>Updated on 2026-10-09 at 13:36:31 +0000</p>
+<p>Updated on 2026-11-13 at 20:25:40 +0000</p>
 
 
 </section>
@@ -1161,15 +1170,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -1248,7 +1292,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -1257,8 +1302,69 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -1272,6 +1378,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -1434,44 +1541,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -1569,6 +1686,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       }
     }
   });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
 

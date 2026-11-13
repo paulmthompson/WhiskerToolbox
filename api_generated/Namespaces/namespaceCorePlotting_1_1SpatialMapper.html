@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -72,18 +72,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-0c66bec081e5215138e9fd61e9c23ef8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -116,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -139,6 +140,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -168,13 +170,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -268,6 +276,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -282,15 +291,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -334,8 +342,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
+            <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -344,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
@@ -364,13 +373,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-extractpositions" id="toc-function-extractpositions" class="nav-link" data-scroll-target="#function-extractpositions">function extractPositions</a></li>
   <li><a href="#function-mapallpoints" id="toc-function-mapallpoints" class="nav-link" data-scroll-target="#function-mapallpoints">function mapAllPoints</a></li>
   <li><a href="#function-mapalllines" id="toc-function-mapalllines" class="nav-link" data-scroll-target="#function-mapalllines">function mapAllLines</a></li>
+  <li><a href="#function-mappointsinwindow" id="toc-function-mappointsinwindow" class="nav-link" data-scroll-target="#function-mappointsinwindow">function mapPointsInWindow</a></li>
+  <li><a href="#function-maplinesinwindow" id="toc-function-maplinesinwindow" class="nav-link" data-scroll-target="#function-maplinesinwindow">function mapLinesInWindow</a></li>
+  <li><a href="#function-mapmaskcontoursinwindow" id="toc-function-mapmaskcontoursinwindow" class="nav-link" data-scroll-target="#function-mapmaskcontoursinwindow">function mapMaskContoursInWindow</a></li>
   </ul></li>
   </ul></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -394,7 +406,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="coreplottingspatialmapper" class="level1">
 <h1>CorePlotting::SpatialMapper</h1>
-<p>Mapper for spatial data (SpatialOverlay-style visualization) <a href="#detailed-description">More…</a></p>
+<p>Mapper for spatial data (SpatialOverlay-style visualization). <a href="#detailed-description">More…</a></p>
 <section id="functions" class="level2">
 <h2 class="anchored" data-anchor-id="functions">Functions</h2>
 <table class="caption-top table">
@@ -407,7 +419,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>std::vector&lt; <a href="../../api_generated/Classes/structCorePlotting_1_1MappedElement.html">MappedElement</a> &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1SpatialMapper.html#function-mappointsattime">mapPointsAtTime</a></strong>(<a href="../../api_generated/Classes/classPointData.html">PointData</a> const &amp; points, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, float x_scale =1.0f, float y_scale =1.0f, float x_offset =0.0f, float y_offset =0.0f)<br>Map points at a specific time to world-space positions (materialized)</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1SpatialMapper.html#function-mappointsattime">mapPointsAtTime</a></strong>(<a href="../../api_generated/Classes/classPointData.html">PointData</a> const &amp; points, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> time, float x_scale =1.0f, float y_scale =1.0f, float x_offset =0.0f, float y_offset =0.0f)<br>Map points at a specific time to world-space positions (materialized).</td>
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Classes/structCorePlotting_1_1MappedElement.html">MappedElement</a></td>
@@ -427,7 +439,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>auto</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1SpatialMapper.html#function-maplinelazy">mapLineLazy</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> entity_id, float x_scale =1.0f, float y_scale =1.0f, float x_offset =0.0f, float y_offset =0.0f)<br>Create a lazy line view (no vertex materialization)</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1SpatialMapper.html#function-maplinelazy">mapLineLazy</a></strong>(<a href="../../api_generated/Classes/classLine2D.html">Line2D</a> const &amp; line, <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> entity_id, float x_scale =1.0f, float y_scale =1.0f, float x_offset =0.0f, float y_offset =0.0f)<br>Create a lazy line view (no vertex materialization).</td>
 </tr>
 <tr class="odd">
 <td>template &lt;MappedElementRange R&gt; <br>std::vector&lt; <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> &gt;</td>
@@ -445,12 +457,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>std::vector&lt; <a href="../../api_generated/Classes/classCorePlotting_1_1OwningLineView.html">OwningLineView</a> &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1SpatialMapper.html#function-mapalllines">mapAllLines</a></strong>(<a href="../../api_generated/Classes/classLineData.html">LineData</a> const &amp; lines, float x_scale =1.0f, float y_scale =1.0f, float x_offset =0.0f, float y_offset =0.0f)<br>Flatten all lines across all time frames into a single vector.</td>
 </tr>
+<tr class="odd">
+<td>std::vector&lt; <a href="../../api_generated/Classes/structCorePlotting_1_1TimedMappedElement.html">TimedMappedElement</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1SpatialMapper.html#function-mappointsinwindow">mapPointsInWindow</a></strong>(<a href="../../api_generated/Classes/classPointData.html">PointData</a> const &amp; points, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> center, int behind, int ahead, float x_scale =1.0f, float y_scale =1.0f, float x_offset =0.0f, float y_offset =0.0f)<br>Map points within a temporal window around a center time.</td>
+</tr>
+<tr class="even">
+<td>std::vector&lt; <a href="../../api_generated/Classes/classCorePlotting_1_1TimedOwningLineView.html">TimedOwningLineView</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1SpatialMapper.html#function-maplinesinwindow">mapLinesInWindow</a></strong>(<a href="../../api_generated/Classes/classLineData.html">LineData</a> const &amp; lines, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> center, int behind, int ahead, float x_scale =1.0f, float y_scale =1.0f, float x_offset =0.0f, float y_offset =0.0f)<br>Map lines within a temporal window around a center time.</td>
+</tr>
+<tr class="odd">
+<td>std::vector&lt; <a href="../../api_generated/Classes/classCorePlotting_1_1TimedOwningLineView.html">TimedOwningLineView</a> &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1SpatialMapper.html#function-mapmaskcontoursinwindow">mapMaskContoursInWindow</a></strong>(<a href="../../api_generated/Classes/classMaskData.html">MaskData</a> const &amp; masks, <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> center, int behind, int ahead, float x_scale =1.0f, float y_scale =1.0f, float x_offset =0.0f, float y_offset =0.0f)<br>Map mask contours within a temporal window around a center time.</td>
+</tr>
 </tbody>
 </table>
 </section>
 <section id="detailed-description" class="level2">
 <h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
-<p>Mapper for spatial data (SpatialOverlay-style visualization)</p>
+<p>Mapper for spatial data (SpatialOverlay-style visualization).</p>
 <p>Transforms spatial data (<a href="../../api_generated/Classes/classPointData.html">PointData</a>, <a href="../../api_generated/Classes/classLineData.html">LineData</a>) directly to world-space coordinates. Unlike <a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1TimeSeriesMapper.html">TimeSeriesMapper</a>, X and Y coordinates come directly from the data’s spatial coordinates, not from time conversion.</p>
 <p>This mapper is used for:</p>
 <ul>
@@ -472,7 +496,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_offset <span class="op">=</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span></span>
 <span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_offset <span class="op">=</span><span class="fl">0.0</span><span class="bu">f</span></span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Map points at a specific time to world-space positions (materialized)</p>
+<p>Map points at a specific time to world-space positions (materialized).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>points</strong> <a href="../../api_generated/Classes/structPoint.html">Point</a> data source</li>
@@ -591,7 +615,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_offset <span class="op">=</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span></span>
 <span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_offset <span class="op">=</span><span class="fl">0.0</span><span class="bu">f</span></span>
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Create a lazy line view (no vertex materialization)</p>
+<p>Create a lazy line view (no vertex materialization).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>line</strong> Source line</li>
@@ -617,7 +641,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Template Parameters</strong>:</p>
 <ul>
-<li><strong>R</strong> Range type (MappedElementRange)</li>
+<li><strong>R</strong> Range type ([MappedElementRange])</li>
 </ul>
 <p><strong>Return</strong>: Vector of <a href="../../api_generated/Classes/structEntityId.html">EntityId</a></p>
 <p>Utility for building spatial indices.</p>
@@ -635,7 +659,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Template Parameters</strong>:</p>
 <ul>
-<li><strong>R</strong> Range type (MappedElementRange)</li>
+<li><strong>R</strong> Range type ([MappedElementRange])</li>
 </ul>
 <p><strong>Return</strong>: Vector of glm::vec2 positions</p>
 <p>Utility for building glyph batches.</p>
@@ -681,8 +705,89 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Return</strong>: Vector of <a href="../../api_generated/Classes/classCorePlotting_1_1OwningLineView.html">OwningLineView</a> containing all lines across all times</p>
 <p>Iterates every time frame that contains line data and maps all lines at each time to world-space OwningLineViews. The result is a single flat vector suitable for static rendering (TemporalProjectionView).</p>
+</section>
+<section id="function-mappointsinwindow" class="level3">
+<h3 class="anchored" data-anchor-id="function-mappointsinwindow">function mapPointsInWindow</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> TimedMappedElement <span class="op">&gt;</span> mapPointsInWindow<span class="op">(</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    PointData <span class="at">const</span> <span class="op">&amp;</span> points<span class="op">,</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex center<span class="op">,</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> behind<span class="op">,</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> ahead<span class="op">,</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_scale <span class="op">=</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_scale <span class="op">=</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_offset <span class="op">=</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_offset <span class="op">=</span><span class="fl">0.0</span><span class="bu">f</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Map points within a temporal window around a center time.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>points</strong> <a href="../../api_generated/Classes/structPoint.html">Point</a> data source</li>
+<li><strong>center</strong> Center time frame index (current position)</li>
+<li><strong>behind</strong> Number of time indices to look behind (positive value)</li>
+<li><strong>ahead</strong> Number of time indices to look ahead (positive value)</li>
+<li><strong>x_scale</strong> X coordinate scale</li>
+<li><strong>y_scale</strong> Y coordinate scale</li>
+<li><strong>x_offset</strong> X offset applied after scaling</li>
+<li><strong>y_offset</strong> Y offset applied after scaling</li>
+</ul>
+<p><strong>Return</strong>: Vector of <a href="../../api_generated/Classes/structCorePlotting_1_1TimedMappedElement.html">TimedMappedElement</a> with temporal_distance set</p>
+<p>Gathers points from [center - behind, center + ahead] and tags each with its signed temporal distance from center. Used by OnionSkinView for alpha-graded rendering.</p>
+</section>
+<section id="function-maplinesinwindow" class="level3">
+<h3 class="anchored" data-anchor-id="function-maplinesinwindow">function mapLinesInWindow</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> TimedOwningLineView <span class="op">&gt;</span> mapLinesInWindow<span class="op">(</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    LineData <span class="at">const</span> <span class="op">&amp;</span> lines<span class="op">,</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex center<span class="op">,</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> behind<span class="op">,</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> ahead<span class="op">,</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_scale <span class="op">=</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_scale <span class="op">=</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_offset <span class="op">=</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_offset <span class="op">=</span><span class="fl">0.0</span><span class="bu">f</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Map lines within a temporal window around a center time.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>lines</strong> <a href="../../api_generated/Classes/structLine.html">Line</a> data source</li>
+<li><strong>center</strong> Center time frame index (current position)</li>
+<li><strong>behind</strong> Number of time indices to look behind (positive value)</li>
+<li><strong>ahead</strong> Number of time indices to look ahead (positive value)</li>
+<li><strong>x_scale</strong> X coordinate scale</li>
+<li><strong>y_scale</strong> Y coordinate scale</li>
+<li><strong>x_offset</strong> X offset applied after scaling</li>
+<li><strong>y_offset</strong> Y offset applied after scaling</li>
+</ul>
+<p><strong>Return</strong>: Vector of <a href="../../api_generated/Classes/classCorePlotting_1_1TimedOwningLineView.html">TimedOwningLineView</a> with temporal_distance set</p>
+<p>Gathers lines from [center - behind, center + ahead] and tags each with its signed temporal distance from center.</p>
+</section>
+<section id="function-mapmaskcontoursinwindow" class="level3">
+<h3 class="anchored" data-anchor-id="function-mapmaskcontoursinwindow">function mapMaskContoursInWindow</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> TimedOwningLineView <span class="op">&gt;</span> mapMaskContoursInWindow<span class="op">(</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    MaskData <span class="at">const</span> <span class="op">&amp;</span> masks<span class="op">,</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    TimeFrameIndex center<span class="op">,</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> behind<span class="op">,</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> ahead<span class="op">,</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_scale <span class="op">=</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_scale <span class="op">=</span><span class="fl">1.0</span><span class="bu">f</span><span class="op">,</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> x_offset <span class="op">=</span><span class="fl">0.0</span><span class="bu">f</span><span class="op">,</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> y_offset <span class="op">=</span><span class="fl">0.0</span><span class="bu">f</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Map mask contours within a temporal window around a center time.</p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>masks</strong> Mask data source</li>
+<li><strong>center</strong> Center time frame index (current position)</li>
+<li><strong>behind</strong> Number of time indices to look behind (positive value)</li>
+<li><strong>ahead</strong> Number of time indices to look ahead (positive value)</li>
+<li><strong>x_scale</strong> X coordinate scale</li>
+<li><strong>y_scale</strong> Y coordinate scale</li>
+<li><strong>x_offset</strong> X offset applied after scaling</li>
+<li><strong>y_offset</strong> Y offset applied after scaling</li>
+</ul>
+<p><strong>Return</strong>: Vector of <a href="../../api_generated/Classes/classCorePlotting_1_1TimedOwningLineView.html">TimedOwningLineView</a> with temporal_distance set</p>
+<p>Gathers masks from [center - behind, center + ahead], converts each to a contour polyline via <a href="../../api_generated/Namespaces/namespaceCorePlotting_1_1MaskContourMapper.html">MaskContourMapper</a>, and tags each with its signed temporal distance from center.</p>
 <hr>
-<p>Updated on 2026-10-09 at 13:36:33 +0000</p>
+<p>Updated on 2026-11-13 at 20:25:42 +0000</p>
 
 
 </section>
@@ -694,15 +799,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -781,7 +921,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -790,8 +931,69 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -805,6 +1007,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -967,44 +1170,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -1102,6 +1315,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       }
     }
   });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
 

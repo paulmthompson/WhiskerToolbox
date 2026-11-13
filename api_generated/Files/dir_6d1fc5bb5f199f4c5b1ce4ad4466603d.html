@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -26,6 +26,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 </style>
 
 
@@ -37,18 +72,19 @@ ul.task-list li input[type="checkbox"] {
 <meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-0c66bec081e5215138e9fd61e9c23ef8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -81,7 +117,7 @@ ul.task-list li input[type="checkbox"] {
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -104,6 +140,7 @@ ul.task-list li input[type="checkbox"] {
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -133,13 +170,19 @@ ul.task-list li input[type="checkbox"] {
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -233,6 +276,7 @@ ul.task-list li input[type="checkbox"] {
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -247,15 +291,14 @@ ul.task-list li input[type="checkbox"] {
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -299,8 +342,9 @@ ul.task-list li input[type="checkbox"] {
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
+            <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -309,19 +353,37 @@ ul.task-list li input[type="checkbox"] {
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
   <li><a href="#srcdataobjectstypetraits" id="toc-srcdataobjectstypetraits" class="nav-link active" data-scroll-target="#srcdataobjectstypetraits">src/DataObjects/TypeTraits</a>
   <ul class="collapse">
   <li><a href="#directories" id="toc-directories" class="nav-link" data-scroll-target="#directories">Directories</a></li>
+  <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
   </ul></li>
+  <li><a href="#datamanager-type-traits-system" id="toc-datamanager-type-traits-system" class="nav-link" data-scroll-target="#datamanager-type-traits-system">DataManager Type Traits System</a></li>
+  <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#purpose" id="toc-purpose" class="nav-link" data-scroll-target="#purpose">Purpose</a></li>
+  <li><a href="#design-philosophy" id="toc-design-philosophy" class="nav-link" data-scroll-target="#design-philosophy">Design Philosophy</a>
+  <ul class="collapse">
+  <li><a href="#intrusive-traits-recommended" id="toc-intrusive-traits-recommended" class="nav-link" data-scroll-target="#intrusive-traits-recommended">Intrusive Traits (Recommended)</a></li>
+  <li><a href="#usage-in-generic-code" id="toc-usage-in-generic-code" class="nav-link" data-scroll-target="#usage-in-generic-code">Usage in Generic Code</a></li>
+  </ul></li>
+  <li><a href="#standard-trait-properties" id="toc-standard-trait-properties" class="nav-link" data-scroll-target="#standard-trait-properties">Standard Trait Properties</a></li>
+  <li><a href="#container-type-classification" id="toc-container-type-classification" class="nav-link" data-scroll-target="#container-type-classification">Container Type Classification</a>
+  <ul class="collapse">
+  <li><a href="#ragged-containers-is_ragged-true" id="toc-ragged-containers-is_ragged-true" class="nav-link" data-scroll-target="#ragged-containers-is_ragged-true">Ragged Containers (<code>is_ragged = true</code>)</a></li>
+  <li><a href="#non-ragged-containers-is_ragged-false" id="toc-non-ragged-containers-is_ragged-false" class="nav-link" data-scroll-target="#non-ragged-containers-is_ragged-false">Non-Ragged Containers (<code>is_ragged = false</code>)</a></li>
+  </ul></li>
+  <li><a href="#adding-traits-to-a-new-container-type" id="toc-adding-traits-to-a-new-container-type" class="nav-link" data-scroll-target="#adding-traits-to-a-new-container-type">Adding Traits to a New Container Type</a></li>
+  <li><a href="#future-extensions" id="toc-future-extensions" class="nav-link" data-scroll-target="#future-extensions">Future Extensions</a></li>
+  <li><a href="#related-documentation" id="toc-related-documentation" class="nav-link" data-scroll-target="#related-documentation">Related Documentation</a></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -345,6 +407,7 @@ ul.task-list li input[type="checkbox"] {
 
 <section id="srcdataobjectstypetraits" class="level1">
 <h1>src/DataObjects/TypeTraits</h1>
+<p><a href="#detailed-description">More…</a></p>
 <section id="directories" class="level2">
 <h2 class="anchored" data-anchor-id="directories">Directories</h2>
 <table class="caption-top table">
@@ -359,11 +422,212 @@ ul.task-list li input[type="checkbox"] {
 </tr>
 </tbody>
 </table>
-<hr>
-<p>Updated on 2026-10-09 at 13:36:35 +0000</p>
-
-
 </section>
+<section id="detailed-description" class="level2">
+<h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
+</section>
+</section>
+<section id="datamanager-type-traits-system" class="level1">
+<h1>DataManager Type Traits System</h1>
+</section>
+<section id="overview" class="level1">
+<h1>Overview</h1>
+<p>This directory contains the type trait infrastructure for <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> container types. Type traits provide compile-time metadata about data containers, enabling generic programming patterns and type-safe transformations.</p>
+</section>
+<section id="purpose" class="level1">
+<h1>Purpose</h1>
+<p>Type traits serve as the <strong>fundamental layer of introspection</strong> for <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> types. They answer questions like:</p>
+<ul>
+<li>What element type does this container hold?</li>
+<li>Can this container have multiple values per time point? (raggedness)</li>
+<li>Does this container track EntityIds?</li>
+<li>Does this container represent spatial data?</li>
+</ul>
+<p>These properties are used by:</p>
+<ul>
+<li><strong>Transform system</strong> (v2): Determine appropriate output container types</li>
+<li><strong>Generic algorithms</strong>: Write code that works across multiple container types</li>
+<li><strong>UI widgets</strong>: Adapt display based on container properties</li>
+<li><strong>Serialization</strong>: Handle different storage strategies</li>
+</ul>
+</section>
+<section id="design-philosophy" class="level1">
+<h1>Design Philosophy</h1>
+<section id="intrusive-traits-recommended" class="level2">
+<h2 class="anchored" data-anchor-id="intrusive-traits-recommended">Intrusive Traits (Recommended)</h2>
+<p>Each container type defines its own <code>DataTraits</code> nested struct:</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> MaskData <span class="op">:</span> <span class="kw">public</span> RaggedTimeSeries<span class="op">&lt;</span>Mask2D<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">public</span><span class="op">:</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">struct</span> DataTraits <span class="op">:</span> TypeTraits<span class="op">::</span>DataTypeTraitsBase<span class="op">&lt;</span>MaskData<span class="op">,</span> Mask2D<span class="op">&gt;</span> <span class="op">{</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">static</span> <span class="kw">constexpr</span> <span class="dt">bool</span> is_ragged <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">static</span> <span class="kw">constexpr</span> <span class="dt">bool</span> is_temporal <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        <span class="at">static</span> <span class="kw">constexpr</span> <span class="dt">bool</span> has_entity_ids <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        <span class="at">static</span> <span class="kw">constexpr</span> <span class="dt">bool</span> is_spatial <span class="op">=</span> <span class="kw">true</span><span class="op">;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// ... rest of class</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>Benefits:</strong></p>
+<ul>
+<li>Self-documenting: traits are co-located with type definition</li>
+<li>Minimal header dependencies</li>
+<li>Easy to add custom properties per type</li>
+<li>No central registry to maintain</li>
+</ul>
+</section>
+<section id="usage-in-generic-code" class="level2">
+<h2 class="anchored" data-anchor-id="usage-in-generic-code">Usage in Generic Code</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"TypeTraits/DataTypeTraits.hpp"</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">// Query traits</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> WhiskerToolbox<span class="op">::</span>TypeTraits<span class="op">;</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="kw">static_assert</span><span class="op">(</span>is_ragged_v<span class="op">&lt;</span>MaskData<span class="op">&gt;,</span> <span class="st">"MaskData should be ragged"</span><span class="op">);</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> ElementType <span class="op">=</span> <span class="dt">element_type_t</span><span class="op">&lt;</span>MaskData<span class="op">&gt;;</span>  <span class="co">// Mask2D</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co">// Use concepts</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span>RaggedContainer T<span class="op">&gt;</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> processRaggedData<span class="op">(</span>T <span class="at">const</span><span class="op">&amp;</span> container<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Works for MaskData, LineData, PointData, RaggedAnalogTimeSeries</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span><span class="op">&lt;</span><span class="kw">typename</span> T<span class="op">&gt;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="kw">requires</span> TemporalContainer<span class="op">&lt;</span>T<span class="op">&gt;</span> <span class="op">&amp;&amp;</span> has_entity_ids_v<span class="op">&lt;</span>T<span class="op">&gt;</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> processTrackedTimeSeries<span class="op">(</span>T <span class="at">const</span><span class="op">&amp;</span> container<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Works for containers with TimeFrame and EntityId tracking</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="standard-trait-properties" class="level1">
+<h1>Standard Trait Properties</h1>
+<p>All container types should define these properties:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>container_type</code></td>
+<td><code>using</code></td>
+<td>The container type itself</td>
+</tr>
+<tr class="even">
+<td><code>element_type</code></td>
+<td><code>using</code></td>
+<td>Type of elements stored (e.g., <code>[Mask2D](/api_generated/Classes/classMask2D.md)</code>, <code>float</code>)</td>
+</tr>
+<tr class="odd">
+<td><code>is_ragged</code></td>
+<td><code>bool</code></td>
+<td>True if multiple elements can exist at each time point</td>
+</tr>
+<tr class="even">
+<td><code>is_temporal</code></td>
+<td><code>bool</code></td>
+<td>True if container has <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> association</td>
+</tr>
+<tr class="odd">
+<td><code>has_entity_ids</code></td>
+<td><code>bool</code></td>
+<td>True if elements are tracked with EntityIds</td>
+</tr>
+<tr class="even">
+<td><code>is_spatial</code></td>
+<td><code>bool</code></td>
+<td>True if elements represent spatial data</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="container-type-classification" class="level1">
+<h1>Container Type Classification</h1>
+<section id="ragged-containers-is_ragged-true" class="level2">
+<h2 class="anchored" data-anchor-id="ragged-containers-is_ragged-true">Ragged Containers (<code>is_ragged = true</code>)</h2>
+<ul>
+<li>Multiple elements per time point</li>
+<li>Examples: <code>[MaskData](/api_generated/Classes/classMaskData.md)</code>, <code>[LineData](/api_generated/Classes/classLineData.md)</code>, <code>[PointData](/api_generated/Classes/classPointData.md)</code>, <code>[RaggedAnalogTimeSeries](/api_generated/Classes/classRaggedAnalogTimeSeries.md)</code></li>
+<li>Iterator access: <code>time_slices()</code>, <code>elements()</code></li>
+</ul>
+</section>
+<section id="non-ragged-containers-is_ragged-false" class="level2">
+<h2 class="anchored" data-anchor-id="non-ragged-containers-is_ragged-false">Non-Ragged Containers (<code>is_ragged = false</code>)</h2>
+<ul>
+<li>Single value per time point</li>
+<li>Examples: <code>[AnalogTimeSeries](/api_generated/Classes/classAnalogTimeSeries.md)</code>, <code>[DigitalEventSeries](/api_generated/Classes/classDigitalEventSeries.md)</code></li>
+<li>Iterator access: <code>getAllSamples()</code>, <code>getTimeIndices()</code></li>
+</ul>
+</section>
+</section>
+<section id="adding-traits-to-a-new-container-type" class="level1">
+<h1>Adding Traits to a New Container Type</h1>
+<ol type="1">
+<li>Include the trait header: ```cpp</li>
+</ol>
+<p>#include “TypeTraits/DataTypeTraits.hpp”</p>
+<pre><code>
+2. Define a nested `DataTraits` struct: ```cpp
+
+class MyNewContainer {
+public:
+    struct DataTraits : WhiskerToolbox::TypeTraits::DataTypeTraitsBase&lt;MyNewContainer, MyElement&gt; {
+        static constexpr bool is_ragged = false;
+        static constexpr bool is_temporal = true;
+        static constexpr bool has_entity_ids = false;
+        // Add custom properties as needed
+        static constexpr bool is_my_special_property = true;
+    };
+    
+    // ... rest of class
+};</code></pre>
+<ol start="3" type="1">
+<li>Verify with static assertions in your tests: ```cpp</li>
+</ol>
+<p>#include “TypeTraits/DataTypeTraits.hpp”</p>
+<p>static_assert(WhiskerToolbox::TypeTraits::HasDataTraits<mynewcontainer>); static_assert(!WhiskerToolbox::TypeTraits::is_ragged_v<mynewcontainer>);</mynewcontainer></mynewcontainer></p>
+<pre><code>
+
+
+# Integration with Transform System
+
+The transform system (`[DataManager/utils/ContainerElementMapping.hpp](/api_generated/Files/ContainerElementMapping_8hpp.md#file-containerelementmapping.hpp)`) uses these traits to:
+
+* Map element types to container types
+* Determine appropriate output containers for transforms
+* Validate type compatibility
+
+```cpp
+
+// ContainerElementMapping queries DataTraits for container → element mapping
+template&lt;typename T&gt;
+inline constexpr bool is_ragged_v = WhiskerToolbox::TypeTraits::is_ragged_v&lt;T&gt;;</code></pre>
+</section>
+<section id="future-extensions" class="level1">
+<h1>Future Extensions</h1>
+<p>Potential additional trait properties:</p>
+<ul>
+<li><code>supports_interpolation</code>: Can values be interpolated between time points?</li>
+<li><code>has_provenance</code>: Does container track transform provenance?</li>
+<li><code>storage_strategy</code>: Eager, lazy, or on-demand computation?</li>
+<li><code>supports_parallel_iteration</code>: Can be safely iterated in parallel?</li>
+</ul>
+</section>
+<section id="related-documentation" class="level1">
+<h1>Related Documentation</h1>
+<ul>
+<li>Transform System V2: <code>transforms/v2/DESIGN.md</code></li>
+<li>Container mapping: <code>[DataManager/utils/ContainerElementMapping.hpp](/api_generated/Files/ContainerElementMapping_8hpp.md#file-containerelementmapping.hpp)</code></li>
+<li>Type index mapping: <code>[DataManager/utils/ContainerTypeIndex.hpp](/api_generated/Files/ContainerTypeIndex_8hpp.md#file-containertypeindex.hpp)</code></li>
+</ul>
+<hr>
+<p>Updated on 2026-11-13 at 20:25:43 +0000</p>
+
+
 </section>
 
 </main> <!-- /main -->
@@ -371,15 +635,50 @@ ul.task-list li input[type="checkbox"] {
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -458,7 +757,8 @@ ul.task-list li input[type="checkbox"] {
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -467,8 +767,69 @@ ul.task-list li input[type="checkbox"] {
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -482,6 +843,7 @@ ul.task-list li input[type="checkbox"] {
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -644,44 +1006,54 @@ ul.task-list li input[type="checkbox"] {
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -779,6 +1151,9 @@ ul.task-list li input[type="checkbox"] {
       }
     }
   });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
 

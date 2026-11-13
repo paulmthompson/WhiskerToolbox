@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -72,18 +72,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-0c66bec081e5215138e9fd61e9c23ef8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -116,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -139,6 +140,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -168,13 +170,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -268,6 +276,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -282,15 +291,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -334,8 +342,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
+            <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -344,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
@@ -433,7 +442,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -469,23 +478,239 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1AssembledLabels.html">MLCore::AssembledLabels</a></strong> <br>Result of label assembly.</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1ConversionConfig.html">MLCore::ConversionConfig</a></strong> <br>Configuration for <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> → <a href="">arma::mat</a> conversion.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1BalancedData.html">MLCore::BalancedData</a></strong> <br>Result of a class balancing operation.</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1ConvertedFeatures.html">MLCore::ConvertedFeatures</a></strong> <br>Result of converting a <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> to <a href="">arma::mat</a>.</td>
 </tr>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1BalancingConfig.html">MLCore::BalancingConfig</a></strong> <br>Configuration for class balancing.</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LabelSourceTimeGroups.html">MLCore::LabelSourceTimeGroups</a></strong> <br>Describes a label source based on entity groups of time entities.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LabelSourceIntervals.html">MLCore::LabelSourceIntervals</a></strong> <br>Describes a label source based on a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LabelSourceEntityGroups.html">MLCore::LabelSourceEntityGroups</a></strong> <br>Describes a label source based on entity groups on data objects.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1TensorValidationResult.html">MLCore::TensorValidationResult</a></strong> <br>Result of standalone tensor validation.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1FeatureLabelValidationResult.html">MLCore::FeatureLabelValidationResult</a></strong> <br>Full validation result including label compatibility.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LabelFromIntervals.html">MLCore::LabelFromIntervals</a></strong> <br>Configuration for binary labeling from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LabelFromTimeEntityGroups.html">MLCore::LabelFromTimeEntityGroups</a></strong> <br>Configuration for multi-class labeling from TimeEntity groups.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LabelFromDataEntityGroups.html">MLCore::LabelFromDataEntityGroups</a></strong> <br>Configuration for multi-class labeling from data-object entity groups.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LabelFromEvents.html">MLCore::LabelFromEvents</a></strong> <br>Configuration for binary labeling from a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1AssembledLabels.html">MLCore::AssembledLabels</a></strong> <br>Result of label assembly.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structMLCore_1_1BinaryClassificationMetrics.html">MLCore::BinaryClassificationMetrics</a></strong> <br>Metrics for a binary (two-class) classification problem.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1MultiClassMetrics.html">MLCore::MultiClassMetrics</a></strong> <br>Metrics for a multi-class classification problem.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLDimReductionOperation.html">MLCore::MLDimReductionOperation</a></strong> <br>Abstract base for dimensionality reduction operations.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html">MLCore::MLModelOperation</a></strong> <br>Abstract base for all ML model operations.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1MLModelParametersBase.html">MLCore::MLModelParametersBase</a></strong> <br>Abstract base for all model-specific parameter sets.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1RandomForestParameters.html">MLCore::RandomForestParameters</a></strong> <br>Parameters for Random Forest classifier.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1NaiveBayesParameters.html">MLCore::NaiveBayesParameters</a></strong> <br>Parameters for Naive Bayes classifier.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LogisticRegressionParameters.html">MLCore::LogisticRegressionParameters</a></strong> <br>Parameters for Logistic Regression classifier.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1SoftmaxRegressionParameters.html">MLCore::SoftmaxRegressionParameters</a></strong> <br>Parameters for Softmax Regression (multi-class logistic regression).</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1KMeansParameters.html">MLCore::KMeansParameters</a></strong> <br>Parameters for K-Means clustering.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1DBSCANParameters.html">MLCore::DBSCANParameters</a></strong> <br>Parameters for DBSCAN clustering.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1GMMParameters.html">MLCore::GMMParameters</a></strong> <br>Parameters for Gaussian Mixture Model clustering.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1PCAParameters.html">MLCore::PCAParameters</a></strong> <br>Parameters for PCA dimensionality reduction.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1TSNEParameters.html">MLCore::TSNEParameters</a></strong> <br>Parameters for t-SNE dimensionality reduction.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1RobustPCAParameters.html">MLCore::RobustPCAParameters</a></strong> <br>Parameters for Robust PCA (ROSL) dimensionality reduction.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1ICAParameters.html">MLCore::ICAParameters</a></strong> <br>Parameters for ICA (RADICAL algorithm) dimensionality reduction.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LogitProjectionParameters.html">MLCore::LogitProjectionParameters</a></strong> <br>Parameters for Logit Projection (supervised dimensionality reduction).</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LARSProjectionParameters.html">MLCore::LARSProjectionParameters</a></strong> <br>Parameters for LARS Projection (supervised dimensionality reduction).</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1SupervisedPCAParameters.html">MLCore::SupervisedPCAParameters</a></strong> <br>Parameters for Supervised PCA dimensionality reduction.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1SupervisedRobustPCAParameters.html">MLCore::SupervisedRobustPCAParameters</a></strong> <br>Parameters for Supervised Robust PCA dimensionality reduction.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1HMMParameters.html">MLCore::HMMParameters</a></strong> <br>Parameters for Hidden Markov Model (Gaussian emissions).</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelRegistry.html">MLCore::MLModelRegistry</a></strong> <br>Factory registry for ML model operations.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLSupervisedDimReductionOperation.html">MLCore::MLSupervisedDimReductionOperation</a></strong> <br>Abstract base for supervised dimensionality reduction operations.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1HiddenMarkovModelOperation.html">MLCore::HiddenMarkovModelOperation</a></strong> <br>Gaussian HMM classifier wrapping mlpack::HMM&lt;GaussianDistribution&lt;&gt;&gt;.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LARSProjectionOperation.html">MLCore::LARSProjectionOperation</a></strong> <br>LARS-based supervised feature selection.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html">MLCore::LogisticRegressionOperation</a></strong> <br>Logistic Regression classifier wrapping mlpack::LogisticRegression.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogitProjectionOperation.html">MLCore::LogitProjectionOperation</a></strong> <br>Supervised linear projection via softmax logit extraction.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1NaiveBayesOperation.html">MLCore::NaiveBayesOperation</a></strong> <br>Naive Bayes classifier wrapping mlpack::NaiveBayesClassifier.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1RandomForestOperation.html">MLCore::RandomForestOperation</a></strong> <br>Random Forest classifier wrapping mlpack::RandomForest.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1SoftmaxRegressionOperation.html">MLCore::SoftmaxRegressionOperation</a></strong> <br>Multi-class Softmax Regression classifier wrapping mlpack::SoftmaxRegression.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1SupervisedPCAOperation.html">MLCore::SupervisedPCAOperation</a></strong> <br>Supervised PCA dimensionality reduction.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1SupervisedRobustPCAOperation.html">MLCore::SupervisedRobustPCAOperation</a></strong> <br>Supervised Robust PCA dimensionality reduction.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1DBSCANOperation.html">MLCore::DBSCANOperation</a></strong> <br>DBSCAN clustering wrapping mlpack::DBSCAN.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1GaussianMixtureOperation.html">MLCore::GaussianMixtureOperation</a></strong> <br>Gaussian Mixture Model clustering wrapping mlpack::GMM.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1ICAOperation.html">MLCore::ICAOperation</a></strong> <br>ICA via mlpack’s RADICAL algorithm.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1KMeansOperation.html">MLCore::KMeansOperation</a></strong> <br>K-Means clustering wrapping mlpack::KMeans.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1PCAOperation.html">MLCore::PCAOperation</a></strong> <br>PCA dimensionality reduction via mlpack.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1RobustPCAOperation.html">MLCore::RobustPCAOperation</a></strong> <br>Robust PCA dimensionality reduction via ROSL.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1TSNEOperation.html">MLCore::TSNEOperation</a></strong> <br>t-SNE dimensionality reduction via tapkee</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1PredictionOutput.html">MLCore::PredictionOutput</a></strong> <br>Encapsulates the output of a classification or clustering model.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1PredictionWriterConfig.html">MLCore::PredictionWriterConfig</a></strong> <br>Configuration for how predictions are written to the <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1PredictionWriterResult.html">MLCore::PredictionWriterResult</a></strong> <br>Summary of what the PredictionWriter produced.</td>
 </tr>
 <tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structMLCore_1_1BoundingSpan.html">MLCore::BoundingSpan</a></strong> <br>A closed temporal range [min_time, max_time].</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1FilteredRows.html">MLCore::FilteredRows</a></strong> <br>Result of filtering features and times to a bounding span.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1FilteredTrainingRows.html">MLCore::FilteredTrainingRows</a></strong> <br>Result of filtering feature rows + labels to a set of intervals.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1FilteredPredictions.html">MLCore::FilteredPredictions</a></strong> <br>Result of filtering predictions to a set of intervals.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1PredictionRegionConfig.html">MLCore::PredictionRegionConfig</a></strong> <br>Specifies where prediction should be performed.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
@@ -513,22 +738,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1ConversionConfig.html">MLCore::ConversionConfig</a></strong> <br>Configuration for <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> → <a href="">arma::mat</a> conversion.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1ConvertedFeatures.html">MLCore::ConvertedFeatures</a></strong> <br>Result of converting a <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> to <a href="">arma::mat</a>.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1DBSCANOperation.html">MLCore::DBSCANOperation</a></strong> <br>DBSCAN clustering wrapping mlpack::DBSCAN.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1DBSCANParameters.html">MLCore::DBSCANParameters</a></strong> <br>Parameters for DBSCAN clustering.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structMLCore_1_1DimReductionOutputConfig.html">MLCore::DimReductionOutputConfig</a></strong> <br>Output configuration for the dimensionality reduction pipeline.</td>
 </tr>
 <tr class="odd">
@@ -541,231 +750,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1FeatureLabelValidationResult.html">MLCore::FeatureLabelValidationResult</a></strong> <br>Full validation result including label compatibility.</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1SequenceSegment.html">MLCore::SequenceSegment</a></strong> <br>A single contiguous temporal segment of features and labels.</td>
 </tr>
 <tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1FilteredPredictions.html">MLCore::FilteredPredictions</a></strong> <br>Result of filtering predictions to a set of intervals.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1FilteredRows.html">MLCore::FilteredRows</a></strong> <br>Result of filtering features and times to a bounding span.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1FilteredTrainingRows.html">MLCore::FilteredTrainingRows</a></strong> <br>Result of filtering feature rows + labels to a set of intervals.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1GaussianMixtureOperation.html">MLCore::GaussianMixtureOperation</a></strong> <br>Gaussian Mixture Model clustering wrapping mlpack::GMM.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1GMMParameters.html">MLCore::GMMParameters</a></strong> <br>Parameters for Gaussian Mixture Model clustering.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1HiddenMarkovModelOperation.html">MLCore::HiddenMarkovModelOperation</a></strong> <br>Gaussian HMM classifier wrapping mlpack::HMM&lt;GaussianDistribution&lt;&gt;&gt;</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1HMMParameters.html">MLCore::HMMParameters</a></strong> <br>Parameters for Hidden Markov Model (Gaussian emissions)</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1ICAOperation.html">MLCore::ICAOperation</a></strong> <br>ICA via mlpack’s RADICAL algorithm.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1ICAParameters.html">MLCore::ICAParameters</a></strong> <br>Parameters for ICA (RADICAL algorithm) dimensionality reduction.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1KMeansOperation.html">MLCore::KMeansOperation</a></strong> <br>K-Means clustering wrapping mlpack::KMeans.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1KMeansParameters.html">MLCore::KMeansParameters</a></strong> <br>Parameters for K-Means clustering.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LabelFromDataEntityGroups.html">MLCore::LabelFromDataEntityGroups</a></strong> <br>Configuration for multi-class labeling from data-object entity groups.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LabelFromEvents.html">MLCore::LabelFromEvents</a></strong> <br>Configuration for binary labeling from a <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a>.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LabelFromIntervals.html">MLCore::LabelFromIntervals</a></strong> <br>Configuration for binary labeling from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LabelFromTimeEntityGroups.html">MLCore::LabelFromTimeEntityGroups</a></strong> <br>Configuration for multi-class labeling from TimeEntity groups.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LabelSourceEntityGroups.html">MLCore::LabelSourceEntityGroups</a></strong> <br>Describes a label source based on entity groups on data objects.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LabelSourceIntervals.html">MLCore::LabelSourceIntervals</a></strong> <br>Describes a label source based on a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LabelSourceTimeGroups.html">MLCore::LabelSourceTimeGroups</a></strong> <br>Describes a label source based on entity groups of time entities.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LARSProjectionOperation.html">MLCore::LARSProjectionOperation</a></strong> <br>LARS-based supervised feature selection.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LARSProjectionParameters.html">MLCore::LARSProjectionParameters</a></strong> <br>Parameters for LARS Projection (supervised dimensionality reduction)</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html">MLCore::LogisticRegressionOperation</a></strong> <br>Logistic Regression classifier wrapping mlpack::LogisticRegression.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LogisticRegressionParameters.html">MLCore::LogisticRegressionParameters</a></strong> <br>Parameters for Logistic Regression classifier.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1LogitProjectionOperation.html">MLCore::LogitProjectionOperation</a></strong> <br>Supervised linear projection via softmax logit extraction.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1LogitProjectionParameters.html">MLCore::LogitProjectionParameters</a></strong> <br>Parameters for Logit Projection (supervised dimensionality reduction)</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLDimReductionOperation.html">MLCore::MLDimReductionOperation</a></strong> <br>Abstract base for dimensionality reduction operations.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html">MLCore::MLModelOperation</a></strong> <br>Abstract base for all ML model operations.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1MLModelParametersBase.html">MLCore::MLModelParametersBase</a></strong> <br>Abstract base for all model-specific parameter sets.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelRegistry.html">MLCore::MLModelRegistry</a></strong> <br>Factory registry for ML model operations.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLSupervisedDimReductionOperation.html">MLCore::MLSupervisedDimReductionOperation</a></strong> <br>Abstract base for supervised dimensionality reduction operations.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1MultiClassMetrics.html">MLCore::MultiClassMetrics</a></strong> <br>Metrics for a multi-class classification problem.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1NaiveBayesOperation.html">MLCore::NaiveBayesOperation</a></strong> <br>Naive Bayes classifier wrapping mlpack::NaiveBayesClassifier.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1NaiveBayesParameters.html">MLCore::NaiveBayesParameters</a></strong> <br>Parameters for Naive Bayes classifier.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1PCAOperation.html">MLCore::PCAOperation</a></strong> <br>PCA dimensionality reduction via mlpack.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1PCAParameters.html">MLCore::PCAParameters</a></strong> <br>Parameters for PCA dimensionality reduction.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1PredictionOutput.html">MLCore::PredictionOutput</a></strong> <br>Encapsulates the output of a classification or clustering model.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1PredictionRegionConfig.html">MLCore::PredictionRegionConfig</a></strong> <br>Specifies where prediction should be performed.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1PredictionWriterConfig.html">MLCore::PredictionWriterConfig</a></strong> <br>Configuration for how predictions are written to the <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1PredictionWriterResult.html">MLCore::PredictionWriterResult</a></strong> <br>Summary of what the PredictionWriter produced.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1RandomForestOperation.html">MLCore::RandomForestOperation</a></strong> <br>Random Forest classifier wrapping mlpack::RandomForest.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1RandomForestParameters.html">MLCore::RandomForestParameters</a></strong> <br>Parameters for Random Forest classifier.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1RobustPCAOperation.html">MLCore::RobustPCAOperation</a></strong> <br>Robust PCA dimensionality reduction via ROSL.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1RobustPCAParameters.html">MLCore::RobustPCAParameters</a></strong> <br>Parameters for Robust PCA (ROSL) dimensionality reduction.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1SequenceAssembler.html">MLCore::SequenceAssembler</a></strong> <br>Segments flat matrices into contiguous temporal sequences.</td>
-</tr>
-<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structMLCore_1_1SequenceAssemblerConfig.html">MLCore::SequenceAssemblerConfig</a></strong> <br>Configuration for sequence segmentation.</td>
 </tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1SequenceSegment.html">MLCore::SequenceSegment</a></strong> <br>A single contiguous temporal segment of features and labels.</td>
-</tr>
 <tr class="odd">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1SoftmaxRegressionOperation.html">MLCore::SoftmaxRegressionOperation</a></strong> <br>Multi-class Softmax Regression classifier wrapping mlpack::SoftmaxRegression.</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1SequenceAssembler.html">MLCore::SequenceAssembler</a></strong> <br>Segments flat matrices into contiguous temporal sequences.</td>
 </tr>
 <tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1SoftmaxRegressionParameters.html">MLCore::SoftmaxRegressionParameters</a></strong> <br>Parameters for Softmax Regression (multi-class logistic regression)</td>
-</tr>
-<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structMLCore_1_1SupervisedDimReductionPipelineConfig.html">MLCore::SupervisedDimReductionPipelineConfig</a></strong> <br>Full configuration for the supervised dimensionality reduction pipeline.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structMLCore_1_1SupervisedDimReductionPipelineResult.html">MLCore::SupervisedDimReductionPipelineResult</a></strong> <br>Complete result of a supervised dimensionality reduction pipeline run.</td>
 </tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1SupervisedPCAOperation.html">MLCore::SupervisedPCAOperation</a></strong> <br>Supervised PCA dimensionality reduction.</td>
-</tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1SupervisedPCAParameters.html">MLCore::SupervisedPCAParameters</a></strong> <br>Parameters for Supervised PCA dimensionality reduction.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1SupervisedRobustPCAOperation.html">MLCore::SupervisedRobustPCAOperation</a></strong> <br>Supervised Robust PCA dimensionality reduction.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1SupervisedRobustPCAParameters.html">MLCore::SupervisedRobustPCAParameters</a></strong> <br>Parameters for Supervised Robust PCA dimensionality reduction.</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1BalancingConfig.html">MLCore::BalancingConfig</a></strong> <br>Configuration for class balancing.</td>
 </tr>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1TensorValidationResult.html">MLCore::TensorValidationResult</a></strong> <br>Result of standalone tensor validation.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1TSNEOperation.html">MLCore::TSNEOperation</a></strong> <br>t-SNE dimensionality reduction via tapkee</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structMLCore_1_1TSNEParameters.html">MLCore::TSNEParameters</a></strong> <br>Parameters for t-SNE dimensionality reduction.</td>
+<td><strong><a href="../../api_generated/Classes/structMLCore_1_1BalancedData.html">MLCore::BalancedData</a></strong> <br>Result of a class balancing operation.</td>
 </tr>
 </tbody>
 </table>
@@ -907,11 +916,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structMLCore_1_1ConvertedFeatures.html">ConvertedFeatures</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceMLCore.html#function-converttensortoarmarowmajor">convertTensorToArmaRowMajor</a></strong>(<a href="../../api_generated/Classes/classTensorData.html">TensorData</a> const &amp; tensor, <a href="../../api_generated/Classes/structMLCore_1_1ConversionConfig.html">ConversionConfig</a> const &amp; config ={})<br>Convert a <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> to a row-major <a href="">arma::mat</a> (observations × features)</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceMLCore.html#function-converttensortoarmarowmajor">convertTensorToArmaRowMajor</a></strong>(<a href="../../api_generated/Classes/classTensorData.html">TensorData</a> const &amp; tensor, <a href="../../api_generated/Classes/structMLCore_1_1ConversionConfig.html">ConversionConfig</a> const &amp; config ={})<br>Convert a <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> to a row-major <a href="">arma::mat</a> (observations × features).</td>
 </tr>
 <tr class="even">
 <td>std::string</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceMLCore.html#function-tostring">toString</a></strong>(<a href="../../api_generated/Namespaces/namespaceMLCore.html#enum-rowcompatibility">RowCompatibility</a> rc)<br>Human-readable description of a RowCompatibility value.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceMLCore.html#function-tostring">toString</a></strong>(<a href="../../api_generated/Namespaces/namespaceMLCore.html#enum-rowcompatibility">RowCompatibility</a> rc)<br>Human-readable description of a <a href="../../api_generated/Namespaces/namespaceMLCore.html#enum-rowcompatibility">RowCompatibility</a> value.</td>
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structMLCore_1_1TensorValidationResult.html">TensorValidationResult</a></td>
@@ -975,7 +984,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>std::string</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceMLCore.html#function-tostring">toString</a></strong>(<a href="../../api_generated/Namespaces/namespaceMLCore.html#enum-mltasktype">MLTaskType</a> task)<br>Human-readable string for an MLTaskType.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceMLCore.html#function-tostring">toString</a></strong>(<a href="../../api_generated/Namespaces/namespaceMLCore.html#enum-mltasktype">MLTaskType</a> task)<br>Human-readable string for an <a href="../../api_generated/Namespaces/namespaceMLCore.html#enum-mltasktype">MLTaskType</a>.</td>
 </tr>
 <tr class="odd">
 <td>std::vector&lt; std::string &gt;</td>
@@ -1007,7 +1016,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Classes/structMLCore_1_1BoundingSpan.html">BoundingSpan</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceMLCore.html#function-mergespans">mergeSpans</a></strong>(<a href="../../api_generated/Classes/structMLCore_1_1BoundingSpan.html">BoundingSpan</a> a, <a href="../../api_generated/Classes/structMLCore_1_1BoundingSpan.html">BoundingSpan</a> b)<br>Merge two bounding spans into their union (the span covering both)</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceMLCore.html#function-mergespans">mergeSpans</a></strong>(<a href="../../api_generated/Classes/structMLCore_1_1BoundingSpan.html">BoundingSpan</a> a, <a href="../../api_generated/Classes/structMLCore_1_1BoundingSpan.html">BoundingSpan</a> b)<br>Merge two bounding spans into their union (the span covering both).</td>
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structMLCore_1_1FilteredRows.html">FilteredRows</a></td>
@@ -1027,7 +1036,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structMLCore_1_1ClassificationPipelineResult.html">ClassificationPipelineResult</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceMLCore.html#function-runclassificationpipeline">runClassificationPipeline</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, <a href="../../api_generated/Classes/classMLCore_1_1MLModelRegistry.html">MLModelRegistry</a> const &amp; registry, <a href="../../api_generated/Classes/structMLCore_1_1ClassificationPipelineConfig.html">ClassificationPipelineConfig</a> const &amp; config, <a href="../../api_generated/Namespaces/namespaceMLCore.html#using-pipelineprogresscallback">PipelineProgressCallback</a> const &amp; progress =nullptr)<br>Run the full supervised classification pipeline.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceMLCore.html#function-runclassificationpipeline">runClassificationPipeline</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, <a href="../../api_generated/Classes/classMLCore_1_1MLModelRegistry.html">MLModelRegistry</a> const &amp; registry, <a href="../../api_generated/Classes/structMLCore_1_1ClassificationPipelineConfig.html">ClassificationPipelineConfig</a> const &amp; config, <a href="../../api_generated/Namespaces/namespaceMLCore.html#using-pipelineprogresscallback">PipelineProgressCallback</a> const &amp; progress =[nullptr])<br>Run the full supervised classification pipeline.</td>
 </tr>
 <tr class="even">
 <td>std::string</td>
@@ -1035,7 +1044,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structMLCore_1_1ClusteringPipelineResult.html">ClusteringPipelineResult</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceMLCore.html#function-runclusteringpipeline">runClusteringPipeline</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, <a href="../../api_generated/Classes/classMLCore_1_1MLModelRegistry.html">MLModelRegistry</a> const &amp; registry, <a href="../../api_generated/Classes/structMLCore_1_1ClusteringPipelineConfig.html">ClusteringPipelineConfig</a> const &amp; config, <a href="../../api_generated/Namespaces/namespaceMLCore.html#using-clusteringprogresscallback">ClusteringProgressCallback</a> const &amp; progress =nullptr)<br>Run the full unsupervised clustering pipeline.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceMLCore.html#function-runclusteringpipeline">runClusteringPipeline</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, <a href="../../api_generated/Classes/classMLCore_1_1MLModelRegistry.html">MLModelRegistry</a> const &amp; registry, <a href="../../api_generated/Classes/structMLCore_1_1ClusteringPipelineConfig.html">ClusteringPipelineConfig</a> const &amp; config, <a href="../../api_generated/Namespaces/namespaceMLCore.html#using-clusteringprogresscallback">ClusteringProgressCallback</a> const &amp; progress =[nullptr])<br>Run the full unsupervised clustering pipeline.</td>
 </tr>
 <tr class="even">
 <td>std::string</td>
@@ -1043,7 +1052,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structMLCore_1_1DimReductionPipelineResult.html">DimReductionPipelineResult</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceMLCore.html#function-rundimreductionpipeline">runDimReductionPipeline</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, <a href="../../api_generated/Classes/classMLCore_1_1MLModelRegistry.html">MLModelRegistry</a> const &amp; registry, <a href="../../api_generated/Classes/structMLCore_1_1DimReductionPipelineConfig.html">DimReductionPipelineConfig</a> const &amp; config, <a href="../../api_generated/Namespaces/namespaceMLCore.html#using-dimreductionprogresscallback">DimReductionProgressCallback</a> const &amp; progress =nullptr)<br>Run the full dimensionality reduction pipeline.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceMLCore.html#function-rundimreductionpipeline">runDimReductionPipeline</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, <a href="../../api_generated/Classes/classMLCore_1_1MLModelRegistry.html">MLModelRegistry</a> const &amp; registry, <a href="../../api_generated/Classes/structMLCore_1_1DimReductionPipelineConfig.html">DimReductionPipelineConfig</a> const &amp; config, <a href="../../api_generated/Namespaces/namespaceMLCore.html#using-dimreductionprogresscallback">DimReductionProgressCallback</a> const &amp; progress =[nullptr])<br>Run the full dimensionality reduction pipeline.</td>
 </tr>
 <tr class="even">
 <td>std::string</td>
@@ -1051,7 +1060,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structMLCore_1_1SupervisedDimReductionPipelineResult.html">SupervisedDimReductionPipelineResult</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceMLCore.html#function-runsuperviseddimreductionpipeline">runSupervisedDimReductionPipeline</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, <a href="../../api_generated/Classes/classMLCore_1_1MLModelRegistry.html">MLModelRegistry</a> const &amp; registry, <a href="../../api_generated/Classes/structMLCore_1_1SupervisedDimReductionPipelineConfig.html">SupervisedDimReductionPipelineConfig</a> const &amp; config, <a href="../../api_generated/Namespaces/namespaceMLCore.html#using-superviseddimreductionprogresscallback">SupervisedDimReductionProgressCallback</a> const &amp; progress =nullptr)<br>Run the full supervised dimensionality reduction pipeline.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceMLCore.html#function-runsuperviseddimreductionpipeline">runSupervisedDimReductionPipeline</a></strong>(<a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &amp; dm, <a href="../../api_generated/Classes/classMLCore_1_1MLModelRegistry.html">MLModelRegistry</a> const &amp; registry, <a href="../../api_generated/Classes/structMLCore_1_1SupervisedDimReductionPipelineConfig.html">SupervisedDimReductionPipelineConfig</a> const &amp; config, <a href="../../api_generated/Namespaces/namespaceMLCore.html#using-superviseddimreductionprogresscallback">SupervisedDimReductionProgressCallback</a> const &amp; progress =[nullptr])<br>Run the full supervised dimensionality reduction pipeline.</td>
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Classes/structMLCore_1_1BalancedData.html">BalancedData</a></td>
@@ -1067,7 +1076,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>std::string</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceMLCore.html#function-tostring">toString</a></strong>(<a href="../../api_generated/Namespaces/namespaceMLCore.html#enum-balancingstrategy">BalancingStrategy</a> strategy)<br>Convert a BalancingStrategy enum to a human-readable string.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceMLCore.html#function-tostring">toString</a></strong>(<a href="../../api_generated/Namespaces/namespaceMLCore.html#enum-balancingstrategy">BalancingStrategy</a> strategy)<br>Convert a <a href="../../api_generated/Namespaces/namespaceMLCore.html#enum-balancingstrategy">BalancingStrategy</a> enum to a human-readable string.</td>
 </tr>
 </tbody>
 </table>
@@ -1108,12 +1117,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>RowTypeMismatch</td>
 <td></td>
-<td>e.g., tensor has Interval rows but labels expect <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a></td>
+<td>e.g., tensor has <a href="">Interval</a> rows but labels expect <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a></td>
 </tr>
 <tr class="even">
 <td>TimeFrameMismatch</td>
 <td></td>
-<td>Feature and label time frames are different objects (different clocks)</td>
+<td>Feature and label time frames are different objects (different clocks).</td>
 </tr>
 <tr class="odd">
 <td>RowCountMismatch</td>
@@ -1184,22 +1193,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>MultiClassClassification</td>
 <td></td>
-<td>N-class supervised classification (N ≥ 2)</td>
+<td>N-class supervised classification (N ≥ 2).</td>
 </tr>
 <tr class="odd">
 <td>Clustering</td>
 <td></td>
-<td>Unsupervised clustering (assign to K groups)</td>
+<td>Unsupervised clustering (assign to K groups).</td>
 </tr>
 <tr class="even">
 <td>DimensionalityReduction</td>
 <td></td>
-<td>Unsupervised dimensionality reduction (PCA, t-SNE, etc.)</td>
+<td>Unsupervised dimensionality reduction (PCA, t-SNE, etc.).</td>
 </tr>
 <tr class="odd">
 <td>SupervisedDimensionalityReduction</td>
 <td></td>
-<td>Supervised projection using class labels (Logit Projection, LDA, etc.)</td>
+<td>Supervised projection using class labels (Logit Projection, LDA, etc.).</td>
 </tr>
 </tbody>
 </table>
@@ -1457,68 +1466,79 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="using-labelsourcedescriptor" class="level3">
 <h3 class="anchored" data-anchor-id="using-labelsourcedescriptor">using LabelSourceDescriptor</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>LabelSourceDescriptor <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>variant<span class="op">&lt;</span> LabelSourceTimeGroups<span class="op">,</span> LabelSourceIntervals<span class="op">,</span> LabelSourceEntityGroups<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>LabelSourceDescriptor <span class="op">=</span>  <span class="bu">std::</span>variant<span class="op">&lt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>        LabelSourceTimeGroups<span class="op">,</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>        LabelSourceIntervals<span class="op">,</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>        LabelSourceEntityGroups<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Describes the expected label source for validation.</p>
 <p>This is a lightweight descriptor — it captures only the metadata needed to validate compatibility with a feature tensor, without requiring access to the full <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> or <a href="../../api_generated/Classes/classEntityGroupManager.html">EntityGroupManager</a>.</p>
 </section>
 <section id="using-labelassemblyconfig" class="level3">
 <h3 class="anchored" data-anchor-id="using-labelassemblyconfig">using LabelAssemblyConfig</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>LabelAssemblyConfig <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>variant<span class="op">&lt;</span> LabelFromIntervals<span class="op">,</span> LabelFromTimeEntityGroups<span class="op">,</span> LabelFromDataEntityGroups<span class="op">,</span> LabelFromEvents<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>LabelAssemblyConfig <span class="op">=</span>  <span class="bu">std::</span>variant<span class="op">&lt;</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>        LabelFromIntervals<span class="op">,</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>        LabelFromTimeEntityGroups<span class="op">,</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        LabelFromDataEntityGroups<span class="op">,</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        LabelFromEvents<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Configuration variant for label assembly.</p>
 <p>Select one of the four labeling modes.</p>
 </section>
 <section id="using-gaussianhmm" class="level3">
 <h3 class="anchored" data-anchor-id="using-gaussianhmm">using GaussianHMM</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>GaussianHMM <span class="op">=</span> <span class="kw">typedef</span> mlpack<span class="op">::</span>HMM<span class="op">&lt;</span>mlpack<span class="op">::</span>GaussianDistribution<span class="op">&lt;&gt;</span> <span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>GaussianHMM <span class="op">=</span>  mlpack<span class="op">::</span>HMM<span class="op">&lt;</span>mlpack<span class="op">::</span>GaussianDistribution<span class="op">&lt;&gt;&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="using-diagonalgaussianhmm" class="level3">
 <h3 class="anchored" data-anchor-id="using-diagonalgaussianhmm">using DiagonalGaussianHMM</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>DiagonalGaussianHMM <span class="op">=</span> <span class="kw">typedef</span> mlpack<span class="op">::</span>HMM<span class="op">&lt;</span>mlpack<span class="op">::</span>DiagonalGaussianDistribution<span class="op">&lt;&gt;</span> <span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>DiagonalGaussianHMM <span class="op">=</span>  mlpack<span class="op">::</span>HMM<span class="op">&lt;</span>mlpack<span class="op">::</span>DiagonalGaussianDistribution<span class="op">&lt;&gt;&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="using-gmmemissionhmm" class="level3">
 <h3 class="anchored" data-anchor-id="using-gmmemissionhmm">using GMMEmissionHMM</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>GMMEmissionHMM <span class="op">=</span> <span class="kw">typedef</span> mlpack<span class="op">::</span>HMM<span class="op">&lt;</span>mlpack<span class="op">::</span>GMM<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>GMMEmissionHMM <span class="op">=</span>  mlpack<span class="op">::</span>HMM<span class="op">&lt;</span>mlpack<span class="op">::</span>GMM<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="using-diagonalgmmemissionhmm" class="level3">
 <h3 class="anchored" data-anchor-id="using-diagonalgmmemissionhmm">using DiagonalGMMEmissionHMM</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>DiagonalGMMEmissionHMM <span class="op">=</span> <span class="kw">typedef</span> mlpack<span class="op">::</span>HMM<span class="op">&lt;</span>mlpack<span class="op">::</span>DiagonalGMM<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>DiagonalGMMEmissionHMM <span class="op">=</span>  mlpack<span class="op">::</span>HMM<span class="op">&lt;</span>mlpack<span class="op">::</span>DiagonalGMM<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="using-lrmodel" class="level3">
 <h3 class="anchored" data-anchor-id="using-lrmodel">using LRModel</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>LRModel <span class="op">=</span> <span class="kw">typedef</span> mlpack<span class="op">::</span>LogisticRegression<span class="op">&lt;</span>arma<span class="op">::</span>mat<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>LRModel <span class="op">=</span>  mlpack<span class="op">::</span>LogisticRegression<span class="op">&lt;</span>arma<span class="op">::</span>mat<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="typedef-srmodel" class="level3">
 <h3 class="anchored" data-anchor-id="typedef-srmodel">typedef SRModel</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> mlpack<span class="op">::</span>SoftmaxRegression<span class="op">&lt;</span> arma<span class="op">::</span>mat <span class="op">&gt;</span> MLCore<span class="op">::</span>SRModel<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> mlpack<span class="op">::</span>SoftmaxRegression<span class="op">&lt;</span> arma<span class="op">::</span>mat <span class="op">&gt;</span> MLCore<span class="op">::</span>SRModel <span class="op">=</span>  mlpack<span class="op">::</span>SoftmaxRegression<span class="op">&lt;</span>arma<span class="op">::</span>mat<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="using-nbmodel" class="level3">
 <h3 class="anchored" data-anchor-id="using-nbmodel">using NBModel</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>NBModel <span class="op">=</span> <span class="kw">typedef</span> mlpack<span class="op">::</span>NaiveBayesClassifier<span class="op">&lt;&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>NBModel <span class="op">=</span>  mlpack<span class="op">::</span>NaiveBayesClassifier<span class="op">&lt;&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="using-rfmodel" class="level3">
 <h3 class="anchored" data-anchor-id="using-rfmodel">using RFModel</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>RFModel <span class="op">=</span> <span class="kw">typedef</span> mlpack<span class="op">::</span>RandomForest<span class="op">&lt;</span> mlpack<span class="op">::</span>GiniGain<span class="op">,</span> mlpack<span class="op">::</span>MultipleRandomDimensionSelect<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>RFModel <span class="op">=</span>  mlpack<span class="op">::</span>RandomForest<span class="op">&lt;</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    mlpack<span class="op">::</span>GiniGain<span class="op">,</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    mlpack<span class="op">::</span>MultipleRandomDimensionSelect<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="using-pipelineprogresscallback" class="level3">
 <h3 class="anchored" data-anchor-id="using-pipelineprogresscallback">using PipelineProgressCallback</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>PipelineProgressCallback <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">(</span>ClassificationStage<span class="op">,</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>PipelineProgressCallback <span class="op">=</span>  <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">(</span>ClassificationStage<span class="op">,</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Optional callback for pipeline progress reporting.</p>
 <p>Called at the start of each pipeline stage. The string parameter provides a human-readable status message.</p>
 </section>
 <section id="using-clusteringprogresscallback" class="level3">
 <h3 class="anchored" data-anchor-id="using-clusteringprogresscallback">using ClusteringProgressCallback</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>ClusteringProgressCallback <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">(</span>ClusteringStage<span class="op">,</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>ClusteringProgressCallback <span class="op">=</span>  <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">(</span>ClusteringStage<span class="op">,</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Optional callback for pipeline progress reporting.</p>
 <p>Called at the start of each pipeline stage. The string parameter provides a human-readable status message.</p>
 </section>
 <section id="using-dimreductionprogresscallback" class="level3">
 <h3 class="anchored" data-anchor-id="using-dimreductionprogresscallback">using DimReductionProgressCallback</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>DimReductionProgressCallback <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">(</span>DimReductionStage<span class="op">,</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>DimReductionProgressCallback <span class="op">=</span> </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">(</span>DimReductionStage<span class="op">,</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Progress callback type.</p>
 </section>
 <section id="using-superviseddimreductionprogresscallback" class="level3">
 <h3 class="anchored" data-anchor-id="using-superviseddimreductionprogresscallback">using SupervisedDimReductionProgressCallback</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>SupervisedDimReductionProgressCallback <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">(</span>SupervisedDimReductionStage<span class="op">,</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb14"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> MLCore<span class="op">::</span>SupervisedDimReductionProgressCallback <span class="op">=</span> </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">(</span>SupervisedDimReductionStage<span class="op">,</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Progress callback type.</p>
 </section>
 </section>
@@ -1654,7 +1674,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    TensorData <span class="at">const</span> <span class="op">&amp;</span> tensor<span class="op">,</span></span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    ConversionConfig <span class="at">const</span> <span class="op">&amp;</span> config <span class="op">={}</span></span>
 <span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Convert a <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> to a row-major <a href="">arma::mat</a> (observations × features)</p>
+<p>Convert a <a href="../../api_generated/Classes/classTensorData.html">TensorData</a> to a row-major <a href="">arma::mat</a> (observations × features).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>tensor</strong> The feature tensor</li>
@@ -1672,7 +1692,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string toString<span class="op">(</span></span>
 <span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    RowCompatibility rc</span>
 <span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Human-readable description of a RowCompatibility value.</p>
+<p>Human-readable description of a <a href="../../api_generated/Namespaces/namespaceMLCore.html#enum-rowcompatibility">RowCompatibility</a> value.</p>
 </section>
 <section id="function-validatefeaturetensor" class="level3">
 <h3 class="anchored" data-anchor-id="function-validatefeaturetensor">function validateFeatureTensor</h3>
@@ -1817,7 +1837,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>config.class_groups must not be empty (enforcement: exception)</li>
 <li>row_times must not be empty (enforcement: exception)</li>
 </ul>
-<p>Similar to assembleLabelsFromTimeEntityGroups but matches entities by data_key rather than time_key. Accepts entities of any EntityKind (LineEntity, PointEntity, EventEntity, etc.) as long as data_key matches.</p>
+<p>Similar to assembleLabelsFromTimeEntityGroups but matches entities by data_key rather than time_key. Accepts entities of any <a href="../../api_generated/Files/EntityTypes_8hpp.html#enum-entitykind">EntityKind</a> (LineEntity, PointEntity, EventEntity, etc.) as long as data_key matches.</p>
 </section>
 <section id="function-assemblelabelsfromevents" class="level3">
 <h3 class="anchored" data-anchor-id="function-assemblelabelsfromevents">function assembleLabelsFromEvents</h3>
@@ -1969,7 +1989,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>string toString<span class="op">(</span></span>
 <span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>    MLTaskType task</span>
 <span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Human-readable string for an MLTaskType.</p>
+<p>Human-readable string for an <a href="../../api_generated/Namespaces/namespaceMLCore.html#enum-mltasktype">MLTaskType</a>.</p>
 </section>
 <section id="function-writepredictionsasintervals" class="level3">
 <h3 class="anchored" data-anchor-id="function-writepredictionsasintervals">function writePredictionsAsIntervals</h3>
@@ -2110,7 +2130,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>    BoundingSpan a<span class="op">,</span></span>
 <span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>    BoundingSpan b</span>
 <span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Merge two bounding spans into their union (the span covering both)</p>
+<p>Merge two bounding spans into their union (the span covering both).</p>
 </section>
 <section id="function-filterrowstospan" class="level3">
 <h3 class="anchored" data-anchor-id="function-filterrowstospan">function filterRowsToSpan</h3>
@@ -2374,9 +2394,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb62"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string toString<span class="op">(</span></span>
 <span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>    BalancingStrategy strategy</span>
 <span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Convert a BalancingStrategy enum to a human-readable string.</p>
+<p>Convert a <a href="../../api_generated/Namespaces/namespaceMLCore.html#enum-balancingstrategy">BalancingStrategy</a> enum to a human-readable string.</p>
 <hr>
-<p>Updated on 2026-10-09 at 13:36:33 +0000</p>
+<p>Updated on 2026-11-13 at 20:25:41 +0000</p>
 
 
 </section>
@@ -2388,15 +2408,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -2475,7 +2530,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -2484,8 +2540,69 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -2499,6 +2616,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -2661,44 +2779,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -2796,6 +2924,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       }
     }
   });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
 

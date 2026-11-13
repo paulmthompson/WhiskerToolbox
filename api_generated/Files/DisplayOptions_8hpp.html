@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -72,18 +72,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-0c66bec081e5215138e9fd61e9c23ef8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -116,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -139,6 +140,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -168,13 +170,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -268,6 +276,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -282,15 +291,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -334,8 +342,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
+            <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -344,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
@@ -354,7 +363,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#classes" id="toc-classes" class="nav-link" data-scroll-target="#classes">Classes</a></li>
   <li><a href="#types" id="toc-types" class="nav-link" data-scroll-target="#types">Types</a></li>
   <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
+  </ul></li>
+  <li><a href="#section" id="toc-section" class="nav-link" data-scroll-target="#section"></a>
+  <ul class="collapse">
   <li><a href="#design-principles" id="toc-design-principles" class="nav-link" data-scroll-target="#design-principles">Design Principles</a></li>
+  </ul></li>
+  <li><a href="#section-1" id="toc-section-1" class="nav-link" data-scroll-target="#section-1"></a>
+  <ul class="collapse">
   <li><a href="#usage" id="toc-usage" class="nav-link" data-scroll-target="#usage">Usage</a></li>
   <li><a href="#types-documentation" id="toc-types-documentation" class="nav-link" data-scroll-target="#types-documentation">Types Documentation</a>
   <ul class="collapse">
@@ -368,7 +383,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -469,7 +484,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>using <a href="../../api_generated/Classes/structCommonDisplayFields.html">CommonDisplayFields</a></td>
-<td><strong><a href="../../api_generated/Files/DisplayOptions_8hpp.html#using-basedisplayoptions">BaseDisplayOptions</a></strong> <br>Legacy alias for BaseDisplayOptions.</td>
+<td><strong><a href="../../api_generated/Files/DisplayOptions_8hpp.html#using-basedisplayoptions">BaseDisplayOptions</a></strong> <br>Legacy alias for <a href="">BaseDisplayOptions</a>.</td>
 </tr>
 </tbody>
 </table>
@@ -479,6 +494,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Display option structs for <a href="../../api_generated/Classes/classMedia__Widget.html">Media_Widget</a> visualization.</p>
 <p>This file defines serializable display options for various data types displayed in the <a href="../../api_generated/Classes/classMedia__Widget.html">Media_Widget</a>. All structs are designed for reflect-cpp serialization using rfl::Flatten for composition instead of inheritance.</p>
 </section>
+</section>
+<section id="section" class="level1">
+<h1></h1>
 <section id="design-principles" class="level2">
 <h2 class="anchored" data-anchor-id="design-principles">Design Principles</h2>
 <ol type="1">
@@ -488,6 +506,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>Default constructible</strong> - all members have sensible defaults</li>
 </ol>
 </section>
+</section>
+<section id="section-1" class="level1">
+<h1></h1>
 <section id="usage" class="level2">
 <h2 class="anchored" data-anchor-id="usage">Usage</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a></span>
@@ -569,7 +590,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="using-basedisplayoptions" class="level3">
 <h3 class="anchored" data-anchor-id="using-basedisplayoptions">using BaseDisplayOptions</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> BaseDisplayOptions <span class="op">=</span>  CommonDisplayFields<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Legacy alias for BaseDisplayOptions.</p>
+<p>Legacy alias for <a href="">BaseDisplayOptions</a>.</p>
 <p><strong>Deprecated</strong>:</p>
 <p>Use <a href="../../api_generated/Classes/structCommonDisplayFields.html">CommonDisplayFields</a> with rfl::Flatten instead</p>
 <p>This alias is provided for backwards compatibility during migration. New code should not use inheritance - use composition with rfl::Flatten.</p>
@@ -580,201 +601,202 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="pp">#ifndef DISPLAY_OPTIONS_HPP</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#define DISPLAY_OPTIONS_HPP</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"CorePlotting/Layout/CanvasCoordinateSystem.hpp"</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"CorePlotting/DataTypes/GlyphStyleData.hpp"</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"CoreUtilities/color.hpp"</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"ImageProcessing/ProcessingOptions.hpp"</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;rfl.hpp&gt;</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;rfl/json.hpp&gt;</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;string&gt;</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co">// ==================== Enums ====================</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> IntervalPlottingStyle <span class="op">{</span></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    Box<span class="op">,</span>  </span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    Border</span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> IntervalLocation <span class="op">{</span></span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    TopLeft<span class="op">,</span></span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    TopRight<span class="op">,</span></span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    BottomLeft<span class="op">,</span></span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    BottomRight</span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="co">// ==================== Default Values ====================</span></span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> DefaultDisplayValues <span class="op">{</span></span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string <span class="at">const</span> COLOR <span class="op">=</span> <span class="st">"#007bff"</span><span class="op">;</span></span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> <span class="at">const</span> ALPHA <span class="op">=</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">;</span></span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> <span class="at">const</span> VISIBLE <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> <span class="at">const</span> POINT_SIZE <span class="op">=</span> <span class="dv">5</span><span class="op">;</span></span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> <span class="at">const</span> LINE_THICKNESS <span class="op">=</span> <span class="dv">2</span><span class="op">;</span></span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> <span class="at">const</span> TENSOR_DISPLAY_CHANNEL <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> <span class="at">const</span> SHOW_POINTS <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>CorePlotting<span class="op">::</span>GlyphType <span class="at">const</span> POINT_MARKER_SHAPE <span class="op">=</span> CorePlotting<span class="op">::</span>GlyphType<span class="op">::</span>Circle<span class="op">;</span></span>
-<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> DEFAULT_COLORS <span class="op">=</span> <span class="op">{</span></span>
-<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>        <span class="st">"#ff0000"</span><span class="op">,</span><span class="co">// Red</span></span>
-<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>        <span class="st">"#008000"</span><span class="op">,</span><span class="co">// Green</span></span>
-<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>        <span class="st">"#00ffff"</span><span class="op">,</span><span class="co">// Cyan</span></span>
-<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>        <span class="st">"#ff00ff"</span><span class="op">,</span><span class="co">// Magenta</span></span>
-<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>        <span class="st">"#ffff00"</span> <span class="co">// Yellow</span></span>
-<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>string getColorForIndex<span class="op">(</span><span class="dt">size_t</span> index<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>index <span class="op">&lt;</span> DEFAULT_COLORS<span class="op">.</span>size<span class="op">())</span> <span class="op">{</span></span>
-<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> DEFAULT_COLORS<span class="op">[</span>index<span class="op">];</span></span>
-<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
-<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> generateRandomColor<span class="op">();</span></span>
-<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace DefaultDisplayValues</span></span>
-<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a><span class="co">// ==================== Common Display Fields ====================</span></span>
-<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> CommonDisplayFields <span class="op">{</span></span>
-<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string hex_color<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>COLOR<span class="op">};</span></span>
-<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> alpha<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>ALPHA<span class="op">};</span>          </span>
-<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> is_visible<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>VISIBLE<span class="op">};</span>    </span>
-<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a><span class="co">// ==================== Display Options (Composition via rfl::Flatten) ====================</span></span>
-<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> MediaDisplayOptions <span class="op">{</span></span>
-<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>    rfl<span class="op">::</span>Flatten<span class="op">&lt;</span>CommonDisplayFields<span class="op">&gt;</span> common<span class="op">;</span></span>
-<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Processing chain active flags (managed at this level, not inside option structs)</span></span>
-<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> contrast_active<span class="op">{</span><span class="kw">false</span><span class="op">};</span>    </span>
-<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> gamma_active<span class="op">{</span><span class="kw">false</span><span class="op">};</span>       </span>
-<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> sharpen_active<span class="op">{</span><span class="kw">false</span><span class="op">};</span>     </span>
-<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> clahe_active<span class="op">{</span><span class="kw">false</span><span class="op">};</span>       </span>
-<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> bilateral_active<span class="op">{</span><span class="kw">false</span><span class="op">};</span>   </span>
-<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> median_active<span class="op">{</span><span class="kw">false</span><span class="op">};</span>      </span>
-<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> magic_eraser_active<span class="op">{</span><span class="kw">false</span><span class="op">};</span></span>
-<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> colormap_active<span class="op">{</span><span class="kw">false</span><span class="op">};</span>    </span>
-<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a>    ContrastOptions contrast_options<span class="op">;</span>     </span>
-<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a>    GammaOptions gamma_options<span class="op">;</span>           </span>
-<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a>    SharpenOptions sharpen_options<span class="op">;</span>       </span>
-<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a>    ClaheOptions clahe_options<span class="op">;</span>           </span>
-<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a>    BilateralOptions bilateral_options<span class="op">;</span>   </span>
-<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a>    MedianOptions median_options<span class="op">;</span>         </span>
-<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a>    MagicEraserParams magic_eraser_params<span class="op">;</span></span>
-<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a>    MagicEraserState magic_eraser_state<span class="op">;</span>  </span>
-<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a>    ColormapOptions colormap_options<span class="op">;</span>     </span>
-<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Convenience accessors for common fields ===</span></span>
-<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="at">const</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> PointDisplayOptions <span class="op">{</span></span>
-<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a>    rfl<span class="op">::</span>Flatten<span class="op">&lt;</span>CommonDisplayFields<span class="op">&gt;</span> common<span class="op">;</span></span>
-<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> point_size<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>POINT_SIZE<span class="op">};</span>                              </span>
-<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>GlyphType marker_shape<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>POINT_MARKER_SHAPE<span class="op">};</span></span>
-<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a>    CoordinateMappingMode coordinate_mapping<span class="op">{</span>CoordinateMappingMode<span class="op">::</span>ScaleToCanvas<span class="op">};</span></span>
-<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Convenience accessors for common fields ===</span></span>
-<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="at">const</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> LineDisplayOptions <span class="op">{</span></span>
-<span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a>    rfl<span class="op">::</span>Flatten<span class="op">&lt;</span>CommonDisplayFields<span class="op">&gt;</span> common<span class="op">;</span></span>
-<span id="cb3-118"><a href="#cb3-118" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-119"><a href="#cb3-119" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> line_thickness<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>LINE_THICKNESS<span class="op">};</span></span>
-<span id="cb3-120"><a href="#cb3-120" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show_points<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>SHOW_POINTS<span class="op">};</span>     </span>
-<span id="cb3-121"><a href="#cb3-121" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> edge_snapping<span class="op">{</span><span class="kw">false</span><span class="op">};</span>                               </span>
-<span id="cb3-122"><a href="#cb3-122" aria-hidden="true" tabindex="-1"></a>    CoordinateMappingMode coordinate_mapping<span class="op">{</span>CoordinateMappingMode<span class="op">::</span>ScaleToCanvas<span class="op">};</span></span>
-<span id="cb3-123"><a href="#cb3-123" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show_position_marker<span class="op">{</span><span class="kw">false</span><span class="op">};</span>                        </span>
-<span id="cb3-124"><a href="#cb3-124" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> position_percentage<span class="op">{</span><span class="dv">20</span><span class="op">};</span>                             </span>
-<span id="cb3-125"><a href="#cb3-125" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show_segment<span class="op">{</span><span class="kw">false</span><span class="op">};</span>                                </span>
-<span id="cb3-126"><a href="#cb3-126" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> segment_start_percentage<span class="op">{</span><span class="dv">0</span><span class="op">};</span>                         </span>
-<span id="cb3-127"><a href="#cb3-127" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> segment_end_percentage<span class="op">{</span><span class="dv">100</span><span class="op">};</span>                         </span>
-<span id="cb3-128"><a href="#cb3-128" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> selected_line_index<span class="op">{-</span><span class="dv">1</span><span class="op">};</span>                             </span>
-<span id="cb3-129"><a href="#cb3-129" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-130"><a href="#cb3-130" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Convenience accessors for common fields ===</span></span>
-<span id="cb3-131"><a href="#cb3-131" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-132"><a href="#cb3-132" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-133"><a href="#cb3-133" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-134"><a href="#cb3-134" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-135"><a href="#cb3-135" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-136"><a href="#cb3-136" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="at">const</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-137"><a href="#cb3-137" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb3-138"><a href="#cb3-138" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-139"><a href="#cb3-139" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> MaskDisplayOptions <span class="op">{</span></span>
-<span id="cb3-140"><a href="#cb3-140" aria-hidden="true" tabindex="-1"></a>    rfl<span class="op">::</span>Flatten<span class="op">&lt;</span>CommonDisplayFields<span class="op">&gt;</span> common<span class="op">;</span></span>
-<span id="cb3-141"><a href="#cb3-141" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show_bounding_box<span class="op">{</span><span class="kw">false</span><span class="op">};</span>  </span>
-<span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show_outline<span class="op">{</span><span class="kw">false</span><span class="op">};</span>       </span>
-<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> use_as_transparency<span class="op">{</span><span class="kw">false</span><span class="op">};</span></span>
-<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a>    CoordinateMappingMode coordinate_mapping<span class="op">{</span>CoordinateMappingMode<span class="op">::</span>ScaleToCanvas<span class="op">};</span></span>
-<span id="cb3-146"><a href="#cb3-146" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-147"><a href="#cb3-147" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Convenience accessors for common fields ===</span></span>
-<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-149"><a href="#cb3-149" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-150"><a href="#cb3-150" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-151"><a href="#cb3-151" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-152"><a href="#cb3-152" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-153"><a href="#cb3-153" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="at">const</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-154"><a href="#cb3-154" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb3-155"><a href="#cb3-155" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-156"><a href="#cb3-156" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> TensorDisplayOptions <span class="op">{</span></span>
-<span id="cb3-157"><a href="#cb3-157" aria-hidden="true" tabindex="-1"></a>    rfl<span class="op">::</span>Flatten<span class="op">&lt;</span>CommonDisplayFields<span class="op">&gt;</span> common<span class="op">;</span></span>
-<span id="cb3-158"><a href="#cb3-158" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-159"><a href="#cb3-159" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> display_channel<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>TENSOR_DISPLAY_CHANNEL<span class="op">};</span></span>
-<span id="cb3-160"><a href="#cb3-160" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-161"><a href="#cb3-161" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Convenience accessors for common fields ===</span></span>
-<span id="cb3-162"><a href="#cb3-162" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-163"><a href="#cb3-163" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-164"><a href="#cb3-164" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-165"><a href="#cb3-165" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-166"><a href="#cb3-166" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-167"><a href="#cb3-167" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="at">const</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-168"><a href="#cb3-168" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb3-169"><a href="#cb3-169" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-170"><a href="#cb3-170" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> DigitalIntervalDisplayOptions <span class="op">{</span></span>
-<span id="cb3-171"><a href="#cb3-171" aria-hidden="true" tabindex="-1"></a>    rfl<span class="op">::</span>Flatten<span class="op">&lt;</span>CommonDisplayFields<span class="op">&gt;</span> common<span class="op">;</span></span>
-<span id="cb3-172"><a href="#cb3-172" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-173"><a href="#cb3-173" aria-hidden="true" tabindex="-1"></a>    IntervalPlottingStyle plotting_style<span class="op">{</span>IntervalPlottingStyle<span class="op">::</span>Box<span class="op">};</span></span>
-<span id="cb3-174"><a href="#cb3-174" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-175"><a href="#cb3-175" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Box style specific options</span></span>
-<span id="cb3-176"><a href="#cb3-176" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> box_size<span class="op">{</span><span class="dv">20</span><span class="op">};</span>                                     </span>
-<span id="cb3-177"><a href="#cb3-177" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame_range<span class="op">{</span><span class="dv">2</span><span class="op">};</span>                                   </span>
-<span id="cb3-178"><a href="#cb3-178" aria-hidden="true" tabindex="-1"></a>    IntervalLocation location<span class="op">{</span>IntervalLocation<span class="op">::</span>TopRight<span class="op">};</span></span>
-<span id="cb3-179"><a href="#cb3-179" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-180"><a href="#cb3-180" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Border style specific options</span></span>
-<span id="cb3-181"><a href="#cb3-181" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> border_thickness<span class="op">{</span><span class="dv">5</span><span class="op">};</span></span>
-<span id="cb3-182"><a href="#cb3-182" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-183"><a href="#cb3-183" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Convenience accessors for common fields ===</span></span>
-<span id="cb3-184"><a href="#cb3-184" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-185"><a href="#cb3-185" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-186"><a href="#cb3-186" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-187"><a href="#cb3-187" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-188"><a href="#cb3-188" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-189"><a href="#cb3-189" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="at">const</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
-<span id="cb3-190"><a href="#cb3-190" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
-<span id="cb3-191"><a href="#cb3-191" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-192"><a href="#cb3-192" aria-hidden="true" tabindex="-1"></a><span class="co">// ==================== Backwards Compatibility ====================</span></span>
-<span id="cb3-193"><a href="#cb3-193" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-194"><a href="#cb3-194" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> BaseDisplayOptions <span class="op">=</span> CommonDisplayFields<span class="op">;</span></span>
-<span id="cb3-195"><a href="#cb3-195" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-196"><a href="#cb3-196" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// DISPLAY_OPTIONS_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"CorePlotting/Layout/CanvasCoordinateSystem.hpp"</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"CorePlotting/DataTypes/GlyphStyleData.hpp"</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"CoreUtilities/color.hpp"</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"ImageProcessing/ProcessingOptions.hpp"</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;rfl.hpp&gt;</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;rfl/json.hpp&gt;</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;string&gt;</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;vector&gt;</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co">// ==================== Enums ====================</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> IntervalPlottingStyle <span class="op">{</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    Box<span class="op">,</span>  </span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    Border</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="kw">enum</span> <span class="kw">class</span> IntervalLocation <span class="op">{</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    TopLeft<span class="op">,</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    TopRight<span class="op">,</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    BottomLeft<span class="op">,</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    BottomRight</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="co">// ==================== Default Values ====================</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="kw">namespace</span> DefaultDisplayValues <span class="op">{</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>string <span class="at">const</span> COLOR <span class="op">=</span> <span class="st">"#007bff"</span><span class="op">;</span></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> <span class="at">const</span> ALPHA <span class="op">=</span> <span class="fl">1.0</span><span class="bu">f</span><span class="op">;</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> <span class="at">const</span> VISIBLE <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> <span class="at">const</span> POINT_SIZE <span class="op">=</span> <span class="dv">5</span><span class="op">;</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> <span class="at">const</span> LINE_THICKNESS <span class="op">=</span> <span class="dv">2</span><span class="op">;</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="dt">int</span> <span class="at">const</span> TENSOR_DISPLAY_CHANNEL <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> <span class="at">const</span> SHOW_POINTS <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>CorePlotting<span class="op">::</span>GlyphType <span class="at">const</span> POINT_MARKER_SHAPE <span class="op">=</span> CorePlotting<span class="op">::</span>GlyphType<span class="op">::</span>Circle<span class="op">;</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">&gt;</span> <span class="at">const</span> DEFAULT_COLORS <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>        <span class="st">"#ff0000"</span><span class="op">,</span><span class="co">// Red</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>        <span class="st">"#008000"</span><span class="op">,</span><span class="co">// Green</span></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>        <span class="st">"#00ffff"</span><span class="op">,</span><span class="co">// Cyan</span></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>        <span class="st">"#ff00ff"</span><span class="op">,</span><span class="co">// Magenta</span></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>        <span class="st">"#ffff00"</span> <span class="co">// Yellow</span></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>string getColorForIndex<span class="op">(</span><span class="dt">size_t</span> index<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="op">(</span>index <span class="op">&lt;</span> DEFAULT_COLORS<span class="op">.</span>size<span class="op">())</span> <span class="op">{</span></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> DEFAULT_COLORS<span class="op">[</span>index<span class="op">];</span></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span> <span class="cf">else</span> <span class="op">{</span></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> generateRandomColor<span class="op">();</span></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a><span class="op">}</span><span class="co">// namespace DefaultDisplayValues</span></span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a><span class="co">// ==================== Common Display Fields ====================</span></span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> CommonDisplayFields <span class="op">{</span></span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>string hex_color<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>COLOR<span class="op">};</span></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>    <span class="dt">float</span> alpha<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>ALPHA<span class="op">};</span>          </span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> is_visible<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>VISIBLE<span class="op">};</span>    </span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a><span class="co">// ==================== Display Options (Composition via rfl::Flatten) ====================</span></span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> MediaDisplayOptions <span class="op">{</span></span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>    rfl<span class="op">::</span>Flatten<span class="op">&lt;</span>CommonDisplayFields<span class="op">&gt;</span> common<span class="op">;</span></span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Processing chain active flags (managed at this level, not inside option structs)</span></span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> contrast_active<span class="op">{</span><span class="kw">false</span><span class="op">};</span>    </span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> gamma_active<span class="op">{</span><span class="kw">false</span><span class="op">};</span>       </span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> sharpen_active<span class="op">{</span><span class="kw">false</span><span class="op">};</span>     </span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> clahe_active<span class="op">{</span><span class="kw">false</span><span class="op">};</span>       </span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> bilateral_active<span class="op">{</span><span class="kw">false</span><span class="op">};</span>   </span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> median_active<span class="op">{</span><span class="kw">false</span><span class="op">};</span>      </span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> magic_eraser_active<span class="op">{</span><span class="kw">false</span><span class="op">};</span></span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> colormap_active<span class="op">{</span><span class="kw">false</span><span class="op">};</span>    </span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a>    ContrastOptions contrast_options<span class="op">;</span>     </span>
+<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a>    GammaOptions gamma_options<span class="op">;</span>           </span>
+<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a>    SharpenOptions sharpen_options<span class="op">;</span>       </span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a>    ClaheOptions clahe_options<span class="op">;</span>           </span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a>    BilateralOptions bilateral_options<span class="op">;</span>   </span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a>    MedianOptions median_options<span class="op">;</span>         </span>
+<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a>    MagicEraserParams magic_eraser_params<span class="op">;</span></span>
+<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a>    MagicEraserState magic_eraser_state<span class="op">;</span>  </span>
+<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a>    ColormapOptions colormap_options<span class="op">;</span>     </span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Convenience accessors for common fields ===</span></span>
+<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="at">const</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> PointDisplayOptions <span class="op">{</span></span>
+<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a>    rfl<span class="op">::</span>Flatten<span class="op">&lt;</span>CommonDisplayFields<span class="op">&gt;</span> common<span class="op">;</span></span>
+<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> point_size<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>POINT_SIZE<span class="op">};</span>                              </span>
+<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a>    CorePlotting<span class="op">::</span>GlyphType marker_shape<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>POINT_MARKER_SHAPE<span class="op">};</span></span>
+<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a>    CoordinateMappingMode coordinate_mapping<span class="op">{</span>CoordinateMappingMode<span class="op">::</span>ScaleToCanvas<span class="op">};</span></span>
+<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Convenience accessors for common fields ===</span></span>
+<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="at">const</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> LineDisplayOptions <span class="op">{</span></span>
+<span id="cb3-118"><a href="#cb3-118" aria-hidden="true" tabindex="-1"></a>    rfl<span class="op">::</span>Flatten<span class="op">&lt;</span>CommonDisplayFields<span class="op">&gt;</span> common<span class="op">;</span></span>
+<span id="cb3-119"><a href="#cb3-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-120"><a href="#cb3-120" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> line_thickness<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>LINE_THICKNESS<span class="op">};</span></span>
+<span id="cb3-121"><a href="#cb3-121" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show_points<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>SHOW_POINTS<span class="op">};</span>     </span>
+<span id="cb3-122"><a href="#cb3-122" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> edge_snapping<span class="op">{</span><span class="kw">false</span><span class="op">};</span>                               </span>
+<span id="cb3-123"><a href="#cb3-123" aria-hidden="true" tabindex="-1"></a>    CoordinateMappingMode coordinate_mapping<span class="op">{</span>CoordinateMappingMode<span class="op">::</span>ScaleToCanvas<span class="op">};</span></span>
+<span id="cb3-124"><a href="#cb3-124" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show_position_marker<span class="op">{</span><span class="kw">false</span><span class="op">};</span>                        </span>
+<span id="cb3-125"><a href="#cb3-125" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> position_percentage<span class="op">{</span><span class="dv">20</span><span class="op">};</span>                             </span>
+<span id="cb3-126"><a href="#cb3-126" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show_segment<span class="op">{</span><span class="kw">false</span><span class="op">};</span>                                </span>
+<span id="cb3-127"><a href="#cb3-127" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> segment_start_percentage<span class="op">{</span><span class="dv">0</span><span class="op">};</span>                         </span>
+<span id="cb3-128"><a href="#cb3-128" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> segment_end_percentage<span class="op">{</span><span class="dv">100</span><span class="op">};</span>                         </span>
+<span id="cb3-129"><a href="#cb3-129" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> selected_line_index<span class="op">{-</span><span class="dv">1</span><span class="op">};</span>                             </span>
+<span id="cb3-130"><a href="#cb3-130" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-131"><a href="#cb3-131" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Convenience accessors for common fields ===</span></span>
+<span id="cb3-132"><a href="#cb3-132" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-133"><a href="#cb3-133" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-134"><a href="#cb3-134" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-135"><a href="#cb3-135" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-136"><a href="#cb3-136" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-137"><a href="#cb3-137" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="at">const</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-138"><a href="#cb3-138" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb3-139"><a href="#cb3-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-140"><a href="#cb3-140" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> MaskDisplayOptions <span class="op">{</span></span>
+<span id="cb3-141"><a href="#cb3-141" aria-hidden="true" tabindex="-1"></a>    rfl<span class="op">::</span>Flatten<span class="op">&lt;</span>CommonDisplayFields<span class="op">&gt;</span> common<span class="op">;</span></span>
+<span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show_bounding_box<span class="op">{</span><span class="kw">false</span><span class="op">};</span>  </span>
+<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> show_outline<span class="op">{</span><span class="kw">false</span><span class="op">};</span>       </span>
+<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> use_as_transparency<span class="op">{</span><span class="kw">false</span><span class="op">};</span></span>
+<span id="cb3-146"><a href="#cb3-146" aria-hidden="true" tabindex="-1"></a>    CoordinateMappingMode coordinate_mapping<span class="op">{</span>CoordinateMappingMode<span class="op">::</span>ScaleToCanvas<span class="op">};</span></span>
+<span id="cb3-147"><a href="#cb3-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Convenience accessors for common fields ===</span></span>
+<span id="cb3-149"><a href="#cb3-149" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-150"><a href="#cb3-150" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-151"><a href="#cb3-151" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-152"><a href="#cb3-152" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-153"><a href="#cb3-153" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-154"><a href="#cb3-154" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="at">const</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-155"><a href="#cb3-155" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb3-156"><a href="#cb3-156" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-157"><a href="#cb3-157" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> TensorDisplayOptions <span class="op">{</span></span>
+<span id="cb3-158"><a href="#cb3-158" aria-hidden="true" tabindex="-1"></a>    rfl<span class="op">::</span>Flatten<span class="op">&lt;</span>CommonDisplayFields<span class="op">&gt;</span> common<span class="op">;</span></span>
+<span id="cb3-159"><a href="#cb3-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-160"><a href="#cb3-160" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> display_channel<span class="op">{</span>DefaultDisplayValues<span class="op">::</span>TENSOR_DISPLAY_CHANNEL<span class="op">};</span></span>
+<span id="cb3-161"><a href="#cb3-161" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-162"><a href="#cb3-162" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Convenience accessors for common fields ===</span></span>
+<span id="cb3-163"><a href="#cb3-163" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-164"><a href="#cb3-164" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-165"><a href="#cb3-165" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-166"><a href="#cb3-166" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-167"><a href="#cb3-167" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-168"><a href="#cb3-168" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="at">const</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-169"><a href="#cb3-169" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb3-170"><a href="#cb3-170" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-171"><a href="#cb3-171" aria-hidden="true" tabindex="-1"></a><span class="kw">struct</span> DigitalIntervalDisplayOptions <span class="op">{</span></span>
+<span id="cb3-172"><a href="#cb3-172" aria-hidden="true" tabindex="-1"></a>    rfl<span class="op">::</span>Flatten<span class="op">&lt;</span>CommonDisplayFields<span class="op">&gt;</span> common<span class="op">;</span></span>
+<span id="cb3-173"><a href="#cb3-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-174"><a href="#cb3-174" aria-hidden="true" tabindex="-1"></a>    IntervalPlottingStyle plotting_style<span class="op">{</span>IntervalPlottingStyle<span class="op">::</span>Box<span class="op">};</span></span>
+<span id="cb3-175"><a href="#cb3-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-176"><a href="#cb3-176" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Box style specific options</span></span>
+<span id="cb3-177"><a href="#cb3-177" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> box_size<span class="op">{</span><span class="dv">20</span><span class="op">};</span>                                     </span>
+<span id="cb3-178"><a href="#cb3-178" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> frame_range<span class="op">{</span><span class="dv">2</span><span class="op">};</span>                                   </span>
+<span id="cb3-179"><a href="#cb3-179" aria-hidden="true" tabindex="-1"></a>    IntervalLocation location<span class="op">{</span>IntervalLocation<span class="op">::</span>TopRight<span class="op">};</span></span>
+<span id="cb3-180"><a href="#cb3-180" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-181"><a href="#cb3-181" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Border style specific options</span></span>
+<span id="cb3-182"><a href="#cb3-182" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> border_thickness<span class="op">{</span><span class="dv">5</span><span class="op">};</span></span>
+<span id="cb3-183"><a href="#cb3-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-184"><a href="#cb3-184" aria-hidden="true" tabindex="-1"></a>    <span class="co">// === Convenience accessors for common fields ===</span></span>
+<span id="cb3-185"><a href="#cb3-185" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-186"><a href="#cb3-186" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> hex_color<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>hex_color<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-187"><a href="#cb3-187" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-188"><a href="#cb3-188" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">float</span> <span class="at">const</span> <span class="op">&amp;</span> alpha<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>alpha<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-189"><a href="#cb3-189" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-190"><a href="#cb3-190" aria-hidden="true" tabindex="-1"></a>    <span class="op">[[</span><span class="at">nodiscard</span><span class="op">]]</span> <span class="dt">bool</span> <span class="at">const</span> <span class="op">&amp;</span> is_visible<span class="op">()</span> <span class="at">const</span> <span class="op">{</span> <span class="cf">return</span> common<span class="op">.</span>get<span class="op">().</span>is_visible<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-191"><a href="#cb3-191" aria-hidden="true" tabindex="-1"></a><span class="op">};</span></span>
+<span id="cb3-192"><a href="#cb3-192" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-193"><a href="#cb3-193" aria-hidden="true" tabindex="-1"></a><span class="co">// ==================== Backwards Compatibility ====================</span></span>
+<span id="cb3-194"><a href="#cb3-194" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-195"><a href="#cb3-195" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> BaseDisplayOptions <span class="op">=</span> CommonDisplayFields<span class="op">;</span></span>
+<span id="cb3-196"><a href="#cb3-196" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-197"><a href="#cb3-197" aria-hidden="true" tabindex="-1"></a><span class="pp">#endif</span><span class="co">// DISPLAY_OPTIONS_HPP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-10-09 at 13:36:37 +0000</p>
+<p>Updated on 2026-11-13 at 20:25:45 +0000</p>
 
 
 </section>
@@ -785,15 +807,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -872,7 +929,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -881,8 +939,69 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -896,6 +1015,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -1058,44 +1178,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -1193,6 +1323,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       }
     }
   });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
 

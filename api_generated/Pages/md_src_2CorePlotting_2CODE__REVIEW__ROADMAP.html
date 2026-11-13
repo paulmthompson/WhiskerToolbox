@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -72,18 +72,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-0c66bec081e5215138e9fd61e9c23ef8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -116,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -139,6 +140,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -168,13 +170,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -268,6 +276,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -282,15 +291,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -334,8 +342,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
+            <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -344,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
@@ -395,7 +404,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -430,10 +439,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Issue</strong>: Range-based methods (<code>addGlyphs</code>, <code>addRectangles</code>) populate <code>_pending_spatial_inserts</code>, but low-level batch methods (<code>addGlyphBatch</code>, <code>addPolyLineBatch</code>, <code>addRectangleBatch</code>) do not.</p>
 <p><strong>Consequence</strong>: Manual batches (e.g., from <code>GapDetector</code>) bypass the pending queue. When <code>build()</code> calls <code>buildSpatialIndexFromPending()</code>, these batches aren’t indexed.</p>
 <p><strong>Action Items</strong>:</p>
-<ul class="task-list">
-<li><label><input type="checkbox">Either: Update <code>addGlyphBatch</code> / <code>addRectangleBatch</code> to also populate <code>_pending_spatial_inserts</code></label></li>
-<li><label><input type="checkbox">Or: Update <code>build()</code> to call <code>buildSpatialIndex()</code> which iterates all batches, not just pending inserts</label></li>
-<li><label><input type="checkbox">Document clearly which methods auto-populate spatial index</label></li>
+<ul>
+<li><p>Either: Update <code>addGlyphBatch</code> / <code>addRectangleBatch</code> to also populate <code>_pending_spatial_inserts</code></p></li>
+<li><p>Or: Update <code>build()</code> to call <code>buildSpatialIndex()</code> which iterates all batches, not just pending inserts</p></li>
+<li><p>Document clearly which methods auto-populate spatial index</p></li>
 </ul>
 <hr>
 </section>
@@ -457,11 +466,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Action Items</strong>:</p>
-<ul class="task-list">
-<li><label><input type="checkbox">Remove <code>_pending_spatial_inserts</code> vector</label></li>
-<li><label><input type="checkbox">Initialize <a href="../../api_generated/Classes/classQuadTree.html">QuadTree</a> in <code>setBounds()</code></label></li>
-<li><label><input type="checkbox">Insert directly into <a href="../../api_generated/Classes/classQuadTree.html">QuadTree</a> in <code>addGlyphs</code> and <code>addRectangles</code></label></li>
-<li><label><input type="checkbox">Remove <code>buildSpatialIndexFromPending()</code> helper</label></li>
+<ul>
+<li><p>Remove <code>_pending_spatial_inserts</code> vector</p></li>
+<li><p>Initialize <a href="../../api_generated/Classes/classQuadTree.html">QuadTree</a> in <code>setBounds()</code></p></li>
+<li><p>Insert directly into <a href="../../api_generated/Classes/classQuadTree.html">QuadTree</a> in <code>addGlyphs</code> and <code>addRectangles</code></p></li>
+<li><p>Remove <code>buildSpatialIndexFromPending()</code> helper</p></li>
 </ul>
 <hr>
 </section>
@@ -473,9 +482,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><code>
 **Action Items**:
 
-* [ ] Rewrite `transform()` to use `segmentByGaps` template logic directly on `[AnalogTimeSeries](/api_generated/Classes/classAnalogTimeSeries.md)` view
-* [ ] Remove intermediate `std::vector` allocations
-* [ ] Consider keeping vector overload only for unit testing
+* Rewrite `transform()` to use `segmentByGaps` template logic directly on `[AnalogTimeSeries](/api_generated/Classes/classAnalogTimeSeries.md)` view
+
+
+
+* Remove intermediate `std::vector` allocations
+
+
+
+* Consider keeping vector overload only for unit testing
 
 
 
@@ -493,10 +508,10 @@ for (auto const &amp; v : vertices) {
     batch.vertices.push_back(v.y);
 }</code></pre>
 <p><strong>Action Items</strong>:</p>
-<ul class="task-list">
-<li><label><input type="checkbox">Check if range satisfies <code>std::ranges::sized_range</code></label></li>
-<li><label><input type="checkbox">If so, call <code>batch.vertices.reserve(batch.vertices.size() + std::ranges::size(vertices) * 2)</code> before loop</label></li>
-<li><label><input type="checkbox">Apply same optimization to <code>addPolyLines</code></label></li>
+<ul>
+<li><p>Check if range satisfies <code>std::ranges::sized_range</code></p></li>
+<li><p>If so, call <code>batch.vertices.reserve(batch.vertices.size() + std::ranges::size(vertices) * 2)</code> before loop</p></li>
+<li><p>Apply same optimization to <code>addPolyLines</code></p></li>
 </ul>
 <hr>
 </section>
@@ -505,9 +520,9 @@ for (auto const &amp; v : vertices) {
 <p><strong>File</strong>: <a href="Mappers/RasterMapper.hpp#L126">Mappers/RasterMapper.hpp</a></p>
 <p><strong>Issue</strong>: <code>mapTrials</code> returns <code>std::vector&lt;MappedElement&gt;</code>, forcing evaluation despite <code>mapEventsRelative</code> already being a view.</p>
 <p><strong>Action Items</strong>:</p>
-<ul class="task-list">
-<li><label><input type="checkbox">Use <code>std::ranges::join</code> or coroutine generator to make this lazy</label></li>
-<li><label><input type="checkbox">Maintain ownership semantics as needed</label></li>
+<ul>
+<li><p>Use <code>std::ranges::join</code> or coroutine generator to make this lazy</p></li>
+<li><p>Maintain ownership semantics as needed</p></li>
 </ul>
 <hr>
 </section>
@@ -524,10 +539,19 @@ for (auto const &amp; v : vertices) {
 
 **Action Items**:
 
-* [ ] Pass series layout bounds to controller, OR
-* [ ] Add `_config.y_min` / `_config.y_max` fields, OR
-* [ ] Have PreviewRenderer ignore controller's Y and draw full-height
-* [ ] Update `start()` method to accept series Y position
+* Pass series layout bounds to controller, OR
+
+
+
+* Add `_config.y_min` / `_config.y_max` fields, OR
+
+
+
+* Have PreviewRenderer ignore controller's Y and draw full-height
+
+
+
+* Update `start()` method to accept series Y position
 
 
 
@@ -543,9 +567,9 @@ for (auto const &amp; v : vertices) {
 float dist = y_dist;  // For intervals, X is always inside</code></pre>
 <p><strong>Problem</strong>: For overlapping intervals on the same row, X distance matters for determining which interval was clicked (especially at edges or with transparency).</p>
 <p><strong>Action Items</strong>:</p>
-<ul class="task-list">
-<li><label><input type="checkbox">If <code>y_dist == 0</code> (inside Y), factor in distance to interval center in X</label></li>
-<li><label><input type="checkbox">Or strictly return 0 for “most centered” prioritization</label></li>
+<ul>
+<li><p>If <code>y_dist == 0</code> (inside Y), factor in distance to interval center in X</p></li>
+<li><p>Or strictly return 0 for “most centered” prioritization</p></li>
 </ul>
 <hr>
 </section>
@@ -554,10 +578,10 @@ float dist = y_dist;  // For intervals, X is always inside</code></pre>
 <p><strong>File</strong>: <a href="Mappers/RasterMapper.hpp#L57-L60">Mappers/RasterMapper.hpp</a></p>
 <p><strong>Issue</strong>: <code>mapEventsRelative</code> outputs X as relative time, but <code>SceneHitTester</code> and <code>InverseTransform::worldXToTimeIndex</code> assume absolute time.</p>
 <p><strong>Action Items</strong>:</p>
-<ul class="task-list">
-<li><label><input type="checkbox">Document that RasterMapper outputs require paired ViewState acknowledging relative X-axis</label></li>
-<li><label><input type="checkbox">Or distinguish “Time Space” from “World Space” in <code>HitTestResult</code></label></li>
-<li><label><input type="checkbox">Add documentation/comments warning about coordinate system assumptions</label></li>
+<ul>
+<li><p>Document that RasterMapper outputs require paired ViewState acknowledging relative X-axis</p></li>
+<li><p>Or distinguish “Time Space” from “World Space” in <code>HitTestResult</code></p></li>
+<li><p>Add documentation/comments warning about coordinate system assumptions</p></li>
 </ul>
 <hr>
 </section>
@@ -570,10 +594,10 @@ float dist = y_dist;  // For intervals, X is always inside</code></pre>
 <p><strong>File</strong>: <a href="Mappers/MappedLineView.hpp#L73-L110">Mappers/MappedLineView.hpp</a></p>
 <p><strong>Issue</strong>: <code>SpanLineView</code>, <code>OwningLineView</code>, and generic <code>MappedLineView</code> all exist. Most mappers return <code>OwningLineView</code> or lazy ranges.</p>
 <p><strong>Action Items</strong>:</p>
-<ul class="task-list">
-<li><label><input type="checkbox">Audit codebase for <code>SpanLineView</code> usage</label></li>
-<li><label><input type="checkbox">If unused by <code>SceneBuilder</code> or any consumer, remove to reduce API surface</label></li>
-<li><label><input type="checkbox">Document remaining line view types and when to use each</label></li>
+<ul>
+<li><p>Audit codebase for <code>SpanLineView</code> usage</p></li>
+<li><p>If unused by <code>SceneBuilder</code> or any consumer, remove to reduce API surface</p></li>
+<li><p>Document remaining line view types and when to use each</p></li>
 </ul>
 <hr>
 </section>
@@ -582,10 +606,10 @@ float dist = y_dist;  // For intervals, X is always inside</code></pre>
 <p><strong>File</strong>: Interaction/ROADMAP.md</p>
 <p><strong>Issue</strong>: References “Phase 5” and “Phase 6” which may be outdated.</p>
 <p><strong>Action Items</strong>:</p>
-<ul class="task-list">
-<li><label><input type="checkbox">Review if roadmap is current</label></li>
-<li><label><input type="checkbox">Update to reflect current state, OR</label></li>
-<li><label><input type="checkbox">Remove if no longer relevant</label></li>
+<ul>
+<li><p>Review if roadmap is current</p></li>
+<li><p>Update to reflect current state, OR</p></li>
+<li><p>Remove if no longer relevant</p></li>
 </ul>
 <hr>
 </section>
@@ -607,10 +631,10 @@ float dist = y_dist;  // For intervals, X is always inside</code></pre>
 </ol>
 <p><strong>Note</strong>: Since OpenGL requires contiguous buffers for <code>glMultiDrawArrays</code>, some materialization is pragmatically necessary. The goal is to decouple from rendering concerns.</p>
 <p><strong>Action Items</strong>:</p>
-<ul class="task-list">
-<li><label><input type="checkbox">Change <code>GapDetector::transform()</code> to return raw geometry (e.g., <code>SegmentedLineData</code> struct with vertices + segment indices)</label></li>
-<li><label><input type="checkbox">Let <code>SceneBuilder</code> convert to <code>RenderablePolyLineBatch</code></label></li>
-<li><label><input type="checkbox">Or implement <code>gap_view</code> range adaptor for full lazy evaluation</label></li>
+<ul>
+<li><p>Change <code>GapDetector::transform()</code> to return raw geometry (e.g., <code>SegmentedLineData</code> struct with vertices + segment indices)</p></li>
+<li><p>Let <code>SceneBuilder</code> convert to <code>RenderablePolyLineBatch</code></p></li>
+<li><p>Or implement <code>gap_view</code> range adaptor for full lazy evaluation</p></li>
 </ul>
 <hr>
 </section>
@@ -618,13 +642,13 @@ float dist = y_dist;  // For intervals, X is always inside</code></pre>
 <h2 class="anchored" data-anchor-id="stronger-coordinate-typing">5.2 Stronger Coordinate Typing</h2>
 <p><strong>Issue</strong>: <code>float world_x</code> vs <code>float canvas_x</code> is easy to mix up despite <code>[InverseTransform.hpp](/api_generated/Files/InverseTransform_8hpp.md#file-inversetransform.hpp)</code> helpers.</p>
 <p><strong>Action Items</strong>:</p>
-<ul class="task-list">
-<li><label><input type="checkbox">Consider strong typedefs or simple structs: ```cpp</label></li>
+<ul>
+<li>Consider strong typedefs or simple structs: ```cpp</li>
 </ul>
 <p>struct WorldCoord { float x, y; }; struct CanvasCoord { float x, y; }; struct NDCCoord { float x, y; }; ```</p>
-<ul class="task-list">
-<li><label><input type="checkbox">Update function signatures to use typed coordinates</label></li>
-<li><label><input type="checkbox">Evaluate compile-time overhead vs.&nbsp;safety benefit</label></li>
+<ul>
+<li><p>Update function signatures to use typed coordinates</p></li>
+<li><p>Evaluate compile-time overhead vs.&nbsp;safety benefit</p></li>
 </ul>
 <hr>
 </section>
@@ -632,13 +656,13 @@ float dist = y_dist;  // For intervals, X is always inside</code></pre>
 <h2 class="anchored" data-anchor-id="clearer-naming-in-layouttransformserieslayout">5.3 Clearer Naming in LayoutTransform/SeriesLayout</h2>
 <p><strong>Issue</strong>: <code>SeriesLayout::y_transform</code> naming is ambiguous - is it Data→World or Normalized→World?</p>
 <p><strong>Action Items</strong>:</p>
-<ul class="task-list">
-<li><label><input type="checkbox">Consider renaming helpers in <code>NormalizationHelpers</code>:</label>
+<ul>
+<li>Consider renaming helpers in <code>NormalizationHelpers</code>:
 <ul>
 <li><code>createDataToNormalized()</code></li>
 <li><code>createNormalizedToWorld()</code></li>
 </ul></li>
-<li><label><input type="checkbox">Add more explicit documentation about transform composition chain</label></li>
+<li>Add more explicit documentation about transform composition chain</li>
 </ul>
 <hr>
 </section>
@@ -647,10 +671,10 @@ float dist = y_dist;  // For intervals, X is always inside</code></pre>
 <p><strong>File</strong>: <a href="Layout/LayoutTransform.hpp">Layout/LayoutTransform.hpp</a></p>
 <p><strong>Issue</strong>: <code>[SeriesMatrices.cpp](/api_generated/Files/SeriesMatrices_8cpp.md#file-seriesmatrices.cpp)</code> has excellent validation (<code>validateOrthoParams</code>). Similar validation should exist for <code>LayoutTransform</code>.</p>
 <p><strong>Action Items</strong>:</p>
-<ul class="task-list">
-<li><label><input type="checkbox">Add <code>validateLayoutTransform()</code> to ensure gain is never NaN or Infinity</label></li>
-<li><label><input type="checkbox">Call during <code>compose()</code> or <code>apply()</code> in debug builds</label></li>
-<li><label><input type="checkbox">Prevent bad values from propagating through layout engine</label></li>
+<ul>
+<li><p>Add <code>validateLayoutTransform()</code> to ensure gain is never NaN or Infinity</p></li>
+<li><p>Call during <code>compose()</code> or <code>apply()</code> in debug builds</p></li>
+<li><p>Prevent bad values from propagating through layout engine</p></li>
 </ul>
 <hr>
 </section>
@@ -665,10 +689,10 @@ float dist = y_dist;  // For intervals, X is always inside</code></pre>
 <li><a href="Layout/LayoutTransform.hpp">Layout/LayoutTransform.hpp</a></li>
 </ul>
 <p><strong>Action Items</strong>:</p>
-<ul class="task-list">
-<li><label><input type="checkbox">Mark <code>NormalizationHelpers</code> functions as <code>constexpr</code> where applicable</label></li>
-<li><label><input type="checkbox">Mark <code>LayoutTransform</code> methods as <code>constexpr</code> where applicable</label></li>
-<li><label><input type="checkbox">Verify no runtime-only operations prevent constexpr</label></li>
+<ul>
+<li><p>Mark <code>NormalizationHelpers</code> functions as <code>constexpr</code> where applicable</p></li>
+<li><p>Mark <code>LayoutTransform</code> methods as <code>constexpr</code> where applicable</p></li>
+<li><p>Verify no runtime-only operations prevent constexpr</p></li>
 </ul>
 <hr>
 </section>
@@ -676,9 +700,9 @@ float dist = y_dist;  // For intervals, X is always inside</code></pre>
 <h2 class="anchored" data-anchor-id="verify-stdabs-include">6.2 Verify std::abs Include</h2>
 <p><strong>File</strong>: <a href="CoordinateTransform/InverseTransform.cpp">CoordinateTransform/InverseTransform.cpp</a></p>
 <p><strong>Action Items</strong>:</p>
-<ul class="task-list">
-<li><label><input type="checkbox">Verify <code>&lt;cmath&gt;</code> is included for <code>std::abs</code> on floats</label></li>
-<li><label><input type="checkbox">Ensure correct overload resolution (float vs int)</label></li>
+<ul>
+<li><p>Verify <code>&lt;cmath&gt;</code> is included for <code>std::abs</code> on floats</p></li>
+<li><p>Ensure correct overload resolution (float vs int)</p></li>
 </ul>
 <hr>
 </section>
@@ -687,10 +711,10 @@ float dist = y_dist;  // For intervals, X is always inside</code></pre>
 <p><strong>File</strong>: <a href="../../api_generated/Pages/md_src_2CorePlotting_2DESIGN.html#page-md-src-2coreplotting-2design">DESIGN.md</a></p>
 <p><strong>Issue</strong>: Design doc mentions “Compute shader for dense line data” but <code>RenderablePolyLineBatch</code> uses <code>std::vector</code>.</p>
 <p><strong>Action Items</strong>:</p>
-<ul class="task-list">
-<li><label><input type="checkbox">If compute shaders are planned, ensure alignment (std430 layout, <code>glm::vec4</code> padding)</label></li>
-<li><label><input type="checkbox">Update DESIGN.md to reflect current implementation state</label></li>
-<li><label><input type="checkbox">Or add tracking issue for compute shader implementation</label></li>
+<ul>
+<li><p>If compute shaders are planned, ensure alignment (std430 layout, <code>glm::vec4</code> padding)</p></li>
+<li><p>Update DESIGN.md to reflect current implementation state</p></li>
+<li><p>Or add tracking issue for compute shader implementation</p></li>
 </ul>
 <hr>
 </section>
@@ -702,7 +726,7 @@ float dist = y_dist;  // For intervals, X is always inside</code></pre>
 <ol type="1">
 <li>Floating point precision fix (1.1)</li>
 <li>Spatial index synchronization (1.2)</li>
-<li>RectangleInteractionController constraint logic (3.1)</li>
+<li><a href="../../api_generated/Classes/classRectangleInteractionController.html">RectangleInteractionController</a> constraint logic (3.1)</li>
 </ol>
 </section>
 <section id="phase-2-performance" class="level2">
@@ -818,7 +842,7 @@ float dist = y_dist;  // For intervals, X is always inside</code></pre>
 </tbody>
 </table>
 <hr>
-<p>Updated on 2026-10-09 at 13:36:38 +0000</p>
+<p>Updated on 2026-11-13 at 20:25:46 +0000</p>
 
 
 </section>
@@ -828,15 +852,50 @@ float dist = y_dist;  // For intervals, X is always inside</code></pre>
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -915,7 +974,8 @@ float dist = y_dist;  // For intervals, X is always inside</code></pre>
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -924,8 +984,69 @@ float dist = y_dist;  // For intervals, X is always inside</code></pre>
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -939,6 +1060,7 @@ float dist = y_dist;  // For intervals, X is always inside</code></pre>
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -1101,44 +1223,54 @@ float dist = y_dist;  // For intervals, X is always inside</code></pre>
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -1236,6 +1368,9 @@ float dist = y_dist;  // For intervals, X is always inside</code></pre>
       }
     }
   });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
 

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -72,18 +72,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-0c66bec081e5215138e9fd61e9c23ef8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -116,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -139,6 +140,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -168,13 +170,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -268,6 +276,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -282,15 +291,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -334,8 +342,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
+            <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -344,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
@@ -352,8 +361,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#public-functions" id="toc-public-functions" class="nav-link" data-scroll-target="#public-functions">Public Functions</a></li>
   <li><a href="#detailed-description" id="toc-detailed-description" class="nav-link" data-scroll-target="#detailed-description">Detailed Description</a></li>
+  </ul></li>
+  <li><a href="#section" id="toc-section" class="nav-link" data-scroll-target="#section"></a>
+  <ul class="collapse">
   <li><a href="#supervised-workflow" id="toc-supervised-workflow" class="nav-link" data-scroll-target="#supervised-workflow">Supervised workflow</a></li>
+  </ul></li>
+  <li><a href="#section-1" id="toc-section-1" class="nav-link" data-scroll-target="#section-1"></a>
+  <ul class="collapse">
   <li><a href="#unsupervised-workflow" id="toc-unsupervised-workflow" class="nav-link" data-scroll-target="#unsupervised-workflow">Unsupervised workflow</a></li>
+  </ul></li>
+  <li><a href="#section-2" id="toc-section-2" class="nav-link" data-scroll-target="#section-2"></a>
+  <ul class="collapse">
   <li><a href="#lifecycle" id="toc-lifecycle" class="nav-link" data-scroll-target="#lifecycle">Lifecycle</a></li>
   <li><a href="#public-functions-documentation" id="toc-public-functions-documentation" class="nav-link" data-scroll-target="#public-functions-documentation">Public Functions Documentation</a>
   <ul class="collapse">
@@ -383,7 +401,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -426,7 +444,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>virtual std::string</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-getname">getName</a></strong>() const =0<br>Unique human-readable name for this model (e.g., “Random Forest”)</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-getname">getName</a></strong>() const =0<br>Unique human-readable name for this model (e.g., “Random Forest”).</td>
 </tr>
 <tr class="odd">
 <td>virtual <a href="../../api_generated/Namespaces/namespaceMLCore.html#enum-mltasktype">MLTaskType</a></td>
@@ -474,7 +492,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>virtual bool</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-fit">fit</a></strong>(<a href="../../api_generated/Namespaces/namespacearma.html#using-mat">arma::mat</a> const &amp; features, <a href="../../api_generated/Classes/structMLCore_1_1MLModelParametersBase.html">MLModelParametersBase</a> const * params)<br>Fit the model to unlabeled data (unsupervised)</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-fit">fit</a></strong>(<a href="../../api_generated/Namespaces/namespacearma.html#using-mat">arma::mat</a> const &amp; features, <a href="../../api_generated/Classes/structMLCore_1_1MLModelParametersBase.html">MLModelParametersBase</a> const * params)<br>Fit the model to unlabeled data (unsupervised).</td>
 </tr>
 <tr class="odd">
 <td>virtual bool</td>
@@ -490,11 +508,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>virtual bool</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-istrained">isTrained</a></strong>() const =0<br>Whether the model has been trained (supervised) or fit (unsupervised)</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-istrained">isTrained</a></strong>() const =0<br>Whether the model has been trained (supervised) or fit (unsupervised).</td>
 </tr>
 <tr class="odd">
 <td>virtual std::size_t</td>
-<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-numclasses">numClasses</a></strong>() const<br>Number of classes (supervised) or clusters (unsupervised)</td>
+<td><strong><a href="../../api_generated/Classes/classMLCore_1_1MLModelOperation.html#function-numclasses">numClasses</a></strong>() const<br>Number of classes (supervised) or clusters (unsupervised).</td>
 </tr>
 <tr class="even">
 <td>virtual std::size_t</td>
@@ -509,6 +527,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Abstract base for all ML model operations.</p>
 <p>A model operation encapsulates a single ML algorithm. It can be trained (supervised) or fit (unsupervised), then used for prediction or cluster assignment. Each operation declares its task type so the registry can categorize it.</p>
 </section>
+</section>
+<section id="section" class="level1">
+<h1></h1>
 <section id="supervised-workflow" class="level2">
 <h2 class="anchored" data-anchor-id="supervised-workflow">Supervised workflow</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>op<span class="op">-&gt;</span>train<span class="op">(</span>features<span class="op">,</span> labels<span class="op">,</span> params<span class="op">);</span></span>
@@ -516,11 +537,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">// Optional:</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>op<span class="op">-&gt;</span>predictProbabilities<span class="op">(</span>features<span class="op">,</span> probabilities<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
+</section>
+<section id="section-1" class="level1">
+<h1></h1>
 <section id="unsupervised-workflow" class="level2">
 <h2 class="anchored" data-anchor-id="unsupervised-workflow">Unsupervised workflow</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>op<span class="op">-&gt;</span>fit<span class="op">(</span>features<span class="op">,</span> params<span class="op">);</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>op<span class="op">-&gt;</span>assignClusters<span class="op">(</span>features<span class="op">,</span> assignments<span class="op">);</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
+</section>
+<section id="section-2" class="level1">
+<h1></h1>
 <section id="lifecycle" class="level2">
 <h2 class="anchored" data-anchor-id="lifecycle">Lifecycle</h2>
 <ol type="1">
@@ -540,22 +567,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-getname" class="level3">
 <h3 class="anchored" data-anchor-id="function-getname">function getName</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>string getName<span class="op">()</span> <span class="at">const</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Unique human-readable name for this model (e.g., “Random Forest”)</p>
-<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classMLCore_1_1HiddenMarkovModelOperation.html#function-getname">MLCore::HiddenMarkovModelOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1LARSProjectionOperation.html#function-getname">MLCore::LARSProjectionOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-getname">MLCore::LogisticRegressionOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogitProjectionOperation.html#function-getname">MLCore::LogitProjectionOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1NaiveBayesOperation.html#function-getname">MLCore::NaiveBayesOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1RandomForestOperation.html#function-getname">MLCore::RandomForestOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1SoftmaxRegressionOperation.html#function-getname">MLCore::SoftmaxRegressionOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedPCAOperation.html#function-getname">MLCore::SupervisedPCAOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedRobustPCAOperation.html#function-getname">MLCore::SupervisedRobustPCAOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1DBSCANOperation.html#function-getname">MLCore::DBSCANOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1GaussianMixtureOperation.html#function-getname">MLCore::GaussianMixtureOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1ICAOperation.html#function-getname">MLCore::ICAOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1KMeansOperation.html#function-getname">MLCore::KMeansOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1PCAOperation.html#function-getname">MLCore::PCAOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1RobustPCAOperation.html#function-getname">MLCore::RobustPCAOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1TSNEOperation.html#function-getname">MLCore::TSNEOperation::getName</a></p>
+<p>Unique human-readable name for this model (e.g., “Random Forest”).</p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classMLCore_1_1DBSCANOperation.html#function-getname">MLCore::DBSCANOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1GaussianMixtureOperation.html#function-getname">MLCore::GaussianMixtureOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1HiddenMarkovModelOperation.html#function-getname">MLCore::HiddenMarkovModelOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1ICAOperation.html#function-getname">MLCore::ICAOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1KMeansOperation.html#function-getname">MLCore::KMeansOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1LARSProjectionOperation.html#function-getname">MLCore::LARSProjectionOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-getname">MLCore::LogisticRegressionOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogitProjectionOperation.html#function-getname">MLCore::LogitProjectionOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1NaiveBayesOperation.html#function-getname">MLCore::NaiveBayesOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1PCAOperation.html#function-getname">MLCore::PCAOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1RandomForestOperation.html#function-getname">MLCore::RandomForestOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1RobustPCAOperation.html#function-getname">MLCore::RobustPCAOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1SoftmaxRegressionOperation.html#function-getname">MLCore::SoftmaxRegressionOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedPCAOperation.html#function-getname">MLCore::SupervisedPCAOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedRobustPCAOperation.html#function-getname">MLCore::SupervisedRobustPCAOperation::getName</a>, <a href="../../api_generated/Classes/classMLCore_1_1TSNEOperation.html#function-getname">MLCore::TSNEOperation::getName</a></p>
 <p>Used as the key in <a href="../../api_generated/Classes/classMLCore_1_1MLModelRegistry.html">MLModelRegistry</a> and displayed in the UI.</p>
 </section>
 <section id="function-gettasktype" class="level3">
 <h3 class="anchored" data-anchor-id="function-gettasktype">function getTaskType</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> MLTaskType getTaskType<span class="op">()</span> <span class="at">const</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>The ML task type this operation supports.</p>
-<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classMLCore_1_1MLDimReductionOperation.html#function-gettasktype">MLCore::MLDimReductionOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1MLSupervisedDimReductionOperation.html#function-gettasktype">MLCore::MLSupervisedDimReductionOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1HiddenMarkovModelOperation.html#function-gettasktype">MLCore::HiddenMarkovModelOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1LARSProjectionOperation.html#function-gettasktype">MLCore::LARSProjectionOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-gettasktype">MLCore::LogisticRegressionOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogitProjectionOperation.html#function-gettasktype">MLCore::LogitProjectionOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1NaiveBayesOperation.html#function-gettasktype">MLCore::NaiveBayesOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1RandomForestOperation.html#function-gettasktype">MLCore::RandomForestOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1SoftmaxRegressionOperation.html#function-gettasktype">MLCore::SoftmaxRegressionOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedPCAOperation.html#function-gettasktype">MLCore::SupervisedPCAOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedRobustPCAOperation.html#function-gettasktype">MLCore::SupervisedRobustPCAOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1DBSCANOperation.html#function-gettasktype">MLCore::DBSCANOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1GaussianMixtureOperation.html#function-gettasktype">MLCore::GaussianMixtureOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1KMeansOperation.html#function-gettasktype">MLCore::KMeansOperation::getTaskType</a></p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classMLCore_1_1DBSCANOperation.html#function-gettasktype">MLCore::DBSCANOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1GaussianMixtureOperation.html#function-gettasktype">MLCore::GaussianMixtureOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1HiddenMarkovModelOperation.html#function-gettasktype">MLCore::HiddenMarkovModelOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1KMeansOperation.html#function-gettasktype">MLCore::KMeansOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1LARSProjectionOperation.html#function-gettasktype">MLCore::LARSProjectionOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-gettasktype">MLCore::LogisticRegressionOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogitProjectionOperation.html#function-gettasktype">MLCore::LogitProjectionOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1MLDimReductionOperation.html#function-gettasktype">MLCore::MLDimReductionOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1MLSupervisedDimReductionOperation.html#function-gettasktype">MLCore::MLSupervisedDimReductionOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1NaiveBayesOperation.html#function-gettasktype">MLCore::NaiveBayesOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1RandomForestOperation.html#function-gettasktype">MLCore::RandomForestOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1SoftmaxRegressionOperation.html#function-gettasktype">MLCore::SoftmaxRegressionOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedPCAOperation.html#function-gettasktype">MLCore::SupervisedPCAOperation::getTaskType</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedRobustPCAOperation.html#function-gettasktype">MLCore::SupervisedRobustPCAOperation::getTaskType</a></p>
 <p>Enables the registry to filter models by task (classification vs clustering).</p>
 </section>
 <section id="function-getdefaultparameters" class="level3">
 <h3 class="anchored" data-anchor-id="function-getdefaultparameters">function getDefaultParameters</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="bu">std::</span>unique_ptr<span class="op">&lt;</span> MLModelParametersBase <span class="op">&gt;</span> getDefaultParameters<span class="op">()</span> <span class="at">const</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Create a default parameter set for this model.</p>
-<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classMLCore_1_1HiddenMarkovModelOperation.html#function-getdefaultparameters">MLCore::HiddenMarkovModelOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1LARSProjectionOperation.html#function-getdefaultparameters">MLCore::LARSProjectionOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-getdefaultparameters">MLCore::LogisticRegressionOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogitProjectionOperation.html#function-getdefaultparameters">MLCore::LogitProjectionOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1NaiveBayesOperation.html#function-getdefaultparameters">MLCore::NaiveBayesOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1RandomForestOperation.html#function-getdefaultparameters">MLCore::RandomForestOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1SoftmaxRegressionOperation.html#function-getdefaultparameters">MLCore::SoftmaxRegressionOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedPCAOperation.html#function-getdefaultparameters">MLCore::SupervisedPCAOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedRobustPCAOperation.html#function-getdefaultparameters">MLCore::SupervisedRobustPCAOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1DBSCANOperation.html#function-getdefaultparameters">MLCore::DBSCANOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1GaussianMixtureOperation.html#function-getdefaultparameters">MLCore::GaussianMixtureOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1ICAOperation.html#function-getdefaultparameters">MLCore::ICAOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1KMeansOperation.html#function-getdefaultparameters">MLCore::KMeansOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1PCAOperation.html#function-getdefaultparameters">MLCore::PCAOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1RobustPCAOperation.html#function-getdefaultparameters">MLCore::RobustPCAOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1TSNEOperation.html#function-getdefaultparameters">MLCore::TSNEOperation::getDefaultParameters</a></p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classMLCore_1_1DBSCANOperation.html#function-getdefaultparameters">MLCore::DBSCANOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1GaussianMixtureOperation.html#function-getdefaultparameters">MLCore::GaussianMixtureOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1HiddenMarkovModelOperation.html#function-getdefaultparameters">MLCore::HiddenMarkovModelOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1ICAOperation.html#function-getdefaultparameters">MLCore::ICAOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1KMeansOperation.html#function-getdefaultparameters">MLCore::KMeansOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1LARSProjectionOperation.html#function-getdefaultparameters">MLCore::LARSProjectionOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-getdefaultparameters">MLCore::LogisticRegressionOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogitProjectionOperation.html#function-getdefaultparameters">MLCore::LogitProjectionOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1NaiveBayesOperation.html#function-getdefaultparameters">MLCore::NaiveBayesOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1PCAOperation.html#function-getdefaultparameters">MLCore::PCAOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1RandomForestOperation.html#function-getdefaultparameters">MLCore::RandomForestOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1RobustPCAOperation.html#function-getdefaultparameters">MLCore::RobustPCAOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1SoftmaxRegressionOperation.html#function-getdefaultparameters">MLCore::SoftmaxRegressionOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedPCAOperation.html#function-getdefaultparameters">MLCore::SupervisedPCAOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedRobustPCAOperation.html#function-getdefaultparameters">MLCore::SupervisedRobustPCAOperation::getDefaultParameters</a>, <a href="../../api_generated/Classes/classMLCore_1_1TSNEOperation.html#function-getdefaultparameters">MLCore::TSNEOperation::getDefaultParameters</a></p>
 <p>Returns a new instance with algorithm-specific defaults. The caller owns the returned pointer.</p>
 </section>
 <section id="function-train" class="level3">
@@ -580,7 +607,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>labels.n_elem must equal features.n_cols (enforcement: none) [IMPORTANT]</li>
 <li>Features are expected to be z-score normalized for scale-sensitive classifiers (Logistic Regression, Softmax Regression). Tree-based methods (Random Forest) are scale-invariant. (enforcement: none) [IMPORTANT]</li>
 </ul>
-<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classMLCore_1_1MLSupervisedDimReductionOperation.html#function-train">MLCore::MLSupervisedDimReductionOperation::train</a>, <a href="../../api_generated/Classes/classMLCore_1_1HiddenMarkovModelOperation.html#function-train">MLCore::HiddenMarkovModelOperation::train</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-train">MLCore::LogisticRegressionOperation::train</a>, <a href="../../api_generated/Classes/classMLCore_1_1NaiveBayesOperation.html#function-train">MLCore::NaiveBayesOperation::train</a>, <a href="../../api_generated/Classes/classMLCore_1_1RandomForestOperation.html#function-train">MLCore::RandomForestOperation::train</a>, <a href="../../api_generated/Classes/classMLCore_1_1SoftmaxRegressionOperation.html#function-train">MLCore::SoftmaxRegressionOperation::train</a></p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classMLCore_1_1HiddenMarkovModelOperation.html#function-train">MLCore::HiddenMarkovModelOperation::train</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-train">MLCore::LogisticRegressionOperation::train</a>, <a href="../../api_generated/Classes/classMLCore_1_1MLSupervisedDimReductionOperation.html#function-train">MLCore::MLSupervisedDimReductionOperation::train</a>, <a href="../../api_generated/Classes/classMLCore_1_1NaiveBayesOperation.html#function-train">MLCore::NaiveBayesOperation::train</a>, <a href="../../api_generated/Classes/classMLCore_1_1RandomForestOperation.html#function-train">MLCore::RandomForestOperation::train</a>, <a href="../../api_generated/Classes/classMLCore_1_1SoftmaxRegressionOperation.html#function-train">MLCore::SoftmaxRegressionOperation::train</a></p>
 <p>After successful training, <code>[isTrained()](/api_generated/Classes/classMLCore_1_1MLModelOperation.md#function-istrained)</code> returns true, and <code>[numClasses()](/api_generated/Classes/classMLCore_1_1MLModelOperation.md#function-numclasses)</code> and <code>[numFeatures()](/api_generated/Classes/classMLCore_1_1MLModelOperation.md#function-numfeatures)</code> reflect the training data dimensions.</p>
 <p>The default implementation returns false (unsupervised models).</p>
 </section>
@@ -730,7 +757,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    arma<span class="op">::</span>mat <span class="at">const</span> <span class="op">&amp;</span> features<span class="op">,</span></span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    MLModelParametersBase <span class="at">const</span> <span class="op">*</span> params</span>
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Fit the model to unlabeled data (unsupervised)</p>
+<p>Fit the model to unlabeled data (unsupervised).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>features</strong> Feature matrix (features × observations)</li>
@@ -743,7 +770,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>features must not contain NaN or Inf values (enforcement: none) [IMPORTANT]</li>
 <li>Features are expected to be z-score normalized for distance-based clustering algorithms (K-Means, DBSCAN, GMM). (enforcement: none) [IMPORTANT]</li>
 </ul>
-<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classMLCore_1_1MLDimReductionOperation.html#function-fit">MLCore::MLDimReductionOperation::fit</a>, <a href="../../api_generated/Classes/classMLCore_1_1DBSCANOperation.html#function-fit">MLCore::DBSCANOperation::fit</a>, <a href="../../api_generated/Classes/classMLCore_1_1GaussianMixtureOperation.html#function-fit">MLCore::GaussianMixtureOperation::fit</a>, <a href="../../api_generated/Classes/classMLCore_1_1KMeansOperation.html#function-fit">MLCore::KMeansOperation::fit</a></p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classMLCore_1_1DBSCANOperation.html#function-fit">MLCore::DBSCANOperation::fit</a>, <a href="../../api_generated/Classes/classMLCore_1_1GaussianMixtureOperation.html#function-fit">MLCore::GaussianMixtureOperation::fit</a>, <a href="../../api_generated/Classes/classMLCore_1_1KMeansOperation.html#function-fit">MLCore::KMeansOperation::fit</a>, <a href="../../api_generated/Classes/classMLCore_1_1MLDimReductionOperation.html#function-fit">MLCore::MLDimReductionOperation::fit</a></p>
 <p>After successful fitting, <code>[isTrained()](/api_generated/Classes/classMLCore_1_1MLModelOperation.md#function-istrained)</code> returns true (the model is ready for <code>[assignClusters()](/api_generated/Classes/classMLCore_1_1MLModelOperation.md#function-assignclusters)</code>), and <code>[numClasses()](/api_generated/Classes/classMLCore_1_1MLModelOperation.md#function-numclasses)</code> returns the number of clusters found/requested.</p>
 <p>The default implementation returns false (supervised models).</p>
 </section>
@@ -781,7 +808,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>out</strong> Output stream (binary or text, model-dependent)</li>
 </ul>
 <p><strong>Return</strong>: true if save succeeded</p>
-<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classMLCore_1_1HiddenMarkovModelOperation.html#function-save">MLCore::HiddenMarkovModelOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1LARSProjectionOperation.html#function-save">MLCore::LARSProjectionOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-save">MLCore::LogisticRegressionOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogitProjectionOperation.html#function-save">MLCore::LogitProjectionOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1NaiveBayesOperation.html#function-save">MLCore::NaiveBayesOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1RandomForestOperation.html#function-save">MLCore::RandomForestOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1SoftmaxRegressionOperation.html#function-save">MLCore::SoftmaxRegressionOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedPCAOperation.html#function-save">MLCore::SupervisedPCAOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedRobustPCAOperation.html#function-save">MLCore::SupervisedRobustPCAOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1DBSCANOperation.html#function-save">MLCore::DBSCANOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1GaussianMixtureOperation.html#function-save">MLCore::GaussianMixtureOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1ICAOperation.html#function-save">MLCore::ICAOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1KMeansOperation.html#function-save">MLCore::KMeansOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1PCAOperation.html#function-save">MLCore::PCAOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1RobustPCAOperation.html#function-save">MLCore::RobustPCAOperation::save</a></p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classMLCore_1_1DBSCANOperation.html#function-save">MLCore::DBSCANOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1GaussianMixtureOperation.html#function-save">MLCore::GaussianMixtureOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1HiddenMarkovModelOperation.html#function-save">MLCore::HiddenMarkovModelOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1ICAOperation.html#function-save">MLCore::ICAOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1KMeansOperation.html#function-save">MLCore::KMeansOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1LARSProjectionOperation.html#function-save">MLCore::LARSProjectionOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-save">MLCore::LogisticRegressionOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogitProjectionOperation.html#function-save">MLCore::LogitProjectionOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1NaiveBayesOperation.html#function-save">MLCore::NaiveBayesOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1PCAOperation.html#function-save">MLCore::PCAOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1RandomForestOperation.html#function-save">MLCore::RandomForestOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1RobustPCAOperation.html#function-save">MLCore::RobustPCAOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1SoftmaxRegressionOperation.html#function-save">MLCore::SoftmaxRegressionOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedPCAOperation.html#function-save">MLCore::SupervisedPCAOperation::save</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedRobustPCAOperation.html#function-save">MLCore::SupervisedRobustPCAOperation::save</a></p>
 <p>The default implementation returns false (no persistence support).</p>
 </section>
 <section id="function-load" class="level3">
@@ -795,31 +822,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>in</strong> Input stream</li>
 </ul>
 <p><strong>Return</strong>: true if load succeeded</p>
-<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classMLCore_1_1HiddenMarkovModelOperation.html#function-load">MLCore::HiddenMarkovModelOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1LARSProjectionOperation.html#function-load">MLCore::LARSProjectionOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-load">MLCore::LogisticRegressionOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogitProjectionOperation.html#function-load">MLCore::LogitProjectionOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1NaiveBayesOperation.html#function-load">MLCore::NaiveBayesOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1RandomForestOperation.html#function-load">MLCore::RandomForestOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1SoftmaxRegressionOperation.html#function-load">MLCore::SoftmaxRegressionOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedPCAOperation.html#function-load">MLCore::SupervisedPCAOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedRobustPCAOperation.html#function-load">MLCore::SupervisedRobustPCAOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1DBSCANOperation.html#function-load">MLCore::DBSCANOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1GaussianMixtureOperation.html#function-load">MLCore::GaussianMixtureOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1ICAOperation.html#function-load">MLCore::ICAOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1KMeansOperation.html#function-load">MLCore::KMeansOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1PCAOperation.html#function-load">MLCore::PCAOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1RobustPCAOperation.html#function-load">MLCore::RobustPCAOperation::load</a></p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classMLCore_1_1DBSCANOperation.html#function-load">MLCore::DBSCANOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1GaussianMixtureOperation.html#function-load">MLCore::GaussianMixtureOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1HiddenMarkovModelOperation.html#function-load">MLCore::HiddenMarkovModelOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1ICAOperation.html#function-load">MLCore::ICAOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1KMeansOperation.html#function-load">MLCore::KMeansOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1LARSProjectionOperation.html#function-load">MLCore::LARSProjectionOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-load">MLCore::LogisticRegressionOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogitProjectionOperation.html#function-load">MLCore::LogitProjectionOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1NaiveBayesOperation.html#function-load">MLCore::NaiveBayesOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1PCAOperation.html#function-load">MLCore::PCAOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1RandomForestOperation.html#function-load">MLCore::RandomForestOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1RobustPCAOperation.html#function-load">MLCore::RobustPCAOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1SoftmaxRegressionOperation.html#function-load">MLCore::SoftmaxRegressionOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedPCAOperation.html#function-load">MLCore::SupervisedPCAOperation::load</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedRobustPCAOperation.html#function-load">MLCore::SupervisedRobustPCAOperation::load</a></p>
 <p>After successful loading, <code>[isTrained()](/api_generated/Classes/classMLCore_1_1MLModelOperation.md#function-istrained)</code> should return true. The default implementation returns false (no persistence support).</p>
 </section>
 <section id="function-istrained" class="level3">
 <h3 class="anchored" data-anchor-id="function-istrained">function isTrained</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">virtual</span> <span class="dt">bool</span> isTrained<span class="op">()</span> <span class="at">const</span> <span class="op">=</span><span class="dv">0</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Whether the model has been trained (supervised) or fit (unsupervised)</p>
-<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classMLCore_1_1HiddenMarkovModelOperation.html#function-istrained">MLCore::HiddenMarkovModelOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1LARSProjectionOperation.html#function-istrained">MLCore::LARSProjectionOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-istrained">MLCore::LogisticRegressionOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogitProjectionOperation.html#function-istrained">MLCore::LogitProjectionOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1NaiveBayesOperation.html#function-istrained">MLCore::NaiveBayesOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1RandomForestOperation.html#function-istrained">MLCore::RandomForestOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1SoftmaxRegressionOperation.html#function-istrained">MLCore::SoftmaxRegressionOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedPCAOperation.html#function-istrained">MLCore::SupervisedPCAOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedRobustPCAOperation.html#function-istrained">MLCore::SupervisedRobustPCAOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1DBSCANOperation.html#function-istrained">MLCore::DBSCANOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1GaussianMixtureOperation.html#function-istrained">MLCore::GaussianMixtureOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1ICAOperation.html#function-istrained">MLCore::ICAOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1KMeansOperation.html#function-istrained">MLCore::KMeansOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1PCAOperation.html#function-istrained">MLCore::PCAOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1RobustPCAOperation.html#function-istrained">MLCore::RobustPCAOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1TSNEOperation.html#function-istrained">MLCore::TSNEOperation::isTrained</a></p>
+<p>Whether the model has been trained (supervised) or fit (unsupervised).</p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classMLCore_1_1DBSCANOperation.html#function-istrained">MLCore::DBSCANOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1GaussianMixtureOperation.html#function-istrained">MLCore::GaussianMixtureOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1HiddenMarkovModelOperation.html#function-istrained">MLCore::HiddenMarkovModelOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1ICAOperation.html#function-istrained">MLCore::ICAOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1KMeansOperation.html#function-istrained">MLCore::KMeansOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1LARSProjectionOperation.html#function-istrained">MLCore::LARSProjectionOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-istrained">MLCore::LogisticRegressionOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogitProjectionOperation.html#function-istrained">MLCore::LogitProjectionOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1NaiveBayesOperation.html#function-istrained">MLCore::NaiveBayesOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1PCAOperation.html#function-istrained">MLCore::PCAOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1RandomForestOperation.html#function-istrained">MLCore::RandomForestOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1RobustPCAOperation.html#function-istrained">MLCore::RobustPCAOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1SoftmaxRegressionOperation.html#function-istrained">MLCore::SoftmaxRegressionOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedPCAOperation.html#function-istrained">MLCore::SupervisedPCAOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedRobustPCAOperation.html#function-istrained">MLCore::SupervisedRobustPCAOperation::isTrained</a>, <a href="../../api_generated/Classes/classMLCore_1_1TSNEOperation.html#function-istrained">MLCore::TSNEOperation::isTrained</a></p>
 <p>Returns true after a successful <code>[train()](/api_generated/Classes/classMLCore_1_1MLModelOperation.md#function-train)</code> or <code>[fit()](/api_generated/Classes/classMLCore_1_1MLModelOperation.md#function-fit)</code> call, or after a successful <code>[load()](/api_generated/Classes/classMLCore_1_1MLModelOperation.md#function-load)</code>.</p>
 </section>
 <section id="function-numclasses" class="level3">
 <h3 class="anchored" data-anchor-id="function-numclasses">function numClasses</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">virtual</span> <span class="bu">std::</span>size_t numClasses<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Number of classes (supervised) or clusters (unsupervised)</p>
-<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classMLCore_1_1HiddenMarkovModelOperation.html#function-numclasses">MLCore::HiddenMarkovModelOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1LARSProjectionOperation.html#function-numclasses">MLCore::LARSProjectionOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-numclasses">MLCore::LogisticRegressionOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogitProjectionOperation.html#function-numclasses">MLCore::LogitProjectionOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1NaiveBayesOperation.html#function-numclasses">MLCore::NaiveBayesOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1RandomForestOperation.html#function-numclasses">MLCore::RandomForestOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1SoftmaxRegressionOperation.html#function-numclasses">MLCore::SoftmaxRegressionOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedPCAOperation.html#function-numclasses">MLCore::SupervisedPCAOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedRobustPCAOperation.html#function-numclasses">MLCore::SupervisedRobustPCAOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1DBSCANOperation.html#function-numclasses">MLCore::DBSCANOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1GaussianMixtureOperation.html#function-numclasses">MLCore::GaussianMixtureOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1KMeansOperation.html#function-numclasses">MLCore::KMeansOperation::numClasses</a></p>
+<p>Number of classes (supervised) or clusters (unsupervised).</p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classMLCore_1_1DBSCANOperation.html#function-numclasses">MLCore::DBSCANOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1GaussianMixtureOperation.html#function-numclasses">MLCore::GaussianMixtureOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1HiddenMarkovModelOperation.html#function-numclasses">MLCore::HiddenMarkovModelOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1KMeansOperation.html#function-numclasses">MLCore::KMeansOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1LARSProjectionOperation.html#function-numclasses">MLCore::LARSProjectionOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-numclasses">MLCore::LogisticRegressionOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogitProjectionOperation.html#function-numclasses">MLCore::LogitProjectionOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1NaiveBayesOperation.html#function-numclasses">MLCore::NaiveBayesOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1RandomForestOperation.html#function-numclasses">MLCore::RandomForestOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1SoftmaxRegressionOperation.html#function-numclasses">MLCore::SoftmaxRegressionOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedPCAOperation.html#function-numclasses">MLCore::SupervisedPCAOperation::numClasses</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedRobustPCAOperation.html#function-numclasses">MLCore::SupervisedRobustPCAOperation::numClasses</a></p>
 <p>Returns 0 if the model has not been trained/fit. For binary classification, returns 2.</p>
 </section>
 <section id="function-numfeatures" class="level3">
 <h3 class="anchored" data-anchor-id="function-numfeatures">function numFeatures</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">virtual</span> <span class="bu">std::</span>size_t numFeatures<span class="op">()</span> <span class="at">const</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Number of features the model was trained on.</p>
-<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classMLCore_1_1HiddenMarkovModelOperation.html#function-numfeatures">MLCore::HiddenMarkovModelOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1LARSProjectionOperation.html#function-numfeatures">MLCore::LARSProjectionOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-numfeatures">MLCore::LogisticRegressionOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogitProjectionOperation.html#function-numfeatures">MLCore::LogitProjectionOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1NaiveBayesOperation.html#function-numfeatures">MLCore::NaiveBayesOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1RandomForestOperation.html#function-numfeatures">MLCore::RandomForestOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1SoftmaxRegressionOperation.html#function-numfeatures">MLCore::SoftmaxRegressionOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedPCAOperation.html#function-numfeatures">MLCore::SupervisedPCAOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedRobustPCAOperation.html#function-numfeatures">MLCore::SupervisedRobustPCAOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1DBSCANOperation.html#function-numfeatures">MLCore::DBSCANOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1GaussianMixtureOperation.html#function-numfeatures">MLCore::GaussianMixtureOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1ICAOperation.html#function-numfeatures">MLCore::ICAOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1KMeansOperation.html#function-numfeatures">MLCore::KMeansOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1PCAOperation.html#function-numfeatures">MLCore::PCAOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1RobustPCAOperation.html#function-numfeatures">MLCore::RobustPCAOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1TSNEOperation.html#function-numfeatures">MLCore::TSNEOperation::numFeatures</a></p>
+<p><strong>Reimplemented by</strong>: <a href="../../api_generated/Classes/classMLCore_1_1DBSCANOperation.html#function-numfeatures">MLCore::DBSCANOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1GaussianMixtureOperation.html#function-numfeatures">MLCore::GaussianMixtureOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1HiddenMarkovModelOperation.html#function-numfeatures">MLCore::HiddenMarkovModelOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1ICAOperation.html#function-numfeatures">MLCore::ICAOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1KMeansOperation.html#function-numfeatures">MLCore::KMeansOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1LARSProjectionOperation.html#function-numfeatures">MLCore::LARSProjectionOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogisticRegressionOperation.html#function-numfeatures">MLCore::LogisticRegressionOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1LogitProjectionOperation.html#function-numfeatures">MLCore::LogitProjectionOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1NaiveBayesOperation.html#function-numfeatures">MLCore::NaiveBayesOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1PCAOperation.html#function-numfeatures">MLCore::PCAOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1RandomForestOperation.html#function-numfeatures">MLCore::RandomForestOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1RobustPCAOperation.html#function-numfeatures">MLCore::RobustPCAOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1SoftmaxRegressionOperation.html#function-numfeatures">MLCore::SoftmaxRegressionOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedPCAOperation.html#function-numfeatures">MLCore::SupervisedPCAOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1SupervisedRobustPCAOperation.html#function-numfeatures">MLCore::SupervisedRobustPCAOperation::numFeatures</a>, <a href="../../api_generated/Classes/classMLCore_1_1TSNEOperation.html#function-numfeatures">MLCore::TSNEOperation::numFeatures</a></p>
 <p>Returns 0 if the model has not been trained/fit. Used for validating that prediction data has the correct dimensionality.</p>
 <hr>
-<p>Updated on 2026-10-09 at 13:36:33 +0000</p>
+<p>Updated on 2026-11-13 at 20:25:41 +0000</p>
 
 
 </section>
@@ -831,15 +858,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -918,7 +980,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -927,8 +990,69 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -942,6 +1066,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -1104,44 +1229,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -1239,6 +1374,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       }
     }
   });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
 

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -72,18 +72,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-0c66bec081e5215138e9fd61e9c23ef8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -116,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -139,6 +140,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -168,13 +170,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -268,6 +276,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -282,15 +291,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -334,8 +342,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
+            <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -344,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
@@ -432,6 +441,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#function-handlezoom" id="toc-function-handlezoom" class="nav-link" data-scroll-target="#function-handlezoom">function handleZoom</a></li>
   <li><a href="#function-affectsaxis" id="toc-function-affectsaxis" class="nav-link" data-scroll-target="#function-affectsaxis">function affectsAxis</a></li>
   <li><a href="#function-makeviewaxissyncsnapshot" id="toc-function-makeviewaxissyncsnapshot" class="nav-link" data-scroll-target="#function-makeviewaxissyncsnapshot">function makeViewAxisSyncSnapshot</a></li>
+  <li><a href="#function-makeviewaxissyncsnapshot-1" id="toc-function-makeviewaxissyncsnapshot-1" class="nav-link" data-scroll-target="#function-makeviewaxissyncsnapshot-1">function makeViewAxisSyncSnapshot</a></li>
   <li><a href="#function-computeviewaxisrefreshmask" id="toc-function-computeviewaxisrefreshmask" class="nav-link" data-scroll-target="#function-computeviewaxisrefreshmask">function computeViewAxisRefreshMask</a></li>
   <li><a href="#function-extractedgeevents" id="toc-function-extractedgeevents" class="nav-link" data-scroll-target="#function-extractedgeevents">function extractEdgeEvents</a></li>
   <li><a href="#function-runheatmappipeline" id="toc-function-runheatmappipeline" class="nav-link" data-scroll-target="#function-runheatmappipeline">function runHeatmapPipeline</a></li>
@@ -450,7 +460,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -501,31 +511,87 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1AlignmentSourceResult.html">Neuralyzer::Plots::AlignmentSourceResult</a></strong> <br>Result of alignment source lookup.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1AxisTickConfig.html">Neuralyzer::Plots::AxisTickConfig</a></strong> <br>Configuration for axis tick generation.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1BinningParams.html">Neuralyzer::Plots::BinningParams</a></strong> <br>Parameters for simple histogram binning.</td>
 </tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1GaussianKernelParams.html">Neuralyzer::Plots::GaussianKernelParams</a></strong> <br>Parameters for Gaussian kernel smoothing (stub — not yet implemented).</td>
+</tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1CausalExponentialParams.html">Neuralyzer::Plots::CausalExponentialParams</a></strong> <br>Parameters for causal exponential filter (stub — not yet implemented)</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1CausalExponentialParams.html">Neuralyzer::Plots::CausalExponentialParams</a></strong> <br>Parameters for causal exponential filter (stub — not yet implemented).</td>
 </tr>
 <tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1UnitGatherContext.html">Neuralyzer::Plots::UnitGatherContext</a></strong> <br>Bundles a <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> with its <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> and source key.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1RateEstimate.html">Neuralyzer::Plots::RateEstimate</a></strong> <br>The universal output of any rate estimation method.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PerTrialData.html">Neuralyzer::Plots::PerTrialData</a></strong> <br>Optional per-trial breakdown, for uncertainty and variability analysis.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1RateEstimateWithTrials.html">Neuralyzer::Plots::RateEstimateWithTrials</a></strong> <br>Extended output when per-trial data is requested.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1NormalizedRow.html">Neuralyzer::Plots::NormalizedRow</a></strong> <br>One row of normalized values (deprecated — use <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1RateEstimate.html">RateEstimate</a> + applyScaling instead).</td>
+</tr>
+<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1ConfidenceBand.html">Neuralyzer::Plots::ConfidenceBand</a></strong> <br>Lower and upper bounds at each time point.</td>
 </tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PreparedAlignmentWindows.html">Neuralyzer::Plots::PreparedAlignmentWindows</a></strong> <br>Prepared row metadata for a plot-aligned gather.</td>
+</tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1EventPlotEventHit.html">Neuralyzer::Plots::EventPlotEventHit</a></strong> <br>Result of hit-testing an event in a raster plot.</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1AlignmentSourceResult.html">Neuralyzer::Plots::AlignmentSourceResult</a></strong> <br>Result of alignment source lookup.</td>
 </tr>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1GaussianKernelParams.html">Neuralyzer::Plots::GaussianKernelParams</a></strong> <br>Parameters for Gaussian kernel smoothing (stub — not yet implemented)</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1EventPlotEventHit.html">Neuralyzer::Plots::EventPlotEventHit</a></strong> <br>Result of hit-testing an event in a raster plot.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1ViewAxisSyncSnapshot.html">Neuralyzer::Plots::ViewAxisSyncSnapshot</a></strong> <br>Snapshot of view fields that affect axis display.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfile.html">Neuralyzer::Plots::PlotZoomProfile</a></strong> <br>Runtime-gated zoom/paint profiler (singleton).</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfileWheelScope.html">Neuralyzer::Plots::PlotZoomProfileWheelScope</a></strong> <br>RAII scope for wheelEvent synchronous profiling.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfilePaintGLScope.html">Neuralyzer::Plots::PlotZoomProfilePaintGLScope</a></strong> <br>RAII scope for paintGL profiling.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfileAxisPaintScope.html">Neuralyzer::Plots::PlotZoomProfileAxisPaintScope</a></strong> <br>RAII scope for axis paintEvent profiling.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PlotTooltipHit.html">Neuralyzer::Plots::PlotTooltipHit</a></strong> <br>Result of a tooltip hit test.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PlotTooltipContent.html">Neuralyzer::Plots::PlotTooltipContent</a></strong> <br>Content to display in the tooltip.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotTooltipManager.html">Neuralyzer::Plots::PlotTooltipManager</a></strong> <br>Manages tooltip lifecycle for plot widgets.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
@@ -534,62 +600,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1HeatmapPipelineResult.html">Neuralyzer::Plots::HeatmapPipelineResult</a></strong> <br>Result of the heatmap data pipeline.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1NormalizedRow.html">Neuralyzer::Plots::NormalizedRow</a></strong> <br>One row of normalized values (deprecated — use <a href="">RateEstimate</a> + applyScaling instead)</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PerTrialData.html">Neuralyzer::Plots::PerTrialData</a></strong> <br>Optional per-trial breakdown, for uncertainty and variability analysis.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PlotTooltipContent.html">Neuralyzer::Plots::PlotTooltipContent</a></strong> <br>Content to display in the tooltip.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PlotTooltipHit.html">Neuralyzer::Plots::PlotTooltipHit</a></strong> <br>Result of a tooltip hit test.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotTooltipManager.html">Neuralyzer::Plots::PlotTooltipManager</a></strong> <br>Manages tooltip lifecycle for plot widgets.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfile.html">Neuralyzer::Plots::PlotZoomProfile</a></strong> <br>Runtime-gated zoom/paint profiler (singleton).</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfileAxisPaintScope.html">Neuralyzer::Plots::PlotZoomProfileAxisPaintScope</a></strong> <br>RAII scope for axis paintEvent profiling.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfilePaintGLScope.html">Neuralyzer::Plots::PlotZoomProfilePaintGLScope</a></strong> <br>RAII scope for paintGL profiling.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classNeuralyzer_1_1Plots_1_1PlotZoomProfileWheelScope.html">Neuralyzer::Plots::PlotZoomProfileWheelScope</a></strong> <br>RAII scope for wheelEvent synchronous profiling.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PreparedAlignmentWindows.html">Neuralyzer::Plots::PreparedAlignmentWindows</a></strong> <br>Prepared row metadata for a plot-aligned gather.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1RateEstimate.html">Neuralyzer::Plots::RateEstimate</a></strong> <br>The universal output of any rate estimation method.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1RateEstimateWithTrials.html">Neuralyzer::Plots::RateEstimateWithTrials</a></strong> <br>Extended output when per-trial data is requested.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1UnitGatherContext.html">Neuralyzer::Plots::UnitGatherContext</a></strong> <br>Bundles a <a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a> with its <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> and source key.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1ViewAxisSyncSnapshot.html">Neuralyzer::Plots::ViewAxisSyncSnapshot</a></strong> <br>Snapshot of view fields that affect axis display.</td>
 </tr>
 </tbody>
 </table>
@@ -687,7 +697,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1RateEstimate.html">RateEstimate</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-estimaterate">estimateRate</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt; const &amp; gathered, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const * time_frame, double window_size, <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#using-estimationparams">EstimationParams</a> const &amp; params =<a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1BinningParams.html">BinningParams</a>)<br>Estimate the rate for a single unit (aggregate across trials)</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-estimaterate">estimateRate</a></strong>(<a href="../../api_generated/Classes/classGatherResult.html">GatherResult</a>&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt; const &amp; gathered, <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> const * time_frame, double window_size, <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#using-estimationparams">EstimationParams</a> const &amp; params =<a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1BinningParams.html">BinningParams</a>)<br>Estimate the rate for a single unit (aggregate across trials).</td>
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1RateEstimateWithTrials.html">RateEstimateWithTrials</a></td>
@@ -698,20 +708,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-estimaterates">estimateRates</a></strong>(std::vector&lt; <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1UnitGatherContext.html">UnitGatherContext</a> &gt; const &amp; units, double window_size, <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#using-estimationparams">EstimationParams</a> const &amp; params =<a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1BinningParams.html">BinningParams</a>)<br>Estimate rates for multiple units.</td>
 </tr>
 <tr class="odd">
-<td>constexpr char const *</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-scalinglabel">scalingLabel</a></strong>(<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-scalingmode">ScalingMode</a> mode)<br>Return a human-readable label for a ScalingMode value.</td>
+<td>char const *</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-scalinglabel">scalingLabel</a></strong>(<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-scalingmode">ScalingMode</a> mode)<br>Return a human-readable label for a <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-scalingmode">ScalingMode</a> value.</td>
 </tr>
 <tr class="even">
-<td>constexpr char const *</td>
+<td>char const *</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-scalingaxislabel">scalingAxisLabel</a></strong>(<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-scalingmode">ScalingMode</a> mode)<br>Return the axis label appropriate for a scaling mode.</td>
 </tr>
 <tr class="odd">
 <td>std::vector&lt; <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-scalingmode">ScalingMode</a> &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-allscalingmodes">allScalingModes</a></strong>()<br>All available scaling modes (for populating combo boxes)</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-allscalingmodes">allScalingModes</a></strong>()<br>All available scaling modes (for populating combo boxes).</td>
 </tr>
 <tr class="even">
 <td>void</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-tofiringratehz">toFiringRateHz</a></strong>(std::span&lt; double &gt; values, size_t num_trials, double sample_spacing, double time_units_per_second)<br>Convert raw counts to firing rate (Hz)</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-tofiringratehz">toFiringRateHz</a></strong>(std::span&lt; double &gt; values, size_t num_trials, double sample_spacing, double time_units_per_second)<br>Convert raw counts to firing rate (Hz).</td>
 </tr>
 <tr class="odd">
 <td>void</td>
@@ -743,7 +753,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1ConfidenceBand.html">ConfidenceBand</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-bootstrapci">bootstrapCI</a></strong>(<a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1RateEstimateWithTrials.html">RateEstimateWithTrials</a> const &amp; data, size_t n_resamples =1000, double ci_level =0.95)<br>Bootstrap confidence band (resamples trials)</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-bootstrapci">bootstrapCI</a></strong>(<a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1RateEstimateWithTrials.html">RateEstimateWithTrials</a> const &amp; data, size_t n_resamples =1000, double ci_level =0.95)<br>Bootstrap confidence band (resamples trials).</td>
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structCorePlotting_1_1Interaction_1_1GlyphPreview.html">CorePlotting::Interaction::GlyphPreview</a></td>
@@ -775,7 +785,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-alignmentpoint">AlignmentPoint</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-toalignmentpoint">toAlignmentPoint</a></strong>(<a href="../../api_generated/Files/PlotAlignmentData_8hpp.html#enum-intervalalignmenttype">IntervalAlignmentType</a> type)<br>Convert IntervalAlignmentType to the plot-facing AlignmentPoint enum.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-toalignmentpoint">toAlignmentPoint</a></strong>(<a href="../../api_generated/Files/PlotAlignmentData_8hpp.html#enum-intervalalignmenttype">IntervalAlignmentType</a> type)<br>Convert <a href="">IntervalAlignmentType</a> to the plot-facing <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-alignmentpoint">AlignmentPoint</a> enum.</td>
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Transforms_1_1V2_1_1Examples.html#enum-intervaleventpoint">Neuralyzer::Transforms::V2::Examples::IntervalEventPoint</a></td>
@@ -898,7 +908,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-handlezoom">handleZoom</a></strong>(State &amp; state, ViewState const &amp; view_state, float delta, bool y_only, bool both_axes)<br>Apply a scroll-wheel zoom step to the state.</td>
 </tr>
 <tr class="odd">
-<td>constexpr bool</td>
+<td>bool</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-affectsaxis">affectsAxis</a></strong>(<a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-viewaxisrefresh">ViewAxisRefresh</a> mask, <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-viewaxisrefresh">ViewAxisRefresh</a> axis)<br>Test whether <code>mask</code> includes <code>axis</code>.</td>
 </tr>
 <tr class="even">
@@ -906,22 +916,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-makeviewaxissyncsnapshot">makeViewAxisSyncSnapshot</a></strong>(ViewState const &amp; view_state)<br>Capture zoom/pan fields from a view state.</td>
 </tr>
 <tr class="odd">
+<td>template &lt;ViewStateZoomPanLike ViewState&gt; <br><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1ViewAxisSyncSnapshot.html">ViewAxisSyncSnapshot</a></td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-makeviewaxissyncsnapshot">makeViewAxisSyncSnapshot</a></strong>(ViewState const &amp; view_state)<br>Capture zoom/pan and data bounds from a view state.</td>
+</tr>
+<tr class="even">
 <td><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-viewaxisrefresh">ViewAxisRefresh</a></td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-computeviewaxisrefreshmask">computeViewAxisRefreshMask</a></strong>(<a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1ViewAxisSyncSnapshot.html">ViewAxisSyncSnapshot</a> const &amp; before, <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1ViewAxisSyncSnapshot.html">ViewAxisSyncSnapshot</a> const &amp; after)<br>Determine which axes need refresh between two snapshots.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalEventSeries.html">DigitalEventSeries</a> &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-extractedgeevents">extractEdgeEvents</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a> const &gt; intervals, <a href="../../api_generated/Files/PlotAlignmentData_8hpp.html#enum-intervalalignmenttype">IntervalAlignmentType</a> edge)<br>Extract edge events from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1HeatmapPipelineResult.html">HeatmapPipelineResult</a></td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-runheatmappipeline">runHeatmapPipeline</a></strong>(std::shared_ptr&lt; <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> &gt; const &amp; data_manager, std::vector&lt; std::string &gt; const &amp; unit_keys, <a href="../../api_generated/Classes/structPlotAlignmentData.html">PlotAlignmentData</a> const &amp; alignment_data, <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1HeatmapPipelineConfig.html">HeatmapPipelineConfig</a> const &amp; config)<br>Execute the heatmap data pipeline without an OpenGL context.</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>std::vector&lt; std::size_t &gt;</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-computesortorder">computeSortOrder</a></strong>(<a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1HeatmapPipelineResult.html">HeatmapPipelineResult</a> const &amp; result, std::vector&lt; std::string &gt; const &amp; unit_keys, <a href="../../api_generated/Files/HeatmapState_8hpp.html#enum-heatmapsortmode">HeatmapSortMode</a> sort_mode, bool ascending)<br>Compute a permutation vector that sorts the pipeline rows.</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>void</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#function-applysortorder">applySortOrder</a></strong>(<a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1HeatmapPipelineResult.html">HeatmapPipelineResult</a> &amp; result, std::vector&lt; std::string &gt; &amp; unit_keys, std::vector&lt; std::size_t &gt; const &amp; sort_indices)<br>Apply a precomputed permutation to the pipeline result and unit keys.</td>
 </tr>
@@ -939,19 +953,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>constexpr float</td>
+<td>float</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#variable-default-wheel-pixels-per-zoom-step">DEFAULT_WHEEL_PIXELS_PER_ZOOM_STEP</a></strong> <br>Pixels of vertical trackpad movement equivalent to one mouse-wheel notch.</td>
 </tr>
 <tr class="even">
-<td>constexpr float</td>
+<td>float</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#variable-wheel-angle-delta-per-notch">WHEEL_ANGLE_DELTA_PER_NOTCH</a></strong> <br>Qt angleDelta units per physical wheel notch (8 degrees x 15).</td>
 </tr>
 <tr class="odd">
-<td>constexpr double</td>
+<td>double</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#variable-adaptive-zoom-range-fraction">ADAPTIVE_ZOOM_RANGE_FRACTION</a></strong> <br>Visible-range fraction removed per zoom step (matches <a href="">DataViewer</a> adaptive normal mode).</td>
 </tr>
 <tr class="even">
-<td>constexpr double</td>
+<td>double</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#variable-min-adaptive-visible-range-scale">MIN_ADAPTIVE_VISIBLE_RANGE_SCALE</a></strong> <br>Minimum visible-range scale factor in a single wheel event (prevents runaway zoom).</td>
 </tr>
 </tbody>
@@ -1043,7 +1057,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td>RawCount</td>
 <td></td>
-<td>Raw event count (no normalization)</td>
+<td>Raw event count (no normalization).</td>
 </tr>
 <tr class="odd">
 <td>CountPerTrial</td>
@@ -1128,7 +1142,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="using-estimationparams" class="level3">
 <h3 class="anchored" data-anchor-id="using-estimationparams">using EstimationParams</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>EstimationParams <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>variant<span class="op">&lt;</span>BinningParams<span class="op">,</span> GaussianKernelParams<span class="op">,</span> CausalExponentialParams<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>EstimationParams <span class="op">=</span>  <span class="bu">std::</span>variant<span class="op">&lt;</span>BinningParams<span class="op">,</span> GaussianKernelParams<span class="op">,</span> CausalExponentialParams<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Tagged union of all supported rate estimation method parameter structs.</p>
 <p><strong>Note</strong>: <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1GaussianKernelParams.html">GaussianKernelParams</a> and <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1CausalExponentialParams.html">CausalExponentialParams</a> are included in the variant but their implementations return empty <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1RateEstimate.html">RateEstimate</a> (stub).</p>
 <p>This is the single variation point for estimation method selection. Selecting a method at runtime is zero-overhead compared to a virtual base-class strategy — <code>std::visit</code> dispatches via a jump table.</p>
@@ -1141,24 +1155,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="using-heatmapscaling" class="level3">
 <h3 class="anchored" data-anchor-id="using-heatmapscaling">using HeatmapScaling</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>HeatmapScaling <span class="op">=</span> <span class="kw">typedef</span> ScalingMode<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>HeatmapScaling <span class="op">=</span>  ScalingMode<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p><strong>Deprecated</strong>:</p>
-<p>Use <code>ScalingMode</code> instead</p>
+<p>Use <code>[ScalingMode](/api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.md#enum-scalingmode)</code> instead</p>
 </section>
 <section id="using-tooltiphittestfn" class="level3">
 <h3 class="anchored" data-anchor-id="using-tooltiphittestfn">using TooltipHitTestFn</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>TooltipHitTestFn <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>optional<span class="op">&lt;</span>PlotTooltipHit<span class="op">&gt;(</span><span class="ex">QPoint</span> screen_pos<span class="op">)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>TooltipHitTestFn <span class="op">=</span> </span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>optional<span class="op">&lt;</span>PlotTooltipHit<span class="op">&gt;(</span><span class="ex">QPoint</span> screen_pos<span class="op">)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Callback that performs a hit test at a screen position.</p>
 <p>Returns a <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PlotTooltipHit.html">PlotTooltipHit</a> on success, or std::nullopt if nothing is under the cursor. This callback may perform spatial queries (<a href="../../api_generated/Classes/classQuadTree.html">QuadTree</a>, etc.) and is only called after the dwell timer fires.</p>
 </section>
 <section id="using-tooltiptextfn" class="level3">
 <h3 class="anchored" data-anchor-id="using-tooltiptextfn">using TooltipTextFn</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>TooltipTextFn <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="ex">QString</span><span class="op">(</span>PlotTooltipHit <span class="at">const</span> <span class="op">&amp;</span> hit<span class="op">)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>TooltipTextFn <span class="op">=</span> </span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>function<span class="op">&lt;</span><span class="ex">QString</span><span class="op">(</span>PlotTooltipHit <span class="at">const</span> <span class="op">&amp;</span> hit<span class="op">)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Callback that generates tooltip text from a hit result.</p>
 </section>
 <section id="using-tooltipcontentfn" class="level3">
 <h3 class="anchored" data-anchor-id="using-tooltipcontentfn">using TooltipContentFn</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>TooltipContentFn <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span>PlotTooltipContent<span class="op">(</span>PlotTooltipHit <span class="at">const</span> <span class="op">&amp;</span> hit<span class="op">)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> Neuralyzer<span class="op">::</span>Plots<span class="op">::</span>TooltipContentFn <span class="op">=</span> </span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>        <span class="bu">std::</span>function<span class="op">&lt;</span>PlotTooltipContent<span class="op">(</span>PlotTooltipHit <span class="at">const</span> <span class="op">&amp;</span> hit<span class="op">)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Callback that generates rich tooltip content from a hit result.</p>
 <p>Use this for expensive content generation (rendering glyphs, mini-plots). Returns a full <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1PlotTooltipContent.html">PlotTooltipContent</a>, allowing the provider to choose between text and pixmap on a per-hit basis.</p>
 </section>
@@ -1261,7 +1278,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>alignment_data</strong> Alignment configuration (alignment key, window size, etc.)</li>
 </ul>
 <p><strong>Return</strong>: Populated <code>[UnitGatherContext](/api_generated/Classes/structNeuralyzer_1_1Plots_1_1UnitGatherContext.md)</code>, or <code>std::nullopt</code> on failure</p>
-<p>Calls <code>createAlignedGatherResult&lt;[DigitalEventSeries](/api_generated/Classes/classDigitalEventSeries.md)&gt;</code> and also retrieves the source <code>[TimeFrame](/api_generated/Classes/classTimeFrame.md)</code>. Returns <code>std::nullopt</code> when:</p>
+<p>Calls <code>[createAlignedGatherResult](/api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.md#function-createalignedgatherresult)&lt;[DigitalEventSeries](/api_generated/Classes/classDigitalEventSeries.md)&gt;</code> and also retrieves the source <code>[TimeFrame](/api_generated/Classes/classTimeFrame.md)</code>. Returns <code>std::nullopt</code> when:</p>
 <ul>
 <li><code>data_manager</code> is null or <code>event_key</code> is empty</li>
 <li>The gather result is empty (alignment key not found or no events in window)</li>
@@ -1283,7 +1300,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>alignment_data</strong> Alignment configuration shared across all units</li>
 </ul>
 <p><strong>Return</strong>: Vector of successfully gathered <code>[UnitGatherContext](/api_generated/Classes/structNeuralyzer_1_1Plots_1_1UnitGatherContext.md)</code> objects</p>
-<p>Applies <code>createUnitGatherContext</code> to each key in <code>event_keys</code> with the same alignment settings. Keys for which gathering fails are silently skipped; the returned vector may therefore be shorter than <code>event_keys</code>.</p>
+<p>Applies <code>[createUnitGatherContext](/api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.md#function-createunitgathercontext)</code> to each key in <code>event_keys</code> with the same alignment settings. Keys for which gathering fails are silently skipped; the returned vector may therefore be shorter than <code>event_keys</code>.</p>
 <p>Order is preserved: the i-th element of the result corresponds to the i-th key that succeeded.</p>
 </section>
 <section id="function-estimaterate" class="level3">
@@ -1294,7 +1311,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> window_size<span class="op">,</span></span>
 <span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    EstimationParams <span class="at">const</span> <span class="op">&amp;</span> params <span class="op">=</span>BinningParams<span class="op">{}</span></span>
 <span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Estimate the rate for a single unit (aggregate across trials)</p>
+<p>Estimate the rate for a single unit (aggregate across trials).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>gathered</strong> Trial-aligned views of one <code>[DigitalEventSeries](/api_generated/Classes/classDigitalEventSeries.md)</code></li>
@@ -1337,24 +1354,24 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Estimate rates for multiple units.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>units</strong> Per-unit gather contexts (from <code>createUnitGatherContexts</code>)</li>
+<li><strong>units</strong> Per-unit gather contexts (from <code>[createUnitGatherContexts](/api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.md#function-createunitgathercontexts)</code>)</li>
 <li><strong>window_size</strong> Total window span in time units</li>
 <li><strong>params</strong> Estimation method and parameters (default: <code>[BinningParams](/api_generated/Classes/structNeuralyzer_1_1Plots_1_1BinningParams.md){}</code>)</li>
 </ul>
 <p><strong>Return</strong>: One <code>[RateEstimate](/api_generated/Classes/structNeuralyzer_1_1Plots_1_1RateEstimate.md)</code> per unit, in input order</p>
-<p>Applies <code>estimateRate</code> independently to each <code>[UnitGatherContext](/api_generated/Classes/structNeuralyzer_1_1Plots_1_1UnitGatherContext.md)</code> in <code>units</code>. All units share the same <code>window_size</code> and <code>params</code>. The output vector is in the same order as the input and has the same length.</p>
+<p>Applies <code>[estimateRate](/api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.md#function-estimaterate)</code> independently to each <code>[UnitGatherContext](/api_generated/Classes/structNeuralyzer_1_1Plots_1_1UnitGatherContext.md)</code> in <code>units</code>. All units share the same <code>window_size</code> and <code>params</code>. The output vector is in the same order as the input and has the same length.</p>
 <p>This is the primary entry point for <code>[HeatmapWidget](/api_generated/Classes/classHeatmapWidget.md)</code>, which needs a <code>units × time_bins</code> rate matrix.</p>
 </section>
 <section id="function-scalinglabel" class="level3">
 <h3 class="anchored" data-anchor-id="function-scalinglabel">function scalingLabel</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">char</span> <span class="at">const</span> <span class="op">*</span> scalingLabel<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb16"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> <span class="at">const</span> <span class="op">*</span> scalingLabel<span class="op">(</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>    ScalingMode mode</span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Return a human-readable label for a ScalingMode value.</p>
+<p>Return a human-readable label for a <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-scalingmode">ScalingMode</a> value.</p>
 </section>
 <section id="function-scalingaxislabel" class="level3">
 <h3 class="anchored" data-anchor-id="function-scalingaxislabel">function scalingAxisLabel</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">char</span> <span class="at">const</span> <span class="op">*</span> scalingAxisLabel<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="dt">char</span> <span class="at">const</span> <span class="op">*</span> scalingAxisLabel<span class="op">(</span></span>
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    ScalingMode mode</span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Return the axis label appropriate for a scaling mode.</p>
@@ -1362,7 +1379,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="function-allscalingmodes" class="level3">
 <h3 class="anchored" data-anchor-id="function-allscalingmodes">function allScalingModes</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> ScalingMode <span class="op">&gt;</span> allScalingModes<span class="op">()</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>All available scaling modes (for populating combo boxes)</p>
+<p>All available scaling modes (for populating combo boxes).</p>
 </section>
 <section id="function-tofiringratehz" class="level3">
 <h3 class="anchored" data-anchor-id="function-tofiringratehz">function toFiringRateHz</h3>
@@ -1372,7 +1389,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> sample_spacing<span class="op">,</span></span>
 <span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> time_units_per_second</span>
 <span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Convert raw counts to firing rate (Hz)</p>
+<p>Convert raw counts to firing rate (Hz).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>values</strong> Value vector to modify in-place</li>
@@ -1438,7 +1455,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <table class="caption-top table">
 <thead>
 <tr class="header">
-<th>ScalingMode</th>
+<th><a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-scalingmode">ScalingMode</a></th>
 <th>Transform</th>
 </tr>
 </thead>
@@ -1521,7 +1538,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">size_t</span> n_resamples <span class="op">=</span><span class="dv">1000</span><span class="op">,</span></span>
 <span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    <span class="dt">double</span> ci_level <span class="op">=</span><span class="fl">0.95</span></span>
 <span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Bootstrap confidence band (resamples trials)</p>
+<p>Bootstrap confidence band (resamples trials).</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>data</strong> <a href="../../api_generated/Classes/structNeuralyzer_1_1Plots_1_1RateEstimateWithTrials.html">RateEstimateWithTrials</a> (must have per-trial data)</li>
@@ -1642,7 +1659,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> AlignmentPoint toAlignmentPoint<span class="op">(</span></span>
 <span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    IntervalAlignmentType type</span>
 <span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Convert IntervalAlignmentType to the plot-facing AlignmentPoint enum.</p>
+<p>Convert <a href="">IntervalAlignmentType</a> to the plot-facing <a href="../../api_generated/Namespaces/namespaceNeuralyzer_1_1Plots.html#enum-alignmentpoint">AlignmentPoint</a> enum.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>type</strong> UI alignment type.</li>
@@ -1700,7 +1717,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Extract absolute alignment times from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>intervals</strong> Interval series to inspect.</li>
+<li><strong>intervals</strong> <a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> series to inspect.</li>
 <li><strong>align</strong> Which interval point to use.</li>
 </ul>
 <p><strong>Return</strong>: Absolute-time values in interval row order.</p>
@@ -1772,7 +1789,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>post_window</strong> Time units after alignment.</li>
 <li><strong>target_time_frame</strong> <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> for the output interval, or null for raw time indices.</li>
 </ul>
-<p><strong>Return</strong>: Interval expressed in target_time_frame indices.</p>
+<p><strong>Return</strong>: <a href="../../api_generated/Files/interval__data_8hpp.html#using-interval">Interval</a> expressed in target_time_frame indices.</p>
 <p><strong>Postcondition</strong>: The start uses the next index at/after the window start; the end uses the nearest preceding index.</p>
 </section>
 <section id="function-createwindowsaroundevents" class="level3">
@@ -2059,7 +2076,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Template Parameters</strong>:</p>
 <ul>
-<li><strong>ViewState</strong> A type satisfying ViewStateLike.</li>
+<li><strong>ViewState</strong> A type satisfying [ViewStateLike].</li>
 </ul>
 <p><strong>Return</strong>: The orthographic projection matrix.</p>
 <p>This consolidates the updateMatrices() logic from all plot widgets. The caller provides the data ranges and centers (which vary per widget), and this function applies zoom and pan to produce the final projection.</p>
@@ -2077,7 +2094,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Template Parameters</strong>:</p>
 <ul>
-<li><strong>ViewState</strong> A type satisfying ViewStateWithBounds.</li>
+<li><strong>ViewState</strong> A type satisfying [ViewStateWithBounds].</li>
 </ul>
 <p><strong>Return</strong>: The orthographic projection matrix.</p>
 <p>Convenience overload for view states that have x_min, x_max, y_min, y_max. Derives x_range, x_center, y_range, y_center and calls the 4-arg computeOrthoProjection.</p>
@@ -2110,8 +2127,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Template Parameters</strong>:</p>
 <ul>
-<li><strong>State</strong> A type satisfying ZoomPanSettable (has setPan()).</li>
-<li><strong>ViewState</strong> A type satisfying ViewStateLike.</li>
+<li><strong>State</strong> A type satisfying [ZoomPanSettable] (has setPan()).</li>
+<li><strong>ViewState</strong> A type satisfying [ViewStateLike].</li>
 </ul>
 <p>Converts the pixel delta to world-space using the provided data ranges, widget dimensions, and current zoom level, then calls state.setPan().</p>
 </section>
@@ -2139,8 +2156,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Template Parameters</strong>:</p>
 <ul>
-<li><strong>State</strong> A type satisfying ZoomPanSettable.</li>
-<li><strong>ViewState</strong> A type satisfying ViewStateWithBounds.</li>
+<li><strong>State</strong> A type satisfying [ZoomPanSettable].</li>
+<li><strong>ViewState</strong> A type satisfying [ViewStateWithBounds].</li>
 </ul>
 <p>Convenience overload for view states that have x_min, x_max, y_min, y_max. Derives x_range and y_range and calls the 8-arg handlePanning.</p>
 </section>
@@ -2198,8 +2215,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
 <p><strong>Template Parameters</strong>:</p>
 <ul>
-<li><strong>State</strong> A type satisfying ZoomPanSettable.</li>
-<li><strong>ViewState</strong> A type satisfying ViewStateLike.</li>
+<li><strong>State</strong> A type satisfying [ZoomPanSettable].</li>
+<li><strong>ViewState</strong> A type satisfying [ViewStateLike].</li>
 </ul>
 <p>Uses adaptive range-proportional scaling: each wheel step changes the visible span by 3% of the current range (same feel as <a href="../../api_generated/Namespaces/namespaceDataViewer.html">DataViewer</a> adaptive mode). Modifier keys select the axis:</p>
 <ul>
@@ -2210,7 +2227,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-affectsaxis" class="level3">
 <h3 class="anchored" data-anchor-id="function-affectsaxis">function affectsAxis</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb66"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">bool</span> affectsAxis<span class="op">(</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb66"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="dt">bool</span> affectsAxis<span class="op">(</span></span>
 <span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a>    ViewAxisRefresh mask<span class="op">,</span></span>
 <span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a>    ViewAxisRefresh axis</span>
 <span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -2223,22 +2240,29 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state</span>
 <span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Capture zoom/pan fields from a view state.</p>
+</section>
+<section id="function-makeviewaxissyncsnapshot-1" class="level3">
+<h3 class="anchored" data-anchor-id="function-makeviewaxissyncsnapshot-1">function makeViewAxisSyncSnapshot</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb68"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span>ViewStateZoomPanLike ViewState<span class="op">&gt;</span></span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>ViewAxisSyncSnapshot makeViewAxisSyncSnapshot<span class="op">(</span></span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>    ViewState <span class="at">const</span> <span class="op">&amp;</span> view_state</span>
+<span id="cb68-4"><a href="#cb68-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Capture zoom/pan and data bounds from a view state.</p>
 </section>
 <section id="function-computeviewaxisrefreshmask" class="level3">
 <h3 class="anchored" data-anchor-id="function-computeviewaxisrefreshmask">function computeViewAxisRefreshMask</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb68"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> ViewAxisRefresh computeViewAxisRefreshMask<span class="op">(</span></span>
-<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a>    ViewAxisSyncSnapshot <span class="at">const</span> <span class="op">&amp;</span> before<span class="op">,</span></span>
-<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a>    ViewAxisSyncSnapshot <span class="at">const</span> <span class="op">&amp;</span> after</span>
-<span id="cb68-4"><a href="#cb68-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb69"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> ViewAxisRefresh computeViewAxisRefreshMask<span class="op">(</span></span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>    ViewAxisSyncSnapshot <span class="at">const</span> <span class="op">&amp;</span> before<span class="op">,</span></span>
+<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>    ViewAxisSyncSnapshot <span class="at">const</span> <span class="op">&amp;</span> after</span>
+<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Determine which axes need refresh between two snapshots.</p>
 </section>
 <section id="function-extractedgeevents" class="level3">
 <h3 class="anchored" data-anchor-id="function-extractedgeevents">function extractEdgeEvents</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb69"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> extractEdgeEvents<span class="op">(</span></span>
-<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> intervals<span class="op">,</span></span>
-<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a>    IntervalAlignmentType edge</span>
-<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb70"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalEventSeries <span class="op">&gt;</span> extractEdgeEvents<span class="op">(</span></span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DigitalIntervalSeries <span class="at">const</span> <span class="op">&gt;</span> intervals<span class="op">,</span></span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>    IntervalAlignmentType edge</span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Extract edge events from a <a href="../../api_generated/Classes/classDigitalIntervalSeries.html">DigitalIntervalSeries</a>.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -2250,12 +2274,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-runheatmappipeline" class="level3">
 <h3 class="anchored" data-anchor-id="function-runheatmappipeline">function runHeatmapPipeline</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb70"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>HeatmapPipelineResult runHeatmapPipeline<span class="op">(</span></span>
-<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
-<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
-<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data<span class="op">,</span></span>
-<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineConfig <span class="at">const</span> <span class="op">&amp;</span> config</span>
-<span id="cb70-6"><a href="#cb70-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb71"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>HeatmapPipelineResult runHeatmapPipeline<span class="op">(</span></span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>shared_ptr<span class="op">&lt;</span> DataManager <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> data_manager<span class="op">,</span></span>
+<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
+<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a>    PlotAlignmentData <span class="at">const</span> <span class="op">&amp;</span> alignment_data<span class="op">,</span></span>
+<span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineConfig <span class="at">const</span> <span class="op">&amp;</span> config</span>
+<span id="cb71-6"><a href="#cb71-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Execute the heatmap data pipeline without an OpenGL context.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -2275,12 +2299,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-computesortorder" class="level3">
 <h3 class="anchored" data-anchor-id="function-computesortorder">function computeSortOrder</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb71"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> computeSortOrder<span class="op">(</span></span>
-<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineResult <span class="at">const</span> <span class="op">&amp;</span> result<span class="op">,</span></span>
-<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
-<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a>    HeatmapSortMode sort_mode<span class="op">,</span></span>
-<span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> ascending</span>
-<span id="cb71-6"><a href="#cb71-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb72"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> computeSortOrder<span class="op">(</span></span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineResult <span class="at">const</span> <span class="op">&amp;</span> result<span class="op">,</span></span>
+<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
+<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a>    HeatmapSortMode sort_mode<span class="op">,</span></span>
+<span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a>    <span class="dt">bool</span> ascending</span>
+<span id="cb72-6"><a href="#cb72-6" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Compute a permutation vector that sorts the pipeline rows.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -2294,11 +2318,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="function-applysortorder" class="level3">
 <h3 class="anchored" data-anchor-id="function-applysortorder">function applySortOrder</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb72"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> applySortOrder<span class="op">(</span></span>
-<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineResult <span class="op">&amp;</span> result<span class="op">,</span></span>
-<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
-<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> sort_indices</span>
-<span id="cb72-5"><a href="#cb72-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb73"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="dt">void</span> applySortOrder<span class="op">(</span></span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>    HeatmapPipelineResult <span class="op">&amp;</span> result<span class="op">,</span></span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>string <span class="op">&gt;</span> <span class="op">&amp;</span> unit_keys<span class="op">,</span></span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">std::</span>vector<span class="op">&lt;</span> <span class="bu">std::</span>size_t <span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;</span> sort_indices</span>
+<span id="cb73-5"><a href="#cb73-5" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Apply a precomputed permutation to the pipeline result and unit keys.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -2313,25 +2337,25 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="attributes-documentation">Attributes Documentation</h2>
 <section id="variable-default_wheel_pixels_per_zoom_step" class="level3">
 <h3 class="anchored" data-anchor-id="variable-default_wheel_pixels_per_zoom_step">variable DEFAULT_WHEEL_PIXELS_PER_ZOOM_STEP</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb73"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">float</span> DEFAULT_WHEEL_PIXELS_PER_ZOOM_STEP <span class="op">=</span> <span class="fl">20.0</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb74"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> DEFAULT_WHEEL_PIXELS_PER_ZOOM_STEP <span class="op">=</span> <span class="fl">20.0</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Pixels of vertical trackpad movement equivalent to one mouse-wheel notch.</p>
 </section>
 <section id="variable-wheel_angle_delta_per_notch" class="level3">
 <h3 class="anchored" data-anchor-id="variable-wheel_angle_delta_per_notch">variable WHEEL_ANGLE_DELTA_PER_NOTCH</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb74"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">float</span> WHEEL_ANGLE_DELTA_PER_NOTCH <span class="op">=</span> <span class="fl">120.0</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb75"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="dt">float</span> WHEEL_ANGLE_DELTA_PER_NOTCH <span class="op">=</span> <span class="fl">120.0</span><span class="bu">f</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Qt angleDelta units per physical wheel notch (8 degrees x 15).</p>
 </section>
 <section id="variable-adaptive_zoom_range_fraction" class="level3">
 <h3 class="anchored" data-anchor-id="variable-adaptive_zoom_range_fraction">variable ADAPTIVE_ZOOM_RANGE_FRACTION</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb75"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">double</span> ADAPTIVE_ZOOM_RANGE_FRACTION <span class="op">=</span> <span class="fl">0.03</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb76"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> ADAPTIVE_ZOOM_RANGE_FRACTION <span class="op">=</span> <span class="fl">0.03</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Visible-range fraction removed per zoom step (matches <a href="">DataViewer</a> adaptive normal mode).</p>
 </section>
 <section id="variable-min_adaptive_visible_range_scale" class="level3">
 <h3 class="anchored" data-anchor-id="variable-min_adaptive_visible_range_scale">variable MIN_ADAPTIVE_VISIBLE_RANGE_SCALE</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb76"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">double</span> MIN_ADAPTIVE_VISIBLE_RANGE_SCALE <span class="op">=</span> <span class="fl">0.01</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb77"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> MIN_ADAPTIVE_VISIBLE_RANGE_SCALE <span class="op">=</span> <span class="fl">0.01</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Minimum visible-range scale factor in a single wheel event (prevents runaway zoom).</p>
 <hr>
-<p>Updated on 2026-10-09 at 13:36:32 +0000</p>
+<p>Updated on 2026-11-13 at 20:25:41 +0000</p>
 
 
 </section>
@@ -2343,15 +2367,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -2430,7 +2489,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -2439,8 +2499,69 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -2454,6 +2575,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -2616,44 +2738,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -2751,6 +2883,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       }
     }
   });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
 

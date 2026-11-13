@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -72,18 +72,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-0c66bec081e5215138e9fd61e9c23ef8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -116,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -139,6 +140,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -168,13 +170,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -268,6 +276,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -282,15 +291,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -334,8 +342,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
+            <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -344,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
@@ -364,7 +373,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#typedef-costfunction" id="toc-typedef-costfunction" class="nav-link" data-scroll-target="#typedef-costfunction">typedef CostFunction</a></li>
   <li><a href="#using-hypothesisscoringfunction" id="toc-using-hypothesisscoringfunction" class="nav-link" data-scroll-target="#using-hypothesisscoringfunction">using HypothesisScoringFunction</a></li>
   <li><a href="#using-featurecache" id="toc-using-featurecache" class="nav-link" data-scroll-target="#using-featurecache">using FeatureCache</a></li>
-  <li><a href="#typedef-smoothedresults" id="toc-typedef-smoothedresults" class="nav-link" data-scroll-target="#typedef-smoothedresults">typedef SmoothedResults</a></li>
+  <li><a href="#using-smoothedresults" id="toc-using-smoothedresults" class="nav-link" data-scroll-target="#using-smoothedresults">using SmoothedResults</a></li>
   <li><a href="#typedef-progresscallback" id="toc-typedef-progresscallback" class="nav-link" data-scroll-target="#typedef-progresscallback">typedef ProgressCallback</a></li>
   <li><a href="#using-framebucket" id="toc-using-framebucket" class="nav-link" data-scroll-target="#using-framebucket">using FrameBucket</a></li>
   <li><a href="#using-kalmanfilter" id="toc-using-kalmanfilter" class="nav-link" data-scroll-target="#using-kalmanfilter">using KalmanFilter</a></li>
@@ -408,7 +417,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -462,99 +471,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1AnchorPositions.html">StateEstimation::AnchorPositions</a></strong> <br>Locate anchors with both meta-node and member indices.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1ArcChain.html">StateEstimation::ArcChain</a></strong></td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1ArcSpec.html">StateEstimation::ArcSpec</a></strong> <br>Arc specification for a directed graph edge used in min-cost flow.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1Assignment.html">StateEstimation::Assignment</a></strong> <br>The result of the assignment process.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1AssignmentConstraints.html">StateEstimation::AssignmentConstraints</a></strong> <br>Constraints for assignment operations.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1AssignmentProblem.html">StateEstimation::AssignmentProblem</a></strong> <br>Abstract interface for solving assignment problems.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1AssignmentResult.html">StateEstimation::AssignmentResult</a></strong> <br>Result of an assignment operation.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1ChainHypotheses.html">StateEstimation::ChainHypotheses</a></strong> <br>Manages multiple hypothesis branches for a single chain during N-scan.</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1AssignmentConstraints.html">StateEstimation::AssignmentConstraints</a></strong> <br>Constraints for assignment operations.</td>
 </tr>
 <tr class="odd">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1CompositeFeatureExtractor.html">StateEstimation::CompositeFeatureExtractor</a></strong> <br>Feature extractor that chains multiple extractors together.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1Config.html">StateEstimation::Config</a></strong> <br>Configuration for line feature extraction.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1CorrelatedMaskPointTracker.html">StateEstimation::CorrelatedMaskPointTracker</a></strong> <br>A discrete particle filter for tracking multiple correlated points.</td>
+<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1AssignmentProblem.html">StateEstimation::AssignmentProblem</a></strong> <br>Abstract interface for solving assignment problems.</td>
 </tr>
 <tr class="even">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1DataTrackingBridge.html">StateEstimation::DataTrackingBridge</a></strong> <br>Helper class to bridge between the new <a href="../../api_generated/Namespaces/namespaceStateEstimation.html">StateEstimation</a> framework and existing <a href="../../api_generated/Classes/classLineData.html">LineData</a> tracking.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1ElementsDataAdapter.html">StateEstimation::ElementsDataAdapter</a></strong> <br>Simple adapter that wraps elements() output for <a href="../../api_generated/Namespaces/namespaceStateEstimation.html">StateEstimation</a> compatibility.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1FeatureDescriptor.html">StateEstimation::FeatureDescriptor</a></strong> <br>Metadata for a feature within a feature vector.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1FeatureExtractor.html">StateEstimation::FeatureExtractor</a></strong> <br>Abstract interface for extracting features from data objects.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1FeatureMetadata.html">StateEstimation::FeatureMetadata</a></strong> <br>Metadata describing a feature’s characteristics.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1FeaturePrediction.html">StateEstimation::FeaturePrediction</a></strong> <br><a href="">Prediction</a> result from multi-feature Kalman filter.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1FeatureVector.html">StateEstimation::FeatureVector</a></strong> <br>Container for multiple features with metadata.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1FilterState.html">StateEstimation::FilterState</a></strong> <br>Represents the state (mean and covariance) of a tracked object.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1FlattenedItem.html">StateEstimation::FlattenedItem</a></strong> <br>A single flattened data item with associated metadata for tracking.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1FlattenedMaskAdapter.html">StateEstimation::FlattenedMaskAdapter</a></strong> <br>Adapter that flattens time-mask structure into individual time-mask pairs.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1FlattenedMaskItem.html">StateEstimation::FlattenedMaskItem</a></strong> <br>A single flattened mask data item with associated metadata for tracking.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1GroundTruthSegment.html">StateEstimation::GroundTruthSegment</a></strong> <br>Structure to hold ground truth anchor pairs for a group. Each pair represents consecutive ground truth labels for a group.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1GroupTracker.html">StateEstimation::GroupTracker</a></strong> <br>Group tracker that manages multiple groups with multi-feature Kalman filters.</td>
+<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1HungarianAssignment.html">StateEstimation::HungarianAssignment</a></strong> <br>Hungarian algorithm implementation for assignment.</td>
 </tr>
 <tr class="odd">
 <td>class</td>
@@ -562,15 +491,63 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1HungarianAssignment.html">StateEstimation::HungarianAssignment</a></strong> <br>Hungarian algorithm implementation for assignment.</td>
+<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1IAssigner.html">StateEstimation::IAssigner</a></strong> <br>Abstract interface for a data association (assignment) algorithm.</td>
 </tr>
 <tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1Hypothesis.html">StateEstimation::Hypothesis</a></strong> <br>Represents a single hypothesis path during N-scan lookahead. Tracks the sequence of assignments, the filter state, and accumulated cost.</td>
 </tr>
 <tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1ChainHypotheses.html">StateEstimation::ChainHypotheses</a></strong> <br>Manages multiple hypothesis branches for a single chain during N-scan.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1FilterState.html">StateEstimation::FilterState</a></strong> <br>Represents the state (mean and covariance) of a tracked object.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1Measurement.html">StateEstimation::Measurement</a></strong> <br>Represents a measurement (an extracted feature vector).</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1Prediction.html">StateEstimation::Prediction</a></strong> <br>Represents a predicted state for a tracked group.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1Observation.html">StateEstimation::Observation</a></strong> <br>Represents an unassigned observation.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1Assignment.html">StateEstimation::Assignment</a></strong> <br>The result of the assignment process.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1FlattenedItem.html">StateEstimation::FlattenedItem</a></strong> <br>A single flattened data item with associated metadata for tracking.</td>
+</tr>
+<tr class="odd">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1IAssigner.html">StateEstimation::IAssigner</a></strong> <br>Abstract interface for a data association (assignment) algorithm.</td>
+<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1ElementsDataAdapter.html">StateEstimation::ElementsDataAdapter</a></strong> <br>Simple adapter that wraps elements() output for <a href="../../api_generated/Namespaces/namespaceStateEstimation.html">StateEstimation</a> compatibility.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1CompositeFeatureExtractor.html">StateEstimation::CompositeFeatureExtractor</a></strong> <br>Feature extractor that chains multiple extractors together.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1FeatureMetadata.html">StateEstimation::FeatureMetadata</a></strong> <br>Metadata describing a feature’s characteristics.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1FeatureDescriptor.html">StateEstimation::FeatureDescriptor</a></strong> <br>Metadata for a feature within a feature vector.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1FeatureVector.html">StateEstimation::FeatureVector</a></strong> <br>Container for multiple features with metadata.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1FeatureExtractor.html">StateEstimation::FeatureExtractor</a></strong> <br>Abstract interface for extracting features from data objects.</td>
 </tr>
 <tr class="odd">
 <td>class</td>
@@ -578,11 +555,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1IFilter.html">StateEstimation::IFilter</a></strong> <br>Abstract interface for a state estimation filter.</td>
+<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1LineBasePointExtractor.html">StateEstimation::LineBasePointExtractor</a></strong> <br>Feature extractor that extracts the base point (first point) of a line.</td>
 </tr>
 <tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1LineCentroidExtractor.html">StateEstimation::LineCentroidExtractor</a></strong> <br>Feature extractor that computes line centroids on-demand.</td>
+</tr>
+<tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1IntervalHistory.html">StateEstimation::IntervalHistory</a></strong> <br>Internal per-group tracking buffers for a single interval between anchors.</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1Config.html">StateEstimation::Config</a></strong> <br>Configuration for line feature extraction.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1LineFeatureExtractor.html">StateEstimation::LineFeatureExtractor</a></strong> <br>Feature extractor for <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> objects.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1LineLengthExtractor.html">StateEstimation::LineLengthExtractor</a></strong> <br>Feature extractor that computes line length.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1IFilter.html">StateEstimation::IFilter</a></strong> <br>Abstract interface for a state estimation filter.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
@@ -597,60 +590,52 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1KalmanMatrixBuilder.html">StateEstimation::KalmanMatrixBuilder</a></strong> <br>Utility class for building Kalman filter matrices for composite features.</td>
 </tr>
 <tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1LineBasePointExtractor.html">StateEstimation::LineBasePointExtractor</a></strong> <br>Feature extractor that extracts the base point (first point) of a line.</td>
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1FlattenedMaskItem.html">StateEstimation::FlattenedMaskItem</a></strong> <br>A single flattened mask data item with associated metadata for tracking.</td>
 </tr>
 <tr class="even">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1LineCentroidExtractor.html">StateEstimation::LineCentroidExtractor</a></strong> <br>Feature extractor that computes line centroids on-demand.</td>
+<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1FlattenedMaskAdapter.html">StateEstimation::FlattenedMaskAdapter</a></strong> <br>Adapter that flattens time-mask structure into individual time-mask pairs.</td>
 </tr>
 <tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1LineFeatureExtractor.html">StateEstimation::LineFeatureExtractor</a></strong> <br>Feature extractor for <a href="../../api_generated/Classes/classLine2D.html">Line2D</a> objects.</td>
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1PointHash.html">StateEstimation::PointHash</a></strong> <br>Hash function for <a href="../../api_generated/Classes/structPoint2D.html">Point2D<uint32_t></uint32_t></a> to use in unordered_set.</td>
 </tr>
 <tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1LineLengthExtractor.html">StateEstimation::LineLengthExtractor</a></strong> <br>Feature extractor that computes line length.</td>
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1PointEqual.html">StateEstimation::PointEqual</a></strong> <br>Equality function for <a href="../../api_generated/Classes/structPoint2D.html">Point2D<uint32_t></uint32_t></a>.</td>
 </tr>
 <tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1Particle.html">StateEstimation::Particle</a></strong> <br>A weighted particle representing a discrete state (pixel location + velocity).</td>
+</tr>
+<tr class="even">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1MaskPointTracker.html">StateEstimation::MaskPointTracker</a></strong> <br>A discrete particle filter for tracking a single point through mask data.</td>
 </tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1MultiPointState.html">StateEstimation::MultiPointState</a></strong> <br>State for tracking multiple correlated points.</td>
+</tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1Measurement.html">StateEstimation::Measurement</a></strong> <br>Represents a measurement (an extracted feature vector).</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1MultiPointParticle.html">StateEstimation::MultiPointParticle</a></strong> <br><a href="../../api_generated/Classes/structStateEstimation_1_1Particle.html">Particle</a> for multi-point tracking.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1CorrelatedMaskPointTracker.html">StateEstimation::CorrelatedMaskPointTracker</a></strong> <br>A discrete particle filter for tracking multiple correlated points.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1ArcSpec.html">StateEstimation::ArcSpec</a></strong> <br>Arc specification for a directed graph edge used in min-cost flow.</td>
 </tr>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1MetaNode.html">StateEstimation::MetaNode</a></strong> <br>Represents a greedy-linked sequence (meta-node) of cheap assignments across consecutive frames.</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1TrackerDiagnostics.html">StateEstimation::TrackerDiagnostics</a></strong></td>
 </tr>
 <tr class="even">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1MinCostFlowTracker.html">StateEstimation::MinCostFlowTracker</a></strong> <br>A tracker that uses a global min-cost flow optimization to solve data association.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1MultiFeatureKalmanConfig.html">StateEstimation::MultiFeatureKalmanConfig</a></strong> <br>Configuration for a multi-feature Kalman filter.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1MultiFeatureKalmanFilter.html">StateEstimation::MultiFeatureKalmanFilter</a></strong> <br>Multi-feature Kalman filter for tracking arbitrary feature sets.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1MultiPointParticle.html">StateEstimation::MultiPointParticle</a></strong> <br><a href="">Particle</a> for multi-point tracking.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1MultiPointState.html">StateEstimation::MultiPointState</a></strong> <br>State for tracking multiple correlated points.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1NodeInfo.html">StateEstimation::NodeInfo</a></strong></td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1Observation.html">StateEstimation::Observation</a></strong> <br>Represents an unassigned observation.</td>
 </tr>
 <tr class="odd">
 <td>class</td>
@@ -658,43 +643,51 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1OutlierDetectionResults.html">StateEstimation::OutlierDetectionResults</a></strong> <br>Results from outlier detection analysis.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1OutlierInfo.html">StateEstimation::OutlierInfo</a></strong> <br>Outlier information for a specific observation.</td>
 </tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1Particle.html">StateEstimation::Particle</a></strong> <br>A weighted particle representing a discrete state (pixel location + velocity)</td>
-</tr>
 <tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1PointEqual.html">StateEstimation::PointEqual</a></strong> <br>Equality function for <a href="../../api_generated/Classes/structPoint2D.html">Point2D<uint32_t></uint32_t></a></td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1PointHash.html">StateEstimation::PointHash</a></strong> <br>Hash function for <a href="../../api_generated/Classes/structPoint2D.html">Point2D<uint32_t></uint32_t></a> to use in unordered_set.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1Prediction.html">StateEstimation::Prediction</a></strong> <br>Represents a predicted state for a tracked group.</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1OutlierDetectionResults.html">StateEstimation::OutlierDetectionResults</a></strong> <br>Results from outlier detection analysis.</td>
 </tr>
 <tr class="even">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1StateEstimator.html">StateEstimation::StateEstimator</a></strong> <br>State estimator for smoothing and outlier detection on grouped data.</td>
 </tr>
 <tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1IntervalHistory.html">StateEstimation::IntervalHistory</a></strong> <br>Internal per-group tracking buffers for a single interval between anchors.</td>
+</tr>
+<tr class="even">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1Tracker.html">StateEstimation::Tracker</a></strong> <br>The new tracker implementing iterative RTS smoothing without dynamic measurement noise.</td>
 </tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1AnchorPositions.html">StateEstimation::AnchorPositions</a></strong> <br>Locate anchors with both meta-node and member indices.</td>
+</tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1TrackerDiagnostics.html">StateEstimation::TrackerDiagnostics</a></strong></td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1ArcChain.html">StateEstimation::ArcChain</a></strong></td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1GroundTruthSegment.html">StateEstimation::GroundTruthSegment</a></strong> <br>Structure to hold ground truth anchor pairs for a group. Each pair represents consecutive ground truth labels for a group.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1MultiFeatureKalmanConfig.html">StateEstimation::MultiFeatureKalmanConfig</a></strong> <br>Configuration for a multi-feature Kalman filter.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1FeaturePrediction.html">StateEstimation::FeaturePrediction</a></strong> <br><a href="../../api_generated/Classes/structStateEstimation_1_1Prediction.html">Prediction</a> result from multi-feature Kalman filter.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1MultiFeatureKalmanFilter.html">StateEstimation::MultiFeatureKalmanFilter</a></strong> <br>Multi-feature Kalman filter for tracking arbitrary feature sets.</td>
 </tr>
 <tr class="odd">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1TrackingSession.html">StateEstimation::TrackingSession</a></strong> <br>Manages a complete tracking session with multiple groups and features.</td>
+<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1GroupTracker.html">StateEstimation::GroupTracker</a></strong> <br>Group tracker that manages multiple groups with multi-feature Kalman filters.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
@@ -703,6 +696,22 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="odd">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1TrackingUpdateResult.html">StateEstimation::TrackingUpdateResult</a></strong> <br>Result of a tracking update.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1TrackingSession.html">StateEstimation::TrackingSession</a></strong> <br>Manages a complete tracking session with multiple groups and features.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classStateEstimation_1_1DataTrackingBridge.html">StateEstimation::DataTrackingBridge</a></strong> <br>Helper class to bridge between the new <a href="../../api_generated/Namespaces/namespaceStateEstimation.html">StateEstimation</a> framework and existing <a href="../../api_generated/Classes/classLineData.html">LineData</a> tracking.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1NodeInfo.html">StateEstimation::NodeInfo</a></strong></td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structStateEstimation_1_1MetaNode.html">StateEstimation::MetaNode</a></strong> <br>Represents a greedy-linked sequence (meta-node) of cheap assignments across consecutive frames.</td>
 </tr>
 </tbody>
 </table>
@@ -746,8 +755,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Namespaces/namespaceStateEstimation.html#using-featurecache">FeatureCache</a></strong> <br>Stores memoized feature calculations for a single data object.</td>
 </tr>
 <tr class="even">
-<td>typedef std::map&lt; <a href="../../api_generated/Files/DataManager_8hpp.html#using-groupid">GroupId</a>, std::vector&lt; <a href="../../api_generated/Classes/structStateEstimation_1_1FilterState.html">FilterState</a> &gt; &gt;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceStateEstimation.html#typedef-smoothedresults">SmoothedResults</a></strong> <br>Smoothed results for each group over frames.</td>
+<td>using std::map&lt; <a href="../../api_generated/Files/DataManager_8hpp.html#using-groupid">GroupId</a>, std::vector&lt; <a href="../../api_generated/Classes/structStateEstimation_1_1FilterState.html">FilterState</a> &gt; &gt;</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceStateEstimation.html#using-smoothedresults">SmoothedResults</a></strong> <br>Smoothed results for each group over frames.</td>
 </tr>
 <tr class="odd">
 <td>typedef std::function&lt; void(int)&gt;</td>
@@ -812,15 +821,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>template &lt;typename Item &gt; <br>auto const &amp;</td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceStateEstimation.html#function-getdata">getData</a></strong>(Item const &amp; item)<br>Helper to extract data from a DataItem (supports both tuple and accessor)</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceStateEstimation.html#function-getdata">getData</a></strong>(Item const &amp; item)<br>Helper to extract data from a [DataItem] (supports both tuple and accessor).</td>
 </tr>
 <tr class="odd">
 <td>template &lt;typename Item &gt; <br><a href="../../api_generated/Classes/structEntityId.html">EntityId</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceStateEstimation.html#function-getentityid">getEntityId</a></strong>(Item const &amp; item)<br>Helper to extract <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> from a DataItem (supports both tuple and accessor)</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceStateEstimation.html#function-getentityid">getEntityId</a></strong>(Item const &amp; item)<br>Helper to extract <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> from a [DataItem] (supports both tuple and accessor).</td>
 </tr>
 <tr class="even">
 <td>template &lt;typename Item &gt; <br><a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespaceStateEstimation.html#function-gettimeframeindex">getTimeFrameIndex</a></strong>(Item const &amp; item)<br>Helper to extract <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> from a DataItem (supports both tuple and accessor)</td>
+<td><strong><a href="../../api_generated/Namespaces/namespaceStateEstimation.html#function-gettimeframeindex">getTimeFrameIndex</a></strong>(Item const &amp; item)<br>Helper to extract <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> from a [DataItem] (supports both tuple and accessor).</td>
 </tr>
 <tr class="odd">
 <td>template &lt;typename DataType &gt; <br>DataType const *</td>
@@ -896,7 +905,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>constexpr double</td>
+<td>double</td>
 <td><strong><a href="../../api_generated/Namespaces/namespaceStateEstimation.html#variable-ksymmetrizehalf">kSymmetrizeHalf</a></strong></td>
 </tr>
 </tbody>
@@ -1056,7 +1065,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="typedef-costfunction" class="level3">
 <h3 class="anchored" data-anchor-id="typedef-costfunction">typedef CostFunction</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span> <span class="dt">double</span><span class="op">(</span>FilterState <span class="at">const</span> <span class="op">&amp;,</span> Eigen<span class="op">::</span>VectorXd <span class="at">const</span> <span class="op">&amp;,</span> <span class="dt">int</span><span class="op">)&gt;</span> StateEstimation<span class="op">::</span>CostFunction<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span> <span class="dt">double</span><span class="op">(</span>FilterState <span class="at">const</span> <span class="op">&amp;,</span> Eigen<span class="op">::</span>VectorXd <span class="at">const</span> <span class="op">&amp;,</span> <span class="dt">int</span><span class="op">)&gt;</span> StateEstimation<span class="op">::</span>CostFunction <span class="op">=</span>  <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">double</span><span class="op">(</span>FeatureVector <span class="at">const</span> <span class="op">&amp;</span> object<span class="op">,</span> FeatureVector <span class="at">const</span> <span class="op">&amp;</span> target<span class="op">)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Cost function for computing assignment costs between feature vectors.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1069,53 +1078,53 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="using-hypothesisscoringfunction" class="level3">
 <h3 class="anchored" data-anchor-id="using-hypothesisscoringfunction">using HypothesisScoringFunction</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> StateEstimation<span class="op">::</span>HypothesisScoringFunction <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">double</span><span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> StateEstimation<span class="op">::</span>HypothesisScoringFunction <span class="op">=</span>  <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">double</span><span class="op">(</span><span class="bu">std::</span>vector<span class="op">&lt;</span><span class="dt">double</span><span class="op">&gt;</span> <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Scoring function for combining costs across multiple frames. Allows easy switching between simple sum, log-likelihood, or discounted costs.</p>
 </section>
 <section id="using-featurecache" class="level3">
 <h3 class="anchored" data-anchor-id="using-featurecache">using FeatureCache</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> StateEstimation<span class="op">::</span>FeatureCache <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>any<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> StateEstimation<span class="op">::</span>FeatureCache <span class="op">=</span>  <span class="bu">std::</span>map<span class="op">&lt;</span><span class="bu">std::</span>string<span class="op">,</span> <span class="bu">std::</span>any<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Stores memoized feature calculations for a single data object.</p>
 </section>
-<section id="typedef-smoothedresults" class="level3">
-<h3 class="anchored" data-anchor-id="typedef-smoothedresults">typedef SmoothedResults</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="bu">std::</span>map<span class="op">&lt;</span> GroupId<span class="op">,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span> FilterState <span class="op">&gt;</span> <span class="op">&gt;</span> StateEstimation<span class="op">::</span>SmoothedResults<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="using-smoothedresults" class="level3">
+<h3 class="anchored" data-anchor-id="using-smoothedresults">using SmoothedResults</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> StateEstimation<span class="op">::</span>SmoothedResults <span class="op">=</span>  <span class="bu">std::</span>map<span class="op">&lt;</span>GroupId<span class="op">,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>FilterState<span class="op">&gt;&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Smoothed results for each group over frames.</p>
 </section>
 <section id="typedef-progresscallback" class="level3">
 <h3 class="anchored" data-anchor-id="typedef-progresscallback">typedef ProgressCallback</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span> <span class="dt">void</span><span class="op">(</span><span class="dt">int</span><span class="op">)&gt;</span> StateEstimation<span class="op">::</span>ProgressCallback<span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span> <span class="dt">void</span><span class="op">(</span><span class="dt">int</span><span class="op">)&gt;</span> StateEstimation<span class="op">::</span>ProgressCallback <span class="op">=</span>  <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">(</span><span class="dt">int</span><span class="op">)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Progress callback as percent complete [0,100].</p>
 <p>Progress callback where percent complete [0,100].</p>
 </section>
 <section id="using-framebucket" class="level3">
 <h3 class="anchored" data-anchor-id="using-framebucket">using FrameBucket</h3>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb6"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">template</span> <span class="op">&lt;</span><span class="kw">typename</span> DataType <span class="op">&gt;</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> StateEstimation<span class="op">::</span>FrameBucket <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>tuple<span class="op">&lt;</span>DataType <span class="at">const</span> <span class="op">*,</span> EntityId<span class="op">,</span> TimeFrameIndex<span class="op">&gt;</span> <span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> StateEstimation<span class="op">::</span>FrameBucket <span class="op">=</span>  <span class="bu">std::</span>vector<span class="op">&lt;</span><span class="bu">std::</span>tuple<span class="op">&lt;</span>DataType <span class="at">const</span> <span class="op">*,</span> EntityId<span class="op">,</span> TimeFrameIndex<span class="op">&gt;&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="using-kalmanfilter" class="level3">
 <h3 class="anchored" data-anchor-id="using-kalmanfilter">using KalmanFilter</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> StateEstimation<span class="op">::</span>KalmanFilter <span class="op">=</span> <span class="kw">typedef</span> KalmanFilterT<span class="op">&lt;</span>Eigen<span class="op">::</span>Dynamic<span class="op">,</span> Eigen<span class="op">::</span>Dynamic<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> StateEstimation<span class="op">::</span>KalmanFilter <span class="op">=</span>  KalmanFilterT<span class="op">&lt;</span>Eigen<span class="op">::</span>Dynamic<span class="op">,</span> Eigen<span class="op">::</span>Dynamic<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Dynamic-size Kalman filter alias using the templated implementation.</p>
 <p>This maintains the existing type name while consolidating code into a single templated implementation that also supports fixed-size variants in tests.</p>
 </section>
 <section id="using-smoothedgroupresults" class="level3">
 <h3 class="anchored" data-anchor-id="using-smoothedgroupresults">using SmoothedGroupResults</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> StateEstimation<span class="op">::</span>SmoothedGroupResults <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>map<span class="op">&lt;</span>GroupId<span class="op">,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>FilterState<span class="op">&gt;</span> <span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> StateEstimation<span class="op">::</span>SmoothedGroupResults <span class="op">=</span>  <span class="bu">std::</span>map<span class="op">&lt;</span>GroupId<span class="op">,</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>FilterState<span class="op">&gt;&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Smoothed results for each group over frames.</p>
 </section>
 <section id="using-groundtruthmap" class="level3">
 <h3 class="anchored" data-anchor-id="using-groundtruthmap">using GroundTruthMap</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> StateEstimation<span class="op">::</span>GroundTruthMap <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>map<span class="op">&lt;</span>TimeFrameIndex<span class="op">,</span> <span class="bu">std::</span>map<span class="op">&lt;</span>GroupId<span class="op">,</span> EntityId<span class="op">&gt;</span> <span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> StateEstimation<span class="op">::</span>GroundTruthMap <span class="op">=</span>  <span class="bu">std::</span>map<span class="op">&lt;</span>TimeFrameIndex<span class="op">,</span> <span class="bu">std::</span>map<span class="op">&lt;</span>GroupId<span class="op">,</span> EntityId<span class="op">&gt;&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 <section id="using-trackingprogresscallback" class="level3">
 <h3 class="anchored" data-anchor-id="using-trackingprogresscallback">using TrackingProgressCallback</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> StateEstimation<span class="op">::</span>TrackingProgressCallback <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">(</span><span class="dt">int</span> percentage<span class="op">,</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> status<span class="op">)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb10"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> StateEstimation<span class="op">::</span>TrackingProgressCallback <span class="op">=</span>  <span class="bu">std::</span>function<span class="op">&lt;</span><span class="dt">void</span><span class="op">(</span><span class="dt">int</span> percentage<span class="op">,</span> <span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;</span> status<span class="op">)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Callback function type for tracking progress.</p>
 </section>
 <section id="using-path" class="level3">
 <h3 class="anchored" data-anchor-id="using-path">using Path</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> StateEstimation<span class="op">::</span>Path <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>vector<span class="op">&lt;</span>NodeInfo<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> StateEstimation<span class="op">::</span>Path <span class="op">=</span>  <span class="bu">std::</span>vector<span class="op">&lt;</span>NodeInfo<span class="op">&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
 </section>
 <section id="functions-documentation" class="level2">
@@ -1153,7 +1162,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>H</strong> <a href="../../api_generated/Classes/structStateEstimation_1_1Measurement.html">Measurement</a> matrix (maps state space to measurement space)</li>
 <li><strong>R</strong> <a href="../../api_generated/Classes/structStateEstimation_1_1Measurement.html">Measurement</a> noise covariance matrix</li>
 </ul>
-<p><strong>Return</strong>: CostFunction that computes Mahalanobis distance</p>
+<p><strong>Return</strong>: <a href="../../api_generated/Namespaces/namespaceStateEstimation.html#typedef-costfunction">CostFunction</a> that computes Mahalanobis distance</p>
 <p>This is the default cost function that computes the Mahalanobis distance between the predicted measurement (H * predicted_state) and the actual observation.</p>
 </section>
 <section id="function-createdynamicsawarecostfunction" class="level3">
@@ -1197,7 +1206,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> getData<span class="op">(</span></span>
 <span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    Item <span class="at">const</span> <span class="op">&amp;</span> item</span>
 <span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Helper to extract data from a DataItem (supports both tuple and accessor)</p>
+<p>Helper to extract data from a [DataItem] (supports both tuple and accessor).</p>
 </section>
 <section id="function-getentityid" class="level3">
 <h3 class="anchored" data-anchor-id="function-getentityid">function getEntityId</h3>
@@ -1205,7 +1214,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> EntityId getEntityId<span class="op">(</span></span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    Item <span class="at">const</span> <span class="op">&amp;</span> item</span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Helper to extract <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> from a DataItem (supports both tuple and accessor)</p>
+<p>Helper to extract <a href="../../api_generated/Classes/structEntityId.html">EntityId</a> from a [DataItem] (supports both tuple and accessor).</p>
 </section>
 <section id="function-gettimeframeindex" class="level3">
 <h3 class="anchored" data-anchor-id="function-gettimeframeindex">function getTimeFrameIndex</h3>
@@ -1213,7 +1222,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="kw">inline</span> TimeFrameIndex getTimeFrameIndex<span class="op">(</span></span>
 <span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    Item <span class="at">const</span> <span class="op">&amp;</span> item</span>
 <span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="op">)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>Helper to extract <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> from a DataItem (supports both tuple and accessor)</p>
+<p>Helper to extract <a href="../../api_generated/Classes/structTimeFrameIndex.html">TimeFrameIndex</a> from a [DataItem] (supports both tuple and accessor).</p>
 </section>
 <section id="function-findentity" class="level3">
 <h3 class="anchored" data-anchor-id="function-findentity">function findEntity</h3>
@@ -1341,7 +1350,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li><strong>ground_truth</strong> Map of frame -&gt; (group_id -&gt; entity_id)</li>
 </ul>
 <p><strong>Return</strong>: Vector of ground truth segments, ordered by group and frame</p>
-<p>Groups ground truth labels by GroupId and creates consecutive pairs. For example, if group 1 has labels at frames 1, 1000, 5000, this creates:</p>
+<p>Groups ground truth labels by <a href="../../api_generated/Files/DataManager_8hpp.html#using-groupid">GroupId</a> and creates consecutive pairs. For example, if group 1 has labels at frames 1, 1000, 5000, this creates:</p>
 <ul>
 <li>Segment 1: (1, entity1) -&gt; (1000, entity1000)</li>
 <li>Segment 2: (1000, entity1000) -&gt; (5000, entity5000)</li>
@@ -1415,9 +1424,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="attributes-documentation">Attributes Documentation</h2>
 <section id="variable-ksymmetrizehalf" class="level3">
 <h3 class="anchored" data-anchor-id="variable-ksymmetrizehalf">variable kSymmetrizeHalf</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="kw">constexpr</span> <span class="dt">double</span> kSymmetrizeHalf <span class="op">=</span> <span class="fl">0.5</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb36"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="dt">double</span> kSymmetrizeHalf <span class="op">=</span> <span class="fl">0.5</span><span class="op">;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-10-09 at 13:36:32 +0000</p>
+<p>Updated on 2026-11-13 at 20:25:41 +0000</p>
 
 
 </section>
@@ -1429,15 +1438,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -1516,7 +1560,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -1525,8 +1570,69 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -1540,6 +1646,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -1702,44 +1809,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -1837,6 +1954,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       }
     }
   });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
 

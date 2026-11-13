@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -72,18 +72,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-0c66bec081e5215138e9fd61e9c23ef8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -116,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -139,6 +140,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -168,13 +170,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -268,6 +276,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -282,15 +291,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -334,8 +342,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
+            <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -344,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
@@ -378,7 +387,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -402,7 +411,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <section id="srcwhiskertoolboxstatemanagementstatemanagement.test.cpp" class="level1">
 <h1>src/WhiskerToolbox/StateManagement/StateManagement.test.cpp</h1>
-<p>Integration tests for AppPreferences, SessionStore, and StateManager. <a href="#detailed-description">More…</a></p>
+<p>Integration tests for <a href="../../api_generated/Classes/classStateManagement_1_1AppPreferences.html">AppPreferences</a>, <a href="../../api_generated/Classes/classStateManagement_1_1SessionStore.html">SessionStore</a>, and <a href="../../api_generated/Classes/classStateManagement_1_1StateManager.html">StateManager</a>. <a href="#detailed-description">More…</a></p>
 <section id="functions" class="level2">
 <h2 class="anchored" data-anchor-id="functions">Functions</h2>
 <table class="caption-top table">
@@ -455,7 +464,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td></td>
-<td><strong><a href="../../api_generated/Files/StateManagement_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“SessionStore - recent workspaces capped at max” , “” [StateManagement][Session][Qt])</td>
+<td><strong><a href="../../api_generated/Files/StateManagement_8test_8cpp.html#function-test-case">TEST_CASE</a></strong>(“SessionStore - recent workspaces capped <a href="../../api_generated/Namespaces/namespaceat.html">at</a> max” , “” [StateManagement][Session][Qt])</td>
 </tr>
 <tr class="even">
 <td></td>
@@ -486,7 +495,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </section>
 <section id="detailed-description" class="level2">
 <h2 class="anchored" data-anchor-id="detailed-description">Detailed Description</h2>
-<p>Integration tests for AppPreferences, SessionStore, and StateManager.</p>
+<p>Integration tests for <a href="../../api_generated/Classes/classStateManagement_1_1AppPreferences.html">AppPreferences</a>, <a href="../../api_generated/Classes/classStateManagement_1_1SessionStore.html">SessionStore</a>, and <a href="../../api_generated/Classes/classStateManagement_1_1StateManager.html">StateManager</a>.</p>
 <p>These tests require Qt (for QObject, QTimer, signal/slot) and use a temporary directory for file I/O.</p>
 </section>
 <section id="functions-documentation" class="level2">
@@ -611,328 +620,329 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="source-code" class="level2">
 <h2 class="anchored" data-anchor-id="source-code">Source code</h2>
 <div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb18"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/catch_test_macros.hpp&gt;</span></span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"StateManagement/AppPreferences.hpp"</span></span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"StateManagement/SessionStore.hpp"</span></span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"StateManagement/StateManager.hpp"</span></span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QCoreApplication&gt;</span></span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QDir&gt;</span></span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QTemporaryDir&gt;</span></span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> StateManagement<span class="op">;</span></span>
-<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a><span class="co">// Helper to process pending events (needed for QTimer-based debounce)</span></span>
-<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="dt">void</span> processEvents<span class="op">()</span> <span class="op">{</span></span>
-<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QCoreApplication::processEvents</span><span class="op">();</span></span>
-<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a><span class="co">// AppPreferences Tests</span></span>
-<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AppPreferences - save and load round trip"</span><span class="op">,</span> <span class="st">"[StateManagement][AppPreferences][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
-<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
-<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Save</span></span>
-<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
-<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>        AppPreferences prefs<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>        prefs<span class="op">.</span>setPythonEnvSearchPaths<span class="op">({</span><span class="st">"/usr/bin"</span><span class="op">,</span> <span class="st">"/opt/python"</span><span class="op">});</span></span>
-<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a>        prefs<span class="op">.</span>setPreferredPythonEnv<span class="op">(</span><span class="st">"/usr/bin/python3"</span><span class="op">);</span></span>
-<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a>        prefs<span class="op">.</span>setDefaultImportDirectory<span class="op">(</span><span class="st">"/data/import"</span><span class="op">);</span></span>
-<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>        prefs<span class="op">.</span>setDefaultExportDirectory<span class="op">(</span><span class="st">"/data/export"</span><span class="op">);</span></span>
-<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a>        prefs<span class="op">.</span>setDefaultTimeFrameKey<span class="op">(</span><span class="st">"absolute_time"</span><span class="op">);</span></span>
-<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a>        prefs<span class="op">.</span>save<span class="op">();</span></span>
-<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Load</span></span>
-<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
-<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a>        AppPreferences prefs<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a>        prefs<span class="op">.</span>load<span class="op">();</span></span>
-<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>prefs<span class="op">.</span>pythonEnvSearchPaths<span class="op">().</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
-<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>prefs<span class="op">.</span>pythonEnvSearchPaths<span class="op">()[</span><span class="dv">0</span><span class="op">]</span> <span class="op">==</span> <span class="st">"/usr/bin"</span><span class="op">);</span></span>
-<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>prefs<span class="op">.</span>pythonEnvSearchPaths<span class="op">()[</span><span class="dv">1</span><span class="op">]</span> <span class="op">==</span> <span class="st">"/opt/python"</span><span class="op">);</span></span>
-<span id="cb18-46"><a href="#cb18-46" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>prefs<span class="op">.</span>preferredPythonEnv<span class="op">()</span> <span class="op">==</span> <span class="st">"/usr/bin/python3"</span><span class="op">);</span></span>
-<span id="cb18-47"><a href="#cb18-47" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>prefs<span class="op">.</span>defaultImportDirectory<span class="op">()</span> <span class="op">==</span> <span class="st">"/data/import"</span><span class="op">);</span></span>
-<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>prefs<span class="op">.</span>defaultExportDirectory<span class="op">()</span> <span class="op">==</span> <span class="st">"/data/export"</span><span class="op">);</span></span>
-<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>prefs<span class="op">.</span>defaultTimeFrameKey<span class="op">()</span> <span class="op">==</span> <span class="st">"absolute_time"</span><span class="op">);</span></span>
-<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb18-51"><a href="#cb18-51" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-52"><a href="#cb18-52" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-53"><a href="#cb18-53" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AppPreferences - load nonexistent file uses defaults"</span><span class="op">,</span> <span class="st">"[StateManagement][AppPreferences][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-54"><a href="#cb18-54" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
-<span id="cb18-55"><a href="#cb18-55" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
-<span id="cb18-56"><a href="#cb18-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-57"><a href="#cb18-57" aria-hidden="true" tabindex="-1"></a>    AppPreferences prefs<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-58"><a href="#cb18-58" aria-hidden="true" tabindex="-1"></a>    prefs<span class="op">.</span>load<span class="op">();</span> <span class="co">// No file exists — should not crash</span></span>
-<span id="cb18-59"><a href="#cb18-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-60"><a href="#cb18-60" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>prefs<span class="op">.</span>pythonEnvSearchPaths<span class="op">().</span>empty<span class="op">());</span></span>
-<span id="cb18-61"><a href="#cb18-61" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>prefs<span class="op">.</span>preferredPythonEnv<span class="op">().</span>empty<span class="op">());</span></span>
-<span id="cb18-62"><a href="#cb18-62" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>prefs<span class="op">.</span>defaultImportDirectory<span class="op">().</span>empty<span class="op">());</span></span>
-<span id="cb18-63"><a href="#cb18-63" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-64"><a href="#cb18-64" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-65"><a href="#cb18-65" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AppPreferences - signal emission on change"</span><span class="op">,</span> <span class="st">"[StateManagement][AppPreferences][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-66"><a href="#cb18-66" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
-<span id="cb18-67"><a href="#cb18-67" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
-<span id="cb18-68"><a href="#cb18-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-69"><a href="#cb18-69" aria-hidden="true" tabindex="-1"></a>    AppPreferences prefs<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-70"><a href="#cb18-70" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-71"><a href="#cb18-71" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> signal_count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb18-72"><a href="#cb18-72" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> last_key<span class="op">;</span></span>
-<span id="cb18-73"><a href="#cb18-73" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QObject::connect</span><span class="op">(&amp;</span>prefs<span class="op">,</span> <span class="op">&amp;</span>AppPreferences<span class="op">::</span>preferenceChanged<span class="op">,</span></span>
-<span id="cb18-74"><a href="#cb18-74" aria-hidden="true" tabindex="-1"></a>                     <span class="op">[&amp;](</span><span class="ex">QString</span> key<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-75"><a href="#cb18-75" aria-hidden="true" tabindex="-1"></a>                         signal_count<span class="op">++;</span></span>
-<span id="cb18-76"><a href="#cb18-76" aria-hidden="true" tabindex="-1"></a>                         last_key <span class="op">=</span> key<span class="op">;</span></span>
-<span id="cb18-77"><a href="#cb18-77" aria-hidden="true" tabindex="-1"></a>                     <span class="op">});</span></span>
-<span id="cb18-78"><a href="#cb18-78" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-79"><a href="#cb18-79" aria-hidden="true" tabindex="-1"></a>    prefs<span class="op">.</span>setDefaultImportDirectory<span class="op">(</span><span class="st">"/new/path"</span><span class="op">);</span></span>
-<span id="cb18-80"><a href="#cb18-80" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>signal_count <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb18-81"><a href="#cb18-81" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>last_key <span class="op">==</span> <span class="st">"default_import_directory"</span><span class="op">);</span></span>
-<span id="cb18-82"><a href="#cb18-82" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-83"><a href="#cb18-83" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Same value → no signal</span></span>
-<span id="cb18-84"><a href="#cb18-84" aria-hidden="true" tabindex="-1"></a>    prefs<span class="op">.</span>setDefaultImportDirectory<span class="op">(</span><span class="st">"/new/path"</span><span class="op">);</span></span>
-<span id="cb18-85"><a href="#cb18-85" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>signal_count <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb18-86"><a href="#cb18-86" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-87"><a href="#cb18-87" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Different value → signal</span></span>
-<span id="cb18-88"><a href="#cb18-88" aria-hidden="true" tabindex="-1"></a>    prefs<span class="op">.</span>setDefaultImportDirectory<span class="op">(</span><span class="st">"/other/path"</span><span class="op">);</span></span>
-<span id="cb18-89"><a href="#cb18-89" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>signal_count <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
-<span id="cb18-90"><a href="#cb18-90" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-91"><a href="#cb18-91" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-92"><a href="#cb18-92" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AppPreferences - file path is correct"</span><span class="op">,</span> <span class="st">"[StateManagement][AppPreferences][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-93"><a href="#cb18-93" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
-<span id="cb18-94"><a href="#cb18-94" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
-<span id="cb18-95"><a href="#cb18-95" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-96"><a href="#cb18-96" aria-hidden="true" tabindex="-1"></a>    AppPreferences prefs<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-97"><a href="#cb18-97" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>prefs<span class="op">.</span>filePath<span class="op">()</span> <span class="op">==</span> tmp_dir<span class="op">.</span>path<span class="op">()</span> <span class="op">+</span> <span class="st">"/preferences.json"</span><span class="op">);</span></span>
-<span id="cb18-98"><a href="#cb18-98" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-99"><a href="#cb18-99" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-100"><a href="#cb18-100" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb18-101"><a href="#cb18-101" aria-hidden="true" tabindex="-1"></a><span class="co">// SessionStore Tests</span></span>
-<span id="cb18-102"><a href="#cb18-102" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb18-103"><a href="#cb18-103" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-104"><a href="#cb18-104" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SessionStore - path memory save and load"</span><span class="op">,</span> <span class="st">"[StateManagement][Session][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-105"><a href="#cb18-105" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
-<span id="cb18-106"><a href="#cb18-106" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
-<span id="cb18-107"><a href="#cb18-107" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-108"><a href="#cb18-108" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Save</span></span>
-<span id="cb18-109"><a href="#cb18-109" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
-<span id="cb18-110"><a href="#cb18-110" aria-hidden="true" tabindex="-1"></a>        SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-111"><a href="#cb18-111" aria-hidden="true" tabindex="-1"></a>        session<span class="op">.</span>rememberPath<span class="op">(</span><span class="st">"import_csv"</span><span class="op">,</span> tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-112"><a href="#cb18-112" aria-hidden="true" tabindex="-1"></a>        session<span class="op">.</span>rememberPath<span class="op">(</span><span class="st">"load_video"</span><span class="op">,</span> tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-113"><a href="#cb18-113" aria-hidden="true" tabindex="-1"></a>        session<span class="op">.</span>save<span class="op">();</span></span>
-<span id="cb18-114"><a href="#cb18-114" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb18-115"><a href="#cb18-115" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-116"><a href="#cb18-116" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Load</span></span>
-<span id="cb18-117"><a href="#cb18-117" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
-<span id="cb18-118"><a href="#cb18-118" aria-hidden="true" tabindex="-1"></a>        SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-119"><a href="#cb18-119" aria-hidden="true" tabindex="-1"></a>        session<span class="op">.</span>load<span class="op">();</span></span>
-<span id="cb18-120"><a href="#cb18-120" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-121"><a href="#cb18-121" aria-hidden="true" tabindex="-1"></a>        <span class="co">// tmp_dir path exists, so it should be returned</span></span>
-<span id="cb18-122"><a href="#cb18-122" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>session<span class="op">.</span>lastUsedPath<span class="op">(</span><span class="st">"import_csv"</span><span class="op">)</span> <span class="op">==</span> tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-123"><a href="#cb18-123" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>session<span class="op">.</span>lastUsedPath<span class="op">(</span><span class="st">"load_video"</span><span class="op">)</span> <span class="op">==</span> tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-124"><a href="#cb18-124" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb18-125"><a href="#cb18-125" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-126"><a href="#cb18-126" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-127"><a href="#cb18-127" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SessionStore - lastUsedPath returns fallback for unknown dialog"</span><span class="op">,</span> <span class="st">"[StateManagement][Session][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-128"><a href="#cb18-128" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
-<span id="cb18-129"><a href="#cb18-129" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
-<span id="cb18-130"><a href="#cb18-130" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-131"><a href="#cb18-131" aria-hidden="true" tabindex="-1"></a>    SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-132"><a href="#cb18-132" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-133"><a href="#cb18-133" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>session<span class="op">.</span>lastUsedPath<span class="op">(</span><span class="st">"unknown_dialog"</span><span class="op">,</span> <span class="st">"/fallback"</span><span class="op">)</span> <span class="op">==</span> <span class="st">"/fallback"</span><span class="op">);</span></span>
-<span id="cb18-134"><a href="#cb18-134" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>session<span class="op">.</span>lastUsedPath<span class="op">(</span><span class="st">"unknown_dialog"</span><span class="op">).</span>isEmpty<span class="op">());</span></span>
-<span id="cb18-135"><a href="#cb18-135" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-136"><a href="#cb18-136" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-137"><a href="#cb18-137" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SessionStore - rememberPath stores directory for file paths"</span><span class="op">,</span> <span class="st">"[StateManagement][Session][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-138"><a href="#cb18-138" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
-<span id="cb18-139"><a href="#cb18-139" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
-<span id="cb18-140"><a href="#cb18-140" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-141"><a href="#cb18-141" aria-hidden="true" tabindex="-1"></a>    SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-142"><a href="#cb18-142" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-143"><a href="#cb18-143" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create a temporary file inside the temp dir</span></span>
-<span id="cb18-144"><a href="#cb18-144" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> file_path <span class="op">=</span> tmp_dir<span class="op">.</span>path<span class="op">()</span> <span class="op">+</span> <span class="st">"/test_file.csv"</span><span class="op">;</span></span>
-<span id="cb18-145"><a href="#cb18-145" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QFile</span> file<span class="op">(</span>file_path<span class="op">);</span></span>
-<span id="cb18-146"><a href="#cb18-146" aria-hidden="true" tabindex="-1"></a>    file<span class="op">.</span>open<span class="op">(</span><span class="ex">QIODevice::WriteOnly</span><span class="op">);</span></span>
-<span id="cb18-147"><a href="#cb18-147" aria-hidden="true" tabindex="-1"></a>    file<span class="op">.</span>close<span class="op">();</span></span>
-<span id="cb18-148"><a href="#cb18-148" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-149"><a href="#cb18-149" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>rememberPath<span class="op">(</span><span class="st">"test"</span><span class="op">,</span> file_path<span class="op">);</span></span>
-<span id="cb18-150"><a href="#cb18-150" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-151"><a href="#cb18-151" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Should store the directory, not the file</span></span>
-<span id="cb18-152"><a href="#cb18-152" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>session<span class="op">.</span>lastUsedPath<span class="op">(</span><span class="st">"test"</span><span class="op">)</span> <span class="op">==</span> tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-153"><a href="#cb18-153" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-154"><a href="#cb18-154" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-155"><a href="#cb18-155" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SessionStore - recent workspaces"</span><span class="op">,</span> <span class="st">"[StateManagement][Session][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-156"><a href="#cb18-156" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
-<span id="cb18-157"><a href="#cb18-157" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
-<span id="cb18-158"><a href="#cb18-158" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-159"><a href="#cb18-159" aria-hidden="true" tabindex="-1"></a>    SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-160"><a href="#cb18-160" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-161"><a href="#cb18-161" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>addRecentWorkspace<span class="op">(</span><span class="st">"/exp01/workspace.whisker"</span><span class="op">);</span></span>
-<span id="cb18-162"><a href="#cb18-162" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>addRecentWorkspace<span class="op">(</span><span class="st">"/exp02/workspace.whisker"</span><span class="op">);</span></span>
-<span id="cb18-163"><a href="#cb18-163" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>addRecentWorkspace<span class="op">(</span><span class="st">"/exp03/workspace.whisker"</span><span class="op">);</span></span>
-<span id="cb18-164"><a href="#cb18-164" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-165"><a href="#cb18-165" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> recent <span class="op">=</span> session<span class="op">.</span>recentWorkspaces<span class="op">();</span></span>
-<span id="cb18-166"><a href="#cb18-166" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>recent<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
-<span id="cb18-167"><a href="#cb18-167" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Most recent first</span></span>
-<span id="cb18-168"><a href="#cb18-168" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>recent<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">==</span> <span class="st">"/exp03/workspace.whisker"</span><span class="op">);</span></span>
-<span id="cb18-169"><a href="#cb18-169" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>recent<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">==</span> <span class="st">"/exp02/workspace.whisker"</span><span class="op">);</span></span>
-<span id="cb18-170"><a href="#cb18-170" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>recent<span class="op">[</span><span class="dv">2</span><span class="op">]</span> <span class="op">==</span> <span class="st">"/exp01/workspace.whisker"</span><span class="op">);</span></span>
-<span id="cb18-171"><a href="#cb18-171" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-172"><a href="#cb18-172" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-173"><a href="#cb18-173" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SessionStore - recent workspaces moves duplicates to front"</span><span class="op">,</span> <span class="st">"[StateManagement][Session][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-174"><a href="#cb18-174" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
-<span id="cb18-175"><a href="#cb18-175" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
-<span id="cb18-176"><a href="#cb18-176" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-177"><a href="#cb18-177" aria-hidden="true" tabindex="-1"></a>    SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-178"><a href="#cb18-178" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-179"><a href="#cb18-179" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>addRecentWorkspace<span class="op">(</span><span class="st">"/exp01/ws.whisker"</span><span class="op">);</span></span>
-<span id="cb18-180"><a href="#cb18-180" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>addRecentWorkspace<span class="op">(</span><span class="st">"/exp02/ws.whisker"</span><span class="op">);</span></span>
-<span id="cb18-181"><a href="#cb18-181" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>addRecentWorkspace<span class="op">(</span><span class="st">"/exp01/ws.whisker"</span><span class="op">);</span> <span class="co">// Re-add</span></span>
-<span id="cb18-182"><a href="#cb18-182" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-183"><a href="#cb18-183" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> recent <span class="op">=</span> session<span class="op">.</span>recentWorkspaces<span class="op">();</span></span>
-<span id="cb18-184"><a href="#cb18-184" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>recent<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
-<span id="cb18-185"><a href="#cb18-185" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>recent<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">==</span> <span class="st">"/exp01/ws.whisker"</span><span class="op">);</span> <span class="co">// Moved to front</span></span>
-<span id="cb18-186"><a href="#cb18-186" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>recent<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">==</span> <span class="st">"/exp02/ws.whisker"</span><span class="op">);</span></span>
-<span id="cb18-187"><a href="#cb18-187" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-188"><a href="#cb18-188" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-189"><a href="#cb18-189" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SessionStore - recent workspaces capped at max"</span><span class="op">,</span> <span class="st">"[StateManagement][Session][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-190"><a href="#cb18-190" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
-<span id="cb18-191"><a href="#cb18-191" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
-<span id="cb18-192"><a href="#cb18-192" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-193"><a href="#cb18-193" aria-hidden="true" tabindex="-1"></a>    SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-194"><a href="#cb18-194" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-195"><a href="#cb18-195" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">15</span><span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-196"><a href="#cb18-196" aria-hidden="true" tabindex="-1"></a>        session<span class="op">.</span>addRecentWorkspace<span class="op">(</span><span class="ex">QString</span><span class="op">(</span><span class="st">"/exp%1/ws.whisker"</span><span class="op">).</span>arg<span class="op">(</span>i<span class="op">));</span></span>
-<span id="cb18-197"><a href="#cb18-197" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb18-198"><a href="#cb18-198" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-199"><a href="#cb18-199" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> recent <span class="op">=</span> session<span class="op">.</span>recentWorkspaces<span class="op">();</span></span>
-<span id="cb18-200"><a href="#cb18-200" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>recent<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> SessionData<span class="op">::</span>max_recent_workspaces<span class="op">);</span></span>
-<span id="cb18-201"><a href="#cb18-201" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Most recent should be last added</span></span>
-<span id="cb18-202"><a href="#cb18-202" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>recent<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">==</span> <span class="st">"/exp14/ws.whisker"</span><span class="op">);</span></span>
-<span id="cb18-203"><a href="#cb18-203" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-204"><a href="#cb18-204" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-205"><a href="#cb18-205" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SessionStore - remove recent workspace"</span><span class="op">,</span> <span class="st">"[StateManagement][Session][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-206"><a href="#cb18-206" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
-<span id="cb18-207"><a href="#cb18-207" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
-<span id="cb18-208"><a href="#cb18-208" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-209"><a href="#cb18-209" aria-hidden="true" tabindex="-1"></a>    SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-210"><a href="#cb18-210" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-211"><a href="#cb18-211" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>addRecentWorkspace<span class="op">(</span><span class="st">"/exp01/ws.whisker"</span><span class="op">);</span></span>
-<span id="cb18-212"><a href="#cb18-212" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>addRecentWorkspace<span class="op">(</span><span class="st">"/exp02/ws.whisker"</span><span class="op">);</span></span>
-<span id="cb18-213"><a href="#cb18-213" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>removeRecentWorkspace<span class="op">(</span><span class="st">"/exp01/ws.whisker"</span><span class="op">);</span></span>
-<span id="cb18-214"><a href="#cb18-214" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-215"><a href="#cb18-215" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> recent <span class="op">=</span> session<span class="op">.</span>recentWorkspaces<span class="op">();</span></span>
-<span id="cb18-216"><a href="#cb18-216" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>recent<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb18-217"><a href="#cb18-217" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>recent<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">==</span> <span class="st">"/exp02/ws.whisker"</span><span class="op">);</span></span>
-<span id="cb18-218"><a href="#cb18-218" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-219"><a href="#cb18-219" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-220"><a href="#cb18-220" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SessionStore - window geometry save and load"</span><span class="op">,</span> <span class="st">"[StateManagement][Session][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-221"><a href="#cb18-221" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
-<span id="cb18-222"><a href="#cb18-222" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
-<span id="cb18-223"><a href="#cb18-223" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-224"><a href="#cb18-224" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Save</span></span>
-<span id="cb18-225"><a href="#cb18-225" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
-<span id="cb18-226"><a href="#cb18-226" aria-hidden="true" tabindex="-1"></a>        SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-227"><a href="#cb18-227" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Directly set data for testing (no QMainWindow needed)</span></span>
-<span id="cb18-228"><a href="#cb18-228" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">&amp;</span> data <span class="op">=</span> <span class="kw">const_cast</span><span class="op">&lt;</span>SessionData <span class="op">&amp;&gt;(</span>session<span class="op">.</span>data<span class="op">());</span></span>
-<span id="cb18-229"><a href="#cb18-229" aria-hidden="true" tabindex="-1"></a>        data<span class="op">.</span>window_x <span class="op">=</span> <span class="dv">50</span><span class="op">;</span></span>
-<span id="cb18-230"><a href="#cb18-230" aria-hidden="true" tabindex="-1"></a>        data<span class="op">.</span>window_y <span class="op">=</span> <span class="dv">75</span><span class="op">;</span></span>
-<span id="cb18-231"><a href="#cb18-231" aria-hidden="true" tabindex="-1"></a>        data<span class="op">.</span>window_width <span class="op">=</span> <span class="dv">1600</span><span class="op">;</span></span>
-<span id="cb18-232"><a href="#cb18-232" aria-hidden="true" tabindex="-1"></a>        data<span class="op">.</span>window_height <span class="op">=</span> <span class="dv">1200</span><span class="op">;</span></span>
-<span id="cb18-233"><a href="#cb18-233" aria-hidden="true" tabindex="-1"></a>        data<span class="op">.</span>window_maximized <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
-<span id="cb18-234"><a href="#cb18-234" aria-hidden="true" tabindex="-1"></a>        session<span class="op">.</span>save<span class="op">();</span></span>
-<span id="cb18-235"><a href="#cb18-235" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb18-236"><a href="#cb18-236" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-237"><a href="#cb18-237" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Load</span></span>
-<span id="cb18-238"><a href="#cb18-238" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
-<span id="cb18-239"><a href="#cb18-239" aria-hidden="true" tabindex="-1"></a>        SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-240"><a href="#cb18-240" aria-hidden="true" tabindex="-1"></a>        session<span class="op">.</span>load<span class="op">();</span></span>
-<span id="cb18-241"><a href="#cb18-241" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-242"><a href="#cb18-242" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> data <span class="op">=</span> session<span class="op">.</span>data<span class="op">();</span></span>
-<span id="cb18-243"><a href="#cb18-243" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">.</span>window_x <span class="op">==</span> <span class="dv">50</span><span class="op">);</span></span>
-<span id="cb18-244"><a href="#cb18-244" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">.</span>window_y <span class="op">==</span> <span class="dv">75</span><span class="op">);</span></span>
-<span id="cb18-245"><a href="#cb18-245" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">.</span>window_width <span class="op">==</span> <span class="dv">1600</span><span class="op">);</span></span>
-<span id="cb18-246"><a href="#cb18-246" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">.</span>window_height <span class="op">==</span> <span class="dv">1200</span><span class="op">);</span></span>
-<span id="cb18-247"><a href="#cb18-247" aria-hidden="true" tabindex="-1"></a>        CHECK_FALSE<span class="op">(</span>data<span class="op">.</span>window_maximized<span class="op">);</span></span>
-<span id="cb18-248"><a href="#cb18-248" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb18-249"><a href="#cb18-249" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-250"><a href="#cb18-250" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-251"><a href="#cb18-251" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SessionStore - signal emission"</span><span class="op">,</span> <span class="st">"[StateManagement][Session][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-252"><a href="#cb18-252" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
-<span id="cb18-253"><a href="#cb18-253" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
-<span id="cb18-254"><a href="#cb18-254" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-255"><a href="#cb18-255" aria-hidden="true" tabindex="-1"></a>    SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-256"><a href="#cb18-256" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-257"><a href="#cb18-257" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> signal_count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb18-258"><a href="#cb18-258" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QObject::connect</span><span class="op">(&amp;</span>session<span class="op">,</span> <span class="op">&amp;</span>SessionStore<span class="op">::</span>sessionChanged<span class="op">,</span></span>
-<span id="cb18-259"><a href="#cb18-259" aria-hidden="true" tabindex="-1"></a>                     <span class="op">[&amp;]()</span> <span class="op">{</span> signal_count<span class="op">++;</span> <span class="op">});</span></span>
-<span id="cb18-260"><a href="#cb18-260" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-261"><a href="#cb18-261" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>rememberPath<span class="op">(</span><span class="st">"test"</span><span class="op">,</span> tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-262"><a href="#cb18-262" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>signal_count <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb18-263"><a href="#cb18-263" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-264"><a href="#cb18-264" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>addRecentWorkspace<span class="op">(</span><span class="st">"/exp01/ws.whisker"</span><span class="op">);</span></span>
-<span id="cb18-265"><a href="#cb18-265" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>signal_count <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
-<span id="cb18-266"><a href="#cb18-266" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-267"><a href="#cb18-267" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-268"><a href="#cb18-268" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb18-269"><a href="#cb18-269" aria-hidden="true" tabindex="-1"></a><span class="co">// StateManager Tests</span></span>
-<span id="cb18-270"><a href="#cb18-270" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
-<span id="cb18-271"><a href="#cb18-271" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-272"><a href="#cb18-272" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"StateManager - construction with explicit dir"</span><span class="op">,</span> <span class="st">"[StateManagement][StateManager][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-273"><a href="#cb18-273" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
-<span id="cb18-274"><a href="#cb18-274" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
-<span id="cb18-275"><a href="#cb18-275" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-276"><a href="#cb18-276" aria-hidden="true" tabindex="-1"></a>    StateManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-277"><a href="#cb18-277" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-278"><a href="#cb18-278" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>mgr<span class="op">.</span>preferences<span class="op">()</span> <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb18-279"><a href="#cb18-279" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>mgr<span class="op">.</span>session<span class="op">()</span> <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
-<span id="cb18-280"><a href="#cb18-280" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>configDir<span class="op">()</span> <span class="op">==</span> tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-281"><a href="#cb18-281" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-282"><a href="#cb18-282" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-283"><a href="#cb18-283" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"StateManager - loadAll and saveAll"</span><span class="op">,</span> <span class="st">"[StateManagement][StateManager][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-284"><a href="#cb18-284" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
-<span id="cb18-285"><a href="#cb18-285" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
-<span id="cb18-286"><a href="#cb18-286" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-287"><a href="#cb18-287" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Save</span></span>
-<span id="cb18-288"><a href="#cb18-288" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
-<span id="cb18-289"><a href="#cb18-289" aria-hidden="true" tabindex="-1"></a>        StateManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-290"><a href="#cb18-290" aria-hidden="true" tabindex="-1"></a>        mgr<span class="op">.</span>loadAll<span class="op">();</span></span>
-<span id="cb18-291"><a href="#cb18-291" aria-hidden="true" tabindex="-1"></a>        mgr<span class="op">.</span>preferences<span class="op">()-&gt;</span>setDefaultImportDirectory<span class="op">(</span><span class="st">"/test/path"</span><span class="op">);</span></span>
-<span id="cb18-292"><a href="#cb18-292" aria-hidden="true" tabindex="-1"></a>        mgr<span class="op">.</span>session<span class="op">()-&gt;</span>addRecentWorkspace<span class="op">(</span><span class="st">"/test/workspace.whisker"</span><span class="op">);</span></span>
-<span id="cb18-293"><a href="#cb18-293" aria-hidden="true" tabindex="-1"></a>        mgr<span class="op">.</span>saveAll<span class="op">();</span></span>
-<span id="cb18-294"><a href="#cb18-294" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb18-295"><a href="#cb18-295" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-296"><a href="#cb18-296" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Load</span></span>
-<span id="cb18-297"><a href="#cb18-297" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
-<span id="cb18-298"><a href="#cb18-298" aria-hidden="true" tabindex="-1"></a>        StateManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-299"><a href="#cb18-299" aria-hidden="true" tabindex="-1"></a>        mgr<span class="op">.</span>loadAll<span class="op">();</span></span>
-<span id="cb18-300"><a href="#cb18-300" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-301"><a href="#cb18-301" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>mgr<span class="op">.</span>preferences<span class="op">()-&gt;</span>defaultImportDirectory<span class="op">()</span> <span class="op">==</span> <span class="st">"/test/path"</span><span class="op">);</span></span>
-<span id="cb18-302"><a href="#cb18-302" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> recent <span class="op">=</span> mgr<span class="op">.</span>session<span class="op">()-&gt;</span>recentWorkspaces<span class="op">();</span></span>
-<span id="cb18-303"><a href="#cb18-303" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>recent<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
-<span id="cb18-304"><a href="#cb18-304" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>recent<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">==</span> <span class="st">"/test/workspace.whisker"</span><span class="op">);</span></span>
-<span id="cb18-305"><a href="#cb18-305" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb18-306"><a href="#cb18-306" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb18-307"><a href="#cb18-307" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-308"><a href="#cb18-308" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SessionStore - rememberPath ignores empty path"</span><span class="op">,</span> <span class="st">"[StateManagement][Session][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
-<span id="cb18-309"><a href="#cb18-309" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
-<span id="cb18-310"><a href="#cb18-310" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
-<span id="cb18-311"><a href="#cb18-311" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-312"><a href="#cb18-312" aria-hidden="true" tabindex="-1"></a>    SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
-<span id="cb18-313"><a href="#cb18-313" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-314"><a href="#cb18-314" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> signal_count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
-<span id="cb18-315"><a href="#cb18-315" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QObject::connect</span><span class="op">(&amp;</span>session<span class="op">,</span> <span class="op">&amp;</span>SessionStore<span class="op">::</span>sessionChanged<span class="op">,</span></span>
-<span id="cb18-316"><a href="#cb18-316" aria-hidden="true" tabindex="-1"></a>                     <span class="op">[&amp;]()</span> <span class="op">{</span> signal_count<span class="op">++;</span> <span class="op">});</span></span>
-<span id="cb18-317"><a href="#cb18-317" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-318"><a href="#cb18-318" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>rememberPath<span class="op">(</span><span class="st">"test"</span><span class="op">,</span> <span class="st">""</span><span class="op">);</span> <span class="co">// Empty path should be ignored</span></span>
-<span id="cb18-319"><a href="#cb18-319" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>signal_count <span class="op">==</span> <span class="dv">0</span><span class="op">);</span></span>
-<span id="cb18-320"><a href="#cb18-320" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>session<span class="op">.</span>lastUsedPath<span class="op">(</span><span class="st">"test"</span><span class="op">).</span>isEmpty<span class="op">());</span></span>
-<span id="cb18-321"><a href="#cb18-321" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;catch2/catch_test_macros.hpp&gt;</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"StateManagement/AppPreferences.hpp"</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"StateManagement/SessionStore.hpp"</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">"StateManagement/StateManager.hpp"</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QCoreApplication&gt;</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QDir&gt;</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#include </span><span class="im">&lt;QTemporaryDir&gt;</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> <span class="kw">namespace</span> StateManagement<span class="op">;</span></span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="co">// Helper to process pending events (needed for QTimer-based debounce)</span></span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a><span class="at">static</span> <span class="dt">void</span> processEvents<span class="op">()</span> <span class="op">{</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QCoreApplication::processEvents</span><span class="op">();</span></span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a><span class="co">// AppPreferences Tests</span></span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AppPreferences - save and load round trip"</span><span class="op">,</span> <span class="st">"[StateManagement][AppPreferences][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb18-26"><a href="#cb18-26" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb18-27"><a href="#cb18-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-28"><a href="#cb18-28" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Save</span></span>
+<span id="cb18-29"><a href="#cb18-29" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb18-30"><a href="#cb18-30" aria-hidden="true" tabindex="-1"></a>        AppPreferences prefs<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-31"><a href="#cb18-31" aria-hidden="true" tabindex="-1"></a>        prefs<span class="op">.</span>setPythonEnvSearchPaths<span class="op">({</span><span class="st">"/usr/bin"</span><span class="op">,</span> <span class="st">"/opt/python"</span><span class="op">});</span></span>
+<span id="cb18-32"><a href="#cb18-32" aria-hidden="true" tabindex="-1"></a>        prefs<span class="op">.</span>setPreferredPythonEnv<span class="op">(</span><span class="st">"/usr/bin/python3"</span><span class="op">);</span></span>
+<span id="cb18-33"><a href="#cb18-33" aria-hidden="true" tabindex="-1"></a>        prefs<span class="op">.</span>setDefaultImportDirectory<span class="op">(</span><span class="st">"/data/import"</span><span class="op">);</span></span>
+<span id="cb18-34"><a href="#cb18-34" aria-hidden="true" tabindex="-1"></a>        prefs<span class="op">.</span>setDefaultExportDirectory<span class="op">(</span><span class="st">"/data/export"</span><span class="op">);</span></span>
+<span id="cb18-35"><a href="#cb18-35" aria-hidden="true" tabindex="-1"></a>        prefs<span class="op">.</span>setDefaultTimeFrameKey<span class="op">(</span><span class="st">"absolute_time"</span><span class="op">);</span></span>
+<span id="cb18-36"><a href="#cb18-36" aria-hidden="true" tabindex="-1"></a>        prefs<span class="op">.</span>save<span class="op">();</span></span>
+<span id="cb18-37"><a href="#cb18-37" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb18-38"><a href="#cb18-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-39"><a href="#cb18-39" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Load</span></span>
+<span id="cb18-40"><a href="#cb18-40" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb18-41"><a href="#cb18-41" aria-hidden="true" tabindex="-1"></a>        AppPreferences prefs<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-42"><a href="#cb18-42" aria-hidden="true" tabindex="-1"></a>        prefs<span class="op">.</span>load<span class="op">();</span></span>
+<span id="cb18-43"><a href="#cb18-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-44"><a href="#cb18-44" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>prefs<span class="op">.</span>pythonEnvSearchPaths<span class="op">().</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb18-45"><a href="#cb18-45" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>prefs<span class="op">.</span>pythonEnvSearchPaths<span class="op">()[</span><span class="dv">0</span><span class="op">]</span> <span class="op">==</span> <span class="st">"/usr/bin"</span><span class="op">);</span></span>
+<span id="cb18-46"><a href="#cb18-46" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>prefs<span class="op">.</span>pythonEnvSearchPaths<span class="op">()[</span><span class="dv">1</span><span class="op">]</span> <span class="op">==</span> <span class="st">"/opt/python"</span><span class="op">);</span></span>
+<span id="cb18-47"><a href="#cb18-47" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>prefs<span class="op">.</span>preferredPythonEnv<span class="op">()</span> <span class="op">==</span> <span class="st">"/usr/bin/python3"</span><span class="op">);</span></span>
+<span id="cb18-48"><a href="#cb18-48" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>prefs<span class="op">.</span>defaultImportDirectory<span class="op">()</span> <span class="op">==</span> <span class="st">"/data/import"</span><span class="op">);</span></span>
+<span id="cb18-49"><a href="#cb18-49" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>prefs<span class="op">.</span>defaultExportDirectory<span class="op">()</span> <span class="op">==</span> <span class="st">"/data/export"</span><span class="op">);</span></span>
+<span id="cb18-50"><a href="#cb18-50" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>prefs<span class="op">.</span>defaultTimeFrameKey<span class="op">()</span> <span class="op">==</span> <span class="st">"absolute_time"</span><span class="op">);</span></span>
+<span id="cb18-51"><a href="#cb18-51" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb18-52"><a href="#cb18-52" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-53"><a href="#cb18-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-54"><a href="#cb18-54" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AppPreferences - load nonexistent file uses defaults"</span><span class="op">,</span> <span class="st">"[StateManagement][AppPreferences][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-55"><a href="#cb18-55" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb18-56"><a href="#cb18-56" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb18-57"><a href="#cb18-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-58"><a href="#cb18-58" aria-hidden="true" tabindex="-1"></a>    AppPreferences prefs<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-59"><a href="#cb18-59" aria-hidden="true" tabindex="-1"></a>    prefs<span class="op">.</span>load<span class="op">();</span> <span class="co">// No file exists — should not crash</span></span>
+<span id="cb18-60"><a href="#cb18-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-61"><a href="#cb18-61" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>prefs<span class="op">.</span>pythonEnvSearchPaths<span class="op">().</span>empty<span class="op">());</span></span>
+<span id="cb18-62"><a href="#cb18-62" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>prefs<span class="op">.</span>preferredPythonEnv<span class="op">().</span>empty<span class="op">());</span></span>
+<span id="cb18-63"><a href="#cb18-63" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>prefs<span class="op">.</span>defaultImportDirectory<span class="op">().</span>empty<span class="op">());</span></span>
+<span id="cb18-64"><a href="#cb18-64" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-65"><a href="#cb18-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-66"><a href="#cb18-66" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AppPreferences - signal emission on change"</span><span class="op">,</span> <span class="st">"[StateManagement][AppPreferences][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-67"><a href="#cb18-67" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb18-68"><a href="#cb18-68" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb18-69"><a href="#cb18-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-70"><a href="#cb18-70" aria-hidden="true" tabindex="-1"></a>    AppPreferences prefs<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-71"><a href="#cb18-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-72"><a href="#cb18-72" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> signal_count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb18-73"><a href="#cb18-73" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QString</span> last_key<span class="op">;</span></span>
+<span id="cb18-74"><a href="#cb18-74" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QObject::connect</span><span class="op">(&amp;</span>prefs<span class="op">,</span> <span class="op">&amp;</span>AppPreferences<span class="op">::</span>preferenceChanged<span class="op">,</span></span>
+<span id="cb18-75"><a href="#cb18-75" aria-hidden="true" tabindex="-1"></a>                     <span class="op">[&amp;](</span><span class="ex">QString</span> key<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-76"><a href="#cb18-76" aria-hidden="true" tabindex="-1"></a>                         signal_count<span class="op">++;</span></span>
+<span id="cb18-77"><a href="#cb18-77" aria-hidden="true" tabindex="-1"></a>                         last_key <span class="op">=</span> key<span class="op">;</span></span>
+<span id="cb18-78"><a href="#cb18-78" aria-hidden="true" tabindex="-1"></a>                     <span class="op">});</span></span>
+<span id="cb18-79"><a href="#cb18-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-80"><a href="#cb18-80" aria-hidden="true" tabindex="-1"></a>    prefs<span class="op">.</span>setDefaultImportDirectory<span class="op">(</span><span class="st">"/new/path"</span><span class="op">);</span></span>
+<span id="cb18-81"><a href="#cb18-81" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>signal_count <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb18-82"><a href="#cb18-82" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>last_key <span class="op">==</span> <span class="st">"default_import_directory"</span><span class="op">);</span></span>
+<span id="cb18-83"><a href="#cb18-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-84"><a href="#cb18-84" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Same value → no signal</span></span>
+<span id="cb18-85"><a href="#cb18-85" aria-hidden="true" tabindex="-1"></a>    prefs<span class="op">.</span>setDefaultImportDirectory<span class="op">(</span><span class="st">"/new/path"</span><span class="op">);</span></span>
+<span id="cb18-86"><a href="#cb18-86" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>signal_count <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb18-87"><a href="#cb18-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-88"><a href="#cb18-88" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Different value → signal</span></span>
+<span id="cb18-89"><a href="#cb18-89" aria-hidden="true" tabindex="-1"></a>    prefs<span class="op">.</span>setDefaultImportDirectory<span class="op">(</span><span class="st">"/other/path"</span><span class="op">);</span></span>
+<span id="cb18-90"><a href="#cb18-90" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>signal_count <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb18-91"><a href="#cb18-91" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-92"><a href="#cb18-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-93"><a href="#cb18-93" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"AppPreferences - file path is correct"</span><span class="op">,</span> <span class="st">"[StateManagement][AppPreferences][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-94"><a href="#cb18-94" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb18-95"><a href="#cb18-95" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb18-96"><a href="#cb18-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-97"><a href="#cb18-97" aria-hidden="true" tabindex="-1"></a>    AppPreferences prefs<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-98"><a href="#cb18-98" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>prefs<span class="op">.</span>filePath<span class="op">()</span> <span class="op">==</span> tmp_dir<span class="op">.</span>path<span class="op">()</span> <span class="op">+</span> <span class="st">"/preferences.json"</span><span class="op">);</span></span>
+<span id="cb18-99"><a href="#cb18-99" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-100"><a href="#cb18-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-101"><a href="#cb18-101" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb18-102"><a href="#cb18-102" aria-hidden="true" tabindex="-1"></a><span class="co">// SessionStore Tests</span></span>
+<span id="cb18-103"><a href="#cb18-103" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb18-104"><a href="#cb18-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-105"><a href="#cb18-105" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SessionStore - path memory save and load"</span><span class="op">,</span> <span class="st">"[StateManagement][Session][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-106"><a href="#cb18-106" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb18-107"><a href="#cb18-107" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb18-108"><a href="#cb18-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-109"><a href="#cb18-109" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Save</span></span>
+<span id="cb18-110"><a href="#cb18-110" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb18-111"><a href="#cb18-111" aria-hidden="true" tabindex="-1"></a>        SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-112"><a href="#cb18-112" aria-hidden="true" tabindex="-1"></a>        session<span class="op">.</span>rememberPath<span class="op">(</span><span class="st">"import_csv"</span><span class="op">,</span> tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-113"><a href="#cb18-113" aria-hidden="true" tabindex="-1"></a>        session<span class="op">.</span>rememberPath<span class="op">(</span><span class="st">"load_video"</span><span class="op">,</span> tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-114"><a href="#cb18-114" aria-hidden="true" tabindex="-1"></a>        session<span class="op">.</span>save<span class="op">();</span></span>
+<span id="cb18-115"><a href="#cb18-115" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb18-116"><a href="#cb18-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-117"><a href="#cb18-117" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Load</span></span>
+<span id="cb18-118"><a href="#cb18-118" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb18-119"><a href="#cb18-119" aria-hidden="true" tabindex="-1"></a>        SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-120"><a href="#cb18-120" aria-hidden="true" tabindex="-1"></a>        session<span class="op">.</span>load<span class="op">();</span></span>
+<span id="cb18-121"><a href="#cb18-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-122"><a href="#cb18-122" aria-hidden="true" tabindex="-1"></a>        <span class="co">// tmp_dir path exists, so it should be returned</span></span>
+<span id="cb18-123"><a href="#cb18-123" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>session<span class="op">.</span>lastUsedPath<span class="op">(</span><span class="st">"import_csv"</span><span class="op">)</span> <span class="op">==</span> tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-124"><a href="#cb18-124" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>session<span class="op">.</span>lastUsedPath<span class="op">(</span><span class="st">"load_video"</span><span class="op">)</span> <span class="op">==</span> tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-125"><a href="#cb18-125" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb18-126"><a href="#cb18-126" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-127"><a href="#cb18-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-128"><a href="#cb18-128" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SessionStore - lastUsedPath returns fallback for unknown dialog"</span><span class="op">,</span> <span class="st">"[StateManagement][Session][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-129"><a href="#cb18-129" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb18-130"><a href="#cb18-130" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb18-131"><a href="#cb18-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-132"><a href="#cb18-132" aria-hidden="true" tabindex="-1"></a>    SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-133"><a href="#cb18-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-134"><a href="#cb18-134" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>session<span class="op">.</span>lastUsedPath<span class="op">(</span><span class="st">"unknown_dialog"</span><span class="op">,</span> <span class="st">"/fallback"</span><span class="op">)</span> <span class="op">==</span> <span class="st">"/fallback"</span><span class="op">);</span></span>
+<span id="cb18-135"><a href="#cb18-135" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>session<span class="op">.</span>lastUsedPath<span class="op">(</span><span class="st">"unknown_dialog"</span><span class="op">).</span>isEmpty<span class="op">());</span></span>
+<span id="cb18-136"><a href="#cb18-136" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-137"><a href="#cb18-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-138"><a href="#cb18-138" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SessionStore - rememberPath stores directory for file paths"</span><span class="op">,</span> <span class="st">"[StateManagement][Session][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-139"><a href="#cb18-139" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb18-140"><a href="#cb18-140" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb18-141"><a href="#cb18-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-142"><a href="#cb18-142" aria-hidden="true" tabindex="-1"></a>    SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-143"><a href="#cb18-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-144"><a href="#cb18-144" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Create a temporary file inside the temp dir</span></span>
+<span id="cb18-145"><a href="#cb18-145" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> <span class="at">const</span> file_path <span class="op">=</span> tmp_dir<span class="op">.</span>path<span class="op">()</span> <span class="op">+</span> <span class="st">"/test_file.csv"</span><span class="op">;</span></span>
+<span id="cb18-146"><a href="#cb18-146" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QFile</span> file<span class="op">(</span>file_path<span class="op">);</span></span>
+<span id="cb18-147"><a href="#cb18-147" aria-hidden="true" tabindex="-1"></a>    file<span class="op">.</span>open<span class="op">(</span><span class="ex">QIODevice::WriteOnly</span><span class="op">);</span></span>
+<span id="cb18-148"><a href="#cb18-148" aria-hidden="true" tabindex="-1"></a>    file<span class="op">.</span>close<span class="op">();</span></span>
+<span id="cb18-149"><a href="#cb18-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-150"><a href="#cb18-150" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>rememberPath<span class="op">(</span><span class="st">"test"</span><span class="op">,</span> file_path<span class="op">);</span></span>
+<span id="cb18-151"><a href="#cb18-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-152"><a href="#cb18-152" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Should store the directory, not the file</span></span>
+<span id="cb18-153"><a href="#cb18-153" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>session<span class="op">.</span>lastUsedPath<span class="op">(</span><span class="st">"test"</span><span class="op">)</span> <span class="op">==</span> tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-154"><a href="#cb18-154" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-155"><a href="#cb18-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-156"><a href="#cb18-156" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SessionStore - recent workspaces"</span><span class="op">,</span> <span class="st">"[StateManagement][Session][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-157"><a href="#cb18-157" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb18-158"><a href="#cb18-158" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb18-159"><a href="#cb18-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-160"><a href="#cb18-160" aria-hidden="true" tabindex="-1"></a>    SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-161"><a href="#cb18-161" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-162"><a href="#cb18-162" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>addRecentWorkspace<span class="op">(</span><span class="st">"/exp01/workspace.whisker"</span><span class="op">);</span></span>
+<span id="cb18-163"><a href="#cb18-163" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>addRecentWorkspace<span class="op">(</span><span class="st">"/exp02/workspace.whisker"</span><span class="op">);</span></span>
+<span id="cb18-164"><a href="#cb18-164" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>addRecentWorkspace<span class="op">(</span><span class="st">"/exp03/workspace.whisker"</span><span class="op">);</span></span>
+<span id="cb18-165"><a href="#cb18-165" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-166"><a href="#cb18-166" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> recent <span class="op">=</span> session<span class="op">.</span>recentWorkspaces<span class="op">();</span></span>
+<span id="cb18-167"><a href="#cb18-167" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>recent<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">3</span><span class="op">);</span></span>
+<span id="cb18-168"><a href="#cb18-168" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Most recent first</span></span>
+<span id="cb18-169"><a href="#cb18-169" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>recent<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">==</span> <span class="st">"/exp03/workspace.whisker"</span><span class="op">);</span></span>
+<span id="cb18-170"><a href="#cb18-170" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>recent<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">==</span> <span class="st">"/exp02/workspace.whisker"</span><span class="op">);</span></span>
+<span id="cb18-171"><a href="#cb18-171" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>recent<span class="op">[</span><span class="dv">2</span><span class="op">]</span> <span class="op">==</span> <span class="st">"/exp01/workspace.whisker"</span><span class="op">);</span></span>
+<span id="cb18-172"><a href="#cb18-172" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-173"><a href="#cb18-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-174"><a href="#cb18-174" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SessionStore - recent workspaces moves duplicates to front"</span><span class="op">,</span> <span class="st">"[StateManagement][Session][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-175"><a href="#cb18-175" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb18-176"><a href="#cb18-176" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb18-177"><a href="#cb18-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-178"><a href="#cb18-178" aria-hidden="true" tabindex="-1"></a>    SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-179"><a href="#cb18-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-180"><a href="#cb18-180" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>addRecentWorkspace<span class="op">(</span><span class="st">"/exp01/ws.whisker"</span><span class="op">);</span></span>
+<span id="cb18-181"><a href="#cb18-181" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>addRecentWorkspace<span class="op">(</span><span class="st">"/exp02/ws.whisker"</span><span class="op">);</span></span>
+<span id="cb18-182"><a href="#cb18-182" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>addRecentWorkspace<span class="op">(</span><span class="st">"/exp01/ws.whisker"</span><span class="op">);</span> <span class="co">// Re-add</span></span>
+<span id="cb18-183"><a href="#cb18-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-184"><a href="#cb18-184" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> recent <span class="op">=</span> session<span class="op">.</span>recentWorkspaces<span class="op">();</span></span>
+<span id="cb18-185"><a href="#cb18-185" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>recent<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb18-186"><a href="#cb18-186" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>recent<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">==</span> <span class="st">"/exp01/ws.whisker"</span><span class="op">);</span> <span class="co">// Moved to front</span></span>
+<span id="cb18-187"><a href="#cb18-187" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>recent<span class="op">[</span><span class="dv">1</span><span class="op">]</span> <span class="op">==</span> <span class="st">"/exp02/ws.whisker"</span><span class="op">);</span></span>
+<span id="cb18-188"><a href="#cb18-188" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-189"><a href="#cb18-189" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-190"><a href="#cb18-190" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SessionStore - recent workspaces capped at max"</span><span class="op">,</span> <span class="st">"[StateManagement][Session][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-191"><a href="#cb18-191" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb18-192"><a href="#cb18-192" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb18-193"><a href="#cb18-193" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-194"><a href="#cb18-194" aria-hidden="true" tabindex="-1"></a>    SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-195"><a href="#cb18-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-196"><a href="#cb18-196" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> <span class="op">(</span><span class="dt">int</span> i <span class="op">=</span> <span class="dv">0</span><span class="op">;</span> i <span class="op">&lt;</span> <span class="dv">15</span><span class="op">;</span> <span class="op">++</span>i<span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-197"><a href="#cb18-197" aria-hidden="true" tabindex="-1"></a>        session<span class="op">.</span>addRecentWorkspace<span class="op">(</span><span class="ex">QString</span><span class="op">(</span><span class="st">"/exp%1/ws.whisker"</span><span class="op">).</span>arg<span class="op">(</span>i<span class="op">));</span></span>
+<span id="cb18-198"><a href="#cb18-198" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb18-199"><a href="#cb18-199" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-200"><a href="#cb18-200" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> recent <span class="op">=</span> session<span class="op">.</span>recentWorkspaces<span class="op">();</span></span>
+<span id="cb18-201"><a href="#cb18-201" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>recent<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> SessionData<span class="op">::</span>max_recent_workspaces<span class="op">);</span></span>
+<span id="cb18-202"><a href="#cb18-202" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Most recent should be last added</span></span>
+<span id="cb18-203"><a href="#cb18-203" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>recent<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">==</span> <span class="st">"/exp14/ws.whisker"</span><span class="op">);</span></span>
+<span id="cb18-204"><a href="#cb18-204" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-205"><a href="#cb18-205" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-206"><a href="#cb18-206" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SessionStore - remove recent workspace"</span><span class="op">,</span> <span class="st">"[StateManagement][Session][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-207"><a href="#cb18-207" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb18-208"><a href="#cb18-208" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb18-209"><a href="#cb18-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-210"><a href="#cb18-210" aria-hidden="true" tabindex="-1"></a>    SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-211"><a href="#cb18-211" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-212"><a href="#cb18-212" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>addRecentWorkspace<span class="op">(</span><span class="st">"/exp01/ws.whisker"</span><span class="op">);</span></span>
+<span id="cb18-213"><a href="#cb18-213" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>addRecentWorkspace<span class="op">(</span><span class="st">"/exp02/ws.whisker"</span><span class="op">);</span></span>
+<span id="cb18-214"><a href="#cb18-214" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>removeRecentWorkspace<span class="op">(</span><span class="st">"/exp01/ws.whisker"</span><span class="op">);</span></span>
+<span id="cb18-215"><a href="#cb18-215" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-216"><a href="#cb18-216" aria-hidden="true" tabindex="-1"></a>    <span class="kw">auto</span> recent <span class="op">=</span> session<span class="op">.</span>recentWorkspaces<span class="op">();</span></span>
+<span id="cb18-217"><a href="#cb18-217" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>recent<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb18-218"><a href="#cb18-218" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>recent<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">==</span> <span class="st">"/exp02/ws.whisker"</span><span class="op">);</span></span>
+<span id="cb18-219"><a href="#cb18-219" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-220"><a href="#cb18-220" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-221"><a href="#cb18-221" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SessionStore - window geometry save and load"</span><span class="op">,</span> <span class="st">"[StateManagement][Session][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-222"><a href="#cb18-222" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb18-223"><a href="#cb18-223" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb18-224"><a href="#cb18-224" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-225"><a href="#cb18-225" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Save</span></span>
+<span id="cb18-226"><a href="#cb18-226" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb18-227"><a href="#cb18-227" aria-hidden="true" tabindex="-1"></a>        SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-228"><a href="#cb18-228" aria-hidden="true" tabindex="-1"></a>        <span class="co">// Directly set data for testing (no QMainWindow needed)</span></span>
+<span id="cb18-229"><a href="#cb18-229" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="op">&amp;</span> data <span class="op">=</span> <span class="kw">const_cast</span><span class="op">&lt;</span>SessionData <span class="op">&amp;&gt;(</span>session<span class="op">.</span>data<span class="op">());</span></span>
+<span id="cb18-230"><a href="#cb18-230" aria-hidden="true" tabindex="-1"></a>        data<span class="op">.</span>window_x <span class="op">=</span> <span class="dv">50</span><span class="op">;</span></span>
+<span id="cb18-231"><a href="#cb18-231" aria-hidden="true" tabindex="-1"></a>        data<span class="op">.</span>window_y <span class="op">=</span> <span class="dv">75</span><span class="op">;</span></span>
+<span id="cb18-232"><a href="#cb18-232" aria-hidden="true" tabindex="-1"></a>        data<span class="op">.</span>window_width <span class="op">=</span> <span class="dv">1600</span><span class="op">;</span></span>
+<span id="cb18-233"><a href="#cb18-233" aria-hidden="true" tabindex="-1"></a>        data<span class="op">.</span>window_height <span class="op">=</span> <span class="dv">1200</span><span class="op">;</span></span>
+<span id="cb18-234"><a href="#cb18-234" aria-hidden="true" tabindex="-1"></a>        data<span class="op">.</span>window_maximized <span class="op">=</span> <span class="kw">false</span><span class="op">;</span></span>
+<span id="cb18-235"><a href="#cb18-235" aria-hidden="true" tabindex="-1"></a>        session<span class="op">.</span>save<span class="op">();</span></span>
+<span id="cb18-236"><a href="#cb18-236" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb18-237"><a href="#cb18-237" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-238"><a href="#cb18-238" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Load</span></span>
+<span id="cb18-239"><a href="#cb18-239" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb18-240"><a href="#cb18-240" aria-hidden="true" tabindex="-1"></a>        SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-241"><a href="#cb18-241" aria-hidden="true" tabindex="-1"></a>        session<span class="op">.</span>load<span class="op">();</span></span>
+<span id="cb18-242"><a href="#cb18-242" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-243"><a href="#cb18-243" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> <span class="at">const</span> <span class="op">&amp;</span> data <span class="op">=</span> session<span class="op">.</span>data<span class="op">();</span></span>
+<span id="cb18-244"><a href="#cb18-244" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">.</span>window_x <span class="op">==</span> <span class="dv">50</span><span class="op">);</span></span>
+<span id="cb18-245"><a href="#cb18-245" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">.</span>window_y <span class="op">==</span> <span class="dv">75</span><span class="op">);</span></span>
+<span id="cb18-246"><a href="#cb18-246" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">.</span>window_width <span class="op">==</span> <span class="dv">1600</span><span class="op">);</span></span>
+<span id="cb18-247"><a href="#cb18-247" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>data<span class="op">.</span>window_height <span class="op">==</span> <span class="dv">1200</span><span class="op">);</span></span>
+<span id="cb18-248"><a href="#cb18-248" aria-hidden="true" tabindex="-1"></a>        CHECK_FALSE<span class="op">(</span>data<span class="op">.</span>window_maximized<span class="op">);</span></span>
+<span id="cb18-249"><a href="#cb18-249" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb18-250"><a href="#cb18-250" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-251"><a href="#cb18-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-252"><a href="#cb18-252" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SessionStore - signal emission"</span><span class="op">,</span> <span class="st">"[StateManagement][Session][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-253"><a href="#cb18-253" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb18-254"><a href="#cb18-254" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb18-255"><a href="#cb18-255" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-256"><a href="#cb18-256" aria-hidden="true" tabindex="-1"></a>    SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-257"><a href="#cb18-257" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-258"><a href="#cb18-258" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> signal_count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb18-259"><a href="#cb18-259" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QObject::connect</span><span class="op">(&amp;</span>session<span class="op">,</span> <span class="op">&amp;</span>SessionStore<span class="op">::</span>sessionChanged<span class="op">,</span></span>
+<span id="cb18-260"><a href="#cb18-260" aria-hidden="true" tabindex="-1"></a>                     <span class="op">[&amp;]()</span> <span class="op">{</span> signal_count<span class="op">++;</span> <span class="op">});</span></span>
+<span id="cb18-261"><a href="#cb18-261" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-262"><a href="#cb18-262" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>rememberPath<span class="op">(</span><span class="st">"test"</span><span class="op">,</span> tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-263"><a href="#cb18-263" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>signal_count <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb18-264"><a href="#cb18-264" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-265"><a href="#cb18-265" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>addRecentWorkspace<span class="op">(</span><span class="st">"/exp01/ws.whisker"</span><span class="op">);</span></span>
+<span id="cb18-266"><a href="#cb18-266" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>signal_count <span class="op">==</span> <span class="dv">2</span><span class="op">);</span></span>
+<span id="cb18-267"><a href="#cb18-267" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-268"><a href="#cb18-268" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-269"><a href="#cb18-269" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb18-270"><a href="#cb18-270" aria-hidden="true" tabindex="-1"></a><span class="co">// StateManager Tests</span></span>
+<span id="cb18-271"><a href="#cb18-271" aria-hidden="true" tabindex="-1"></a><span class="co">// ============================================================================</span></span>
+<span id="cb18-272"><a href="#cb18-272" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-273"><a href="#cb18-273" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"StateManager - construction with explicit dir"</span><span class="op">,</span> <span class="st">"[StateManagement][StateManager][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-274"><a href="#cb18-274" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb18-275"><a href="#cb18-275" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb18-276"><a href="#cb18-276" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-277"><a href="#cb18-277" aria-hidden="true" tabindex="-1"></a>    StateManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-278"><a href="#cb18-278" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-279"><a href="#cb18-279" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>mgr<span class="op">.</span>preferences<span class="op">()</span> <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb18-280"><a href="#cb18-280" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>mgr<span class="op">.</span>session<span class="op">()</span> <span class="op">!=</span> <span class="kw">nullptr</span><span class="op">);</span></span>
+<span id="cb18-281"><a href="#cb18-281" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>mgr<span class="op">.</span>configDir<span class="op">()</span> <span class="op">==</span> tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-282"><a href="#cb18-282" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-283"><a href="#cb18-283" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-284"><a href="#cb18-284" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"StateManager - loadAll and saveAll"</span><span class="op">,</span> <span class="st">"[StateManagement][StateManager][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-285"><a href="#cb18-285" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb18-286"><a href="#cb18-286" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb18-287"><a href="#cb18-287" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-288"><a href="#cb18-288" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Save</span></span>
+<span id="cb18-289"><a href="#cb18-289" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb18-290"><a href="#cb18-290" aria-hidden="true" tabindex="-1"></a>        StateManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-291"><a href="#cb18-291" aria-hidden="true" tabindex="-1"></a>        mgr<span class="op">.</span>loadAll<span class="op">();</span></span>
+<span id="cb18-292"><a href="#cb18-292" aria-hidden="true" tabindex="-1"></a>        mgr<span class="op">.</span>preferences<span class="op">()-&gt;</span>setDefaultImportDirectory<span class="op">(</span><span class="st">"/test/path"</span><span class="op">);</span></span>
+<span id="cb18-293"><a href="#cb18-293" aria-hidden="true" tabindex="-1"></a>        mgr<span class="op">.</span>session<span class="op">()-&gt;</span>addRecentWorkspace<span class="op">(</span><span class="st">"/test/workspace.whisker"</span><span class="op">);</span></span>
+<span id="cb18-294"><a href="#cb18-294" aria-hidden="true" tabindex="-1"></a>        mgr<span class="op">.</span>saveAll<span class="op">();</span></span>
+<span id="cb18-295"><a href="#cb18-295" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb18-296"><a href="#cb18-296" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-297"><a href="#cb18-297" aria-hidden="true" tabindex="-1"></a>    <span class="co">// Load</span></span>
+<span id="cb18-298"><a href="#cb18-298" aria-hidden="true" tabindex="-1"></a>    <span class="op">{</span></span>
+<span id="cb18-299"><a href="#cb18-299" aria-hidden="true" tabindex="-1"></a>        StateManager mgr<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-300"><a href="#cb18-300" aria-hidden="true" tabindex="-1"></a>        mgr<span class="op">.</span>loadAll<span class="op">();</span></span>
+<span id="cb18-301"><a href="#cb18-301" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-302"><a href="#cb18-302" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>mgr<span class="op">.</span>preferences<span class="op">()-&gt;</span>defaultImportDirectory<span class="op">()</span> <span class="op">==</span> <span class="st">"/test/path"</span><span class="op">);</span></span>
+<span id="cb18-303"><a href="#cb18-303" aria-hidden="true" tabindex="-1"></a>        <span class="kw">auto</span> recent <span class="op">=</span> mgr<span class="op">.</span>session<span class="op">()-&gt;</span>recentWorkspaces<span class="op">();</span></span>
+<span id="cb18-304"><a href="#cb18-304" aria-hidden="true" tabindex="-1"></a>        REQUIRE<span class="op">(</span>recent<span class="op">.</span>size<span class="op">()</span> <span class="op">==</span> <span class="dv">1</span><span class="op">);</span></span>
+<span id="cb18-305"><a href="#cb18-305" aria-hidden="true" tabindex="-1"></a>        CHECK<span class="op">(</span>recent<span class="op">[</span><span class="dv">0</span><span class="op">]</span> <span class="op">==</span> <span class="st">"/test/workspace.whisker"</span><span class="op">);</span></span>
+<span id="cb18-306"><a href="#cb18-306" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb18-307"><a href="#cb18-307" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb18-308"><a href="#cb18-308" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-309"><a href="#cb18-309" aria-hidden="true" tabindex="-1"></a>TEST_CASE<span class="op">(</span><span class="st">"SessionStore - rememberPath ignores empty path"</span><span class="op">,</span> <span class="st">"[StateManagement][Session][Qt]"</span><span class="op">)</span> <span class="op">{</span></span>
+<span id="cb18-310"><a href="#cb18-310" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QTemporaryDir</span> tmp_dir<span class="op">;</span></span>
+<span id="cb18-311"><a href="#cb18-311" aria-hidden="true" tabindex="-1"></a>    REQUIRE<span class="op">(</span>tmp_dir<span class="op">.</span>isValid<span class="op">());</span></span>
+<span id="cb18-312"><a href="#cb18-312" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-313"><a href="#cb18-313" aria-hidden="true" tabindex="-1"></a>    SessionStore session<span class="op">(</span>tmp_dir<span class="op">.</span>path<span class="op">());</span></span>
+<span id="cb18-314"><a href="#cb18-314" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-315"><a href="#cb18-315" aria-hidden="true" tabindex="-1"></a>    <span class="dt">int</span> signal_count <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></span>
+<span id="cb18-316"><a href="#cb18-316" aria-hidden="true" tabindex="-1"></a>    <span class="ex">QObject::connect</span><span class="op">(&amp;</span>session<span class="op">,</span> <span class="op">&amp;</span>SessionStore<span class="op">::</span>sessionChanged<span class="op">,</span></span>
+<span id="cb18-317"><a href="#cb18-317" aria-hidden="true" tabindex="-1"></a>                     <span class="op">[&amp;]()</span> <span class="op">{</span> signal_count<span class="op">++;</span> <span class="op">});</span></span>
+<span id="cb18-318"><a href="#cb18-318" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-319"><a href="#cb18-319" aria-hidden="true" tabindex="-1"></a>    session<span class="op">.</span>rememberPath<span class="op">(</span><span class="st">"test"</span><span class="op">,</span> <span class="st">""</span><span class="op">);</span> <span class="co">// Empty path should be ignored</span></span>
+<span id="cb18-320"><a href="#cb18-320" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>signal_count <span class="op">==</span> <span class="dv">0</span><span class="op">);</span></span>
+<span id="cb18-321"><a href="#cb18-321" aria-hidden="true" tabindex="-1"></a>    CHECK<span class="op">(</span>session<span class="op">.</span>lastUsedPath<span class="op">(</span><span class="st">"test"</span><span class="op">).</span>isEmpty<span class="op">());</span></span>
+<span id="cb18-322"><a href="#cb18-322" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <hr>
-<p>Updated on 2026-10-09 at 13:36:38 +0000</p>
+<p>Updated on 2026-11-13 at 20:25:45 +0000</p>
 
 
 </section>
@@ -943,15 +953,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -1030,7 +1075,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -1039,8 +1085,69 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -1054,6 +1161,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -1216,44 +1324,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -1351,6 +1469,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       }
     }
   });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
 

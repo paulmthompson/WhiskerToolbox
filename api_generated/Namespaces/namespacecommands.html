@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.10.19">
+<meta name="generator" content="quarto-1.11.9">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -72,18 +72,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <meta name="quarto:offset" content="../../">
 <script src="../../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../../site_libs/quarto-html/scrollable-regions/scrollable-regions.js" type="module"></script>
 <script src="../../site_libs/quarto-html/popper.min.js"></script>
 <script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="../../site_libs/quarto-html/anchor.min.js"></script>
 <link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-b626d73c4c936ccc3cb08be7d45d1df6.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
-<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-bf27225e3a48a9273f3daa8f8e829971.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dark-447e42e69aaa9833c0ba1b986f430b20.css" rel="stylesheet" class="quarto-color-scheme quarto-color-alternate" id="quarto-text-highlighting-styles">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-63b5708e65d6cd79cd7618c58d0c21e7.css" rel="stylesheet" class="quarto-color-scheme-extra" id="quarto-text-highlighting-styles">
 <script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
-<link href="../../site_libs/bootstrap/bootstrap-dark-b359af0c6196647c48c2f17a2167ba66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
-<link href="../../site_libs/bootstrap/bootstrap-2b5cb093d99d100b4a3d54a45db43b66.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme" id="quarto-bootstrap" data-mode="light">
+<link href="../../site_libs/bootstrap/bootstrap-dark-0c66bec081e5215138e9fd61e9c23ef8.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme quarto-color-alternate" id="quarto-bootstrap" data-mode="dark">
+<link href="../../site_libs/bootstrap/bootstrap-109001bb052778e184d02ae3ac8fcf6f.min.css" rel="stylesheet" append-hash="true" class="quarto-color-scheme-extra" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -116,7 +117,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link rel="stylesheet" href="../../styles.css">
 </head>
 
-<body class="nav-fixed quarto-light"><script id="quarto-html-before-body" type="application/javascript">
+<body class="nav-fixed quarto-light"><a id="quarto-skip-link" class="visually-hidden-focusable" href="#quarto-document-content">Skip to main content</a><script id="quarto-html-before-body" type="application/javascript">
     const toggleBodyColorMode = (bsSheetEl) => {
       const mode = bsSheetEl.getAttribute("data-mode");
       const bodyEl = window.document.querySelector("body");
@@ -139,6 +140,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       for (let i=0; i < toggles.length; i++) {
         const toggle = toggles[i];
         if (toggle) {
+          toggle.setAttribute("aria-checked", alternate ? "true" : "false");
           if (alternate) {
             toggle.classList.add("alternate");
           } else {
@@ -168,13 +170,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       manageTransitions('#quarto-margin-sidebar .nav-link', true);
       // Switch the toggles
       setColorSchemeToggle(alternate)
-      // Hack to workaround the fact that safari doesn't
-      // properly recolor the scrollbar when toggling (#1455)
+    }
+    // Hack to workaround the fact that safari doesn't
+    // properly recolor the scrollbar when toggling (#1455).
+    // Not run on load: stylesheets are set before first paint there, and
+    // scrolling would undo the scroll to a URL fragment (#14973).
+    // The one pixel nudge keeps the reader where they were.
+    const refreshSafariScrollbar = () => {
       if (navigator.userAgent.indexOf('Safari') > 0 && navigator.userAgent.indexOf('Chrome') == -1) {
         manageTransitions("body", false);
-        window.scrollTo(0, 1);
+        const scrollY = window.scrollY;
+        window.scrollTo(0, scrollY > 0 ? scrollY - 1 : 1);
         setTimeout(() => {
-          window.scrollTo(0, 0);
+          window.scrollTo(0, scrollY);
           manageTransitions("body", true);
         }, 40);
       }
@@ -268,6 +276,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       // Read the current dark / light value
       let toAlternate = !hasAlternateSentinel();
       toggleColorMode(toAlternate);
+      refreshSafariScrollbar();
       setStyleSentinel(toAlternate);
       toggleGiscusIfUsed(toAlternate, darkModeDefault);
       window.dispatchEvent(new Event('resize'));
@@ -282,15 +291,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 <div id="quarto-search-results"></div>
   <header id="quarto-header" class="headroom fixed-top">
-    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark" aria-label="Site">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">Neuralyzer</span>
     </a>
   </div>
-            <div id="quarto-search" class="" title="Search"></div>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
   <span class="navbar-toggler-icon"></span>
 </button>
           <div class="collapse navbar-collapse" id="navbarCollapse">
@@ -334,8 +342,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
-  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
+  <button type="button" role="switch" aria-checked="false" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode" aria-label="Toggle dark mode"><i class="bi"></i></button>
 </div>
+            <div id="quarto-search" class="" title="Search"></div>
       </div> <!-- /container-fluid -->
     </nav>
 </header>
@@ -344,7 +353,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <!-- sidebar -->
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
+        <nav id="TOC" role="doc-toc" aria-labelledby="toc-title" class="toc-active">
     <h2 id="toc-title">On this page</h2>
    
   <ul>
@@ -388,7 +397,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
     </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
+<main class="content" id="quarto-document-content" tabindex="-1">
 
 
 <header id="title-block-header" class="quarto-title-block default">
@@ -423,28 +432,20 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </thead>
 <tbody>
 <tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1AddInterval.html">commands::AddInterval</a></strong></td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1AddIntervalParams.html">commands::AddIntervalParams</a></strong></td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1AdvanceFrame.html">commands::AdvanceFrame</a></strong> <br>Advances (or rewinds) the current <code>[TimePosition](/api_generated/Classes/structTimePosition.md)</code> on <code>[CommandContext::time_controller]()</code>.</td>
-</tr>
-<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structcommands_1_1AdvanceFrameParams.html">commands::AdvanceFrameParams</a></strong></td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1ClearLineDataAtTime.html">commands::ClearLineDataAtTime</a></strong> <br>Removes all <code>[LineData](/api_generated/Classes/classLineData.md)</code> entries at one frame via <code>[LineData::clearAtTime](/api_generated/Classes/classRaggedTimeSeries.md#function-clearattime)</code>.</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1AdvanceFrame.html">commands::AdvanceFrame</a></strong> <br>Advances (or rewinds) the current <code>[TimePosition](/api_generated/Classes/structTimePosition.md)</code> on <code>[CommandContext::time_controller]()</code>.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1CopyByTimeRangeParams.html">commands::CopyByTimeRangeParams</a></strong></td>
 </tr>
 <tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1ClearLineDataAtTimeParams.html">commands::ClearLineDataAtTimeParams</a></strong> <br>Parameters for <code>[ClearLineDataAtTime](/api_generated/Classes/classcommands_1_1ClearLineDataAtTime.md)</code> (JSON fields <code>data_key</code>, <code>time</code>).</td>
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1CopyByTimeRange.html">commands::CopyByTimeRange</a></strong></td>
 </tr>
 <tr class="odd">
 <td>struct</td>
@@ -455,8 +456,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandDescriptor.html">commands::CommandDescriptor</a></strong> <br>A single command invocation as it appears in a JSON file.</td>
 </tr>
 <tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1CommandGuard.html">commands::CommandGuard</a></strong> <br>RAII guard that sets the inside-command flag for its lifetime.</td>
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandSequenceDescriptor.html">commands::CommandSequenceDescriptor</a></strong> <br>A sequence of commands, optionally with template variables.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
@@ -475,40 +476,56 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandResult.html">commands::CommandResult</a></strong> <br>Result of executing a command.</td>
 </tr>
 <tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1CommandSequenceDescriptor.html">commands::CommandSequenceDescriptor</a></strong> <br>A sequence of commands, optionally with template variables.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1CopyByTimeRange.html">commands::CopyByTimeRange</a></strong></td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1CopyByTimeRangeParams.html">commands::CopyByTimeRangeParams</a></strong></td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1FlipEventAtTime.html">commands::FlipEventAtTime</a></strong> <br>Toggles interval membership at <code>time</code> using <code>hasIntervalAtTime</code> then <code>setEventAtTime</code> with the negated value.</td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1FlipEventAtTimeParams.html">commands::FlipEventAtTimeParams</a></strong> <br>Parameters for <code>[FlipEventAtTime](/api_generated/Classes/classcommands_1_1FlipEventAtTime.md)</code> (JSON field <code>data_key</code>, <code>time</code>).</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1ForEachKey.html">commands::ForEachKey</a></strong></td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1ForEachKeyParams.html">commands::ForEachKeyParams</a></strong></td>
-</tr>
-<tr class="odd">
 <td>class</td>
 <td><strong><a href="../../api_generated/Classes/classcommands_1_1ICommand.html">commands::ICommand</a></strong> <br>Base class for all commands operating on <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>.</td>
 </tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1SequenceResult.html">commands::SequenceResult</a></strong> <br>Result of executing a command sequence.</td>
+</tr>
+<tr class="even">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1ValidationResult.html">commands::ValidationResult</a></strong> <br>Result of validating a command sequence before execution.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1AddIntervalParams.html">commands::AddIntervalParams</a></strong></td>
+</tr>
 <tr class="even">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1LoadData.html">commands::LoadData</a></strong></td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1AddInterval.html">commands::AddInterval</a></strong></td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1FlipEventAtTimeParams.html">commands::FlipEventAtTimeParams</a></strong> <br>Parameters for <code>[FlipEventAtTime]()</code> (JSON field <code>[data_key]()</code>, <code>[time]()</code>).</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1FlipEventAtTime.html">commands::FlipEventAtTime</a></strong> <br>Toggles interval membership at <code>time</code> using <code>hasIntervalAtTime</code> then <code>setEventAtTime</code> with the negated value.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1SetEventAtTimeParams.html">commands::SetEventAtTimeParams</a></strong> <br>Parameters for <code>[SetEventAtTime]()</code> (JSON field <code>[data_key]()</code>, <code>[time]()</code>, <code>[event]()</code>).</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1SetEventAtTime.html">commands::SetEventAtTime</a></strong> <br>Sets <code>[DigitalIntervalSeries::setEventAtTime](/api_generated/Classes/classDigitalIntervalSeries.md#function-seteventattime)</code> for one frame (<code>event</code> true adds a one-frame interval; false removes coverage at that time).</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1ClearLineDataAtTimeParams.html">commands::ClearLineDataAtTimeParams</a></strong> <br>Parameters for <code>[ClearLineDataAtTime]()</code> (JSON fields <code>[data_key]()</code>, <code>[time]()</code>).</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1ClearLineDataAtTime.html">commands::ClearLineDataAtTime</a></strong> <br>Removes all <code>[LineData](/api_generated/Classes/classLineData.md)</code> entries at one frame via <code>[LineData::clearAtTime](/api_generated/Classes/classRaggedTimeSeries.md#function-clearattime)</code>.</td>
+</tr>
+<tr class="odd">
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1ForEachKeyParams.html">commands::ForEachKeyParams</a></strong></td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1ForEachKey.html">commands::ForEachKey</a></strong></td>
 </tr>
 <tr class="odd">
 <td>struct</td>
@@ -516,39 +533,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1MoveByTimeRange.html">commands::MoveByTimeRange</a></strong></td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1LoadData.html">commands::LoadData</a></strong></td>
 </tr>
 <tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1MoveByTimeRangeParams.html">commands::MoveByTimeRangeParams</a></strong></td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1MultiFileSavePathResolution.html">commands::MultiFileSavePathResolution</a></strong> <br>Resolved multi-file save directory for a data key.</td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1RunTransformsV2Pipeline.html">commands::RunTransformsV2Pipeline</a></strong> <br>Runs a saved TransformsV2 pipeline on an entire <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> data object.</td>
-</tr>
-<tr class="even">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1RunTransformsV2PipelineAtTime.html">commands::RunTransformsV2PipelineAtTime</a></strong> <br>Runs a saved TransformsV2 pipeline on one frame.</td>
-</tr>
-<tr class="odd">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1RunTransformsV2PipelineAtTimeParams.html">commands::RunTransformsV2PipelineAtTimeParams</a></strong> <br>Parameters for <code>[RunTransformsV2PipelineAtTime](/api_generated/Classes/classcommands_1_1RunTransformsV2PipelineAtTime.md)</code></td>
-</tr>
-<tr class="even">
-<td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1RunTransformsV2PipelineParams.html">commands::RunTransformsV2PipelineParams</a></strong> <br>Parameters for <code>[RunTransformsV2Pipeline](/api_generated/Classes/classcommands_1_1RunTransformsV2Pipeline.md)</code></td>
-</tr>
-<tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1SaveData.html">commands::SaveData</a></strong></td>
-</tr>
-<tr class="even">
 <td>struct</td>
 <td><strong><a href="../../api_generated/Classes/structcommands_1_1SaveDataParams.html">commands::SaveDataParams</a></strong></td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1SaveData.html">commands::SaveData</a></strong></td>
 </tr>
 <tr class="odd">
 <td>struct</td>
@@ -556,19 +549,27 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1SequenceResult.html">commands::SequenceResult</a></strong> <br>Result of executing a command sequence.</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1MultiFileSavePathResolution.html">commands::MultiFileSavePathResolution</a></strong> <br>Resolved multi-file save directory for a data key.</td>
 </tr>
 <tr class="odd">
-<td>class</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1SetEventAtTime.html">commands::SetEventAtTime</a></strong> <br>Sets <code>[DigitalIntervalSeries::setEventAtTime](/api_generated/Classes/classDigitalIntervalSeries.md#function-seteventattime)</code> for one frame (<code>event</code> true adds a one-frame interval; false removes coverage at that time).</td>
+<td>struct</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1MoveByTimeRangeParams.html">commands::MoveByTimeRangeParams</a></strong></td>
 </tr>
 <tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1MoveByTimeRange.html">commands::MoveByTimeRange</a></strong></td>
+</tr>
+<tr class="odd">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1SetEventAtTimeParams.html">commands::SetEventAtTimeParams</a></strong> <br>Parameters for <code>[SetEventAtTime](/api_generated/Classes/classcommands_1_1SetEventAtTime.md)</code> (JSON field <code>data_key</code>, <code>time</code>, <code>event</code>).</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1UpsampleTimeFrameParams.html">commands::UpsampleTimeFrameParams</a></strong> <br>Parameters for <code>[UpsampleTimeFrame]()</code>.</td>
+</tr>
+<tr class="even">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1UpsampleTimeFrame.html">commands::UpsampleTimeFrame</a></strong> <br>Creates a new <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> by upsampling an existing one.</td>
 </tr>
 <tr class="odd">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1SynthesizeData.html">commands::SynthesizeData</a></strong></td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1CommandGuard.html">commands::CommandGuard</a></strong> <br>RAII guard that sets the inside-command flag for its lifetime.</td>
 </tr>
 <tr class="even">
 <td>struct</td>
@@ -576,15 +577,23 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td>class</td>
-<td><strong><a href="../../api_generated/Classes/classcommands_1_1UpsampleTimeFrame.html">commands::UpsampleTimeFrame</a></strong> <br>Creates a new <a href="../../api_generated/Classes/classTimeFrame.html">TimeFrame</a> by upsampling an existing one.</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1SynthesizeData.html">commands::SynthesizeData</a></strong></td>
 </tr>
 <tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1UpsampleTimeFrameParams.html">commands::UpsampleTimeFrameParams</a></strong> <br>Parameters for <code>[UpsampleTimeFrame](/api_generated/Classes/classcommands_1_1UpsampleTimeFrame.md)</code></td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1RunTransformsV2PipelineParams.html">commands::RunTransformsV2PipelineParams</a></strong> <br>Parameters for <code>[RunTransformsV2Pipeline]()</code>.</td>
 </tr>
 <tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1RunTransformsV2Pipeline.html">commands::RunTransformsV2Pipeline</a></strong> <br>Runs a saved TransformsV2 pipeline on an entire <a href="../../api_generated/Classes/classDataManager.html">DataManager</a> data object.</td>
+</tr>
+<tr class="even">
 <td>struct</td>
-<td><strong><a href="../../api_generated/Classes/structcommands_1_1ValidationResult.html">commands::ValidationResult</a></strong> <br>Result of validating a command sequence before execution.</td>
+<td><strong><a href="../../api_generated/Classes/structcommands_1_1RunTransformsV2PipelineAtTimeParams.html">commands::RunTransformsV2PipelineAtTimeParams</a></strong> <br>Parameters for <code>[RunTransformsV2PipelineAtTime]()</code>.</td>
+</tr>
+<tr class="odd">
+<td>class</td>
+<td><strong><a href="../../api_generated/Classes/classcommands_1_1RunTransformsV2PipelineAtTime.html">commands::RunTransformsV2PipelineAtTime</a></strong> <br>Runs a saved TransformsV2 pipeline on one frame.</td>
 </tr>
 </tbody>
 </table>
@@ -642,7 +651,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </tr>
 <tr class="odd">
 <td><a href="../../api_generated/Classes/structcommands_1_1SequenceResult.html">SequenceResult</a></td>
-<td><strong><a href="../../api_generated/Namespaces/namespacecommands.html#function-executesequence">executeSequence</a></strong>(<a href="../../api_generated/Classes/structcommands_1_1CommandSequenceDescriptor.html">CommandSequenceDescriptor</a> const &amp; seq, <a href="../../api_generated/Classes/structcommands_1_1CommandContext.html">CommandContext</a> const &amp; ctx, bool stop_on_error =true, <a href="../../api_generated/Classes/classcommands_1_1CommandRecorder.html">CommandRecorder</a> * recorder =nullptr)<br>Execute a sequence of command descriptors.</td>
+<td><strong><a href="../../api_generated/Namespaces/namespacecommands.html#function-executesequence">executeSequence</a></strong>(<a href="../../api_generated/Classes/structcommands_1_1CommandSequenceDescriptor.html">CommandSequenceDescriptor</a> const &amp; seq, <a href="../../api_generated/Classes/structcommands_1_1CommandContext.html">CommandContext</a> const &amp; ctx, bool stop_on_error =true, <a href="../../api_generated/Classes/classcommands_1_1CommandRecorder.html">CommandRecorder</a> * recorder =[nullptr])<br>Execute a sequence of command descriptors.</td>
 </tr>
 <tr class="even">
 <td><a href="../../api_generated/Classes/structcommands_1_1CommandResult.html">CommandResult</a></td>
@@ -715,7 +724,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="types-documentation">Types Documentation</h2>
 <section id="using-commandcreator" class="level3">
 <h3 class="anchored" data-anchor-id="using-commandcreator">using CommandCreator</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> commands<span class="op">::</span>CommandCreator <span class="op">=</span> <span class="kw">typedef</span> <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>ICommand<span class="op">&gt;(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode cpp code-with-copy"><code class="sourceCode cpp"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">using</span> commands<span class="op">::</span>CommandCreator <span class="op">=</span>  <span class="bu">std::</span>function<span class="op">&lt;</span><span class="bu">std::</span>unique_ptr<span class="op">&lt;</span>ICommand<span class="op">&gt;(</span><span class="bu">std::</span>string <span class="at">const</span> <span class="op">&amp;)&gt;;</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <p>Type-erased command creator.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -885,7 +894,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <li>Deserialization: parameters deserialize into expected param structs</li>
 <li>Variable resolution: all ${variable} references resolve</li>
 <li>Data key existence (optional, requires <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>): referenced keys exist</li>
-<li>Type compatibility (optional, requires <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>): move/copy source and destination resolve to the same DataTypeVariant alternative</li>
+<li>Type compatibility (optional, requires <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>): move/copy source and destination resolve to the same <a href="../../api_generated/Files/DataManagerTypes_8hpp.html#using-datatypevariant">DataTypeVariant</a> alternative</li>
 </ol>
 <p>Checks 1–3 run without a <a href="../../api_generated/Classes/classDataManager.html">DataManager</a>. Checks 4–5 only run when ctx.data_manager is non-null.</p>
 </section>
@@ -1064,7 +1073,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><strong>Postcondition</strong>: On success, <code>output_key</code> exists with replaced data bound to <code>time_key</code></p>
 <p>Used by full-dataset commands that mirror TransformsV2 widget semantics.</p>
 <hr>
-<p>Updated on 2026-10-09 at 13:36:33 +0000</p>
+<p>Updated on 2026-11-13 at 20:25:42 +0000</p>
 
 
 </section>
@@ -1076,15 +1085,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   window.document.addEventListener("DOMContentLoaded", function (event) {
     // Ensure there is a toggle, if there isn't float one in the top right
     if (window.document.querySelector('.quarto-color-scheme-toggle') === null) {
-      const a = window.document.createElement('a');
-      a.classList.add('top-right');
-      a.classList.add('quarto-color-scheme-toggle');
-      a.href = "";
-      a.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
+      const toggle = window.document.createElement('button');
+      toggle.type = "button";
+      toggle.setAttribute("role", "switch");
+      toggle.setAttribute("aria-checked", "false");
+      toggle.classList.add('top-right');
+      toggle.classList.add('quarto-color-scheme-toggle');
+      toggle.setAttribute("aria-label", "Toggle dark mode");
+      toggle.onclick = function() { try { window.quartoToggleColorScheme(); } catch {} return false; };
       const i = window.document.createElement("i");
       i.classList.add('bi');
-      a.appendChild(i);
-      window.document.body.appendChild(a);
+      toggle.appendChild(i);
+      // Put the toggle in a landmark of its own, so that landmark navigation
+      // can reach it.
+      //
+      // The container is always a fresh direct child of body, and the toggle is
+      // never moved into page furniture that the theme or the author controls.
+      // The toggle is positioned against the page, so any ancestor that
+      // establishes a containing block captures it: a positioned element or a
+      // grid for position: absolute, and transform, filter, will-change or
+      // contain for position: fixed. A direct child of body has none of these
+      // to inherit, and the shift when one appears is silent and visual.
+      //
+      // ARIA says a document should have at most one banner, and axe reports a
+      // duplicate whether or not the banners carry distinct labels. So use a
+      // header when the page has no banner yet, and a named region otherwise.
+      //
+      // A header is a banner wherever it sits, unless it is inside sectioning
+      // content, so this cannot just look at the children of body: a custom
+      // page layout wraps the title block header in a plain div. An explicit
+      // role="banner" always counts.
+      const sectioning = 'article, aside, main, nav, section, [role="article"], [role="complementary"], [role="main"], [role="navigation"], [role="region"]';
+      const hasBanner = Array.from(
+        window.document.querySelectorAll('header:not([role]), [role="banner"]')
+      ).some(function(el) {
+        return el.hasAttribute("role") || el.closest(sectioning) === null;
+      });
+      const container = window.document.createElement(hasBanner ? "div" : "header");
+      if (hasBanner) {
+        container.setAttribute("role", "region");
+        container.setAttribute("aria-label", "Toggle dark mode");
+      }
+      container.classList.add('quarto-color-scheme-toggle-container');
+      container.appendChild(toggle);
+      window.document.body.appendChild(container);
     }
     setColorSchemeToggle(hasAlternateSentinel())
     const icon = "";
@@ -1163,7 +1207,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
       }
       // Inspect non-navigation links and adorn them if external
-     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      window.quartoDecorateExternalLinks = function (root) {
+     var links = (root || window.document).querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
       for (var i=0; i<links.length; i++) {
         const link = links[i];
         if (!isInternal(link.href)) {
@@ -1172,8 +1217,69 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           if (link.dataset.originalHref !== undefined) {
             link.href = link.dataset.originalHref;
           }
+          if (!link.classList.contains('no-external-icon')) {
+          }
         }
       }
+      };
+      window.quartoDecorateExternalLinks(window.document);
+    // Esc closes the popup (WCAG 1.4.13) and focus leaving both trigger and
+    // popup closes it (WCAG 2.4.11); tippy handles neither for interactive popups.
+    const hideOnEscAndFocusOut = {
+      name: 'hideOnEscAndFocusOut',
+      defaultValue: true,
+      fn(instance) {
+        const dismiss = () => {
+          // A show scheduled by the trigger delay would otherwise reopen it
+          instance.clearDelayTimeouts();
+          instance.hide();
+        };
+        const onKeyDown = (event) => {
+          if (event.key !== 'Escape') {
+            return;
+          }
+          // Keep Esc from also reaching page handlers (e.g. reveal.js overview),
+          // except an open reveal.js slide menu, which Esc should close too.
+          // The menu handles keys only when its keyboard option is on.
+          const menuHandlesEsc = window.Reveal?.getPlugin?.('menu')?.isOpen() &&
+            window.Reveal.getConfig().menu?.keyboard !== false;
+          if (!menuHandlesEsc) {
+            event.stopPropagation();
+          }
+          if (instance.popper.contains(window.document.activeElement)) {
+            // Disabled while refocusing so the focus trigger does not reopen it
+            instance.disable();
+            instance.reference.focus();
+            instance.enable();
+          }
+          dismiss();
+        };
+        const onFocusOut = (event) => {
+          const target = event.relatedTarget;
+          if (target && !instance.reference.contains(target) &&
+              !instance.popper.contains(target)) {
+            dismiss();
+          }
+        };
+        // On the trigger too: a click trigger (code-annotations: select) has no
+        // blur handling. Attached for the instance's lifetime so leaving the
+        // trigger also cancels a show still pending on the trigger delay.
+        instance.reference.addEventListener('focusout', onFocusOut);
+        return {
+          onShow() {
+            window.document.addEventListener('keydown', onKeyDown, true);
+            instance.popper.addEventListener('focusout', onFocusOut);
+          },
+          onHide() {
+            window.document.removeEventListener('keydown', onKeyDown, true);
+            instance.popper.removeEventListener('focusout', onFocusOut);
+          },
+          onDestroy() {
+            instance.reference.removeEventListener('focusout', onFocusOut);
+          },
+        };
+      },
+    };
     function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
       const config = {
         allowHTML: true,
@@ -1187,6 +1293,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
         interactiveBorder: 10,
         theme: 'quarto',
         placement: 'bottom-start',
+        plugins: [hideOnEscAndFocusOut],
       };
       if (contentFn) {
         config.content = contentFn;
@@ -1349,44 +1456,54 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           const lineIds = lines.map((line) => {
             return targetCell + "-" + line;
           })
-          let top = null;
-          let height = null;
-          let parent = null;
+          // Each band is positioned against its own containing block, which is
+          // not the offsetParent of the lines, so place it from client rects.
+          const placeBand = (band, firstEl, lastEl, codeBlock) => {
+            const container = band.offsetParent;
+            if (container === null) {
+              return;
+            }
+            const containerRect = container.getBoundingClientRect();
+            // Reveal.js scales slides with a transform, so convert client
+            // pixels back to the CSS pixels of the container.
+            const scale = containerRect.height / container.offsetHeight || 1;
+            const firstRect = firstEl.getBoundingClientRect();
+            const lastRect = lastEl.getBoundingClientRect();
+            const top = (firstRect.top - containerRect.top) / scale - container.clientTop + container.scrollTop;
+            const height = (lastRect.bottom - firstRect.top) / scale;
+            band.style.top = top - 2 + "px";
+            band.style.height = height + 4 + "px";
+            if (codeBlock) {
+              // Without the copy button wrapper, the containing block is wider
+              // than the code block, so span the code block explicitly.
+              const blockRect = codeBlock.getBoundingClientRect();
+              band.style.left = (blockRect.left - containerRect.left) / scale - container.clientLeft + container.scrollLeft + "px";
+              band.style.width = blockRect.width / scale + "px";
+            }
+          };
           if (lineIds.length > 0) {
-              //compute the position of the single el (top and bottom and make a div)
-              const el = window.document.getElementById(lineIds[0]);
-              top = el.offsetTop;
-              height = el.offsetHeight;
-              parent = el.parentElement.parentElement;
-            if (lineIds.length > 1) {
-              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
-              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
-              height = bottom - top;
+            const el = window.document.getElementById(lineIds[0]);
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const parent = el.parentElement.parentElement;
+            // cook up a div (if necessary) and position it
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
             }
-            if (top !== null && height !== null && parent !== null) {
-              // cook up a div (if necessary) and position it 
-              let div = window.document.getElementById("code-annotation-line-highlight");
-              if (div === null) {
-                div = window.document.createElement("div");
-                div.setAttribute("id", "code-annotation-line-highlight");
-                div.style.position = 'absolute';
-                parent.appendChild(div);
-              }
-              div.style.top = top - 2 + "px";
-              div.style.height = height + 4 + "px";
-              div.style.left = 0;
-              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
-              if (gutterDiv === null) {
-                gutterDiv = window.document.createElement("div");
-                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
-                gutterDiv.style.position = 'absolute';
-                const codeCell = window.document.getElementById(targetCell);
-                const gutter = codeCell.querySelector('.code-annotation-gutter');
-                gutter.appendChild(gutterDiv);
-              }
-              gutterDiv.style.top = top - 2 + "px";
-              gutterDiv.style.height = height + 4 + "px";
+            placeBand(div, el, lastEl, parent.closest("div.sourceCode") || parent);
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
             }
+            placeBand(gutterDiv, el, lastEl);
             selectedAnnoteEl = annoteEl;
           }
         };
@@ -1484,6 +1601,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       }
     }
   });
+  </script>
+  <script type="application/javascript">
+  window.quartoScrollableRegionsLabels = {"code":"Scrollable code","output":"Scrollable output"};
   </script>
 </div> <!-- /content -->
 
